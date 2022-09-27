@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Reflection;
 import com.namazustudios.socialengine.rt.annotation.*;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,14 +36,14 @@ public class LocalInvocationProcessorBuilder {
     private LocalInvocationProcessor.ReturnValueStrategy returnValueStrategy;
 
     public LocalInvocationProcessorBuilder(
-            RemoteServiceDefinition remoteServiceDefinition,
+            RemoteScope remoteScope,
             final Class<?> type,
             final String name,
             final List<String> parameters) throws ClassNotFoundException { ;
 
         final Class<?>[] parameterTypes = lookupParameterTypes(parameters);
 
-        final var methodCaseFormat = remoteServiceDefinition.style().methodCaseFormat();
+        final var methodCaseFormat = remoteScope.style().methodCaseFormat();
         final var jvmMethodName = LOWER_CAMEL.to(methodCaseFormat, name);
 
         this.method = methods(type).filter(m -> m.getName().equals(jvmMethodName))

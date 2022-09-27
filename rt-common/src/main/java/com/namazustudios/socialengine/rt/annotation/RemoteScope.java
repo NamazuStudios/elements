@@ -8,12 +8,12 @@ import java.lang.annotation.Target;
 import static com.namazustudios.socialengine.rt.annotation.CaseFormat.NATURAL;
 
 /**
- * Provides metadata for an exposed service. For an object to be remotely exposed, it must bear one of these annotations
- * or it will be forbidden based on the container configuration.
+ * Provides scoping metadata for an exposed service. For an object to be remotely exposed, it must bear one of these
+ * annotations or it will be forbidden based on the container configuration.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RemoteServiceDefinition {
+public @interface RemoteScope {
 
     /**
      * The master node scope.

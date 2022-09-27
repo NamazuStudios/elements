@@ -8,14 +8,14 @@ import java.util.Objects;
 public class JsonRpcManifest implements Serializable {
 
     @NotNull
-    private Map<@NotNull String, @NotNull JsonRpcService> modulesByName;
+    private Map<@NotNull String, @NotNull JsonRpcService> servicesByName;
 
-    public Map<String, JsonRpcService> getModulesByName() {
-        return modulesByName;
+    public Map<String, JsonRpcService> getServicesByName() {
+        return servicesByName;
     }
 
-    public void setModulesByName(Map<String, JsonRpcService> modulesByName) {
-        this.modulesByName = modulesByName;
+    public void setServicesByName(Map<String, JsonRpcService> servicesByName) {
+        this.servicesByName = servicesByName;
     }
 
     @Override
@@ -23,18 +23,18 @@ public class JsonRpcManifest implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JsonRpcManifest that = (JsonRpcManifest) o;
-        return Objects.equals(getModulesByName(), that.getModulesByName());
+        return Objects.equals(getServicesByName(), that.getServicesByName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getModulesByName());
+        return Objects.hash(getServicesByName());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("JsonRpcManifest{");
-        sb.append("modulesByName=").append(modulesByName);
+        sb.append("modulesByName=").append(servicesByName);
         sb.append('}');
         return sb.toString();
     }

@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt.manifest.jrpc;
 
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
+import com.namazustudios.socialengine.rt.manifest.Deprecation;
+
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -11,10 +14,7 @@ public class JsonRpcService implements Serializable {
     private String scope;
 
     @NotNull
-    private boolean deprecated;
-
-    @NotNull
-    private String deprecationMessage;
+    private Deprecation deprecation;
 
     @NotNull
     private List<JsonRpcMethod> jsonRpcMethodList;
@@ -27,20 +27,12 @@ public class JsonRpcService implements Serializable {
         this.scope = scope;
     }
 
-    public boolean isDeprecated() {
-        return deprecated;
+    public Deprecation getDeprecation() {
+        return deprecation;
     }
 
-    public void setDeprecated(boolean deprecated) {
-        this.deprecated = deprecated;
-    }
-
-    public String getDeprecationMessage() {
-        return deprecationMessage;
-    }
-
-    public void setDeprecationMessage(String deprecationMessage) {
-        this.deprecationMessage = deprecationMessage;
+    public void setDeprecation(Deprecation deprecation) {
+        this.deprecation = deprecation;
     }
 
     public List<JsonRpcMethod> getJsonRpcMethodList() {
@@ -56,22 +48,22 @@ public class JsonRpcService implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JsonRpcService that = (JsonRpcService) o;
-        return isDeprecated() == that.isDeprecated() && Objects.equals(getScope(), that.getScope()) && Objects.equals(getDeprecationMessage(), that.getDeprecationMessage()) && Objects.equals(getJsonRpcMethodList(), that.getJsonRpcMethodList());
+        return Objects.equals(getScope(), that.getScope()) && Objects.equals(getDeprecation(), that.getDeprecation()) && Objects.equals(getJsonRpcMethodList(), that.getJsonRpcMethodList());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getScope(), isDeprecated(), getDeprecationMessage(), getJsonRpcMethodList());
+        return Objects.hash(getScope(), getDeprecation(), getJsonRpcMethodList());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("JsonRpcService{");
         sb.append("scope='").append(scope).append('\'');
-        sb.append(", deprecated=").append(deprecated);
-        sb.append(", deprecationMessage='").append(deprecationMessage).append('\'');
+        sb.append(", definition=").append(deprecation);
         sb.append(", jsonRpcMethodList=").append(jsonRpcMethodList);
         sb.append('}');
         return sb.toString();
     }
+
 }

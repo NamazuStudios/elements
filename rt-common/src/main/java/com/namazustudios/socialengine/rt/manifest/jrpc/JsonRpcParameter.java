@@ -16,6 +16,12 @@ public class JsonRpcParameter implements Serializable {
     @NotNull
     private Type type;
 
+    @NotNull
+    private String model;
+
+    @NotNull
+    private String name;
+
     public int getIndex() {
         return index;
     }
@@ -28,8 +34,24 @@ public class JsonRpcParameter implements Serializable {
         return type;
     }
 
-    public void setType(Type type) {
+    public void setType(final Type type) {
         this.type = type;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
@@ -37,12 +59,12 @@ public class JsonRpcParameter implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JsonRpcParameter that = (JsonRpcParameter) o;
-        return getIndex() == that.getIndex() && getType() == that.getType();
+        return getIndex() == that.getIndex() && getType() == that.getType() && Objects.equals(getModel(), that.getModel()) && Objects.equals(getName(), that.getName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getIndex(), getType());
+        return Objects.hash(getIndex(), getType(), getModel(), getName());
     }
 
     @Override
@@ -50,6 +72,8 @@ public class JsonRpcParameter implements Serializable {
         final StringBuilder sb = new StringBuilder("JsonRpcParameter{");
         sb.append("index=").append(index);
         sb.append(", type=").append(type);
+        sb.append(", model='").append(model).append('\'');
+        sb.append(", name='").append(name).append('\'');
         sb.append('}');
         return sb.toString();
     }

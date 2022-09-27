@@ -25,6 +25,57 @@ public class Reflection {
     private Reflection(){}
 
     /**
+     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isObjectInteger(final Class<?> cls) {
+        return
+            Byte.class.equals(cls) ||
+            Short.class.equals(cls) ||
+            Character.class.equals(cls) ||
+            Integer.class.equals(cls) ||
+            Long.class.equals(cls);
+    }
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isPrimitiveInteger(final Class<?> cls) {
+        return
+            byte.class.equals(cls) ||
+            short.class.equals(cls) ||
+            char.class.equals(cls) ||
+            int.class.equals(cls) ||
+            long.class.equals(cls);
+    }
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isObjectFloat(final Class<?> cls) {
+        return
+            Byte.class.equals(cls) ||
+            Short.class.equals(cls) ||
+            Character.class.equals(cls) ||
+            Integer.class.equals(cls) ||
+            Long.class.equals(cls);
+    }
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive float.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isPrimitiveFloat(final Class<?> cls) {
+        return Float.class.equals(cls) || Double.class.equals(cls);
+    }
+
+    /**
      * Formats a {@link Method} for use in logging.
      *
      * @param method the {@link Method}
@@ -75,7 +126,10 @@ public class Reflection {
      * @param args the argument types
      * @return the {@link IllegalArgumentException}
      */
-    public static IllegalArgumentException noSuchMethod(final Class<?> cls, final String name, final Collection<Class<?>> args) {
+    public static IllegalArgumentException noSuchMethod(
+            final Class<?> cls,
+            final String name,
+            final Collection<Class<?>> args) {
         return noSuchMethod(cls, name, args.stream().toArray(Class[]::new));
     }
 

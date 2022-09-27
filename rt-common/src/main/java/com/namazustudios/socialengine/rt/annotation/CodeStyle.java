@@ -1,13 +1,8 @@
 package com.namazustudios.socialengine.rt.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
-
-import static com.namazustudios.socialengine.rt.annotation.CaseFormat.LOWER_UNDERSCORE;
-import static com.namazustudios.socialengine.rt.annotation.CaseFormat.UPPER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.*;
 
 /**
  * Indicates the exposed code style.
@@ -39,5 +34,100 @@ public @interface CodeStyle {
      * @return the {@link CaseFormat} to use in conversion
      */
     CaseFormat constantCaseFormat() default UPPER_UNDERSCORE;
+
+    /**
+     * Used for converting the case format for types.
+     *
+     * @return the type case format
+     */
+    CaseFormat typeCaseFormat() default NATURAL;
+
+    /**
+     * Used for converting the case format for properties.
+     *
+     * @return the property case format
+     */
+    CaseFormat propertyCaseFormat() default NATURAL;
+
+    /**
+     * Implementation of {@link CodeStyle} which represents the JVM native code style.
+     */
+    CodeStyle JVM_NATIVE = new CodeStyle() {
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return CodeStyle.class;
+        }
+
+        @Override
+        public CaseFormat methodCaseFormat() {
+            return LOWER_CAMEL;
+        }
+
+        @Override
+        public CaseFormat parameterCaseFormat() {
+            return LOWER_CAMEL;
+        }
+
+        @Override
+        public CaseFormat constantCaseFormat() {
+            return UPPER_UNDERSCORE;
+        }
+
+        @Override
+        public CaseFormat typeCaseFormat() {
+            return UPPER_CAMEL;
+        }
+
+        @Override
+        public CaseFormat propertyCaseFormat() {
+            return LOWER_CAMEL;
+        }
+
+        @Override
+        protected Object clone() {
+            return this;
+        }
+
+        @Override
+        public int hashCode() {
+            return
+                (127 * "methodCaseFormat".hashCode()) ^ methodCaseFormat().hashCode() +
+                (127 * "parameterCaseFormat".hashCode()) ^ parameterCaseFormat().hashCode() +
+                (127 * "constantCaseFormat".hashCode()) ^ constantCaseFormat().hashCode() +
+                (127 * "typeCaseFormat".hashCode()) ^ typeCaseFormat().hashCode() +
+                (127 * "propertyCaseFormat".hashCode()) ^ propertyCaseFormat().hashCode();
+        }
+
+        @Override
+        public boolean equals(final Object obj) {
+
+            if (!(obj instanceof CodeStyle)) {
+                return false;
+            }
+
+            final CodeStyle other = (CodeStyle) obj;
+
+            return
+                methodCaseFormat().equals(other.methodCaseFormat()) &&
+                parameterCaseFormat().equals(other.parameterCaseFormat()) &&
+                constantCaseFormat().equals(other.constantCaseFormat()) &&
+                typeCaseFormat().equals(other.typeCaseFormat()) &&
+                propertyCaseFormat().equals(other.propertyCaseFormat());
+
+        }
+
+        @Override
+        public String toString() {
+            return "@" + CodeStyle.class.getName() + "(" +
+                "methodCaseFormat=" + methodCaseFormat() + ", " +
+                "parameterCaseFormat=" + parameterCaseFormat() + ", " +
+                "constantCaseFormat=" + constantCaseFormat() + ", " +
+                "typeCaseFormat=" + typeCaseFormat() + ", " +
+                "propertyCaseFormat=" + propertyCaseFormat() +
+            ")";
+        }
+
+    };
 
 }

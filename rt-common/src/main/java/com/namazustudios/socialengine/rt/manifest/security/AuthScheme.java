@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.manifest.security;
 
-import com.namazustudios.socialengine.rt.manifest.Header;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
 import javax.validation.constraints.NotNull;
@@ -68,19 +67,19 @@ public abstract class AuthScheme<SpecT> implements Serializable {
     public abstract void setSpec(SpecT spec);
 
     /**
-     * Represents an {@link AuthScheme} which uses a {@link com.namazustudios.socialengine.rt.manifest.Header} to provide credentials.
+     * Represents an {@link AuthScheme} which uses a {@link com.namazustudios.socialengine.rt.manifest.http.Header} to provide credentials.
      */
-    public static class Header extends AuthScheme<com.namazustudios.socialengine.rt.manifest.Header> {
+    public static class Header extends AuthScheme<com.namazustudios.socialengine.rt.manifest.http.Header> {
 
-        private com.namazustudios.socialengine.rt.manifest.Header spec;
+        private com.namazustudios.socialengine.rt.manifest.http.Header spec;
 
         @Override
-        public com.namazustudios.socialengine.rt.manifest.Header getSpec() {
+        public com.namazustudios.socialengine.rt.manifest.http.Header getSpec() {
             return spec;
         }
 
         @Override
-        public void setSpec(com.namazustudios.socialengine.rt.manifest.Header spec) {
+        public void setSpec(com.namazustudios.socialengine.rt.manifest.http.Header spec) {
             this.spec = spec;
         }
     }

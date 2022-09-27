@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.manifest;
+package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
@@ -6,7 +6,7 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * Stores metadat for a specific HTTP request,
+ * Stores metadata for a specific HTTP request,
  */
 public class Header implements Serializable {
 

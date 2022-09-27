@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.Constants.REMOTE_PROTOCOL;
 import static com.namazustudios.socialengine.rt.Constants.REMOTE_SCOPE;
@@ -37,18 +36,11 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
             @Override
             public LocalInvocationProcessor load(final MethodKey key) throws Exception {
 
-                final var definition = Stream
-                      .of(key.getType().getAnnotationsByType(RemoteService.class))
-                      .flatMap(rs -> Stream.of(rs.value()))
-                      .filter(d -> getScope().equals(d.scope()))
-                      .filter(d -> getProtocol().equals(d.protocol()))
-                      .findFirst()
-                      .orElseThrow(() -> new ServiceNotFoundException(format(
-                          "Service Not found for %s (%s - %s)",
-                          key.getType().getName(),
-                          getScope(),
-                          getProtocol()
-                      )));
+                final var definition = RemoteService.Util.getScope(
+                    key.getType(),
+                    getProtocol(),
+                    getScope()
+                );
 
                 return new LocalInvocationProcessorBuilder(
                     definition,

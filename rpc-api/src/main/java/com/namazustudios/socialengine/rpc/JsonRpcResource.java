@@ -22,7 +22,7 @@ public class JsonRpcResource {
     public void invoke(
             final JsonRpcRequest jsonRpcRequest,
             @Suspended final AsyncResponse asyncResponse) {
-
+                
     }
 
     public LocalInvocationDispatcher getLocalInvocationDispatcher() {

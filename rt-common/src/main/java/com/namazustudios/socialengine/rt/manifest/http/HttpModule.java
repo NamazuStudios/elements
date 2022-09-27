@@ -13,10 +13,10 @@ public class HttpModule implements Serializable {
     private String module;
 
     @NotNull
-    private Map<@NotNull String,@NotNull HttpOperation> operationsByName;
+    private Map<@NotNull String, @NotNull HttpOperation> operationsByName;
 
     /**
-     * Gets the name fo the module.  This typically names the language-specific type or class name
+     * Gets the name of the module.  This typically names the language-specific type or class name
      * which is used to load the underlying logic.
      *
      * @return the name of the module

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
-import com.namazustudios.socialengine.rt.manifest.Header;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;

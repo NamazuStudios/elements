@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.annotation;
 
-import com.namazustudios.socialengine.rt.exception.ServiceNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ModelNotFoundException;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,15 +11,12 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
-/**
- * Indicates a type is a remotely-invokable service. This may be done with or without proxying.
- */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RemoteService {
+public @interface RemoteModel {
 
     /**
-     * Names the remote service. If left blank, the name will be inferred.
+     * Names the remote model. If left blank, the name will be inferred.
      *
      * @return the name of the service
      */
@@ -35,25 +32,25 @@ public @interface RemoteService {
     final class Util {
 
         /**
-         * Finds the name of a type annotated with {@link RemoteService}.
+         * Finds the name of a type annotated with {@link RemoteModel}.
          *
          * @param cls the class
          * @return an {@link Optional<String>}
          */
         public static Optional<String> findName(final Class<?> cls) {
             return Optional
-                    .ofNullable(cls.getAnnotation(RemoteService.class))
-                    .map(m -> m.value().isBlank() ? cls.getName() : m.value());
+                .ofNullable(cls.getAnnotation(RemoteModel.class))
+                .map(m -> m.value().isBlank() ? cls.getName() : m.value());
         }
 
         /**
-         * Finds the name of a type annotated with {@link RemoteService}.
+         * Finds the name of a type annotated with {@link RemoteModel}.
          *
          * @param cls the class
          * @return an {@link Optional<String>}
          */
         public static String getName(final Class<?> cls) {
-            return findName(cls).orElseThrow(() -> new ServiceNotFoundException(format("Service Not found for %s", cls)));
+            return findName(cls).orElseThrow(() -> new ModelNotFoundException(format("Model Not found for %s", cls)));
         }
 
         /**
@@ -62,17 +59,17 @@ public @interface RemoteService {
          * @param cls the type
          * @param protocol the protocol
          * @param scope the scope
-         * @return the {@link Optional< RemoteScope >} which matches.
+         * @return the {@link Optional < RemoteScope >} which matches.
          */
         public static Optional<RemoteScope> findScopes(
                 final Class<?> cls,
                 final String protocol,
                 final String scope) {
-            return Stream.of(cls.getAnnotationsByType(RemoteService.class))
-                    .flatMap(rs -> Stream.of(rs.scopes()))
-                    .filter(d -> scope.equals(d.scope()))
-                    .filter(d -> protocol.equals(d.protocol()))
-                    .findFirst();
+            return Stream.of(cls.getAnnotationsByType(RemoteModel.class))
+                .flatMap(rs -> Stream.of(rs.scopes()))
+                .filter(d -> scope.equals(d.scope()))
+                .filter(d -> protocol.equals(d.protocol()))
+                .findFirst();
         }
 
         /**
@@ -85,9 +82,9 @@ public @interface RemoteService {
          */
         public static RemoteScope getScope(final Class<?> cls, final String protocol, final String scope) {
             return findScopes(cls, protocol, scope)
-                .orElseThrow(() -> new ServiceNotFoundException(format(
-                    "Service Not found for %s (%s - %s)",
-                    cls, scope, protocol
+                .orElseThrow(() -> new ModelNotFoundException(format(
+                        "Model Not found for %s (%s - %s)",
+                        cls, scope, protocol
                 )));
         }
     }
