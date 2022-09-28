@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.manifest.http;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -19,9 +20,11 @@ public class HttpContent implements Serializable {
     @NotNull
     private String model;
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull Header> headers;
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull String> staticHeaders;
 

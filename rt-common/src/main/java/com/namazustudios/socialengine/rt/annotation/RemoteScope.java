@@ -36,6 +36,16 @@ public @interface RemoteScope {
     String ELEMENTS_JSON_RPC_HTTP_PROTOCOL = "eci:json-rpc:http";
 
     /**
+     * Indicates the scope for remote dispatch
+     */
+    String REMOTE_SCOPE = "com.namazustudios.socialengine.rt.scope";
+
+    /**
+     * Indicates the protocol for remote dispatch
+     */
+    String REMOTE_PROTOCOL = "com.namazustudios.socialengine.rt.protocol";
+
+    /**
      * Indicates the scope of the service. Note scopes prefixed with "eci" are reserved for system use.
      *
      * @return the scope.

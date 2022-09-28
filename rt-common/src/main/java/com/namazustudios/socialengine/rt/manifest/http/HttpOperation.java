@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.*;
@@ -32,15 +33,19 @@ public class HttpOperation implements Serializable {
     @NotNull
     private String method;
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull HttpParameter> parameters;
 
+    @Valid
     @NotNull
-    private List<@NotNull @NotNull String> authSchemes;
+    private List<@NotNull String> authSchemes;
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull HttpContent> producesContentByType;
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull HttpContent> consumesContentByType;
 

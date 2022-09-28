@@ -6,10 +6,7 @@ import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.Deprecation;
-import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcManifest;
-import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcMethod;
-import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcParameter;
-import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcService;
+import com.namazustudios.socialengine.rt.manifest.jrpc.*;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 import org.dozer.Mapper;
 
@@ -17,14 +14,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.validation.Validator;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.Constants.REMOTE_PROTOCOL;
-import static com.namazustudios.socialengine.rt.Constants.REMOTE_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
 import static java.util.stream.Collectors.toList;
 
@@ -97,6 +91,8 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
     private class JsonRpcManifestBuilder {
 
+        private final Set<String> methodNames = new HashSet<>();
+
         private final JsonRpcManifest jsonRpcManifest = new JsonRpcManifest();
 
         public JsonRpcManifestBuilder() {
@@ -104,14 +100,19 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
             final var services = new LinkedHashMap<String, JsonRpcService>();
 
             for (final var cls : getJsonRpcServices()) {
+
                 final var name = RemoteService.Util.getName(cls);
                 final var service = buildJsonRpcService(cls);
-                services.put(name, service);
+
+                if (services.put(name, service) != null) {
+                    throw new BadManifestException("Service already exists with name: " + name);
+                }
+
             }
 
             jsonRpcManifest.setServicesByName(services);
 
-            final var violations = validator.validate(jsonRpcManifest);
+            final var violations = getValidator().validate(jsonRpcManifest);
 
             if (!violations.isEmpty()) {
                 throw new BadManifestException(violations);
@@ -128,22 +129,26 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
             jsonRpcService.setDeprecation(Deprecation.from(rsd.deprecated()));
 
             final var jsonRpcMethodList = buildMethodsForClass(rsd, cls);
+
+            jsonRpcMethodList.forEach(m -> {
+                if (!methodNames.add(m.getName())) {
+                    throw new BadManifestException("JSON RPC Method Already exists:" + m.getName());
+                }
+            });
+
             jsonRpcService.setJsonRpcMethodList(jsonRpcMethodList);
 
             return jsonRpcService;
 
         }
 
-        private List<JsonRpcMethod> buildMethodsForClass(
-                final RemoteScope remoteScope,
-                final Class<?> cls) {
-            return RemotelyInvokable.Util.getMethods(cls)
+        private List<JsonRpcMethod> buildMethodsForClass(final RemoteScope remoteScope, final Class<?> cls) {
+            return RemotelyInvokable.Util.getMethodStream(cls)
                 .flatMap(method -> buildMethodsForService(remoteScope, method))
                 .collect(toList());
         }
 
-        private Stream<JsonRpcMethod> buildMethodsForService(
-                final RemoteScope remoteScope, final Method method) {
+        private Stream<JsonRpcMethod> buildMethodsForService(final RemoteScope remoteScope, final Method method) {
 
             final var methodCaseFormat = remoteScope.style().methodCaseFormat();
 
@@ -155,6 +160,16 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
                     jsonRpcMethod.setName(methodName);
                     jsonRpcMethod.setParameters(methodParameters);
                     jsonRpcMethod.setDeprecation(Deprecation.from(remotelyInvokable.deprecated()));
+
+                    if (method.getReturnType() != void.class) {
+                        final var jsonRpcReturnType = new JsonRpcReturnType();
+                        final var returnType = getModelIntrospector().introspectClassForType(method.getReturnType());
+                        final var returnModel = getModelIntrospector().introspectClassForModelName(method.getReturnType(), remoteScope);
+                        jsonRpcReturnType.setType(returnType);
+                        jsonRpcReturnType.setModel(returnModel);
+                        jsonRpcMethod.setReturns(jsonRpcReturnType);
+                    }
+
                     return jsonRpcMethod;
                 });
 

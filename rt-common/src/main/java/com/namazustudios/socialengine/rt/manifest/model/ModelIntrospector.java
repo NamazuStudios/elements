@@ -30,8 +30,6 @@ public interface ModelIntrospector {
      * @param remoteScope the remote scope
      * @return the model name
      */
-    default String introspectClassForModelName(Class<?> cls, RemoteScope remoteScope) {
-        return introspectClassForModel(cls, remoteScope).getName();
-    }
+    String introspectClassForModelName(Class<?> cls, RemoteScope remoteScope);
 
 }

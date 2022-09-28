@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.manifest.jrpc;
 
-import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.manifest.Deprecation;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -16,6 +16,7 @@ public class JsonRpcService implements Serializable {
     @NotNull
     private Deprecation deprecation;
 
+    @Valid
     @NotNull
     private List<JsonRpcMethod> jsonRpcMethodList;
 

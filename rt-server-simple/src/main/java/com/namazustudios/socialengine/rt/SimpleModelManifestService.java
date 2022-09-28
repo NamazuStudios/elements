@@ -12,8 +12,8 @@ import javax.validation.Validator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import static com.namazustudios.socialengine.rt.Constants.REMOTE_PROTOCOL;
-import static com.namazustudios.socialengine.rt.Constants.REMOTE_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
 
 public class SimpleModelManifestService implements ModelManifestService {
 

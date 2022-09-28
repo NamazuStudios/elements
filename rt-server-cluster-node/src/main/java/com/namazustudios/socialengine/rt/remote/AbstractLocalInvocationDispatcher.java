@@ -15,8 +15,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.Constants.REMOTE_PROTOCOL;
-import static com.namazustudios.socialengine.rt.Constants.REMOTE_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 

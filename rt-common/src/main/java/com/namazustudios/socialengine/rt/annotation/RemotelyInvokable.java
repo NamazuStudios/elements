@@ -33,12 +33,22 @@ public @interface RemotelyInvokable {
 
     final class Util {
 
+
         /**
          * Gets all {@link Method}
          * @param cls the {@link Class<?>} from hich to extract the methods.
          * @return a {@link Stream} of {@link Method} types.
          */
-        public static Stream<Method> getMethods(final Class<?> cls) {
+        public static Method[] getMethods(final Class<?> cls) {
+            return getMethodStream(cls).toArray(Method[]::new);
+        }
+
+        /**
+         * Gets all {@link Method}
+         * @param cls the {@link Class<?>} from hich to extract the methods.
+         * @return a {@link Stream} of {@link Method} types.
+         */
+        public static Stream<Method> getMethodStream(final Class<?> cls) {
             return Reflection.methods(cls).filter(m -> m.getAnnotationsByType(RemotelyInvokable.class).length > 0);
         }
 

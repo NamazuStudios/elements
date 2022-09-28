@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.Map;
  */
 public class HttpManifest implements Serializable {
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull HttpModule> modulesByName;
 

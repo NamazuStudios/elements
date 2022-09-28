@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.manifest.jrpc;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Objects;
 
 public class JsonRpcManifest implements Serializable {
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull JsonRpcService> servicesByName;
 

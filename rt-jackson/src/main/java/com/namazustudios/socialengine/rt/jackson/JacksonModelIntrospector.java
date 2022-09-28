@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import com.namazustudios.socialengine.rt.annotation.CodeStyle;
+import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
@@ -40,9 +41,10 @@ public class JacksonModelIntrospector implements ModelIntrospector {
 
     @Override
     public String introspectClassForModelName(final Class<?> cls, final RemoteScope remoteScope) {
-        return CodeStyle.JVM_NATIVE
-            .typeCaseFormat()
-            .to(remoteScope.style().typeCaseFormat(), cls.getName());
+        final var typeCaseFormat = remoteScope.style().typeCaseFormat();
+        return RemoteModel.Util.findName(cls)
+            .map(s -> CodeStyle.JVM_NATIVE.typeCaseFormat().to(typeCaseFormat, s))
+            .orElse(null);
     }
 
     @Override

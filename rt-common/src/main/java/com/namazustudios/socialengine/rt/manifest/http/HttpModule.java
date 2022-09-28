@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
@@ -12,6 +13,7 @@ public class HttpModule implements Serializable {
     @NotNull
     private String module;
 
+    @Valid
     @NotNull
     private Map<@NotNull String, @NotNull HttpOperation> operationsByName;
 
