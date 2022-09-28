@@ -58,12 +58,7 @@ public class Reflection {
      * @return true if the number is a primitive number
      */
     public static boolean isObjectFloat(final Class<?> cls) {
-        return
-            Byte.class.equals(cls) ||
-            Short.class.equals(cls) ||
-            Character.class.equals(cls) ||
-            Integer.class.equals(cls) ||
-            Long.class.equals(cls);
+        return Float.class.equals(cls) || Double.class.equals(cls);
     }
 
     /**
@@ -72,7 +67,7 @@ public class Reflection {
      * @return true if the number is a primitive number
      */
     public static boolean isPrimitiveFloat(final Class<?> cls) {
-        return Float.class.equals(cls) || Double.class.equals(cls);
+        return float.class.equals(cls) || double.class.equals(cls);
     }
 
     /**

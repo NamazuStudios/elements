@@ -86,9 +86,12 @@ public class JacksonModelIntrospector implements ModelIntrospector {
         property.setName(name);
         property.setDescription(format("Model for: %s", beanPropertyDefinition.getRawPrimaryType()));
 
-        final var contentType = javaType.getContentType();
-        if (contentType != null) {
+        if (javaType.isContainerType()) {
+            final var contentType = javaType.getContentType();
             final var modelName = introspectClassForModelName(contentType.getRawClass(), remoteScope);
+            property.setModel(modelName);
+        } else if (OBJECT.equals(type)) {
+            final var modelName = introspectClassForModelName(javaType.getRawClass(), remoteScope);
             property.setModel(modelName);
         }
 

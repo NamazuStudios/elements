@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
+import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
@@ -9,6 +10,7 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.validation.Validator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -64,6 +66,8 @@ public class SimpleModelManifestService implements ModelManifestService {
 
     private class ModelManifestBuilder {
 
+        private final Set<String> modelNames = new HashSet<>();
+
         private final ModelManifest modelManifest = new ModelManifest();
 
         public ModelManifestBuilder() {
@@ -71,10 +75,15 @@ public class SimpleModelManifestService implements ModelManifestService {
             final var modelsByName = new LinkedHashMap<String, Model>();
 
             for (var cls : rpcModels) {
+
                 final var name = RemoteModel.Util.getName(cls);
                 final var remoteScope = RemoteModel.Util.getScope(cls, protocol, scope);
-                final var model =modelIntrospector.introspectClassForModel(cls, remoteScope);
-                modelsByName.put(name, model);
+                final var model = modelIntrospector.introspectClassForModel(cls, remoteScope);
+
+                if (modelsByName.put(name, model) != null) {
+                    throw new BadManifestException("Model already exists with name: " + name);
+                }
+
             }
 
             modelManifest.setModelsByName(modelsByName);
