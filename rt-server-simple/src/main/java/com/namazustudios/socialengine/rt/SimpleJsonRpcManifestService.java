@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.Deprecation;
 import com.namazustudios.socialengine.rt.manifest.jrpc.*;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
-import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,9 +16,9 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
-import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
 import static java.util.stream.Collectors.toList;
 
 public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
@@ -34,9 +33,9 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
     private final Validator validator;
 
-    private final ModelIntrospector modelIntrospector;
+    private final PayloadReader payloadReader;
 
-    private final Mapper mapper;
+    private final ModelIntrospector modelIntrospector;
 
     private final JsonRpcManifest jsonRpcManifest;
 
@@ -49,14 +48,14 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
             @Named(RPC_SERVICES)
             final Set<Class<?>> jsonRpcServices,
             final Validator validator,
-            final Mapper mapper,
+            final PayloadReader payloadReader,
             final ModelIntrospector modelIntrospector) {
 
         this.scope = scope;
-        this.mapper = mapper;
         this.protocol = protocol;
         this.jsonRpcServices = jsonRpcServices;
         this.validator = validator;
+        this.payloadReader = payloadReader;
         this.modelIntrospector = modelIntrospector;
 
         final var builder = new JsonRpcManifestBuilder();
@@ -66,7 +65,7 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
     @Override
     public JsonRpcManifest getJsonRpcManifest() {
-        return mapper.map(jsonRpcManifest, JsonRpcManifest.class);
+        return getPayloadReader().convert(JsonRpcManifest.class, jsonRpcManifest);
     }
 
     public Set<Class<?>> getJsonRpcServices() {
@@ -83,6 +82,10 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
     public Validator getValidator() {
         return validator;
+    }
+
+    public PayloadReader getPayloadReader() {
+        return payloadReader;
     }
 
     public ModelIntrospector getModelIntrospector() {

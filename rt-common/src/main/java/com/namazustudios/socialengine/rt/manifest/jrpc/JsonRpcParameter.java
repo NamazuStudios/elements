@@ -10,23 +10,20 @@ import java.util.Objects;
 public class JsonRpcParameter implements Serializable {
 
     @Min(0)
-    @NotNull
-    private int index;
+    private Integer index;
 
     @NotNull
     private Type type;
 
-    @NotNull
     private String model;
 
-    @NotNull
     private String name;
 
-    public int getIndex() {
+    public Integer getIndex() {
         return index;
     }
 
-    public void setIndex(int index) {
+    public void setIndex(Integer index) {
         this.index = index;
     }
 
@@ -54,12 +51,16 @@ public class JsonRpcParameter implements Serializable {
         this.name = name;
     }
 
+    public boolean isAnonymous() {
+        return getName() == null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         JsonRpcParameter that = (JsonRpcParameter) o;
-        return getIndex() == that.getIndex() && getType() == that.getType() && Objects.equals(getModel(), that.getModel()) && Objects.equals(getName(), that.getName());
+        return Objects.equals(getIndex(), that.getIndex()) && getType() == that.getType() && Objects.equals(getModel(), that.getModel()) && Objects.equals(getName(), that.getName());
     }
 
     @Override

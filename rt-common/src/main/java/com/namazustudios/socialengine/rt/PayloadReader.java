@@ -9,8 +9,17 @@ import java.io.OutputStream;
  * Handles the actual details of writing to the {@link OutputStream}.  Allows for multiple content types
  * to be read throughthe {@link Request} and {@link Request}
  */
-@FunctionalInterface
 public interface PayloadReader {
+
+    /**
+     * Reads the object to another type.
+     *
+     * @param to the type to read
+     * @param from the type from which to read
+     * @param <T> the type
+     * @return an instance of the requested type, read from the supplied object.
+     */
+    <T> T convert(final Class<T> to, final Object from);
 
     /**
      * Reads the actual response object to the {@link InputStream}.
@@ -31,10 +40,9 @@ public interface PayloadReader {
      * @return the deserialized payload
      * @throws IOException
      */
-    default <T> T read(Class<T> payloadType, byte[] toRead) throws IOException {
+    default <T> T read(final Class<T> payloadType, final byte[] toRead) throws IOException {
         try (final ByteArrayInputStream bis = new ByteArrayInputStream(toRead)) {
             return read(payloadType, bis);
         }
     }
-
 }

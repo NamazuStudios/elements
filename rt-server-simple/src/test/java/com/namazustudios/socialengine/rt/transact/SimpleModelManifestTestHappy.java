@@ -1,30 +1,20 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.ModelManifestService;
-import com.namazustudios.socialengine.rt.SimpleModelManifestService;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
-import com.namazustudios.socialengine.rt.jackson.JacksonModelIntrospector;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
-import org.dozer.DozerBeanMapper;
-import org.dozer.Mapper;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import ru.vyarus.guice.validator.ValidationModule;
 
-import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.namazustudios.socialengine.rt.SimpleModelManifestService.RPC_MODELS;
-import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
+import static com.namazustudios.socialengine.rt.transact.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
 import static org.testng.Assert.assertEquals;
 
 @Guice(modules = {SimpleModelManifestTestHappy.Module.class, ValidationModule.class})
 public class SimpleModelManifestTestHappy {
-
-    public static final String HAPPY_SCOPE = SimpleJsonRpcManifestTestHappy.HAPPY_SCOPE;
 
     private ModelManifestService underTest;
 
@@ -33,8 +23,8 @@ public class SimpleModelManifestTestHappy {
     @DataProvider
     public static Object[][] getModelsToTest() {
         return new Object[][] {
-                {TestJsonRpcModelA.class},
-                {TestJsonRpcModelB.class}
+            {TestJsonRpcModelA.class},
+            {TestJsonRpcModelB.class}
         };
     }
 
@@ -66,29 +56,12 @@ public class SimpleModelManifestTestHappy {
         this.modelIntrospector = modelIntrospector;
     }
 
-    public static class Module extends AbstractModule {
-
+    public static class Module extends SimpleJsonRpcManifestTestModule {
         @Override
-        protected void configure() {
-
-            final var services = newSetBinder(
-                    binder(),
-                    new TypeLiteral<Class<?>>(){},
-                    Names.named(RPC_MODELS)
-            );
-
-            bind(Mapper.class).to(DozerBeanMapper.class);
-            bind(ModelIntrospector.class).to(JacksonModelIntrospector.class);
-            bind(ModelManifestService.class).to(SimpleModelManifestService.class);
-
-            services.addBinding().toInstance(TestJsonRpcModelA.class);
-            services.addBinding().toInstance(TestJsonRpcModelB.class);
-
-            bind(String.class).annotatedWith(Names.named(REMOTE_SCOPE)).toInstance(HAPPY_SCOPE);
-            bind(String.class).annotatedWith(Names.named(REMOTE_PROTOCOL)).toInstance(ELEMENTS_JSON_RPC_HTTP_PROTOCOL);
-
+        protected void configureTypes() {
+            bindModel(TestJsonRpcModelA.class);
+            bindModel(TestJsonRpcModelB.class);
         }
-
     }
 
 }

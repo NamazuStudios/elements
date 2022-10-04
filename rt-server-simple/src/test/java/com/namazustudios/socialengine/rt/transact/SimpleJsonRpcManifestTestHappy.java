@@ -1,18 +1,10 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.JsonRpcManifestService;
-import com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService;
-import com.namazustudios.socialengine.rt.annotation.CodeStyle;
 import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.jackson.JacksonModelIntrospector;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
-import org.dozer.DozerBeanMapper;
-import org.dozer.Mapper;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -21,17 +13,13 @@ import ru.vyarus.guice.validator.ValidationModule;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import static com.google.inject.multibindings.Multibinder.newSetBinder;
-import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService.RPC_SERVICES;
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
-import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.AssertJUnit.*;
 
 @Guice(modules={SimpleJsonRpcManifestTestHappy.Module.class, ValidationModule.class})
 public class SimpleJsonRpcManifestTestHappy {
-
-    public static final String HAPPY_SCOPE = "happy";
 
     private JsonRpcManifestService underTest;
 
@@ -70,7 +58,7 @@ public class SimpleJsonRpcManifestTestHappy {
         assertNotNull(service.getDeprecation());
         assertFalse(service.getDeprecation().isDeprecated());
         assertNull(service.getDeprecation().getDeprecationMessage());
-        assertEquals(service.getScope(), HAPPY_SCOPE);
+        assertEquals(service.getScope(), SimpleJsonRpcManifestTestModule.HAPPY_SCOPE);
         assertEquals(methods.length, service.getJsonRpcMethodList().size());
     }
 
@@ -85,7 +73,7 @@ public class SimpleJsonRpcManifestTestHappy {
         final var methods = RemotelyInvokable.Util.getMethods(cls);
         assertEquals(methods.length, service.getJsonRpcMethodList().size());
 
-        final var scope = RemoteService.Util.getScope(cls, ELEMENTS_JSON_RPC_HTTP_PROTOCOL, HAPPY_SCOPE);
+        final var scope = RemoteService.Util.getScope(cls, ELEMENTS_JSON_RPC_HTTP_PROTOCOL, SimpleJsonRpcManifestTestModule.HAPPY_SCOPE);
 
         final var jrpcMethodName = JVM_NATIVE.methodCaseFormat().to(
             scope.style().methodCaseFormat(),
@@ -152,31 +140,6 @@ public class SimpleJsonRpcManifestTestHappy {
         this.modelIntrospector = modelIntrospector;
     }
 
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            final var services = newSetBinder(
-                binder(),
-                new TypeLiteral<Class<?>>(){},
-                Names.named(RPC_SERVICES)
-            );
-
-            bind(Mapper.class).to(DozerBeanMapper.class);
-            bind(ModelIntrospector.class).to(JacksonModelIntrospector.class);
-            bind(JsonRpcManifestService.class).to(SimpleJsonRpcManifestService.class);
-
-            services.addBinding().toInstance(TestJsonRpcServiceSimple.class);
-            services.addBinding().toInstance(TestJsonRpcServiceModelParameters.class);
-
-            bind(String.class).annotatedWith(Names.named(REMOTE_SCOPE)).toInstance(HAPPY_SCOPE);
-            bind(String.class).annotatedWith(Names.named(REMOTE_PROTOCOL)).toInstance(ELEMENTS_JSON_RPC_HTTP_PROTOCOL);
-
-        }
-
-    }
-
     private static class MethodWrapper {
 
         private final Method method;
@@ -190,6 +153,14 @@ public class SimpleJsonRpcManifestTestHappy {
             return method.toString();
         }
 
+    }
+
+    public static class Module extends SimpleJsonRpcManifestTestModule {
+        @Override
+        protected void configureTypes() {
+            bindService(TestJsonRpcServiceSimple.class);
+            bindService(TestJsonRpcServiceModelParameters.class);
+        }
     }
 
 }

@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.model.Model;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
-import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,7 +30,7 @@ public class SimpleModelManifestService implements ModelManifestService {
 
     private final ModelIntrospector modelIntrospector;
 
-    private final Mapper mapper;
+    private final PayloadReader payloadReader;
 
     private final ModelManifest modelManifest;
 
@@ -44,14 +43,14 @@ public class SimpleModelManifestService implements ModelManifestService {
             @Named(RPC_MODELS)
             final Set<Class<?>> rpcModels,
             final Validator validator,
-            final Mapper mapper,
+            final PayloadReader payloadReader,
             final ModelIntrospector modelIntrospector) {
 
         this.scope = scope;
-        this.mapper = mapper;
         this.protocol = protocol;
         this.rpcModels = rpcModels;
         this.validator = validator;
+        this.payloadReader = payloadReader;
         this.modelIntrospector = modelIntrospector;
 
         final var builder = new ModelManifestBuilder();
@@ -61,7 +60,19 @@ public class SimpleModelManifestService implements ModelManifestService {
 
     @Override
     public ModelManifest getModelManifest() {
-        return mapper.map(modelManifest, ModelManifest.class);
+        return getPayloadReader().convert(ModelManifest.class, modelManifest);
+    }
+
+    public Validator getValidator() {
+        return validator;
+    }
+
+    public ModelIntrospector getModelIntrospector() {
+        return modelIntrospector;
+    }
+
+    public PayloadReader getPayloadReader() {
+        return payloadReader;
     }
 
     private class ModelManifestBuilder {
@@ -78,7 +89,7 @@ public class SimpleModelManifestService implements ModelManifestService {
 
                 final var name = RemoteModel.Util.getName(cls);
                 final var remoteScope = RemoteModel.Util.getScope(cls, protocol, scope);
-                final var model = modelIntrospector.introspectClassForModel(cls, remoteScope);
+                final var model = getModelIntrospector().introspectClassForModel(cls, remoteScope);
 
                 if (modelsByName.put(name, model) != null) {
                     throw new BadManifestException("Model already exists with name: " + name);
