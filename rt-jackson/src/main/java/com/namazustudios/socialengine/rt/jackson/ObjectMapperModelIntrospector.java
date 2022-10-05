@@ -19,7 +19,7 @@ import static com.namazustudios.socialengine.rt.manifest.model.Type.ARRAY;
 import static com.namazustudios.socialengine.rt.manifest.model.Type.OBJECT;
 import static java.lang.String.format;
 
-public class JacksonModelIntrospector implements ModelIntrospector {
+public class ObjectMapperModelIntrospector implements ModelIntrospector {
 
     private ObjectMapper objectMapper;
 

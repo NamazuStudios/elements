@@ -50,7 +50,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
     private JsonRpcManifestService jsonRpcManifestService;
 
-    private final LazyValue<JsonRpcManifest> jsonRpcManifest = new LazyValue<>(getJsonRpcManifestService()::getJsonRpcManifest);
+    private final LazyValue<JsonRpcManifest> jsonRpcManifest = new LazyValue<>(() -> getJsonRpcManifestService().getJsonRpcManifest());
 
     private final Map<String, JsonRpcServiceResolution> resolutionCache = new ConcurrentHashMap<>();
 
@@ -122,7 +122,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
             case OBJECT:
                 return buildArgumentConverterForObject(key, resolution);
             default:
-                return jsonRpcRequest -> emptyList();
+                return buildArgumentConverterForSingularParameter(key, resolution);
         }
 
     }
@@ -141,7 +141,10 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
             final var jsonParameters = getPayloadReader().convert(List.class, jsonRpcRequest.getParams());
 
             if (jsonParameters.size() != javaParameterTypes.size()) {
-                throw new BadRequestException("Incorrect parameter count for method " + key.getMethod());
+                throw new BadRequestException(
+                    "Incorrect parameter count for method " + key.getMethod() +
+                    "(expected " + javaParameterTypes.size() + ")."
+                );
             }
 
             return IntStream
@@ -183,6 +186,28 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
                 }).collect(toList());
 
         };
+    }
+
+    private Function<JsonRpcRequest, List<Object>> buildArgumentConverterForSingularParameter(
+            final JsonRpcMethodCacheKey key,
+            final JsonRpcServiceResolution resolution) {
+
+        final var javaParameters = resolution.getServiceMethod().getParameters();
+
+        if (javaParameters.length != 1) {
+            throw new BadRequestException(
+                "Incorrect parameter count for method " + key.getMethod() +
+                "(expected 1)."
+            );
+        }
+
+        final var jp = javaParameters[0];
+
+        return p ->
+            p == null ?                                   List.of(Reflection.getDefaultValue(jp)) :
+            jp.getType().isAssignableFrom(p.getClass()) ? List.of(p) :
+                                                          List.of(getPayloadReader().convert(jp.getType(), p));
+
     }
 
     public String getScope() {

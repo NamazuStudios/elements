@@ -3,11 +3,9 @@ package com.namazustudios.socialengine.rt.transact;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.rt.JsonRpcManifestService;
-import com.namazustudios.socialengine.rt.ModelManifestService;
-import com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService;
-import com.namazustudios.socialengine.rt.SimpleModelManifestService;
-import com.namazustudios.socialengine.rt.jackson.JacksonModelIntrospector;
+import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.jackson.ObjectMapperModelIntrospector;
+import com.namazustudios.socialengine.rt.jackson.ObjectMapperPayloadReader;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 
 import java.util.function.Consumer;
@@ -41,18 +39,19 @@ public abstract class SimpleJsonRpcManifestTestModule extends AbstractModule {
     protected final void configure() {
 
         final var models = newSetBinder(
-                binder(),
-                new TypeLiteral<Class<?>>() {},
-                Names.named(RPC_MODELS)
+            binder(),
+            new TypeLiteral<Class<?>>() {},
+            Names.named(RPC_MODELS)
         );
 
         final var services = newSetBinder(
-                binder(),
-                new TypeLiteral<Class<?>>() {},
-                Names.named(RPC_SERVICES)
+            binder(),
+            new TypeLiteral<Class<?>>() {},
+            Names.named(RPC_SERVICES)
         );
 
-        bind(ModelIntrospector.class).to(JacksonModelIntrospector.class);
+        bind(PayloadReader.class).to(ObjectMapperPayloadReader.class);
+        bind(ModelIntrospector.class).to(ObjectMapperModelIntrospector.class);
         bind(ModelManifestService.class).to(SimpleModelManifestService.class);
         bind(JsonRpcManifestService.class).to(SimpleJsonRpcManifestService.class);
 

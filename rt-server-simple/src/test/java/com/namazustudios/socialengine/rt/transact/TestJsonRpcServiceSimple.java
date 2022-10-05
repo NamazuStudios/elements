@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.transact;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
 
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
 import static com.namazustudios.socialengine.rt.transact.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
@@ -17,25 +18,25 @@ public class TestJsonRpcServiceSimple {
     public void testVoidStringParam(String foo) {}
 
     @RemotelyInvokable
-    public void testVoidByteParam(byte i) {}
+    public void testVoidByteParam(@Serialize byte i) {}
 
     @RemotelyInvokable
-    public void testVoidCharParam(char i) {}
+    public void testVoidCharParam(@Serialize char i) {}
 
     @RemotelyInvokable
-    public void testVoidShortParam(short i) {}
+    public void testVoidShortParam(@Serialize short i) {}
 
     @RemotelyInvokable
-    public void testVoidIntParam(int i) {}
+    public void testVoidIntParam(@Serialize int i) {}
 
     @RemotelyInvokable
-    public void testVoidLongParam(long i) {}
+    public void testVoidLongParam(@Serialize long i) {}
 
     @RemotelyInvokable
-    public void testVoidFloatParam(float f) {}
+    public void testVoidFloatParam(@Serialize float f) {}
 
     @RemotelyInvokable
-    public void testVoidDoubleParam(double d) {}
+    public void testVoidDoubleParam(@Serialize double d) {}
 
     @RemotelyInvokable
     public String testReturnString() {

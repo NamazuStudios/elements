@@ -7,7 +7,7 @@ public class JsonRpcRequest implements Serializable {
 
     public static String V_2_0 = "2.0";
 
-    private String jsonrpc;
+    private String jsonrpc = V_2_0;
 
     private String method;
 

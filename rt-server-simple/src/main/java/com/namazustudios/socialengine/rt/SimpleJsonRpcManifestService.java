@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
 public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
@@ -215,6 +216,7 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
             }
 
+            jsonRpcParameters.sort(comparing(JsonRpcParameter::getIndex));
             return jsonRpcParameters;
 
         }

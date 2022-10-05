@@ -220,6 +220,17 @@ public class Reflection {
      * Gets the default value for the supplied type. For primitive types, this is always "0" and for non-primitive
      * types, this is null.
      *
+     * @param parameter the {@link Parameter}
+     * @return the default value
+     */
+    public static Object getDefaultValue(final Parameter parameter) {
+        return getDefaultValue(parameter.getType());
+    }
+
+    /**
+     * Gets the default value for the supplied type. For primitive types, this is always "0" and for non-primitive
+     * types, this is null.
+     *
      * @param type the type
      * @return the default value
      */
