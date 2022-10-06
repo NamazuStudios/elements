@@ -51,10 +51,6 @@ public class JsonRpcParameter implements Serializable {
         this.name = name;
     }
 
-    public boolean isAnonymous() {
-        return getName() == null;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

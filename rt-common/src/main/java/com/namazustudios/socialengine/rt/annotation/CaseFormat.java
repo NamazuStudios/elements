@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.annotation;
 
 /**
- * Specifies case format translation. This should accommodate most, if not all languages. THis relies on the underlying
+ * Specifies case format translation. This should accommodate most, if not all languages. This relies on the underlying
  * Guava library, but adds additional cases.
  */
 public enum CaseFormat {

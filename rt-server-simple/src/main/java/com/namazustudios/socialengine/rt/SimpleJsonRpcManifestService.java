@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.RemoteScope;
-import com.namazustudios.socialengine.rt.annotation.RemoteService;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.manifest.Deprecation;
 import com.namazustudios.socialengine.rt.manifest.jrpc.*;
@@ -19,6 +16,7 @@ import java.util.stream.Stream;
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
+import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
@@ -185,33 +183,33 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
             final var parameters = method.getParameters();
             final var jsonRpcParameters = new ArrayList<JsonRpcParameter>();
-            final var parameterCaseFormat = remoteScope.style().parameterCaseFormat();
 
             int rpcParameterIndex = 0;
 
             for (var parameterIndex : Reflection.indices(method, Serialize.class)) {
 
                 final var parameter = parameters[parameterIndex];
-
                 final var jsonRpcParameter = new JsonRpcParameter();
 
-                final var name = JVM_NATIVE
-                    .parameterCaseFormat()
-                    .to(parameterCaseFormat, parameter.getName());
-
-                final var scope = RemoteService.Util.getScope(
-                    parameter.getType(),
-                    getProtocol(),
-                    getScope()
-                );
+                final var name = Serialize.Util
+                    .findName(parameter, remoteScope.style())
+                    .orElseThrow(() -> new BadManifestException(format(
+                        "Unable to determine parameter %d for method %s.",
+                        parameterIndex,
+                        method.toGenericString()
+                    )));
 
                 final var type = getModelIntrospector().introspectClassForType(parameter.getType());
-                final var model = getModelIntrospector().introspectClassForModelName(parameter.getType(), scope);
 
-                jsonRpcParameter.setName(name);
                 jsonRpcParameter.setType(type);
-                jsonRpcParameter.setModel(model);
+                jsonRpcParameter.setName(name);
                 jsonRpcParameter.setIndex(rpcParameterIndex++);
+
+                RemoteModel.Util.findScope(parameter.getType(), getProtocol(), getScope()).ifPresent(s -> {
+                    final var model = getModelIntrospector().introspectClassForModelName(parameter.getType(), s);
+                    jsonRpcParameter.setModel(model);
+                });
+
                 jsonRpcParameters.add(jsonRpcParameter);
 
             }

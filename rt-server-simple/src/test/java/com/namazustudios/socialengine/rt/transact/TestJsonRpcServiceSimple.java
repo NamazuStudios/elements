@@ -15,28 +15,28 @@ public class TestJsonRpcServiceSimple {
     public void testVoidNoParams() {}
 
     @RemotelyInvokable
-    public void testVoidStringParam(String foo) {}
+    public void testVoidStringParam(@Serialize("foo") String foo) {}
 
     @RemotelyInvokable
-    public void testVoidByteParam(@Serialize byte i) {}
+    public void testVoidByteParam(@Serialize("b") byte b) {}
 
     @RemotelyInvokable
-    public void testVoidCharParam(@Serialize char i) {}
+    public void testVoidCharParam(@Serialize("c") char c) {}
 
     @RemotelyInvokable
-    public void testVoidShortParam(@Serialize short i) {}
+    public void testVoidShortParam(@Serialize("s") short s) {}
 
     @RemotelyInvokable
-    public void testVoidIntParam(@Serialize int i) {}
+    public void testVoidIntParam(@Serialize("i") int i) {}
 
     @RemotelyInvokable
-    public void testVoidLongParam(@Serialize long i) {}
+    public void testVoidLongParam(@Serialize("l") long i) {}
 
     @RemotelyInvokable
-    public void testVoidFloatParam(@Serialize float f) {}
+    public void testVoidFloatParam(@Serialize("f") float f) {}
 
     @RemotelyInvokable
-    public void testVoidDoubleParam(@Serialize double d) {}
+    public void testVoidDoubleParam(@Serialize("d") double d) {}
 
     @RemotelyInvokable
     public String testReturnString() {

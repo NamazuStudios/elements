@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -110,7 +111,7 @@ public class SimpleJsonRpcManifestTestHappy {
                 .findFirst()
                 .get();
 
-            final var jrpcParameterName = JVM_NATIVE.parameterCaseFormat().to(scope.style().parameterCaseFormat(), parameter.getName());
+            final var jrpcParameterName = Serialize.Util.findName(parameter, scope.style()).get();
             assertEquals(jrpcParameterName, jrpcParameter.getName());
 
             final var parameterType = getModelIntrospector().introspectClassForType(parameter.getType());
