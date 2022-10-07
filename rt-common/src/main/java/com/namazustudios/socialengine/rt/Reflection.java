@@ -94,11 +94,14 @@ public class Reflection {
 
         Stream<Method> methodStream = empty();
 
+        boolean isInterface = false;
+
         for (Class<?> cls = aClass; cls != null; cls = cls.getSuperclass()) {
+            isInterface = cls.isInterface();
             methodStream = concat(methodStream, stream(cls.getMethods()));
         }
 
-        return aClass.isInterface() ? concat(methodStream, stream(Object.class.getMethods())) : methodStream;
+        return isInterface ? concat(methodStream, stream(Object.class.getMethods())) : methodStream;
 
     }
 

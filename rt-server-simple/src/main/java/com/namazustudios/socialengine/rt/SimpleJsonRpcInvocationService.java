@@ -163,7 +163,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
         return jsonRpcRequest -> {
 
-            final Map<?,?> jsonParameters = getPayloadReader().convert(Map.class, jsonRpcRequest.getParams());
+            final var jsonParameters = getPayloadReader().convert(Map.class, jsonRpcRequest.getParams());
 
             return Stream
                 .of(javaParameters)
@@ -196,7 +196,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
         if (javaParameters.length != 1) {
             throw new BadRequestException(
-                "Incorrect parameter count for method " + key.getMethod() +
+                "Incorrect parameter count for method " + key.getMethod() + " " +
                 "(expected 1)."
             );
         }
@@ -286,9 +286,9 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
         private final Dispatch.Type dispatchType;
 
         public JsonRpcServiceResolution(final String jsonRpcMethod) {
-            this.serviceClass = findServiceClass(jsonRpcMethod);
+            this.serviceClass = getServiceClass(jsonRpcMethod);
             this.remoteScope = RemoteService.Util.getScope(this.serviceClass, getProtocol(), getScope());
-            this.serviceMethod = findServiceMethod(jsonRpcMethod);
+            this.serviceMethod = getServiceMethod(jsonRpcMethod);
             this.dispatchType = Dispatch.Type.determine(this.serviceMethod);
             this.parameters = Stream
                 .of(serviceMethod.getParameters())
@@ -296,14 +296,16 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
                 .collect(toList());
         }
 
-        private Method findServiceMethod(final String jsonRpcMethod) {
+        private Method getServiceMethod(final String jsonRpcMethod) {
+            final var methodCaseFormat = remoteScope.style().methodCaseFormat();
             return RemotelyInvokable.Util
                 .getMethodStream(serviceClass)
+                .filter(m -> methodCaseFormat.to(JVM_NATIVE.methodCaseFormat(), m.getName()).equals(jsonRpcMethod))
                 .findFirst()
                 .orElseThrow(() -> new MethodNotFoundException("Unable to find method: " + jsonRpcMethod));
         }
 
-        private Class<?> findServiceClass(final String jsonRpcMethod) {
+        private Class<?> getServiceClass(final String jsonRpcMethod) {
             return jsonRpcManifest.get()
                 .getServicesByName()
                 .entrySet()

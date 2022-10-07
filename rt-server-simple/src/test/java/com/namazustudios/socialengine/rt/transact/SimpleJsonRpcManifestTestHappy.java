@@ -74,7 +74,11 @@ public class SimpleJsonRpcManifestTestHappy {
         final var methods = RemotelyInvokable.Util.getMethods(cls);
         assertEquals(methods.length, service.getJsonRpcMethodList().size());
 
-        final var scope = RemoteService.Util.getScope(cls, ELEMENTS_JSON_RPC_HTTP_PROTOCOL, SimpleJsonRpcManifestTestModule.HAPPY_SCOPE);
+        final var scope = RemoteService.Util.getScope(
+            cls,
+            ELEMENTS_JSON_RPC_HTTP_PROTOCOL,
+            SimpleJsonRpcManifestTestModule.HAPPY_SCOPE
+        );
 
         final var jrpcMethodName = JVM_NATIVE.methodCaseFormat().to(
             scope.style().methodCaseFormat(),

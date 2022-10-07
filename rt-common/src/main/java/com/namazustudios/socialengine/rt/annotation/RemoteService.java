@@ -42,8 +42,8 @@ public @interface RemoteService {
          */
         public static Optional<String> findName(final Class<?> cls) {
             return Optional
-                    .ofNullable(cls.getAnnotation(RemoteService.class))
-                    .map(m -> m.value().isBlank() ? cls.getName() : m.value());
+                .ofNullable(cls.getAnnotation(RemoteService.class))
+                .map(m -> m.value().isBlank() ? cls.getName() : m.value());
         }
 
         /**
