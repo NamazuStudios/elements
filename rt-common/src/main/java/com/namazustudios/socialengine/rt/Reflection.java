@@ -252,9 +252,54 @@ public class Reflection {
             return 0f;
         } else if (double.class.equals(type)) {
             return 0;
+        } else if (boolean.class.equals(type)) {
+            return false;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Gets the default value for the supplied type. For primitive types, this is always "0" and for non-primitive
+     * types, this is null.
+     *
+     * @param type the type
+     * @return the default value
+     */
+    public static Object getBoxedPrimitive(final Class<?> type, final Object boxedPrimitive) {
+
+        if (boxedPrimitive == null) {
+            return getDefaultValue(type);
+        }
+
+        if (!type.isPrimitive()) {
+            throw new IllegalArgumentException(type + " is not a primitive type.");
+        }
+
+        final Number number = boxedPrimitive instanceof Boolean
+            ? Double.valueOf(0)
+            : (Number) boxedPrimitive;
+
+        if (byte.class.equals(type)) {
+            return number.byteValue();
+        } else if (short.class.equals(type)) {
+            return number.shortValue();
+        } else if (char.class.equals(type)) {
+            return (char) number.shortValue();
+        } else if (int.class.equals(type)) {
+            return number.intValue();
+        } else if (long.class.equals(type)) {
+            return number.longValue();
+        } else if (float.class.equals(type)) {
+            return number.floatValue();
+        } else if (double.class.equals(type)) {
+            return number.doubleValue();
+        } else if (boolean.class.equals(type)) {
+            return number.doubleValue() != 0;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
+
     }
 
 }

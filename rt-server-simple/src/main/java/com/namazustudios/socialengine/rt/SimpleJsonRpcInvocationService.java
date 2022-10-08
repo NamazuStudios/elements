@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ParameterNotFoundException;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcManifest;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcParameter;
@@ -195,10 +196,30 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
         final var jp = javaParameters[0];
 
-        return p ->
-            p == null ?                                   List.of(Reflection.getDefaultValue(jp)) :
-            jp.getType().isAssignableFrom(p.getClass()) ? List.of(p) :
-                                                          List.of(getPayloadReader().convert(jp.getType(), p));
+        return jsonRpcRequest -> {
+
+            var params = jsonRpcRequest.getParams();
+
+            if (params == null) {
+                return List.of(Reflection.getDefaultValue(jp));
+            } else if (jp.getType().isPrimitive()) {
+
+                if (!(params instanceof Boolean || params instanceof Number)) {
+                    throw new BadRequestException(
+                        "Incorrect parameter type for method " + key.getMethod() +
+                        "(expected " + jp.getType() + ")."
+                    );
+                }
+
+                return List.of(Reflection.getBoxedPrimitive(jp.getType(), params));
+
+            } else if (jp.getType().isAssignableFrom(params.getClass())) {
+                return List.of(params);
+            } else {
+                return List.of(getPayloadReader().convert(jp.getType(), params));
+            }
+
+        };
 
     }
 
@@ -463,7 +484,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
             final JsonRpcParameter jsonRpcParameter = new JsonRpcParameter();
 
-            if (inputParameter == null) {
+            if (inputParameter != null) {
                 final var cls = inputParameter.getClass();
                 final var type = getModelIntrospector().introspectClassForType(cls);
                 final var model = getModelIntrospector().introspectClassForModelName(cls, scope);

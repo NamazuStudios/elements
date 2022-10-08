@@ -104,6 +104,33 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
         ensureInvocationMethodExists(jsonRpcMethod, invocation);
 
     }
+    @DataProvider
+    public Object[][] getSingleArgJsonRpcMethods() {
+        return getManifestService().getJsonRpcManifest()
+            .getServicesByName()
+            .values()
+            .stream()
+            .map(JsonRpcService::getJsonRpcMethodList)
+            .flatMap(List::stream)
+            .filter(method -> method.getParameters().size() == 1)
+            .map(m -> new Object[]{m})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getSingleArgJsonRpcMethods")
+    public void testBuildInvocationSingleArg(final JsonRpcMethod jsonRpcMethod) throws Exception {
+
+        final var jsonRpcRequest = new JsonRpcRequest();
+        jsonRpcRequest.setMethod(jsonRpcMethod.getName());
+
+        final var parameter = jsonRpcMethod.getParameters().get(0);
+        final var params = getDefaultParameterValue(parameter);
+        jsonRpcRequest.setParams(params);
+
+        final var invocation = getJsonRpcInvocationService().resolveInvocation(jsonRpcRequest);
+        ensureInvocationMethodExists(jsonRpcMethod, invocation);
+
+    }
 
     private void ensureInvocationMethodExists(
             final JsonRpcMethod jsonRpcMethod,
@@ -162,7 +189,10 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
         } else if (double.class.equals(type)) {
             assertNotNull(argument);
             assertEquals(Double.class, argument.getClass());
-        } else {
+        } else if (boolean.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Boolean.class, argument.getClass());
+        } else if (argument != null) {
             assertNotNull(argument);
             assertEquals(type, argument.getClass());
         }
