@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.Dispatch;
-import com.namazustudios.socialengine.rt.annotation.RemoteScope;
-import com.namazustudios.socialengine.rt.annotation.RemoteService;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
@@ -169,15 +166,10 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
                 .of(javaParameters)
                 .map(p -> {
 
-                    final var name = resolution
-                        .getRemoteScope()
-                        .style()
-                        .parameterCaseFormat()
-                        .to(JVM_NATIVE.parameterCaseFormat(), p.getName());
-
-                    final var value = jsonParameters.get(name);
+                    final var name = Serialize.Util.getName(p, resolution.getRemoteScope().style());
 
                     if (jsonParameters.containsKey(name)) {
+                        final var value = jsonParameters.get(name);
                         return getPayloadReader().convert(p.getType(), value);
                     } else {
                         return Reflection.getDefaultValue(p.getType());

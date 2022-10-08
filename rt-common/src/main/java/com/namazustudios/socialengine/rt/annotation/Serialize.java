@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.annotation;
 
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ParameterNotFoundException;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -59,6 +60,20 @@ public @interface Serialize {
         public static Optional<String> findName(final Parameter parameter, final CodeStyle codeStyle) {
             final var parameterCaseFormat = codeStyle.parameterCaseFormat();
             return findRawName(parameter).map(name -> JVM_NATIVE.parameterCaseFormat().to(parameterCaseFormat, name));
+        }
+
+        /**
+         * Accepting the supplied {@link CodeStyle}, this converts the raw parameter name to the supplied
+         * {@link CodeStyle}.
+         *
+         * @param parameter the parameter
+         * @param codeStyle the {@link CodeStyle}
+         * @return an {@link Optional<String>} of the name
+         */
+        public static String getName(final Parameter parameter, final CodeStyle codeStyle) {
+            return findName(parameter, codeStyle).orElseThrow(() -> new ParameterNotFoundException(
+                "No name for parameter: " + parameter.getName()
+            ));
         }
 
     }

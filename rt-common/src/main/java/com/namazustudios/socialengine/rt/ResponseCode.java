@@ -110,6 +110,11 @@ public enum ResponseCode {
     MODEL_NOT_FOUND,
 
     /**
+     * Indicates that the parameter is not found.
+     */
+    PARAMETER_NOT_FOUND,
+
+    /**
      * A particular operation, (eg {@link HttpOperation}) could not be found.
      */
     OPERATION_NOT_FOUND,

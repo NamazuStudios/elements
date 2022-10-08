@@ -17,6 +17,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 import static com.namazustudios.socialengine.rt.SimpleModelManifestService.RPC_MODELS;
@@ -25,8 +26,7 @@ import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 @Guice(modules = {
     ValidationModule.class,
@@ -83,7 +83,7 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
         jsonRpcRequest.setParams(params);
 
         final var invocation = getJsonRpcInvocationService().resolveInvocation(jsonRpcRequest);
-        final var method = ensureInvocationMethodExists(jsonRpcMethod, invocation);
+        ensureInvocationMethodExists(jsonRpcMethod, invocation);
 
     }
 
@@ -101,14 +101,26 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
         jsonRpcRequest.setParams(params);
 
         final var invocation = getJsonRpcInvocationService().resolveInvocation(jsonRpcRequest);
-        final var method = ensureInvocationMethodExists(jsonRpcMethod, invocation);
+        ensureInvocationMethodExists(jsonRpcMethod, invocation);
 
     }
 
-    private Method ensureInvocationMethodExists(final JsonRpcMethod jsonRpcMethod, final Invocation invocation) throws Exception {
-        // Ensures that the Class<?> exists and Method exists
+    private void ensureInvocationMethodExists(
+            final JsonRpcMethod jsonRpcMethod,
+            final Invocation invocation) throws Exception {
+
         final var cls = Class.forName(invocation.getType());
-        return findJsonRpcMethod(cls, jsonRpcMethod);
+        final var method = findJsonRpcMethod(cls, jsonRpcMethod);
+
+        final var jvmParameters = method.getParameters();
+        assertEquals(jvmParameters.length, invocation.getArguments().size());
+        assertEquals(jvmParameters.length, invocation.getParameters().size());
+
+        for (int i = 0; i < jvmParameters.length; ++i) {
+            assertParameterMatchesArgument(jvmParameters[i], invocation.getArguments().get(i));
+            assertEquals(jvmParameters[i].getType().getName(), invocation.getParameters().get(i));
+        }
+
     }
 
     private Method findJsonRpcMethod(final Class<?> cls, final JsonRpcMethod jsonRpcMethod) {
@@ -122,6 +134,38 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
             .filter(m -> JVM_NATIVE.methodCaseFormat().to(mcf, m.getName()).equals(jsonRpcMethod.getName()))
             .findFirst()
             .get();
+
+    }
+
+    private void assertParameterMatchesArgument(final Parameter parameter, final Object argument) {
+
+        final var type = parameter.getType();
+
+        if (byte.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Byte.class, argument.getClass());
+        } else if (short.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Short.class, argument.getClass());
+        } else if (char.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Character.class, argument.getClass());
+        } else if (int.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Integer.class, argument.getClass());
+        } else if (long.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Long.class, argument.getClass());
+        } else if (float.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Float.class, argument.getClass());
+        } else if (double.class.equals(type)) {
+            assertNotNull(argument);
+            assertEquals(Double.class, argument.getClass());
+        } else {
+            assertNotNull(argument);
+            assertEquals(type, argument.getClass());
+        }
 
     }
 
