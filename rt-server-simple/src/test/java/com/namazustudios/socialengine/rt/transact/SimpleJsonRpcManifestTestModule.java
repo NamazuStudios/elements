@@ -6,6 +6,7 @@ import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.jackson.ObjectMapperModelIntrospector;
 import com.namazustudios.socialengine.rt.jackson.ObjectMapperPayloadReader;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 
 import java.util.function.Consumer;

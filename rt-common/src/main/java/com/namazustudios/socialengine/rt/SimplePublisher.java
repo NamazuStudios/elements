@@ -97,7 +97,6 @@ public class SimplePublisher<T> implements Publisher<T> {
             }
         }
 
-
         public LinkedConsumer<ConsumedT> andThenTry(final BiConsumer<Subscription, ? super ConsumedT> next) {
             return andThenTry(new LinkedConsumer<>(next));
         }

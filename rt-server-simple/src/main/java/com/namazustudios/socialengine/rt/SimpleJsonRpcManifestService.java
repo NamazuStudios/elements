@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.manifest.Deprecation;
 import com.namazustudios.socialengine.rt.manifest.jrpc.*;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;

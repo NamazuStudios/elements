@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class JsonRpcRequest implements Serializable {
 
-    public static String V_2_0 = "2.0";
+    public static final String V_2_0 = "2.0";
 
     private String jsonrpc = V_2_0;
 

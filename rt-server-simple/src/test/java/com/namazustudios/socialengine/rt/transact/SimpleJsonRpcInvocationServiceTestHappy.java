@@ -4,6 +4,8 @@ package com.namazustudios.socialengine.rt.transact;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.ModelNotFoundException;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcInvocationService;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcMethod;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcParameter;
@@ -34,17 +36,6 @@ import static org.testng.Assert.*;
     SimpleJsonRpcInvocationServiceTestHappy.Module.class
 })
 public class SimpleJsonRpcInvocationServiceTestHappy {
-
-    private static  final Map<String, Class<?>> PRIMITIVES = Map.of(
-        byte.class.getName(),    byte.class,
-        short.class.getName(),   short.class,
-        char.class.getName(),    char.class,
-        int.class.getName(),     int.class,
-        boolean.class.getName(), boolean.class,
-        long.class.getName(),    long.class,
-        float.class.getName(),   float.class,
-        double.class.getName(),  double.class
-    );
 
     private String scope;
 
@@ -82,8 +73,8 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
 
         jsonRpcRequest.setParams(params);
 
-        final var invocation = getJsonRpcInvocationService().resolveInvocation(jsonRpcRequest);
-        ensureInvocationMethodExists(jsonRpcMethod, invocation);
+        final var invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
+        ensureInvocationMethodExists(jsonRpcMethod, invocation.getInvocation());
 
     }
 
@@ -100,8 +91,8 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
 
         jsonRpcRequest.setParams(params);
 
-        final var invocation = getJsonRpcInvocationService().resolveInvocation(jsonRpcRequest);
-        ensureInvocationMethodExists(jsonRpcMethod, invocation);
+        final var invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
+        ensureInvocationMethodExists(jsonRpcMethod, invocation.getInvocation());
 
     }
     @DataProvider
@@ -127,8 +118,8 @@ public class SimpleJsonRpcInvocationServiceTestHappy {
         final var params = getDefaultParameterValue(parameter);
         jsonRpcRequest.setParams(params);
 
-        final var invocation = getJsonRpcInvocationService().resolveInvocation(jsonRpcRequest);
-        ensureInvocationMethodExists(jsonRpcMethod, invocation);
+        final var invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
+        ensureInvocationMethodExists(jsonRpcMethod, invocation.getInvocation());
 
     }
 

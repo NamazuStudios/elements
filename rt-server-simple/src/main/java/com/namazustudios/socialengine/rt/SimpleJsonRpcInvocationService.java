@@ -2,9 +2,10 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
-import com.namazustudios.socialengine.rt.exception.ParameterNotFoundException;
-import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
+import com.namazustudios.socialengine.rt.exception.ServiceNotFoundException;
+import com.namazustudios.socialengine.rt.jrpc.*;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcManifest;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcParameter;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcService;
@@ -29,6 +30,7 @@ import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService.RPC
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
@@ -54,12 +56,12 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
     private final Map<JsonRpcMethodCacheKey, Function<JsonRpcRequest, Invocation>> methodCache = new ConcurrentHashMap<>();
 
-    private static final List<Object> NULL_ARG = Arrays.asList(new Object[]{null});
+    private final Map<JsonRpcMethodCacheKey, Function<JsonRpcRequest, ResultHandlerStrategy>> resultHandlerStrategyCache = new ConcurrentHashMap<>();
 
     @Override
-    public Invocation resolveInvocation(final JsonRpcRequest rpcRequest) {
+    public JsonRpcInvocation resolve(final JsonRpcRequest jsonRpcRequest) {
 
-        final var violations = getValidator().validate(rpcRequest);
+        final var violations = getValidator().validate(jsonRpcRequest);
 
         if (!violations.isEmpty()) {
 
@@ -73,15 +75,33 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
         }
 
         final var resolution = resolutionCache.computeIfAbsent(
-            rpcRequest.getMethod(),
+            jsonRpcRequest.getMethod(),
             JsonRpcServiceResolution::new
         );
 
-        final var key = new JsonRpcMethodCacheKey(rpcRequest, resolution);
+        final var key = new JsonRpcMethodCacheKey(jsonRpcRequest, resolution);
 
-        return methodCache
-            .computeIfAbsent(key, k -> computeMethodProcessor(k, resolution))
-            .apply(rpcRequest);
+        final var invocationProcessor = methodCache.computeIfAbsent(
+                key,
+                k -> computeMethodProcessor(k, resolution)
+        );
+
+        final var resultHandlerStrategyProcessor = resultHandlerStrategyCache.computeIfAbsent(
+                key,
+                k -> computeResultHandlerStrategy(k, resolution)
+        );
+
+        return new JsonRpcInvocation() {
+            @Override
+            public Invocation getInvocation() {
+                return invocationProcessor.apply(jsonRpcRequest);
+            }
+
+            @Override
+            public ResultHandlerStrategy getResultHandlerStrategy() {
+                return resultHandlerStrategyProcessor.apply(jsonRpcRequest);
+            }
+        };
 
     }
 
@@ -223,6 +243,47 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
     }
 
+    private Function<JsonRpcRequest, ResultHandlerStrategy> computeResultHandlerStrategy(
+            final JsonRpcMethodCacheKey key,
+            final JsonRpcServiceResolution resolution) {
+
+        // TODO:   This should be annotation driven with a default behavior. Right now, we're doing simple introspection
+        // TODO:   of the method and applying a standard set of rules. If there needs to be more in the future, we can
+        // TODO:   expand upon the idea by having specific annotation drive the return strategy. This would avoid the
+        // TODO:   problem of throwing an internal exception by allowing for any valid combination up front at the
+        // TODO:   manifest level.
+
+        switch (resolution.getDispatchType()) {
+            case SYNCHRONOUS:
+
+                if (resolution.getAsyncErrorHandlerCount() != 0 || resolution.getAsyncResultHandlerCount() != 0) {
+                    throw new InternalException(format(
+                        "%s method %s configured incorrectly.",
+                        resolution.getDispatchType(),
+                        key.getMethod())
+                    );
+                }
+
+                return req -> new SingleSyncReturnResultHandlerStrategy();
+
+            case ASYNCHRONOUS:
+
+                if (resolution.getAsyncErrorHandlerCount() == 0 || resolution.getAsyncResultHandlerCount() == 0) {
+                    throw new InternalException(format(
+                        "%s method %s configured incorrectly.",
+                        resolution.getDispatchType(),
+                        key.getMethod())
+                    );
+                }
+
+                return req -> new SingleAsyncResultHandlerStrategy();
+
+            default:
+                throw new InternalException(format("Unsupported dispatch mode: %s", resolution.getDispatchType()));
+        }
+
+    }
+
     public String getScope() {
         return scope;
     }
@@ -298,11 +359,17 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
         private final Dispatch.Type dispatchType;
 
+        private final int asyncErrorHandlerCount;
+
+        private final int asyncResultHandlerCount;
+
         public JsonRpcServiceResolution(final String jsonRpcMethod) {
             this.serviceClass = getServiceClass(jsonRpcMethod);
             this.remoteScope = RemoteService.Util.getScope(this.serviceClass, getProtocol(), getScope());
             this.serviceMethod = getServiceMethod(jsonRpcMethod);
             this.dispatchType = Dispatch.Type.determine(this.serviceMethod);
+            this.asyncErrorHandlerCount = Reflection.count(serviceMethod, ErrorHandler.class);
+            this.asyncResultHandlerCount = Reflection.count(serviceMethod, ResultHandler.class);
             this.parameters = Stream
                 .of(serviceMethod.getParameters())
                 .map(p -> p.getType().getName())
@@ -315,7 +382,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
                 .getMethodStream(serviceClass)
                 .filter(m -> methodCaseFormat.to(JVM_NATIVE.methodCaseFormat(), m.getName()).equals(jsonRpcMethod))
                 .findFirst()
-                .orElseThrow(() -> new MethodNotFoundException("Unable to find method: " + jsonRpcMethod));
+                .orElseThrow(() -> new ServiceNotFoundException("Unable to find method: " + jsonRpcMethod));
         }
 
         private Class<?> getServiceClass(final String jsonRpcMethod) {
@@ -360,6 +427,14 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
         public Dispatch.Type getDispatchType() {
             return dispatchType;
+        }
+
+        public int getAsyncErrorHandlerCount() {
+            return asyncErrorHandlerCount;
+        }
+
+        public int getAsyncResultHandlerCount() {
+            return asyncResultHandlerCount;
         }
 
     }

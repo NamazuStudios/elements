@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -300,6 +301,13 @@ public class Reflection {
             throw new IllegalArgumentException("Unsupported type: " + type);
         }
 
+    }
+
+    public static int count(final Method method, final Class<? extends Annotation> annotationClass) {
+        return Stream.of(method.getParameters())
+            .filter(p -> p.getAnnotation(annotationClass) != null)
+            .mapToInt(p -> 1)
+            .reduce(0, Integer::sum);
     }
 
 }

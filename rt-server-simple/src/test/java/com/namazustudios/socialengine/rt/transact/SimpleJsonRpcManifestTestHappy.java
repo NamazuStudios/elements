@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.rt.JsonRpcManifestService;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
