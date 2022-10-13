@@ -157,9 +157,16 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
             return Stream.of(method.getAnnotationsByType(RemotelyInvokable.class))
                 .map(remotelyInvokable -> {
+
                     final var jsonRpcMethod = new JsonRpcMethod();
-                    final var methodName = JVM_NATIVE.methodCaseFormat().to(methodCaseFormat, method.getName());
+
                     final var methodParameters = buildParameters(remoteScope, method);
+
+                    final var methodName = format("%s%s",
+                        remoteScope.style().methodPrefix(),
+                        JVM_NATIVE.methodCaseFormat().to(methodCaseFormat, method.getName()
+                    ));
+
                     jsonRpcMethod.setName(methodName);
                     jsonRpcMethod.setParameters(methodParameters);
                     jsonRpcMethod.setDeprecation(Deprecation.from(remotelyInvokable.deprecated()));

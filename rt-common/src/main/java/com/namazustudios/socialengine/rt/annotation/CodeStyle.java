@@ -50,6 +50,11 @@ public @interface CodeStyle {
     CaseFormat propertyCaseFormat() default NATURAL;
 
     /**
+     * Indicates the method name prefix.
+     */
+    String methodPrefix() default "";
+
+    /**
      * Implementation of {@link CodeStyle} which represents the JVM native code style.
      */
     CodeStyle JVM_NATIVE = new CodeStyle() {
@@ -85,6 +90,11 @@ public @interface CodeStyle {
         }
 
         @Override
+        public String methodPrefix() {
+            return "";
+        }
+
+        @Override
         protected Object clone() {
             return this;
         }
@@ -96,7 +106,8 @@ public @interface CodeStyle {
                 (127 * "parameterCaseFormat".hashCode()) ^ parameterCaseFormat().hashCode() +
                 (127 * "constantCaseFormat".hashCode()) ^ constantCaseFormat().hashCode() +
                 (127 * "typeCaseFormat".hashCode()) ^ typeCaseFormat().hashCode() +
-                (127 * "propertyCaseFormat".hashCode()) ^ propertyCaseFormat().hashCode();
+                (127 * "propertyCaseFormat".hashCode()) ^ propertyCaseFormat().hashCode() +
+                (127 * "methodPrefix".hashCode()) ^ propertyCaseFormat().hashCode();
         }
 
         @Override
@@ -113,7 +124,8 @@ public @interface CodeStyle {
                 parameterCaseFormat().equals(other.parameterCaseFormat()) &&
                 constantCaseFormat().equals(other.constantCaseFormat()) &&
                 typeCaseFormat().equals(other.typeCaseFormat()) &&
-                propertyCaseFormat().equals(other.propertyCaseFormat());
+                propertyCaseFormat().equals(other.propertyCaseFormat()) &&
+                methodPrefix().equals(other.methodPrefix());
 
         }
 
@@ -124,7 +136,8 @@ public @interface CodeStyle {
                 "parameterCaseFormat=" + parameterCaseFormat() + ", " +
                 "constantCaseFormat=" + constantCaseFormat() + ", " +
                 "typeCaseFormat=" + typeCaseFormat() + ", " +
-                "propertyCaseFormat=" + propertyCaseFormat() +
+                "propertyCaseFormat=" + propertyCaseFormat() + ", " +
+                "methodPrefix=" + methodPrefix() +
             ")";
         }
 

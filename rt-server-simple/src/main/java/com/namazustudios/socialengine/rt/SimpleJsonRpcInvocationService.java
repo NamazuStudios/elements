@@ -22,6 +22,7 @@ import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -380,12 +381,19 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
         }
 
         private Method getServiceMethod(final String jsonRpcMethod) {
+
+            final var methodPrefix = remoteScope.style().methodPrefix();
             final var methodCaseFormat = remoteScope.style().methodCaseFormat();
+            final var jvmMethodName = methodCaseFormat
+                .to(JVM_NATIVE.methodCaseFormat(), jsonRpcMethod)
+                .replaceFirst("^" + Pattern.quote(methodPrefix), "");
+
             return RemotelyInvokable.Util
                 .getMethodStream(serviceClass)
-                .filter(m -> methodCaseFormat.to(JVM_NATIVE.methodCaseFormat(), m.getName()).equals(jsonRpcMethod))
+                .filter(m -> m.getName().equals(jvmMethodName))
                 .findFirst()
                 .orElseThrow(() -> new ServiceNotFoundException("Unable to find method: " + jsonRpcMethod));
+
         }
 
         private Class<?> getServiceClass(final String jsonRpcMethod) {

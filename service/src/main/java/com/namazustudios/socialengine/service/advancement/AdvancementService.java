@@ -6,10 +6,7 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
-import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.service.Unscoped;
 
 /**
