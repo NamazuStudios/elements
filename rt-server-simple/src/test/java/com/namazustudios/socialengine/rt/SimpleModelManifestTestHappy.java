@@ -1,7 +1,6 @@
-package com.namazustudios.socialengine.rt.transact;
+package com.namazustudios.socialengine.rt;
 
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.rt.ModelManifestService;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 import org.testng.annotations.DataProvider;
@@ -10,7 +9,7 @@ import org.testng.annotations.Test;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
-import static com.namazustudios.socialengine.rt.transact.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
+import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
 import static org.testng.Assert.assertEquals;
 
 @Guice(modules = {SimpleModelManifestTestHappy.Module.class, ValidationModule.class})

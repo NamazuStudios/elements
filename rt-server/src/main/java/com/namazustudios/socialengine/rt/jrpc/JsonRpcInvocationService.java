@@ -1,11 +1,7 @@
 package com.namazustudios.socialengine.rt.jrpc;
 
 import com.namazustudios.socialengine.rt.ResultHandlerStrategy;
-import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
 import com.namazustudios.socialengine.rt.remote.Invocation;
-import com.namazustudios.socialengine.rt.remote.InvocationResult;
-
-import java.util.function.Consumer;
 
 /**
  * Processes {@link JsonRpcRequest} instances and converts to {@link Invocation}.
@@ -13,17 +9,31 @@ import java.util.function.Consumer;
 public interface JsonRpcInvocationService {
 
     /**
-     * Returns an instance of {@link JsonRpcInvocation} given the {@link JsonRpcRequest}.
+     * Returns an instance of {@link InvocationResolution} given the {@link JsonRpcRequest}.
      *
      * @param jsonRpcRequest the {@link JsonRpcRequest}
      * @return the {@link ResultHandlerStrategy}
      */
-    JsonRpcInvocation resolve(JsonRpcRequest jsonRpcRequest);
+    InvocationResolution resolve(JsonRpcRequest jsonRpcRequest);
 
-    interface JsonRpcInvocation {
+    /**
+     * Represents the resolved invocation which includes the {@link Invocation} and the {@link ResultHandlerStrategy}
+     * used to dispatch the method call to the underlying system.
+     */
+    interface InvocationResolution {
 
+        /**
+         * Gets the {@link Invocation}
+         *
+         * @return the invocation
+         */
         Invocation getInvocation();
 
+        /**
+         * Gets the {@link ResultHandlerStrategy} which defines the various
+         *
+         * @return the {@link ResultHandlerStrategy}
+         */
         ResultHandlerStrategy getResultHandlerStrategy();
 
     }

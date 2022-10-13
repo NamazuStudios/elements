@@ -59,7 +59,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
     private final Map<JsonRpcMethodCacheKey, Function<JsonRpcRequest, ResultHandlerStrategy>> resultHandlerStrategyCache = new ConcurrentHashMap<>();
 
     @Override
-    public JsonRpcInvocation resolve(final JsonRpcRequest jsonRpcRequest) {
+    public InvocationResolution resolve(final JsonRpcRequest jsonRpcRequest) {
 
         final var violations = getValidator().validate(jsonRpcRequest);
 
@@ -81,17 +81,18 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
         final var key = new JsonRpcMethodCacheKey(jsonRpcRequest, resolution);
 
-        final var invocationProcessor = methodCache.computeIfAbsent(
-                key,
-                k -> computeMethodProcessor(k, resolution)
-        );
+        return new InvocationResolution() {
 
-        final var resultHandlerStrategyProcessor = resultHandlerStrategyCache.computeIfAbsent(
-                key,
-                k -> computeResultHandlerStrategy(k, resolution)
-        );
+            private final Function<JsonRpcRequest, Invocation> invocationProcessor = methodCache.computeIfAbsent(
+                    key,
+                    k -> computeMethodProcessor(k, resolution)
+            );
 
-        return new JsonRpcInvocation() {
+            private final Function<JsonRpcRequest, ResultHandlerStrategy> resultHandlerStrategyProcessor = resultHandlerStrategyCache.computeIfAbsent(
+                    key,
+                    k -> computeResultHandlerStrategy(k, resolution)
+            );
+
             @Override
             public Invocation getInvocation() {
                 return invocationProcessor.apply(jsonRpcRequest);
@@ -101,6 +102,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
             public ResultHandlerStrategy getResultHandlerStrategy() {
                 return resultHandlerStrategyProcessor.apply(jsonRpcRequest);
             }
+
         };
 
     }
@@ -280,6 +282,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
 
             default:
                 throw new InternalException(format("Unsupported dispatch mode: %s", resolution.getDispatchType()));
+
         }
 
     }

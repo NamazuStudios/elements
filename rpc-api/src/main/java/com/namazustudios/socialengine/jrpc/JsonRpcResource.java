@@ -1,13 +1,12 @@
-package com.namazustudios.socialengine.rpc;
+package com.namazustudios.socialengine.jrpc;
 
 import com.namazustudios.socialengine.rt.Subscription;
-import com.namazustudios.socialengine.rt.jrpc.JsonRpcInvocationService;
-import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ServiceNotFoundException;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcInvocationService;
+import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcManifest;
-import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
 
 import javax.inject.Inject;
@@ -99,10 +98,10 @@ public class JsonRpcResource {
             @Suspended
             final AsyncResponse asyncResponse) {
 
-        final JsonRpcInvocationService.JsonRpcInvocation invocation;
+        final JsonRpcInvocationService.InvocationResolution resolution;
 
         try {
-            invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
+            resolution = getJsonRpcInvocationService().resolve(jsonRpcRequest);
         } catch (MethodNotFoundException | ServiceNotFoundException original) {
 
             getJsonRpcRedirectionStrategy().redirect(
@@ -117,18 +116,11 @@ public class JsonRpcResource {
         }
 
         final var subscription = Subscription.begin()
-            .chain(invocation.getResultHandlerStrategy().onError(asyncResponse::resume))
-            .chain(invocation.getResultHandlerStrategy().onFinalResult(asyncResponse::resume));
+            .chain(resolution.getResultHandlerStrategy().onError(asyncResponse::resume))
+            .chain(resolution.getResultHandlerStrategy().onFinalResult(asyncResponse::resume));
 
         asyncResponse.setTimeoutHandler(ar -> subscription.unsubscribe());
-
-        getLocalInvocationDispatcher().dispatch(
-            invocation.getInvocation(),
-            invocation.getResultHandlerStrategy().getSyncResultConsumer(),
-            invocation.getResultHandlerStrategy().getAsyncInvocationErrorConsumer(),
-            invocation.getResultHandlerStrategy().getAsyncInvocationResultConsumers(),
-            invocation.getResultHandlerStrategy().getAsyncInvocationErrorConsumer()
-        );
+        getLocalInvocationDispatcher().dispatch(resolution.getInvocation(), resolution.getResultHandlerStrategy());
 
     }
 

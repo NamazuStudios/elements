@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.ResultHandlerStrategy;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -21,5 +23,21 @@ public interface LocalInvocationDispatcher {
                   Consumer<InvocationError> syncInvocationErrorConsumer,
                   List<Consumer<InvocationResult>> additionalInvocationResultConsumerList,
                   Consumer<InvocationError> asyncInvocationErrorConsumer);
+
+    /**
+     * Dispatches using the {@link Invocation} and {@link ResultHandlerStrategy}.
+     *
+     * @param invocation the {@link Invocation}
+     * @param resultHandlerStrategy the {@link ResultHandlerStrategy}
+     */
+    default void dispatch(final Invocation invocation, final ResultHandlerStrategy resultHandlerStrategy) {
+        dispatch(
+            invocation,
+            resultHandlerStrategy.getSyncResultConsumer(),
+            resultHandlerStrategy.getAsyncInvocationErrorConsumer(),
+            resultHandlerStrategy.getAsyncInvocationResultConsumers(),
+            resultHandlerStrategy.getAsyncInvocationErrorConsumer()
+        );
+    }
 
 }

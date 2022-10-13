@@ -83,6 +83,8 @@
         <module>doclet</module>
         <module>mongo-test</module>
         <module>rpc-api</module>
+        <module>rpc-api-guice</module>
+        <module>rpc-api-jetty</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.transact;
+package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.ResourceLockService;
 import com.namazustudios.socialengine.rt.SharedLock;

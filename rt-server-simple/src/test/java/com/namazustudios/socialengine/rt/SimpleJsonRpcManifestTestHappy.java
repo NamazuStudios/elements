@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.transact;
+package com.namazustudios.socialengine.rt;
 
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcManifestService;

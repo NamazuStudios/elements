@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.transact;
+package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import java.util.Objects;
 
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
-import static com.namazustudios.socialengine.rt.transact.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
+import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
 
 @RemoteModel(scopes = @RemoteScope(scope = HAPPY_SCOPE, protocol = ELEMENTS_JSON_RPC_HTTP_PROTOCOL))
 public class TestJsonRpcModelA {

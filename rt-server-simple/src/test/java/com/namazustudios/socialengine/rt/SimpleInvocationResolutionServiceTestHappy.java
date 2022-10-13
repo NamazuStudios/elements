@@ -1,7 +1,6 @@
-package com.namazustudios.socialengine.rt.transact;
+package com.namazustudios.socialengine.rt;
 
 
-import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.ModelNotFoundException;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcInvocationService;
@@ -33,9 +32,9 @@ import static org.testng.Assert.*;
 @Guice(modules = {
     ValidationModule.class,
     SimpleJsonRpcInvocationServiceTestModule.class,
-    SimpleJsonRpcInvocationServiceTestHappy.Module.class
+    SimpleInvocationResolutionServiceTestHappy.Module.class
 })
-public class SimpleJsonRpcInvocationServiceTestHappy {
+public class SimpleInvocationResolutionServiceTestHappy {
 
     private String scope;
 
