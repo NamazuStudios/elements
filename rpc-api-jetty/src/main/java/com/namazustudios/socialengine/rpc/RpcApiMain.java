@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.jrpc;
+package com.namazustudios.socialengine.rpc;
 
 public class RpcApiMain {
 

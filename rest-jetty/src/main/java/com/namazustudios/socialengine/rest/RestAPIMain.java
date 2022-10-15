@@ -13,23 +13,19 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.DispatcherType;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
 import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static java.util.EnumSet.allOf;
-import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Singleton

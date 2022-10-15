@@ -64,7 +64,7 @@ public @interface RemoteService {
          * @param scope the scope
          * @return the {@link Optional< RemoteScope >} which matches.
          */
-        public static Optional<RemoteScope> findScopes(
+        public static Optional<RemoteScope> findScope(
                 final Class<?> cls,
                 final String protocol,
                 final String scope) {
@@ -84,7 +84,7 @@ public @interface RemoteService {
          * @return the {@link RemoteScope} which matches.
          */
         public static RemoteScope getScope(final Class<?> cls, final String protocol, final String scope) {
-            return findScopes(cls, protocol, scope)
+            return findScope(cls, protocol, scope)
                 .orElseThrow(() -> new ServiceNotFoundException(format(
                     "Service Not found for %s (%s - %s)",
                     cls, scope, protocol

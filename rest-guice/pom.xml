@@ -10,7 +10,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>rest-guice</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>rest-guice</name>

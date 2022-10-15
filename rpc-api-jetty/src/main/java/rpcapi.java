@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.jrpc.RpcApiMain;
+import com.namazustudios.socialengine.rpc.RpcApiMain;
 
 public class rpcapi {
 
