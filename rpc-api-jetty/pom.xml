@@ -236,6 +236,11 @@
             <version>${testng.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>guice-bridge</artifactId>
+            <version>${guice.bridge.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>jetty-util</artifactId>
             <version>${project.version}</version>

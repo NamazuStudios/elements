@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.rpc;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
+import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.jrpc.JrpcModule;
 import com.namazustudios.socialengine.jrpc.JsonRpcNetwork;
+import com.namazustudios.socialengine.rpc.guice.RpcApiSecurityModule;
+import com.namazustudios.socialengine.rpc.guice.RpcApiServicesModule;
 import com.namazustudios.socialengine.rpc.guice.RpcJerseyModule;
 import com.namazustudios.socialengine.servlet.security.HealthServlet;
 import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
@@ -16,11 +18,14 @@ import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -31,10 +36,6 @@ import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
 
 public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
-
-    private static final String HEALTH_PREFIX_FORMAT = "%s/health";
-
-    private static final String VERSION_PREFIX_FORMAT = "%s/version";
 
     private static final String NETWORK_PREFIX_FORMAT = "%s/net/%s";
 
@@ -53,32 +54,39 @@ public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private void doStartBase() {
+
         final var injector = getInjector().createChildInjector(
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(HealthServlet.class).asEagerSingleton();
-                        bind(VersionServlet.class).asEagerSingleton();
-                        bind(HttpServletCORSFilter.class).asEagerSingleton();
-                        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
-                    }
+            new ServletModule() {
+                @Override
+                protected void configureServlets() {
+
+                    bind(HealthServlet.class).asEagerSingleton();
+                    bind(VersionServlet.class).asEagerSingleton();
+                    bind(HttpServletCORSFilter.class).asEagerSingleton();
+                    bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
+
+                    filter("/*").through(HttpServletCORSFilter.class);
+                    filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
+
+                    serve("health").with(HealthServlet.class);
+                    serve("version").with(VersionServlet.class);
+
                 }
+            }
         );
 
-        final var healthServlet = injector.getInstance(HealthServlet.class);
-        final var versionServlet = injector.getInstance(VersionServlet.class);
-        final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
-        final var globalHeaderFilter = injector.getInstance(HttpServletGlobalSecretHeaderFilter.class);
-
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
         final var servletContextHandler = new ServletContextHandler();
-
+        servletContextHandler.setContextPath(getPrefix().replaceAll("/{2,}", "/"));
+        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
     }
 
     private void doStartJrpcNetworks() {
         for (var jsonRpcNetwork : JsonRpcNetwork.values()) {
 
-            final var prefix = format(NETWORK_PREFIX_FORMAT,
+            final var prefix = format(
+                NETWORK_PREFIX_FORMAT,
                     getPrefix(),
                     jsonRpcNetwork.getPrefix()
             ).replace("/{2,}", "/");
@@ -94,7 +102,24 @@ public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var injector = getInjector().createChildInjector(
             new RpcJerseyModule(),
-            new JrpcModule().withNetwork(jsonRpcNetwork)
+            new RpcApiServicesModule(),
+            new JrpcModule().withNetwork(jsonRpcNetwork),
+            new RpcApiSecurityModule(),
+            new ServletModule() {
+                @Override
+                protected void configureServlets() {
+
+                    bind(ServletContainer.class).asEagerSingleton();
+                    serve("/*").with(ServletContainer.class);
+
+                    final var params = Map.of("javax.ws.rs.Application", RpcResourceConfig.class.getName());
+                    serve("/*").with(ServletContainer.class, params);
+
+                    filter("/*").through(HttpServletCORSFilter.class);
+                    filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
+
+                }
+            }
         );
 
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
@@ -108,12 +133,12 @@ public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     @Override
-    public ContextHandler createContextHandler(final App app) throws Exception {
+    public ContextHandler createContextHandler(final App app) {
         return startupOps.get(app).apply(app);
     }
 
     @Override
-    protected void doStop() throws Exception {
+    protected void doStop() {
         startupOps.clear();
     }
 
