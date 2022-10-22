@@ -12,24 +12,23 @@ import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
-import com.namazustudios.socialengine.service.guice.*;
+import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
+import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
+import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
+import com.namazustudios.socialengine.service.guice.NotificationServiceModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.util.AppleDateFormat;
 import ru.vyarus.guice.validator.ValidationModule;
 
-import java.text.DateFormat;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 
 public class RestAPIModule extends AbstractModule {
@@ -86,24 +85,8 @@ public class RestAPIModule extends AbstractModule {
         install(new SimpleRemoteInvokerRegistryModule());
         install(new SimpleInstanceModule());
         install(new FSTPayloadReaderWriterModule());
-        install(new JacksonHttpClientModule()
-            .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-            .withDefaultObjectMapperProvider(() -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            })
-            .withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                final DateFormat dateFormat = new AppleDateFormat();
-                objectMapper.setDateFormat(dateFormat);
-                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            })
-        );
+        install(new JerseyHttpClientModule());
 
         bind(InstanceId.class).toInstance(randomInstanceId());
-
     }
 }

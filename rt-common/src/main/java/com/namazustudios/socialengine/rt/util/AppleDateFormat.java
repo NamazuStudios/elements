@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.util;
+package com.namazustudios.socialengine.rt.util;
 
 import java.text.*;
 import java.time.Instant;

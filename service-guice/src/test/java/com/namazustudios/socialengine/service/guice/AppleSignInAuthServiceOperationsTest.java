@@ -15,7 +15,7 @@
 //import com.namazustudios.socialengine.service.NameService;
 //import com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations;
 //import com.namazustudios.socialengine.service.name.SimpleAdjectiveAnimalNameService;
-//import com.namazustudios.socialengine.util.AppleDateFormat;
+//import com.namazustudios.socialengine.rt.util.AppleDateFormat;
 //import org.testng.annotations.Guice;
 //import org.testng.annotations.Test;
 //
@@ -27,7 +27,7 @@
 //import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 //import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 //import static com.google.inject.name.Names.bindProperties;
-//import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+//import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 //import static com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations.Claim.EMAIL;
 //import static com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations.Claim.USER_ID;
 //import static org.mockito.ArgumentMatchers.any;

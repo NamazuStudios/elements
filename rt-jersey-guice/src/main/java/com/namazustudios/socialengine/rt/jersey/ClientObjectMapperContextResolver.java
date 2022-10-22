@@ -1,23 +1,23 @@
-package com.namazustudios.socialengine.service.guice;
+package com.namazustudios.socialengine.rt.jersey;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
+import com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy;
 
 import javax.inject.Inject;
 import javax.ws.rs.ext.ContextResolver;
 import java.util.Map;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.DEFAULT;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.DEFAULT;
 
 public class ClientObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
 
     private Map<String, ObjectMapper> objectMappers;
 
     private final LoadingCache<Class<?>, ObjectMapper> cache = CacheBuilder.newBuilder()
-        .build(new CacheLoader<Class<?>, ObjectMapper>() {
+        .build(new CacheLoader<>() {
             @Override
             public ObjectMapper load(final Class<?> key) {
 

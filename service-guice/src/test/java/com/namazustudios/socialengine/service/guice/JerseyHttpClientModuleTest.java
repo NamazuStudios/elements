@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.service.guice;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -13,16 +10,12 @@ import org.testng.annotations.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
-import java.text.SimpleDateFormat;
 import java.util.Map;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 import static org.testng.Assert.assertEquals;
 
-@Guice(modules = JacksonHttpClientModuleTest.Module.class)
-public class JacksonHttpClientModuleTest {
+@Guice(modules = JerseyHttpClientModule.class)
+public class JerseyHttpClientModuleTest {
 
     private final JettyEmbeddedJSONService jettyEmbeddedJSONService = new JettyEmbeddedJSONService();
 
@@ -109,24 +102,6 @@ public class JacksonHttpClientModuleTest {
     @Inject
     public void setClient(Client client) {
         this.client = client;
-    }
-
-    public static class Module extends AbstractModule {
-        @Override
-        protected void configure() {
-            install(new JacksonHttpClientModule().withDefaultObjectMapperProvider(()-> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
-                return objectMapper;
-            }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                objectMapper.setDateFormat(simpleDateFormat);
-                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            }));
-        }
     }
 
 }

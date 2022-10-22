@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.guice;
+package com.namazustudios.socialengine.rt.jersey;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

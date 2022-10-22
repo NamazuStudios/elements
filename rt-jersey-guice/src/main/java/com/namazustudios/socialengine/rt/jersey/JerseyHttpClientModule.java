@@ -1,11 +1,13 @@
-package com.namazustudios.socialengine.service.guice;
+package com.namazustudios.socialengine.rt.jersey;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
+import com.namazustudios.socialengine.rt.util.AppleDateFormat;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,19 +19,23 @@ import javax.ws.rs.ext.ContextResolver;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.google.inject.Scopes.SINGLETON;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.DEFAULT;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.DEFAULT;
 import static javax.ws.rs.client.ClientBuilder.newBuilder;
 
-public class JacksonHttpClientModule extends PrivateModule {
+public class JerseyHttpClientModule extends PrivateModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(JacksonHttpClientModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(JerseyHttpClientModule.class);
 
     public static final String DISABLE_SSL_VERIFICATION = "com.namazustudios.ssl.verification.disable";
 
@@ -37,7 +43,7 @@ public class JacksonHttpClientModule extends PrivateModule {
 
         final String disable = System.getProperty(DISABLE_SSL_VERIFICATION);
 
-        if (disable != null && Boolean.valueOf(disable)) {
+        if (Boolean.parseBoolean(disable)) {
             disableSslVerification();
         }
 
@@ -90,16 +96,32 @@ public class JacksonHttpClientModule extends PrivateModule {
 
         expose(Client.class);
 
+        withRegisteredComponent(OctetStreamJsonMessageBodyReader.class);
+
+        withDefaultObjectMapperProvider(() -> {
+            final ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+            return objectMapper;
+        });
+
+        withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final DateFormat dateFormat = new AppleDateFormat();
+            objectMapper.setDateFormat(dateFormat);
+            objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+            objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+            return objectMapper;
+        });
+
         final Key<ContextResolver<ObjectMapper>> key = Key.get(new TypeLiteral<ContextResolver<ObjectMapper>>(){});
-
-        final Provider<ContextResolver<ObjectMapper>> contextResolverProvider;
-
-        contextResolverProvider = getProvider(key);
+        final Provider<ContextResolver<ObjectMapper>> contextResolverProvider = getProvider(key);
 
         bind(Client.class).toProvider(() -> {
 
             final ClientBuilder builder = newBuilder()
                 .register(JacksonFeature.class)
+                .register(MultiPartFeature.class)
+                .register(GenericMultipartClientFeature.class)
                 .register(contextResolverProvider.get());
 
             registrations.forEach(c -> c.accept(builder));
@@ -123,7 +145,7 @@ public class JacksonHttpClientModule extends PrivateModule {
      * @param <T> the type to register
      * @return this instance
      */
-    public <T> JacksonHttpClientModule withRegisteredComponent(final Class<T> cls) {
+    public <T> JerseyHttpClientModule withRegisteredComponent(final Class<T> cls) {
         registrations.add(cb -> cb.register(cls));
         return this;
     }
@@ -135,7 +157,7 @@ public class JacksonHttpClientModule extends PrivateModule {
      * @param objectMapperProvider the {@link Provider<ObjectMapper>}
      * @return this instance
      */
-    public JacksonHttpClientModule withDefaultObjectMapperProvider(final Provider<ObjectMapper> objectMapperProvider) {
+    public JerseyHttpClientModule withDefaultObjectMapperProvider(final Provider<ObjectMapper> objectMapperProvider) {
         this.defaultObjectMapperProvider = objectMapperProvider;
         return this;
     }
@@ -149,8 +171,8 @@ public class JacksonHttpClientModule extends PrivateModule {
      *
      * @return this instance
      */
-    public JacksonHttpClientModule withNamedObjectMapperProvider(final String name,
-                                                                 final Provider<ObjectMapper> objectMapperProvider) {
+    public JerseyHttpClientModule withNamedObjectMapperProvider(final String name,
+                                                                final Provider<ObjectMapper> objectMapperProvider) {
         namedObjectMapperProviders.put(name, objectMapperProvider);
         return this;
     }

@@ -18,10 +18,10 @@ import com.namazustudios.socialengine.rt.remote.guice.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
-import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
-import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
+import com.namazustudios.socialengine.rt.jersey.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.util.AppleDateFormat;
+import com.namazustudios.socialengine.rt.util.AppleDateFormat;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class DocServeMain implements Runnable {
 
@@ -115,20 +115,7 @@ public class DocServeMain implements Runnable {
             new FirebaseAppFactoryModule(),
             new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
             new AppleIapReceiptInvokerModule(),
-            new JacksonHttpClientModule()
-                    .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-                    .withDefaultObjectMapperProvider(() -> {
-                        final ObjectMapper objectMapper = new ObjectMapper();
-                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                        return objectMapper;
-                    }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                final DateFormat dateFormat = new AppleDateFormat();
-                objectMapper.setDateFormat(dateFormat);
-                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            })
+            new JerseyHttpClientModule()
         );
 
     }

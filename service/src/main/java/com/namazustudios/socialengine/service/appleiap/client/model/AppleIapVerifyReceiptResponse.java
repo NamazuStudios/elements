@@ -1,11 +1,11 @@
 package com.namazustudios.socialengine.service.appleiap.client.model;
 
-import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
+import com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy;
 import io.swagger.annotations.ApiModel;
 
 import java.util.Objects;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 @ApiModel
 @ClientSerializationStrategy(APPLE_ITUNES)
