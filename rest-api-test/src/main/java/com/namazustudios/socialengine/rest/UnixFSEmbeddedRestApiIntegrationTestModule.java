@@ -13,7 +13,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rest.guice.RestAPIModule;
+import com.namazustudios.socialengine.rest.guice.EmbeddedRestAPIModule;
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
@@ -134,8 +134,8 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         }).in(SINGLETON);
 
-        install(new RestAPIServerModule());
-        install(new RestAPIModule(configurationSupplier));
+        install(new RestAPITestServerModule());
+        install(new EmbeddedRestAPIModule(configurationSupplier));
 
         bind(RestAPIMain.class).asEagerSingleton();
         bind(EmbeddedRestApi.class).asEagerSingleton();

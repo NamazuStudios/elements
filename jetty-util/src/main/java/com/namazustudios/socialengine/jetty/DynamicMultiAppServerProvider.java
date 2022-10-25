@@ -11,12 +11,13 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.Set;
 
-public class DynamicServerProvider implements Provider<Server> {
+public class DynamicMultiAppServerProvider implements Provider<Server> {
 
     private SimpleServerProvider serverProvider;
 
-    private Provider<AppProvider> appProviderProvider;
+    private Provider<Set<AppProvider>> appProviderSetProvider;
 
     private Provider<DeploymentManager> deploymentManagerProvider;
 
@@ -24,7 +25,7 @@ public class DynamicServerProvider implements Provider<Server> {
     public Server get() {
 
         final var server = getServerProvider().get();
-        final var dispatcherAppProvider = getAppProviderProvider().get();
+        final var appProviderSet = getAppProviderSetProvider().get();
         final var deploymentManager = getDeploymentManagerProvider().get();
 
         final HandlerCollection handlerCollection = new HandlerCollection();
@@ -39,9 +40,10 @@ public class DynamicServerProvider implements Provider<Server> {
         rootServletHandler.addServlet(HappyServlet.class, "/");
         handlerCollection.addHandler(rootServletHandler);
 
-        deploymentManager.addAppProvider(dispatcherAppProvider);
         server.addBean(deploymentManager);
         server.setHandler(handlerCollection);
+
+        appProviderSet.forEach(deploymentManager::addAppProvider);
 
         return server;
     }
@@ -64,13 +66,13 @@ public class DynamicServerProvider implements Provider<Server> {
         this.deploymentManagerProvider = deploymentManagerProvider;
     }
 
-    public Provider<AppProvider> getAppProviderProvider() {
-        return appProviderProvider;
+    public Provider<Set<AppProvider>> getAppProviderSetProvider() {
+        return appProviderSetProvider;
     }
 
     @Inject
-    public void setAppProviderProvider(Provider<AppProvider> appProviderProvider) {
-        this.appProviderProvider = appProviderProvider;
+    public void setAppProviderSetProvider(Provider<Set<AppProvider>> appProviderSetProvider) {
+        this.appProviderSetProvider = appProviderSetProvider;
     }
 
 }

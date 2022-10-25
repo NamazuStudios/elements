@@ -7,7 +7,7 @@
     <module name="rest-jetty" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.namazustudios.socialengine.rest.*" />
+        <option name="PATTERN" value="com.namazustudios.socialengine.rest.formidium.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

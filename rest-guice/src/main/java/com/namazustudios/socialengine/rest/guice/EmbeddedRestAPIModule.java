@@ -31,18 +31,18 @@ import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 
-public class RestAPIModule extends AbstractModule {
+public class EmbeddedRestAPIModule extends AbstractModule {
 
     private final Supplier<Properties> configurationSupplier;
 
     private final Supplier<List<FacebookPermission>> facebookPermissionSupplier;
 
-    public RestAPIModule(final Supplier<Properties> propertiesSupplier) {
+    public EmbeddedRestAPIModule(final Supplier<Properties> propertiesSupplier) {
         this(propertiesSupplier, new FacebookBuiltinPermissionsSupplier());
     }
 
-    public RestAPIModule(final Supplier<Properties> configurationSupplier,
-                         final Supplier<List<FacebookPermission>> facebookPermissionSupplier) {
+    public EmbeddedRestAPIModule(final Supplier<Properties> configurationSupplier,
+                                 final Supplier<List<FacebookPermission>> facebookPermissionSupplier) {
         this.configurationSupplier = configurationSupplier;
         this.facebookPermissionSupplier = facebookPermissionSupplier;
     }
@@ -58,12 +58,7 @@ public class RestAPIModule extends AbstractModule {
         install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
-        install(new RestJerseyModule(apiRoot) {
-            @Override
-            protected void configureResoures() {
-                        enableAllResources();
-                    }
-        });
+        install(new RestAPIJerseyModule(apiRoot));
         install(new RestAPIServicesModule());
         install(new NotificationServiceModule());
         install(new GuiceStandardNotificationFactoryModule());
@@ -86,7 +81,7 @@ public class RestAPIModule extends AbstractModule {
         install(new SimpleInstanceModule());
         install(new FSTPayloadReaderWriterModule());
         install(new JerseyHttpClientModule());
-
         bind(InstanceId.class).toInstance(randomInstanceId());
+
     }
 }

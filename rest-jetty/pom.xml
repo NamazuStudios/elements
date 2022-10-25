@@ -18,6 +18,11 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>formidium-jetty</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rest-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -39,6 +44,11 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-deploy</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-proxy</artifactId>
             <version>${jetty.version}</version>
         </dependency>
         <dependency>
