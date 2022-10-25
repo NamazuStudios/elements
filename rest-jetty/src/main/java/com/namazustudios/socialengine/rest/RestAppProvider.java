@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.rest;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import com.namazustudios.socialengine.rest.guice.RestAPIRedissonServicesModule;
-import com.namazustudios.socialengine.rest.guice.RestAPISecurityModule;
-import com.namazustudios.socialengine.rest.guice.RestAPIServicesModule;
+import com.namazustudios.socialengine.guice.StandardServletSecurityModule;
+import com.namazustudios.socialengine.guice.StandardServletRedissonServicesModule;
+import com.namazustudios.socialengine.guice.StandardServletServicesModule;
 import com.namazustudios.socialengine.rest.guice.RestAPIJerseyModule;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -45,9 +45,9 @@ public class RestAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var injector = this.injector.createChildInjector(
             new RestAPIJerseyModule(),
-            new RestAPISecurityModule(),
-            new RestAPIServicesModule(),
-            new RestAPIRedissonServicesModule()
+            new StandardServletSecurityModule(),
+            new StandardServletServicesModule(),
+            new StandardServletRedissonServicesModule()
         );
 
         final var servletContextHandler = new ServletContextHandler();

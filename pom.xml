@@ -65,7 +65,7 @@
         <module>code-serve</module>
         <module>code-serve-guice</module>
         <module>code-serve-jetty</module>
-        <module>jetty-util</module>
+        <module>common-jetty</module>
         <module>cdn-serve</module>
         <module>cdn-serve-api</module>
         <module>cdn-serve-jetty</module>
@@ -84,6 +84,7 @@
         <module>mongo-test</module>
         <module>rt-jersey-guice</module>
         <module>formidium-jetty</module>
+        <module>common-servlet-guice</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

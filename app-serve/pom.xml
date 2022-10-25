@@ -234,7 +234,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>jetty-util</artifactId>
+            <artifactId>common-jetty</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -40,6 +40,11 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-servlet-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>service</artifactId>
             <version>${project.version}</version>
         </dependency>

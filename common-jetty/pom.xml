@@ -9,10 +9,9 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>jetty-util</artifactId>
+    <artifactId>common-jetty</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>jetty-util</name>
+    <name>common-jetty</name>
 
     <dependencies>
         <dependency>

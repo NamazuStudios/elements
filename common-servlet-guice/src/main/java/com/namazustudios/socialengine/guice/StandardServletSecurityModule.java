@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 /**
  * Created by patricktwohig on 6/26/17.
  */
-public class RestAPISecurityModule extends AbstractModule {
+public class StandardServletSecurityModule extends AbstractModule {
 
     @Override
     protected void configure() {

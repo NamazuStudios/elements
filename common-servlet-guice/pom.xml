@@ -2,6 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -10,45 +11,29 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>formidium-jetty</artifactId>
+    <artifactId>common-servlet-guice</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>formidium-jetty</name>
+    <name>common-servlet-guice</name>
 
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common-jetty</artifactId>
+            <artifactId>service-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common-servlet-guice</artifactId>
+            <artifactId>common-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-deploy</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-proxy</artifactId>
-            <version>${jetty.version}</version>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-http-servlet</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
-            <version>${guice.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
             <version>${guice.version}</version>
         </dependency>
     </dependencies>

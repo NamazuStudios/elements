@@ -1,26 +1,34 @@
 package com.namazustudios.socialengine.formidium;
 
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.guice.StandardServletRedissonServicesModule;
+import com.namazustudios.socialengine.guice.StandardServletSecurityModule;
+import com.namazustudios.socialengine.guice.StandardServletServicesModule;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
-import static com.namazustudios.socialengine.formidium.FormidiumConstants.FORMIDIUM_API_URL;
-import static com.namazustudios.socialengine.formidium.FormidiumConstants.FORMIDIUM_CONTEXT_ROOT;
+import static com.namazustudios.socialengine.formidium.FormidiumConstants.*;
 import static com.namazustudios.socialengine.servlet.security.HttpPathUtils.normalize;
 import static java.lang.String.format;
 
 public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvider {
 
+    private static final Logger logger = LoggerFactory.getLogger(FormidiumProxyServlet.class);
+
     private Injector injector;
 
     private String rootContext;
+
+    private String formidiumApiKey;
 
     private String formidiumApiUrl;
 
@@ -32,12 +40,41 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
     protected void doStart() throws Exception {
 
         final var formidiumContextRoot = normalize(format("%s/%s", getRootContext(), getFormidiumContext()));
-        deploymentManager.addApp(new App(deploymentManager, this, formidiumContextRoot, buildFormidiumApiContext()));
+
+        if (getFormidiumApiKey().isBlank()) {
+            logger.info("No Formidium API Key Configured. Disabling Formidium support.");
+        } else {
+
+            logger.info("Formidium API Key Configured. Enabling Formidium support.");
+
+            final var app = new App(
+                    getDeploymentManager(),
+                    this,
+                    formidiumContextRoot,
+                    buildFormidiumApiContext()
+            );
+
+            deploymentManager.addApp(app);
+
+        }
 
     }
 
     private ContextHandler buildFormidiumApiContext() {
+
+        final var injector = this.injector.createChildInjector(
+                new StandardServletSecurityModule(),
+                new StandardServletServicesModule(),
+                new StandardServletRedissonServicesModule(),
+                new FormidiumServletModule(getFormidiumApiUrl())
+        );
+
         return null;
+
+    }
+
+    public DeploymentManager getDeploymentManager() {
+        return deploymentManager;
     }
 
     @Override
@@ -59,6 +96,15 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
         this.rootContext = rootContext;
     }
 
+    public String getFormidiumApiKey() {
+        return formidiumApiKey;
+    }
+
+    @Inject
+    public void setFormidiumApiKey(@Named(FORMIDIUM_API_KEY) String formidiumApiKey) {
+        this.formidiumApiKey = formidiumApiKey;
+    }
+
     public String getFormidiumApiUrl() {
         return formidiumApiUrl;
     }
@@ -75,6 +121,10 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
     @Inject
     public void setFormidiumContext(@Named(FORMIDIUM_CONTEXT_ROOT) String formidiumContext) {
         this.formidiumContext = formidiumContext;
+    }
+
+    public Injector getInjector() {
+        return injector;
     }
 
     @Inject
