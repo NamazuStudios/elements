@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y cmake libssl-dev libsasl2-dev lua5.3 lu
     cd cmake-build && \
     cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && \
     make install && \
-    luarocks install lua-mongo && \
+    luarocks install lua-mongo LIBBSON_DIR=/usr/local && \
     apt-get autoremove && \
     apt-get remove -y luarocks lua5.3-dev lua5.3 libsasl2-dev libssl-dev cmake && \
     cd ../.. && \
