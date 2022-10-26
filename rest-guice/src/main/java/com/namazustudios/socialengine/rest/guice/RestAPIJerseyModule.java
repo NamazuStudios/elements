@@ -26,7 +26,7 @@ public class RestAPIJerseyModule extends ServletModule {
     }
 
     public RestAPIJerseyModule(final String apiRoot) {
-        this.apiRoot = normalize(apiRoot.isBlank() ? "/*" : apiRoot);
+        this.apiRoot = normalize(apiRoot.isBlank() ? "/*" : apiRoot + "/*");
     }
 
     @Override
