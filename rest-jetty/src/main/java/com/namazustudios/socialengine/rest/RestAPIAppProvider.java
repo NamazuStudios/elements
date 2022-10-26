@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.guice.StandardServletSecurityModule;
 import com.namazustudios.socialengine.guice.StandardServletRedissonServicesModule;
 import com.namazustudios.socialengine.guice.StandardServletServicesModule;
 import com.namazustudios.socialengine.rest.guice.RestAPIJerseyModule;
+import com.namazustudios.socialengine.service.guice.NotificationServiceModule;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -22,10 +23,11 @@ import java.util.EnumSet;
 
 import static com.namazustudios.socialengine.Constants.API_PREFIX;
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
+import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static com.namazustudios.socialengine.servlet.security.HttpPathUtils.normalize;
 import static java.lang.String.format;
 
-public class RestAppProvider extends AbstractLifeCycle implements AppProvider {
+public class RestAPIAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private String rootContext;
 
@@ -37,7 +39,7 @@ public class RestAppProvider extends AbstractLifeCycle implements AppProvider {
 
     @Override
     protected void doStart() throws Exception {
-        final var apiContextRoot = normalize(format("%s/%s/*", getRootContext(), getApiContext()));
+        final var apiContextRoot = normalize(format("%s/%s", getRootContext(), getApiContext()));
         deploymentManager.addApp(new App(deploymentManager, this, apiContextRoot, buildRestApiContext(apiContextRoot)));
     }
 
@@ -45,16 +47,21 @@ public class RestAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var injector = this.injector.createChildInjector(
             new RestAPIJerseyModule(),
+            new NotificationServiceModule(),
             new StandardServletSecurityModule(),
             new StandardServletServicesModule(),
             new StandardServletRedissonServicesModule()
         );
 
         final var servletContextHandler = new ServletContextHandler();
+        servletContextHandler.setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
+
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
         final var restDocRedirectFilter = injector.getInstance(RestDocRedirectFilter.class);
-        servletContextHandler.addFilter(new FilterHolder(guiceFilter), apiContextRoot, EnumSet.allOf(DispatcherType.class));
-        servletContextHandler.addFilter(new FilterHolder(restDocRedirectFilter), apiContextRoot, EnumSet.allOf(DispatcherType.class));
+
+        servletContextHandler.setContextPath(apiContextRoot);
+        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", EnumSet.allOf(DispatcherType.class));
+        servletContextHandler.addFilter(new FilterHolder(restDocRedirectFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
         return servletContextHandler;
 

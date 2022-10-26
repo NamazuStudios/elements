@@ -19,7 +19,6 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
-import com.namazustudios.socialengine.service.guice.NotificationServiceModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.server.Server;
@@ -58,7 +57,6 @@ public class RestAPIServerModule extends AbstractModule {
         install(new ConfigurationModule(() -> properties));
         install(new InstanceDiscoveryServiceModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
-        install(new NotificationServiceModule());
         install(new GuiceStandardNotificationFactoryModule());
         install(new FirebaseAppFactoryModule());
         install(new MongoCoreModule());
@@ -80,7 +78,7 @@ public class RestAPIServerModule extends AbstractModule {
         install(new RandomInstanceIdModule());
 
         var apps = Multibinder.newSetBinder(binder(), AppProvider.class);
-        apps.addBinding().to(RestAppProvider.class);
+        apps.addBinding().to(RestAPIAppProvider.class);
         apps.addBinding().to(FormidiumAppProvider.class);
 
     }

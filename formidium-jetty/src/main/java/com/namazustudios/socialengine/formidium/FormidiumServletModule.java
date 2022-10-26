@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.formidium;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
 import com.namazustudios.socialengine.servlet.security.HttpServletGlobalSecretHeaderFilter;
+import com.namazustudios.socialengine.servlet.security.HttpServletSessionIdAuthenticationFilter;
 
 import java.util.Map;
 
@@ -17,15 +18,20 @@ public class FormidiumServletModule extends ServletModule {
     @Override
     protected void configureServlets() {
 
+        bind(FormidiumProxyServlet.class).asEagerSingleton();
+        bind(HttpServletCORSFilter.class).asEagerSingleton();
+        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
+        bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
+
         final var params = Map.of(
                 "Prefix", "/",
-                "ProxyTo", formidiumApiUrl
+                "proxyTo", formidiumApiUrl
         );
 
-        bind(FormidiumProxyServlet.class).asEagerSingleton();
-        serve("/*").with(FormidiumProxyServlet.class);
+        serve("/*").with(FormidiumProxyServlet.class, params);
         filter("/*").through(HttpServletCORSFilter.class);
         filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
+        filter("/*").through(HttpServletSessionIdAuthenticationFilter.class);
 
     }
 

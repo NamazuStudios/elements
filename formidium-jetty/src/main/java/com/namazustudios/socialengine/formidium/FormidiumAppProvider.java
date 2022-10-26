@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.formidium;
 
 import com.google.inject.Injector;
+import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.guice.StandardServletRedissonServicesModule;
 import com.namazustudios.socialengine.guice.StandardServletSecurityModule;
 import com.namazustudios.socialengine.guice.StandardServletServicesModule;
@@ -8,12 +9,17 @@ import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.DispatcherType;
+
+import java.util.EnumSet;
 
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static com.namazustudios.socialengine.formidium.FormidiumConstants.*;
@@ -51,7 +57,7 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
                     getDeploymentManager(),
                     this,
                     formidiumContextRoot,
-                    buildFormidiumApiContext()
+                    buildFormidiumApiContext(formidiumContextRoot)
             );
 
             deploymentManager.addApp(app);
@@ -60,7 +66,7 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
 
     }
 
-    private ContextHandler buildFormidiumApiContext() {
+    private ContextHandler buildFormidiumApiContext(final String formidiumContextRoot) {
 
         final var injector = this.injector.createChildInjector(
                 new StandardServletSecurityModule(),
@@ -69,7 +75,13 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
                 new FormidiumServletModule(getFormidiumApiUrl())
         );
 
-        return null;
+        final var servletContextHandler = new ServletContextHandler();
+        servletContextHandler.setContextPath(formidiumContextRoot);
+
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
+        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", EnumSet.allOf(DispatcherType.class));
+
+        return servletContextHandler;
 
     }
 

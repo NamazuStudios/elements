@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import static com.namazustudios.socialengine.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
 import static com.namazustudios.socialengine.formidium.FormidiumConstants.FORMIDIUM_API_KEY_HEADER;
 
-public class FormidiumProxyServlet extends ProxyServlet {
+public class  FormidiumProxyServlet extends ProxyServlet.Transparent {
 
     private String formidiumApiKey;
 

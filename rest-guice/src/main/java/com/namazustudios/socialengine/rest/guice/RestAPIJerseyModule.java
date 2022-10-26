@@ -4,12 +4,15 @@ import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
+import com.namazustudios.socialengine.servlet.security.HttpPathUtils;
 import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
 import com.namazustudios.socialengine.servlet.security.HttpServletGlobalSecretHeaderFilter;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.util.Map;
+
+import static com.namazustudios.socialengine.servlet.security.HttpPathUtils.normalize;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -23,7 +26,7 @@ public class RestAPIJerseyModule extends ServletModule {
     }
 
     public RestAPIJerseyModule(final String apiRoot) {
-        this.apiRoot = "/" + apiRoot.replace("/.$","") + "/*";
+        this.apiRoot = normalize(apiRoot.isBlank() ? "/*" : apiRoot);
     }
 
     @Override

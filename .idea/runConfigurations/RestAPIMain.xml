@@ -2,6 +2,7 @@
   <configuration default="false" name="RestAPIMain" type="Application" factoryName="Application" nameIsGenerated="true">
     <envs>
       <env name="com.namazustudios.socialengine.doc.url" value="http://localhost:8080/doc" />
+      <env name="com.namazustudios.socialengine.formidium.api.key" value="UW3hB42v9Lmsx3BlELfPlBijad61SFSs" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.rest.RestAPIMain" />
     <module name="rest-jetty" />
