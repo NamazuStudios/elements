@@ -24,7 +24,7 @@ public class FormidiumServletModule extends ServletModule {
         bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
 
         final var params = Map.of(
-                "Prefix", "/",
+                "prefix", "/",
                 "proxyTo", formidiumApiUrl
         );
 
