@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.servlet.security.HttpServletSessionIdAuthe
 
 import java.util.Map;
 
+import static com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter.INTERCEPT;
+
 public class FormidiumServletModule extends ServletModule {
 
     private final String formidiumApiUrl;
@@ -28,8 +30,15 @@ public class FormidiumServletModule extends ServletModule {
                 "proxyTo", formidiumApiUrl
         );
 
-        serve("/*").with(FormidiumProxyServlet.class, params);
-        filter("/*").through(HttpServletCORSFilter.class);
+        serve("/*").with(FormidiumProxyServlet.class, Map.of(
+                "prefix", "/",
+                "proxyTo", formidiumApiUrl
+        ));
+
+        filter("/*").through(HttpServletCORSFilter.class, Map.of(
+                INTERCEPT, "true"
+        ));
+
         filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
         filter("/*").through(HttpServletSessionIdAuthenticationFilter.class);
 

@@ -18,15 +18,28 @@ import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
 import static com.namazustudios.socialengine.Constants.DOC_OUTSIDE_URL;
 import static com.namazustudios.socialengine.Headers.*;
 import static com.namazustudios.socialengine.util.URIs.originFor;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 public class HttpServletCORSFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpServletCORSFilter.class);
 
     private final Set<URI> allowedOrigins = new HashSet<>();
-    
+
+    public static final String INTERCEPT = "intercept";
+
+    private ServletFilterProcessor<HttpServletRequest, HttpServletResponse> processor = this::proceedNormally;
+
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
+    public void init(final FilterConfig filterConfig) throws ServletException {
+
+        final var intercept = Boolean.parseBoolean(filterConfig.getInitParameter(INTERCEPT));
+
+        if (intercept) {
+            processor = this::proceedWithInterception;
+        }
+
+    }
 
     @Override
     public void doFilter(final ServletRequest servletRequest,
@@ -59,8 +72,22 @@ public class HttpServletCORSFilter implements Filter {
 
         }
 
-        chain.doFilter(servletRequest, servletResponse);
+        processor.process(httpServletRequest, httpServletResponse, chain);
 
+    }
+
+    private void proceedNormally(
+            final HttpServletRequest httpServletRequest,
+            final HttpServletResponse httpServletResponse,
+            final FilterChain chain) throws IOException, ServletException {
+        chain.doFilter(httpServletRequest, httpServletResponse);
+    }
+
+    private void proceedWithInterception(
+            final HttpServletRequest httpServletRequest,
+            final HttpServletResponse httpServletResponse,
+            final FilterChain filterChain) {
+        httpServletResponse.setStatus(SC_OK);
     }
 
     private boolean isWildcard() {
