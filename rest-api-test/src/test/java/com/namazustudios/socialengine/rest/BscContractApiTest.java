@@ -122,7 +122,8 @@ public class BscContractApiTest {
         contractId = contract.getId();
     }
 
-    @Test(dataProvider = "getAuthHeader")
+//TODO: This test currently requires a GAS fee, so it should be left disabled for CI
+//    @Test(dataProvider = "getAuthHeader")
     public void testSend(final String authHeader) {
 
         final var name = "Test";
