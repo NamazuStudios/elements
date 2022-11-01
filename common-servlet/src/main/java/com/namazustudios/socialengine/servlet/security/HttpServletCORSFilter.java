@@ -86,8 +86,12 @@ public class HttpServletCORSFilter implements Filter {
     private void proceedWithInterception(
             final HttpServletRequest httpServletRequest,
             final HttpServletResponse httpServletResponse,
-            final FilterChain filterChain) {
-        httpServletResponse.setStatus(SC_OK);
+            final FilterChain filterChain) throws IOException, ServletException {
+        if ("OPTIONS".equals(httpServletRequest.getMethod())) {
+            httpServletResponse.setStatus(SC_OK);
+        } else {
+            proceedNormally(httpServletRequest, httpServletResponse, filterChain);
+        }
     }
 
     private boolean isWildcard() {
