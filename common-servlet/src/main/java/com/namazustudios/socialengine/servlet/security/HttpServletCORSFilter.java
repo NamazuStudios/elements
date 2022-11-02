@@ -18,7 +18,7 @@ import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
 import static com.namazustudios.socialengine.Constants.DOC_OUTSIDE_URL;
 import static com.namazustudios.socialengine.Headers.*;
 import static com.namazustudios.socialengine.util.URIs.originFor;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 
 public class HttpServletCORSFilter implements Filter {
 
@@ -28,6 +28,8 @@ public class HttpServletCORSFilter implements Filter {
 
     public static final String INTERCEPT = "intercept";
 
+    public static final String INTERCEPT_RESPONSE_CODE = "intercept.response.code";
+
     private ServletFilterProcessor<HttpServletRequest, HttpServletResponse> processor = this::proceedNormally;
 
     @Override
@@ -36,7 +38,23 @@ public class HttpServletCORSFilter implements Filter {
         final var intercept = Boolean.parseBoolean(filterConfig.getInitParameter(INTERCEPT));
 
         if (intercept) {
-            processor = this::proceedWithInterception;
+
+            final var interceptResponseCode = filterConfig.getInitParameter(INTERCEPT_RESPONSE_CODE);
+
+            if (interceptResponseCode == null) {
+                logger.info("Using default intercept response code {}", SC_NO_CONTENT);
+                processor = ((request, response, chain) -> response.setStatus(SC_NO_CONTENT));
+            } else {
+                try {
+                    var code = Integer.parseInt(interceptResponseCode);
+                    logger.info("Using intercept response code {}", code);
+                    processor = ((request, response, chain) -> response.setStatus(code));
+                } catch (NumberFormatException ex) {
+                    logger.warn("Invalid intercept response code {}", interceptResponseCode);
+                    processor = ((request, response, chain) -> response.setStatus(SC_NO_CONTENT));
+                }
+            }
+
         }
 
     }
@@ -64,10 +82,10 @@ public class HttpServletCORSFilter implements Filter {
             }
 
             if (isWildcard() || getAllowedOrigins().contains(origin)) {
-                httpServletResponse.addHeader(AC_ALLOW_ORIGIN, originHeader);
-                httpServletResponse.addHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
-                httpServletResponse.addHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
-                httpServletResponse.addHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
+                httpServletResponse.setHeader(AC_ALLOW_ORIGIN, originHeader);
+                httpServletResponse.setHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
+                httpServletResponse.setHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
+                httpServletResponse.setHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
             }
 
             processor.process(httpServletRequest, httpServletResponse, chain);
@@ -83,13 +101,6 @@ public class HttpServletCORSFilter implements Filter {
             final HttpServletResponse httpServletResponse,
             final FilterChain chain) throws IOException, ServletException {
         chain.doFilter(httpServletRequest, httpServletResponse);
-    }
-
-    private void proceedWithInterception(
-            final HttpServletRequest httpServletRequest,
-            final HttpServletResponse httpServletResponse,
-            final FilterChain filterChain) {
-        httpServletResponse.setStatus(SC_OK);
     }
 
     private boolean isWildcard() {
