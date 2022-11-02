@@ -51,7 +51,7 @@ public class HttpServletCORSFilter implements Filter {
 
         final var originHeader = httpServletRequest.getHeader(ORIGIN);
 
-        if (originHeader != null) {
+        if (originHeader != null && "OPTIONS".equals(httpServletRequest.getMethod())) {
 
             final URI origin;
 
@@ -70,9 +70,11 @@ public class HttpServletCORSFilter implements Filter {
                 httpServletResponse.addHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
             }
 
-        }
+            processor.process(httpServletRequest, httpServletResponse, chain);
 
-        processor.process(httpServletRequest, httpServletResponse, chain);
+        } else {
+            chain.doFilter(servletRequest, servletResponse);
+        }
 
     }
 
@@ -86,12 +88,8 @@ public class HttpServletCORSFilter implements Filter {
     private void proceedWithInterception(
             final HttpServletRequest httpServletRequest,
             final HttpServletResponse httpServletResponse,
-            final FilterChain filterChain) throws IOException, ServletException {
-        if ("OPTIONS".equals(httpServletRequest.getMethod())) {
-            httpServletResponse.setStatus(SC_OK);
-        } else {
-            proceedNormally(httpServletRequest, httpServletResponse, filterChain);
-        }
+            final FilterChain filterChain) {
+        httpServletResponse.setStatus(SC_OK);
     }
 
     private boolean isWildcard() {
