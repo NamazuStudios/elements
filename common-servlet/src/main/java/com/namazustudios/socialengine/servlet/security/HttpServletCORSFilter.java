@@ -43,15 +43,15 @@ public class HttpServletCORSFilter implements Filter {
 
             if (interceptResponseCode == null) {
                 logger.info("Using default intercept response code {}", SC_NO_CONTENT);
-                processor = ((request, response, chain) -> response.setStatus(SC_NO_CONTENT));
+                processor = ((request, response, chain) -> proceedWithIntercept(request, response, chain, SC_NO_CONTENT));
             } else {
                 try {
                     var code = Integer.parseInt(interceptResponseCode);
                     logger.info("Using intercept response code {}", code);
-                    processor = ((request, response, chain) -> response.setStatus(code));
+                    processor = ((request, response, chain) -> proceedWithIntercept(request, response, chain, code));
                 } catch (NumberFormatException ex) {
                     logger.warn("Invalid intercept response code {}", interceptResponseCode);
-                    processor = ((request, response, chain) -> response.setStatus(SC_NO_CONTENT));
+                    processor = ((request, response, chain) -> proceedWithIntercept(request, response, chain, SC_NO_CONTENT));
                 }
             }
 
@@ -69,7 +69,7 @@ public class HttpServletCORSFilter implements Filter {
 
         final var originHeader = httpServletRequest.getHeader(ORIGIN);
 
-        if (originHeader != null && "OPTIONS".equals(httpServletRequest.getMethod())) {
+        if (originHeader != null) {
 
             final URI origin;
 
@@ -81,14 +81,14 @@ public class HttpServletCORSFilter implements Filter {
                 return;
             }
 
+            processor.process(httpServletRequest, httpServletResponse, chain);
+
             if (isWildcard() || getAllowedOrigins().contains(origin)) {
                 httpServletResponse.setHeader(AC_ALLOW_ORIGIN, originHeader);
                 httpServletResponse.setHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
                 httpServletResponse.setHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
                 httpServletResponse.setHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
             }
-
-            processor.process(httpServletRequest, httpServletResponse, chain);
 
         } else {
             chain.doFilter(servletRequest, servletResponse);
@@ -101,6 +101,18 @@ public class HttpServletCORSFilter implements Filter {
             final HttpServletResponse httpServletResponse,
             final FilterChain chain) throws IOException, ServletException {
         chain.doFilter(httpServletRequest, httpServletResponse);
+    }
+
+    private void proceedWithIntercept(
+            final HttpServletRequest httpServletRequest,
+            final HttpServletResponse httpServletResponse,
+            final FilterChain chain,
+            final int status) throws IOException, ServletException {
+        if ("OPTIONS".equals(httpServletRequest.getMethod())) {
+            httpServletResponse.setStatus(status);
+        } else {
+            chain.doFilter(httpServletRequest, httpServletResponse);
+        }
     }
 
     private boolean isWildcard() {
