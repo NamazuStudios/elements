@@ -2,6 +2,8 @@ package com.namazustudios.socialengine;
 
 import com.namazustudios.socialengine.model.session.SessionCreation;
 
+import java.util.Set;
+
 /**
  * A place to store the non-standard HTTP header (and related) constants.
  *
@@ -83,5 +85,15 @@ public interface Headers {
     String AC_ALLOW_ALLOW_METHODS = "Access-Control-Allow-Methods";
 
     String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, PATCH, DELETE";
+
+    /**
+     * Indicates all CORS headers that Elements will manage automatically.
+     */
+    Set<String> ALL_CORS_ALLOW_HEADERS = Set.of(
+        AC_ALLOW_ORIGIN,
+        AC_ALLOW_HEADERS,
+        AC_ALLOW_CREDENTIALS,
+        AC_ALLOW_ALLOW_METHODS
+    );
 
 }
