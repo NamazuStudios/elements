@@ -81,14 +81,14 @@ public class HttpServletCORSFilter implements Filter {
                 return;
             }
 
-            processor.process(httpServletRequest, httpServletResponse, chain);
-
             if (isWildcard() || getAllowedOrigins().contains(origin)) {
                 httpServletResponse.setHeader(AC_ALLOW_ORIGIN, originHeader);
                 httpServletResponse.setHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
                 httpServletResponse.setHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
                 httpServletResponse.setHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
             }
+
+            processor.process(httpServletRequest, httpServletResponse, chain);
 
         } else {
             chain.doFilter(servletRequest, servletResponse);
