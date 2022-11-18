@@ -52,6 +52,46 @@ function client.post(base)
 
 end
 
+function client.post_multipart(base)
+
+    log.info("Sending request {}", base)
+
+    local status, headers, response = namazu_http_client.send{
+        method = "GET",
+        base = base,
+        path = "simple"
+    }
+
+    assert(status  == 200, "Expected 200 but got " .. tostring(status))
+    assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
+    assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
+    assert(#response == 0, "Expected empty table.  Got " .. tostring(#response) .. " entries instead.")
+    assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
+
+    local status, headers, response = namazu_http_client.send{
+        method = "POST",
+        base = base,
+        path = "simple",
+        accept ="*/*",
+        entity = {
+            media_type = "multipart/form-data",
+            value = {
+                { type = "text/plain", disposition="form-data; name=\"hello\"", entity = "Hello!" },
+                { type = "text/plain", disposition="form-data; name=\"world\"", entity = "World!" },
+            }
+        }
+    }
+
+    assert(status  == 200, "Expected 200 but got " .. tostring(status))
+    assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
+    assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
+    assert(response.id ~= nil, "Expected non-nil id in response.  Got nil.")
+    assert(response.hello == "Hello!", "Expected Hello! in response.  Got: " .. tostring(response.hello))
+    assert(response.world == "World!", "Expected World! in response.  Got: " .. tostring(response.world))
+    log.info("Got response id {}.  Hello: {}.  World: {}", response.id, response.hello, response.world)
+
+end
+
 function client.get_all(base)
 
     log.info("Sending request {}", base)

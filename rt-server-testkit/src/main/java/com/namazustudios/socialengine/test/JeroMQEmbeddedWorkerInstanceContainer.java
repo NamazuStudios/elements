@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
@@ -138,12 +139,7 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
     }
 
     public JeroMQEmbeddedWorkerInstanceContainer withDefaultHttpClient() {
-        return withInstanceModules(new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton();
-            }
-        });
+        return withInstanceModules(new JerseyHttpClientModule());
     }
 
     @Override

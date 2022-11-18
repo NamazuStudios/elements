@@ -121,6 +121,7 @@ public class JerseyHttpClientModule extends PrivateModule {
             final ClientBuilder builder = newBuilder()
                 .register(JacksonFeature.class)
                 .register(MultiPartFeature.class)
+                .register(GenericMultipartFeature.class)
                 .register(contextResolverProvider.get());
 
             registrations.forEach(c -> c.accept(builder));

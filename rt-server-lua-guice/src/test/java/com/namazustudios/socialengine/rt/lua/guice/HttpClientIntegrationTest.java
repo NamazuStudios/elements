@@ -72,12 +72,14 @@ public class HttpClientIntegrationTest {
     @DataProvider
     public static Object[][] resourcesToTest() {
         return new Object[][] {
-            {"post"},
-            {"get_all"},
-            {"get_all_query"},
-            {"get_specific"},
-            {"put"},
-            {"delete"}
+//            {"post"},
+            // TODO: Make sure this doesn't get committed
+            {"post_multipart"},
+//            {"get_all"},
+//            {"get_all_query"},
+//            {"get_specific"},
+//            {"put"},
+//            {"delete"}
         };
     }
 

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
 import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment;
