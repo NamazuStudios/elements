@@ -18,6 +18,8 @@ import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.*;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
+import com.namazustudios.socialengine.service.formidium.FormidiumService;
+import com.namazustudios.socialengine.service.formidium.FormidiumServiceProvider;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
@@ -138,8 +140,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(BscSmartContractService.class)
-                .toProvider(BscSmartContractServiceProvider.class)
-                .in(scope);
+            .toProvider(BscSmartContractServiceProvider.class)
+            .in(scope);
 
         bind(FollowerService.class)
             .toProvider(FollowerServiceProvider.class)
@@ -254,8 +256,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(BscWalletService.class)
-                .toProvider(BscWalletServiceProvider.class)
-                .in(scope);
+            .toProvider(BscWalletServiceProvider.class)
+            .in(scope);
 
         bind(AuthSchemeService.class)
             .toProvider(AuthSchemeServiceProvider.class)
@@ -266,24 +268,24 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(BscTokenService.class)
-                .toProvider(BscTokenServiceProvider.class)
-                .in(scope);
+            .toProvider(BscTokenServiceProvider.class)
+            .in(scope);
 
         bind(MetadataSpecService.class)
-                .toProvider(MetadataSpecServiceProvider.class)
-                .in(scope);
+            .toProvider(MetadataSpecServiceProvider.class)
+            .in(scope);
 
         bind(TokenTemplateService.class)
-                .toProvider(TokenTemplateServiceProvider.class)
-                .in(scope);
+            .toProvider(TokenTemplateServiceProvider.class)
+            .in(scope);
 
         bind(NeoSmartContractService.class)
             .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(BscSmartContractService.class)
-                .toProvider(BscSmartContractServiceProvider.class)
-                .in(scope);
+            .toProvider(BscSmartContractServiceProvider.class)
+            .in(scope);
 
         bind(HealthStatusService.class)
             .to(DefaultHealthStatusService.class)
@@ -295,6 +297,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(DistinctInventoryItemService.class)
             .toProvider(DistinctInventoryItemServiceProvider.class)
+            .in(scope);
+
+        bind(FormidiumService.class)
+            .toProvider(FormidiumServiceProvider.class)
             .in(scope);
 
         bind(NameService.class)
@@ -449,8 +455,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoWalletService.class);
 
         bind(BscWalletService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscWalletService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserBscWalletService.class);
 
         bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
@@ -458,25 +464,25 @@ public class ServicesModule extends PrivateModule {
             .asEagerSingleton();
 
         bind(Bscw3jClient.class)
-                .annotatedWith(Unscoped.class)
-                .to(StandardBscw3jClient.class)
-                .asEagerSingleton();
+            .annotatedWith(Unscoped.class)
+            .to(StandardBscw3jClient.class)
+            .asEagerSingleton();
 
         bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoTokenService.class);
 
         bind(BscTokenService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscTokenService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserBscTokenService.class);
 
         bind(MetadataSpecService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserMetadataSpecService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserMetadataSpecService.class);
 
         bind(TokenTemplateService.class)
-                .annotatedWith(Unscoped.class)
-                .to(UserTokenTemplateService.class);
+            .annotatedWith(Unscoped.class)
+            .to(UserTokenTemplateService.class);
 
         bind(AuthSchemeService.class)
             .annotatedWith(Unscoped.class)
@@ -487,8 +493,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoSmartContractService.class);
 
         bind(BscSmartContractService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscSmartContractService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserBscSmartContractService.class);
 
         bind(SaveDataDocumentService.class)
             .annotatedWith(Unscoped.class)
@@ -501,6 +507,10 @@ public class ServicesModule extends PrivateModule {
         bind(DistinctInventoryItemService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserDistinctInventoryItemService.class);
+
+        bind(FormidiumService.class)
+            .annotatedWith(Unscoped.class)
+            .toProvider(FormidiumServiceProvider.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -559,6 +569,7 @@ public class ServicesModule extends PrivateModule {
         expose(BscWalletService.class);
         expose(Bscw3jClient.class);
         expose(BscTokenService.class);
+        expose(FormidiumService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -608,6 +619,7 @@ public class ServicesModule extends PrivateModule {
         expose(BscWalletService.class).annotatedWith(Unscoped.class);
         expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
         expose(BscTokenService.class).annotatedWith(Unscoped.class);
+        expose(FormidiumService.class).annotatedWith(Unscoped.class);
 
     }
 
