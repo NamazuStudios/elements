@@ -18,13 +18,6 @@ import { IOSApplicationConfigurationService } from './services/iosapplication-co
 import { MatchmakingApplicationConfigurationService } from './services/matchmaking-application-configuration.service';
 import { PSNApplicationConfigurationsService } from './services/psnapplication-configurations.service';
 import { FriendsService } from './services/friends.service';
-import { GameOnPrizesService } from './services/game-on-prizes.service';
-import { GameOnMatchesService } from './services/game-on-matches.service';
-import { GameOnPlayerTournamentService } from './services/game-on-player-tournament.service';
-import { GameOnRegistrationService } from './services/game-on-registration.service';
-import { GameOnSessionService } from './services/game-on-session.service';
-import { GameOnEntryService } from './services/game-on-entry.service';
-import { GameOnTournamentService } from './services/game-on-tournament.service';
 import { ItemsService } from './services/items.service';
 import { LeaderboardsService } from './services/leaderboards.service';
 import { RankingService } from './services/ranking.service';
@@ -66,13 +59,6 @@ import { NeoWalletsService } from './services/blockchain/neo-wallets.service';
     MatchmakingApplicationConfigurationService,
     PSNApplicationConfigurationsService,
     FriendsService,
-    GameOnPrizesService,
-    GameOnMatchesService,
-    GameOnPlayerTournamentService,
-    GameOnRegistrationService,
-    GameOnSessionService,
-    GameOnEntryService,
-    GameOnTournamentService,
     ItemsService,
     LeaderboardsService,
     NeoWalletsService,
