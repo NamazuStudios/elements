@@ -57,18 +57,6 @@ function client.post_multipart(base)
     log.info("Sending request {}", base)
 
     local status, headers, response = namazu_http_client.send{
-        method = "GET",
-        base = base,
-        path = "simple"
-    }
-
-    assert(status  == 200, "Expected 200 but got " .. tostring(status))
-    assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
-    assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
-    assert(#response == 0, "Expected empty table.  Got " .. tostring(#response) .. " entries instead.")
-    assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
-
-    local status, headers, response = namazu_http_client.send{
         method = "POST",
         base = base,
         path = "simple",
@@ -105,7 +93,7 @@ function client.get_all(base)
     assert(status  == 200, "Expected 200 but got " .. tostring(status))
     assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
     assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
-    assert(#response == 1, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
+    assert(#response == 2, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
     assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
 
 end
@@ -128,7 +116,7 @@ function client.get_all_query(base)
     assert(status  == 200, "Expected 200 but got " .. tostring(status))
     assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
     assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
-    assert(#response == 1, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
+    assert(#response == 2, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
     assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
 
 end
@@ -146,7 +134,6 @@ function client.get_specific(base)
     assert(status  == 200, "Expected 200 but got " .. tostring(status))
     assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
     assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
-    assert(#response == 1, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
     assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
 
     local id = tostring(response[1].id)
@@ -179,7 +166,6 @@ function client.put(base)
     assert(status  == 200, "Expected 200 but got " .. tostring(status))
     assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
     assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
-    assert(#response == 1, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
     assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
 
     local id = tostring(response[1].id)
@@ -219,7 +205,6 @@ function client.delete(base)
     assert(status  == 200, "Expected 200 but got " .. tostring(status))
     assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
     assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
-    assert(#response == 1, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
     assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
 
     local id = tostring(response[1].id)
@@ -230,7 +215,7 @@ function client.delete(base)
         path = "simple/" .. id
     }
 
-    assert(status  == 204, "Expected 200 but got " .. tostring(status))
+    assert(status  == 204, "Expected 204 but got " .. tostring(status))
     assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
     assert(response == nil, "Expected nil for response.  Got " .. type(response) .. ": " .. tostring(response))
 

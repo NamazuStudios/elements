@@ -42,10 +42,10 @@ public class HttpClientBuiltin implements Builtin {
 
     private final JavaFunction send = l -> {
 
-        final TaskId taskId = currentTaskId(l);
+        final var taskId = currentTaskId(l);
         if (taskId == null) throw new IllegalStateException("No currently running task.");
 
-        final String base = getRequiredStringField(l, "base");
+        final var base = getRequiredStringField(l, "base");
 
         WebTarget target = getClient().target(base);
         target = getRequiredStringField(l, "path", target::path);
@@ -59,7 +59,7 @@ public class HttpClientBuiltin implements Builtin {
         builder = getOptionalStringFields(l, "accept", builder, Invocation.Builder::accept);
         builder = getOptionalStringFields(l, "accept_language", builder, Invocation.Builder::acceptLanguage);
 
-        final String method = getRequiredStringField(l, "method");
+        final var method = getRequiredStringField(l, "method");
         final Entity<Object> requestEntity = getEntity(l);
 
         final CompletionStage<Response> responseCompletionStage =
@@ -87,9 +87,11 @@ public class HttpClientBuiltin implements Builtin {
 
                         final int status = response.getStatus();
                         final var headers = response.getHeaders();
-                        final Object responseEntity = SUCCESSFUL.equals(response.getStatusInfo().getFamily()) ?
-                            response.readEntity(Object.class) :
-                            null;
+
+                        final var responseEntity =
+                            SUCCESSFUL.equals(response.getStatusInfo().getFamily()) && response.hasEntity()
+                                ? response.readEntity(Object.class)
+                                : null;
 
                         logger.trace("Status: {}.  Headers: {}.  Entity: {}", status, headers, responseEntity);
                         getContext().getSchedulerContext().resume(taskId, status, headers, responseEntity);
