@@ -3,14 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.namazustudios.socialengine.dao.mongo.converter.*;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscToken;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.*;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscWallet;
-import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
-import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
-import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
@@ -23,15 +16,11 @@ import com.namazustudios.socialengine.dao.mongo.model.schema.MongoTokenTemplate;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
+import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
-import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
-import com.namazustudios.socialengine.model.schema.template.TemplateTab;
 import com.namazustudios.socialengine.model.friend.Friend;
-import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
-import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -47,6 +36,8 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
+import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
+import com.namazustudios.socialengine.model.schema.template.TemplateTab;
 import com.namazustudios.socialengine.model.schema.template.TokenTemplate;
 import com.namazustudios.socialengine.model.user.User;
 import org.dozer.DozerBeanMapper;
@@ -134,13 +125,6 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(Friend.class, MongoFriendship.class)
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));
-
-            mapping(GameOnRegistration.class, MongoGameOnRegistration.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
-
-            mapping(GameOnSession.class, MongoGameOnSession.class)
-                .fields("id", "objectId", customConverter(MongoGameOnSessionId.Converter.class))
-                .fields("deviceOSType", "objectId.deviceOSType");
 
             mapping(Item.class, MongoItem.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class))

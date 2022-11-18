@@ -101,7 +101,6 @@ public class ApplicationNode {
             new AppNodeServicesModule(),
             new RedissonServicesModule(ResourceScope.getInstance()),
             new AppleIapReceiptInvokerModule(),
-            new GameOnInvokerModule(),
             new JerseyHttpClientModule()
         );
 

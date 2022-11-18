@@ -17,7 +17,6 @@ import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import com.namazustudios.socialengine.rt.remote.guice.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
-import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -65,7 +64,6 @@ public class RestAPIServerModule extends AbstractModule {
         install(new ZContextModule());
         install(new ClusterContextFactoryModule());
         install(new ValidationModule());
-        install(new GameOnInvokerModule());
         install(new AppleIapReceiptInvokerModule());
         install(new JeroMQAsyncConnectionServiceModule());
         install(new JeroMQInstanceConnectionServiceModule());

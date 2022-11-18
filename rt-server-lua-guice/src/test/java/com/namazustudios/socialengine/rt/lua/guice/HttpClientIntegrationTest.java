@@ -2,11 +2,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
-import com.namazustudios.socialengine.rt.id.ApplicationId;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
-import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;

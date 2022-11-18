@@ -20,7 +20,6 @@ import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
-import com.namazustudios.socialengine.service.gameon.*;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
 import com.namazustudios.socialengine.service.goods.SuperuserItemService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptService;
@@ -200,38 +199,6 @@ public class ServicesModule extends PrivateModule {
 
         bind(MockSessionService.class)
             .toProvider(MockSessionServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnApplicationConfigurationService.class)
-            .toProvider(GameOnApplicationConfigurationServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnRegistrationService.class)
-            .toProvider(GameOnRegistrationServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnSessionService.class)
-            .toProvider(GameOnSessionServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnTournamentService.class)
-            .toProvider(GameOnTournamentServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnPlayerTournamentService.class)
-            .toProvider(GameOnPlayerTournamentServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnMatchService.class)
-            .toProvider(GameOnMatchServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnAdminPrizeService.class)
-            .toProvider(GameOnAdminPrizeServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnGamePrizeService.class)
-            .toProvider(GameOnGamePrizeServiceProvider.class)
             .in(scope);
 
         bind(ItemService.class)
@@ -423,14 +390,6 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserMockSessionService.class);
 
-        bind(GameOnApplicationConfigurationService.class)
-            .annotatedWith(Unscoped.class)
-            .to(SuperUserGameOnApplicationConfigurationService.class);
-
-        bind(GameOnAdminPrizeService.class)
-            .annotatedWith(Unscoped.class)
-            .to(SuperUserGameOnAdminPrizeService.class);
-
         bind(ItemService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperuserItemService.class);
@@ -568,14 +527,6 @@ public class ServicesModule extends PrivateModule {
         expose(FriendService.class);
         expose(FacebookFriendService.class);
         expose(MockSessionService.class);
-        expose(GameOnApplicationConfigurationService.class);
-        expose(GameOnRegistrationService.class);
-        expose(GameOnSessionService.class);
-        expose(GameOnTournamentService.class);
-        expose(GameOnPlayerTournamentService.class);
-        expose(GameOnMatchService.class);
-        expose(GameOnAdminPrizeService.class);
-        expose(GameOnGamePrizeService.class);
         expose(ItemService.class);
         expose(SimpleInventoryItemService.class);
         expose(AdvancedInventoryItemService.class);
@@ -628,8 +579,7 @@ public class ServicesModule extends PrivateModule {
         expose(ScoreService.class).annotatedWith(Unscoped.class);
         expose(LeaderboardService.class).annotatedWith(Unscoped.class);
         expose(MockSessionService.class).annotatedWith(Unscoped.class);
-        expose(GameOnApplicationConfigurationService.class).annotatedWith(Unscoped.class);
-        expose(GameOnAdminPrizeService.class).annotatedWith(Unscoped.class);
+
         expose(ItemService.class).annotatedWith(Unscoped.class);
         expose(SimpleInventoryItemService.class).annotatedWith(Unscoped.class);
         expose(AdvancedInventoryItemService.class).annotatedWith(Unscoped.class);

@@ -18,7 +18,6 @@ import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
-import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.guice.NotificationServiceModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
@@ -70,7 +69,6 @@ public class EmbeddedRestAPIModule extends AbstractModule {
         install(new ZContextModule());
         install(new ClusterContextFactoryModule());
         install(new ValidationModule());
-        install(new GameOnInvokerModule());
         install(new AppleIapReceiptInvokerModule());
         install(new JeroMQAsyncConnectionServiceModule());
         install(new JeroMQInstanceConnectionServiceModule());

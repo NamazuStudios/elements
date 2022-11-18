@@ -19,7 +19,6 @@ import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
-import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
@@ -181,7 +180,6 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                     modules.add(new AppNodeSecurityModule());
                     modules.add(new ConfigurationModule(() -> properties));
                     modules.add(new AppleIapReceiptInvokerModule());
-                    modules.add(new GameOnInvokerModule());
                     modules.add(new ClusterContextFactoryModule());
                     modules.add(new RedissonServicesModule(ResourceScope.getInstance()));
                     modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
