@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 @Singleton
@@ -85,7 +86,7 @@ public class GenericMultipartReader implements MessageBodyReader<Collection<?>> 
         final var disposition = bodyPart.getContentDisposition();
         final var entity = bodyPart.getEntity();
 
-        map.put(GenericMultipartFeature.TYPE, type.getType());
+        map.put(GenericMultipartFeature.TYPE, type.toString());
 
         if (disposition != null) {
             map.put(GenericMultipartFeature.DISPOSITION, disposition.toString());

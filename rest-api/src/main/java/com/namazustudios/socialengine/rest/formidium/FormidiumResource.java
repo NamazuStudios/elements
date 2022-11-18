@@ -44,11 +44,7 @@ public class FormidiumResource {
                     "create a new Investor. This accepts multipart, per the Formidium specification, and relays " +
                     "it directly the Formidium API. Refer to the Add Investor API in Formidium."
     )
-    public FormidiumInvestor createFormidiumInvestor(
-            @Context final Request request,
-            @Context final ContainerRequestContext containerRequestContext,
-            @Context final HttpServletRequest httpServletRequest,
-            final List<Map<String, Object>> multiPartFormData) {
+    public FormidiumInvestor createFormidiumInvestor(final List<Map<String, Object>> multiPartFormData) {
         return getFormidiumService().createFormidiumInvestor(multiPartFormData);
     }
 
