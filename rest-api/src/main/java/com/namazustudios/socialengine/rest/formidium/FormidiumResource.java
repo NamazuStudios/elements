@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.formidium;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.formidium.CreateFormidiumInvestorRequest;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.service.formidium.FormidiumService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -10,14 +9,17 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Form;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Request;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
-import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 @Path("kyc/formidium")
 @Api(
@@ -34,45 +36,20 @@ public class FormidiumResource {
     private ValidationHelper validationHelper;
 
     @POST
-    @Consumes(APPLICATION_FORM_URLENCODED)
+    @Consumes(MULTIPART_FORM_DATA)
     @Produces(APPLICATION_JSON)
     @ApiOperation(
             value = "Creates a Formidium Investor",
             notes = "Creates a Formidium User in both the Elements database as well as makes the call to Formidium to" +
-                    "create a new Investor."
+                    "create a new Investor. This accepts multipart, per the Formidium specification, and relays " +
+                    "it directly the Formidium API. Refer to the Add Investor API in Formidium."
     )
-    public FormidiumInvestor createFormidiumInvestorForm(final Form form) {
-
-        final var userId = form.asMap().getFirst(ELEMENTS_USER_ID_FORM_PARAM);
-
-        final var params = form
-            .asMap()
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-                final var value = entry.getValue();
-                return value.size() == 1 ? value.get(0) : value;
-            }));
-
-        final var createFormidiumInvestorRequest = new CreateFormidiumInvestorRequest();
-        createFormidiumInvestorRequest.setUserId(userId);
-        createFormidiumInvestorRequest.setFormidiumApiParameters(params);
-
-        return createFormidiumInvestorJson(createFormidiumInvestorRequest);
-
-    }
-
-    @POST
-    @Consumes(APPLICATION_JSON)
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(
-            value = "Creates a Formidium Investor",
-            notes = "Creates a Formidium User in both the Elements database as well as makes the call to Formidium to" +
-                    "create a new Investor."
-    )
-    public FormidiumInvestor createFormidiumInvestorJson(final CreateFormidiumInvestorRequest createFormidiumInvestorRequest) {
-        getValidationHelper().validateModel(createFormidiumInvestorRequest);
-        return getFormidiumService().createFormidiumInvestor(createFormidiumInvestorRequest);
+    public FormidiumInvestor createFormidiumInvestor(
+            @Context final Request request,
+            @Context final ContainerRequestContext containerRequestContext,
+            @Context final HttpServletRequest httpServletRequest,
+            final List<Map<String, Object>> multiPartFormData) {
+        return getFormidiumService().createFormidiumInvestor(multiPartFormData);
     }
 
     @GET

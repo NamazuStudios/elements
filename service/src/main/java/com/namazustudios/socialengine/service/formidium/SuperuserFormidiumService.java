@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.service.formidium;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.formidium.CreateFormidiumInvestorRequest;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.util.ValidationHelper;
 
@@ -9,6 +8,8 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Form;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class SuperuserFormidiumService implements FormidiumService {
@@ -18,31 +19,8 @@ public class SuperuserFormidiumService implements FormidiumService {
     private ValidationHelper validationHelper;
 
     @Override
-    public FormidiumInvestor createFormidiumInvestor(final CreateFormidiumInvestorRequest createFormidiumInvestorRequest) {
-
-        final var form = new Form();
-
-        getValidationHelper().validateModel(validationHelper);
-
-        for(final var entry : createFormidiumInvestorRequest.getFormidiumApiParameters().entrySet()) {
-
-            final var key = entry.getKey();
-            final var value = entry.getValue();
-
-            if (value instanceof Collection<?>) {
-                final Collection<?> collection = (Collection<?>) value;
-                collection.stream()
-                    .filter(Objects::nonNull)
-                    .map(Object::toString)
-                    .forEach(s -> form.param(key, s));
-            } else if (value != null) {
-                form.param(key, value.toString());
-            }
-
-        }
-
+    public FormidiumInvestor createFormidiumInvestor(final List<Map<String, Object>> multipartFormData) {
         return null;
-
     }
 
     @Override

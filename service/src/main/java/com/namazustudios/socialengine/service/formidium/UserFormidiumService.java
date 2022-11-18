@@ -1,12 +1,13 @@
 package com.namazustudios.socialengine.service.formidium;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.formidium.CreateFormidiumInvestorRequest;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.Client;
+import java.util.List;
+import java.util.Map;
 
 public class UserFormidiumService implements FormidiumService {
 
@@ -15,7 +16,7 @@ public class UserFormidiumService implements FormidiumService {
     private Client client;
 
     @Override
-    public FormidiumInvestor createFormidiumInvestor(final CreateFormidiumInvestorRequest createFormidiumInvestorRequest) {
+    public FormidiumInvestor createFormidiumInvestor(final List<Map<String, Object>> multipartFormData) {
         
         return null;
     }
