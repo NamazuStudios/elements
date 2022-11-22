@@ -9,15 +9,14 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
@@ -31,8 +30,6 @@ public class FormidiumResource {
 
     private FormidiumService formidiumService;
 
-    public static final String ELEMENTS_USER_ID_FORM_PARAM = "elements_user_id";
-
     private ValidationHelper validationHelper;
 
     @POST
@@ -45,7 +42,46 @@ public class FormidiumResource {
                     "it directly the Formidium API. Refer to the Add Investor API in Formidium."
     )
     public FormidiumInvestor createFormidiumInvestor(final List<Map<String, Object>> multiPartFormData) {
-        return getFormidiumService().createFormidiumInvestor(multiPartFormData);
+
+        final var userId = multiPartFormData.stream()
+                .filter(this::filterUserId)
+                .map(m -> m.get("entity").toString())
+                .findFirst()
+                .orElse(null);
+
+        final var filteredMultipartFormData = multiPartFormData
+                .stream()
+                .filter(m -> !filterUserId(m))
+                .collect(toList());
+
+        return getFormidiumService().createFormidiumInvestor(userId, filteredMultipartFormData);
+
+    }
+
+    private boolean filterUserId(final Map<String, Object> stringObjectMap) {
+
+        // Discard form entries which do not have an entity.
+        if (!stringObjectMap.containsKey("entity") || !stringObjectMap.containsKey("disposition"))
+            return false;
+
+        // Discard content which does not have a disposition either
+        final var disposition = stringObjectMap.get("disposition").toString();
+
+        if (disposition.isBlank())
+            return false;
+
+        final var parameters = Arrays
+            .stream(disposition.split(";"))
+            .map(String::trim)
+            .toArray(String[]::new);
+
+        if (!parameters[0].equalsIgnoreCase("form-data"))
+            return false;
+
+        return Arrays
+            .stream(parameters)
+            .anyMatch(p -> p.matches("name=\"elements_user_id\""));
+
     }
 
     @GET

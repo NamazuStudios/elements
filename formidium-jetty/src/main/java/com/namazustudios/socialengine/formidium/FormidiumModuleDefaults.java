@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.formidium.FormidiumConstants.*;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.*;
 
 public class FormidiumModuleDefaults implements ModuleDefaults {
 

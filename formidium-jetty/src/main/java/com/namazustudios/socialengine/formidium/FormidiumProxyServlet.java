@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.formidium;
 
-import com.namazustudios.socialengine.Headers;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.proxy.ProxyServlet;
@@ -8,13 +7,12 @@ import org.eclipse.jetty.proxy.ProxyServlet;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import static com.namazustudios.socialengine.Headers.ALL_CORS_ALLOW_HEADERS;
-import static com.namazustudios.socialengine.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
-import static com.namazustudios.socialengine.formidium.FormidiumConstants.FORMIDIUM_API_KEY_HEADER;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY_HEADER;
 
-public class  FormidiumProxyServlet extends ProxyServlet.Transparent {
+public class FormidiumProxyServlet extends ProxyServlet.Transparent {
 
     private String formidiumApiKey;
 

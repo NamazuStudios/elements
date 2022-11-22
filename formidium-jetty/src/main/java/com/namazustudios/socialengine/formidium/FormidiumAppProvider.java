@@ -22,7 +22,7 @@ import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
-import static com.namazustudios.socialengine.formidium.FormidiumConstants.*;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.*;
 import static com.namazustudios.socialengine.servlet.security.HttpPathUtils.normalize;
 import static java.lang.String.format;
 

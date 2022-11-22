@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.service.formidium;
 
+import com.namazustudios.socialengine.dao.FormidiumUserDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.model.user.User;
@@ -8,6 +10,7 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserFormidiumService implements FormidiumService {
 
@@ -15,25 +18,36 @@ public class UserFormidiumService implements FormidiumService {
 
     private Client client;
 
+    private FormidiumUserDao formidiumUserDao;
+
+    private SuperuserFormidiumService superuserFormidiumService;
+
     @Override
-    public FormidiumInvestor createFormidiumInvestor(final List<Map<String, Object>> multipartFormData) {
-        
-        return null;
+    public FormidiumInvestor createFormidiumInvestor(final String userId, final List<Map<String, Object>> multipartFormData) {
+
+        if (userId != null && !Objects.equals(getUser().getId(), userId)) {
+            throw new ForbiddenException("Invalid user id: " + userId);
+        }
+
+        return getSuperuserFormidiumService().createFormidiumInvestor(getUser().getId(), multipartFormData);
+
     }
 
     @Override
     public Pagination<FormidiumInvestor> getFormidiumInvestors(final String userId, final int offset, final int count) {
-        return null;
+        return userId != null && !Objects.equals(getUser().getId(), userId)
+                ? Pagination.empty()
+                : getFormidiumUserDao().getFormidiumInvestors(getUser().getId(), offset, count);
     }
 
     @Override
     public FormidiumInvestor getFormidiumInvestor(final String formidiumInvestorId) {
-        return null;
+        return getFormidiumUserDao().getFormidiumInvestor(formidiumInvestorId, getUser().getId());
     }
 
     @Override
     public void deleteFormidiumInvestor(final String formidiumInvestorId) {
-
+        throw new ForbiddenException();
     }
 
     public User getUser() {
@@ -52,6 +66,24 @@ public class UserFormidiumService implements FormidiumService {
     @Inject
     public void setClient(Client client) {
         this.client = client;
+    }
+
+    public FormidiumUserDao getFormidiumUserDao() {
+        return formidiumUserDao;
+    }
+
+    @Inject
+    public void setFormidiumUserDao(FormidiumUserDao formidiumUserDao) {
+        this.formidiumUserDao = formidiumUserDao;
+    }
+
+    public SuperuserFormidiumService getSuperuserFormidiumService() {
+        return superuserFormidiumService;
+    }
+
+    @Inject
+    public void setSuperuserFormidiumService(SuperuserFormidiumService superuserFormidiumService) {
+        this.superuserFormidiumService = superuserFormidiumService;
     }
 
 }

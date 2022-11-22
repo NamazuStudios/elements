@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.formidium;
+package com.namazustudios.socialengine.service.formidium;
 
 public class FormidiumConstants {
 
