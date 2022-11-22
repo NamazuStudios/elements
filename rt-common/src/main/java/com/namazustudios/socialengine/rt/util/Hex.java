@@ -110,7 +110,7 @@ public class Hex {
      * @param hex the hex string
      * @return a {@link byte[]} representing the hex
      */
-    private static ByteBuffer decodeToBuffer(final String hex) {
+    public static ByteBuffer decodeToBuffer(final String hex) {
         return decodeToBuffer(hex, ByteBuffer::allocate);
     }
 
@@ -121,7 +121,7 @@ public class Hex {
      * @param hex the hex string
      * @return a {@link byte[]} representing the hex
      */
-    private static ByteBuffer decodeToBuffer(final String hex, final ByteBufferAllocator byteBufferAllocator) {
+    public static ByteBuffer decodeToBuffer(final String hex, final ByteBufferAllocator byteBufferAllocator) {
         return decodeToBuffer(hex, byteBufferAllocator.allocate(hex.length() / 2));
     }
 
