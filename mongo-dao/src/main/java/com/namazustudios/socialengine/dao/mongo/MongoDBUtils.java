@@ -3,20 +3,20 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.google.common.collect.Iterables;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoWriteException;
-import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.elements.fts.NoResultException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.elements.fts.SearchException;
 import com.namazustudios.elements.fts.TopDocsSearchResult;
+import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import org.bson.types.ObjectId;
-import org.dozer.Mapper;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import org.bson.types.ObjectId;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -24,10 +24,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static java.lang.Math.min;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Some helper methods used in various parts of the MongoDB code.

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
-import com.mongodb.WriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.AppleIapReceiptDao;
@@ -10,25 +9,21 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import dev.morphia.DeleteOptions;
-import dev.morphia.InsertOneOptions;
-import dev.morphia.query.FindOptions;
-import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.experimental.filters.Filters;
+import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.google.common.collect.Streams.concat;
-import static java.util.stream.Stream.of;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {

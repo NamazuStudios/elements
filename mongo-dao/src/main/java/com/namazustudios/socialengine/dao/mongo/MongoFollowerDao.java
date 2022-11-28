@@ -1,10 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.FollowerDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFollower;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFollowerId;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;

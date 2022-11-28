@@ -1,33 +1,38 @@
-package com.namazustudios.socialengine.model.formidium;
+package com.namazustudios.socialengine.dao.mongo.model.formidium;
 
-import com.namazustudios.socialengine.model.user.User;
-import io.swagger.annotations.ApiModel;
+import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import dev.morphia.annotations.*;
 
-import java.io.Serializable;
 import java.util.Objects;
 
-@ApiModel
-public class FormidiumInvestor implements Serializable {
+@Entity(value = "formidium_user", useDiscriminator = false)
+@Indexes({
+        @Index(fields = @Field(value = "user"))
+    })
+public class MongoFormidiumInvestor {
 
-    private String id;
+    @Id
+    private MongoFormidiumInvestorId id;
 
-    private User user;
+    @Reference
+    private MongoUser user;
 
+    @Property
     private String formidiumInvestorId;
 
-    public String getId() {
+    public MongoFormidiumInvestorId getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(MongoFormidiumInvestorId id) {
         this.id = id;
     }
 
-    public User getUser() {
+    public MongoUser getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(MongoUser user) {
         this.user = user;
     }
 
@@ -43,7 +48,7 @@ public class FormidiumInvestor implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FormidiumInvestor that = (FormidiumInvestor) o;
+        MongoFormidiumInvestor that = (MongoFormidiumInvestor) o;
         return Objects.equals(getId(), that.getId()) && Objects.equals(getUser(), that.getUser()) && Objects.equals(getFormidiumInvestorId(), that.getFormidiumInvestorId());
     }
 
@@ -54,8 +59,8 @@ public class FormidiumInvestor implements Serializable {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("FormidiumInvestor{");
-        sb.append("id='").append(id).append('\'');
+        final StringBuilder sb = new StringBuilder("MongoFormidiumInvestor{");
+        sb.append("id=").append(id);
         sb.append(", user=").append(user);
         sb.append(", formidiumInvestorId='").append(formidiumInvestorId).append('\'');
         sb.append('}');

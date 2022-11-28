@@ -13,11 +13,13 @@ import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.auth.MongoAuthSchemeDao;
 import com.namazustudios.socialengine.dao.mongo.auth.MongoCustomAuthUserDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.*;
+import com.namazustudios.socialengine.dao.mongo.formidium.MongoFormidiumInvestorDao;
 import com.namazustudios.socialengine.dao.mongo.goods.MongoDistinctInventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.goods.MongoInventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.goods.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
+import com.namazustudios.socialengine.dao.mongo.model.formidium.MongoFormidiumInvestor;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
@@ -92,6 +94,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(CustomAuthUserDao.class).to(MongoCustomAuthUserDao.class);
         bind(DistinctInventoryItemDao.class).to(MongoDistinctInventoryItemDao.class);
+        bind(FormidiumInvestorDao.class).to(MongoFormidiumInvestorDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -153,6 +156,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(AuthSchemeDao.class);
         expose(CustomAuthUserDao.class);
         expose(DistinctInventoryItemDao.class);
+        expose(FormidiumInvestorDao.class);
 
     }
 

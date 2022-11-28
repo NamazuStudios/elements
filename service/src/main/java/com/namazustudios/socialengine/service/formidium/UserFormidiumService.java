@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.formidium;
 
-import com.namazustudios.socialengine.dao.FormidiumUserDao;
+import com.namazustudios.socialengine.dao.FormidiumInvestorDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
@@ -18,7 +18,7 @@ public class UserFormidiumService implements FormidiumService {
 
     private Client client;
 
-    private FormidiumUserDao formidiumUserDao;
+    private FormidiumInvestorDao formidiumInvestorDao;
 
     private SuperuserFormidiumService superuserFormidiumService;
 
@@ -68,13 +68,13 @@ public class UserFormidiumService implements FormidiumService {
         this.client = client;
     }
 
-    public FormidiumUserDao getFormidiumUserDao() {
-        return formidiumUserDao;
+    public FormidiumInvestorDao getFormidiumUserDao() {
+        return formidiumInvestorDao;
     }
 
     @Inject
-    public void setFormidiumUserDao(FormidiumUserDao formidiumUserDao) {
-        this.formidiumUserDao = formidiumUserDao;
+    public void setFormidiumUserDao(FormidiumInvestorDao formidiumInvestorDao) {
+        this.formidiumInvestorDao = formidiumInvestorDao;
     }
 
     public SuperuserFormidiumService getSuperuserFormidiumService() {

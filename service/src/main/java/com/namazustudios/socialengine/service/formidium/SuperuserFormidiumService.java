@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.formidium;
 
-import com.namazustudios.socialengine.dao.FormidiumUserDao;
+import com.namazustudios.socialengine.dao.FormidiumInvestorDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
@@ -9,12 +9,15 @@ import com.namazustudios.socialengine.service.formidium.api.CreateInvestorRespon
 import com.namazustudios.socialengine.service.formidium.api.FormidiumApiResponse;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY_HEADER;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
@@ -22,9 +25,11 @@ public class SuperuserFormidiumService implements FormidiumService {
 
     private Client client;
 
+    private String formidiumApiKey;
+
     private String formidiumApiUrl;
 
-    private FormidiumUserDao formidiumUserDao;
+    private FormidiumInvestorDao formidiumInvestorDao;
 
     @Override
     public FormidiumInvestor createFormidiumInvestor(final String userId, final List<Map<String, Object>> multipartFormData) {
@@ -34,6 +39,7 @@ public class SuperuserFormidiumService implements FormidiumService {
         final var response = getClient()
             .target(getFormidiumApiUrl())
             .request(MediaType.APPLICATION_JSON_TYPE)
+            .header(FORMIDIUM_API_KEY_HEADER, getFormidiumApiKey())
             .post(entity);
 
         if (!response.hasEntity())
@@ -88,6 +94,15 @@ public class SuperuserFormidiumService implements FormidiumService {
         this.client = client;
     }
 
+    public String getFormidiumApiKey() {
+        return formidiumApiKey;
+    }
+
+    @Inject
+    public void setFormidiumApiKey(@Named(FORMIDIUM_API_KEY) String formidiumApiKey) {
+        this.formidiumApiKey = formidiumApiKey;
+    }
+
     public String getFormidiumApiUrl() {
         return formidiumApiUrl;
     }
@@ -97,13 +112,13 @@ public class SuperuserFormidiumService implements FormidiumService {
         this.formidiumApiUrl = formidiumApiUrl;
     }
 
-    public FormidiumUserDao getFormidiumUserDao() {
-        return formidiumUserDao;
+    public FormidiumInvestorDao getFormidiumUserDao() {
+        return formidiumInvestorDao;
     }
 
     @Inject
-    public void setFormidiumUserDao(FormidiumUserDao formidiumUserDao) {
-        this.formidiumUserDao = formidiumUserDao;
+    public void setFormidiumUserDao(FormidiumInvestorDao formidiumInvestorDao) {
+        this.formidiumInvestorDao = formidiumInvestorDao;
     }
 
 }
