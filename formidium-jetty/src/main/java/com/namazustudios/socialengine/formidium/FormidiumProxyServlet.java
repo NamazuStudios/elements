@@ -6,7 +6,6 @@ import org.eclipse.jetty.proxy.ProxyServlet;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import static com.namazustudios.socialengine.Headers.ALL_CORS_ALLOW_HEADERS;
