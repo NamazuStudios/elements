@@ -23,13 +23,15 @@ public class UserFormidiumService implements FormidiumService {
     private SuperuserFormidiumService superuserFormidiumService;
 
     @Override
-    public FormidiumInvestor createFormidiumInvestor(final String userId, final List<Map<String, Object>> multipartFormData) {
+    public FormidiumInvestor createFormidiumInvestor(final String userId,
+                                                     final String userAgent,
+                                                     final List<Map<String, Object>> multipartFormData) {
 
         if (userId != null && !Objects.equals(getUser().getId(), userId)) {
             throw new ForbiddenException("Invalid user id: " + userId);
         }
 
-        return getSuperuserFormidiumService().createFormidiumInvestor(getUser().getId(), multipartFormData);
+        return getSuperuserFormidiumService().createFormidiumInvestor(getUser().getId(), userAgent, multipartFormData);
 
     }
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest.formidium;
 
+import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.service.formidium.FormidiumService;
@@ -13,8 +14,8 @@ import javax.ws.rs.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.Headers.USER_AGENT;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -41,7 +42,10 @@ public class FormidiumResource {
                     "create a new Investor. This accepts multipart, per the Formidium specification, and relays " +
                     "it directly the Formidium API. Refer to the Add Investor API in Formidium."
     )
-    public FormidiumInvestor createFormidiumInvestor(final List<Map<String, Object>> multiPartFormData) {
+    public FormidiumInvestor createFormidiumInvestor(
+            @HeaderParam(USER_AGENT)
+            final String userAgent,
+            final List<Map<String, Object>> multiPartFormData) {
 
         final var userId = multiPartFormData.stream()
                 .filter(this::filterUserId)
@@ -54,7 +58,7 @@ public class FormidiumResource {
                 .filter(m -> !filterUserId(m))
                 .collect(toList());
 
-        return getFormidiumService().createFormidiumInvestor(userId, filteredMultipartFormData);
+        return getFormidiumService().createFormidiumInvestor(userId, userAgent, filteredMultipartFormData);
 
     }
 

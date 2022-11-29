@@ -6,13 +6,13 @@ import java.util.Objects;
 
 public class CreateInvestorResponse extends FormidiumApiResponse implements Serializable {
 
-    private List<FormidiumInvestorSummary> data;
+    private FormidiumInvestorSummary data;
 
-    public List<FormidiumInvestorSummary> getData() {
+    public FormidiumInvestorSummary getData() {
         return data;
     }
 
-    public void setData(List<FormidiumInvestorSummary> data) {
+    public void setData(FormidiumInvestorSummary data) {
         this.data = data;
     }
 

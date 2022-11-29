@@ -65,6 +65,8 @@ public interface Headers {
      */
     String BEARER = "Bearer";
 
+    String USER_AGENT = "User-Agent";
+
     String ORIGIN = "Origin";
 
     String AC_ALLOW_ORIGIN = "Access-Control-Allow-Origin";

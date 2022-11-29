@@ -45,6 +45,7 @@ import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoverySe
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerEnvironment.SCHEDULER_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.Runtime.getRuntime;
@@ -73,6 +74,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 final var properties = super.get();
                 properties.put(HTTP_PORT, "8181");
                 properties.put(TEST_API_ROOT, "http://localhost:8181/api/rest");
+                properties.put(FORMIDIUM_API_KEY, "UW3hB42v9Lmsx3BlELfPlBijad61SFSs");
                 properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
                 properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
                 properties.put(STATIC_HOST_INFO, format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT));

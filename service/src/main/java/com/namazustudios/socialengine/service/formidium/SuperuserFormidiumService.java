@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.service.formidium.api.CreateInvestorResponse;
-import com.namazustudios.socialengine.service.formidium.api.FormidiumApiResponse;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -16,12 +15,14 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 
-import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
-import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY_HEADER;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.*;
+import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 public class SuperuserFormidiumService implements FormidiumService {
+
+    private static final String ADD_INVESTOR_API = "csdapi/v1/csd_investor_api";
 
     private Client client;
 
@@ -32,13 +33,17 @@ public class SuperuserFormidiumService implements FormidiumService {
     private FormidiumInvestorDao formidiumInvestorDao;
 
     @Override
-    public FormidiumInvestor createFormidiumInvestor(final String userId, final List<Map<String, Object>> multipartFormData) {
+    public FormidiumInvestor createFormidiumInvestor(final String userId,
+                                                     final String userAgent,
+                                                     final List<Map<String, Object>> multipartFormData) {
 
         final var entity = Entity.entity(multipartFormData, MULTIPART_FORM_DATA);
+        final var url = format("%s/%s", getFormidiumApiUrl(), ADD_INVESTOR_API).replace("/+", "/");
 
         final var response = getClient()
-            .target(getFormidiumApiUrl())
+            .target(url)
             .request(MediaType.APPLICATION_JSON_TYPE)
+            .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0")
             .header(FORMIDIUM_API_KEY_HEADER, getFormidiumApiKey())
             .post(entity);
 
@@ -46,8 +51,8 @@ public class SuperuserFormidiumService implements FormidiumService {
             throw new InternalException("Formidium returned: " + response.getStatus());
 
         if (!SUCCESSFUL.equals(response.getStatusInfo().getFamily())) {
-            final var formidiumApiResponse = response.readEntity(FormidiumApiResponse.class);
-            throw new BadRequestException("Formidium API returned: " + formidiumApiResponse.getMessage());
+            final var formidiumApiResponse = response.readEntity(String.class);
+            throw new BadRequestException("Formidium API returned: " + formidiumApiResponse);
         }
 
         final var createInvestorResponse = response.readEntity(CreateInvestorResponse.class);
@@ -58,10 +63,10 @@ public class SuperuserFormidiumService implements FormidiumService {
 
         final var data = createInvestorResponse.getData();
 
-        if (data == null || data.isEmpty())
+        if (data == null)
             throw new InternalException("Invalid response data from Formidium.");
 
-        final var investorId = data.get(0).getId();
+        final var investorId = data.getId();
 
         if (investorId == null)
             throw new InternalException("Invalid investor id data from Formidium.");
@@ -108,7 +113,7 @@ public class SuperuserFormidiumService implements FormidiumService {
     }
 
     @Inject
-    public void setFormidiumApiUrl(String formidiumApiUrl) {
+    public void setFormidiumApiUrl(@Named(FORMIDIUM_API_URL) String formidiumApiUrl) {
         this.formidiumApiUrl = formidiumApiUrl;
     }
 

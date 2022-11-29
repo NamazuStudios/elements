@@ -28,10 +28,11 @@ public interface FormidiumService {
      *
      *
      * @param userId
+     * @param userAgent
      * @param multipartFormData the formidium investor create request as multipart form data.
      * @return the formidium investor as written to the database
      */
-    FormidiumInvestor createFormidiumInvestor(String userId, List<Map<String, Object>> multipartFormData);
+    FormidiumInvestor createFormidiumInvestor(String userId, String userAgent, List<Map<String, Object>> multipartFormData);
 
     /**
      * Creates a Formidium investor by accessing hte Formidium API and updates the User in the database.
