@@ -1,13 +1,11 @@
 package com.namazustudios.socialengine.rt.jersey;
 
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide;
-import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
@@ -23,8 +21,8 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 @Singleton
@@ -32,6 +30,8 @@ import static java.util.stream.Collectors.toList;
 public class GenericMultipartReader implements MessageBodyReader<Collection<?>> {
 
     private static final Logger logger = LoggerFactory.getLogger(GenericMultipartReader.class);
+
+    private static final TemporaryFiles temporary = new TemporaryFiles(GenericMultipartReader.class);
 
     private final Providers providers;
 
@@ -85,8 +85,10 @@ public class GenericMultipartReader implements MessageBodyReader<Collection<?>> 
         final var type = bodyPart.getMediaType();
         final var disposition = bodyPart.getContentDisposition();
         final var entity = bodyPart.getEntity();
+        final Function<Class<?>, Object> reader = bodyPart::getEntityAs;
 
         map.put(GenericMultipartFeature.TYPE, type.toString());
+        map.put(GenericMultipartFeature.READER, reader);
 
         if (disposition != null) {
             map.put(GenericMultipartFeature.DISPOSITION, disposition.toString());

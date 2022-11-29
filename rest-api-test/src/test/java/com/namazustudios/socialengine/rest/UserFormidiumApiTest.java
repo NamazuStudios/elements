@@ -25,14 +25,13 @@ import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Stream.concat;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
 public class UserFormidiumApiTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserFormidiumApiTest.class);
 
     @Factory
     public Object[] getTests() {
@@ -46,7 +45,11 @@ public class UserFormidiumApiTest {
 
     private Client client;
 
-    private List<ClientContext> clientContexts;
+    private ClientContext trudyClientContext;
+
+    private List<ClientContext> explicitClientContexts;
+
+    private List<ClientContext> implicitClientContexts;
 
     private Provider<ClientContext> clientContextProvider;
 
@@ -54,33 +57,67 @@ public class UserFormidiumApiTest {
 
     @BeforeClass
     public void setupClients() {
-        clientContexts = IntStream.range(0, 10)
+
+        trudyClientContext = getClientContextProvider()
+                .get()
+                .createUser("formidium-trudy")
+                .createSession();
+
+        implicitClientContexts = IntStream.range(0, 10)
                 .mapToObj(i -> getClientContextProvider()
                         .get()
                         .createUser("formidium")
                         .createSession()
                 )
                 .collect(toUnmodifiableList());
+
+        explicitClientContexts = IntStream.range(0, 10)
+                .mapToObj(i -> getClientContextProvider()
+                        .get()
+                        .createUser("formidium")
+                        .createSession()
+                )
+                .collect(toUnmodifiableList());
+
     }
 
     @DataProvider
     public Object[][] allClientContexts() {
-        return clientContexts
-                .stream()
+        return concat(implicitClientContexts.stream(), explicitClientContexts.stream())
+                .map(c -> new Object[] {c})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] explicitClientContexts() {
+        return explicitClientContexts.stream()
+                .map(c -> new Object[] {c})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] implicitClientContexts() {
+        return implicitClientContexts.stream()
                 .map(c -> new Object[] {c})
                 .toArray(Object[][]::new);
     }
 
     @DataProvider
     public Object[][] allClientContextsAndInvestors() {
-        return clientContexts
-                .stream()
+        return concat(implicitClientContexts.stream(), explicitClientContexts.stream())
                 .map(c -> new Object[] {c, intermediates.get(c)})
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "allClientContexts")
-    public void createFormidiumInvestors(final ClientContext clientContext) {
+    @DataProvider
+    public Object[][] allInvestors() {
+        return intermediates.values().stream()
+                .map(i -> new Object[] {i})
+                .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "implicitClientContexts")
+    public void createFormidiumInvestorsImplicit(final ClientContext clientContext) {
 
         final var email = format("%s-%s@example.com", "formidium-test", UUID.randomUUID());
 
@@ -105,7 +142,37 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allClientContexts", dependsOnMethods = "createFormidiumInvestors")
+    @Test(dataProvider = "explicitClientContexts")
+    public void createFormidiumInvestorsExplicit(final ClientContext clientContext) {
+
+        final var email = format("%s-%s@example.com", "formidium-test", UUID.randomUUID());
+
+        final var multipart = new MultiPart()
+                .bodyPart(new FormDataBodyPart("elements_user_id", clientContext.getUser().getId()))
+                .bodyPart(new FormDataBodyPart("full_name", "Testy McTesterson"))
+                .bodyPart(new FormDataBodyPart("investor_type", "IND"))
+                .bodyPart(new FormDataBodyPart("email", email));
+
+        final var response = client.target(getApiUrl() + "/kyc/formidium")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(entity(multipart, MULTIPART_FORM_DATA));
+
+        assertEquals(response.getStatus(), 200);
+
+        final var formidiumInvestor = response.readEntity(FormidiumInvestor.class);
+        assertNotNull(formidiumInvestor.getId());
+        assertNotNull(formidiumInvestor.getFormidiumInvestorId());
+        assertEquals(clientContext.getUser(), formidiumInvestor.getUser());
+
+        intermediates.put(clientContext, formidiumInvestor);
+
+    }
+
+    @Test(dataProvider = "allClientContexts", dependsOnMethods = {
+            "createFormidiumInvestorsImplicit",
+            "createFormidiumInvestorsExplicit"
+    })
     public void testGetInvestors(final ClientContext clientContext) {
 
         final var response = client.target(getApiUrl() + "/kyc/formidium")
@@ -124,7 +191,10 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allClientContextsAndInvestors", dependsOnMethods = "createFormidiumInvestors")
+    @Test(dataProvider = "allClientContextsAndInvestors", dependsOnMethods = {
+            "createFormidiumInvestorsImplicit",
+            "createFormidiumInvestorsExplicit"
+    })
     public void testGetSpecificInvestor(final ClientContext clientContext, final FormidiumInvestor formidiumInvestor) {
 
         final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
@@ -136,9 +206,57 @@ public class UserFormidiumApiTest {
 
         final var responseInvestor = response.readEntity(FormidiumInvestor.class);
         assertEquals(responseInvestor, formidiumInvestor);
-        
+
     }
 
+    @Test(dataProvider = "allInvestors", dependsOnMethods = {
+            "createFormidiumInvestorsImplicit",
+            "createFormidiumInvestorsExplicit"
+    })
+    public void testCrossUserGetInvestor(final FormidiumInvestor formidiumInvestor) {
+
+        final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
+                .request()
+                .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
+    @Test(dependsOnMethods = {
+            "createFormidiumInvestorsImplicit",
+            "createFormidiumInvestorsExplicit"
+    })
+    public void testCrossUserGetInvestors() {
+
+        final var response = client.target(getApiUrl() + "/kyc/formidium")
+                .request()
+                .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var formidiumInvestorPagination = response.readEntity(FormidiumInvestorPagination.class);
+        assertNotNull(formidiumInvestorPagination);
+        assertEquals(formidiumInvestorPagination.getObjects().size(), 0);
+
+    }
+
+    @Test(dataProvider = "allClientContextsAndInvestors", dependsOnMethods = {
+            "createFormidiumInvestorsImplicit",
+            "createFormidiumInvestorsExplicit"
+    })
+    public void testUserCannotDelete(final ClientContext clientContext, final FormidiumInvestor formidiumInvestor) {
+
+        final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 403);
+
+    }
 
     public String getApiUrl() {
         return apiUrl;

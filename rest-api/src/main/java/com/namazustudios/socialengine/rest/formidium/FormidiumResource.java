@@ -14,6 +14,7 @@ import javax.ws.rs.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static com.namazustudios.socialengine.Headers.USER_AGENT;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
@@ -49,7 +50,8 @@ public class FormidiumResource {
 
         final var userId = multiPartFormData.stream()
                 .filter(this::filterUserId)
-                .map(m -> m.get("entity").toString())
+                .map(m -> (Function<Class<?>, Object>) m.get("reader"))
+                .map(f -> f.apply(String.class).toString())
                 .findFirst()
                 .orElse(null);
 
@@ -115,6 +117,7 @@ public class FormidiumResource {
 
     @DELETE
     @Path("{formidiumInvestorId}")
+    @Produces(APPLICATION_JSON)
     @ApiOperation(
             value = "Deletes a Specific Formidium Investor",
             notes = "Deletes the specific Formidium investor, presuming that the investor is available to the " +
