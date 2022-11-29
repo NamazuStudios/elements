@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
+import com.namazustudios.socialengine.rest.model.FormidiumInvestorPagination;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.slf4j.Logger;
@@ -15,7 +16,9 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.ws.rs.client.Client;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
@@ -47,6 +50,8 @@ public class UserFormidiumApiTest {
 
     private Provider<ClientContext> clientContextProvider;
 
+    private final Map<ClientContext, FormidiumInvestor> intermediates = new ConcurrentHashMap<>();
+
     @BeforeClass
     public void setupClients() {
         clientContexts = IntStream.range(0, 10)
@@ -63,6 +68,14 @@ public class UserFormidiumApiTest {
         return clientContexts
                 .stream()
                 .map(c -> new Object[] {c})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] allClientContextsAndInvestors() {
+        return clientContexts
+                .stream()
+                .map(c -> new Object[] {c, intermediates.get(c)})
                 .toArray(Object[][]::new);
     }
 
@@ -88,7 +101,44 @@ public class UserFormidiumApiTest {
         assertNotNull(formidiumInvestor.getFormidiumInvestorId());
         assertEquals(clientContext.getUser(), formidiumInvestor.getUser());
 
+        intermediates.put(clientContext, formidiumInvestor);
+
     }
+
+    @Test(dataProvider = "allClientContexts", dependsOnMethods = "createFormidiumInvestors")
+    public void testGetInvestors(final ClientContext clientContext) {
+
+        final var response = client.target(getApiUrl() + "/kyc/formidium")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var formidiumInvestorPagination = response.readEntity(FormidiumInvestorPagination.class);
+        assertNotNull(formidiumInvestorPagination);
+        assertEquals(formidiumInvestorPagination.getObjects().size(), 1);
+
+        final var investor = formidiumInvestorPagination.getObjects().get(0);
+        assertEquals(investor.getUser(), clientContext.getUser());
+
+    }
+
+    @Test(dataProvider = "allClientContextsAndInvestors", dependsOnMethods = "createFormidiumInvestors")
+    public void testGetSpecificInvestor(final ClientContext clientContext, final FormidiumInvestor formidiumInvestor) {
+
+        final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var responseInvestor = response.readEntity(FormidiumInvestor.class);
+        assertEquals(responseInvestor, formidiumInvestor);
+        
+    }
+
 
     public String getApiUrl() {
         return apiUrl;
