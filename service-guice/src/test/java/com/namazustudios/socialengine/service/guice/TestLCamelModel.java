@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.service.guice;
 
-import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
+import com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.LCAMEL;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.LCAMEL;
 
 @ClientSerializationStrategy(LCAMEL)
 public class TestLCamelModel {

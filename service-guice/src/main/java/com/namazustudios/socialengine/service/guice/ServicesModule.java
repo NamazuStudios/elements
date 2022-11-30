@@ -18,9 +18,10 @@ import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.*;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
+import com.namazustudios.socialengine.service.formidium.FormidiumService;
+import com.namazustudios.socialengine.service.formidium.FormidiumServiceProvider;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
-import com.namazustudios.socialengine.service.gameon.*;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
 import com.namazustudios.socialengine.service.goods.SuperuserItemService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptService;
@@ -139,8 +140,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(BscSmartContractService.class)
-                .toProvider(BscSmartContractServiceProvider.class)
-                .in(scope);
+            .toProvider(BscSmartContractServiceProvider.class)
+            .in(scope);
 
         bind(FollowerService.class)
             .toProvider(FollowerServiceProvider.class)
@@ -202,38 +203,6 @@ public class ServicesModule extends PrivateModule {
             .toProvider(MockSessionServiceProvider.class)
             .in(scope);
 
-        bind(GameOnApplicationConfigurationService.class)
-            .toProvider(GameOnApplicationConfigurationServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnRegistrationService.class)
-            .toProvider(GameOnRegistrationServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnSessionService.class)
-            .toProvider(GameOnSessionServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnTournamentService.class)
-            .toProvider(GameOnTournamentServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnPlayerTournamentService.class)
-            .toProvider(GameOnPlayerTournamentServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnMatchService.class)
-            .toProvider(GameOnMatchServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnAdminPrizeService.class)
-            .toProvider(GameOnAdminPrizeServiceProvider.class)
-            .in(scope);
-
-        bind(GameOnGamePrizeService.class)
-            .toProvider(GameOnGamePrizeServiceProvider.class)
-            .in(scope);
-
         bind(ItemService.class)
             .toProvider(ItemServiceProvider.class)
             .in(scope);
@@ -287,8 +256,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(BscWalletService.class)
-                .toProvider(BscWalletServiceProvider.class)
-                .in(scope);
+            .toProvider(BscWalletServiceProvider.class)
+            .in(scope);
 
         bind(AuthSchemeService.class)
             .toProvider(AuthSchemeServiceProvider.class)
@@ -299,24 +268,24 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(BscTokenService.class)
-                .toProvider(BscTokenServiceProvider.class)
-                .in(scope);
+            .toProvider(BscTokenServiceProvider.class)
+            .in(scope);
 
         bind(MetadataSpecService.class)
-                .toProvider(MetadataSpecServiceProvider.class)
-                .in(scope);
+            .toProvider(MetadataSpecServiceProvider.class)
+            .in(scope);
 
         bind(TokenTemplateService.class)
-                .toProvider(TokenTemplateServiceProvider.class)
-                .in(scope);
+            .toProvider(TokenTemplateServiceProvider.class)
+            .in(scope);
 
         bind(NeoSmartContractService.class)
             .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(BscSmartContractService.class)
-                .toProvider(BscSmartContractServiceProvider.class)
-                .in(scope);
+            .toProvider(BscSmartContractServiceProvider.class)
+            .in(scope);
 
         bind(HealthStatusService.class)
             .to(DefaultHealthStatusService.class)
@@ -328,6 +297,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(DistinctInventoryItemService.class)
             .toProvider(DistinctInventoryItemServiceProvider.class)
+            .in(scope);
+
+        bind(FormidiumService.class)
+            .toProvider(FormidiumServiceProvider.class)
             .in(scope);
 
         bind(NameService.class)
@@ -423,14 +396,6 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserMockSessionService.class);
 
-        bind(GameOnApplicationConfigurationService.class)
-            .annotatedWith(Unscoped.class)
-            .to(SuperUserGameOnApplicationConfigurationService.class);
-
-        bind(GameOnAdminPrizeService.class)
-            .annotatedWith(Unscoped.class)
-            .to(SuperUserGameOnAdminPrizeService.class);
-
         bind(ItemService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperuserItemService.class);
@@ -490,8 +455,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoWalletService.class);
 
         bind(BscWalletService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscWalletService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserBscWalletService.class);
 
         bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
@@ -499,25 +464,25 @@ public class ServicesModule extends PrivateModule {
             .asEagerSingleton();
 
         bind(Bscw3jClient.class)
-                .annotatedWith(Unscoped.class)
-                .to(StandardBscw3jClient.class)
-                .asEagerSingleton();
+            .annotatedWith(Unscoped.class)
+            .to(StandardBscw3jClient.class)
+            .asEagerSingleton();
 
         bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoTokenService.class);
 
         bind(BscTokenService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscTokenService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserBscTokenService.class);
 
         bind(MetadataSpecService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserMetadataSpecService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserMetadataSpecService.class);
 
         bind(TokenTemplateService.class)
-                .annotatedWith(Unscoped.class)
-                .to(UserTokenTemplateService.class);
+            .annotatedWith(Unscoped.class)
+            .to(UserTokenTemplateService.class);
 
         bind(AuthSchemeService.class)
             .annotatedWith(Unscoped.class)
@@ -528,8 +493,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoSmartContractService.class);
 
         bind(BscSmartContractService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscSmartContractService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserBscSmartContractService.class);
 
         bind(SaveDataDocumentService.class)
             .annotatedWith(Unscoped.class)
@@ -542,6 +507,10 @@ public class ServicesModule extends PrivateModule {
         bind(DistinctInventoryItemService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserDistinctInventoryItemService.class);
+
+        bind(FormidiumService.class)
+            .annotatedWith(Unscoped.class)
+            .toProvider(FormidiumServiceProvider.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -568,14 +537,6 @@ public class ServicesModule extends PrivateModule {
         expose(FriendService.class);
         expose(FacebookFriendService.class);
         expose(MockSessionService.class);
-        expose(GameOnApplicationConfigurationService.class);
-        expose(GameOnRegistrationService.class);
-        expose(GameOnSessionService.class);
-        expose(GameOnTournamentService.class);
-        expose(GameOnPlayerTournamentService.class);
-        expose(GameOnMatchService.class);
-        expose(GameOnAdminPrizeService.class);
-        expose(GameOnGamePrizeService.class);
         expose(ItemService.class);
         expose(SimpleInventoryItemService.class);
         expose(AdvancedInventoryItemService.class);
@@ -608,6 +569,7 @@ public class ServicesModule extends PrivateModule {
         expose(BscWalletService.class);
         expose(Bscw3jClient.class);
         expose(BscTokenService.class);
+        expose(FormidiumService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -628,8 +590,7 @@ public class ServicesModule extends PrivateModule {
         expose(ScoreService.class).annotatedWith(Unscoped.class);
         expose(LeaderboardService.class).annotatedWith(Unscoped.class);
         expose(MockSessionService.class).annotatedWith(Unscoped.class);
-        expose(GameOnApplicationConfigurationService.class).annotatedWith(Unscoped.class);
-        expose(GameOnAdminPrizeService.class).annotatedWith(Unscoped.class);
+
         expose(ItemService.class).annotatedWith(Unscoped.class);
         expose(SimpleInventoryItemService.class).annotatedWith(Unscoped.class);
         expose(AdvancedInventoryItemService.class).annotatedWith(Unscoped.class);
@@ -658,6 +619,7 @@ public class ServicesModule extends PrivateModule {
         expose(BscWalletService.class).annotatedWith(Unscoped.class);
         expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
         expose(BscTokenService.class).annotatedWith(Unscoped.class);
+        expose(FormidiumService.class).annotatedWith(Unscoped.class);
 
     }
 

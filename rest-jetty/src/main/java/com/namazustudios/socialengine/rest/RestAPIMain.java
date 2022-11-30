@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.rest.guice.RestAPIModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.servlet.security.HappyServlet;
 import joptsimple.OptionException;
@@ -13,23 +12,19 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.DispatcherType;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
 import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static java.util.EnumSet.allOf;
-import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Singleton
@@ -84,18 +79,10 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         }
 
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        final var injector = createInjector(stage,
-            new RestAPIServerModule(),
-            new RestAPIModule(defaultConfigurationSupplier));
-
-        final var guiceFilter = injector.getInstance(GuiceFilter.class);
-        final var restDocRedirectFilter = injector.getInstance(RestDocRedirectFilter.class);
-        final var servletHandler = injector.getInstance(ServletContextHandler.class);
+        final var injector = createInjector(stage, new RestAPIServerModule(defaultConfigurationSupplier));
 
         this.server = injector.getInstance(Server.class);
         this.instance = injector.getInstance(Instance.class);
-        doInit(injector, guiceFilter, restDocRedirectFilter, servletHandler);
 
     }
 

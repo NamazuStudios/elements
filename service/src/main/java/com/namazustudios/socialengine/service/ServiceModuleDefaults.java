@@ -1,12 +1,15 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
+import com.namazustudios.socialengine.service.formidium.FormidiumConstants;
 
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.Constants.NEO_BLOCKCHAIN_PORT;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_URL;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ServiceModuleDefaults implements ModuleDefaults {
@@ -19,6 +22,8 @@ public class ServiceModuleDefaults implements ModuleDefaults {
         properties.put(NEO_BLOCKCHAIN_HOST, "http://127.0.0.1");
         properties.put(NEO_BLOCKCHAIN_PORT, "50012");
         properties.put(BSC_RPC_PROVIDER, "https://data-seed-prebsc-1-s1.binance.org:8545");
+        properties.setProperty(FORMIDIUM_API_KEY, "");
+        properties.setProperty(FORMIDIUM_API_URL, "https://csduat.formidium.com");
         return properties;
     }
 

@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.rest.guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.jersey.GenericMultipartFeature;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
@@ -37,6 +39,8 @@ public class GuiceResourceConfig extends ResourceConfig {
         if (!tryConfigureJackson() || !tryConfigureMoxy()) {
             logger.warn("Neither Jackson nor Moxy could be configured.  Using default media support.");
         }
+
+        tryConfigureMultipart();
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
 
@@ -85,6 +89,23 @@ public class GuiceResourceConfig extends ResourceConfig {
         } catch (NoSuchFieldException | IllegalAccessException ex) {
             logger.error("Failed to disable bean validation in MOXy.", ex);
             throw new InternalException(ex);
+        }
+    }
+
+    private boolean tryConfigureMultipart() {
+        try {
+
+            final Class<?> nativeMultipart = Class.forName("org.glassfish.jersey.media.multipart.MultiPartFeature");
+            logger.info("Found Native Multipart support {}", nativeMultipart);
+
+            final Class<?> genericMultipart = Class.forName("com.namazustudios.socialengine.rt.jersey.GenericMultipartFeature");
+            register(nativeMultipart);
+            register(genericMultipart);
+
+            return true;
+        } catch (ClassNotFoundException ex) {
+            logger.info("Multipart support not found.  Skipping support.");
+            return false;
         }
     }
 

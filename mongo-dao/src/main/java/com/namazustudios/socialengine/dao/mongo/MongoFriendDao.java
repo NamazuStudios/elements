@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.WriteResult;
 import com.mongodb.client.result.DeleteResult;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FriendDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
@@ -9,13 +9,14 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.FriendNotFoundException;
 import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -25,11 +26,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
-
 import java.util.List;
 
 import static com.namazustudios.socialengine.model.friend.Friendship.*;

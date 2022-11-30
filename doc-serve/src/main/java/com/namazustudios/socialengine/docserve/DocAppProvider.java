@@ -5,8 +5,8 @@ import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.docserve.guice.DocJerseyModule;
 import com.namazustudios.socialengine.docserve.guice.LuaStaticPathDocsModule;
-import com.namazustudios.socialengine.rest.guice.RestAPISecurityModule;
-import com.namazustudios.socialengine.rest.guice.RestAPIServicesModule;
+import com.namazustudios.socialengine.guice.StandardServletSecurityModule;
+import com.namazustudios.socialengine.guice.StandardServletServicesModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -117,8 +117,8 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var injector = getInjector().createChildInjector(
             new DocJerseyModule(),
-            new RestAPISecurityModule(),
-            new RestAPIServicesModule(),
+            new StandardServletSecurityModule(),
+            new StandardServletServicesModule(),
             new RedissonServicesModule(ServletScopes.REQUEST)
         );
 

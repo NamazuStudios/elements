@@ -3,14 +3,8 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.namazustudios.socialengine.dao.mongo.converter.*;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscToken;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.*;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscWallet;
-import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
-import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
-import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
+import com.namazustudios.socialengine.dao.mongo.model.formidium.MongoFormidiumInvestor;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
@@ -23,15 +17,12 @@ import com.namazustudios.socialengine.dao.mongo.model.schema.MongoTokenTemplate;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
+import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
-import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
-import com.namazustudios.socialengine.model.schema.template.TemplateTab;
+import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.model.friend.Friend;
-import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
-import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -47,6 +38,8 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
+import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
+import com.namazustudios.socialengine.model.schema.template.TemplateTab;
 import com.namazustudios.socialengine.model.schema.template.TokenTemplate;
 import com.namazustudios.socialengine.model.user.User;
 import org.dozer.DozerBeanMapper;
@@ -101,10 +94,6 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("projectId", "uniqueIdentifier");
 
-            mapping(GameOnApplicationConfiguration.class, MongoGameOnApplicationConfiguration.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("gameId", "uniqueIdentifier");
-
             mapping(Profile.class, MongoProfile.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                 .fields("application.id", "application.objectId", customConverter(ObjectIdConverter.class))
@@ -135,13 +124,6 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Friend.class, MongoFriendship.class)
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));
 
-            mapping(GameOnRegistration.class, MongoGameOnRegistration.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
-
-            mapping(GameOnSession.class, MongoGameOnSession.class)
-                .fields("id", "objectId", customConverter(MongoGameOnSessionId.Converter.class))
-                .fields("deviceOSType", "objectId.deviceOSType");
-
             mapping(Item.class, MongoItem.class)
                 .fields("id","objectId", customConverter(ObjectIdConverter.class))
                 .fields("metadata","metadata", customConverter(IdentityConverter.class));
@@ -157,28 +139,28 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
-                .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
-                .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
-                .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
+                    .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
+                    .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
+                    .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
 
             mapping(RewardIssuance.class, MongoRewardIssuance.class)
-                .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
-                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                    .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Reward.class, MongoReward.class)
-                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(ProgressMissionInfo.class, MongoProgressMissionInfo.class)
-                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Step.class, MongoStep.class)
-                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(ProductBundle.class, MongoProductBundle.class)
-                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Deployment.class, MongoDeployment.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(NeoWallet.class, MongoNeoWallet.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
@@ -189,7 +171,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("wallet", "wallet", customConverter(MongoBscWalletConverter.class));
 
             mapping(NeoToken.class, MongoNeoToken.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(ElementsSmartContract.class, MongoNeoSmartContract.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
@@ -198,12 +180,12 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(BscToken.class, MongoBscToken.class)
-                        .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(MetadataSpec.class, MongoMetadataSpec.class)
-                        .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                        .fields("name","name")
-                        .fields("tabs","tabs");
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields("name","name")
+                    .fields("tabs","tabs");
 
             mapping(TokenTemplate.class, MongoTokenTemplate.class)
                     .fields("id","objectId", customConverter(ObjectIdConverter.class))
@@ -214,13 +196,16 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("tabOrder","tabOrder");
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
-                .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))
-                .fields("slot", "saveDataDocumentId.slot", customConverter(IdentityConverter.class))
-                .fields("version", "version", customConverter(HexStringByteConverter.class));
+                    .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))
+                    .fields("slot", "saveDataDocumentId.slot", customConverter(IdentityConverter.class))
+                    .fields("version", "version", customConverter(HexStringByteConverter.class));
 
             mapping(DistinctInventoryItem.class, MongoDistinctInventoryItem.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("metadata","metadata", customConverter(IdentityConverter.class));;
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(FormidiumInvestor.class, MongoFormidiumInvestor.class)
+                    .fields("id", "id", customConverter(MongoHexableIdConverter.class));
 
             }
         };

@@ -11,9 +11,9 @@ import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.testkit.TestKit;
 import com.namazustudios.socialengine.rt.testkit.UnitTestModule;
-import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
-import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
-import com.namazustudios.socialengine.util.AppleDateFormat;
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
+import com.namazustudios.socialengine.rt.jersey.OctetStreamJsonMessageBodyReader;
+import com.namazustudios.socialengine.rt.util.AppleDateFormat;
 import joptsimple.OptionSpec;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -21,7 +21,7 @@ import java.text.DateFormat;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class AppServeTestKitMain {
 
@@ -58,22 +58,7 @@ public class AppServeTestKitMain {
 
         testKitMain.addModule(new GuiceIoCResolverModule())
                    .addModule(new ConfigurationModule(defaultConfigurationSupplier))
-                   .addModule(new JacksonHttpClientModule()
-                       .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-                       .withDefaultObjectMapperProvider(() -> {
-                           final ObjectMapper objectMapper = new ObjectMapper();
-                           objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                           return objectMapper;
-                       })
-                       .withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                           final ObjectMapper objectMapper = new ObjectMapper();
-                           final DateFormat dateFormat = new AppleDateFormat();
-                           objectMapper.setDateFormat(dateFormat);
-                           objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                           objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                           return objectMapper;
-                       })
-                   );
+                   .addModule(new JerseyHttpClientModule());
 
         testKitMain.run(optionSet -> {
 

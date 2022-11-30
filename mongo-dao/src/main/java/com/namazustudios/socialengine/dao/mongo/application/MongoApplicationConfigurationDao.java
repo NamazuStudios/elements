@@ -71,9 +71,6 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             case MATCHMAKING:
                 type = MongoMatchmakingApplicationConfiguration.class;
                 break;
-            case AMAZON_GAME_ON:
-                type = MongoGameOnApplicationConfiguration.class;
-                break;
             case ANDROID_GOOGLE_PLAY:
                 type = MongoGooglePlayApplicationConfiguration.class;
                 break;

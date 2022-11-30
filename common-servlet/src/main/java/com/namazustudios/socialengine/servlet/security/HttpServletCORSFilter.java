@@ -18,15 +18,46 @@ import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
 import static com.namazustudios.socialengine.Constants.DOC_OUTSIDE_URL;
 import static com.namazustudios.socialengine.Headers.*;
 import static com.namazustudios.socialengine.util.URIs.originFor;
+import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 
 public class HttpServletCORSFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpServletCORSFilter.class);
 
     private final Set<URI> allowedOrigins = new HashSet<>();
-    
+
+    public static final String INTERCEPT = "intercept";
+
+    public static final String INTERCEPT_RESPONSE_CODE = "intercept.response.code";
+
+    private ServletFilterProcessor<HttpServletRequest, HttpServletResponse> processor = this::proceedNormally;
+
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
+    public void init(final FilterConfig filterConfig) throws ServletException {
+
+        final var intercept = Boolean.parseBoolean(filterConfig.getInitParameter(INTERCEPT));
+
+        if (intercept) {
+
+            final var interceptResponseCode = filterConfig.getInitParameter(INTERCEPT_RESPONSE_CODE);
+
+            if (interceptResponseCode == null) {
+                logger.info("Using default intercept response code {}", SC_NO_CONTENT);
+                processor = ((request, response, chain) -> proceedWithIntercept(request, response, chain, SC_NO_CONTENT));
+            } else {
+                try {
+                    var code = Integer.parseInt(interceptResponseCode);
+                    logger.info("Using intercept response code {}", code);
+                    processor = ((request, response, chain) -> proceedWithIntercept(request, response, chain, code));
+                } catch (NumberFormatException ex) {
+                    logger.warn("Invalid intercept response code {}", interceptResponseCode);
+                    processor = ((request, response, chain) -> proceedWithIntercept(request, response, chain, SC_NO_CONTENT));
+                }
+            }
+
+        }
+
+    }
 
     @Override
     public void doFilter(final ServletRequest servletRequest,
@@ -51,16 +82,37 @@ public class HttpServletCORSFilter implements Filter {
             }
 
             if (isWildcard() || getAllowedOrigins().contains(origin)) {
-                httpServletResponse.addHeader(AC_ALLOW_ORIGIN, originHeader);
-                httpServletResponse.addHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
-                httpServletResponse.addHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
-                httpServletResponse.addHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
+                httpServletResponse.setHeader(AC_ALLOW_ORIGIN, originHeader);
+                httpServletResponse.setHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
+                httpServletResponse.setHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
+                httpServletResponse.setHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
             }
 
+            processor.process(httpServletRequest, httpServletResponse, chain);
+
+        } else {
+            chain.doFilter(servletRequest, servletResponse);
         }
 
-        chain.doFilter(servletRequest, servletResponse);
+    }
 
+    private void proceedNormally(
+            final HttpServletRequest httpServletRequest,
+            final HttpServletResponse httpServletResponse,
+            final FilterChain chain) throws IOException, ServletException {
+        chain.doFilter(httpServletRequest, httpServletResponse);
+    }
+
+    private void proceedWithIntercept(
+            final HttpServletRequest httpServletRequest,
+            final HttpServletResponse httpServletResponse,
+            final FilterChain chain,
+            final int status) throws IOException, ServletException {
+        if ("OPTIONS".equals(httpServletRequest.getMethod())) {
+            httpServletResponse.setStatus(status);
+        } else {
+            chain.doFilter(httpServletRequest, httpServletResponse);
+        }
     }
 
     private boolean isWildcard() {

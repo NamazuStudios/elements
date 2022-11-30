@@ -10,16 +10,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.ws.rs.client.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.util.concurrent.CompletionStage;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
@@ -43,10 +42,10 @@ public class HttpClientBuiltin implements Builtin {
 
     private final JavaFunction send = l -> {
 
-        final TaskId taskId = currentTaskId(l);
+        final var taskId = currentTaskId(l);
         if (taskId == null) throw new IllegalStateException("No currently running task.");
 
-        final String base = getRequiredStringField(l, "base");
+        final var base = getRequiredStringField(l, "base");
 
         WebTarget target = getClient().target(base);
         target = getRequiredStringField(l, "path", target::path);
@@ -60,7 +59,7 @@ public class HttpClientBuiltin implements Builtin {
         builder = getOptionalStringFields(l, "accept", builder, Invocation.Builder::accept);
         builder = getOptionalStringFields(l, "accept_language", builder, Invocation.Builder::acceptLanguage);
 
-        final String method = getRequiredStringField(l, "method");
+        final var method = getRequiredStringField(l, "method");
         final Entity<Object> requestEntity = getEntity(l);
 
         final CompletionStage<Response> responseCompletionStage =
@@ -88,9 +87,11 @@ public class HttpClientBuiltin implements Builtin {
 
                         final int status = response.getStatus();
                         final var headers = response.getHeaders();
-                        final Object responseEntity = SUCCESSFUL.equals(response.getStatusInfo().getFamily()) ?
-                            response.readEntity(Object.class) :
-                            null;
+
+                        final var responseEntity =
+                            SUCCESSFUL.equals(response.getStatusInfo().getFamily()) && response.hasEntity()
+                                ? response.readEntity(Object.class)
+                                : null;
 
                         logger.trace("Status: {}.  Headers: {}.  Entity: {}", status, headers, responseEntity);
                         getContext().getSchedulerContext().resume(taskId, status, headers, responseEntity);

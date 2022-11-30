@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.rt.lua.guice.rest;
 
+import org.glassfish.jersey.media.multipart.MultiPart;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -23,6 +26,7 @@ public class SimpleModelEndpoint {
     }
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public List<SimpleModel> getModels(
             @QueryParam("hello") final String hello,
             @QueryParam("world") final String world) {
@@ -35,6 +39,7 @@ public class SimpleModelEndpoint {
 
     @GET
     @Path("{id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public SimpleModel getModel(@PathParam("id") final String id) {
         final SimpleModel model = models.get(id);
         if (model == null) throw new NotFoundException();
@@ -42,6 +47,8 @@ public class SimpleModelEndpoint {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public SimpleModel create(final SimpleModel simpleModel) {
         final String id = randomUUID().toString();
         simpleModel.setId(id);
@@ -49,8 +56,35 @@ public class SimpleModelEndpoint {
         return simpleModel;
     }
 
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public SimpleModel createMultipartForm(final MultiPart multiPart) {
+
+        final var hello = getFormPart(multiPart, "hello");
+        final var world = getFormPart(multiPart, "world");
+
+        final var simpleModel = new SimpleModel();
+        simpleModel.setHello(hello);
+        simpleModel.setWorld(world);
+
+        return create(simpleModel);
+
+    }
+
+    private String getFormPart(final MultiPart multiPart, final String name) {
+        return multiPart.getBodyParts()
+            .stream()
+            .filter(bp -> bp.getContentDisposition().getParameters().get("name").equals(name))
+            .map(bp -> bp.getEntityAs(String.class))
+            .findFirst()
+            .orElseThrow(IllegalArgumentException::new);
+    }
+
     @PUT
     @Path("{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public SimpleModel update(@PathParam("id") final String id, final SimpleModel replacement) {
 
         replacement.setId(id);

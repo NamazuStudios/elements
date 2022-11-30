@@ -2,12 +2,14 @@
   <configuration default="false" name="RestAPIMain" type="Application" factoryName="Application" nameIsGenerated="true">
     <envs>
       <env name="com.namazustudios.socialengine.doc.url" value="http://localhost:8080/doc" />
+      <env name="com.namazustudios.socialengine.formidium.api.key" value="UW3hB42v9Lmsx3BlELfPlBijad61SFSs" />
+      <env name="logback.debug" value="true" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.rest.RestAPIMain" />
     <module name="rest-jetty" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.namazustudios.socialengine.rest.*" />
+        <option name="PATTERN" value="com.namazustudios.socialengine.rest.formidium.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
