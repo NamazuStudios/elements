@@ -9,20 +9,18 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.annotation.Expose;
-import dev.morphia.query.FindOptions;
-import dev.morphia.query.experimental.filters.Filters;
-import org.dozer.Mapper;
 import dev.morphia.Datastore;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
+import dev.morphia.query.experimental.filters.Filters;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Function;
 
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 
 public class MongoRankDao implements RankDao {

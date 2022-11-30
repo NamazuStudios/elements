@@ -2,9 +2,6 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.gridfs.GridFS;
-import com.mongodb.gridfs.GridFSDBFile;
-import com.mongodb.gridfs.GridFSInputFile;
 import com.namazustudios.socialengine.dao.FileDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
 

@@ -1,26 +1,21 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoException;
-import com.mongodb.client.model.ReturnDocument;
-import com.namazustudios.socialengine.exception.*;
-import com.namazustudios.socialengine.exception.user.UserNotFoundException;
-import com.namazustudios.socialengine.util.ValidationHelper;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

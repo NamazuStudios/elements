@@ -61,18 +61,19 @@
         <module>rt-jackson</module>
         <module>rt-jackson-guice</module>
         <module>rt-server-guice</module>
+        <module>rt-jersey-guice</module>
+        <module>rt-server-lua-testkit</module>
         <module>docker</module>
         <module>code-serve</module>
         <module>code-serve-guice</module>
         <module>code-serve-jetty</module>
-        <module>jetty-util</module>
+        <module>common-jetty</module>
         <module>cdn-serve</module>
         <module>cdn-serve-api</module>
         <module>cdn-serve-jetty</module>
         <module>app-serve</module>
         <module>app-serve-testkit</module>
         <module>app-node</module>
-        <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
         <module>web-ui-angular</module>
@@ -82,6 +83,8 @@
         <module>doc-serve</module>
         <module>doclet</module>
         <module>mongo-test</module>
+        <module>formidium-jetty</module>
+        <module>common-servlet-guice</module>
         <module>rpc-api</module>
         <module>rpc-api-guice</module>
         <module>rpc-api-jetty</module>

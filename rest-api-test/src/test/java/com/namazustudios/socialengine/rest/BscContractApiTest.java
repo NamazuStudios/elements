@@ -122,7 +122,8 @@ public class BscContractApiTest {
         contractId = contract.getId();
     }
 
-    @Test(dataProvider = "getAuthHeader")
+    //TODO: This test currently requires a GAS fee, so it should be left disabled for CI
+    @Test(dataProvider = "getAuthHeader", enabled = false)
     public void testSend(final String authHeader) {
 
         final var name = "Test";
@@ -160,8 +161,8 @@ public class BscContractApiTest {
         listingId = responseId;
     }
 
-
-    @Test(dataProvider = "getAuthHeader", dependsOnMethods = "testSend")
+    //TODO: This test currently requires a GAS fee, so it should be left disabled for C
+    @Test(dataProvider = "getAuthHeader", dependsOnMethods = "testSend", enabled = false)
     public void testCall(final String authHeader) {
 
         final var request = new EVMInvokeContractRequest();

@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.rest.guice.RestAPIModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.servlet.security.HappyServlet;
 import joptsimple.OptionException;
@@ -80,18 +79,10 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         }
 
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        final var injector = createInjector(stage,
-            new RestAPIServerModule(),
-            new RestAPIModule(defaultConfigurationSupplier));
-
-        final var guiceFilter = injector.getInstance(GuiceFilter.class);
-        final var restDocRedirectFilter = injector.getInstance(RestDocRedirectFilter.class);
-        final var servletHandler = injector.getInstance(ServletContextHandler.class);
+        final var injector = createInjector(stage, new RestAPIServerModule(defaultConfigurationSupplier));
 
         this.server = injector.getInstance(Server.class);
         this.instance = injector.getInstance(Instance.class);
-        doInit(injector, guiceFilter, restDocRedirectFilter, servletHandler);
 
     }
 

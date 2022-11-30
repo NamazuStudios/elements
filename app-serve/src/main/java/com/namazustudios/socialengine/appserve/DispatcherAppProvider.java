@@ -91,7 +91,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
         final var globalHeaderFilter = injector.getInstance(HttpServletGlobalSecretHeaderFilter.class);
 
-        final ServletContextHandler servletContextHandler = new ServletContextHandler();
+        final var servletContextHandler = new ServletContextHandler();
 
         final var path = getApplicationPathPrefix();
         servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));

@@ -7,20 +7,15 @@ EXPOSE 28883
 
 USER root:root
 
-RUN apt-get update && apt-get install -y cmake libssl-dev libsasl2-dev lua5.3 lua5.3-dev luarocks && \
-    wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz && \
-    tar xzf mongo-c-driver-1.21.1.tar.gz && \
-    cd mongo-c-driver-1.21.1 && \
-    mkdir cmake-build && \
-    cd cmake-build && \
-    cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && \
-    make install && \
-    luarocks install lua-mongo && \
-    apt-get autoremove && \
-    apt-get remove -y luarocks lua5.3-dev lua5.3 libsasl2-dev libssl-dev cmake && \
-    cd ../.. && \
-    rm -f mongo-c-driver-1.21.1.tar.gz && \
-    rm -rf mongo-c-driver-1.21.1
+RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsasl2-dev lua5.3 lua5.3-dev libmongoc-dev libbson-dev && \
+    wget https://luarocks.org/releases/luarocks-3.9.1.tar.gz && \
+    tar zxpf luarocks-3.9.1.tar.gz && \
+    cd luarocks-3.9.1 && \
+    ./configure && make && make install && \
+    cd .. && \
+    rm luarocks-3.9.1.tar.gz && \
+    rm -rf luarocks-3.9.1 && \
+    luarocks install lua-mongo
 
 USER elements:elements
 

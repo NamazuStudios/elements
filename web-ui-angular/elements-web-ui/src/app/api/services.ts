@@ -13,13 +13,6 @@ export { IOSApplicationConfigurationService } from './services/iosapplication-co
 export { MatchmakingApplicationConfigurationService } from './services/matchmaking-application-configuration.service';
 export { PSNApplicationConfigurationsService } from './services/psnapplication-configurations.service';
 export { FriendsService } from './services/friends.service';
-export { GameOnPrizesService } from './services/game-on-prizes.service';
-export { GameOnMatchesService } from './services/game-on-matches.service';
-export { GameOnPlayerTournamentService } from './services/game-on-player-tournament.service';
-export { GameOnRegistrationService } from './services/game-on-registration.service';
-export { GameOnSessionService } from './services/game-on-session.service';
-export { GameOnEntryService } from './services/game-on-entry.service';
-export { GameOnTournamentService } from './services/game-on-tournament.service';
 export { ItemsService } from './services/items.service';
 export { MissionsService } from './services/missions.service';
 export { LeaderboardsService } from './services/leaderboards.service';

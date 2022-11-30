@@ -30,9 +30,6 @@ import { FacebookApplicationConfigurationDialogComponent } from './facebook-appl
 import { FirebaseApplicationConfigurationDialogComponent } from './firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
 import {ConfigService} from "./config.service";
 import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
-import { GameOnApplicationConfigurationDialogComponent } from './game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
-import { GameOnPrizeDialogComponent } from './game-on-prize-dialog/game-on-prize-dialog.component';
-import { GameOnPrizesListComponent } from './game-on-prizes-list/game-on-prizes-list.component';
 import { ItemsListComponent } from './items-list/items-list.component';
 import { ItemDialogComponent } from './item-dialog/item-dialog.component';
 import { SimpleJsonEditorComponent } from './json-editor-card/simple-json-editor/simple-json-editor.component';
@@ -107,8 +104,6 @@ export function initialize(configService: ConfigService) {
     FacebookApplicationConfigurationDialogComponent,
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
-    GameOnApplicationConfigurationDialogComponent,
-    GameOnPrizeDialogComponent,
     IosApplicationConfigurationDialogComponent,
     AndroidGooglePlayConfigurationDialogComponent,
     ProductBundleEditorComponent,
@@ -117,7 +112,6 @@ export function initialize(configService: ConfigService) {
     LeaderboardDialogComponent,
     InventoryDialogComponent,
     ItemSelectDialogComponent
-
   ],
   declarations: [
     AppComponent,
@@ -134,9 +128,6 @@ export function initialize(configService: ConfigService) {
     FacebookApplicationConfigurationDialogComponent,
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
-    GameOnApplicationConfigurationDialogComponent,
-    GameOnPrizesListComponent,
-    GameOnPrizeDialogComponent,
     ItemsListComponent,
     ItemDialogComponent,
     SimpleJsonEditorComponent,

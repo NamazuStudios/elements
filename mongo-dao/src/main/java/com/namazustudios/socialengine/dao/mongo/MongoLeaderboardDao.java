@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
-import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.LeaderboardDao;
@@ -11,31 +10,23 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
-
-import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType.*;
-import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.ScoreStrategyType.*;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-
-import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoLeaderboardDao implements LeaderboardDao {
 

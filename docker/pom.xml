@@ -21,7 +21,6 @@
         <module>namazu-socialengine-app-node</module>
         <module>namazu-socialengine-cdn-serve</module>
         <module>namazu-socialengine-doc-serve</module>
-        <module>namazu-socialengine-rpc</module>
     </modules>
     <properties>
         <exec.plugin.version>1.6.0</exec.plugin.version>

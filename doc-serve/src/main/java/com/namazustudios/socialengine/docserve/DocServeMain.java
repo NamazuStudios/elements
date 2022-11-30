@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.docserve;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
@@ -13,28 +12,20 @@ import com.namazustudios.socialengine.docserve.guice.ServerModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.guice.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
-import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
-import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
-import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import javax.inject.Inject;
-import java.text.DateFormat;
 import java.util.List;
 import java.util.function.Supplier;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class DocServeMain implements Runnable {
 
@@ -104,7 +95,6 @@ public class DocServeMain implements Runnable {
             new ValidationModule(),
             new MongoSearchModule(),
             new ZContextModule(),
-            new GameOnInvokerModule(),
             new ClusterContextFactoryModule(),
             new JeroMQRemoteInvokerModule(),
             new JeroMQInstanceConnectionServiceModule(),
@@ -115,20 +105,7 @@ public class DocServeMain implements Runnable {
             new FirebaseAppFactoryModule(),
             new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
             new AppleIapReceiptInvokerModule(),
-            new JacksonHttpClientModule()
-                    .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-                    .withDefaultObjectMapperProvider(() -> {
-                        final ObjectMapper objectMapper = new ObjectMapper();
-                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                        return objectMapper;
-                    }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                final DateFormat dateFormat = new AppleDateFormat();
-                objectMapper.setDateFormat(dateFormat);
-                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            })
+            new JerseyHttpClientModule()
         );
 
     }

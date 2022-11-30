@@ -17,7 +17,6 @@ import {FacebookApplicationConfigurationDialogComponent} from '../facebook-appli
 import {FirebaseApplicationConfigurationDialogComponent} from '../firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
 import {MatchmakingApplicationConfigurationDialogComponent} from '../matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
 import {MatchmakingApplicationConfigurationService} from '../api/services/matchmaking-application-configuration.service';
-import {GameOnApplicationConfigurationDialogComponent} from '../game-on-application-configuration-dialog/game-on-application-configuration-dialog.component';
 import {IosApplicationConfigurationDialogComponent} from '../ios-application-configuration-dialog/ios-application-configuration-dialog.component';
 import {AndroidGooglePlayConfigurationDialogComponent} from '../android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
 import {IOSApplicationConfigurationService} from '../api/services/iosapplication-configuration.service';
@@ -134,11 +133,6 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           error => this.alertService.error(error));
 
         break;
-      case 'AMAZON_GAME_ON':
-        this.firebaseApplicationConfigurationService.deleteGameOnApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
-          error => this.alertService.error(error));
-
-        break;
       case 'IOS_APP_STORE':
         this.iosApplicationConfigurationService.deleteIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
           error => this.alertService.error(error));
@@ -202,15 +196,6 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         });
 
         break;
-      case 'AMAZON_GAME_ON':
-        this.showDialog(true, GameOnApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
-          this.firebaseApplicationConfigurationService.createGameOnApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
-              this.refresh();
-            },
-            error => this.alertService.error(error));
-        });
-
-        break;
       case 'IOS_APP_STORE':
         this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
           this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
@@ -265,17 +250,6 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
                 },
                 error => this.alertService.error(error));
             }));
-      case 'AMAZON_GAME_ON':
-        this.firebaseApplicationConfigurationService.getGameOnApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
-          .subscribe(applicationConfiguration =>
-            this.showDialog(false, GameOnApplicationConfigurationDialogComponent, applicationConfiguration, result => {
-              this.firebaseApplicationConfigurationService.updateApplicationConfiguration_1({ applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id, body: result }).subscribe(r => {
-                  this.refresh();
-                },
-                error => this.alertService.error(error));
-            }));
-
-        break;
       case 'IOS_APP_STORE':
         this.iosApplicationConfigurationService.getIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
           .subscribe(applicationConfiguration => {

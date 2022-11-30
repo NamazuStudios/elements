@@ -39,6 +39,11 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-servlet-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>service</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -70,6 +75,11 @@
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-jeromq-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-jersey-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -141,11 +151,12 @@
 
         <!-- Optional -->
 
-<!--        <dependency>-->
-<!--            <groupId>commons-logging</groupId>-->
-<!--            <artifactId>commons-logging</artifactId>-->
-<!--            <version>${commons.logging.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
+            <optional>true</optional>
+        </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
@@ -153,6 +164,14 @@
             <version>${jersey.version}</version>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-jersey-guice</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>

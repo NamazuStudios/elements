@@ -1,11 +1,11 @@
 package com.namazustudios.socialengine.model.applesignin;
 
-import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
+import com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy;
 
 import java.util.List;
 import java.util.Objects;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 @ClientSerializationStrategy(APPLE_ITUNES)
 public class JWKSet {

@@ -1,10 +1,6 @@
 package com.namazustudios.socialengine.service.appleiap.client.invoker;
 
-import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchResponse;
-import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapGrandUnifiedReceipt;
-import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapVerifyReceiptResponse;
-import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequest;
 
 public interface AppleIapVerifyReceiptInvoker {
 

@@ -115,7 +115,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>jetty-util</artifactId>
+            <artifactId>common-jetty</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -196,14 +196,19 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>service-guice</artifactId>
+            <artifactId>rt-jersey-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rest-api</artifactId>
+            <artifactId>service-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.namazustudios.socialengine</groupId>-->
+<!--            <artifactId>rest-api</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>

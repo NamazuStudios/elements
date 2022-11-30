@@ -14,7 +14,7 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 public class HttpServletGlobalSecretHeaderFilter implements Filter {
 
-    private Processor processor = this::proceed;
+    private ServletFilterProcessor<ServletRequest, ServletResponse> processor = this::proceed;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -23,7 +23,7 @@ public class HttpServletGlobalSecretHeaderFilter implements Filter {
     public void doFilter(final ServletRequest _request,
                          final ServletResponse _response,
                          final FilterChain chain) throws IOException, ServletException {
-        processor.doFilter(_request, _response, chain);
+        processor.process(_request, _response, chain);
     }
 
     private void proceed(final ServletRequest _request,
@@ -50,13 +50,6 @@ public class HttpServletGlobalSecretHeaderFilter implements Filter {
             }
 
         };
-    }
-
-    private interface Processor {
-        void doFilter(
-            final ServletRequest request,
-            final ServletResponse response,
-            final FilterChain chain)throws IOException, ServletException;
     }
 
 }

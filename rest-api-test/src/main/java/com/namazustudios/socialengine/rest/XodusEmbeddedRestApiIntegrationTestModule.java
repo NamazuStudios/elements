@@ -13,13 +13,13 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rest.guice.RestAPIModule;
+import com.namazustudios.socialengine.rest.guice.EmbeddedRestAPIModule;
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
+import com.namazustudios.socialengine.service.formidium.FormidiumConstants;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
-import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
@@ -46,6 +46,7 @@ import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoverySe
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerEnvironment.SCHEDULER_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
+import static com.namazustudios.socialengine.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.Runtime.getRuntime;
@@ -74,6 +75,7 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 final var properties = super.get();
                 properties.put(HTTP_PORT, "8081");
                 properties.put(TEST_API_ROOT, "http://localhost:8081/api/rest");
+                properties.put(FORMIDIUM_API_KEY, "UW3hB42v9Lmsx3BlELfPlBijad61SFSs");
                 properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
                 properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
                 properties.put(STATIC_HOST_INFO, format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT));
@@ -134,8 +136,8 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         }).in(SINGLETON);
 
-        install(new RestAPIServerModule());
-        install(new RestAPIModule(configurationSupplier));
+        install(new RestAPITestServerModule());
+        install(new EmbeddedRestAPIModule(configurationSupplier));
 
         bind(RestAPIMain.class).asEagerSingleton();
         bind(EmbeddedRestApi.class).asEagerSingleton();
@@ -181,7 +183,6 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 modules.add(new AppNodeSecurityModule());
                 modules.add(new ConfigurationModule(() -> properties));
                 modules.add(new AppleIapReceiptInvokerModule());
-                modules.add(new GameOnInvokerModule());
                 modules.add(new ClusterContextFactoryModule());
                 modules.add(new RedissonServicesModule(ResourceScope.getInstance()));
                 modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
