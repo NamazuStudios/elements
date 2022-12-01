@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.jrpc;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jrpc.JsonRpcRequest;
 
 import java.util.function.Consumer;
@@ -10,7 +9,10 @@ import java.util.function.Consumer;
  */
 public interface JsonRpcRedirectionStrategy {
 
-    String REDIRECT_URL = "com.namazustudios.socialengine.rt.jrpc.redirect.url";
+    /**
+     * Names the default redirect URLs.
+     */
+    String REDIRECT_URLS = "com.namazustudios.socialengine.jrpc.redirect.urls";
 
     /**
      * Redirects the JSON-RPC request.

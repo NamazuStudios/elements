@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine;
 
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+
 import java.math.BigInteger;
 
 public interface BlockchainConstants {
@@ -28,37 +30,53 @@ public interface BlockchainConstants {
     }
 
     /**
-     * Names of the supported blockchains
+     * Names of the supported blockchains.
+     *
+     * @deprecated use {@link BlockchainNetwork} instead
      */
+    @Deprecated
     interface Names {
 
         /**
          * The name of the NEO blockchain
+         * @deprecated use {@link BlockchainNetwork} instead
          */
+        @Deprecated
         String NEO = "NEO";
 
         /**
          * The name of the BSC blockchain
+         * @deprecated use {@link BlockchainNetwork} instead
          */
+        @Deprecated
         String BSC = "BSC";
 
     }
 
-    interface Topics {
+    /**
+     * Smart Contract Constants
+     *
+     * @deprecated migrate this to a configurable parameter
+     */
+    @Deprecated
+    interface SmartContracts {
 
         /**
-         * The root topic of the NeoApplicationLog type
+         * Gas Price
+         *
+         * @deprecated migrate this to a configurable parameter
          */
-        String NEO_APPLICATION_LOG = "neoapplicationlog";
-        /**
-         * The root topic of the BscApplicationLog type
-         */
-        String BSC_APPLICATION_LOG = "bscapplicationlog";
-    }
-
-    interface SmartContracts{
+        @Deprecated
         BigInteger GAS_PRICE = BigInteger.valueOf(20000000000L);
+
+        /**
+         * Gas Limits
+         *
+         * @deprecated migrate this to a configurable parameter
+         */
+        @Deprecated
         BigInteger GAS_LIMIT = BigInteger.valueOf(6721975);
+
     }
 
 }

@@ -1,18 +1,20 @@
 package com.namazustudios.socialengine.jrpc;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import org.reflections.Reflections;
 
-import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.jrpc.JsonRpcConstants.BLOCKCHAIN_NETWORK;
+import static com.namazustudios.socialengine.jrpc.JsonRpcRedirectionStrategy.REDIRECT_URLS;
 import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService.RPC_SERVICES;
 import static com.namazustudios.socialengine.rt.SimpleModelManifestService.RPC_MODELS;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
@@ -20,7 +22,7 @@ import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
 /**
  * Configures a JSON RPC module.
  */
-public class JrpcModule extends AbstractModule {
+public class JrpcModule extends PrivateModule {
 
     private ClassLoader classLoader;
 
@@ -43,13 +45,20 @@ public class JrpcModule extends AbstractModule {
     }
 
     /**
-     * Configures with the {@link JsonRpcNetwork} instance.
+     * Configures with the {@link BlockchainNetwork} instance.
      *
-     * @param jsonRpcNetwork the JSON RPC Network
+     * @param network the name of the network
      * @return this instance
      */
-    public JrpcModule withNetwork(final JsonRpcNetwork jsonRpcNetwork) {
-        return scanningScope(jsonRpcNetwork.getScope()).withRedirectProvider(jsonRpcNetwork.getUrlProvider());
+    public JrpcModule withNetwork(final BlockchainNetwork network) {
+
+        bindings.add(() -> bind(BlockchainNetwork.class)
+            .annotatedWith(named(BLOCKCHAIN_NETWORK))
+            .toInstance(network)
+        );
+
+        return this;
+
     }
 
     /**
@@ -101,15 +110,21 @@ public class JrpcModule extends AbstractModule {
     /**
      * Specifies the redirect provider.
      *
-     * @param providerClass the provider class
      * @return this instance
      */
-    public JrpcModule withRedirectProvider(final Class<? extends Provider<String>> providerClass) {
+    public JrpcModule withHttpRedirectProvider(final String redirectUrls) {
 
-        bindings.add(() -> bind(String.class)
-            .annotatedWith(named(JsonRpcRedirectionStrategy.REDIRECT_URL))
-            .toProvider(providerClass)
-        );
+        bindings.add(() -> {
+
+            bind(String.class)
+                    .annotatedWith(named(REDIRECT_URLS))
+                    .toInstance(redirectUrls);
+
+            bind(JsonRpcRedirectionStrategy.class)
+                    .to(JsonRpcHttpRedirectionStrategy.class)
+                    .asEagerSingleton();
+
+        });
 
         return this;
 

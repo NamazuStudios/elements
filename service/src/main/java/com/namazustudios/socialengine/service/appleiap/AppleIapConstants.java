@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.service.appleiap;
 
 
 public interface AppleIapConstants {

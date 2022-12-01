@@ -18,7 +18,7 @@ public class RpcResourceConfig extends ResourceConfig {
     public RpcResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
 
         register(JacksonFeature.class);
-        packages(true, "com.namazustudios.socialengine.rest");
+        packages(true, "com.namazustudios.socialengine.jrpc");
         packages(true, "com.namazustudios.socialengine.model");
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);

@@ -13,7 +13,7 @@ public class FormidiumModuleDefaults implements ModuleDefaults {
         final var properties = new Properties();
         properties.setProperty(FORMIDIUM_API_KEY, "");
         properties.setProperty(FORMIDIUM_API_URL, "https://csduat.formidium.com");
-        properties.setProperty(FORMIDIUM_CONTEXT_ROOT, "formidium");
+        properties.setProperty(FormidiumAppProvider.FORMIDIUM_CONTEXT_ROOT, "formidium");
         return properties;
     }
 

@@ -21,8 +21,6 @@ public class RpcJerseyModule extends ServletModule {
         bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
         bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
 
-        bind(SessionService.class).to(DefaultSessionService.class);
-
         final var params = Map.of("javax.ws.rs.Application", RpcResourceConfig.class.getName());
 
         serve("/*").with(ServletContainer.class, params);

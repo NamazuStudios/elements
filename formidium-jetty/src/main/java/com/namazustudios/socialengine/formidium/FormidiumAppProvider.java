@@ -28,6 +28,11 @@ import static java.lang.String.format;
 
 public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvider {
 
+    /**
+     * Specifies the formidium context root.
+     */
+    public static final String FORMIDIUM_CONTEXT_ROOT = "com.namazustudios.socialengine.formidium.context.root";
+
     private static final Logger logger = LoggerFactory.getLogger(FormidiumProxyServlet.class);
 
     private Injector injector;
