@@ -23,7 +23,7 @@ import java.util.*;
 
 import static com.namazustudios.socialengine.rt.SimpleModelManifestService.RPC_MODELS;
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
-import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -142,7 +142,7 @@ public class SimpleInvocationResolutionServiceTestHappy {
 
     private Method findJsonRpcMethod(final Class<?> cls, final JsonRpcMethod jsonRpcMethod) {
 
-        final var scope = RemoteService.Util.getScope(cls, ELEMENTS_JSON_RPC_HTTP_PROTOCOL, getScope());
+        final var scope = RemoteService.Util.getScope(cls, ELEMENTS_JSON_RPC_PROTOCOL, getScope());
         final var mcf = scope.style().methodCaseFormat();
 
         return Reflection

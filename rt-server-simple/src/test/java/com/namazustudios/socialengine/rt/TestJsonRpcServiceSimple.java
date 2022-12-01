@@ -5,10 +5,10 @@ import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
 
-import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
 
-@RemoteService(scopes = @RemoteScope(scope = HAPPY_SCOPE, protocol = ELEMENTS_JSON_RPC_HTTP_PROTOCOL))
+@RemoteService(scopes = @RemoteScope(scope = HAPPY_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL))
 public class TestJsonRpcServiceSimple {
 
     @RemotelyInvokable

@@ -33,7 +33,7 @@ public @interface RemoteScope {
     /**
      * The JSON-RPC Protocol tunneled via HTTP.
      */
-    String ELEMENTS_JSON_RPC_HTTP_PROTOCOL = "eci:json-rpc:http";
+    String ELEMENTS_JSON_RPC_PROTOCOL = "eci:json-rpc";
 
     /**
      * Indicates the scope for remote dispatch

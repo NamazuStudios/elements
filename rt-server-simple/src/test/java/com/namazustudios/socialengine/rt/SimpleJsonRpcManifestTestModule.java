@@ -70,7 +70,7 @@ public abstract class SimpleJsonRpcManifestTestModule extends AbstractModule {
         }
 
         bind(String.class).annotatedWith(Names.named(REMOTE_SCOPE)).toInstance(scope);
-        bind(String.class).annotatedWith(Names.named(REMOTE_PROTOCOL)).toInstance(ELEMENTS_JSON_RPC_HTTP_PROTOCOL);
+        bind(String.class).annotatedWith(Names.named(REMOTE_PROTOCOL)).toInstance(ELEMENTS_JSON_RPC_PROTOCOL);
 
     }
 

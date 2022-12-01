@@ -15,7 +15,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import static com.namazustudios.socialengine.rt.annotation.CodeStyle.JVM_NATIVE;
-import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.AssertJUnit.*;
 
@@ -76,7 +76,7 @@ public class SimpleJsonRpcManifestTestHappy {
 
         final var scope = RemoteService.Util.getScope(
             cls,
-            ELEMENTS_JSON_RPC_HTTP_PROTOCOL,
+                ELEMENTS_JSON_RPC_PROTOCOL,
             SimpleJsonRpcManifestTestModule.HAPPY_SCOPE
         );
 

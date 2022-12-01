@@ -25,6 +25,8 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
 
     public static final String RPC_SERVICES = "com.namazustudios.socialengine.rt.rpc.service.classes";
 
+    public static final String MANIFEST_PAYLOAD_READER = "com.namazustudios.socialengine.rt.rpc.simple.manifest.payload.reader";
+
     private final String scope;
 
     private final String protocol;
@@ -48,6 +50,7 @@ public class SimpleJsonRpcManifestService implements JsonRpcManifestService {
             @Named(RPC_SERVICES)
             final Set<Class<?>> jsonRpcServices,
             final Validator validator,
+            @Named(MANIFEST_PAYLOAD_READER)
             final PayloadReader payloadReader,
             final ModelIntrospector modelIntrospector) {
 

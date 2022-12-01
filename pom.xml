@@ -88,6 +88,7 @@
         <module>rpc-api</module>
         <module>rpc-api-guice</module>
         <module>rpc-api-jetty</module>
+        <module>rpc-api-ethereum</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

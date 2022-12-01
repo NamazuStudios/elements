@@ -6,8 +6,9 @@ import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.guice.StandardServletRedissonServicesModule;
 import com.namazustudios.socialengine.guice.StandardServletSecurityModule;
 import com.namazustudios.socialengine.guice.StandardServletServicesModule;
-import com.namazustudios.socialengine.jrpc.JrpcModule;
+import com.namazustudios.socialengine.jrpc.JsonRpcModule;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.rpc.guice.JsonRpcJacksonModule;
 import com.namazustudios.socialengine.rpc.guice.RpcJerseyModule;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -28,7 +29,7 @@ import static com.namazustudios.socialengine.servlet.security.HttpPathUtils.norm
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
 
-public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
+public class BlockchainNetworkRpcAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private static final String NETWORK_PREFIX_FORMAT = "%s/net/%s";
 
@@ -40,14 +41,10 @@ public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
 
     @Override
     protected void doStart() {
-        doStartJrpcNetworks();
-    }
-
-    private void doStartJrpcNetworks() {
         for (var jsonRpcNetwork : BlockchainNetwork.values()) {
 
             final var contextPath = normalize(format(
-                NETWORK_PREFIX_FORMAT,
+                    NETWORK_PREFIX_FORMAT,
                     getRootContext(),
                     jsonRpcNetwork.toString().toLowerCase()
             ));
@@ -78,10 +75,11 @@ public class RpcAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var injector = getInjector().createChildInjector(
                 new RpcJerseyModule(),
+                new JsonRpcJacksonModule(),
                 new StandardServletSecurityModule(),
                 new StandardServletServicesModule(),
                 new StandardServletRedissonServicesModule(),
-                new JrpcModule()
+                new JsonRpcModule()
                         .withNetwork(blockchainNetwork)
                         .withHttpRedirectProvider(urls)
                         .scanningScope(blockchainNetwork.protocol().toString())

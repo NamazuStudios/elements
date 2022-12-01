@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.rpc.guice;
 
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rpc.RpcResourceConfig;
-import com.namazustudios.socialengine.service.SessionService;
-import com.namazustudios.socialengine.service.auth.DefaultSessionService;
 import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
 import com.namazustudios.socialengine.servlet.security.HttpServletGlobalSecretHeaderFilter;
 import com.namazustudios.socialengine.servlet.security.HttpServletSessionIdAuthenticationFilter;

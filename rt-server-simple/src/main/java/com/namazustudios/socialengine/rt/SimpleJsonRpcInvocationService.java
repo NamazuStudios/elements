@@ -37,6 +37,8 @@ import static java.util.stream.Collectors.toList;
 
 public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService {
 
+    public static final String INVOCATION_PAYLOAD_READER = "com.namazustudios.socialengine.rt.rpc.simple.invocation.payload.reader";
+
     private String scope;
 
     private String protocol;
@@ -329,7 +331,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
     }
 
     @Inject
-    public void setPayloadReader(PayloadReader payloadReader) {
+    public void setPayloadReader(@Named(INVOCATION_PAYLOAD_READER) PayloadReader payloadReader) {
         this.payloadReader = payloadReader;
     }
 

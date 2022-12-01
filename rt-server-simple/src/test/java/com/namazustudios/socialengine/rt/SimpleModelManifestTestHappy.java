@@ -8,7 +8,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import ru.vyarus.guice.validator.ValidationModule;
 
-import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_HTTP_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestTestModule.HAPPY_SCOPE;
 import static org.testng.Assert.assertEquals;
 
@@ -30,7 +30,7 @@ public class SimpleModelManifestTestHappy {
     @Test(dataProvider = "getModelsToTest")
     public void testModel(final Class<?> cls) {
         final var name = RemoteModel.Util.getName(cls);
-        final var scope = RemoteModel.Util.getScope(cls, ELEMENTS_JSON_RPC_HTTP_PROTOCOL, HAPPY_SCOPE);
+        final var scope = RemoteModel.Util.getScope(cls, ELEMENTS_JSON_RPC_PROTOCOL, HAPPY_SCOPE);
         final var models = getUnderTest().getModelManifest().getModelsByName();
         final var actual = models.get(name);
         final var expected = getModelIntrospector().introspectClassForModel(cls, scope);

@@ -16,6 +16,7 @@ import javax.ws.rs.container.Suspended;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+@Path("jrpc")
 public class JsonRpcResource {
 
     private JsonRpcManifestService jsonRpcManifestService;
@@ -27,7 +28,7 @@ public class JsonRpcResource {
     private LocalInvocationDispatcher localInvocationDispatcher;
 
     @GET
-    @Path("jrpc")
+    @Path("invoke")
     @Consumes({
         APPLICATION_JSON,
         "application/json-rpc",
@@ -82,7 +83,7 @@ public class JsonRpcResource {
     }
 
     @POST
-    @Path("jrpc")
+    @Path("invoke")
     @Consumes({
         APPLICATION_JSON,
         "application/json-rpc",
