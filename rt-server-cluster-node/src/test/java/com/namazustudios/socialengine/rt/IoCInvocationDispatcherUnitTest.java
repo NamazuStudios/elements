@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import com.namazustudios.socialengine.rt.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.remote.*;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.*;
@@ -334,6 +337,14 @@ public class IoCInvocationDispatcherUnitTest {
 
             bind(IocResolver.class).toInstance(new GuiceIoCResolver());
             bind(LocalInvocationDispatcher.class).to(IoCLocalInvocationDispatcher.class);
+
+            bind(String.class)
+                    .annotatedWith(named(REMOTE_SCOPE))
+                    .toInstance(WORKER_SCOPE);
+
+            bind(String.class)
+                    .annotatedWith(named(REMOTE_PROTOCOL))
+                    .toInstance(ELEMENTS_RT_PROTOCOL);
 
         }
 
