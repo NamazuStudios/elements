@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
+import com.namazustudios.socialengine.rt.annotation.Proxyable;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
+import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
@@ -9,12 +12,14 @@ import java.util.Random;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+@Proxyable
+@RemoteService(scopes = @RemoteScope(scope = MASTER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public class IntegrationTestService implements TestServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(IntegrationTestService.class);
