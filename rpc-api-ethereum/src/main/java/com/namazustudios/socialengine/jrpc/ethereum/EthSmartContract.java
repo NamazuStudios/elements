@@ -22,7 +22,9 @@ import static com.namazustudios.socialengine.rt.annotation.CaseFormat.NATURAL;
 public class EthSmartContract {
 
     @RemotelyInvokable
-    public Object getBlockByHash(final String blockHash, final boolean fullTransactionObjects) {
+    public Object getBlockByHash(
+            @Serialize("blockHash") final String blockHash,
+            @Serialize("fullTransactionObjects") final boolean fullTransactionObjects) {
         return Map.of("message", "Hello World!");
     }
 

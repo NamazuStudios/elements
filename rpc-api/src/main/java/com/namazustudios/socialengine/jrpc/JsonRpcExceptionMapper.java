@@ -23,8 +23,12 @@ public class JsonRpcExceptionMapper implements ExceptionMapper<Exception> {
         final var errorResponse = new ErrorResponse();
 
         jrpcError.setData(errorResponse);
-        jrpcError.setMessage(exception.getMessage());
-        errorResponse.setMessage(exception.getMessage());
+        jrpcError.setMessage(exception.getMessage() == null
+                ? exception.getClass().getName()
+                : exception.getMessage()
+        );
+
+        errorResponse.setMessage(jrpcError.getMessage());
 
         if (exception instanceof MethodNotFoundException) {
             final var mnfe = (MethodNotFoundException) exception;

@@ -114,6 +114,8 @@ public class LocalInvocationProcessorBuilder {
                 parameterTypes.add(float.class);
             } else if (double.class.getName().equals(parameter)) {
                 parameterTypes.add(double.class);
+            } else if (boolean.class.getName().equals(parameter)) {
+                parameterTypes.add(boolean.class);
             } else {
                 parameterTypes.add(Class.forName(parameter));
             }
