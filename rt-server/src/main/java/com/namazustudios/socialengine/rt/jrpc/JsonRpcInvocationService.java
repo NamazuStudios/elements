@@ -27,14 +27,14 @@ public interface JsonRpcInvocationService {
          *
          * @return the invocation
          */
-        Invocation getInvocation();
+        Invocation newInvocation();
 
         /**
          * Gets the {@link ResultHandlerStrategy} which defines the various
          *
          * @return the {@link ResultHandlerStrategy}
          */
-        ResultHandlerStrategy getResultHandlerStrategy();
+        ResultHandlerStrategy newResultHandlerStrategy();
 
     }
 

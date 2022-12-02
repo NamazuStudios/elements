@@ -73,7 +73,7 @@ public class SimpleInvocationResolutionServiceTestHappy {
         jsonRpcRequest.setParams(params);
 
         final var invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
-        ensureInvocationMethodExists(jsonRpcMethod, invocation.getInvocation());
+        ensureInvocationMethodExists(jsonRpcMethod, invocation.newInvocation());
 
     }
 
@@ -91,7 +91,7 @@ public class SimpleInvocationResolutionServiceTestHappy {
         jsonRpcRequest.setParams(params);
 
         final var invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
-        ensureInvocationMethodExists(jsonRpcMethod, invocation.getInvocation());
+        ensureInvocationMethodExists(jsonRpcMethod, invocation.newInvocation());
 
     }
     @DataProvider
@@ -118,7 +118,7 @@ public class SimpleInvocationResolutionServiceTestHappy {
         jsonRpcRequest.setParams(params);
 
         final var invocation = getJsonRpcInvocationService().resolve(jsonRpcRequest);
-        ensureInvocationMethodExists(jsonRpcMethod, invocation.getInvocation());
+        ensureInvocationMethodExists(jsonRpcMethod, invocation.newInvocation());
 
     }
 

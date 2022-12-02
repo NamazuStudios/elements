@@ -116,12 +116,14 @@ public class JsonRpcResource {
 
         }
 
+        final var resultHandlerStrategy = resolution.newResultHandlerStrategy();
+
         final var subscription = Subscription.begin()
-            .chain(resolution.getResultHandlerStrategy().onError(asyncResponse::resume))
-            .chain(resolution.getResultHandlerStrategy().onFinalResult(asyncResponse::resume));
+            .chain(resultHandlerStrategy.onError(asyncResponse::resume))
+            .chain(resultHandlerStrategy.onFinalResult(asyncResponse::resume));
 
         asyncResponse.setTimeoutHandler(ar -> subscription.unsubscribe());
-        getLocalInvocationDispatcher().dispatch(resolution.getInvocation(), resolution.getResultHandlerStrategy());
+        getLocalInvocationDispatcher().dispatch(resolution.newInvocation(), resultHandlerStrategy);
 
     }
 

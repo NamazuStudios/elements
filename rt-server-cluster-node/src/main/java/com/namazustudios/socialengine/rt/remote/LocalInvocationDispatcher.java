@@ -34,7 +34,7 @@ public interface LocalInvocationDispatcher {
         dispatch(
             invocation,
             resultHandlerStrategy.getSyncResultConsumer(),
-            resultHandlerStrategy.getAsyncInvocationErrorConsumer(),
+            resultHandlerStrategy.getSyncErrorConsumer(),
             resultHandlerStrategy.getAsyncInvocationResultConsumers(),
             resultHandlerStrategy.getAsyncInvocationErrorConsumer()
         );

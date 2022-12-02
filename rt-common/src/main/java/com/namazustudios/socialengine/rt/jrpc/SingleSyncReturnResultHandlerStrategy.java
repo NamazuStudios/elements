@@ -67,7 +67,7 @@ public class SingleSyncReturnResultHandlerStrategy implements ResultHandlerStrat
 
     @Override
     public Consumer<InvocationError> getAsyncInvocationErrorConsumer() {
-        return ie -> logger.error("Got async error when not expected.", ie.getThrowable());
+        return invocationErrorConsumer;
     }
 
     @Override

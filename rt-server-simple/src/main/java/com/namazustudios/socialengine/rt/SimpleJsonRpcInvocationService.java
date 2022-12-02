@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
-import com.namazustudios.socialengine.rt.exception.BadRequestException;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
-import com.namazustudios.socialengine.rt.exception.ServiceNotFoundException;
+import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.jrpc.*;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcManifest;
 import com.namazustudios.socialengine.rt.manifest.jrpc.JsonRpcParameter;
@@ -97,12 +94,12 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
             );
 
             @Override
-            public Invocation getInvocation() {
+            public Invocation newInvocation() {
                 return invocationProcessor.apply(jsonRpcRequest);
             }
 
             @Override
-            public ResultHandlerStrategy getResultHandlerStrategy() {
+            public ResultHandlerStrategy newResultHandlerStrategy() {
                 return resultHandlerStrategyProcessor.apply(jsonRpcRequest);
             }
 
@@ -164,7 +161,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
             final var jsonParameters = getPayloadReader().convert(List.class, jsonRpcRequest.getParams());
 
             if (jsonParameters.size() != javaParameterTypes.size()) {
-                throw new BadRequestException(
+                throw new BadParameterException(
                     "Incorrect parameter count for method " + key.getMethod() +
                     "(expected " + javaParameterTypes.size() + ")."
                 );
@@ -213,7 +210,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
         final var javaParameters = resolution.getServiceMethod().getParameters();
 
         if (javaParameters.length != 1) {
-            throw new BadRequestException(
+            throw new BadParameterException(
                 "Incorrect parameter count for method " + key.getMethod() + " " +
                 "(expected 1)."
             );
@@ -230,7 +227,7 @@ public class SimpleJsonRpcInvocationService implements JsonRpcInvocationService 
             } else if (jp.getType().isPrimitive()) {
 
                 if (!(params instanceof Boolean || params instanceof Number)) {
-                    throw new BadRequestException(
+                    throw new BadParameterException(
                         "Incorrect parameter type for method " + key.getMethod() +
                         "(expected " + jp.getType() + ")."
                     );

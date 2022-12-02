@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rest.support;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.ValidationErrorResponse;

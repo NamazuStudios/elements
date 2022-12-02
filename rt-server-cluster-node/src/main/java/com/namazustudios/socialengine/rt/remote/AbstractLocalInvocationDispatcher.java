@@ -108,7 +108,7 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
             logger.error("Caught exception resolving target for invocation.", ex);
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(ex);
-            asyncInvocationErrorConsumer.accept(invocationError);
+            syncInvocationErrorConsumer.accept(invocationError);
             return;
         }
 
