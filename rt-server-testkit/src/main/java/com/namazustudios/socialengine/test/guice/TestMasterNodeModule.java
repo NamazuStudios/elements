@@ -11,6 +11,8 @@ import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_RT_PROTOCOL;
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 
@@ -46,6 +48,15 @@ public class TestMasterNodeModule extends PrivateModule {
         bind(LocalInvocationDispatcher.class)
             .to(MasterNodeLocalInvocationDispatcher.class)
             .asEagerSingleton();
+
+
+        bind(String.class)
+                .annotatedWith(named(REMOTE_SCOPE))
+                .toInstance(MASTER_SCOPE);
+
+        bind(String.class)
+                .annotatedWith(named(REMOTE_PROTOCOL))
+                .toInstance(ELEMENTS_RT_PROTOCOL);
 
     }
 }
