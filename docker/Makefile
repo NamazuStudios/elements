@@ -64,7 +64,6 @@ revision: login deps
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-ui,ui)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-base,base)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-api,api)
-	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-rpc,rpc)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-app-node,app-node)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-app-serve,app-serve)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-code-serve,code-serve)
