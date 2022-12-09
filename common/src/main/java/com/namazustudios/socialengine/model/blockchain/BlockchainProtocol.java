@@ -13,6 +13,11 @@ public enum BlockchainProtocol {
     /**
      * The Ethereum Protocol.
      */
-    ETHEREUM
+    ETHEREUM,
+
+    /**
+     * The Solana protocol.
+     */
+    SOLANA
 
 }

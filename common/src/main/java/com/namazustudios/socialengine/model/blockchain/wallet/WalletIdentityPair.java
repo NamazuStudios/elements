@@ -1,0 +1,67 @@
+package com.namazustudios.socialengine.model.blockchain.wallet;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+import java.util.Objects;
+
+@ApiModel
+public class WalletIdentityPair {
+
+    @ApiModelProperty("The Wallet Address - id public identity.")
+    private String address;
+
+    @ApiModelProperty("The Wallet Account - id private identity.")
+    private String account;
+
+    @ApiModelProperty("Indicates if this identity is encrypted.")
+    private boolean encrypted;
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public boolean isEncrypted() {
+        return encrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        this.encrypted = encrypted;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WalletIdentityPair that = (WalletIdentityPair) o;
+        return isEncrypted() == that.isEncrypted() && Objects.equals(getAddress(), that.getAddress()) && Objects.equals(getAccount(), that.getAccount());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAddress(), getAccount(), isEncrypted());
+    }
+
+    @Override
+    public String toString() {
+        // This is here deliberately to ensure that the wallet's sensitive contents do not get logged to. Therefore,
+        // all fields are skipped except the encrypted flag.
+        final StringBuilder sb = new StringBuilder("WalletIdentityPair{");
+        sb.append("encrypted=").append(encrypted);
+        sb.append('}');
+        return sb.toString();
+    }
+
+}

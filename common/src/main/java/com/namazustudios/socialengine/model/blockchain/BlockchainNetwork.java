@@ -25,7 +25,27 @@ public enum BlockchainNetwork {
     /**
      * Binance Smart Chain Test Network.
      */
-    BSC_TEST(BlockchainProtocol.ETHEREUM);
+    BSC_TEST(BlockchainProtocol.ETHEREUM),
+
+    /**
+     * The Polygon Main Net
+     */
+    POLYGON(BlockchainProtocol.ETHEREUM),
+
+    /**
+     * The Polygon Test Net
+     */
+    POLYGON_TEST(BlockchainProtocol.ETHEREUM),
+
+    /**
+     * The Solana Network
+     */
+    SOLANA(BlockchainProtocol.SOLANA),
+
+    /**
+     * The Solana Test Network
+     */
+    SOLANA_TEST(BlockchainProtocol.SOLANA);
 
     public final BlockchainProtocol protocol;
 

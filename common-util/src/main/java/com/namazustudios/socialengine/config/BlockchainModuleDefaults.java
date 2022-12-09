@@ -36,6 +36,12 @@ public class BlockchainModuleDefaults implements ModuleDefaults {
                 "https://data-seed-prebsc-2-s3.binance.org:8545/"
         )));
 
+        properties.put(POLYGON.urlsName(), "https://polygon-rpc.com/");
+        properties.put(POLYGON_TEST.urlsName(), "https://rpc-mumbai.matic.today/");
+
+        properties.put(SOLANA.urlsName(), "http://localhost:8899/");
+        properties.put(SOLANA_TEST.urlsName(), "http://localhost:8899/");
+
         return properties;
 
     }

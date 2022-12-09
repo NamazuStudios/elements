@@ -43,6 +43,14 @@ public interface BscWalletService {
     BscWallet getWallet(String walletNameOrId);
 
     /**
+     * Creates a new Wallet.
+     *
+     * @param walletRequest the {@link CreateBscWalletRequest} with the information to create
+     * @return the {@link BscWallet} as it was created by the service.
+     */
+    BscWallet createWallet(CreateBscWalletRequest walletRequest);
+
+    /**
      * Updates the supplied {@link BscWallet}.
      *
      * @param walletId the Id of the wallet to update.
@@ -52,17 +60,10 @@ public interface BscWalletService {
     BscWallet updateWallet(String walletId, UpdateBscWalletRequest walletRequest);
 
     /**
-     * Creates a new Wallet.
-     *
-     * @param walletRequest the {@link CreateBscWalletRequest} with the information to create
-     * @return the {@link BscWallet} as it was created by the service.
-     */
-    BscWallet createWallet(CreateBscWalletRequest walletRequest);
-
-    /**
      * Deletes the {@link BscWallet} with the supplied wallet ID.
      *
      * @param walletId the wallet Id.
      */
     void deleteWallet(String walletId);
+
 }

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.model.blockchain.bsc;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+@Deprecated
 @ApiModel(description = "Represents a request to update a Bsc Wallet.")
 public class UpdateBscWalletRequest {
 

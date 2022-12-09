@@ -10,7 +10,6 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 
 /**
- * Manages instances of {@link Bscw3j}.
  *
  * Created by Tuan Tran on 3/24/21.
  */
