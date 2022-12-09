@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.blockchain;
+package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -92,7 +92,7 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
             throw new IllegalArgumentException("Identity is already encrypted.");
         }
 
-        final var unencrypted = identity.getAccount();
+        final var unencrypted = identity.getPrivateKey();
 
         if (unencrypted == null) {
             throw new IllegalArgumentException("Account must not be null.");
@@ -105,7 +105,7 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
             final var unencryptedBytes = unencrypted.getBytes(StandardCharsets.UTF_8);
             final var encryptedBytes = cipher.doFinal(unencryptedBytes);
             final var encryptedString = Hex.encode(encryptedBytes);
-            encrypted.setAccount(encryptedString);
+            encrypted.setPrivateKey(encryptedString);
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
         }
@@ -151,12 +151,12 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
         decrypted.setEncrypted(false);
 
         try {
-            final var encrypted = identity.getAccount();
+            final var encrypted = identity.getPrivateKey();
             final var cipher = getCipher(iv, salt, passphrase, aesEncryptionSpec, Cipher.DECRYPT_MODE);
             final var encryptedBytes = Hex.decode(encrypted);
             final var decryptedBytes = cipher.doFinal(encryptedBytes);
             final var decryptedString = new String(decryptedBytes, StandardCharsets.UTF_8);
-            decrypted.setAccount(decryptedString);
+            decrypted.setPrivateKey(decryptedString);
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
         }

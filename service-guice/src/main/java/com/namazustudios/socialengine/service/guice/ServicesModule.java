@@ -88,7 +88,7 @@ public class ServicesModule extends PrivateModule {
 
     @Override
     protected void configure() {
-
+        
         install(new DatabaseHealthStatusDaoAggregator());
 
         bind(CryptoKeyUtility.class)

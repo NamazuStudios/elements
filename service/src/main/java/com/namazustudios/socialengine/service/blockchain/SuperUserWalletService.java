@@ -10,6 +10,8 @@ import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletReques
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.service.WalletService;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
 import com.namazustudios.socialengine.util.ValidationHelper;
 
 import javax.inject.Inject;
@@ -102,7 +104,13 @@ public class SuperUserWalletService implements WalletService {
 
         wallet.setUser(user);
 
-        wallet = getWalletIdentityFactory().create(wallet);
+        final var identities = walletRequest.getIdentities();
+
+        if (identities == null || identities.isEmpty()) {
+            wallet = getWalletIdentityFactory().create(wallet);
+        } else if (wallet.getDefaultIdentity() > identities.size()){
+            throw new BadRequestException("Default must be less than identity collection.");
+        }
 
         final var passphrase = nullToEmpty(walletRequest.getPassphrase()).trim();
 
@@ -118,8 +126,7 @@ public class SuperUserWalletService implements WalletService {
         for (var network : networks) {
 
             if (network == null) {
-                final var msg = format("Network must not be null.");
-                throw new BadRequestException(msg);
+                throw new BadRequestException("Network must not be null.");
             }
 
             if (!Objects.equals(protocol, network.protocol())) {

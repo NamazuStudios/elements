@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.blockchain;
+package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;

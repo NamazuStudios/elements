@@ -12,7 +12,7 @@ public class WalletIdentityPair {
     private String address;
 
     @ApiModelProperty("The Wallet Account - id private identity.")
-    private String account;
+    private String privateKey;
 
     @ApiModelProperty("Indicates if this identity is encrypted.")
     private boolean encrypted;
@@ -25,12 +25,12 @@ public class WalletIdentityPair {
         this.address = address;
     }
 
-    public String getAccount() {
-        return account;
+    public String getPrivateKey() {
+        return privateKey;
     }
 
-    public void setAccount(String account) {
-        this.account = account;
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     public boolean isEncrypted() {
@@ -46,12 +46,12 @@ public class WalletIdentityPair {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WalletIdentityPair that = (WalletIdentityPair) o;
-        return isEncrypted() == that.isEncrypted() && Objects.equals(getAddress(), that.getAddress()) && Objects.equals(getAccount(), that.getAccount());
+        return isEncrypted() == that.isEncrypted() && Objects.equals(getAddress(), that.getAddress()) && Objects.equals(getPrivateKey(), that.getPrivateKey());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAddress(), getAccount(), isEncrypted());
+        return Objects.hash(getAddress(), getPrivateKey(), isEncrypted());
     }
 
     @Override

@@ -170,7 +170,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
             wallet.setAddresses(addresses);
 
             return wallet;
-        }catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchProviderException ex) {
+        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchProviderException ex) {
             throw new CryptoException(ex);
         }
     }

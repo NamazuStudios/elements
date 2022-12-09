@@ -12,11 +12,11 @@ public class BlockchainModuleDefaults implements ModuleDefaults {
     public Properties get() {
         final var properties = new Properties();
 
-        // Neo Requiries running
         properties.put(NEO.urlsName(), "http://localhost:40332");
         properties.put(NEO_TEST.urlsName(), "http://localhost:40332");
 
-        // Unless Specifically Configured. BSC Main still uses Test Net
+        properties.put(ETHEREUM.urlsName(), "127.0.0.1:8545");
+        properties.put(ETHEREUM_TEST.urlsName(), "127.0.0.1:8545");
 
         properties.put(BSC.urlsName(), String.join(",", List.of(
                 "https://data-seed-prebsc-1-s1.binance.org:8545/",

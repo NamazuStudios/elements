@@ -18,6 +18,16 @@ public enum BlockchainNetwork {
     NEO_TEST(BlockchainProtocol.NEO),
 
     /**
+     * The Ethereum Main Net
+     */
+    ETHEREUM(BlockchainProtocol.ETHEREUM),
+
+    /**
+     * The Ethereum Test Net
+     */
+    ETHEREUM_TEST(BlockchainProtocol.ETHEREUM),
+
+    /**
      * Binance Smart Chain Network.
      */
     BSC(BlockchainProtocol.ETHEREUM),

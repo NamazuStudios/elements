@@ -43,8 +43,6 @@ public class CreateWalletRequest {
     private int defaultIdentity;
 
     @Valid
-    @NotNull
-    @Size(min = 1)
     private List<WalletIdentityPair> identities;
 
     public String getDisplayName() {

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.blockchain;
+package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;

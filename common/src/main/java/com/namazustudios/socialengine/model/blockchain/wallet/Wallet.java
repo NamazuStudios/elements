@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Size;
@@ -43,6 +44,10 @@ public class Wallet {
 
     @ApiModelProperty("The Wallet's encryption metadata. This is specific to the encryption type used.")
     private Map<String, Object> encryption;
+
+    @Min(0)
+    @ApiModelProperty("The default identity. Must not be larger than the count of identities.")
+    private int defaultIdentity;
 
     @Valid
     @NotNull
@@ -97,6 +102,14 @@ public class Wallet {
         this.encryption = encryption;
     }
 
+    public int getDefaultIdentity() {
+        return defaultIdentity;
+    }
+
+    public void setDefaultIdentity(int defaultIdentity) {
+        this.defaultIdentity = defaultIdentity;
+    }
+
     public List<WalletIdentityPair> getIdentities() {
         return identities;
     }
@@ -110,12 +123,12 @@ public class Wallet {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Wallet wallet = (Wallet) o;
-        return Objects.equals(getId(), wallet.getId()) && Objects.equals(getUser(), wallet.getUser()) && Objects.equals(getDisplayName(), wallet.getDisplayName()) && getProtocol() == wallet.getProtocol() && Objects.equals(getNetworks(), wallet.getNetworks()) && Objects.equals(getIdentities(), wallet.getIdentities()) && Objects.equals(getEncryption(), wallet.getEncryption());
+        return getDefaultIdentity() == wallet.getDefaultIdentity() && Objects.equals(getId(), wallet.getId()) && Objects.equals(getUser(), wallet.getUser()) && Objects.equals(getDisplayName(), wallet.getDisplayName()) && getProtocol() == wallet.getProtocol() && Objects.equals(getNetworks(), wallet.getNetworks()) && Objects.equals(getEncryption(), wallet.getEncryption()) && Objects.equals(getIdentities(), wallet.getIdentities());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getDisplayName(), getProtocol(), getNetworks(), getIdentities(), getEncryption());
+        return Objects.hash(getId(), getUser(), getDisplayName(), getProtocol(), getNetworks(), getEncryption(), getDefaultIdentity(), getIdentities());
     }
 
     @Override
@@ -126,8 +139,9 @@ public class Wallet {
         sb.append(", displayName='").append(displayName).append('\'');
         sb.append(", protocol=").append(protocol);
         sb.append(", networks=").append(networks);
+        sb.append(", encryption=").append(encryption);
+        sb.append(", defaultIdentity=").append(defaultIdentity);
         sb.append(", identities=").append(identities);
-        sb.append(", encryptionMetadata=").append(encryption);
         sb.append('}');
         return sb.toString();
     }
