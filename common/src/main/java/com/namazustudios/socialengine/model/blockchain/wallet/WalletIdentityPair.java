@@ -3,15 +3,17 @@ package com.namazustudios.socialengine.model.blockchain.wallet;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel
 public class WalletIdentityPair {
 
-    @ApiModelProperty("The Wallet Address - id public identity.")
+    @NotNull
+    @ApiModelProperty("The Wallet Address - id public identity. Required.")
     private String address;
 
-    @ApiModelProperty("The Wallet Account - id private identity.")
+    @ApiModelProperty("The Wallet Account - id private identity. May be null if the wallet is for receive only.")
     private String privateKey;
 
     @ApiModelProperty("Indicates if this identity is encrypted.")

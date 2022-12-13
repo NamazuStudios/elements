@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface WalletDao {
@@ -17,12 +18,12 @@ public interface WalletDao {
      * @param count the count
      * @param userId the userId, or null
      * @param protocol the protocol, or null
-     * @param network the network, or null
+     * @param networks the network, or null
      * @return a {@link Pagination} of {@link Wallet} instances
      */
     Pagination<Wallet> getWallets(
             int offset, int count,
-            String userId, BlockchainProtocol protocol, BlockchainNetwork network);
+            String userId, BlockchainProtocol protocol, List<BlockchainNetwork> networks);
 
     /**
      * Finds a {@link Wallet} based on wallet id.
@@ -56,30 +57,6 @@ public interface WalletDao {
      */
     default Wallet getWallet(final String walletId, final String userId) {
         return findWallet(walletId, userId).orElseThrow(WalletNotFoundException::new);
-    }
-
-    /**
-     * Tries to fetch a users specific {@link Wallet} instance based on name.
-     *
-     * @param userId the user ID to check for the wallet
-     * @param walletName the wallet name
-     * @return the {@link Wallet}, never null
-     */
-    Wallet getWalletForUser(String userId, String walletName);
-
-    /**
-     * Tries to fetch a users specific {@link Wallet} instance based on name. Returns an empty optional if not found.
-     *
-     * @param userId the user ID to check for the wallet
-     * @param walletName the wallet name
-     * @return the {@link Wallet}, never null
-     */
-    default Optional<Wallet> findWalletForUser(final String userId, final String walletName) {
-        try {
-            return Optional.of(getWalletForUser(userId, walletName));
-        } catch (WalletNotFoundException ex) {
-            return Optional.empty();
-        }
     }
 
     /**

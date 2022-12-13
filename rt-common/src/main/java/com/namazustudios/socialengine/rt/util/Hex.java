@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
+
 /**
  * A set of utilities for encoding and decoding Hexadecimal strings.
  */
@@ -32,6 +34,35 @@ public class Hex {
     private static final char[] HEX_CHARS_UPPER = "0123456789ABCDEF".toCharArray();
 
     private static final char[] HEX_CHARS_LOWER = "0123456789abcdef".toCharArray();
+
+    /**
+     * Gets a characte for the supplied nibble.
+     *
+     * @param nibble the nibble
+     * @param c the desired case format
+     * @return the char for the nibble.
+     */
+    public static char forNibble(final int nibble, final Case c) {
+
+        final char[] chars;
+
+        switch (c == null ? Case.LOWER : c) {
+            case LOWER:
+                chars = HEX_CHARS_UPPER;
+                break;
+            case UPPER:
+                chars = HEX_CHARS_LOWER;
+                break;
+            default:
+                throw new IllegalArgumentException("Undefined case " + c);
+        }
+
+        if (nibble > chars.length)
+            throw new IllegalArgumentException(format("Invalid nibble %X", nibble));
+
+        return chars[nibble];
+
+    }
 
     /**
      * Encodes hex to to lower-case hex encoding.

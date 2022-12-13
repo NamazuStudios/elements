@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.WalletDao;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
@@ -8,10 +9,10 @@ import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletReques
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.service.WalletService;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Objects;
 
 public class UserWalletService implements WalletService {
@@ -25,13 +26,17 @@ public class UserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, final BlockchainProtocol protocol, final BlockchainNetwork network) {
-        return null;
+            final String userId, final BlockchainProtocol protocol, final List<BlockchainNetwork> networks) {
+        if (userId == null || Objects.equals(userId, getUser().getId())) {
+            return getWalletDao().getWallets(offset, count, getUser().getId(), protocol, networks);
+        } else {
+            return Pagination.empty();
+        }
     }
 
     @Override
     public Wallet getWallet(final String walletNameOrId) {
-        return getWalletDao().getWallet(walletNameOrId, user.getId());
+        return getWalletDao().getWallet(walletNameOrId, getUser().getId());
     }
 
     @Override
@@ -42,7 +47,7 @@ public class UserWalletService implements WalletService {
         if (userId == null) {
             userId = getUser().getId();
         } else if (!Objects.equals(userId, getUser().getId())) {
-            throw new BadRequestException("Invalid user id: " + userId);
+            throw new InvalidDataException("Invalid user id: " + userId);
         }
 
         walletRequest.setUserId(userId);
@@ -58,7 +63,7 @@ public class UserWalletService implements WalletService {
         if (userId == null) {
             userId = getUser().getId();
         } else if (!Objects.equals(userId, getUser().getId())) {
-            throw new BadRequestException("Invalid user id: " + userId);
+            throw new InvalidDataException("Invalid user id: " + userId);
         }
 
         walletRequest.setUserId(userId);

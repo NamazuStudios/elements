@@ -57,7 +57,7 @@ public enum BlockchainNetwork {
      */
     SOLANA_TEST(BlockchainProtocol.SOLANA);
 
-    public final BlockchainProtocol protocol;
+    private final BlockchainProtocol protocol;
 
     BlockchainNetwork(BlockchainProtocol protocol) {
         this.protocol = protocol;

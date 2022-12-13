@@ -13,6 +13,8 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
+import java.util.List;
+
 /**
  * Manages blockchain wallets.
  */
@@ -38,7 +40,7 @@ public interface WalletService {
      */
     Pagination<Wallet> getWallets(
             int offset, int count,
-            String userId, BlockchainProtocol protocol, BlockchainNetwork network);
+            String userId, BlockchainProtocol protocol, List<BlockchainNetwork> networks);
 
     /**
      * Fetches a specific {@link BscWallet} instance based on ID or name.  If not found, an

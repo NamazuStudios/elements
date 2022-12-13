@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.service.WalletService;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
@@ -37,8 +37,8 @@ public class SuperUserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, final BlockchainProtocol protocol, final BlockchainNetwork network) {
-        return getWalletDao().getWallets(offset, count, userId, protocol, network);
+            final String userId, final BlockchainProtocol protocol, final List<BlockchainNetwork> networks) {
+        return getWalletDao().getWallets(offset, count, userId, protocol, networks);
     }
 
     @Override
@@ -54,14 +54,17 @@ public class SuperUserWalletService implements WalletService {
         var wallet = getWalletDao().getWallet(walletId);
         validate(wallet.getProtocol(), walletRequest.getNetworks());
 
-        final var userId = walletRequest.getUserId();
+        final var userId = nullToEmpty(walletRequest.getUserId());
 
-        if (userId != null) {
-            final var user = getUserDao()
-                    .findActiveUser(userId)
-                    .orElseThrow(() -> new BadRequestException("No such user."));
-            wallet.setUser(user);
+        if (userId.isBlank()) {
+            throw new InvalidDataException("Must specify user id.");
         }
+
+        final var user = getUserDao()
+                .findActiveUser(userId)
+                .orElseThrow(() -> new InvalidDataException("No such user."));
+
+        wallet.setUser(user);
 
         final var displayName = walletRequest.getDisplayName();
 
@@ -75,7 +78,9 @@ public class SuperUserWalletService implements WalletService {
         if (!passphrase.isBlank() && !newPassphrase.isBlank()) {
             wallet = getWalletCryptoUtilities()
                     .reEncrypt(wallet, passphrase, newPassphrase)
-                    .orElseThrow(() -> new BadRequestException("Invalid Passphrase."));
+                    .orElseThrow(() -> new InvalidDataException("Invalid Passphrase."));
+        } else if (!passphrase.isBlank() || !newPassphrase.isBlank()) {
+            throw new InvalidDataException("Must specify both old and new passphrase.");
         }
 
         return getWalletDao().updateWallet(wallet);
@@ -95,12 +100,12 @@ public class SuperUserWalletService implements WalletService {
         final var userId = nullToEmpty(walletRequest.getUserId()).trim();
 
         if (userId.isBlank()) {
-            throw new BadRequestException("Invalid user id: " + userId);
+            throw new InvalidDataException("Invalid user id: " + userId);
         }
 
         final var user = getUserDao()
                 .findActiveUser(userId)
-                .orElseThrow(() -> new BadRequestException("No such user: " + userId));
+                .orElseThrow(() -> new InvalidDataException("No such user: " + userId));
 
         wallet.setUser(user);
 
@@ -108,14 +113,22 @@ public class SuperUserWalletService implements WalletService {
 
         if (identities == null || identities.isEmpty()) {
             wallet = getWalletIdentityFactory().create(wallet);
-        } else if (wallet.getDefaultIdentity() > identities.size()){
-            throw new BadRequestException("Default must be less than identity collection.");
+        } else if (wallet.getDefaultIdentity() > identities.size()) {
+            throw new InvalidDataException("Default must be less than identity collection.");
         }
 
         final var passphrase = nullToEmpty(walletRequest.getPassphrase()).trim();
 
         if (!passphrase.isBlank()) {
+
+            for (var identity : wallet.getIdentities()) {
+                if (identity.isEncrypted()) {
+                    throw new InvalidDataException("Must supply unencrypted wallet.");
+                }
+            }
+
             wallet = getWalletCryptoUtilities().encrypt(wallet, passphrase);
+
         }
 
         return getWalletDao().createWallet(wallet);
@@ -126,12 +139,12 @@ public class SuperUserWalletService implements WalletService {
         for (var network : networks) {
 
             if (network == null) {
-                throw new BadRequestException("Network must not be null.");
+                throw new InvalidDataException("Network must not be null.");
             }
 
             if (!Objects.equals(protocol, network.protocol())) {
                 final var msg = format("Network %s does not match protocol %s", network, protocol);
-                throw new BadRequestException(msg);
+                throw new InvalidDataException(msg);
             }
 
         }
