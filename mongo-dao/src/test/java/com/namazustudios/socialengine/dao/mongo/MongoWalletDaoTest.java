@@ -1,28 +1,33 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.WalletDao;
+import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.util.PaginationWalker;
+import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.util.Hex.Case.UPPER;
 import static com.namazustudios.socialengine.rt.util.Hex.forNibble;
 import static java.util.stream.Collectors.toList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoWalletDaoTest {
@@ -59,11 +64,56 @@ public class MongoWalletDaoTest {
     }
 
     @DataProvider
+    public Object[][] regularUsersAndBlockchainNetworks() {
+        return regularUsers
+                .stream()
+                .flatMap(user -> Stream
+                        .of(BlockchainNetwork.values())
+                        .map(network -> new Object[]{user, network}))
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] regularUsersAndBlockchainProtocols() {
+        return regularUsers
+                .stream()
+                .flatMap(user -> Stream
+                        .of(BlockchainProtocol.values())
+                        .map(protocol -> new Object[]{user, protocol}))
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] blockchainNetworks() {
+        return Stream
+                .of(BlockchainNetwork.values())
+                .map(protocol -> new Object[]{protocol})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] blockchainProtocols() {
+        return Stream
+                .of(BlockchainProtocol.values())
+                .map(protocol -> new Object[]{protocol})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
     public Object[][] wallets() {
         return wallets
                 .values()
                 .stream()
                 .map(u -> new Object[]{u})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] walletsById() {
+        return wallets
+                .entrySet()
+                .stream()
+                .map(e -> new Object[]{e.getKey(), e.getValue()})
                 .toArray(Object[][]::new);
     }
 
@@ -80,38 +130,37 @@ public class MongoWalletDaoTest {
 
     }
 
-    @Test(dataProvider = "regularUsers")
-    public void testCreateWallets(final User user) {
-        for (var network : BlockchainNetwork.values()) {
+    @Test(dataProvider = "regularUsersAndBlockchainNetworks", groups = "create")
+    public void testCreateWallets(final User user, final BlockchainNetwork network) {
 
-            final var wallet = new Wallet();
-            wallet.setDisplayName("Wallet for User " + user.getName());
-            wallet.setUser(user);
-            wallet.setEncryption(new HashMap<>());
-            wallet.setNetworks(List.of(network));
-            wallet.setProtocol(network.protocol());
+        final var wallet = new Wallet();
+        wallet.setDisplayName("Wallet for User " + user.getName());
+        wallet.setUser(user);
+        wallet.setEncryption(new HashMap<>());
+        wallet.setNetworks(List.of(network));
+        wallet.setProtocol(network.protocol());
 
-            final var identity = new WalletIdentityPair();
-            identity.setEncrypted(false);
-            identity.setAddress(randomKey());
-            identity.setPrivateKey(randomKey());
-            wallet.setIdentities(List.of(identity));
+        final var identity = new WalletIdentityPair();
+        identity.setEncrypted(false);
+        identity.setAddress(randomKey());
+        identity.setPrivateKey(randomKey());
+        wallet.setIdentities(List.of(identity));
 
-            final var created = getUnderTest().createWallet(wallet);
-            assertNotNull(created.getId());
-            assertEquals(created.getDisplayName(), wallet.getDisplayName());
-            assertEquals(created.getEncryption(), wallet.getEncryption());
-            assertEquals(created.getNetworks(), wallet.getNetworks());
-            assertEquals(created.getUser(), wallet.getUser());
-            assertEquals(created.getProtocol(), wallet.getProtocol());
+        final var created = getUnderTest().createWallet(wallet);
+        assertNotNull(created.getId());
+        assertEquals(created.getDisplayName(), wallet.getDisplayName());
+        assertEquals(created.getEncryption(), wallet.getEncryption());
+        assertEquals(created.getNetworks(), wallet.getNetworks());
+        assertEquals(created.getUser(), wallet.getUser());
+        assertEquals(created.getProtocol(), wallet.getProtocol());
 
-            wallets.put(created.getId(), created);
+        wallets.put(created.getId(), created);
 
-        }
     }
 
-    @Test(dependsOnMethods = "testCreateWallets", dataProvider = "wallets")
+    @Test(dataProvider = "wallets", groups = "update", dependsOnGroups = "create")
     public void testUpdateWallet(final Wallet wallet) {
+
         final var update = new Wallet();
         update.setId(wallet.getId());
         update.setDefaultIdentity(wallet.getDefaultIdentity());
@@ -129,6 +178,177 @@ public class MongoWalletDaoTest {
 
         final var updated = getUnderTest().updateWallet(update);
         assertEquals(updated, update);
+        assertNotEquals(updated, wallet);
+
+        wallets.put(updated.getId(), updated);
+
+    }
+
+    @Test(dataProvider = "regularUsers", groups = "read", dependsOnGroups = "update")
+    public void testGetWalletForUser(final User user) {
+
+        final var wallets = new PaginationWalker()
+            .toList((offset, count) -> getUnderTest()
+                    .getWallets(offset, count, user.getId(), null, null));
+
+        for(var wallet : wallets) {
+            assertEquals(wallet.getUser(), user);
+        }
+
+    }
+
+    @Test(dataProvider = "regularUsersAndBlockchainNetworks", groups = "read", dependsOnGroups = "update")
+    public void testGetWalletForUser(final User user, final BlockchainNetwork network) {
+
+        final var wallets = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, user.getId(), null, List.of(network)));
+
+        for(var wallet : wallets) {
+            assertEquals(wallet.getUser(), user);
+            assertEquals(wallet.getProtocol(), network.protocol());
+            assertTrue(wallet.getNetworks().contains(network));
+        }
+
+    }
+
+    @Test(dataProvider = "regularUsersAndBlockchainProtocols", groups = "read", dependsOnGroups = "update")
+    public void testGetWalletForUser(final User user, final BlockchainProtocol protocol) {
+
+        final var wallets = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, user.getId(), protocol, null));
+
+        for(var wallet : wallets) {
+            assertEquals(wallet.getUser(), user);
+            assertEquals(wallet.getProtocol(), protocol);
+        }
+
+    }
+
+    @Test(dataProvider = "blockchainNetworks", groups = "read", dependsOnGroups = "update")
+    public void testGetWalletNetwork(final BlockchainNetwork network) {
+
+        final var wallets = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, null, null, List.of(network))
+                );
+
+        for(var wallet : wallets) {
+            assertTrue(wallet.getNetworks().contains(network));
+            assertEquals(wallet.getProtocol(), network.protocol());
+        }
+
+    }
+
+    @Test(dataProvider = "blockchainProtocols", groups = "read", dependsOnGroups = "update")
+    public void testGetWalletProtocol(final BlockchainProtocol protocol) {
+
+        final var wallets = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, null, protocol, null));
+
+        for(var wallet : wallets) {
+            assertEquals(wallet.getProtocol(), protocol);
+        }
+
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update")
+    public void testGetWalletWalletsFilters() {
+        final var wallets = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, trudyUser.getId(),null, null));
+        assertTrue(wallets.isEmpty());
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update")
+    public void testEmptyNetworkReturnsNothing() {
+        final var wallets = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, null,null, new ArrayList<>()));
+        assertTrue(wallets.isEmpty());
+    }
+
+    @Test(dataProvider = "walletsById", groups = "read", dependsOnGroups = "update")
+    public void testGetSingleWallet(final String walletId, final Wallet wallet) {
+        final var fetched = getUnderTest().getWallet(walletId);
+        assertEquals(fetched, wallet);
+    }
+
+    @Test(dataProvider = "walletsById", groups = "read", dependsOnGroups = "update")
+    public void testGetSingleWalletForUser(final String walletId, final Wallet wallet) {
+        final var fetched = getUnderTest().getWallet(walletId, wallet.getUser().getId());
+        assertEquals(fetched, wallet);
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update", expectedExceptions = WalletNotFoundException.class)
+    public void testGetSingleWalletNotFound() {
+        getUnderTest().getWallet(new ObjectId().toString());
+    }
+
+    @Test(dataProvider = "wallets", groups = "read", dependsOnGroups = "update", expectedExceptions = WalletNotFoundException.class)
+    public void testGetSingleWalletForUserNotFound(final Wallet wallet) {
+        getUnderTest().getWallet(wallet.getId(), trudyUser.getId());
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update")
+    public void testFindSingleWalletNotFound() {
+        final var wallet = getUnderTest().findWallet(new ObjectId().toString());
+        assertFalse(wallet.isPresent());
+    }
+
+    @Test(dataProvider = "wallets", groups = "read", dependsOnGroups = "update")
+    public void testFindSingleWalletForUserNotFound(final Wallet wallet) {
+        final var result = getUnderTest().findWallet(wallet.getId(), trudyUser.getId());
+        assertFalse(result.isPresent());
+    }
+
+    @Test(dataProvider = "wallets",
+            groups = {"delete", "pre delete"},
+            dependsOnGroups = "update",
+            expectedExceptions = WalletNotFoundException.class)
+    public void deleteWalletForWrongUserFails(final Wallet wallet) {
+        try {
+            getUnderTest().deleteWallet(wallet.getId(), trudyUser.getId());
+        } finally {
+            assertTrue(getUnderTest().findWallet(wallet.getId()).isPresent());
+        }
+    }
+
+    @Test(dataProvider = "wallets", groups = "delete", dependsOnGroups = "pre delete")
+    public void deleteWallet(final Wallet wallet) {
+        getUnderTest().deleteWallet(wallet.getId());
+    }
+
+    @Test(dataProvider = "wallets",
+            groups = "delete",
+            dependsOnGroups = "pre delete",
+            dependsOnMethods = "deleteWallet",
+            expectedExceptions = WalletNotFoundException.class)
+    public void doubleDeleteWalletFails(final Wallet wallet) {
+        getUnderTest().deleteWallet(wallet.getId());
+    }
+
+    @Test(dataProvider = "regularUsersAndBlockchainNetworks", groups = "delete", dependsOnGroups = "pre delete")
+    public void deleteWalletForUser(final User user, final BlockchainNetwork network) {
+
+        final var wallet = new Wallet();
+        wallet.setDisplayName("Wallet for User " + user.getName());
+        wallet.setUser(user);
+        wallet.setEncryption(new HashMap<>());
+        wallet.setNetworks(List.of(network));
+        wallet.setProtocol(network.protocol());
+
+        final var identity = new WalletIdentityPair();
+        identity.setEncrypted(false);
+        identity.setAddress(randomKey());
+        identity.setPrivateKey(randomKey());
+        wallet.setIdentities(List.of(identity));
+
+        final var created = getUnderTest().createWallet(wallet);
+        getUnderTest().deleteWallet(created.getId(), user.getId());
+        assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
 
     }
 

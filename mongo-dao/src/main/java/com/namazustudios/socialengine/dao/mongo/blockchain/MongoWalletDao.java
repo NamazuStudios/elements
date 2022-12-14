@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -64,8 +65,10 @@ public class MongoWalletDao implements WalletDao {
         if (protocol != null)
             query.filter(eq("protocol", protocol));
 
-        if (networks != null)
+        if (networks != null) {
+            if (networks.isEmpty()) return Pagination.empty();
             networks.forEach(n -> query.filter(in("networks", List.of(n))));
+        }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, Wallet.class);
 
@@ -76,16 +79,13 @@ public class MongoWalletDao implements WalletDao {
         return findMongoWallet(walletId, userId).map(mw -> getMapper().map(mw, Wallet.class));
     }
 
-    public MongoWallet getMongoWallet(final String walletId, final String userId) {
-        return findMongoWallet(walletId, userId).orElseThrow(WalletNotFoundException::new);
-    }
-
     public Optional<MongoWallet> findMongoWallet(final String walletId, final String userId) {
         return getMongoDBUtils()
                 .parse(walletId)
                 .flatMap(oid -> {
 
                     final var query = getDatastore().find(MongoWallet.class);
+                    query.filter(Filters.eq("_id", oid));
 
                     if (userId != null) {
 
@@ -171,11 +171,13 @@ public class MongoWalletDao implements WalletDao {
             throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getProtocol());
         }
 
+        final var mongoWallet = getMapper().map(wallet, MongoWallet.class);
+
         final var mongoUser = getMongoUserDao()
                 .findActiveMongoUser(wallet.getUser())
                 .orElseThrow(() -> new InvalidDataException("No such user: " + wallet.getUser().getId()));
 
-        final var mongoWallet = getMapper().map(wallet, MongoWallet.class);
+        mongoWallet.setUser(mongoUser);
         getDatastore().insert(mongoWallet);
 
         return getMapper().map(mongoWallet, Wallet.class);

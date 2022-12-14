@@ -51,6 +51,7 @@ public class Wallet {
 
     @Valid
     @NotNull
+    @Size(min = 1)
     @ApiModelProperty("The list of identity pairs included in this wallet.")
     private List<WalletIdentityPair> identities;
 
