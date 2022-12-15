@@ -40,9 +40,9 @@ public class UserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet updateWallet(final String walletId, final UpdateWalletRequest walletRequest) {
+    public Wallet updateWallet(final String walletId, final UpdateWalletRequest walletUpdateRequest) {
 
-        var userId = walletRequest.getUserId();
+        var userId = walletUpdateRequest.getUserId();
 
         if (userId == null) {
             userId = getUser().getId();
@@ -50,15 +50,15 @@ public class UserWalletService implements WalletService {
             throw new InvalidDataException("Invalid user id: " + userId);
         }
 
-        walletRequest.setUserId(userId);
-        return getSuperUserWalletService().updateWallet(walletId, walletRequest);
+        walletUpdateRequest.setUserId(userId);
+        return getSuperUserWalletService().updateWallet(walletId, walletUpdateRequest);
 
     }
 
     @Override
-    public Wallet createWallet(final CreateWalletRequest walletRequest) {
+    public Wallet createWallet(final CreateWalletRequest createWalletRequest) {
 
-        var userId = walletRequest.getUserId();
+        var userId = createWalletRequest.getUserId();
 
         if (userId == null) {
             userId = getUser().getId();
@@ -66,8 +66,8 @@ public class UserWalletService implements WalletService {
             throw new InvalidDataException("Invalid user id: " + userId);
         }
 
-        walletRequest.setUserId(userId);
-        return getSuperUserWalletService().createWallet(walletRequest);
+        createWalletRequest.setUserId(userId);
+        return getSuperUserWalletService().createWallet(createWalletRequest);
 
     }
 

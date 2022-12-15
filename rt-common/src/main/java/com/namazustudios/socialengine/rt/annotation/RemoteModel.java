@@ -40,7 +40,7 @@ public @interface RemoteModel {
         public static Optional<String> findName(final Class<?> cls) {
             return Optional
                 .ofNullable(cls.getAnnotation(RemoteModel.class))
-                .map(m -> m.value().isBlank() ? cls.getName() : m.value());
+                .map(m -> m.value().isBlank() ? cls.getSimpleName() : m.value());
         }
 
         /**

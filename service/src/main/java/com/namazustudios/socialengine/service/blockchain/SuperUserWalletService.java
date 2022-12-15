@@ -47,14 +47,14 @@ public class SuperUserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet updateWallet(final String walletId, final UpdateWalletRequest walletRequest) {
+    public Wallet updateWallet(final String walletId, final UpdateWalletRequest walletUpdateRequest) {
 
-        getValidationHelper().validateModel(walletRequest);
+        getValidationHelper().validateModel(walletUpdateRequest);
 
         var wallet = getWalletDao().getWallet(walletId);
-        validate(wallet.getProtocol(), walletRequest.getNetworks());
+        validate(wallet.getProtocol(), walletUpdateRequest.getNetworks());
 
-        final var userId = nullToEmpty(walletRequest.getUserId());
+        final var userId = nullToEmpty(walletUpdateRequest.getUserId());
 
         if (userId.isBlank()) {
             throw new InvalidDataException("Must specify user id.");
@@ -66,14 +66,14 @@ public class SuperUserWalletService implements WalletService {
 
         wallet.setUser(user);
 
-        final var displayName = walletRequest.getDisplayName();
+        final var displayName = walletUpdateRequest.getDisplayName();
 
         if (displayName != null) {
             wallet.setDisplayName(displayName);
         }
 
-        final var passphrase = nullToEmpty(walletRequest.getPassphrase()).trim();
-        final var newPassphrase = nullToEmpty(walletRequest.getNewPassphrase()).trim();
+        final var passphrase = nullToEmpty(walletUpdateRequest.getPassphrase()).trim();
+        final var newPassphrase = nullToEmpty(walletUpdateRequest.getNewPassphrase()).trim();
 
         if (!passphrase.isBlank() && !newPassphrase.isBlank()) {
             wallet = getWalletCryptoUtilities()
@@ -88,16 +88,16 @@ public class SuperUserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet createWallet(final CreateWalletRequest walletRequest) {
+    public Wallet createWallet(final CreateWalletRequest createWalletRequest) {
 
-        getValidationHelper().validateModel(walletRequest);
+        getValidationHelper().validateModel(createWalletRequest);
 
         var wallet = new Wallet();
-        wallet.setProtocol(walletRequest.getProtocol());
-        wallet.setDisplayName(walletRequest.getDisplayName());
-        validate(walletRequest.getProtocol(), walletRequest.getNetworks());
+        wallet.setProtocol(createWalletRequest.getProtocol());
+        wallet.setDisplayName(createWalletRequest.getDisplayName());
+        validate(createWalletRequest.getProtocol(), createWalletRequest.getNetworks());
 
-        final var userId = nullToEmpty(walletRequest.getUserId()).trim();
+        final var userId = nullToEmpty(createWalletRequest.getUserId()).trim();
 
         if (userId.isBlank()) {
             throw new InvalidDataException("Invalid user id: " + userId);
@@ -109,7 +109,7 @@ public class SuperUserWalletService implements WalletService {
 
         wallet.setUser(user);
 
-        final var identities = walletRequest.getIdentities();
+        final var identities = createWalletRequest.getIdentities();
 
         if (identities == null || identities.isEmpty()) {
             wallet = getWalletIdentityFactory().create(wallet);
@@ -117,7 +117,7 @@ public class SuperUserWalletService implements WalletService {
             throw new InvalidDataException("Default must be less than identity collection.");
         }
 
-        final var passphrase = nullToEmpty(walletRequest.getPassphrase()).trim();
+        final var passphrase = nullToEmpty(createWalletRequest.getPassphrase()).trim();
 
         if (!passphrase.isBlank()) {
 

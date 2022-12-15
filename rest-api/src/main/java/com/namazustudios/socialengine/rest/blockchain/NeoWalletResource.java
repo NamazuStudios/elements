@@ -102,4 +102,5 @@ public class NeoWalletResource {
     public void setWalletService(NeoWalletService neoWalletService) {
         this.neoWalletService = neoWalletService;
     }
+
 }

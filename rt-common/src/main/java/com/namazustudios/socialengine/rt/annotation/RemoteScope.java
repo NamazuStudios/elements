@@ -16,6 +16,11 @@ import static com.namazustudios.socialengine.rt.annotation.CaseFormat.NATURAL;
 public @interface RemoteScope {
 
     /**
+     * The core Elements scope.
+     */
+    String API_SCOPE = "eci:api";
+
+    /**
      * The master node scope.
      */
     String MASTER_SCOPE = "eci:master";

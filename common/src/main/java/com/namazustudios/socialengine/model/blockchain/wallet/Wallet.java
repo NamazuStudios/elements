@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rt.annotation.RemoteModel;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -16,7 +18,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
+
 @ApiModel
+@RemoteModel(
+        scopes = {
+            @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
+        }
+)
 public class Wallet {
 
     @NotNull(groups = ValidationGroups.Update.class)

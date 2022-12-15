@@ -20,6 +20,8 @@ public class SimpleModelManifestService implements ModelManifestService {
 
     public static final String RPC_MODELS = "com.namazustudios.socialengine.rt.rpc.model.classes";
 
+    public static final String MODEL_PAYLOAD_READER = "com.namazustudios.socialengine.rt.rpc.simple.model.payload.reader";
+
     private final String scope;
 
     private final String protocol;
@@ -43,6 +45,7 @@ public class SimpleModelManifestService implements ModelManifestService {
             @Named(RPC_MODELS)
             final Set<Class<?>> rpcModels,
             final Validator validator,
+            @Named(MODEL_PAYLOAD_READER)
             final PayloadReader payloadReader,
             final ModelIntrospector modelIntrospector) {
 

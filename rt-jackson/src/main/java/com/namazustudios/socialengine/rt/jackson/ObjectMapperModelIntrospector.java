@@ -44,14 +44,14 @@ public class ObjectMapperModelIntrospector implements ModelIntrospector {
         final var typeCaseFormat = remoteScope.style().typeCaseFormat();
         return RemoteModel.Util.findName(cls)
             .map(s -> CodeStyle.JVM_NATIVE.typeCaseFormat().to(typeCaseFormat, s))
-            .orElse(null);
+            .orElse(cls.getSimpleName());
     }
 
     @Override
     public Model introspectClassForModel(final Class<?> cls, final RemoteScope remoteScope) {
         final var model = new Model();
         final var name = introspectClassForModelName(cls, remoteScope);
-        final var description = format("Model for Type: %s", cls.getName());
+        final var description = format("Model for Type: %s", name);
         final var properties = introspectProperties(cls, remoteScope);
         model.setName(name);
         model.setDescription(description);

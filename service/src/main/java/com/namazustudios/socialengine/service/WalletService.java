@@ -9,11 +9,12 @@ import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletReques
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.*;
 
 import java.util.List;
+
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 
 /**
  * Manages blockchain wallets.
@@ -26,6 +27,12 @@ import java.util.List;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
+@RemoteService(
+        value = "wallet",
+        scopes = {
+                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
+        }
+)
 public interface WalletService {
 
     /**
@@ -35,44 +42,53 @@ public interface WalletService {
      * @param count the count
      * @param userId the userId, or null
      * @param protocol the protocol, or null
-     * @param network the network, or null
      * @return a {@link Pagination} of {@link BscWallet} instances
      */
+    @RemotelyInvokable
     Pagination<Wallet> getWallets(
-            int offset, int count,
-            String userId, BlockchainProtocol protocol, List<BlockchainNetwork> networks);
+            @Serialize("offset") int offset,
+            @Serialize("count") int count,
+            @Serialize("userId") String userId,
+            @Serialize("protocol") BlockchainProtocol protocol,
+            @Serialize("networks") List<BlockchainNetwork> networks);
 
     /**
      * Fetches a specific {@link BscWallet} instance based on ID or name.  If not found, an
      * exception is raised.
      *
-     * @param walletNameOrId the wallet Id or name
+     * @param walletId the wallet Id or name
      * @return the {@link BscWallet}, never null
      */
-    Wallet getWallet(String walletNameOrId);
+    @RemotelyInvokable
+    Wallet getWallet(@Serialize("walletId") String walletId);
 
     /**
      * Updates the supplied {@link BscWallet}.
      *
      * @param walletId the Id of the wallet to update.
-     * @param walletRequest the {@link UpdateBscWalletRequest} with the information to update
+     * @param walletUpdateRequest the {@link UpdateBscWalletRequest} with the information to update
      * @return the {@link BscWallet} as it was changed by the service.
      */
-    Wallet updateWallet(String walletId, UpdateWalletRequest walletRequest);
+    @RemotelyInvokable
+    Wallet updateWallet(
+            @Serialize("walletId") String walletId,
+            @Serialize("updateRequest") UpdateWalletRequest walletUpdateRequest);
 
     /**
      * Creates a new Wallet.
      *
-     * @param walletRequest the {@link CreateBscWalletRequest} with the information to create
+     * @param createWalletRequest the {@link CreateBscWalletRequest} with the information to create
      * @return the {@link BscWallet} as it was created by the service.
      */
-    Wallet createWallet(CreateWalletRequest walletRequest);
+    @RemotelyInvokable
+    Wallet createWallet(@Serialize("createWalletRequest") CreateWalletRequest createWalletRequest);
 
     /**
      * Deletes the {@link BscWallet} with the supplied wallet ID.
      *
      * @param walletId the wallet Id.
      */
-    void deleteWallet(String walletId);
+    @RemotelyInvokable
+    void deleteWallet(@Serialize("createWalletRequest")String walletId);
 
 }

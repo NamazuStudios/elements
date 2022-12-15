@@ -4,9 +4,7 @@ import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.rt.IocResolver;
-import com.namazustudios.socialengine.rt.SimpleJsonRpcInvocationService;
-import com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteService;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
@@ -109,6 +107,10 @@ public class JsonRpcModule extends PrivateModule {
                     Names.named(RPC_SERVICES)
             );
 
+            bind(ModelManifestService.class)
+                    .to(SimpleModelManifestService.class)
+                    .asEagerSingleton();
+
             bind(JsonRpcManifestService.class)
                     .to(SimpleJsonRpcManifestService.class)
                     .asEagerSingleton();
@@ -145,9 +147,26 @@ public class JsonRpcModule extends PrivateModule {
                     .filter(c -> RemoteService.Util.findScope(c, ELEMENTS_JSON_RPC_PROTOCOL, scope).isPresent())
                     .forEach(c -> services.addBinding().toInstance(c));
 
+            expose(ModelManifestService.class);
             expose(JsonRpcManifestService.class);
             expose(JsonRpcInvocationService.class);
 
+        });
+
+        return this;
+
+    }
+
+    /**
+     * Disables redirection entirely.
+     *
+     * @return this instance
+     */
+    public JsonRpcModule withNoRedirect() {
+
+        bindings.add(() -> {
+            bind(JsonRpcRedirectionStrategy.class).toInstance(JsonRpcRedirectionStrategy.NO_REDIRECT);
+            expose(JsonRpcRedirectionStrategy.class);
         });
 
         return this;

@@ -16,6 +16,10 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServicePro
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.*;
+import com.namazustudios.socialengine.service.blockchain.crypto.AesWalletCryptoUtilities;
+import com.namazustudios.socialengine.service.blockchain.crypto.StandardWalletIdentityFactory;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.formidium.FormidiumService;
@@ -303,6 +307,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(FormidiumServiceProvider.class)
             .in(scope);
 
+        bind(WalletService.class)
+                .toProvider(WalletServiceProvider.class)
+                .in(scope);
+
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
@@ -511,6 +519,18 @@ public class ServicesModule extends PrivateModule {
         bind(FormidiumService.class)
             .annotatedWith(Unscoped.class)
             .toProvider(FormidiumServiceProvider.class);
+
+        bind(WalletService.class)
+                .annotatedWith(Unscoped.class)
+                .toProvider(WalletServiceProvider.class);
+
+        bind(WalletCryptoUtilities.class)
+                .to(AesWalletCryptoUtilities.class)
+                .asEagerSingleton();
+
+        bind(WalletIdentityFactory.class)
+                .to(StandardWalletIdentityFactory.class)
+                .asEagerSingleton();
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
