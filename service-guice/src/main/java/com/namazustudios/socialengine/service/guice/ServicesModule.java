@@ -590,6 +590,7 @@ public class ServicesModule extends PrivateModule {
         expose(Bscw3jClient.class);
         expose(BscTokenService.class);
         expose(FormidiumService.class);
+        expose(WalletService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -640,6 +641,7 @@ public class ServicesModule extends PrivateModule {
         expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
         expose(BscTokenService.class).annotatedWith(Unscoped.class);
         expose(FormidiumService.class).annotatedWith(Unscoped.class);
+        expose(WalletService.class).annotatedWith(Unscoped.class);
 
     }
 
