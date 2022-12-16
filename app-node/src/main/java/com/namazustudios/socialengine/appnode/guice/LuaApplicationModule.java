@@ -17,6 +17,8 @@ import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
 
 import java.io.File;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
 import static java.lang.String.format;
 
 public class LuaApplicationModule extends PrivateModule {
@@ -67,6 +69,14 @@ public class LuaApplicationModule extends PrivateModule {
         install(new JeroMQNodeModule()
             .withNodeName(format("app.%s.%s", application.getName(), application.getId()))
         );
+
+        bind(String.class)
+                .annotatedWith(named(REMOTE_SCOPE))
+                .toInstance(WORKER_SCOPE);
+
+        bind(String.class)
+                .annotatedWith(named(REMOTE_PROTOCOL))
+                .toInstance(ELEMENTS_RT_PROTOCOL);
 
         expose(Node.class);
         expose(NodeLifecycle.class);
