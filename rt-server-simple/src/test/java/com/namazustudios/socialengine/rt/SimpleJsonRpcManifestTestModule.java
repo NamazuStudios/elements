@@ -11,7 +11,10 @@ import com.namazustudios.socialengine.rt.manifest.model.ModelIntrospector;
 import java.util.function.Consumer;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.namazustudios.socialengine.rt.SimpleJsonRpcInvocationService.INVOCATION_PAYLOAD_READER;
+import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService.MANIFEST_PAYLOAD_READER;
 import static com.namazustudios.socialengine.rt.SimpleJsonRpcManifestService.RPC_SERVICES;
+import static com.namazustudios.socialengine.rt.SimpleModelManifestService.MODEL_PAYLOAD_READER;
 import static com.namazustudios.socialengine.rt.SimpleModelManifestService.RPC_MODELS;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
 
@@ -50,10 +53,22 @@ public abstract class SimpleJsonRpcManifestTestModule extends AbstractModule {
             Names.named(RPC_SERVICES)
         );
 
-        bind(PayloadReader.class).to(ObjectMapperPayloadReader.class);
+        bind(PayloadReader.class).to(ObjectMapperPayloadReader.class).asEagerSingleton();
         bind(ModelIntrospector.class).to(ObjectMapperModelIntrospector.class);
         bind(ModelManifestService.class).to(SimpleModelManifestService.class);
         bind(JsonRpcManifestService.class).to(SimpleJsonRpcManifestService.class);
+
+        bind(PayloadReader.class)
+                .annotatedWith(Names.named(MODEL_PAYLOAD_READER))
+                .to(PayloadReader.class);
+
+        bind(PayloadReader.class)
+                .annotatedWith(Names.named(MANIFEST_PAYLOAD_READER))
+                .to(PayloadReader.class);
+
+        bind(PayloadReader.class)
+                .annotatedWith(Names.named(INVOCATION_PAYLOAD_READER))
+                .to(PayloadReader.class);
 
         services.addBinding().toInstance(TestJsonRpcServiceSimple.class);
         services.addBinding().toInstance(TestJsonRpcServiceModelParameters.class);

@@ -44,7 +44,7 @@ public class ObjectMapperModelIntrospector implements ModelIntrospector {
         final var typeCaseFormat = remoteScope.style().typeCaseFormat();
         return RemoteModel.Util.findName(cls)
             .map(s -> CodeStyle.JVM_NATIVE.typeCaseFormat().to(typeCaseFormat, s))
-            .orElse(cls.getSimpleName());
+            .orElse(null);
     }
 
     @Override
@@ -78,13 +78,19 @@ public class ObjectMapperModelIntrospector implements ModelIntrospector {
         final var javaType = beanPropertyDefinition.getPrimaryType();
         final var type = introspectJavaTypeForType(beanPropertyDefinition.getPrimaryType());
 
+        final var description = format("Model for: %s", beanPropertyDefinition
+                .getPrimaryType()
+                .getRawClass()
+                .getSimpleName()
+        );
+
         final var name = CodeStyle.JVM_NATIVE
             .propertyCaseFormat()
             .to(remoteScope.style().propertyCaseFormat(), beanPropertyDefinition.getName());
 
         property.setType(type);
         property.setName(name);
-        property.setDescription(format("Model for: %s", beanPropertyDefinition.getRawPrimaryType()));
+        property.setDescription(description);
 
         if (javaType.isContainerType()) {
             final var contentType = javaType.getContentType();
