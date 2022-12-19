@@ -63,7 +63,7 @@ public class MongoWalletDao implements WalletDao {
         }
 
         if (protocol != null)
-            query.filter(eq("protocol", protocol));
+            query.filter(eq("api", protocol));
 
         if (networks != null) {
             if (networks.isEmpty()) return Pagination.empty();
