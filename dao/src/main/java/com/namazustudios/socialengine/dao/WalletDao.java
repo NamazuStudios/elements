@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public interface WalletDao {
      */
     Pagination<Wallet> getWallets(
             int offset, int count,
-            String userId, BlockchainProtocol protocol, List<BlockchainNetwork> networks);
+            String userId, BlockchainApi protocol, List<BlockchainNetwork> networks);
 
     /**
      * Finds a {@link Wallet} based on wallet id.

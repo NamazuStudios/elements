@@ -1,18 +1,27 @@
 package com.namazustudios.socialengine.model.blockchain.wallet;
 
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.rt.annotation.RemoteModel;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
+
 @ApiModel(description = "Creates a new custodial wallet.")
+@RemoteModel(
+        scopes = {
+                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
+        }
+)
 public class CreateWalletRequest {
 
     @NotNull
@@ -26,7 +35,7 @@ public class CreateWalletRequest {
 
     @NotNull
     @ApiModelProperty("The protocol of this wallet. Once set, this cannot be unset.")
-    private BlockchainProtocol protocol;
+    private BlockchainApi protocol;
 
     @NotNull
     @ApiModelProperty("The networks associated with this wallet. All must support the Wallet's protocol.")
@@ -61,11 +70,11 @@ public class CreateWalletRequest {
         this.userId = userId;
     }
 
-    public BlockchainProtocol getProtocol() {
+    public BlockchainApi getProtocol() {
         return protocol;
     }
 
-    public void setProtocol(BlockchainProtocol protocol) {
+    public void setProtocol(BlockchainApi protocol) {
         this.protocol = protocol;
     }
 

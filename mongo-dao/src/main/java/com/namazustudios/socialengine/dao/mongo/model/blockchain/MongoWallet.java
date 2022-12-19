@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
@@ -11,12 +11,12 @@ import java.util.Map;
 
 @Entity(value = "wallet")
 @Indexes({
+        @Index(fields = @Field("api")),
         @Index(fields = @Field("user")),
         @Index(fields = @Field("networks")),
-        @Index(fields = @Field("protocol")),
         @Index(fields = {
-                @Field("networks"),
-                @Field("protocol")
+                @Field("api"),
+                @Field("networks")
         } )
 })
 public class MongoWallet {
@@ -31,7 +31,7 @@ public class MongoWallet {
     private String displayName;
 
     @Property
-    private BlockchainProtocol protocol;
+    private BlockchainApi api;
 
     @Property
     private List<BlockchainNetwork> networks;
@@ -69,12 +69,12 @@ public class MongoWallet {
         this.displayName = displayName;
     }
 
-    public BlockchainProtocol getProtocol() {
-        return protocol;
+    public BlockchainApi getApi() {
+        return api;
     }
 
-    public void setProtocol(BlockchainProtocol protocol) {
-        this.protocol = protocol;
+    public void setApi(BlockchainApi api) {
+        this.api = api;
     }
 
     public List<BlockchainNetwork> getNetworks() {

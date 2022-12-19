@@ -3,8 +3,7 @@ package com.namazustudios.socialengine.rest.blockchain;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
-import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
@@ -51,15 +50,15 @@ public class WalletResource {
             @QueryParam("userId")
             String userId,
 
-            @QueryParam("protocol")
-            final BlockchainProtocol protocol,
+            @QueryParam("api")
+            final BlockchainApi api,
 
             @QueryParam("network")
             final List<BlockchainNetwork> network
 
     ) {
         userId = emptyToNull(userId);
-        return getWalletService().getWallets(offset, count, userId, protocol, network);
+        return getWalletService().getWallets(offset, count, userId, api, network);
     }
 
     @GET

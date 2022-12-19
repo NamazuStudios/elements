@@ -1,66 +1,76 @@
 package com.namazustudios.socialengine.model.blockchain;
 
+import com.namazustudios.socialengine.rt.annotation.RemoteModel;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
+
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static java.lang.String.format;
 
 /**
  * Enumerates the systems supported blockchains.
  */
+@RemoteModel(
+        scopes = {
+                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
+        }
+)
 public enum BlockchainNetwork {
 
     /**
-     * Neo Blockchain Network.
+     * Neo Blockchain Network. Uses the {@link BlockchainApi#NEO} API.
      */
-    NEO(BlockchainProtocol.NEO),
+    NEO(BlockchainApi.NEO),
 
     /**
-     * Neo Blockchain Test Network.
+     * Neo Blockchain Test Network. Uses the {@link BlockchainApi#NEO} API.
      */
-    NEO_TEST(BlockchainProtocol.NEO),
+    NEO_TEST(BlockchainApi.NEO),
 
     /**
-     * The Ethereum Main Net
+     * The Ethereum Main Net. Uses the  Uses the {@link BlockchainApi#ETHEREUM} API.
      */
-    ETHEREUM(BlockchainProtocol.ETHEREUM),
+    ETHEREUM(BlockchainApi.ETHEREUM),
 
     /**
-     * The Ethereum Test Net
+     * The Ethereum Test Net. Uses the  Uses the {@link BlockchainApi#ETHEREUM} API.
      */
-    ETHEREUM_TEST(BlockchainProtocol.ETHEREUM),
+    ETHEREUM_TEST(BlockchainApi.ETHEREUM),
 
     /**
-     * Binance Smart Chain Network.
+     * Binance Smart Chain Network. Uses the {@link BlockchainApi#ETHEREUM} API.
      */
-    BSC(BlockchainProtocol.ETHEREUM),
+    BSC(BlockchainApi.ETHEREUM),
 
     /**
-     * Binance Smart Chain Test Network.
+     * Binance Smart Chain Test Network. Uses the {@link BlockchainApi#ETHEREUM} API.
      */
-    BSC_TEST(BlockchainProtocol.ETHEREUM),
+    BSC_TEST(BlockchainApi.ETHEREUM),
 
     /**
-     * The Polygon Main Net
+     * The Polygon Main Net. Uses the {@link BlockchainApi#ETHEREUM} API.
      */
-    POLYGON(BlockchainProtocol.ETHEREUM),
+    POLYGON(BlockchainApi.ETHEREUM),
 
     /**
-     * The Polygon Test Net
+     * The Polygon Test Net. Uses the {@link BlockchainApi#ETHEREUM} API.
      */
-    POLYGON_TEST(BlockchainProtocol.ETHEREUM),
+    POLYGON_TEST(BlockchainApi.ETHEREUM),
 
     /**
-     * The Solana Network
+     * The Solana Network. Uses the {@link BlockchainApi#SOLANA} API.
      */
-    SOLANA(BlockchainProtocol.SOLANA),
+    SOLANA(BlockchainApi.SOLANA),
 
     /**
-     * The Solana Test Network
+     * The Solana Test Network. Uses the {@link BlockchainApi#SOLANA} API.
      */
-    SOLANA_TEST(BlockchainProtocol.SOLANA);
+    SOLANA_TEST(BlockchainApi.SOLANA);
 
-    private final BlockchainProtocol protocol;
+    private final BlockchainApi api;
 
-    BlockchainNetwork(BlockchainProtocol protocol) {
-        this.protocol = protocol;
+    BlockchainNetwork(BlockchainApi api) {
+        this.api = api;
     }
 
     /**
@@ -77,8 +87,8 @@ public enum BlockchainNetwork {
      *
      * @return the network's protocol.
      */
-    public BlockchainProtocol protocol() {
-        return protocol;
+    public BlockchainApi api() {
+        return api;
     }
 
 }

@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
@@ -37,7 +37,7 @@ public class SuperUserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, final BlockchainProtocol protocol, final List<BlockchainNetwork> networks) {
+            final String userId, final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         return getWalletDao().getWallets(offset, count, userId, protocol, networks);
     }
 
@@ -52,7 +52,7 @@ public class SuperUserWalletService implements WalletService {
         getValidationHelper().validateModel(walletUpdateRequest);
 
         var wallet = getWalletDao().getWallet(walletId);
-        validate(wallet.getProtocol(), walletUpdateRequest.getNetworks());
+        validate(wallet.getApi(), walletUpdateRequest.getNetworks());
 
         final var userId = nullToEmpty(walletUpdateRequest.getUserId());
 
@@ -93,7 +93,7 @@ public class SuperUserWalletService implements WalletService {
         getValidationHelper().validateModel(createWalletRequest);
 
         var wallet = new Wallet();
-        wallet.setProtocol(createWalletRequest.getProtocol());
+        wallet.setApi(createWalletRequest.getProtocol());
         wallet.setDisplayName(createWalletRequest.getDisplayName());
         validate(createWalletRequest.getProtocol(), createWalletRequest.getNetworks());
 
@@ -135,14 +135,14 @@ public class SuperUserWalletService implements WalletService {
 
     }
 
-    private void validate(final BlockchainProtocol protocol, final List<BlockchainNetwork> networks) {
+    private void validate(final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         for (var network : networks) {
 
             if (network == null) {
                 throw new InvalidDataException("Network must not be null.");
             }
 
-            if (!Objects.equals(protocol, network.protocol())) {
+            if (!Objects.equals(protocol, network.api())) {
                 final var msg = format("Network %s does not match protocol %s", network, protocol);
                 throw new InvalidDataException(msg);
             }

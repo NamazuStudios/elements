@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.NotImplementedException;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 
 import javax.inject.Inject;
@@ -29,7 +29,7 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
         }
 
         final var generated = getObjectMapper().convertValue(wallet, Wallet.class);
-        final var generator = getGenerator(wallet.getProtocol());
+        final var generator = getGenerator(wallet.getApi());
         final var identities = IntStream.range(0, count)
                 .mapToObj(i -> generator.generate())
                 .collect(toList());
@@ -42,7 +42,7 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
     }
 
     @Override
-    public IdentityGenerator getGenerator(final BlockchainProtocol protocol) {
+    public IdentityGenerator getGenerator(final BlockchainApi protocol) {
 
         if (protocol == null) {
             throw new IllegalArgumentException("Wallet must specify protocol.");

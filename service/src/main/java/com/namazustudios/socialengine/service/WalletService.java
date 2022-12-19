@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
@@ -49,7 +49,7 @@ public interface WalletService {
             @Serialize("offset") int offset,
             @Serialize("count") int count,
             @Serialize("userId") String userId,
-            @Serialize("protocol") BlockchainProtocol protocol,
+            @Serialize("protocol") BlockchainApi protocol,
             @Serialize("networks") List<BlockchainNetwork> networks);
 
     /**

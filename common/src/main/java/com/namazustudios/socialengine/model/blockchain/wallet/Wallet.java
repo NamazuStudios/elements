@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.model.blockchain.wallet;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
@@ -44,7 +44,7 @@ public class Wallet {
 
     @NotNull
     @ApiModelProperty("The protocol used wiht this wallet.")
-    private BlockchainProtocol protocol;
+    private BlockchainApi api;
 
     @NotNull
     @Size(min = 1)
@@ -89,12 +89,12 @@ public class Wallet {
         this.displayName = displayName;
     }
 
-    public BlockchainProtocol getProtocol() {
-        return protocol;
+    public BlockchainApi getApi() {
+        return api;
     }
 
-    public void setProtocol(BlockchainProtocol protocol) {
-        this.protocol = protocol;
+    public void setApi(BlockchainApi api) {
+        this.api = api;
     }
 
     public List<BlockchainNetwork> getNetworks() {
@@ -134,12 +134,12 @@ public class Wallet {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Wallet wallet = (Wallet) o;
-        return getDefaultIdentity() == wallet.getDefaultIdentity() && Objects.equals(getId(), wallet.getId()) && Objects.equals(getUser(), wallet.getUser()) && Objects.equals(getDisplayName(), wallet.getDisplayName()) && getProtocol() == wallet.getProtocol() && Objects.equals(getNetworks(), wallet.getNetworks()) && Objects.equals(getEncryption(), wallet.getEncryption()) && Objects.equals(getIdentities(), wallet.getIdentities());
+        return getDefaultIdentity() == wallet.getDefaultIdentity() && Objects.equals(getId(), wallet.getId()) && Objects.equals(getUser(), wallet.getUser()) && Objects.equals(getDisplayName(), wallet.getDisplayName()) && getApi() == wallet.getApi() && Objects.equals(getNetworks(), wallet.getNetworks()) && Objects.equals(getEncryption(), wallet.getEncryption()) && Objects.equals(getIdentities(), wallet.getIdentities());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getDisplayName(), getProtocol(), getNetworks(), getEncryption(), getDefaultIdentity(), getIdentities());
+        return Objects.hash(getId(), getUser(), getDisplayName(), getApi(), getNetworks(), getEncryption(), getDefaultIdentity(), getIdentities());
     }
 
     @Override
@@ -148,7 +148,7 @@ public class Wallet {
         sb.append("id='").append(id).append('\'');
         sb.append(", user=").append(user);
         sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", protocol=").append(protocol);
+        sb.append(", protocol=").append(api);
         sb.append(", networks=").append(networks);
         sb.append(", encryption=").append(encryption);
         sb.append(", defaultIdentity=").append(defaultIdentity);

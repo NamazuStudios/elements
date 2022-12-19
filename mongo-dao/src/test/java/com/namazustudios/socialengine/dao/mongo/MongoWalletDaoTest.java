@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
 import com.namazustudios.socialengine.model.user.User;
@@ -78,7 +78,7 @@ public class MongoWalletDaoTest {
         return regularUsers
                 .stream()
                 .flatMap(user -> Stream
-                        .of(BlockchainProtocol.values())
+                        .of(BlockchainApi.values())
                         .map(protocol -> new Object[]{user, protocol}))
                 .toArray(Object[][]::new);
     }
@@ -94,7 +94,7 @@ public class MongoWalletDaoTest {
     @DataProvider
     public Object[][] blockchainProtocols() {
         return Stream
-                .of(BlockchainProtocol.values())
+                .of(BlockchainApi.values())
                 .map(protocol -> new Object[]{protocol})
                 .toArray(Object[][]::new);
     }
@@ -138,7 +138,7 @@ public class MongoWalletDaoTest {
         wallet.setUser(user);
         wallet.setEncryption(new HashMap<>());
         wallet.setNetworks(List.of(network));
-        wallet.setProtocol(network.protocol());
+        wallet.setApi(network.api());
 
         final var identity = new WalletIdentityPair();
         identity.setEncrypted(false);
@@ -152,7 +152,7 @@ public class MongoWalletDaoTest {
         assertEquals(created.getEncryption(), wallet.getEncryption());
         assertEquals(created.getNetworks(), wallet.getNetworks());
         assertEquals(created.getUser(), wallet.getUser());
-        assertEquals(created.getProtocol(), wallet.getProtocol());
+        assertEquals(created.getApi(), wallet.getApi());
 
         wallets.put(created.getId(), created);
 
@@ -168,7 +168,7 @@ public class MongoWalletDaoTest {
         update.setEncryption(wallet.getEncryption());
         update.setUser(wallet.getUser());
         update.setNetworks(wallet.getNetworks());
-        update.setProtocol(wallet.getProtocol());
+        update.setApi(wallet.getApi());
 
         final var identity = new WalletIdentityPair();
         identity.setEncrypted(false);
@@ -206,14 +206,14 @@ public class MongoWalletDaoTest {
 
         for(var wallet : wallets) {
             assertEquals(wallet.getUser(), user);
-            assertEquals(wallet.getProtocol(), network.protocol());
+            assertEquals(wallet.getApi(), network.api());
             assertTrue(wallet.getNetworks().contains(network));
         }
 
     }
 
     @Test(dataProvider = "regularUsersAndBlockchainProtocols", groups = "read", dependsOnGroups = "update")
-    public void testGetWalletForUser(final User user, final BlockchainProtocol protocol) {
+    public void testGetWalletForUser(final User user, final BlockchainApi protocol) {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
@@ -221,7 +221,7 @@ public class MongoWalletDaoTest {
 
         for(var wallet : wallets) {
             assertEquals(wallet.getUser(), user);
-            assertEquals(wallet.getProtocol(), protocol);
+            assertEquals(wallet.getApi(), protocol);
         }
 
     }
@@ -236,20 +236,20 @@ public class MongoWalletDaoTest {
 
         for(var wallet : wallets) {
             assertTrue(wallet.getNetworks().contains(network));
-            assertEquals(wallet.getProtocol(), network.protocol());
+            assertEquals(wallet.getApi(), network.api());
         }
 
     }
 
     @Test(dataProvider = "blockchainProtocols", groups = "read", dependsOnGroups = "update")
-    public void testGetWalletProtocol(final BlockchainProtocol protocol) {
+    public void testGetWalletProtocol(final BlockchainApi protocol) {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
                         .getWallets(offset, count, null, protocol, null));
 
         for(var wallet : wallets) {
-            assertEquals(wallet.getProtocol(), protocol);
+            assertEquals(wallet.getApi(), protocol);
         }
 
     }
@@ -338,7 +338,7 @@ public class MongoWalletDaoTest {
         wallet.setUser(user);
         wallet.setEncryption(new HashMap<>());
         wallet.setNetworks(List.of(network));
-        wallet.setProtocol(network.protocol());
+        wallet.setApi(network.api());
 
         final var identity = new WalletIdentityPair();
         identity.setEncrypted(false);

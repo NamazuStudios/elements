@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.dao.ChainWalletDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.util.ValidationHelper;
 
@@ -17,7 +17,7 @@ public class AbstractMongoChainWalletDao<WalletT> implements ChainWalletDao<Wall
 
     private final Class<WalletT> walletTClass;
 
-    private final BlockchainProtocol blockchainProtocol;
+    private final BlockchainApi blockchainApi;
 
     private ObjectMapper objectMapper;
 
@@ -26,9 +26,9 @@ public class AbstractMongoChainWalletDao<WalletT> implements ChainWalletDao<Wall
     private MongoWalletDao mongoWalletDao;
 
     public AbstractMongoChainWalletDao(final Class<WalletT> walletTClass,
-                                       final BlockchainProtocol blockchainProtocol) {
+                                       final BlockchainApi blockchainApi) {
         this.walletTClass = walletTClass;
-        this.blockchainProtocol = blockchainProtocol;
+        this.blockchainApi = blockchainApi;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class AbstractMongoChainWalletDao<WalletT> implements ChainWalletDao<Wall
             final int offset, final int count,
             final String userId, final List<BlockchainNetwork> networks) {
         return getWalletDao()
-                .getWallets(offset, count, userId, blockchainProtocol, networks)
+                .getWallets(offset, count, userId, blockchainApi, networks)
                 .transform(w -> getObjectMapper().convertValue(w, walletTClass));
     }
 
@@ -44,7 +44,7 @@ public class AbstractMongoChainWalletDao<WalletT> implements ChainWalletDao<Wall
     public Optional<WalletT> findWallet(final String walletId, final String userId) {
         return getWalletDao()
                 .findWallet(walletId, userId)
-                .map(w -> blockchainProtocol.equals(w.getProtocol())
+                .map(w -> blockchainApi.equals(w.getApi())
                         ? getObjectMapper().convertValue(w, walletTClass)
                         : null
                 );
@@ -68,7 +68,7 @@ public class AbstractMongoChainWalletDao<WalletT> implements ChainWalletDao<Wall
 
     @Override
     public void deleteWallet(final String walletId, final String userId) {
-        getWalletDao().deleteWallet(walletId, userId, blockchainProtocol);
+        getWalletDao().deleteWallet(walletId, userId, blockchainApi);
     }
 
     public MongoWalletDao getWalletDao() {

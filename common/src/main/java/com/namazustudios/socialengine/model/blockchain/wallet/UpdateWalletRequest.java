@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.model.blockchain.wallet;
 
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.rt.annotation.RemoteModel;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,7 +12,15 @@ import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
+
 @ApiModel(description = "Updates a Wallet.")
+@RemoteModel(
+        scopes = {
+                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
+        }
+)
 public class UpdateWalletRequest {
 
     @ApiModelProperty("The new display name of the wallet.")

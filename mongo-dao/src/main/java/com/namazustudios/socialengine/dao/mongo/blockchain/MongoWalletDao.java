@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundExcepti
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -46,7 +46,7 @@ public class MongoWalletDao implements WalletDao {
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
             final String userId,
-            final BlockchainProtocol protocol,
+            final BlockchainApi protocol,
             final List<BlockchainNetwork> networks) {
 
         final var query = getDatastore().find(MongoWallet.class);
@@ -116,11 +116,11 @@ public class MongoWalletDao implements WalletDao {
             throw new InvalidDataException("All networks must be specified.");
         }
 
-        final var protocols = EnumSet.noneOf(BlockchainProtocol.class);
-        wallet.getNetworks().forEach(net -> protocols.add(net.protocol()));
+        final var protocols = EnumSet.noneOf(BlockchainApi.class);
+        wallet.getNetworks().forEach(net -> protocols.add(net.api()));
 
-        if (protocols.size() > 1 && protocols.contains(wallet.getProtocol())) {
-            throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getProtocol());
+        if (protocols.size() > 1 && protocols.contains(wallet.getApi())) {
+            throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getApi());
         }
 
         final var objectId = getMongoDBUtils().parseOrThrow(wallet.getId(), WalletNotFoundException::new);
@@ -135,7 +135,7 @@ public class MongoWalletDao implements WalletDao {
         final var mongoWallet = new UpdateBuilder()
                 .with(set("user", mongoUser))
                 .with(set("displayName", wallet.getDisplayName().trim()))
-                .with(set("protocol", wallet.getProtocol()))
+                .with(set("protocol", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
                 .with(set("defaultIdentity", wallet.getDefaultIdentity()))
                 .with(set("identities", wallet.getIdentities()))
@@ -164,11 +164,11 @@ public class MongoWalletDao implements WalletDao {
             throw new InvalidDataException("All networks must be specified.");
         }
 
-        final var protocols = EnumSet.noneOf(BlockchainProtocol.class);
-        wallet.getNetworks().forEach(net -> protocols.add(net.protocol()));
+        final var protocols = EnumSet.noneOf(BlockchainApi.class);
+        wallet.getNetworks().forEach(net -> protocols.add(net.api()));
 
-        if (protocols.size() > 1 && protocols.contains(wallet.getProtocol())) {
-            throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getProtocol());
+        if (protocols.size() > 1 && protocols.contains(wallet.getApi())) {
+            throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getApi());
         }
 
         final var mongoWallet = getMapper().map(wallet, MongoWallet.class);
@@ -189,7 +189,7 @@ public class MongoWalletDao implements WalletDao {
         deleteWallet(walletId, userId, null);
     }
 
-    public void deleteWallet(final String walletId, final String userId, final BlockchainProtocol blockchainProtocol) {
+    public void deleteWallet(final String walletId, final String userId, final BlockchainApi blockchainApi) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(walletId, WalletNotFoundException::new);
 
@@ -208,8 +208,8 @@ public class MongoWalletDao implements WalletDao {
 
         }
 
-        if (blockchainProtocol != null)
-            query.filter(eq("protocol", blockchainProtocol));
+        if (blockchainApi != null)
+            query.filter(eq("protocol", blockchainApi));
 
         final var result = query.delete();
 

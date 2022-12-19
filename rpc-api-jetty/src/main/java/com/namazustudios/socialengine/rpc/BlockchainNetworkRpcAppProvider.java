@@ -22,9 +22,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
 
+import java.util.stream.Stream;
+
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static com.namazustudios.socialengine.rpc.RpcResourceConfig.INJECTOR_ATTRIBUTE_NAME;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static com.namazustudios.socialengine.servlet.security.HttpPathUtils.normalize;
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
@@ -41,24 +44,28 @@ public class BlockchainNetworkRpcAppProvider extends AbstractLifeCycle implement
 
     @Override
     protected void doStart() {
-        for (var jsonRpcNetwork : BlockchainNetwork.values()) {
+        Stream.of(BlockchainNetwork.values())
+                .filter(p -> p.api().getProtocols().contains(ELEMENTS_JSON_RPC_PROTOCOL))
+                .forEach(this::startJsonRpcNetwork);
+    }
 
-            final var contextPath = normalize(format(
-                    NETWORK_PREFIX_FORMAT,
-                    getRootContext(),
-                    jsonRpcNetwork.toString().toLowerCase()
-            ));
+    private void startJsonRpcNetwork(final BlockchainNetwork jsonRpcNetwork) {
 
-            final var app = new App(
-                    getDeploymentManager(),
-                    this,
-                    contextPath,
-                    createContextHandlerForNetwork(contextPath, jsonRpcNetwork)
-            );
+        final var contextPath = normalize(format(
+                NETWORK_PREFIX_FORMAT,
+                getRootContext(),
+                jsonRpcNetwork.toString().toLowerCase()
+        ));
 
-            getDeploymentManager().addApp(app);
+        final var app = new App(
+                getDeploymentManager(),
+                this,
+                contextPath,
+                createContextHandlerForNetwork(contextPath, jsonRpcNetwork)
+        );
 
-        }
+        getDeploymentManager().addApp(app);
+
     }
 
     private ContextHandler createContextHandlerForNetwork(
@@ -82,7 +89,7 @@ public class BlockchainNetworkRpcAppProvider extends AbstractLifeCycle implement
                 new JsonRpcModule()
                         .withNetwork(blockchainNetwork)
                         .withHttpRedirectProvider(urls)
-                        .scanningScope(blockchainNetwork.protocol().toString())
+                        .scanningScope(blockchainNetwork.api().toString())
         );
 
         final var guiceFilter = injector.getInstance(GuiceFilter.class);

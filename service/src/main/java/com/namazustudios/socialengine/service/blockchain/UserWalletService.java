@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
@@ -26,7 +26,7 @@ public class UserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, final BlockchainProtocol protocol, final List<BlockchainNetwork> networks) {
+            final String userId, final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         if (userId == null || Objects.equals(userId, getUser().getId())) {
             return getWalletDao().getWallets(offset, count, getUser().getId(), protocol, networks);
         } else {

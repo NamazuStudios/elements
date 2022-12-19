@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain.crypto;
 
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainProtocol;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
 
@@ -30,11 +29,11 @@ public interface WalletIdentityFactory {
     Wallet create(final Wallet wallet, int count);
 
     /**
-     * Gets the {@link IdentityGenerator} for the supplied {@link BlockchainProtocol}.
+     * Gets the {@link IdentityGenerator} for the supplied {@link BlockchainApi}.
      *
      * @return the {@link IdentityGenerator}
      */
-    IdentityGenerator getGenerator(BlockchainProtocol protocol);
+    IdentityGenerator getGenerator(BlockchainApi protocol);
 
     /**
      * Generates instances of {@link WalletIdentityPair}.

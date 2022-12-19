@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model;
 
+import com.namazustudios.socialengine.rt.annotation.RemoteModel;
+import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
 
 import java.io.Serializable;
@@ -10,10 +12,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
+
 /**
  * Created by patricktwohig on 3/25/15.
  */
 @ApiModel
+@RemoteModel(
+        scopes = {
+                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
+        }
+)
 public class Pagination<T> implements Iterable<T>, Serializable {
 
     public static <T> Pagination<T> empty() {
