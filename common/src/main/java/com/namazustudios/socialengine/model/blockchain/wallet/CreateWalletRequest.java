@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,7 +36,7 @@ public class CreateWalletRequest {
 
     @NotNull
     @ApiModelProperty("The protocol of this wallet. Once set, this cannot be unset.")
-    private BlockchainApi protocol;
+    private BlockchainApi api;
 
     @NotNull
     @ApiModelProperty("The networks associated with this wallet. All must support the Wallet's protocol.")
@@ -52,6 +53,8 @@ public class CreateWalletRequest {
     private int defaultIdentity;
 
     @Valid
+    @NotNull
+    @Size(min = 1)
     private List<WalletIdentityPair> identities;
 
     public String getDisplayName() {
@@ -70,12 +73,12 @@ public class CreateWalletRequest {
         this.userId = userId;
     }
 
-    public BlockchainApi getProtocol() {
-        return protocol;
+    public BlockchainApi getApi() {
+        return api;
     }
 
-    public void setProtocol(BlockchainApi protocol) {
-        this.protocol = protocol;
+    public void setApi(BlockchainApi api) {
+        this.api = api;
     }
 
     public List<BlockchainNetwork> getNetworks() {
@@ -115,12 +118,12 @@ public class CreateWalletRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateWalletRequest that = (CreateWalletRequest) o;
-        return getDefaultIdentity() == that.getDefaultIdentity() && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getUserId(), that.getUserId()) && getProtocol() == that.getProtocol() && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getPassphrase(), that.getPassphrase()) && Objects.equals(getIdentities(), that.getIdentities());
+        return getDefaultIdentity() == that.getDefaultIdentity() && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getUserId(), that.getUserId()) && getApi() == that.getApi() && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getPassphrase(), that.getPassphrase()) && Objects.equals(getIdentities(), that.getIdentities());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDisplayName(), getUserId(), getProtocol(), getNetworks(), getPassphrase(), getDefaultIdentity(), getIdentities());
+        return Objects.hash(getDisplayName(), getUserId(), getApi(), getNetworks(), getPassphrase(), getDefaultIdentity(), getIdentities());
     }
 
     @Override
@@ -128,7 +131,7 @@ public class CreateWalletRequest {
         final StringBuilder sb = new StringBuilder("CreateWalletRequest{");
         sb.append("displayName='").append(displayName).append('\'');
         sb.append(", userId='").append(userId).append('\'');
-        sb.append(", protocol=").append(protocol);
+        sb.append(", protocol=").append(api);
         sb.append(", networks=").append(networks);
         sb.append(", passphrase='").append(passphrase).append('\'');
         sb.append(", defaultIdentity=").append(defaultIdentity);

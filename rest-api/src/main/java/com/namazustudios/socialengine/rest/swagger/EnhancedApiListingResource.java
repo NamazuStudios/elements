@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.service.ApplicationService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
+import io.swagger.annotations.Info;
 import io.swagger.annotations.SecurityDefinition;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -30,6 +31,10 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
  * Created by patricktwohig on 7/14/17.
  */
 @SwaggerDefinition(
+    info = @Info(
+        version = "1.0",
+        title = "ECI Elements"
+    ),
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {
             @ApiKeyAuthDefinition(

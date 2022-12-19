@@ -72,6 +72,7 @@ public class WalletResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new  Wallet",
             notes = "Creates a new  Wallet, associated with the given user.")

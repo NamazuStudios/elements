@@ -43,6 +43,10 @@ public class UpdateWalletRequest {
             "If not-null, then the password must also not be null.")
     private String newPassword;
 
+    @Min(1)
+    @ApiModelProperty("The default identity. Must not be larger than the count of identities.")
+    private int defaultIdentity;
+
     @NotNull
     @Size(min = 1)
     @ApiModelProperty("The networks associated with this wallet. All must support the Wallet's protocol.")
@@ -88,17 +92,26 @@ public class UpdateWalletRequest {
         this.networks = networks;
     }
 
+    public int getDefaultIdentity() {
+        return defaultIdentity;
+    }
+
+    public void setDefaultIdentity(int defaultIdentity) {
+        this.defaultIdentity = defaultIdentity;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateWalletRequest that = (UpdateWalletRequest) o;
-        return Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getUserId(), that.getUserId()) && Objects.equals(password, that.password) && Objects.equals(newPassword, that.newPassword) && Objects.equals(getNetworks(), that.getNetworks());
+        return getDefaultIdentity() == that.getDefaultIdentity() && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getUserId(), that.getUserId()) && Objects.equals(password, that.password) && Objects.equals(newPassword, that.newPassword) && Objects.equals(getNetworks(), that.getNetworks());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDisplayName(), getUserId(), password, newPassword, getNetworks());
+        return Objects.hash(getDisplayName(), getUserId(), password, newPassword, getDefaultIdentity(), getNetworks());
     }
 
     @Override
@@ -108,6 +121,7 @@ public class UpdateWalletRequest {
         sb.append(", userId='").append(userId).append('\'');
         sb.append(", password='").append(password).append('\'');
         sb.append(", newPassword='").append(newPassword).append('\'');
+        sb.append(", defaultIdentity=").append(defaultIdentity);
         sb.append(", networks=").append(networks);
         sb.append('}');
         return sb.toString();

@@ -54,6 +54,9 @@ public class SuperUserWalletService implements WalletService {
         var wallet = getWalletDao().getWallet(walletId);
         validate(wallet.getApi(), walletUpdateRequest.getNetworks());
 
+        wallet.setNetworks(walletUpdateRequest.getNetworks());
+        wallet.setDisplayName(walletUpdateRequest.getDisplayName());
+
         final var userId = nullToEmpty(walletUpdateRequest.getUserId());
 
         if (userId.isBlank()) {
@@ -91,11 +94,15 @@ public class SuperUserWalletService implements WalletService {
     public Wallet createWallet(final CreateWalletRequest createWalletRequest) {
 
         getValidationHelper().validateModel(createWalletRequest);
+        validate(createWalletRequest.getApi(), createWalletRequest.getNetworks());
 
         var wallet = new Wallet();
-        wallet.setApi(createWalletRequest.getProtocol());
+        wallet.setApi(createWalletRequest.getApi());
         wallet.setDisplayName(createWalletRequest.getDisplayName());
-        validate(createWalletRequest.getProtocol(), createWalletRequest.getNetworks());
+        wallet.setApi(createWalletRequest.getApi());
+        wallet.setNetworks(createWalletRequest.getNetworks());
+        wallet.setIdentities(createWalletRequest.getIdentities());
+        wallet.setDefaultIdentity(createWalletRequest.getDefaultIdentity());
 
         final var userId = nullToEmpty(createWalletRequest.getUserId()).trim();
 
@@ -119,14 +126,21 @@ public class SuperUserWalletService implements WalletService {
 
         final var passphrase = nullToEmpty(createWalletRequest.getPassphrase()).trim();
 
-        if (!passphrase.isBlank()) {
+        if (passphrase.isBlank()) {
+            for (var identity : createWalletRequest.getIdentities()) {
+                if (!identity.isEncrypted()) {
+                    throw new InvalidDataException("Must supply encrypted wallet if not supplying passphrase.");
+                }
+            }
+        } else {
 
-            for (var identity : wallet.getIdentities()) {
+            for (var identity : createWalletRequest.getIdentities()) {
                 if (identity.isEncrypted()) {
-                    throw new InvalidDataException("Must supply unencrypted wallet.");
+                    throw new InvalidDataException("Must supply unencrypted wallet if supplying passphrase.");
                 }
             }
 
+            wallet.setIdentities(createWalletRequest.getIdentities());
             wallet = getWalletCryptoUtilities().encrypt(wallet, passphrase);
 
         }

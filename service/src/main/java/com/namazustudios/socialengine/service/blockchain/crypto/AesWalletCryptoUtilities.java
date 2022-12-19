@@ -105,6 +105,7 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
             final var unencryptedBytes = unencrypted.getBytes(StandardCharsets.UTF_8);
             final var encryptedBytes = cipher.doFinal(unencryptedBytes);
             final var encryptedString = Hex.encode(encryptedBytes);
+            encrypted.setEncrypted(true);
             encrypted.setPrivateKey(encryptedString);
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
