@@ -135,7 +135,7 @@ public class MongoWalletDao implements WalletDao {
         final var mongoWallet = new UpdateBuilder()
                 .with(set("user", mongoUser))
                 .with(set("displayName", wallet.getDisplayName().trim()))
-                .with(set("protocol", wallet.getApi()))
+                .with(set("api", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
                 .with(set("defaultIdentity", wallet.getDefaultIdentity()))
                 .with(set("identities", wallet.getIdentities()))
