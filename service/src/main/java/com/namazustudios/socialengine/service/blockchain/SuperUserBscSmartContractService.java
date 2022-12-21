@@ -9,6 +9,9 @@ import com.namazustudios.socialengine.exception.blockchain.ContractInvocationExc
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractRequest;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMTransactionLog;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
 import org.web3j.abi.FunctionEncoder;

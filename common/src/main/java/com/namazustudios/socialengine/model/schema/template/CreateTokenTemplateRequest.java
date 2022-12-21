@@ -1,13 +1,11 @@
 package com.namazustudios.socialengine.model.schema.template;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import java.util.List;
 import java.util.Map;
 
 @ApiModel(description = "Represents a request to create a MetadataSpec definition.")

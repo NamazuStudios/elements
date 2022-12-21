@@ -17,10 +17,8 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import javax.inject.Inject;
 
 import java.util.List;
-import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static java.lang.String.format;
 
 public class SuperUserWalletService implements WalletService {
 
@@ -52,7 +50,7 @@ public class SuperUserWalletService implements WalletService {
         getValidationHelper().validateModel(walletUpdateRequest);
 
         var wallet = getWalletDao().getWallet(walletId);
-        validate(wallet.getApi(), walletUpdateRequest.getNetworks());
+        wallet.getApi().validate(walletUpdateRequest.getNetworks());
 
         wallet.setNetworks(walletUpdateRequest.getNetworks());
         wallet.setDisplayName(walletUpdateRequest.getDisplayName());
@@ -94,7 +92,10 @@ public class SuperUserWalletService implements WalletService {
     public Wallet createWallet(final CreateWalletRequest createWalletRequest) {
 
         getValidationHelper().validateModel(createWalletRequest);
-        validate(createWalletRequest.getApi(), createWalletRequest.getNetworks());
+
+        createWalletRequest
+                .getApi()
+                .validate(createWalletRequest.getNetworks());
 
         var wallet = new Wallet();
         wallet.setApi(createWalletRequest.getApi());
@@ -147,21 +148,6 @@ public class SuperUserWalletService implements WalletService {
 
         return getWalletDao().createWallet(wallet);
 
-    }
-
-    private void validate(final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
-        for (var network : networks) {
-
-            if (network == null) {
-                throw new InvalidDataException("Network must not be null.");
-            }
-
-            if (!Objects.equals(protocol, network.api())) {
-                final var msg = format("Network %s does not match protocol %s", network, protocol);
-                throw new InvalidDataException(msg);
-            }
-
-        }
     }
 
     @Override

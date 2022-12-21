@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rest.blockchain;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractRequest;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.service.blockchain.BscSmartContractService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

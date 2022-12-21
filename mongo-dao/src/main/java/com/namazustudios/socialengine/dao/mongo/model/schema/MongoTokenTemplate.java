@@ -6,18 +6,9 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoSmartContract;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoTemplateTab;
-import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
-import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
 import dev.morphia.annotations.*;
-import io.swagger.annotations.ApiModelProperty;
 import org.bson.types.ObjectId;
-import org.osgi.service.useradmin.User;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
-import java.util.List;
 import java.util.Map;
 
 @SearchableIdentity(@SearchableField(

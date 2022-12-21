@@ -35,6 +35,13 @@ public interface WalletDao {
         return findWallet(walletId, null);
     }
 
+    /**
+     * Finds the wallets.
+     *
+     * @param walletId
+     * @param userId
+     * @return
+     */
     Optional<Wallet> findWallet(String walletId, String userId);
 
     /**

@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.contract;
 
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
+import java.util.Objects;
 
 public class EVMInvokeContractResponse {
 
@@ -138,10 +139,6 @@ public class EVMInvokeContractResponse {
     }
 
     public boolean isStatusOK() {
-//        if (null == getStatus()) {
-//            return true;
-//        }
-
         return getStatus() == 1;
     }
 
@@ -207,6 +204,43 @@ public class EVMInvokeContractResponse {
 
     public void setDecodedLog(List<Object> decodedLog) {
         this.decodedLog = decodedLog;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EVMInvokeContractResponse that = (EVMInvokeContractResponse) o;
+        return getTransactionIndex() == that.getTransactionIndex() && getBlockNumber() == that.getBlockNumber() && getCumulativeGasUsed() == that.getCumulativeGasUsed() && getGasUsed() == that.getGasUsed() && getStatus() == that.getStatus() && Objects.equals(getTransactionHash(), that.getTransactionHash()) && Objects.equals(getBlockHash(), that.getBlockHash()) && Objects.equals(getContractAddress(), that.getContractAddress()) && Objects.equals(getRoot(), that.getRoot()) && Objects.equals(getFrom(), that.getFrom()) && Objects.equals(getTo(), that.getTo()) && Objects.equals(getLogs(), that.getLogs()) && Objects.equals(getLogsBloom(), that.getLogsBloom()) && Objects.equals(getRevertReason(), that.getRevertReason()) && Objects.equals(getType(), that.getType()) && Objects.equals(getEffectiveGasPrice(), that.getEffectiveGasPrice()) && Objects.equals(getDecodedLog(), that.getDecodedLog());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTransactionHash(), getTransactionIndex(), getBlockHash(), getBlockNumber(), getCumulativeGasUsed(), getGasUsed(), getContractAddress(), getRoot(), getStatus(), getFrom(), getTo(), getLogs(), getLogsBloom(), getRevertReason(), getType(), getEffectiveGasPrice(), getDecodedLog());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("EVMInvokeContractResponse{");
+        sb.append("transactionHash='").append(transactionHash).append('\'');
+        sb.append(", transactionIndex=").append(transactionIndex);
+        sb.append(", blockHash='").append(blockHash).append('\'');
+        sb.append(", blockNumber=").append(blockNumber);
+        sb.append(", cumulativeGasUsed=").append(cumulativeGasUsed);
+        sb.append(", gasUsed=").append(gasUsed);
+        sb.append(", contractAddress='").append(contractAddress).append('\'');
+        sb.append(", root='").append(root).append('\'');
+        sb.append(", status=").append(status);
+        sb.append(", from='").append(from).append('\'');
+        sb.append(", to='").append(to).append('\'');
+        sb.append(", logs=").append(logs);
+        sb.append(", logsBloom='").append(logsBloom).append('\'');
+        sb.append(", revertReason='").append(revertReason).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", effectiveGasPrice='").append(effectiveGasPrice).append('\'');
+        sb.append(", decodedLog=").append(decodedLog);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractRequest;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;

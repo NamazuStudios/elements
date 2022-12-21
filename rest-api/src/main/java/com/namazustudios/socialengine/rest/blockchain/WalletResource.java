@@ -20,14 +20,12 @@ import java.util.List;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
-/**
- * Created by keithhudnall on 9/21/21.
- */
 @Api(value = "Blockchain Wallets",
         description =
                 "Allows for the storage and retrieval blockchain wallets. This is part of the Omni API, which " +
                 "provides access to all support blockchains.",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {
+            @Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("blockchain/omni/wallet")
 public class WalletResource {
 

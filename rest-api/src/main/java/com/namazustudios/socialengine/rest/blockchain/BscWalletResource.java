@@ -20,6 +20,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
  * Created by keithhudnall on 9/21/21.
  */
 @Api(value = "Bsc Wallets",
+        hidden = true,
         description = "Allows for the storage and retrieval of compiled Bsc wallets.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("blockchain/bsc/wallet")

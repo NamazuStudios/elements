@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
+import com.namazustudios.socialengine.model.blockchain.contract.Contract;
 import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
 import com.namazustudios.socialengine.model.schema.template.*;
 import com.namazustudios.socialengine.rest.model.ElementsSmartContractPagination;
@@ -106,7 +106,7 @@ public class TokenTemplateApiTest {
         this.specId = metadataSpec.getId();
 
 
-        final Pagination<ElementsSmartContract> contractPagination = client
+        final Pagination<Contract> contractPagination = client
                 .target(apiRoot + "/blockchain/neo/contract")
                 .queryParam("count", 20)
                 .queryParam("search", "")
@@ -116,7 +116,7 @@ public class TokenTemplateApiTest {
                 .submit(ElementsSmartContractPagination.class)
                 .get();
 
-        ElementsSmartContract contract = contractPagination!=null && contractPagination.getObjects().size() > 0?contractPagination.getObjects().get(0):null;
+        Contract contract = contractPagination!=null && contractPagination.getObjects().size() > 0?contractPagination.getObjects().get(0):null;
 
         if (contract == null){
             final var request = new PatchSmartContractRequest();
@@ -130,7 +130,7 @@ public class TokenTemplateApiTest {
                     .header("X-HTTP-Method-Override", "PATCH")
                     .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
                     .post(Entity.entity(request, APPLICATION_JSON))
-                    .readEntity(ElementsSmartContract.class);
+                    .readEntity(Contract.class);
         }
         contractId = contract.getId();
 

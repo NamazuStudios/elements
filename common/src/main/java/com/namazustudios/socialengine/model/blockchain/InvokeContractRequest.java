@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.List;
 
+@Deprecated
 public class InvokeContractRequest {
 
     @NotNull(groups = {ValidationGroups.Create.class})

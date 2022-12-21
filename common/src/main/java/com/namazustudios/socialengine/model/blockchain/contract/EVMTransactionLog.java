@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.contract;
 
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
+import java.util.Objects;
 
 public class EVMTransactionLog {
 
@@ -114,6 +115,36 @@ public class EVMTransactionLog {
 
     public void setTopics(List<String> topics) {
         this.topics = topics;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EVMTransactionLog that = (EVMTransactionLog) o;
+        return isRemoved() == that.isRemoved() && getLogIndex() == that.getLogIndex() && getTransactionIndex() == that.getTransactionIndex() && getBlockNumber() == that.getBlockNumber() && Objects.equals(getTransactionHash(), that.getTransactionHash()) && Objects.equals(getBlockHash(), that.getBlockHash()) && Objects.equals(getAddress(), that.getAddress()) && Objects.equals(getData(), that.getData()) && Objects.equals(getType(), that.getType()) && Objects.equals(getTopics(), that.getTopics());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isRemoved(), getLogIndex(), getTransactionIndex(), getTransactionHash(), getBlockHash(), getBlockNumber(), getAddress(), getData(), getType(), getTopics());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("EVMTransactionLog{");
+        sb.append("removed=").append(removed);
+        sb.append(", logIndex=").append(logIndex);
+        sb.append(", transactionIndex=").append(transactionIndex);
+        sb.append(", transactionHash='").append(transactionHash).append('\'');
+        sb.append(", blockHash='").append(blockHash).append('\'');
+        sb.append(", blockNumber=").append(blockNumber);
+        sb.append(", address='").append(address).append('\'');
+        sb.append(", data='").append(data).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", topics=").append(topics);
+        sb.append('}');
+        return sb.toString();
     }
 
 }
