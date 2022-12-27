@@ -24,7 +24,7 @@ import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_
                 @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
         }
 )
-public class CreateContractRequest {
+public class CreateSmartContractRequest {
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = ValidationGroups.Update.class)
@@ -118,7 +118,7 @@ public class CreateContractRequest {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CreateContractRequest that = (CreateContractRequest) o;
+        CreateSmartContractRequest that = (CreateSmartContractRequest) o;
         return Objects.equals(getId(), that.getId()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getAddress(), that.getAddress()) && getApi() == that.getApi() && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getWalletId(), that.getWalletId()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 

@@ -1,9 +1,14 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.contract.CreateSmartContractRequest;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.contract.UpdateSmartContractRequest;
+
+import java.util.List;
 
 public interface SmartContractService {
     /**
@@ -11,10 +16,13 @@ public interface SmartContractService {
      *
      * @param offset
      * @param count
-     * @param search
      * @return a {@link Pagination} of {@link SmartContract} instances
      */
-    Pagination<SmartContract> getSmartContracts(int offset, int count, String search);
+    Pagination<SmartContract> getSmartContracts(
+            int offset,
+            int count,
+            BlockchainApi blockchainApi,
+            List<BlockchainNetwork> blockchainNetworks);
 
     /**
      * Fetches a specific {@link SmartContract} instance based on ID. If not found, an
@@ -26,14 +34,22 @@ public interface SmartContractService {
     SmartContract getSmartContract(String contractId);
 
     /**
+     * Creates a new smart contract.
+     *
+     * @param createSmartContractRequest creates a smart contract
+     * @return the {@link SmartContract}
+     */
+    SmartContract createSmartContract(CreateSmartContractRequest createSmartContractRequest);
+
+    /**
      * Updates the supplied {@link SmartContract}.  The
      * {@link PatchSmartContractRequest} method is used to key the
      * {@link SmartContract}.
      *
-     * @param patchSmartContractRequest the {@link PatchSmartContractRequest} with the information to update
+     * @param updateSmartContractRequest the {@link UpdateSmartContractRequest} with the information to update
      * @return the {@link SmartContract} as it was changed by the service.
      */
-    SmartContract updateSmartContract(UpdateSmartContractRequest patchSmartContractRequest);
+    SmartContract updateSmartContract(String contractId, UpdateSmartContractRequest updateSmartContractRequest);
 
     /**
      * Deletes the {@link SmartContract} with the supplied contract ID.
