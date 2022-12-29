@@ -79,6 +79,10 @@ public class MongoWalletDao implements WalletDao {
         return findMongoWallet(walletId, userId).map(mw -> getMapper().map(mw, Wallet.class));
     }
 
+    public Optional<MongoWallet> findMongoWallet(final String walletId) {
+        return findMongoWallet(walletId, null);
+    }
+
     public Optional<MongoWallet> findMongoWallet(final String walletId, final String userId) {
         return getMongoDBUtils()
                 .parse(walletId)

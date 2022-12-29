@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.model.blockchain.contract;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
@@ -52,7 +53,7 @@ public class SmartContract {
     @NotNull
     @ApiModelProperty("The Elements database id of the wallet containing the default account to be used for " +
             "contract related requests.")
-    private String walletId;
+    private Wallet wallet;
 
     @ApiModelProperty("Any metadata for this contract.")
     private Map<String, Object> metadata;
@@ -97,12 +98,12 @@ public class SmartContract {
         this.networks = networks;
     }
 
-    public String getWalletId() {
-        return walletId;
+    public Wallet getWallet() {
+        return wallet;
     }
 
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
     }
 
     public Map<String, Object> getMetadata() {
@@ -118,26 +119,25 @@ public class SmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SmartContract that = (SmartContract) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getAddress(), that.getAddress()) && getApi() == that.getApi() && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getWalletId(), that.getWalletId()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(address, that.address) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getDisplayName(), getAddress(), getApi(), getNetworks(), getWalletId(), getMetadata());
+        return Objects.hash(id, displayName, address, api, networks, wallet, metadata);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("SmartContract{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", address='").append(address).append('\'');
-        sb.append(", api=").append(api);
-        sb.append(", networks=").append(networks);
-        sb.append(", walletId='").append(walletId).append('\'');
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "SmartContract{" +
+                "id='" + id + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", address='" + address + '\'' +
+                ", api=" + api +
+                ", networks=" + networks +
+                ", wallet=" + wallet +
+                ", metadata=" + metadata +
+                '}';
     }
 
 }
