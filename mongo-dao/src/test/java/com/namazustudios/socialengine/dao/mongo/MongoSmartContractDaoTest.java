@@ -81,7 +81,7 @@ public class MongoSmartContractDaoTest {
     }
 
     @DataProvider
-    public Object[][] blockchainProtocols() {
+    public Object[][] blockchainApi() {
         return Stream
                 .of(BlockchainApi.values())
                 .map(protocol -> new Object[]{protocol})
@@ -139,7 +139,7 @@ public class MongoSmartContractDaoTest {
 
     }
 
-    @Test(dataProvider = "wallets", groups = "update", dependsOnGroups = "create")
+    @Test(dataProvider = "smartContracts", groups = "update", dependsOnGroups = "create")
     public void testUpdateSmartContract(final SmartContract smartContract) {
 
         final var addresses = new HashMap<BlockchainNetwork, SmartContractAddress>();
@@ -184,8 +184,8 @@ public class MongoSmartContractDaoTest {
 
     }
 
-    @Test(dataProvider = "blockchainProtocols", groups = "read", dependsOnGroups = "update")
-    public void testGetContractsByProtocol(final BlockchainApi protocol) {
+    @Test(dataProvider = "blockchainApi", groups = "read", dependsOnGroups = "update")
+    public void testGetContractsByApi(final BlockchainApi protocol) {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()

@@ -113,6 +113,7 @@ public class MongoSmartContractDao implements SmartContractDao {
                 .with(set("api", smartContract.getApi()))
                 .with(set("addresses", smartContract.getAddresses()))
                 .with(set("wallet", mongoWallet))
+                .with(set("networks", smartContract.getAddresses().keySet()))
                 .with(set("metadata", smartContract.getMetadata()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 
@@ -148,6 +149,7 @@ public class MongoSmartContractDao implements SmartContractDao {
         mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
+        mongoSmartContract.setNetworks(smartContract.getAddresses().keySet());
 
         mongoSmartContract.setWallet(mongoWallet);
         getDatastore().insert(mongoSmartContract);

@@ -8,11 +8,12 @@ import org.bson.types.ObjectId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity(value = "wallet")
 @Indexes({
         @Index(fields = @Field("api")),
-        @Index(fields = @Field("addresses"))
+        @Index(fields = @Field("networks"))
 })
 public class MongoSmartContract {
 
@@ -21,6 +22,9 @@ public class MongoSmartContract {
 
     @Property
     private String displayName;
+
+    @Property
+    private Set<BlockchainNetwork> networks;
 
     @Property
     private Map<BlockchainNetwork, MongoSmartContractAddress> addresses;
@@ -48,6 +52,14 @@ public class MongoSmartContract {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public Set<BlockchainNetwork> getNetworks() {
+        return networks;
+    }
+
+    public void setNetworks(Set<BlockchainNetwork> networks) {
+        this.networks = networks;
     }
 
     public Map<BlockchainNetwork, MongoSmartContractAddress> getAddresses() {
@@ -87,12 +99,12 @@ public class MongoSmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoSmartContract that = (MongoSmartContract) o;
-        return Objects.equals(objectId, that.objectId) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(objectId, that.objectId) && Objects.equals(displayName, that.displayName) && Objects.equals(networks, that.networks) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, displayName, addresses, api, wallet, metadata);
+        return Objects.hash(objectId, displayName, networks, addresses, api, wallet, metadata);
     }
 
     @Override
@@ -100,6 +112,7 @@ public class MongoSmartContract {
         return "MongoSmartContract{" +
                 "objectId=" + objectId +
                 ", displayName='" + displayName + '\'' +
+                ", networks=" + networks +
                 ", addresses=" + addresses +
                 ", api=" + api +
                 ", wallet=" + wallet +
