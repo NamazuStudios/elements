@@ -113,19 +113,14 @@ public class MongoWalletDao implements WalletDao {
         getValidationHelper().validateModel(wallet, ValidationGroups.Update.class);
 
         if (wallet.getIdentities().stream().anyMatch(Objects::isNull)) {
-            throw new InvalidDataException("All identities must be specified.");
+            throw new InvalidDataException("All identities must be non-null.");
         }
 
         if (wallet.getNetworks().stream().anyMatch(Objects::isNull)) {
-            throw new InvalidDataException("All networks must be specified.");
+            throw new InvalidDataException("All networks must be non-null.");
         }
 
-        final var protocols = EnumSet.noneOf(BlockchainApi.class);
-        wallet.getNetworks().forEach(net -> protocols.add(net.api()));
-
-        if (protocols.size() > 1 && protocols.contains(wallet.getApi())) {
-            throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getApi());
-        }
+        wallet.getApi().validate(wallet.getNetworks());
 
         final var objectId = getMongoDBUtils().parseOrThrow(wallet.getId(), WalletNotFoundException::new);
 
@@ -161,19 +156,14 @@ public class MongoWalletDao implements WalletDao {
         getValidationHelper().validateModel(wallet.getUser(), ValidationGroups.Update.class);
 
         if (wallet.getIdentities().stream().anyMatch(Objects::isNull)) {
-            throw new InvalidDataException("All identities must be specified.");
+            throw new InvalidDataException("All identities must be non-null values.");
         }
 
         if (wallet.getNetworks().stream().anyMatch(Objects::isNull)) {
-            throw new InvalidDataException("All networks must be specified.");
+            throw new InvalidDataException("All networks must be non-null values.");
         }
 
-        final var protocols = EnumSet.noneOf(BlockchainApi.class);
-        wallet.getNetworks().forEach(net -> protocols.add(net.api()));
-
-        if (protocols.size() > 1 && protocols.contains(wallet.getApi())) {
-            throw new InvalidDataException("All networks must use the same protocol and must match: " + wallet.getApi());
-        }
+        wallet.getApi().validate(wallet.getNetworks());
 
         final var mongoWallet = getMapper().map(wallet, MongoWallet.class);
 

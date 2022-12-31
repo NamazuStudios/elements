@@ -23,7 +23,7 @@ public class MongoSmartContract {
     private String displayName;
 
     @Property
-    private Map<BlockchainNetwork, String> addresses;
+    private Map<BlockchainNetwork, MongoSmartContractAddress> addresses;
 
     @Property
     private BlockchainApi api;
@@ -50,11 +50,11 @@ public class MongoSmartContract {
         this.displayName = displayName;
     }
 
-    public Map<BlockchainNetwork, String> getAddresses() {
+    public Map<BlockchainNetwork, MongoSmartContractAddress> getAddresses() {
         return addresses;
     }
 
-    public void setAddresses(Map<BlockchainNetwork, String> addresses) {
+    public void setAddresses(Map<BlockchainNetwork, MongoSmartContractAddress> addresses) {
         this.addresses = addresses;
     }
 

@@ -72,7 +72,7 @@ public enum BlockchainApi {
         for (var network : networks) {
             if (network == null) {
                 throw exSupplier.get();
-            } else if (this.equals(network.api())) {
+            } else if (!this.equals(network.api())) {
                 throw exSupplier.get();
             }
         }

@@ -108,10 +108,6 @@ public class MongoSmartContractDaoTest {
     @Test(dataProvider = "wallets", groups = "create")
     public void testCreateSmartContract(final Wallet wallet) {
 
-        final var contract = new SmartContract();
-        contract.setApi(wallet.getApi());
-        contract.setDisplayName("Test Contract: " + wallet.getApi());
-
         final var addresses = new HashMap<BlockchainNetwork, SmartContractAddress>();
 
         wallet.getNetworks().forEach(network -> {
@@ -120,19 +116,24 @@ public class MongoSmartContractDaoTest {
             addresses.put(network, address);
         });
 
-        contract.setAddresses(addresses);
 
         final var metadata = new HashMap<String, Object>();
         metadata.put("API", wallet.getApi());
         metadata.put("NETS", wallet.getNetworks());
 
+        final var contract = new SmartContract();
+        contract.setWallet(wallet);
+        contract.setMetadata(metadata);
+        contract.setAddresses(addresses);
+        contract.setApi(wallet.getApi());
+        contract.setDisplayName("Test Contract: " + wallet.getApi());
+
         final var created = getUnderTest().createSmartContract(contract);
         assertNotNull(created.getId());
         assertEquals(created.getWallet(), wallet);
-        assertEquals(created.getDisplayName(), wallet.getDisplayName());
+        assertEquals(created.getDisplayName(), contract.getDisplayName());
         assertEquals(created.getApi(), contract.getApi());
         assertEquals(created.getAddresses(), contract.getAddresses());
-        assertEquals(created.getMetadata(), contract.getMetadata());
 
         smartContracts.put(created.getId(), created);
 
@@ -140,13 +141,6 @@ public class MongoSmartContractDaoTest {
 
     @Test(dataProvider = "wallets", groups = "update", dependsOnGroups = "create")
     public void testUpdateSmartContract(final SmartContract smartContract) {
-
-        final var update = new SmartContract();
-        update.setId(smartContract.getId());
-        update.setDisplayName(smartContract.getDisplayName());
-        update.setApi(smartContract.getApi());
-        update.setMetadata(smartContract.getMetadata());
-        update.setWallet(smartContract.getWallet());
 
         final var addresses = new HashMap<BlockchainNetwork, SmartContractAddress>();
 
@@ -156,10 +150,16 @@ public class MongoSmartContractDaoTest {
             addresses.put(network, address);
         });
 
-        update.setAddresses(addresses);
-
         final var metadata = new HashMap<String, Object>();
         metadata.putAll(smartContract.getMetadata());
+
+        final var update = new SmartContract();
+        update.setId(smartContract.getId());
+        update.setDisplayName(smartContract.getDisplayName());
+        update.setApi(smartContract.getApi());
+        update.setMetadata(smartContract.getMetadata());
+        update.setWallet(smartContract.getWallet());
+        update.setAddresses(addresses);
 
         final var updated = getUnderTest().updateSmartContract(update);
         assertEquals(updated, update);

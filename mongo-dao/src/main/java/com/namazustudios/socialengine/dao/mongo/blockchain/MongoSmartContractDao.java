@@ -131,7 +131,7 @@ public class MongoSmartContractDao implements SmartContractDao {
         getValidationHelper().validateModel(smartContract.getWallet(), ValidationGroups.Update.class);
 
         if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
-            throw new InvalidDataException("All networks must be specified.");
+            throw new InvalidDataException("Must specify non-null networks.");
         }
 
         smartContract.getApi().validate(smartContract.getAddresses().keySet());
@@ -150,7 +150,7 @@ public class MongoSmartContractDao implements SmartContractDao {
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
 
         mongoSmartContract.setWallet(mongoWallet);
-        getDatastore().insert(mongoWallet);
+        getDatastore().insert(mongoSmartContract);
 
         return getMapper().map(mongoSmartContract, SmartContract.class);
 
