@@ -24,6 +24,7 @@ import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.formidium.FormidiumService;
 import com.namazustudios.socialengine.service.formidium.FormidiumServiceProvider;
+import com.namazustudios.socialengine.service.formidium.SuperuserFormidiumService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
@@ -311,6 +312,10 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(WalletServiceProvider.class)
                 .in(scope);
 
+        bind(SmartContractService.class)
+                .toProvider(SmartContractServiceProvider.class)
+                .in(scope);
+
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
@@ -513,16 +518,20 @@ public class ServicesModule extends PrivateModule {
             .to(StandardCustomAuthSessionService.class);
 
         bind(DistinctInventoryItemService.class)
-            .annotatedWith(Unscoped.class)
-            .to(SuperUserDistinctInventoryItemService.class);
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserDistinctInventoryItemService.class);
 
         bind(FormidiumService.class)
-            .annotatedWith(Unscoped.class)
-            .toProvider(FormidiumServiceProvider.class);
+                .annotatedWith(Unscoped.class)
+                .to(SuperuserFormidiumService.class);
 
         bind(WalletService.class)
                 .annotatedWith(Unscoped.class)
-                .toProvider(WalletServiceProvider.class);
+                .to(SuperUserWalletService.class);
+
+        bind(SmartContractService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserSmartContractService.class);
 
         bind(WalletCryptoUtilities.class)
                 .to(AesWalletCryptoUtilities.class)

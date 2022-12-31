@@ -7,15 +7,12 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Entity(value = "wallet")
 @Indexes({
         @Index(fields = @Field("api")),
-        @Index(fields = @Field("networks")),
-        @Index(fields = {
-                @Field("api"),
-                @Field("networks")
-        } )
+        @Index(fields = @Field("addresses"))
 })
 public class MongoSmartContract {
 
@@ -26,13 +23,10 @@ public class MongoSmartContract {
     private String displayName;
 
     @Property
-    private String address;
+    private Map<BlockchainNetwork, String> addresses;
 
     @Property
     private BlockchainApi api;
-
-    @Property
-    private List<BlockchainNetwork> networks;
 
     @Reference
     private MongoWallet wallet;
@@ -56,12 +50,12 @@ public class MongoSmartContract {
         this.displayName = displayName;
     }
 
-    public String getAddress() {
-        return address;
+    public Map<BlockchainNetwork, String> getAddresses() {
+        return addresses;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setAddresses(Map<BlockchainNetwork, String> addresses) {
+        this.addresses = addresses;
     }
 
     public BlockchainApi getApi() {
@@ -70,14 +64,6 @@ public class MongoSmartContract {
 
     public void setApi(BlockchainApi api) {
         this.api = api;
-    }
-
-    public List<BlockchainNetwork> getNetworks() {
-        return networks;
-    }
-
-    public void setNetworks(List<BlockchainNetwork> networks) {
-        this.networks = networks;
     }
 
     public MongoWallet getWallet() {
@@ -94,6 +80,31 @@ public class MongoSmartContract {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoSmartContract that = (MongoSmartContract) o;
+        return Objects.equals(objectId, that.objectId) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(objectId, displayName, addresses, api, wallet, metadata);
+    }
+
+    @Override
+    public String toString() {
+        return "MongoSmartContract{" +
+                "objectId=" + objectId +
+                ", displayName='" + displayName + '\'' +
+                ", addresses=" + addresses +
+                ", api=" + api +
+                ", wallet=" + wallet +
+                ", metadata=" + metadata +
+                '}';
     }
 
 }

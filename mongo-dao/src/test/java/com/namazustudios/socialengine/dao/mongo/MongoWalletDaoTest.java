@@ -117,7 +117,7 @@ public class MongoWalletDaoTest {
                 .toArray(Object[][]::new);
     }
 
-    public String randomKey() {
+    public static String randomKey() {
 
         final var key = new char[256];
         final var random = ThreadLocalRandom.current();

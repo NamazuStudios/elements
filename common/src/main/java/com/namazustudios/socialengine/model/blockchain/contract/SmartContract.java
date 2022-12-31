@@ -37,18 +37,14 @@ public class SmartContract {
     private String displayName;
 
     @NotNull
-    @ApiModelProperty("The address of the contract from the blockchain. Depending on the network or protocol this " +
-            "may have several meanings.")
-    private String address;
+    @ApiModelProperty(
+            "The addresses of the contract from the blockchain. Depending on the network or protocol this " +
+            "may have several meanings. For example, this may be the script has for the Ethereum network.")
+    private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull
     @ApiModelProperty("The blockchain API used by this wallet.")
     private BlockchainApi api;
-
-    @NotNull
-    @Size(min = 1)
-    @ApiModelProperty("The blockchain networks associated with this wallet.")
-    private List<BlockchainNetwork> networks;
 
     @NotNull
     @ApiModelProperty("The Elements database id of the wallet containing the default account to be used for " +
@@ -74,12 +70,12 @@ public class SmartContract {
         this.displayName = displayName;
     }
 
-    public String getAddress() {
-        return address;
+    public Map<BlockchainNetwork, SmartContractAddress> getAddresses() {
+        return addresses;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setAddresses(Map<BlockchainNetwork, SmartContractAddress> addresses) {
+        this.addresses = addresses;
     }
 
     public BlockchainApi getApi() {
@@ -88,14 +84,6 @@ public class SmartContract {
 
     public void setApi(BlockchainApi api) {
         this.api = api;
-    }
-
-    public List<BlockchainNetwork> getNetworks() {
-        return networks;
-    }
-
-    public void setNetworks(List<BlockchainNetwork> networks) {
-        this.networks = networks;
     }
 
     public Wallet getWallet() {
@@ -119,12 +107,12 @@ public class SmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SmartContract that = (SmartContract) o;
-        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(address, that.address) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, displayName, address, api, networks, wallet, metadata);
+        return Objects.hash(id, displayName, addresses, api, wallet, metadata);
     }
 
     @Override
@@ -132,12 +120,10 @@ public class SmartContract {
         return "SmartContract{" +
                 "id='" + id + '\'' +
                 ", displayName='" + displayName + '\'' +
-                ", address='" + address + '\'' +
+                ", addresses=" + addresses +
                 ", api=" + api +
-                ", networks=" + networks +
                 ", wallet=" + wallet +
                 ", metadata=" + metadata +
                 '}';
     }
-
 }

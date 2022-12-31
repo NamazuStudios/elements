@@ -95,6 +95,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(DistinctInventoryItemDao.class).to(MongoDistinctInventoryItemDao.class);
         bind(FormidiumInvestorDao.class).to(MongoFormidiumInvestorDao.class);
         bind(WalletDao.class).to(MongoWalletDao.class);
+        bind(SmartContractDao.class).to(MongoSmartContractDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -158,6 +159,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(DistinctInventoryItemDao.class);
         expose(FormidiumInvestorDao.class);
         expose(WalletDao.class);
+        expose(SmartContractDao.class);
 
     }
 

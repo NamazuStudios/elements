@@ -39,7 +39,7 @@ public class CreateSmartContractRequest {
     @ApiModelProperty(
             "The address of the contract from the blockchain. Depending on the network or protocol this " +
             "may have several meanings and vary depending on the specific API or network.")
-    private String address;
+    private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull
     @ApiModelProperty("The blockchain API used by this wallet.")
@@ -74,12 +74,12 @@ public class CreateSmartContractRequest {
         this.displayName = displayName;
     }
 
-    public String getAddress() {
-        return address;
+    public Map<BlockchainNetwork, SmartContractAddress> getAddresses() {
+        return addresses;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setAddresses(Map<BlockchainNetwork, SmartContractAddress> addresses) {
+        this.addresses = addresses;
     }
 
     public BlockchainApi getApi() {
@@ -119,26 +119,25 @@ public class CreateSmartContractRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateSmartContractRequest that = (CreateSmartContractRequest) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getAddress(), that.getAddress()) && getApi() == that.getApi() && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getWalletId(), that.getWalletId()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(walletId, that.walletId) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getDisplayName(), getAddress(), getApi(), getNetworks(), getWalletId(), getMetadata());
+        return Objects.hash(id, displayName, addresses, api, networks, walletId, metadata);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateContractRequest{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", address='").append(address).append('\'');
-        sb.append(", api=").append(api);
-        sb.append(", networks=").append(networks);
-        sb.append(", walletId='").append(walletId).append('\'');
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "CreateSmartContractRequest{" +
+                "id='" + id + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", addresses=" + addresses +
+                ", api=" + api +
+                ", networks=" + networks +
+                ", walletId='" + walletId + '\'' +
+                ", metadata=" + metadata +
+                '}';
     }
 
 }

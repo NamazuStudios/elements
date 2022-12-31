@@ -31,7 +31,7 @@ public class UpdateSmartContractRequest {
     @ApiModelProperty(
             "The address of the contract from the blockchain. Depending on the network or protocol this " +
             "may have several meanings and vary depending on the specific API or network.")
-    private String address;
+    private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull
     @Size(min = 1)
@@ -55,12 +55,12 @@ public class UpdateSmartContractRequest {
         this.displayName = displayName;
     }
 
-    public String getAddress() {
-        return address;
+    public Map<BlockchainNetwork, SmartContractAddress> getAddresses() {
+        return addresses;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setAddresses(Map<BlockchainNetwork, SmartContractAddress> addresses) {
+        this.addresses = addresses;
     }
 
     public List<BlockchainNetwork> getNetworks() {
@@ -92,24 +92,23 @@ public class UpdateSmartContractRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateSmartContractRequest that = (UpdateSmartContractRequest) o;
-        return Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getAddress(), that.getAddress()) && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getWalletId(), that.getWalletId()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(networks, that.networks) && Objects.equals(walletId, that.walletId) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDisplayName(), getAddress(), getNetworks(), getWalletId(), getMetadata());
+        return Objects.hash(displayName, addresses, networks, walletId, metadata);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("UpdateSmartContractRequest{");
-        sb.append("displayName='").append(displayName).append('\'');
-        sb.append(", address='").append(address).append('\'');
-        sb.append(", networks=").append(networks);
-        sb.append(", walletId='").append(walletId).append('\'');
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "UpdateSmartContractRequest{" +
+                "displayName='" + displayName + '\'' +
+                ", addresses=" + addresses +
+                ", networks=" + networks +
+                ", walletId='" + walletId + '\'' +
+                ", metadata=" + metadata +
+                '}';
     }
 
 }

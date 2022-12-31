@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
@@ -62,9 +63,9 @@ public enum BlockchainApi {
      *
      * @param networks the {@link Collection<BlockchainNetwork>}
      * @param exSupplier this {@link Supplier<ExceptionT>}
-     * @param <ExceptionT>
+     * @param <ExceptionT> the exception to throw if the validation fails
      */
-    public <ExceptionT extends Exception>
+    public <ExceptionT extends Throwable>
     void validate(
             final Collection<BlockchainNetwork> networks,
             final Supplier<ExceptionT> exSupplier) throws ExceptionT {
@@ -75,6 +76,15 @@ public enum BlockchainApi {
                 throw exSupplier.get();
             }
         }
+    }
+
+    /**
+     * Gets all {@link BlockchainNetwork}s associated with this API.
+     *
+     * @return a {@link Stream<BlockchainNetwork>}
+     */
+    public Stream<BlockchainNetwork> networks() {
+        return Stream.of(BlockchainNetwork.values()).filter(network -> this.equals(network.api()));
     }
 
     /**

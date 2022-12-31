@@ -4,16 +4,13 @@ import com.namazustudios.socialengine.dao.SmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoSmartContract;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoWallet;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.blockchain.SmartContractNotFoundException;
-import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -29,6 +26,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.in;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static java.lang.String.format;
 
 public class MongoSmartContractDao implements SmartContractDao {
 
@@ -83,12 +81,12 @@ public class MongoSmartContractDao implements SmartContractDao {
         getValidationHelper().validateModel(smartContract, ValidationGroups.Update.class);
         getValidationHelper().validateModel(smartContract.getWallet(), ValidationGroups.Update.class);
 
-        if (smartContract.getNetworks().stream().anyMatch(Objects::isNull)) {
+        if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All networks must be specified.");
         }
 
         final var protocols = EnumSet.noneOf(BlockchainApi.class);
-        smartContract.getNetworks().forEach(net -> protocols.add(net.api()));
+        smartContract.getAddresses().keySet().forEach(net -> protocols.add(net.api()));
 
         if (protocols.size() > 1 && protocols.contains(smartContract.getApi())) {
             throw new InvalidDataException("All networks must use the same protocol and must match: " + smartContract.getApi());
@@ -100,15 +98,20 @@ public class MongoSmartContractDao implements SmartContractDao {
         query.filter(eq("_id", objectId));
 
         final var mongoWallet = getMongoWalletDao()
-
                 .findMongoWallet(smartContract.getWallet().getId())
                 .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getWallet().getId()));
+
+        if (!smartContract.getApi().equals(mongoWallet.getApi())) {
+            final var msg = format("%s=/=%s", smartContract.getApi(), mongoWallet.getApi());
+            throw new InvalidDataException(msg);
+        }
+
+        mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoSmartContract = new UpdateBuilder()
                 .with(set("displayName", smartContract.getDisplayName().trim()))
                 .with(set("api", smartContract.getApi()))
-                .with(set("networks", smartContract.getNetworks()))
-                .with(set("address", smartContract.getAddress()))
+                .with(set("addresses", smartContract.getAddresses()))
                 .with(set("wallet", mongoWallet))
                 .with(set("metadata", smartContract.getMetadata()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
@@ -127,15 +130,22 @@ public class MongoSmartContractDao implements SmartContractDao {
         getValidationHelper().validateModel(smartContract, ValidationGroups.Insert.class);
         getValidationHelper().validateModel(smartContract.getWallet(), ValidationGroups.Update.class);
 
-        if (smartContract.getNetworks().stream().anyMatch(Objects::isNull)) {
+        if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All networks must be specified.");
         }
 
-        smartContract.getApi().validate(smartContract.getNetworks());
+        smartContract.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoWallet = getMongoWalletDao()
-                .findMongoWallet(smartContract.getId())
+                .findMongoWallet(smartContract.getWallet().getId())
                 .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getWallet().getId()));
+
+        if (!smartContract.getApi().equals(mongoWallet.getApi())) {
+            final var msg = format("%s=/=%s", smartContract.getApi(), mongoWallet.getApi());
+            throw new InvalidDataException(msg);
+        }
+
+        mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
 
@@ -148,6 +158,14 @@ public class MongoSmartContractDao implements SmartContractDao {
 
     @Override
     public void deleteContract(final String contractId) {
+
+        final var objectId = getMongoDBUtils().parseOrThrow(contractId, SmartContractNotFoundException::new);
+        final var query = getDatastore().find(MongoSmartContract.class);
+        final var result = query.filter(eq("_id", objectId)).delete();
+
+        if (result.getDeletedCount() == 0) {
+            throw new SmartContractNotFoundException();
+        }
 
     }
 
@@ -195,4 +213,5 @@ public class MongoSmartContractDao implements SmartContractDao {
     public void setMongoWalletDao(MongoWalletDao mongoWalletDao) {
         this.mongoWalletDao = mongoWalletDao;
     }
+
 }
