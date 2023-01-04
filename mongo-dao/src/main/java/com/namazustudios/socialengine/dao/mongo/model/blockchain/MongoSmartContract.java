@@ -8,12 +8,15 @@ import org.bson.types.ObjectId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @Entity(value = "wallet")
 @Indexes({
         @Index(fields = @Field("api")),
-        @Index(fields = @Field("networks"))
+        @Index(fields = @Field("networks")),
+        @Index(fields = {
+                @Field("api"),
+                @Field("networks")
+        })
 })
 public class MongoSmartContract {
 
@@ -24,7 +27,7 @@ public class MongoSmartContract {
     private String displayName;
 
     @Property
-    private Set<BlockchainNetwork> networks;
+    private List<BlockchainNetwork> networks;
 
     @Property
     private Map<BlockchainNetwork, MongoSmartContractAddress> addresses;
@@ -54,11 +57,11 @@ public class MongoSmartContract {
         this.displayName = displayName;
     }
 
-    public Set<BlockchainNetwork> getNetworks() {
+    public List<BlockchainNetwork> getNetworks() {
         return networks;
     }
 
-    public void setNetworks(Set<BlockchainNetwork> networks) {
+    public void setNetworks(List<BlockchainNetwork> networks) {
         this.networks = networks;
     }
 

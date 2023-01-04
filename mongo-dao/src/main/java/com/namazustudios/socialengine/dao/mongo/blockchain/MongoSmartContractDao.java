@@ -17,10 +17,7 @@ import dev.morphia.ModifyOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
@@ -106,6 +103,8 @@ public class MongoSmartContractDao implements SmartContractDao {
             throw new InvalidDataException(msg);
         }
 
+        final var networks = new ArrayList<>(smartContract.getAddresses().values());
+
         mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoSmartContract = new UpdateBuilder()
@@ -149,7 +148,8 @@ public class MongoSmartContractDao implements SmartContractDao {
         mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
-        mongoSmartContract.setNetworks(smartContract.getAddresses().keySet());
+        final var networks = new ArrayList<>(smartContract.getAddresses().keySet());
+        mongoSmartContract.setNetworks(networks);
 
         mongoSmartContract.setWallet(mongoWallet);
         getDatastore().insert(mongoSmartContract);

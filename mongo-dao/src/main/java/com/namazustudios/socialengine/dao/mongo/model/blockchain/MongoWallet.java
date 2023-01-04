@@ -17,7 +17,7 @@ import java.util.Map;
         @Index(fields = {
                 @Field("api"),
                 @Field("networks")
-        } )
+        })
 })
 public class MongoWallet {
 
