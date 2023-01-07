@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo.model.auth;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.user.User;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
@@ -40,7 +39,7 @@ public class MongoAuthScheme {
     private String publicKey;
 
     @Property
-    private AuthSchemeAlgorithm algorithm;
+    private PrivateKeyCrytpoAlgorithm algorithm;
 
     @Property
     private User.Level userLevel;
@@ -83,11 +82,11 @@ public class MongoAuthScheme {
         this.publicKey = publicKey;
     }
 
-    public AuthSchemeAlgorithm getAlgorithm() {
+    public PrivateKeyCrytpoAlgorithm getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(AuthSchemeAlgorithm algorithm) {
+    public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
         this.algorithm = algorithm;
     }
 

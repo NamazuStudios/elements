@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
+import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 
 import java.util.Optional;
 
@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface WalletCryptoUtilities {
 
     /**
-     * Encrypts the {@link Wallet}. If any {@link WalletIdentityPair} whose {@link WalletIdentityPair#isEncrypted()}
+     * Encrypts the {@link Wallet}. If any {@link WalletAccount} whose {@link WalletAccount#isEncrypted()}
      * flag is set to true, this method will throw an exception.
      *
      * @param wallet the wallet contents itself

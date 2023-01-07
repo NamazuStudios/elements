@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.AuthSchemeDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.auth.AuthSchemeNotFoundException;
 import com.namazustudios.socialengine.model.auth.AuthScheme;
-import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.user.User;
 import org.bson.types.ObjectId;
 import org.testng.annotations.DataProvider;
@@ -63,7 +63,7 @@ public class MongoAuthSchemeDaoTest {
         final var toCreate = new AuthScheme();
         toCreate.setAudience(format("%s_%d", TEST_AUDIENCE, iteration));
         toCreate.setPublicKey(generateMockKey());
-        toCreate.setAlgorithm(AuthSchemeAlgorithm.RSA_256);
+        toCreate.setAlgorithm(PrivateKeyCrytpoAlgorithm.RSA_256);
         toCreate.setTags(emptyList());
         toCreate.setAllowedIssuers(TEST_ISSUERS);
         toCreate.setUserLevel(User.Level.USER);
@@ -89,7 +89,7 @@ public class MongoAuthSchemeDaoTest {
         toCreate.setTags(emptyList());
         toCreate.setAudience(format("%s_%d", TEST_AUDIENCE, iteration));
         toCreate.setPublicKey(generateMockKey());
-        toCreate.setAlgorithm(AuthSchemeAlgorithm.RSA_256);
+        toCreate.setAlgorithm(PrivateKeyCrytpoAlgorithm.RSA_256);
         toCreate.setAllowedIssuers(List.of("issuer0", "issuer1"));
         toCreate.setUserLevel(User.Level.USER);
         getAuthSchemeDao().createAuthScheme(toCreate);
@@ -182,7 +182,7 @@ public class MongoAuthSchemeDaoTest {
         toUpdate.setId(authSchemeId);
         toUpdate.setAudience(format("%s_updated", existing.getAudience()));
         toUpdate.setPublicKey(generateMockKey());
-        toUpdate.setAlgorithm(AuthSchemeAlgorithm.RSA_384);
+        toUpdate.setAlgorithm(PrivateKeyCrytpoAlgorithm.RSA_384);
         toUpdate.setTags(TEST_TAGS_UPDATE);
         toUpdate.setAllowedIssuers(TEST_ISSUERS_UPDATE);
         toUpdate.setUserLevel(User.Level.SUPERUSER);
@@ -212,7 +212,7 @@ public class MongoAuthSchemeDaoTest {
         toCreate.setTags(emptyList());
         toCreate.setAudience(format("%s_alternative", TEST_AUDIENCE));
         toCreate.setPublicKey(generateMockKey());
-        toCreate.setAlgorithm(AuthSchemeAlgorithm.RSA_256);
+        toCreate.setAlgorithm(PrivateKeyCrytpoAlgorithm.RSA_256);
         toCreate.setAllowedIssuers(TEST_ISSUERS);
         toCreate.setUserLevel(User.Level.USER);
 

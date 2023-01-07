@@ -76,7 +76,7 @@ public class MongoSmartContractDao implements SmartContractDao {
     public SmartContract updateSmartContract(final SmartContract smartContract) {
 
         getValidationHelper().validateModel(smartContract, ValidationGroups.Update.class);
-        getValidationHelper().validateModel(smartContract.getWallet(), ValidationGroups.Update.class);
+        getValidationHelper().validateModel(smartContract.getVault(), ValidationGroups.Update.class);
 
         if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All networks must be specified.");
@@ -95,8 +95,8 @@ public class MongoSmartContractDao implements SmartContractDao {
         query.filter(eq("_id", objectId));
 
         final var mongoWallet = getMongoWalletDao()
-                .findMongoWallet(smartContract.getWallet().getId())
-                .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getWallet().getId()));
+                .findMongoWallet(smartContract.getVault().getId())
+                .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getVault().getId()));
 
         if (!smartContract.getApi().equals(mongoWallet.getApi())) {
             final var msg = format("%s=/=%s", smartContract.getApi(), mongoWallet.getApi());
@@ -128,7 +128,7 @@ public class MongoSmartContractDao implements SmartContractDao {
     public SmartContract createSmartContract(final SmartContract smartContract) {
 
         getValidationHelper().validateModel(smartContract, ValidationGroups.Insert.class);
-        getValidationHelper().validateModel(smartContract.getWallet(), ValidationGroups.Update.class);
+        getValidationHelper().validateModel(smartContract.getVault(), ValidationGroups.Update.class);
 
         if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("Must specify non-null networks.");
@@ -137,8 +137,8 @@ public class MongoSmartContractDao implements SmartContractDao {
         smartContract.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoWallet = getMongoWalletDao()
-                .findMongoWallet(smartContract.getWallet().getId())
-                .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getWallet().getId()));
+                .findMongoWallet(smartContract.getVault().getId())
+                .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getVault().getId()));
 
         if (!smartContract.getApi().equals(mongoWallet.getApi())) {
             final var msg = format("%s=/=%s", smartContract.getApi(), mongoWallet.getApi());

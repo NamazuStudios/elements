@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.security.CustomJWTCredentials;
 import com.namazustudios.socialengine.security.JWTCredentials;
 import com.namazustudios.socialengine.service.CustomAuthSessionService;
 import com.namazustudios.socialengine.service.NameService;
+import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
 import com.namazustudios.socialengine.util.ValidationHelper;
 
 import javax.inject.Inject;
@@ -31,7 +32,7 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
 
     private AuthSchemeDao authSchemeDao;
 
-    private CryptoKeyUtility cryptoKeyUtility;
+    private CryptoKeyPairUtility cryptoKeyPairUtility;
 
     private ValidationHelper validationHelper;
 
@@ -172,13 +173,13 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
         this.authSchemeDao = authSchemeDao;
     }
 
-    public CryptoKeyUtility getCryptoKeyUtility() {
-        return cryptoKeyUtility;
+    public CryptoKeyPairUtility getCryptoKeyUtility() {
+        return cryptoKeyPairUtility;
     }
 
     @Inject
-    public void setCryptoKeyUtility(CryptoKeyUtility cryptoKeyUtility) {
-        this.cryptoKeyUtility = cryptoKeyUtility;
+    public void setCryptoKeyUtility(CryptoKeyPairUtility cryptoKeyPairUtility) {
+        this.cryptoKeyPairUtility = cryptoKeyPairUtility;
     }
 
     public ValidationHelper getValidationHelper() {

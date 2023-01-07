@@ -41,6 +41,7 @@ public interface WalletService {
      * @param offset the offset
      * @param count the count
      * @param userId the userId, or null
+     * @param vaultId
      * @param protocol the protocol, or null
      * @return a {@link Pagination} of {@link BscWallet} instances
      */
@@ -49,6 +50,7 @@ public interface WalletService {
             @Serialize("offset") int offset,
             @Serialize("count") int count,
             @Serialize("userId") String userId,
+            @Serialize("vaultId") String vaultId,
             @Serialize("protocol") BlockchainApi protocol,
             @Serialize("networks") List<BlockchainNetwork> networks);
 
@@ -63,15 +65,28 @@ public interface WalletService {
     Wallet getWallet(@Serialize("walletId") String walletId);
 
     /**
+     * Fetches wallet from the supplied vault.
+     *
+     * @param walletId the wallet id
+     * @param vaultId the vault id
+     * @return
+     */
+    @RemotelyInvokable
+    Wallet getWallet(@Serialize("walletId") String walletId,
+                     @Serialize("vaultId") String vaultId);
+
+    /**
      * Updates the supplied {@link BscWallet}.
      *
+     *
+     * @param vaultId
      * @param walletId the Id of the wallet to update.
      * @param walletUpdateRequest the {@link UpdateBscWalletRequest} with the information to update
      * @return the {@link BscWallet} as it was changed by the service.
      */
     @RemotelyInvokable
     Wallet updateWallet(
-            @Serialize("walletId") String walletId,
+            String vaultId, @Serialize("walletId") String walletId,
             @Serialize("updateRequest") UpdateWalletRequest walletUpdateRequest);
 
     /**
@@ -81,7 +96,9 @@ public interface WalletService {
      * @return the {@link BscWallet} as it was created by the service.
      */
     @RemotelyInvokable
-    Wallet createWallet(@Serialize("createWalletRequest") CreateWalletRequest createWalletRequest);
+    Wallet createWallet(
+            @Serialize("vaultId") String vaultId,
+            @Serialize("createWalletRequest") CreateWalletRequest createWalletRequest);
 
     /**
      * Deletes the {@link BscWallet} with the supplied wallet ID.
@@ -89,6 +106,16 @@ public interface WalletService {
      * @param walletId the wallet Id.
      */
     @RemotelyInvokable
-    void deleteWallet(@Serialize("createWalletRequest")String walletId);
+    void deleteWallet(@Serialize("walletId") String walletId);
+
+    /**
+     * Deletes the {@link Wallet} with the supplied id, from the vault.
+     * @param walletId the wallet id
+     * @param vaultId the vault id
+     */
+    @RemotelyInvokable
+    void deleteWallet(
+            @Serialize("walletId") String walletId,
+            @Serialize("vaultId") String vaultId);
 
 }

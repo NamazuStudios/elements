@@ -19,7 +19,6 @@ import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,8 +74,8 @@ public class MongoWalletDao implements WalletDao {
     }
 
     @Override
-    public Optional<Wallet> findWallet(final String walletId, final String userId) {
-        return findMongoWallet(walletId, userId).map(mw -> getMapper().map(mw, Wallet.class));
+    public Optional<Wallet> findWallet(final String walletId, final String vaultId) {
+        return findMongoWallet(walletId, vaultId).map(mw -> getMapper().map(mw, Wallet.class));
     }
 
     public Optional<MongoWallet> findMongoWallet(final String walletId) {
@@ -112,7 +111,7 @@ public class MongoWalletDao implements WalletDao {
 
         getValidationHelper().validateModel(wallet, ValidationGroups.Update.class);
 
-        if (wallet.getIdentities().stream().anyMatch(Objects::isNull)) {
+        if (wallet.getAccounts().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All identities must be non-null.");
         }
 
@@ -136,8 +135,8 @@ public class MongoWalletDao implements WalletDao {
                 .with(set("displayName", wallet.getDisplayName().trim()))
                 .with(set("api", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
-                .with(set("defaultIdentity", wallet.getDefaultIdentity()))
-                .with(set("identities", wallet.getIdentities()))
+                .with(set("defaultIdentity", wallet.getPreferredAccount()))
+                .with(set("identities", wallet.getAccounts()))
                 .with(set("encryption", wallet.getEncryption()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 
@@ -155,7 +154,7 @@ public class MongoWalletDao implements WalletDao {
         getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
         getValidationHelper().validateModel(wallet.getUser(), ValidationGroups.Update.class);
 
-        if (wallet.getIdentities().stream().anyMatch(Objects::isNull)) {
+        if (wallet.getAccounts().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All identities must be non-null values.");
         }
 
@@ -179,8 +178,14 @@ public class MongoWalletDao implements WalletDao {
     }
 
     @Override
-    public void deleteWallet(final String walletId, final String userId) {
+    public void deleteWalletForUser(final String walletId, final String userId) {
         deleteWallet(walletId, userId, null);
+    }
+
+
+    @Override
+    public void deleteWalletForVault(String walletId, String vaultId) {
+        // TODO Implement This Method
     }
 
     public void deleteWallet(final String walletId, final String userId, final BlockchainApi blockchainApi) {

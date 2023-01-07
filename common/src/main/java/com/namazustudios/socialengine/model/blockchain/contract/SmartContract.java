@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.model.blockchain.contract;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
@@ -11,8 +11,6 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import javax.validation.constraints.Size;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -47,9 +45,8 @@ public class SmartContract {
     private BlockchainApi api;
 
     @NotNull
-    @ApiModelProperty("The Elements database id of the wallet containing the default account to be used for " +
-            "contract related requests.")
-    private Wallet wallet;
+    @ApiModelProperty("The Elements vault used to ")
+    private Vault vault;
 
     @ApiModelProperty("Any metadata for this contract.")
     private Map<String, Object> metadata;
@@ -86,12 +83,12 @@ public class SmartContract {
         this.api = api;
     }
 
-    public Wallet getWallet() {
-        return wallet;
+    public Vault getVault() {
+        return vault;
     }
 
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
+    public void setVault(Vault vault) {
+        this.vault = vault;
     }
 
     public Map<String, Object> getMetadata() {
@@ -107,12 +104,12 @@ public class SmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SmartContract that = (SmartContract) o;
-        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(vault, that.vault) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, displayName, addresses, api, wallet, metadata);
+        return Objects.hash(id, displayName, addresses, api, vault, metadata);
     }
 
     @Override
@@ -122,7 +119,7 @@ public class SmartContract {
                 ", displayName='" + displayName + '\'' +
                 ", addresses=" + addresses +
                 ", api=" + api +
-                ", wallet=" + wallet +
+                ", wallet=" + vault +
                 ", metadata=" + metadata +
                 '}';
     }

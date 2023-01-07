@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.auth;
 
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
@@ -33,7 +34,7 @@ public class AuthScheme implements Serializable {
 
     @NotNull
     @ApiModelProperty("The digital signature matching the public key format.")
-    private AuthSchemeAlgorithm algorithm;
+    private PrivateKeyCrytpoAlgorithm algorithm;
 
     @NotNull
     @ApiModelProperty("The highest permitted user level this particular scheme will authorize.")
@@ -71,11 +72,11 @@ public class AuthScheme implements Serializable {
         this.publicKey = publicKey;
     }
 
-    public AuthSchemeAlgorithm getAlgorithm() {
+    public PrivateKeyCrytpoAlgorithm getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(AuthSchemeAlgorithm algorithm) {
+    public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
         this.algorithm = algorithm;
     }
 

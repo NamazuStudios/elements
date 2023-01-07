@@ -1,11 +1,11 @@
-package com.namazustudios.socialengine.model.auth;
+package com.namazustudios.socialengine.model.crypto;
 
-import io.swagger.annotations.ApiModel;
+import com.namazustudios.socialengine.model.auth.AuthScheme;
 
 /**
  * Represents the signing algorithm for the {@link AuthScheme}.
  */
-public enum AuthSchemeAlgorithm {
+public enum PrivateKeyCrytpoAlgorithm {
 
     /**
      * RSA 256-bit

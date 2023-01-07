@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
@@ -24,6 +25,8 @@ public class SuperUserWalletService implements WalletService {
 
     private UserDao userDao;
 
+    private VaultDao vaultDao;
+
     private WalletDao walletDao;
 
     private ValidationHelper validationHelper;
@@ -36,38 +39,40 @@ public class SuperUserWalletService implements WalletService {
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
             final String userId,
+            final String vaultId,
             final BlockchainApi protocol,
             final List<BlockchainNetwork> networks) {
         return getWalletDao().getWallets(offset, count, userId, protocol, networks);
     }
 
     @Override
-    public Wallet getWallet(final String walletNameOrId) {
-        return getWalletDao().getWallet(walletNameOrId);
+    public Wallet getWallet(final String walletId) {
+        return getWalletDao().getWallet(walletId);
     }
 
     @Override
-    public Wallet updateWallet(final String walletId, final UpdateWalletRequest walletUpdateRequest) {
+    public Wallet getWallet(final String walletId, final String vaultId) {
+        return getWalletDao().getWallet(walletId, vaultId);
+    }
+
+    @Override
+    public Wallet updateWallet(final String vaultId,
+                               final String walletId,
+                               final UpdateWalletRequest walletUpdateRequest) {
 
         getValidationHelper().validateModel(walletUpdateRequest);
 
         var wallet = getWalletDao().getWallet(walletId);
-        wallet.getApi().validate(walletUpdateRequest.getNetworks());
 
+        wallet.getApi().validate(walletUpdateRequest.getNetworks());
         wallet.setNetworks(walletUpdateRequest.getNetworks());
         wallet.setDisplayName(walletUpdateRequest.getDisplayName());
 
-        final var userId = nullToEmpty(walletUpdateRequest.getUserId());
-
-        if (userId.isBlank()) {
-            throw new InvalidDataException("Must specify user id.");
-        }
-
-        final var user = getUserDao()
-                .findActiveUser(userId)
+        final var vault = getVaultDao()
+                .findVault(vaultId)
                 .orElseThrow(() -> new InvalidDataException("No such user."));
 
-        wallet.setUser(user);
+        wallet.setVault(vault);
 
         final var displayName = walletUpdateRequest.getDisplayName();
 
@@ -75,23 +80,21 @@ public class SuperUserWalletService implements WalletService {
             wallet.setDisplayName(displayName);
         }
 
-        final var passphrase = nullToEmpty(walletUpdateRequest.getPassphrase()).trim();
-        final var newPassphrase = nullToEmpty(walletUpdateRequest.getNewPassphrase()).trim();
-
-        if (!passphrase.isBlank() && !newPassphrase.isBlank()) {
-            wallet = getWalletCryptoUtilities()
-                    .reEncrypt(wallet, passphrase, newPassphrase)
-                    .orElseThrow(() -> new InvalidDataException("Invalid Passphrase."));
-        } else if (!passphrase.isBlank() || !newPassphrase.isBlank()) {
-            throw new InvalidDataException("Must specify both old and new passphrase.");
-        }
+//        if (!passphrase.isBlank() && !newPassphrase.isBlank()) {
+//            wallet = getWalletCryptoUtilities()
+//                    .reEncrypt(wallet, passphrase, newPassphrase)
+//                    .orElseThrow(() -> new InvalidDataException("Invalid Passphrase."));
+//        } else if (!passphrase.isBlank() || !newPassphrase.isBlank()) {
+//            throw new InvalidDataException("Must specify both old and new passphrase.");
+//        }
 
         return getWalletDao().updateWallet(wallet);
 
     }
 
     @Override
-    public Wallet createWallet(final CreateWalletRequest createWalletRequest) {
+    public Wallet createWallet(final String vaultId,
+                               final CreateWalletRequest createWalletRequest) {
 
         getValidationHelper().validateModel(createWalletRequest);
 
@@ -104,26 +107,20 @@ public class SuperUserWalletService implements WalletService {
         wallet.setDisplayName(createWalletRequest.getDisplayName());
         wallet.setApi(createWalletRequest.getApi());
         wallet.setNetworks(createWalletRequest.getNetworks());
-        wallet.setIdentities(createWalletRequest.getIdentities());
-        wallet.setDefaultIdentity(createWalletRequest.getDefaultIdentity());
+        wallet.setAccounts(createWalletRequest.getIdentities());
+        wallet.setPreferredAccount(createWalletRequest.getDefaultIdentity());
 
-        final var userId = nullToEmpty(createWalletRequest.getUserId()).trim();
+        final var vault = getVaultDao()
+                .findVault(vaultId)
+                .orElseThrow(() -> new InvalidDataException("No such user."));
 
-        if (userId.isBlank()) {
-            throw new InvalidDataException("Invalid user id: " + userId);
-        }
-
-        final var user = getUserDao()
-                .findActiveUser(userId)
-                .orElseThrow(() -> new InvalidDataException("No such user: " + userId));
-
-        wallet.setUser(user);
+        wallet.setVault(vault);
 
         final var identities = createWalletRequest.getIdentities();
 
         if (identities == null || identities.isEmpty()) {
             wallet = getWalletIdentityFactory().create(wallet);
-        } else if (wallet.getDefaultIdentity() > identities.size()) {
+        } else if (wallet.getPreferredAccount() > identities.size()) {
             throw new InvalidDataException("Default must be less than identity collection.");
         }
 
@@ -143,7 +140,7 @@ public class SuperUserWalletService implements WalletService {
                 }
             }
 
-            wallet.setIdentities(createWalletRequest.getIdentities());
+            wallet.setAccounts(createWalletRequest.getIdentities());
             wallet = getWalletCryptoUtilities().encrypt(wallet, passphrase);
 
         }
@@ -157,6 +154,12 @@ public class SuperUserWalletService implements WalletService {
         getWalletDao().deleteWallet(walletId);
     }
 
+    @Override
+    public void deleteWallet(final String walletId, final String vaultId) {
+        // TODO Honor Vault ID
+        getWalletDao().deleteWallet(walletId);
+    }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -164,6 +167,15 @@ public class SuperUserWalletService implements WalletService {
     @Inject
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
+    }
+
+    public VaultDao getVaultDao() {
+        return vaultDao;
+    }
+
+    @Inject
+    public void setVaultDao(VaultDao vaultDao) {
+        this.vaultDao = vaultDao;
     }
 
     public WalletDao getWalletDao() {

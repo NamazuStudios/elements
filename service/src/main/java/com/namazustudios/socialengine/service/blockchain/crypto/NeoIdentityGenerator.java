@@ -1,15 +1,15 @@
 package com.namazustudios.socialengine.service.blockchain.crypto;
 
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
+import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory.IdentityGenerator;
 import io.neow3j.wallet.Wallet;
 
 public class NeoIdentityGenerator implements IdentityGenerator {
 
     @Override
-    public WalletIdentityPair generate() {
+    public WalletAccount generate() {
 
-        final var identity = new WalletIdentityPair();
+        final var identity = new WalletAccount();
         final var wallet = Wallet.create();
         final var account = wallet.getAccounts().get(0);
 

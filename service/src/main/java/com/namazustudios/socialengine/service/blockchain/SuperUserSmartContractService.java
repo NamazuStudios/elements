@@ -59,7 +59,6 @@ public class SuperUserSmartContractService  implements SmartContractService {
         smartContract.setApi(api);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
-        smartContract.setWallet(wallet);
         smartContract.setDisplayName(displayName);
 
         return getSmartContractDao().createSmartContract(smartContract);
@@ -85,7 +84,6 @@ public class SuperUserSmartContractService  implements SmartContractService {
 
         final var networks = updateSmartContractRequest.getNetworks();
         smartContract.getApi().validate(networks);
-        smartContract.setWallet(wallet);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
         smartContract.setDisplayName(displayName);

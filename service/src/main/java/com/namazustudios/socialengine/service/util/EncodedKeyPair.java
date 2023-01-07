@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.auth;
+package com.namazustudios.socialengine.service.util;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;

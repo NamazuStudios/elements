@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
+import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
@@ -18,7 +18,7 @@ public class MongoWalletIdentityPair {
 
     public MongoWalletIdentityPair() { }
 
-    public MongoWalletIdentityPair(final WalletIdentityPair pair) {
+    public MongoWalletIdentityPair(final WalletAccount pair) {
         address = pair.getAddress();
         privateKey = pair.getPrivateKey();
         encrypted = pair.isEncrypted();

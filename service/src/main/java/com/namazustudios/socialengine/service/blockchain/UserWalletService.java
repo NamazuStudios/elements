@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
-import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.WalletService;
@@ -19,6 +21,8 @@ public class UserWalletService implements WalletService {
 
     private User user;
 
+    private VaultDao vaultDao;
+
     private WalletDao walletDao;
 
     private SuperUserWalletService superUserWalletService;
@@ -26,7 +30,7 @@ public class UserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
+            final String userId, String vaultId, final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         if (userId == null || Objects.equals(userId, getUser().getId())) {
             return getWalletDao().getWallets(offset, count, getUser().getId(), protocol, networks);
         } else {
@@ -35,45 +39,50 @@ public class UserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet getWallet(final String walletNameOrId) {
-        return getWalletDao().getWallet(walletNameOrId, getUser().getId());
+    public Wallet getWallet(final String walletId) {
+        return getWalletDao().getWallet(walletId, getUser().getId());
     }
 
     @Override
-    public Wallet updateWallet(final String walletId, final UpdateWalletRequest walletUpdateRequest) {
-
-        var userId = walletUpdateRequest.getUserId();
-
-        if (userId == null) {
-            userId = getUser().getId();
-        } else if (!Objects.equals(userId, getUser().getId())) {
-            throw new InvalidDataException("Invalid user id: " + userId);
-        }
-
-        walletUpdateRequest.setUserId(userId);
-        return getSuperUserWalletService().updateWallet(walletId, walletUpdateRequest);
-
+    public Wallet getWallet(final String walletId, final String vaultId) {
+        final var vault = getVaultForUser(vaultId);
+        return getWalletDao().getWallet(walletId, vault.getId());
     }
 
     @Override
-    public Wallet createWallet(final CreateWalletRequest createWalletRequest) {
+    public Wallet updateWallet(final String vaultId,
+                               final String walletId,
+                               final UpdateWalletRequest walletUpdateRequest) {
+        final var vault = getVaultForUser(vaultId);
+        return getSuperUserWalletService().updateWallet(vault.getId(), walletId, walletUpdateRequest);
+    }
 
-        var userId = createWalletRequest.getUserId();
-
-        if (userId == null) {
-            userId = getUser().getId();
-        } else if (!Objects.equals(userId, getUser().getId())) {
-            throw new InvalidDataException("Invalid user id: " + userId);
-        }
-
-        createWalletRequest.setUserId(userId);
-        return getSuperUserWalletService().createWallet(createWalletRequest);
-
+    @Override
+    public Wallet createWallet(final String vaultId, final CreateWalletRequest createWalletRequest) {
+        final var vault = getVaultForUser(vaultId);
+        return getSuperUserWalletService().createWallet(vault.getId(), createWalletRequest);
     }
 
     @Override
     public void deleteWallet(final String walletId) {
-        getWalletDao().deleteWallet(walletId, getUser().getId());
+        getWalletDao().deleteWalletForUser(walletId, getUser().getId());
+    }
+
+    @Override
+    public void deleteWallet(final String walletId, final String vaultId) {
+        final var vault = getVaultForUser(vaultId);
+        getWalletDao().deleteWalletForUser(walletId, vault.getId());
+    }
+
+    private Vault getVaultForUser(final String vaultId) {
+
+        final var vault = getVaultDao().getVault(vaultId);
+
+        if (!Objects.equals(vault.getUser().getId(), getUser().getId())) {
+            throw new VaultNotFoundException("Vault not found: " + vaultId);
+        }
+
+        return vault;
     }
 
     public User getUser() {
@@ -83,6 +92,15 @@ public class UserWalletService implements WalletService {
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public VaultDao getVaultDao() {
+        return vaultDao;
+    }
+
+    @Inject
+    public void setVaultDao(VaultDao vaultDao) {
+        this.vaultDao = vaultDao;
     }
 
     public WalletDao getWalletDao() {

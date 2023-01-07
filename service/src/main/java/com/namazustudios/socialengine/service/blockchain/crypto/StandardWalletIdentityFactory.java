@@ -34,8 +34,8 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
                 .mapToObj(i -> generator.generate())
                 .collect(toList());
 
-        generated.setDefaultIdentity(0);
-        generated.setIdentities(identities);
+        generated.setPreferredAccount(0);
+        generated.setAccounts(identities);
 
         return generated;
 

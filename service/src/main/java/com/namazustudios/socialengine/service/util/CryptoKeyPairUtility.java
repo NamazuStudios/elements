@@ -1,7 +1,7 @@
-package com.namazustudios.socialengine.service.auth;
+package com.namazustudios.socialengine.service.util;
 
-import com.namazustudios.socialengine.exception.auth.InvalidKeyException;
-import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
+import com.namazustudios.socialengine.exception.crypto.InvalidKeyException;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -9,7 +9,7 @@ import java.security.PublicKey;
 /**
  * Utility functions for crypto keys.
  */
-public interface CryptoKeyUtility {
+public interface CryptoKeyPairUtility {
 
     /**
      * The RSA Algorithm.
@@ -24,61 +24,61 @@ public interface CryptoKeyUtility {
     /**
      * Generates a key pair (public and private) as an {@link EncodedKeyPair}.
      *
-     * @param authSchemeAlgorithm the {@link AuthSchemeAlgorithm} to use.
+     * @param privateKeyCrytpoAlgorithm the {@link PrivateKeyCrytpoAlgorithm} to use.
      *
      * @return the {@link EncodedKeyPair} including both public and private key.
      */
-    EncodedKeyPair generateKeyPair(AuthSchemeAlgorithm authSchemeAlgorithm);
+    EncodedKeyPair generateKeyPair(PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm);
 
     /**
      * Loads the public key from the supplied base64 string.
      *
-     * @param authSchemeAlgorithm the algorithm
+     * @param privateKeyCrytpoAlgorithm the algorithm
      * @param base64Representation the base64 representation
      * @return the {@link PublicKey}
      */
-    default PublicKey getPublicKey(final AuthSchemeAlgorithm authSchemeAlgorithm,
+    default PublicKey getPublicKey(final PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm,
                                    final String base64Representation)  throws InvalidKeyException {
-        return getPublicKey(authSchemeAlgorithm, base64Representation, PublicKey.class);
+        return getPublicKey(privateKeyCrytpoAlgorithm, base64Representation, PublicKey.class);
     }
 
     /**
      * Loads the public key from the supplied base64 encoded string.
      *
-     * @param authSchemeAlgorithm the auth scheme algorithm
+     * @param privateKeyCrytpoAlgorithm the auth scheme algorithm
      * @param base64Representation the base64 encoded public key
      * @param publicKeyTClass the public key class
      * @param <PublicKeyT> the requested type
      * @return the public key
      */
     <PublicKeyT extends PublicKey> PublicKeyT getPublicKey(
-            AuthSchemeAlgorithm authSchemeAlgorithm,
+            PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm,
             String base64Representation,
             Class<PublicKeyT> publicKeyTClass) throws InvalidKeyException;
 
     /**
      * Loads the private key from the supplied base64 string.
      *
-     * @param authSchemeAlgorithm the algorithm
+     * @param privateKeyCrytpoAlgorithm the algorithm
      * @param base64Representation the base64 representation
      * @return the {@link PublicKey}
      */
-    default PrivateKey getPrivateKey(final AuthSchemeAlgorithm authSchemeAlgorithm,
+    default PrivateKey getPrivateKey(final PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm,
                                      final String base64Representation)  throws InvalidKeyException {
-        return getPrivateKey(authSchemeAlgorithm, base64Representation, PrivateKey.class);
+        return getPrivateKey(privateKeyCrytpoAlgorithm, base64Representation, PrivateKey.class);
     }
 
     /**
      * Loads the private key from the supplied base64 encoded string.
      *
-     * @param authSchemeAlgorithm the auth scheme algorithm
+     * @param privateKeyCrytpoAlgorithm the auth scheme algorithm
      * @param base64Representation the base64 encoded public key
      * @param publicKeyTClass the public key class
      * @param <PrivateKeyT> the requested type
      * @return the {@link PrivateKey}
      */
     <PrivateKeyT extends PrivateKey> PrivateKeyT getPrivateKey(
-            AuthSchemeAlgorithm authSchemeAlgorithm,
+            PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm,
             String base64Representation,
             Class<PrivateKeyT> publicKeyTClass) throws InvalidKeyException;
 

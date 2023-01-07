@@ -39,10 +39,10 @@ public interface WalletDao {
      * Finds the wallets.
      *
      * @param walletId
-     * @param userId
+     * @param vaultId
      * @return
      */
-    Optional<Wallet> findWallet(String walletId, String userId);
+    Optional<Wallet> findWallet(String walletId, String vaultId);
 
     /**
      * Fetches a specific {@link Wallet} instance based on ID. If not found, an
@@ -60,10 +60,11 @@ public interface WalletDao {
      * exception is raised.
      *
      * @param walletId the wallet id to
+     * @param vaultId
      * @return the {@link Wallet}, never null
      */
-    default Wallet getWallet(final String walletId, final String userId) {
-        return findWallet(walletId, userId).orElseThrow(WalletNotFoundException::new);
+    default Wallet getWallet(final String walletId, final String vaultId) {
+        return findWallet(walletId, vaultId).orElseThrow(WalletNotFoundException::new);
     }
 
     /**
@@ -89,7 +90,7 @@ public interface WalletDao {
      * @
      */
     default void deleteWallet(String walletId) {
-        deleteWallet(walletId, null);
+        deleteWalletForUser(walletId, null);
     }
 
     /**
@@ -98,6 +99,13 @@ public interface WalletDao {
      * @param walletId the wallet id
      * @param userId the user id
      */
-    void deleteWallet(String walletId, String userId);
+    void deleteWalletForUser(String walletId, String userId);
+
+    /**
+     * Deletes a wallet for the supplied user and vault.
+     *  @param walletId the wallet ID
+     * @param vaultId the vault ID
+     */
+    void deleteWalletForVault(String walletId, String vaultId);
 
 }

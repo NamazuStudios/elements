@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.auth.*;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
 import com.namazustudios.socialengine.util.ValidationHelper;
 
 import javax.inject.Inject;
@@ -16,7 +17,7 @@ public class SuperUserAuthSchemeService implements AuthSchemeService {
 
     private AuthSchemeDao authSchemeDao;
 
-    private CryptoKeyUtility cryptoKeyUtility;
+    private CryptoKeyPairUtility cryptoKeyPairUtility;
 
     private ValidationHelper validationHelper;
 
@@ -130,22 +131,22 @@ public class SuperUserAuthSchemeService implements AuthSchemeService {
         this.authSchemeDao = authSchemeDao;
     }
 
-    public CryptoKeyUtility getJwtCryptoUtility() {
-        return cryptoKeyUtility;
+    public CryptoKeyPairUtility getJwtCryptoUtility() {
+        return cryptoKeyPairUtility;
     }
 
     @Inject
-    public void setJwtCryptoUtility(CryptoKeyUtility cryptoKeyUtility) {
-        this.cryptoKeyUtility = cryptoKeyUtility;
+    public void setJwtCryptoUtility(CryptoKeyPairUtility cryptoKeyPairUtility) {
+        this.cryptoKeyPairUtility = cryptoKeyPairUtility;
     }
 
-    public CryptoKeyUtility getCryptoKeyUtility() {
-        return cryptoKeyUtility;
+    public CryptoKeyPairUtility getCryptoKeyUtility() {
+        return cryptoKeyPairUtility;
     }
 
     @Inject
-    public void setCryptoKeyUtility(CryptoKeyUtility cryptoKeyUtility) {
-        this.cryptoKeyUtility = cryptoKeyUtility;
+    public void setCryptoKeyUtility(CryptoKeyPairUtility cryptoKeyPairUtility) {
+        this.cryptoKeyPairUtility = cryptoKeyPairUtility;
     }
 
     public ValidationHelper getValidationHelper() {

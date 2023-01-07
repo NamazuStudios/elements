@@ -1,10 +1,11 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.auth.*;
 import com.namazustudios.socialengine.rest.model.AuthSchemePagination;
-import com.namazustudios.socialengine.service.auth.CryptoKeyUtility;
-import com.namazustudios.socialengine.service.auth.StandardCryptoKeyUtility;
+import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
+import com.namazustudios.socialengine.service.util.StandardCryptoKeyPairUtility;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.exception.ErrorCode.FORBIDDEN;
-import static com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm.ECDSA_256;
+import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.ECDSA_256;
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
@@ -56,7 +57,7 @@ public class AuthSchemeApiTest {
     @Inject
     private ClientContext superUser;
 
-    private CryptoKeyUtility cryptoKeyUtility;
+    private CryptoKeyPairUtility cryptoKeyPairUtility;
 
     @BeforeClass
     public void setupSuperuser() {
@@ -77,18 +78,18 @@ public class AuthSchemeApiTest {
 
     @BeforeClass
     public void setup() throws Exception {
-        cryptoKeyUtility = new StandardCryptoKeyUtility();
+        cryptoKeyPairUtility = new StandardCryptoKeyPairUtility();
     }
 
     @DataProvider
     private Object[][] getAlgorithms() {
-        return Stream.of(AuthSchemeAlgorithm.values())
+        return Stream.of(PrivateKeyCrytpoAlgorithm.values())
             .map(algo -> new Object[]{algo})
             .toArray(Object[][]::new);
     }
 
     @Test(dataProvider = "getAlgorithms")
-    public void createAuthSchemeGeneratingPublicKey(final AuthSchemeAlgorithm algorithm) {
+    public void createAuthSchemeGeneratingPublicKey(final PrivateKeyCrytpoAlgorithm algorithm) {
 
         final var createRequest = new CreateAuthSchemeRequest();
 
@@ -108,8 +109,8 @@ public class AuthSchemeApiTest {
         assertNotNull(response);
         assertNotNull(response.getPublicKey());
         assertNotNull(response.getPrivateKey());
-        cryptoKeyUtility.getPublicKey(algorithm, response.getPublicKey());
-        cryptoKeyUtility.getPrivateKey(algorithm, response.getPrivateKey());
+        cryptoKeyPairUtility.getPublicKey(algorithm, response.getPublicKey());
+        cryptoKeyPairUtility.getPrivateKey(algorithm, response.getPrivateKey());
 
         final var scheme = response.getScheme();
         assertEquals(scheme.getAlgorithm(), algorithm);
@@ -122,10 +123,10 @@ public class AuthSchemeApiTest {
     }
 
     @Test(dataProvider = "getAlgorithms")
-    public void createAuthSchemeSupplyingPublicKey(final AuthSchemeAlgorithm algorithm) {
+    public void createAuthSchemeSupplyingPublicKey(final PrivateKeyCrytpoAlgorithm algorithm) {
 
         final var createRequest = new CreateAuthSchemeRequest();
-        final var keyPair = cryptoKeyUtility.generateKeyPair(algorithm);
+        final var keyPair = cryptoKeyPairUtility.generateKeyPair(algorithm);
 
         createRequest.setAlgorithm(algorithm);
         createRequest.setUserLevel(SUPERUSER);
@@ -144,7 +145,7 @@ public class AuthSchemeApiTest {
         assertNotNull(response);
         assertNull(response.getPrivateKey());
         assertNotNull(response.getPublicKey());
-        cryptoKeyUtility.getPublicKey(algorithm, response.getPublicKey());
+        cryptoKeyPairUtility.getPublicKey(algorithm, response.getPublicKey());
 
         final var scheme = response.getScheme();
         assertEquals(scheme.getAlgorithm(), algorithm);
@@ -160,7 +161,7 @@ public class AuthSchemeApiTest {
     public void testUserIsForbiddenCreate() {
 
         final var createRequest = new CreateAuthSchemeRequest();
-        final var keyPair = cryptoKeyUtility.generateKeyPair(ECDSA_256);
+        final var keyPair = cryptoKeyPairUtility.generateKeyPair(ECDSA_256);
 
         createRequest.setAlgorithm(ECDSA_256);
         createRequest.setUserLevel(SUPERUSER);
@@ -186,7 +187,7 @@ public class AuthSchemeApiTest {
     public void testAnonymousUserIsForbiddenCreate() {
 
         final var createRequest = new CreateAuthSchemeRequest();
-        final var keyPair = cryptoKeyUtility.generateKeyPair(ECDSA_256);
+        final var keyPair = cryptoKeyPairUtility.generateKeyPair(ECDSA_256);
 
         createRequest.setAlgorithm(ECDSA_256);
         createRequest.setUserLevel(SUPERUSER);
@@ -241,8 +242,8 @@ public class AuthSchemeApiTest {
         assertNotNull(response.getPrivateKey());
         assertNotEquals(response.getPublicKey(), authScheme.getPublicKey());
 
-        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
-        cryptoKeyUtility.getPrivateKey(authScheme.getAlgorithm(), response.getPrivateKey());
+        cryptoKeyPairUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+        cryptoKeyPairUtility.getPrivateKey(authScheme.getAlgorithm(), response.getPrivateKey());
 
         final var scheme = response.getScheme();
         assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());
@@ -267,7 +268,7 @@ public class AuthSchemeApiTest {
     @Test(dataProvider = "getIntermediatesSupplied", dependsOnMethods = "createAuthSchemeSupplyingPublicKey")
     public void updateAuthSchemeSupplyingPublicKey(final String authSchemeId, final AuthScheme authScheme) {
 
-        final var keyPair = cryptoKeyUtility.generateKeyPair(authScheme.getAlgorithm());
+        final var keyPair = cryptoKeyPairUtility.generateKeyPair(authScheme.getAlgorithm());
 
         final var updateRequest = new UpdateAuthSchemeRequest();
         updateRequest.setRegenerate(false);
@@ -288,7 +289,7 @@ public class AuthSchemeApiTest {
         assertNotNull(response);
         assertNull(response.getPrivateKey());
         assertNotNull(response.getPublicKey());
-        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+        cryptoKeyPairUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
 
         final var scheme = response.getScheme();
         assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());
@@ -322,7 +323,7 @@ public class AuthSchemeApiTest {
         assertNotNull(response);
         assertNull(response.getPrivateKey());
         assertNotNull(response.getPublicKey());
-        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+        cryptoKeyPairUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
 
         final var scheme = response.getScheme();
         assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());

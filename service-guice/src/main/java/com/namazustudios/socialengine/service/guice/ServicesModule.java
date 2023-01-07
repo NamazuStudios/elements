@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
-import com.namazustudios.socialengine.dao.TokenTemplateDao;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -64,8 +63,9 @@ import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvid
 import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
+import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
+import com.namazustudios.socialengine.service.util.StandardCryptoKeyPairUtility;
 import org.dozer.Mapper;
-import org.glassfish.jersey.model.Scoped;
 
 import javax.inject.Provider;
 
@@ -96,8 +96,8 @@ public class ServicesModule extends PrivateModule {
         
         install(new DatabaseHealthStatusDaoAggregator());
 
-        bind(CryptoKeyUtility.class)
-            .to(StandardCryptoKeyUtility.class)
+        bind(CryptoKeyPairUtility.class)
+            .to(StandardCryptoKeyPairUtility.class)
             .asEagerSingleton();
 
         bind(Mapper.class)

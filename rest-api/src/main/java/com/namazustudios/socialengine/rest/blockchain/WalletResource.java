@@ -48,6 +48,9 @@ public class WalletResource {
             @QueryParam("userId")
             String userId,
 
+            @QueryParam("vaultId")
+            String vaultId,
+
             @QueryParam("api")
             final BlockchainApi api,
 
@@ -56,7 +59,8 @@ public class WalletResource {
 
     ) {
         userId = emptyToNull(userId);
-        return getWalletService().getWallets(offset, count, userId, api, network);
+        vaultId = emptyToNull(vaultId);
+        return getWalletService().getWallets(offset, count, userId, vaultId, api, network);
     }
 
     @GET
@@ -69,30 +73,12 @@ public class WalletResource {
         return getWalletService().getWallet(walletId);
     }
 
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Creates a new  Wallet",
-            notes = "Creates a new  Wallet, associated with the given user.")
-    public Wallet createWallet(final CreateWalletRequest request) {
-        return getWalletService().createWallet(request);
-    }
-
-    @PUT
-    @Path("{walletId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a  Wallet",
-            notes = "Updates a  Wallet with the specified name or id.")
-    public Wallet updateWallet(@PathParam("walletId") final String walletId, final UpdateWalletRequest request) {
-        return getWalletService().updateWallet(walletId, request);
-    }
-
     @DELETE
     @Path("{walletId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes a  Wallet",
             notes = "Deletes a  Wallet with the specified id.")
-    public void deleteTemplate(@PathParam("walletId") final String walletId) {
+    public void deleteWallet(@PathParam("walletId") final String walletId) {
         getWalletService().deleteWallet(walletId);
     }
 

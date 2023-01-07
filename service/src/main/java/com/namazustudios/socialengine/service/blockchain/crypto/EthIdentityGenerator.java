@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.namazustudios.socialengine.exception.crypto.CryptoException;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
+import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Keys;
@@ -13,7 +13,7 @@ import java.security.NoSuchProviderException;
 public class EthIdentityGenerator implements WalletIdentityFactory.IdentityGenerator {
 
     @Override
-    public WalletIdentityPair generate() {
+    public WalletAccount generate() {
         final ECKeyPair ecKeyPair;
 
         try {
@@ -22,7 +22,7 @@ public class EthIdentityGenerator implements WalletIdentityFactory.IdentityGener
             throw new CryptoException(ex);
         }
 
-        final var identity = new WalletIdentityPair();
+        final var identity = new WalletAccount();
         final var credentials = Credentials.create(ecKeyPair);
 
         identity.setEncrypted(false);

@@ -1,7 +1,7 @@
-package com.namazustudios.socialengine.service.auth;
+package com.namazustudios.socialengine.service.util;
 
-import com.namazustudios.socialengine.exception.auth.InvalidKeyException;
-import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
+import com.namazustudios.socialengine.exception.crypto.InvalidKeyException;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.rt.util.Monitor;
 
 import java.security.*;
@@ -13,7 +13,7 @@ import java.util.Base64;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class StandardCryptoKeyUtility implements CryptoKeyUtility {
+public class StandardCryptoKeyPairUtility implements CryptoKeyPairUtility {
 
     private final LockedPair<KeyFactory> rsaKeyFactory;
 
@@ -23,7 +23,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
 
     private final LockedPair<KeyPairGenerator> ecdsaKeyPairGenerator;
 
-    public StandardCryptoKeyUtility() throws NoSuchAlgorithmException {
+    public StandardCryptoKeyPairUtility() throws NoSuchAlgorithmException {
         rsaKeyFactory = new LockedPair<>(KeyFactory.getInstance(RSA_ALGO));
         ecdsaKeyFactory = new LockedPair<>(KeyFactory.getInstance(ECDSA_ALGO));
         rsaKeyPairGenerator = new LockedPair<>(KeyPairGenerator.getInstance(RSA_ALGO));
@@ -31,8 +31,8 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
     }
 
     @Override
-    public EncodedKeyPair generateKeyPair(final AuthSchemeAlgorithm authSchemeAlgorithm) {
-        switch (authSchemeAlgorithm) {
+    public EncodedKeyPair generateKeyPair(final PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm) {
+        switch (privateKeyCrytpoAlgorithm) {
             case RSA_256:
             case RSA_384:
             case RSA_512:
@@ -43,7 +43,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
                 return generate(ecdsaKeyPairGenerator);
             default:
                 // This should never happen
-                throw new IllegalArgumentException("Unsupported algorithm: " + authSchemeAlgorithm);
+                throw new IllegalArgumentException("Unsupported algorithm: " + privateKeyCrytpoAlgorithm);
         }
     }
 
@@ -56,7 +56,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
 
     @Override
     public <PublicKeyT extends PublicKey> PublicKeyT getPublicKey(
-            final AuthSchemeAlgorithm authSchemeAlgorithm,
+            final PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm,
             final String base64Representation,
             final Class<PublicKeyT> publicKeyTClass) {
 
@@ -70,7 +70,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
 
         final var keySpec = new X509EncodedKeySpec(decoded);
 
-        switch (authSchemeAlgorithm) {
+        switch (privateKeyCrytpoAlgorithm) {
             case RSA_256:
             case RSA_384:
             case RSA_512:
@@ -81,7 +81,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
                 return getPublicKey(ecdsaKeyFactory, keySpec, publicKeyTClass);
             default:
                 // This should never happen
-                throw new IllegalArgumentException("Unsupported algorithm: " + authSchemeAlgorithm);
+                throw new IllegalArgumentException("Unsupported algorithm: " + privateKeyCrytpoAlgorithm);
         }
     }
 
@@ -98,7 +98,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
 
     @Override
     public <PrivateKeyT extends PrivateKey> PrivateKeyT getPrivateKey(
-            final AuthSchemeAlgorithm authSchemeAlgorithm,
+            final PrivateKeyCrytpoAlgorithm privateKeyCrytpoAlgorithm,
             final String base64Representation,
             final Class<PrivateKeyT> publicKeyTClass) {
 
@@ -112,7 +112,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
 
         final var keySpec = new PKCS8EncodedKeySpec(decoded);
 
-        switch (authSchemeAlgorithm) {
+        switch (privateKeyCrytpoAlgorithm) {
             case RSA_256:
             case RSA_384:
             case RSA_512:
@@ -123,7 +123,7 @@ public class StandardCryptoKeyUtility implements CryptoKeyUtility {
                 return getPrivateKey(ecdsaKeyFactory, keySpec, publicKeyTClass);
             default:
                 // This should never happen
-                throw new IllegalArgumentException("Unsupported algorithm: " + authSchemeAlgorithm);
+                throw new IllegalArgumentException("Unsupported algorithm: " + privateKeyCrytpoAlgorithm);
         }
     }
 

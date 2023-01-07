@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.exception.auth;
+package com.namazustudios.socialengine.exception.crypto;
 
 import com.namazustudios.socialengine.exception.InvalidDataException;
 

@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContractAddress;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
+import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.bson.types.ObjectId;
@@ -52,7 +52,7 @@ public class MongoSmartContractDaoTest {
         wallets = Stream.of(BlockchainApi.values())
                 .map(api -> {
 
-                    final var identity = new WalletIdentityPair();
+                    final var identity = new WalletAccount();
                     identity.setEncrypted(false);
                     identity.setAddress(MongoWalletDaoTest.randomKey());
                     identity.setPrivateKey(MongoWalletDaoTest.randomKey());
@@ -62,9 +62,9 @@ public class MongoSmartContractDaoTest {
                     wallet.setUser(adminUser);
                     wallet.setNetworks(api.networks().collect(toList()));
                     wallet.setDisplayName("Test Wallet: " + api);
-                    wallet.setDefaultIdentity(0);
+                    wallet.setPreferredAccount(0);
                     wallet.setEncryption(null);
-                    wallet.setIdentities(new ArrayList<>(List.of(identity)));
+                    wallet.setAccounts(new ArrayList<>(List.of(identity)));
 
                     return getWalletDao().createWallet(wallet);
 
@@ -122,7 +122,7 @@ public class MongoSmartContractDaoTest {
         metadata.put("NETS", wallet.getNetworks());
 
         final var contract = new SmartContract();
-        contract.setWallet(wallet);
+
         contract.setMetadata(metadata);
         contract.setAddresses(addresses);
         contract.setApi(wallet.getApi());
@@ -130,7 +130,7 @@ public class MongoSmartContractDaoTest {
 
         final var created = getUnderTest().createSmartContract(contract);
         assertNotNull(created.getId());
-        assertEquals(created.getWallet(), wallet);
+        assertEquals(created.getVault(), wallet);
         assertEquals(created.getDisplayName(), contract.getDisplayName());
         assertEquals(created.getApi(), contract.getApi());
         assertEquals(created.getAddresses(), contract.getAddresses());
@@ -158,7 +158,7 @@ public class MongoSmartContractDaoTest {
         update.setDisplayName(smartContract.getDisplayName());
         update.setApi(smartContract.getApi());
         update.setMetadata(smartContract.getMetadata());
-        update.setWallet(smartContract.getWallet());
+        update.setVault(smartContract.getVault());
         update.setAddresses(addresses);
 
         final var updated = getUnderTest().updateSmartContract(update);

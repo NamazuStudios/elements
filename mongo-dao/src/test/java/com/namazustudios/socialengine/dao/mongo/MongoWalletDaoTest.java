@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundExcepti
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletIdentityPair;
+import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.bson.types.ObjectId;
@@ -140,11 +140,11 @@ public class MongoWalletDaoTest {
         wallet.setNetworks(List.of(network));
         wallet.setApi(network.api());
 
-        final var identity = new WalletIdentityPair();
+        final var identity = new WalletAccount();
         identity.setEncrypted(false);
         identity.setAddress(randomKey());
         identity.setPrivateKey(randomKey());
-        wallet.setIdentities(List.of(identity));
+        wallet.setAccounts(List.of(identity));
 
         final var created = getUnderTest().createWallet(wallet);
         assertNotNull(created.getId());
@@ -163,18 +163,18 @@ public class MongoWalletDaoTest {
 
         final var update = new Wallet();
         update.setId(wallet.getId());
-        update.setDefaultIdentity(wallet.getDefaultIdentity());
+        update.setPreferredAccount(wallet.getPreferredAccount());
         update.setDisplayName(wallet.getDisplayName());
         update.setEncryption(wallet.getEncryption());
         update.setUser(wallet.getUser());
         update.setNetworks(wallet.getNetworks());
         update.setApi(wallet.getApi());
 
-        final var identity = new WalletIdentityPair();
+        final var identity = new WalletAccount();
         identity.setEncrypted(false);
         identity.setAddress(randomKey());
         identity.setPrivateKey(randomKey());
-        update.setIdentities(List.of(identity));
+        update.setAccounts(List.of(identity));
 
         final var updated = getUnderTest().updateWallet(update);
         assertEquals(updated, update);
@@ -310,7 +310,7 @@ public class MongoWalletDaoTest {
             expectedExceptions = WalletNotFoundException.class)
     public void deleteWalletForWrongUserFails(final Wallet wallet) {
         try {
-            getUnderTest().deleteWallet(wallet.getId(), trudyUser.getId());
+            getUnderTest().deleteWalletForUser(wallet.getId(), trudyUser.getId());
         } finally {
             assertTrue(getUnderTest().findWallet(wallet.getId()).isPresent());
         }
@@ -340,14 +340,14 @@ public class MongoWalletDaoTest {
         wallet.setNetworks(List.of(network));
         wallet.setApi(network.api());
 
-        final var identity = new WalletIdentityPair();
+        final var identity = new WalletAccount();
         identity.setEncrypted(false);
         identity.setAddress(randomKey());
         identity.setPrivateKey(randomKey());
-        wallet.setIdentities(List.of(identity));
+        wallet.setAccounts(List.of(identity));
 
         final var created = getUnderTest().createWallet(wallet);
-        getUnderTest().deleteWallet(created.getId(), user.getId());
+        getUnderTest().deleteWalletForUser(created.getId(), user.getId());
         assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
 
     }

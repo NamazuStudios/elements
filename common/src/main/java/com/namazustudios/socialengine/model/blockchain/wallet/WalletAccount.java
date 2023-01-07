@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel
-public class WalletIdentityPair {
+public class WalletAccount {
 
     @NotNull
     @ApiModelProperty("The Wallet Address - id public identity. Required.")
@@ -47,7 +47,7 @@ public class WalletIdentityPair {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WalletIdentityPair that = (WalletIdentityPair) o;
+        WalletAccount that = (WalletAccount) o;
         return isEncrypted() == that.isEncrypted() && Objects.equals(getAddress(), that.getAddress()) && Objects.equals(getPrivateKey(), that.getPrivateKey());
     }
 

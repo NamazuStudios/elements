@@ -3,9 +3,11 @@ package com.namazustudios.socialengine.service.blockchain.crypto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.crypto.CryptoException;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
+import com.namazustudios.socialengine.model.blockchain.wallet.VaultKey;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.rt.util.Hex;
+import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
@@ -22,9 +24,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
+import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 
-public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
+public class AesVaultCryptoUtilities implements VaultCryptoUtilities {
 
     private static final int IV_LENGTH = 16;
 
@@ -42,12 +44,38 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
 
     private static final SecureRandom sr = new SecureRandom();
 
+    public static final PrivateKeyCrytpoAlgorithm VAULT_ALGORITHM = RSA_512;
+
     private Validator validator;
 
     private ObjectMapper objectMapper;
 
+    private CryptoKeyPairUtility cryptoKeyPairUtility;
+
     @Override
-    public Wallet encrypt(final Wallet wallet, final String passphrase) {
+    public VaultKey generateKey() {
+
+        final var encodedKeyPair = getCryptoKeyPairUtility().generateKeyPair(VAULT_ALGORITHM);
+
+        final var vaultKey = new VaultKey();
+        vaultKey.setEncrypted(false);
+        vaultKey.setPublicKey(encodedKeyPair.getPublicKeyBase64());
+        vaultKey.setPrivateKey(encodedKeyPair.getPrivateKeyBase64());
+
+        return vaultKey;
+
+    }
+
+    @Override
+    public VaultKey encryptKey(final VaultKey vaultKey, final String passphrase) {
+
+        if (vaultKey.isEncrypted()) {
+            throw new IllegalArgumentException("Vault key is already encrypted.");
+        }
+
+        if (!getValidator().validate(vaultKey).isEmpty()) {
+            throw new IllegalArgumentException("Invalid vault key.");
+        }
 
         final var iv = new byte[IV_LENGTH];
         final var salt = new byte[SALT_LENGTH];
@@ -67,45 +95,17 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
             throw new InternalException("Generated invalid AES Encryption Spec.");
         }
 
+        final var encrypted = getObjectMapper().convertValue(vaultKey, VaultKey.class);
+
         final var encryption = getObjectMapper().convertValue(aesEncryptionSpec, Map.class);
-        wallet.setEncryption(encryption);
-
-        final var encrypted = wallet
-                .getAccounts()
-                .stream()
-                .map(identity -> doEncrypt(iv, salt, passphrase, aesEncryptionSpec, identity))
-                .collect(toList());
-
-        final var result = getObjectMapper().convertValue(wallet, Wallet.class);
-        result.setAccounts(encrypted);
-
-        return result;
-
-    }
-
-    private WalletAccount doEncrypt(final byte[] iv, final byte [] salt,
-                                    final String passphrase,
-                                    final AesEncryptionSpec aesEncryptionSpec,
-                                    final WalletAccount identity) {
-
-        if (identity.isEncrypted()) {
-            throw new IllegalArgumentException("Identity is already encrypted.");
-        }
-
-        final var unencrypted = identity.getPrivateKey();
-
-        if (unencrypted == null) {
-            throw new IllegalArgumentException("Account must not be null.");
-        }
-
-        final var encrypted = getObjectMapper().convertValue(identity, WalletAccount.class);
+        encrypted.setEncrypted(true);
+        encrypted.setEncryption(encryption);
 
         try {
             final var cipher = getCipher(iv, salt, passphrase, aesEncryptionSpec, Cipher.ENCRYPT_MODE);
-            final var unencryptedBytes = unencrypted.getBytes(StandardCharsets.UTF_8);
+            final var unencryptedBytes = vaultKey.getPrivateKey().getBytes(StandardCharsets.UTF_8);
             final var encryptedBytes = cipher.doFinal(unencryptedBytes);
             final var encryptedString = Hex.encode(encryptedBytes);
-            encrypted.setEncrypted(true);
             encrypted.setPrivateKey(encryptedString);
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
@@ -116,9 +116,9 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
     }
 
     @Override
-    public Optional<Wallet> decrypt(final Wallet wallet, final String passphrase) {
+    public Optional<VaultKey> decryptKey(final VaultKey vaultKey, final String passphrase) {
 
-        final var encryption = wallet.getEncryption();
+        final var encryption = vaultKey.getEncryption();
 
         if (encryption == null) {
             throw new IllegalArgumentException("No encryption metadata.");
@@ -134,35 +134,21 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
         final var iv = Hex.decode(aesEncryptionSpec.getIv());
         final var salt = Hex.decode(aesEncryptionSpec.getSalt());
 
-        final var decrypted = wallet
-                .getAccounts()
-                .stream()
-                .map(identity -> doDecrypt(iv, salt, passphrase, aesEncryptionSpec, identity))
-                .collect(toList());
-
-        return Optional.empty();
-    }
-
-    public WalletAccount doDecrypt(byte[] iv, byte[] salt,
-                                   final String passphrase,
-                                   final AesEncryptionSpec aesEncryptionSpec,
-                                   final WalletAccount identity) {
-
-        final var decrypted = getObjectMapper().convertValue(identity, WalletAccount.class);
+        final var decrypted = getObjectMapper().convertValue(vaultKey, VaultKey.class);
         decrypted.setEncrypted(false);
+        decrypted.setEncryption(null);
 
         try {
-            final var encrypted = identity.getPrivateKey();
+            final var encrypted = vaultKey.getPrivateKey();
             final var cipher = getCipher(iv, salt, passphrase, aesEncryptionSpec, Cipher.DECRYPT_MODE);
             final var encryptedBytes = Hex.decode(encrypted);
             final var decryptedBytes = cipher.doFinal(encryptedBytes);
             final var decryptedString = new String(decryptedBytes, StandardCharsets.UTF_8);
             decrypted.setPrivateKey(decryptedString);
+            return Optional.of(decrypted);
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
-            throw new CryptoException(ex);
+            return Optional.empty();
         }
-
-        return decrypted;
 
     }
 
@@ -207,6 +193,15 @@ public class AesWalletCryptoUtilities implements WalletCryptoUtilities {
     @Inject
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    public CryptoKeyPairUtility getCryptoKeyPairUtility() {
+        return cryptoKeyPairUtility;
+    }
+
+    @Inject
+    public void setCryptoKeyPairUtility(CryptoKeyPairUtility cryptoKeyPairUtility) {
+        this.cryptoKeyPairUtility = cryptoKeyPairUtility;
     }
 
 }
