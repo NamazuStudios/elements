@@ -24,6 +24,8 @@ public class Vault {
     @ApiModelProperty("The display name given to this vault.")
     private String displayName;
 
+    @Valid
+    @NotNull
     @ApiModelProperty("The Vault's key. The vault secures each vault with this key.")
     private VaultKey key;
 

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.util;
 import com.namazustudios.socialengine.exception.crypto.InvalidKeyException;
 import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 
+import javax.crypto.Cipher;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 

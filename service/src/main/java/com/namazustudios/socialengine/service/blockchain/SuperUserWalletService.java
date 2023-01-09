@@ -134,14 +134,14 @@ public class SuperUserWalletService implements WalletService {
             }
         } else {
 
-            for (var identity : createWalletRequest.getIdentities()) {
-                if (identity.isEncrypted()) {
-                    throw new InvalidDataException("Must supply unencrypted wallet if supplying passphrase.");
-                }
-            }
-
-            wallet.setAccounts(createWalletRequest.getIdentities());
-            wallet = getWalletCryptoUtilities().encrypt(wallet, passphrase);
+//            for (var identity : createWalletRequest.getIdentities()) {
+//                if (identity.isEncrypted()) {
+//                    throw new InvalidDataException("Must supply unencrypted wallet if supplying passphrase.");
+//                }
+//            }
+//
+//            wallet.setAccounts(createWalletRequest.getIdentities());
+//            wallet = getWalletCryptoUtilities().encrypt(wallet, passphrase);
 
         }
 

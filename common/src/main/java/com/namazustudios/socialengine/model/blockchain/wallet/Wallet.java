@@ -15,7 +15,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Size;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
@@ -54,9 +53,6 @@ public class Wallet {
     @Valid
     @ApiModelProperty("The networks associated with this wallet.")
     private List<BlockchainNetwork> networks;
-
-    @ApiModelProperty("The Wallet's encryption metadata. This is specific to the encryption type used.")
-    private Map<String, Object> encryption;
 
     @Min(0)
     @ApiModelProperty("The default account. Must not be larger than the count of identities.")
@@ -116,14 +112,6 @@ public class Wallet {
         this.networks = networks;
     }
 
-    public Map<String, Object> getEncryption() {
-        return encryption;
-    }
-
-    public void setEncryption(Map<String, Object> encryption) {
-        this.encryption = encryption;
-    }
-
     public int getPreferredAccount() {
         return preferredAccount;
     }
@@ -146,12 +134,12 @@ public class Wallet {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Wallet wallet = (Wallet) o;
-        return getPreferredAccount() == wallet.getPreferredAccount() && Objects.equals(getId(), wallet.getId()) && Objects.equals(getUser(), wallet.getUser()) && Objects.equals(getVault(), wallet.getVault()) && Objects.equals(getDisplayName(), wallet.getDisplayName()) && getApi() == wallet.getApi() && Objects.equals(getNetworks(), wallet.getNetworks()) && Objects.equals(getEncryption(), wallet.getEncryption()) && Objects.equals(getAccounts(), wallet.getAccounts());
+        return getPreferredAccount() == wallet.getPreferredAccount() && Objects.equals(getId(), wallet.getId()) && Objects.equals(getUser(), wallet.getUser()) && Objects.equals(getVault(), wallet.getVault()) && Objects.equals(getDisplayName(), wallet.getDisplayName()) && getApi() == wallet.getApi() && Objects.equals(getNetworks(), wallet.getNetworks()) && Objects.equals(getAccounts(), wallet.getAccounts());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUser(), getVault(), getDisplayName(), getApi(), getNetworks(), getEncryption(), getPreferredAccount(), getAccounts());
+        return Objects.hash(getId(), getUser(), getVault(), getDisplayName(), getApi(), getNetworks(), getPreferredAccount(), getAccounts());
     }
 
     @Override
@@ -163,10 +151,10 @@ public class Wallet {
         sb.append(", displayName='").append(displayName).append('\'');
         sb.append(", api=").append(api);
         sb.append(", networks=").append(networks);
-        sb.append(", encryption=").append(encryption);
         sb.append(", preferredAccount=").append(preferredAccount);
         sb.append(", accounts=").append(accounts);
         sb.append('}');
         return sb.toString();
     }
+
 }
