@@ -59,7 +59,6 @@ public class UpdateWalletRequest {
         this.defaultIdentity = defaultIdentity;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -39,12 +39,6 @@ public class CreateWalletRequest {
     @ApiModelProperty("The networks associated with this wallet. All must support the Wallet's protocol.")
     private List<BlockchainNetwork> networks;
 
-    @NotNull
-    @ApiModelProperty(
-            "The passphrase used to to encrypt the wallet. If empty, then the wallet will not be " +
-            "encrypted. Some configurations may opt to disallow encryption entirely.")
-    private String passphrase;
-
     @Min(0)
     @ApiModelProperty("The default identity. Must not be larger than the count of identities.")
     private int defaultIdentity;
@@ -78,14 +72,6 @@ public class CreateWalletRequest {
         this.networks = networks;
     }
 
-    public String getPassphrase() {
-        return passphrase;
-    }
-
-    public void setPassphrase(String passphrase) {
-        this.passphrase = passphrase;
-    }
-
     public int getDefaultIdentity() {
         return defaultIdentity;
     }
@@ -102,31 +88,28 @@ public class CreateWalletRequest {
         this.identities = identities;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateWalletRequest that = (CreateWalletRequest) o;
-        return getDefaultIdentity() == that.getDefaultIdentity() && Objects.equals(getDisplayName(), that.getDisplayName()) && getApi() == that.getApi() && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getPassphrase(), that.getPassphrase()) && Objects.equals(getIdentities(), that.getIdentities());
+        return defaultIdentity == that.defaultIdentity && Objects.equals(displayName, that.displayName) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(identities, that.identities);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDisplayName(), getApi(), getNetworks(), getPassphrase(), getDefaultIdentity(), getIdentities());
+        return Objects.hash(displayName, api, networks, defaultIdentity, identities);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateWalletRequest{");
-        sb.append("displayName='").append(displayName).append('\'');
-        sb.append(", api=").append(api);
-        sb.append(", networks=").append(networks);
-        sb.append(", passphrase='").append(passphrase).append('\'');
-        sb.append(", defaultIdentity=").append(defaultIdentity);
-        sb.append(", identities=").append(identities);
-        sb.append('}');
-        return sb.toString();
+        return "CreateWalletRequest{" +
+                "displayName='" + displayName + '\'' +
+                ", api=" + api +
+                ", networks=" + networks +
+                ", defaultIdentity=" + defaultIdentity +
+                ", identities=" + identities +
+                '}';
     }
 
 }

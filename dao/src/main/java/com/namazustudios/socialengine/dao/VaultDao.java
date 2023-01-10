@@ -18,8 +18,16 @@ public interface VaultDao {
         return findVault(vaultId).orElseThrow(VaultNotFoundException::new);
     }
 
+    Optional<Vault> findVaultForUser(String vaultId, String userId);
+
+    default Vault getVaultForUser(final String vaultId, final String userId) {
+        return findVaultForUser(vaultId, userId).orElseThrow(VaultNotFoundException::new);
+    }
+
     Vault createVault(Vault vault);
 
     Vault updateVault(Vault vault);
+
+    void deleteVaultForUser(String vaultId, String userId);
 
 }

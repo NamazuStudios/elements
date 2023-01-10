@@ -23,7 +23,7 @@ public interface VaultCryptoUtilities {
      * @param passphrase the passphrase
      * @return the {@link VaultKey}, encrypted
      */
-    default VaultKey generateKey(String passphrase) {
+    default VaultKey generateKey(final String passphrase) {
         final var key = generateKey();
         return encryptKey(key, passphrase);
     }

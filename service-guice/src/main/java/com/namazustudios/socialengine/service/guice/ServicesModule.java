@@ -15,7 +15,6 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServicePro
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.*;
-import com.namazustudios.socialengine.service.blockchain.crypto.AesWalletCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.StandardWalletIdentityFactory;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
@@ -532,10 +531,6 @@ public class ServicesModule extends PrivateModule {
         bind(SmartContractService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserSmartContractService.class);
-
-        bind(WalletCryptoUtilities.class)
-                .to(AesWalletCryptoUtilities.class)
-                .asEagerSingleton();
 
         bind(WalletIdentityFactory.class)
                 .to(StandardWalletIdentityFactory.class)

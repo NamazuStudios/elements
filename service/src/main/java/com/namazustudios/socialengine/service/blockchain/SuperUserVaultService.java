@@ -82,7 +82,7 @@ public class SuperUserVaultService implements VaultService {
 
         if (existingKey.isEncrypted()) {
 
-            if (passphrase.isBlank() && newPassphrase.isBlank()) {
+            if (!passphrase.isBlank() && !newPassphrase.isBlank()) {
 
                 final var key = getVaultCryptoUtilities().reEncryptKey(
                         vault.getKey(),
@@ -92,7 +92,7 @@ public class SuperUserVaultService implements VaultService {
 
                 vault.setKey(key);
 
-            } else if (!passphrase.isBlank() || !newPassphrase.isBlank()) {
+            } else if (passphrase.isBlank() != newPassphrase.isBlank()) {
                 throw new InvalidDataException("Must specify both old and new passphrase, if specified.");
             }
 

@@ -70,7 +70,7 @@ public class SuperUserWalletService implements WalletService {
 
         final var vault = getVaultDao()
                 .findVault(vaultId)
-                .orElseThrow(() -> new InvalidDataException("No such user."));
+                .orElseThrow(() -> new InvalidDataException("No such vault."));
 
         wallet.setVault(vault);
 
@@ -79,14 +79,6 @@ public class SuperUserWalletService implements WalletService {
         if (displayName != null) {
             wallet.setDisplayName(displayName);
         }
-
-//        if (!passphrase.isBlank() && !newPassphrase.isBlank()) {
-//            wallet = getWalletCryptoUtilities()
-//                    .reEncrypt(wallet, passphrase, newPassphrase)
-//                    .orElseThrow(() -> new InvalidDataException("Invalid Passphrase."));
-//        } else if (!passphrase.isBlank() || !newPassphrase.isBlank()) {
-//            throw new InvalidDataException("Must specify both old and new passphrase.");
-//        }
 
         return getWalletDao().updateWallet(wallet);
 
@@ -124,28 +116,8 @@ public class SuperUserWalletService implements WalletService {
             throw new InvalidDataException("Default must be less than identity collection.");
         }
 
-        final var passphrase = nullToEmpty(createWalletRequest.getPassphrase()).trim();
-
-        if (passphrase.isBlank()) {
-            for (var identity : createWalletRequest.getIdentities()) {
-                if (!identity.isEncrypted()) {
-                    throw new InvalidDataException("Must supply encrypted wallet if not supplying passphrase.");
-                }
-            }
-        } else {
-
-//            for (var identity : createWalletRequest.getIdentities()) {
-//                if (identity.isEncrypted()) {
-//                    throw new InvalidDataException("Must supply unencrypted wallet if supplying passphrase.");
-//                }
-//            }
-//
-//            wallet.setAccounts(createWalletRequest.getIdentities());
-//            wallet = getWalletCryptoUtilities().encrypt(wallet, passphrase);
-
-        }
-
-        return getWalletDao().createWallet(wallet);
+        final var encrypted = getWalletCryptoUtilities().encrypt(wallet);
+        return getWalletDao().createWallet(encrypted);
 
     }
 

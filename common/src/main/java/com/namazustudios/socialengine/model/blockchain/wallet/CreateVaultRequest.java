@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain.wallet;
 
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
@@ -18,9 +19,17 @@ public class CreateVaultRequest {
     private String displayName;
 
     @ApiModelProperty(
-            "The passphrase used to to encrypt the vault. If empty, then the vault will not be " +
-            "encrypted. Some configurations may opt to disallow encryption entirely.")
+            "The passphrase used to to encrypt the vault. If empty, then the vault will not be encrypted. Some " +
+            "configurations may opt to disallow encryption entirely."
+    )
     private String passphrase;
+
+    @NotNull
+    @ApiModelProperty(
+            "The encryption algorithm used to secure the vault. Once crated, a vault will contains a private/public " +
+            "key pair which will be used to encrypt the wallets within the vault."
+    )
+    private PrivateKeyCrytpoAlgorithm algorithm;
 
     public String getDisplayName() {
         return displayName;
@@ -46,27 +55,36 @@ public class CreateVaultRequest {
         this.passphrase = passphrase;
     }
 
+    public PrivateKeyCrytpoAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
+        this.algorithm = algorithm;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateVaultRequest that = (CreateVaultRequest) o;
-        return Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getPassphrase(), that.getPassphrase());
+        return Objects.equals(userId, that.userId) && Objects.equals(displayName, that.displayName) && Objects.equals(passphrase, that.passphrase) && algorithm == that.algorithm;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDisplayName(), getUserId(), getPassphrase());
+        return Objects.hash(userId, displayName, passphrase, algorithm);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateVaultRequest{");
-        sb.append("displayName='").append(displayName).append('\'');
-        sb.append(", vaultId='").append(userId).append('\'');
-        sb.append(", passphrase='").append(passphrase).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "CreateVaultRequest{" +
+                "userId='" + userId + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", passphrase='" + passphrase + '\'' +
+                ", algorithm=" + algorithm +
+                '}';
     }
 
 }

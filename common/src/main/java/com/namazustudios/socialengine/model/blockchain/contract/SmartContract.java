@@ -31,6 +31,10 @@ public class SmartContract {
     private String id;
 
     @NotNull
+    @ApiModelProperty("The unique symbolic name of the smart contract.")
+    private String name;
+
+    @NotNull
     @ApiModelProperty("The name given to this contract for display purposes.")
     private String displayName;
 
@@ -45,7 +49,7 @@ public class SmartContract {
     private BlockchainApi api;
 
     @NotNull
-    @ApiModelProperty("The Elements vault used to ")
+    @ApiModelProperty("The Elements vault used to manage the wallets.")
     private Vault vault;
 
     @ApiModelProperty("Any metadata for this contract.")
@@ -57,6 +61,14 @@ public class SmartContract {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDisplayName() {
@@ -104,23 +116,25 @@ public class SmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SmartContract that = (SmartContract) o;
-        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(vault, that.vault) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(vault, that.vault) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, displayName, addresses, api, vault, metadata);
+        return Objects.hash(id, name, displayName, addresses, api, vault, metadata);
     }
 
     @Override
     public String toString() {
         return "SmartContract{" +
                 "id='" + id + '\'' +
+                ", name='" + name + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", addresses=" + addresses +
                 ", api=" + api +
-                ", wallet=" + vault +
+                ", vault=" + vault +
                 ", metadata=" + metadata +
                 '}';
     }
+
 }

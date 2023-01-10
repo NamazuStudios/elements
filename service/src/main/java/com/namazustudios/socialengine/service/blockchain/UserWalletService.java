@@ -2,13 +2,11 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
-import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.WalletService;
@@ -30,7 +28,8 @@ public class UserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, String vaultId, final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
+            final String userId, final String vaultId,
+            final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         if (userId == null || Objects.equals(userId, getUser().getId())) {
             return getWalletDao().getWallets(offset, count, getUser().getId(), protocol, networks);
         } else {
@@ -45,7 +44,7 @@ public class UserWalletService implements WalletService {
 
     @Override
     public Wallet getWallet(final String walletId, final String vaultId) {
-        final var vault = getVaultForUser(vaultId);
+        final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
         return getWalletDao().getWallet(walletId, vault.getId());
     }
 
@@ -53,13 +52,13 @@ public class UserWalletService implements WalletService {
     public Wallet updateWallet(final String vaultId,
                                final String walletId,
                                final UpdateWalletRequest walletUpdateRequest) {
-        final var vault = getVaultForUser(vaultId);
+        final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
         return getSuperUserWalletService().updateWallet(vault.getId(), walletId, walletUpdateRequest);
     }
 
     @Override
     public Wallet createWallet(final String vaultId, final CreateWalletRequest createWalletRequest) {
-        final var vault = getVaultForUser(vaultId);
+        final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
         return getSuperUserWalletService().createWallet(vault.getId(), createWalletRequest);
     }
 
@@ -70,19 +69,8 @@ public class UserWalletService implements WalletService {
 
     @Override
     public void deleteWallet(final String walletId, final String vaultId) {
-        final var vault = getVaultForUser(vaultId);
+        final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
         getWalletDao().deleteWalletForUser(walletId, vault.getId());
-    }
-
-    private Vault getVaultForUser(final String vaultId) {
-
-        final var vault = getVaultDao().getVault(vaultId);
-
-        if (!Objects.equals(vault.getUser().getId(), getUser().getId())) {
-            throw new VaultNotFoundException("Vault not found: " + vaultId);
-        }
-
-        return vault;
     }
 
     public User getUser() {
