@@ -49,11 +49,12 @@ public class SuperUserVaultService implements VaultService {
         vault.setUser(user);
         vault.setDisplayName(createVaultRequest.getDisplayName());
 
+        final var algorithm = createVaultRequest.getAlgorithm();
         final var passphrase = nullToEmpty(createVaultRequest.getPassphrase()).trim();
 
         final var key = passphrase.isBlank()
-                ? getVaultCryptoUtilities().generateKey()
-                : getVaultCryptoUtilities().generateKey(passphrase);
+                ? getVaultCryptoUtilities().generateKey(algorithm)
+                : getVaultCryptoUtilities().generateKey(algorithm, passphrase);
 
         vault.setKey(key);
 

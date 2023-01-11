@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.crypto.CryptoException;
 import com.namazustudios.socialengine.model.blockchain.wallet.VaultKey;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.rt.util.Hex;
 import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
@@ -53,9 +52,12 @@ public class AesVaultCryptoUtilities implements VaultCryptoUtilities {
     private CryptoKeyPairUtility cryptoKeyPairUtility;
 
     @Override
-    public VaultKey generateKey() {
+    public VaultKey generateKey(final PrivateKeyCrytpoAlgorithm algorithm) {
 
-        final var encodedKeyPair = getCryptoKeyPairUtility().generateKeyPair(VAULT_ALGORITHM);
+        final var encodedKeyPair = getCryptoKeyPairUtility().generateKeyPair(algorithm == null
+                ? VAULT_ALGORITHM
+                : algorithm
+        );
 
         final var vaultKey = new VaultKey();
         vaultKey.setEncrypted(false);

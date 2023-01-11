@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.VaultKey;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 
 import java.util.Optional;
 
@@ -15,7 +16,7 @@ public interface VaultCryptoUtilities {
      *
      * @return the {@link VaultKey}
      */
-    VaultKey generateKey();
+    VaultKey generateKey(PrivateKeyCrytpoAlgorithm algorithm);
 
     /**
      * Generates a {@link VaultKey} secured with the supplied passphrase.
@@ -23,8 +24,8 @@ public interface VaultCryptoUtilities {
      * @param passphrase the passphrase
      * @return the {@link VaultKey}, encrypted
      */
-    default VaultKey generateKey(final String passphrase) {
-        final var key = generateKey();
+    default VaultKey generateKey(final PrivateKeyCrytpoAlgorithm algorithm, final String passphrase) {
+        final var key = generateKey(algorithm);
         return encryptKey(key, passphrase);
     }
 

@@ -25,4 +25,9 @@ public interface ValidationGroups {
      */
     interface Insert {}
 
+    /**
+     * Used when the value is read from the database.
+     */
+    interface Read {}
+
 }

@@ -15,8 +15,9 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServicePro
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.*;
+import com.namazustudios.socialengine.service.blockchain.crypto.AesVaultCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.StandardWalletIdentityFactory;
-import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
+import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
@@ -62,7 +63,9 @@ import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvid
 import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
+import com.namazustudios.socialengine.service.util.CipherUtility;
 import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
+import com.namazustudios.socialengine.service.util.StandardCipherUtility;
 import com.namazustudios.socialengine.service.util.StandardCryptoKeyPairUtility;
 import org.dozer.Mapper;
 
@@ -95,8 +98,16 @@ public class ServicesModule extends PrivateModule {
         
         install(new DatabaseHealthStatusDaoAggregator());
 
+        bind(CipherUtility.class)
+            .to(StandardCipherUtility.class)
+            .asEagerSingleton();
+
         bind(CryptoKeyPairUtility.class)
             .to(StandardCryptoKeyPairUtility.class)
+            .asEagerSingleton();
+
+        bind(VaultCryptoUtilities.class)
+            .to(AesVaultCryptoUtilities.class)
             .asEagerSingleton();
 
         bind(Mapper.class)
@@ -308,12 +319,16 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(WalletService.class)
-                .toProvider(WalletServiceProvider.class)
-                .in(scope);
+            .toProvider(WalletServiceProvider.class)
+            .in(scope);
 
         bind(SmartContractService.class)
-                .toProvider(SmartContractServiceProvider.class)
-                .in(scope);
+            .toProvider(SmartContractServiceProvider.class)
+            .in(scope);
+
+        bind(VaultService.class)
+            .toProvider(VaultServiceProvider.class)
+            .in(scope);
 
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
@@ -528,6 +543,10 @@ public class ServicesModule extends PrivateModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserWalletService.class);
 
+        bind(VaultService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserVaultService.class);
+
         bind(SmartContractService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserSmartContractService.class);
@@ -595,6 +614,8 @@ public class ServicesModule extends PrivateModule {
         expose(BscTokenService.class);
         expose(FormidiumService.class);
         expose(WalletService.class);
+        expose(VaultService.class);
+        expose(SmartContractService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -646,6 +667,8 @@ public class ServicesModule extends PrivateModule {
         expose(BscTokenService.class).annotatedWith(Unscoped.class);
         expose(FormidiumService.class).annotatedWith(Unscoped.class);
         expose(WalletService.class).annotatedWith(Unscoped.class);
+        expose(SmartContractService.class).annotatedWith(Unscoped.class);
+        expose(VaultService.class).annotatedWith(Unscoped.class);
 
     }
 

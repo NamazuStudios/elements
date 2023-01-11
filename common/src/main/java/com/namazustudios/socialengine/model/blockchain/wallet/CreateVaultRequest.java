@@ -24,7 +24,6 @@ public class CreateVaultRequest {
     )
     private String passphrase;
 
-    @NotNull
     @ApiModelProperty(
             "The encryption algorithm used to secure the vault. Once crated, a vault will contains a private/public " +
             "key pair which will be used to encrypt the wallets within the vault."

@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoVault;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoWallet;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
@@ -132,12 +133,12 @@ public class MongoWalletDao implements WalletDao {
 
         final var mongoWallet = new UpdateBuilder()
                 .with(set("user", mongoUser))
+                .with(set("vault", mongoUser))
                 .with(set("displayName", wallet.getDisplayName().trim()))
                 .with(set("api", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
                 .with(set("defaultIdentity", wallet.getPreferredAccount()))
                 .with(set("identities", wallet.getAccounts()))
-                .with(set("encryption", wallet.getEncryption()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 
         if (mongoWallet == null) {
@@ -214,6 +215,10 @@ public class MongoWalletDao implements WalletDao {
 
         if (result.getDeletedCount() == 0)
             throw new WalletNotFoundException();
+
+    }
+
+    public void deleteWalletsInMongoVault(final MongoVault vault) {
 
     }
 

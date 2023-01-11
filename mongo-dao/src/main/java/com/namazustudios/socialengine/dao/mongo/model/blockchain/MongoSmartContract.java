@@ -33,7 +33,7 @@ public class MongoSmartContract {
     private Map<BlockchainNetwork, MongoSmartContractAddress> addresses;
 
     @Property
-    private BlockchainApi api;
+    private MongoVault vault;
 
     @Reference
     private MongoWallet wallet;
@@ -73,12 +73,12 @@ public class MongoSmartContract {
         this.addresses = addresses;
     }
 
-    public BlockchainApi getApi() {
-        return api;
+    public MongoVault getVault() {
+        return vault;
     }
 
-    public void setApi(BlockchainApi api) {
-        this.api = api;
+    public void setVault(MongoVault vault) {
+        this.vault = vault;
     }
 
     public MongoWallet getWallet() {
@@ -102,25 +102,26 @@ public class MongoSmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoSmartContract that = (MongoSmartContract) o;
-        return Objects.equals(objectId, that.objectId) && Objects.equals(displayName, that.displayName) && Objects.equals(networks, that.networks) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(wallet, that.wallet) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(getObjectId(), that.getObjectId()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getAddresses(), that.getAddresses()) && Objects.equals(getVault(), that.getVault()) && Objects.equals(getWallet(), that.getWallet()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, displayName, networks, addresses, api, wallet, metadata);
+        return Objects.hash(getObjectId(), getDisplayName(), getNetworks(), getAddresses(), getVault(), getWallet(), getMetadata());
     }
 
     @Override
     public String toString() {
-        return "MongoSmartContract{" +
-                "objectId=" + objectId +
-                ", displayName='" + displayName + '\'' +
-                ", networks=" + networks +
-                ", addresses=" + addresses +
-                ", api=" + api +
-                ", wallet=" + wallet +
-                ", metadata=" + metadata +
-                '}';
+        final StringBuilder sb = new StringBuilder("MongoSmartContract{");
+        sb.append("objectId=").append(objectId);
+        sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", networks=").append(networks);
+        sb.append(", addresses=").append(addresses);
+        sb.append(", vault=").append(vault);
+        sb.append(", wallet=").append(wallet);
+        sb.append(", metadata=").append(metadata);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

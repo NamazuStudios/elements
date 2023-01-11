@@ -26,7 +26,7 @@ import static com.namazustudios.socialengine.model.ValidationGroups.*;
 public class User implements Serializable {
 
     @Null(groups = Insert.class)
-    @NotNull(groups = Update.class)
+    @NotNull(groups = {Update.class, Read.class})
     @ApiModelProperty("The user's database assigned unique ID.")
     private String id;
 

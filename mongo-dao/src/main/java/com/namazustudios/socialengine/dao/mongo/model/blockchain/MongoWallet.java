@@ -7,7 +7,6 @@ import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.List;
-import java.util.Map;
 
 @Entity(value = "wallet")
 @Indexes({
@@ -27,6 +26,9 @@ public class MongoWallet {
     @Reference
     private MongoUser user;
 
+    @Reference
+    private MongoVault vault;
+
     @Property
     private String displayName;
 
@@ -37,13 +39,10 @@ public class MongoWallet {
     private List<BlockchainNetwork> networks;
 
     @Property
-    private Map<String, Object> encryption;
+    private int preferredAccount;
 
     @Property
-    private int defaultIdentity;
-
-    @Property
-    private List<MongoWalletIdentityPair> identities;
+    private List<MongoWalletAccount> accounts;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -59,6 +58,14 @@ public class MongoWallet {
 
     public void setUser(MongoUser user) {
         this.user = user;
+    }
+
+    public MongoVault getVault() {
+        return vault;
+    }
+
+    public void setVault(MongoVault vault) {
+        this.vault = vault;
     }
 
     public String getDisplayName() {
@@ -85,28 +92,20 @@ public class MongoWallet {
         this.networks = networks;
     }
 
-    public Map<String, Object> getEncryption() {
-        return encryption;
+    public int getPreferredAccount() {
+        return preferredAccount;
     }
 
-    public void setEncryption(Map<String, Object> encryption) {
-        this.encryption = encryption;
+    public void setPreferredAccount(int preferredAccount) {
+        this.preferredAccount = preferredAccount;
     }
 
-    public int getDefaultIdentity() {
-        return defaultIdentity;
+    public List<MongoWalletAccount> getAccounts() {
+        return accounts;
     }
 
-    public void setDefaultIdentity(int defaultIdentity) {
-        this.defaultIdentity = defaultIdentity;
-    }
-
-    public List<MongoWalletIdentityPair> getIdentities() {
-        return identities;
-    }
-
-    public void setIdentities(List<MongoWalletIdentityPair> identities) {
-        this.identities = identities;
+    public void setAccounts(List<MongoWalletAccount> accounts) {
+        this.accounts = accounts;
     }
 
 }

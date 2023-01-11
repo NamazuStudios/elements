@@ -5,6 +5,7 @@ import dev.morphia.annotations.Property;
 
 import java.util.Objects;
 
+@Embedded
 public class MongoSmartContractAddress {
 
     @Property

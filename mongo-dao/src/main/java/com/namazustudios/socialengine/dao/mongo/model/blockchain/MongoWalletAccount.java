@@ -5,7 +5,7 @@ import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
 @Embedded
-public class MongoWalletIdentityPair {
+public class MongoWalletAccount {
 
     @Property
     private String address;
@@ -16,9 +16,9 @@ public class MongoWalletIdentityPair {
     @Property
     private boolean encrypted;
 
-    public MongoWalletIdentityPair() { }
+    public MongoWalletAccount() { }
 
-    public MongoWalletIdentityPair(final WalletAccount pair) {
+    public MongoWalletAccount(final WalletAccount pair) {
         address = pair.getAddress();
         privateKey = pair.getPrivateKey();
         encrypted = pair.isEncrypted();
