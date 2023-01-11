@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.dao.WalletDao;
+import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.model.user.User;
@@ -27,13 +28,14 @@ import static com.namazustudios.socialengine.rt.util.Hex.Case.UPPER;
 import static com.namazustudios.socialengine.rt.util.Hex.forNibble;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoWalletDaoTest {
+public class MongoVaultDaoTest {
 
     private static final int TEST_USER_COUNT = 10;
 
-    private WalletDao underTest;
+    private VaultDao underTest;
 
     private UserTestFactory userTestFactory;
 
@@ -41,7 +43,7 @@ public class MongoWalletDaoTest {
 
     private List<User> regularUsers;
 
-    private final Map<String, Wallet> wallets = new ConcurrentHashMap<>();
+    private final Map<String, Vault> vaults = new ConcurrentHashMap<>();
 
     @BeforeClass
     public void createTestUsers() {
@@ -59,16 +61,6 @@ public class MongoWalletDaoTest {
         return regularUsers
                 .stream()
                 .map(u -> new Object[]{u})
-                .toArray(Object[][]::new);
-    }
-
-    @DataProvider
-    public Object[][] regularUsersAndBlockchainNetworks() {
-        return regularUsers
-                .stream()
-                .flatMap(user -> Stream
-                        .of(BlockchainNetwork.values())
-                        .map(network -> new Object[]{user, network}))
                 .toArray(Object[][]::new);
     }
 
@@ -100,7 +92,7 @@ public class MongoWalletDaoTest {
 
     @DataProvider
     public Object[][] wallets() {
-        return wallets
+        return vaults
                 .values()
                 .stream()
                 .map(u -> new Object[]{u})
@@ -108,8 +100,8 @@ public class MongoWalletDaoTest {
     }
 
     @DataProvider
-    public Object[][] walletsById() {
-        return wallets
+    public Object[][] vaultsById() {
+        return vaults
                 .entrySet()
                 .stream()
                 .map(e -> new Object[]{e.getKey(), e.getValue()})
@@ -130,9 +122,9 @@ public class MongoWalletDaoTest {
     }
 
     @Test(dataProvider = "regularUsersAndBlockchainNetworks", groups = "create")
-    public void testCreateWallets(final User user, final BlockchainNetwork network) {
+    public void testCreateVaults(final User user, final BlockchainNetwork network) {
 
-        final var wallet = new Wallet();
+        final var vault = new Vault();
         wallet.setDisplayName("Wallet for User " + user.getName());
         wallet.setUser(user);
         wallet.setNetworks(List.of(network));
@@ -151,7 +143,7 @@ public class MongoWalletDaoTest {
         assertEquals(created.getUser(), wallet.getUser());
         assertEquals(created.getApi(), wallet.getApi());
 
-        wallets.put(created.getId(), created);
+        vaults.put(created.getId(), created);
 
     }
 
@@ -176,7 +168,7 @@ public class MongoWalletDaoTest {
         assertEquals(updated, update);
         assertNotEquals(updated, wallet);
 
-        wallets.put(updated.getId(), updated);
+        vaults.put(updated.getId(), updated);
 
     }
 
@@ -184,8 +176,8 @@ public class MongoWalletDaoTest {
     public void testGetWalletForUser(final User user) {
 
         final var wallets = new PaginationWalker()
-            .toList((offset, count) -> getUnderTest()
-                    .getWallets(offset, count, user.getId(), null, null));
+                .toList((offset, count) -> getUnderTest()
+                        .getWallets(offset, count, user.getId(), null, null));
 
         for(var wallet : wallets) {
             assertEquals(wallet.getUser(), user);
@@ -347,12 +339,12 @@ public class MongoWalletDaoTest {
 
     }
 
-    public WalletDao getUnderTest() {
+    public VaultDao getUnderTest() {
         return underTest;
     }
 
     @Inject
-    public void setUnderTest(WalletDao underTest) {
+    public void setUnderTest(VaultDao underTest) {
         this.underTest = underTest;
     }
 
