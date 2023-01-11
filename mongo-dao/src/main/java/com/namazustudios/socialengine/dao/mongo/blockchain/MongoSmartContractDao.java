@@ -4,10 +4,14 @@ import com.namazustudios.socialengine.dao.SmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoSmartContract;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoSmartContractAddress;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.blockchain.SmartContractNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Read;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
@@ -24,6 +28,7 @@ import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.in;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toMap;
 
 public class MongoSmartContractDao implements SmartContractDao {
 
@@ -33,9 +38,9 @@ public class MongoSmartContractDao implements SmartContractDao {
 
     private MongoDBUtils mongoDBUtils;
 
-    private ValidationHelper validationHelper;
+    private MongoVaultDao mongoVaultDao;
 
-    private MongoWalletDao mongoWalletDao;
+    private ValidationHelper validationHelper;
 
     @Override
     public Pagination<SmartContract> getSmartContracts(
@@ -75,8 +80,8 @@ public class MongoSmartContractDao implements SmartContractDao {
     @Override
     public SmartContract updateSmartContract(final SmartContract smartContract) {
 
-        getValidationHelper().validateModel(smartContract, ValidationGroups.Update.class);
-        getValidationHelper().validateModel(smartContract.getVault(), ValidationGroups.Update.class);
+        getValidationHelper().validateModel(smartContract, Update.class);
+        getValidationHelper().validateModel(smartContract.getVault(), Read.class);
 
         if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All networks must be specified.");
@@ -89,29 +94,28 @@ public class MongoSmartContractDao implements SmartContractDao {
             throw new InvalidDataException("All networks must use the same protocol and must match: " + smartContract.getApi());
         }
 
-        final var objectId = getMongoDBUtils().parseOrThrow(smartContract.getId(), SmartContractNotFoundException::new);
+        final var objectId = getMongoDBUtils()
+                .parseOrThrow(smartContract.getId(), SmartContractNotFoundException::new);
 
-        final var query = getDatastore().find(MongoSmartContract.class);
-        query.filter(eq("_id", objectId));
+        final var query = getDatastore()
+                .find(MongoSmartContract.class)
+                .filter(eq("_id", objectId));
 
-        final var mongoWallet = getMongoWalletDao()
-                .findMongoWallet(smartContract.getVault().getId())
-                .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getVault().getId()));
+        final var mongoVault = getMongoVaultDao()
+                .findMongoVault(smartContract.getVault().getId())
+                .orElseThrow(() -> new InvalidDataException("No such vault: " + smartContract.getVault().getId()));
 
-        if (!smartContract.getApi().equals(mongoWallet.getApi())) {
-            final var msg = format("%s=/=%s", smartContract.getApi(), mongoWallet.getApi());
-            throw new InvalidDataException(msg);
-        }
-
-        final var networks = new ArrayList<>(smartContract.getAddresses().values());
-
-        mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
+        final var mongoSmartContractAddresses = smartContract
+                .getAddresses()
+                .entrySet()
+                .stream()
+                .collect(toMap(Map.Entry::getKey, e -> new MongoSmartContractAddress(e.getValue())));
 
         final var mongoSmartContract = new UpdateBuilder()
                 .with(set("displayName", smartContract.getDisplayName().trim()))
                 .with(set("api", smartContract.getApi()))
-                .with(set("addresses", smartContract.getAddresses()))
-                .with(set("wallet", mongoWallet))
+                .with(set("wallet", mongoVault))
+                .with(set("addresses", mongoSmartContractAddresses))
                 .with(set("networks", smartContract.getAddresses().keySet()))
                 .with(set("metadata", smartContract.getMetadata()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
@@ -120,15 +124,15 @@ public class MongoSmartContractDao implements SmartContractDao {
             throw new SmartContractNotFoundException();
         }
 
-        return getMapper().map(mongoWallet, SmartContract.class);
+        return getMapper().map(mongoVault, SmartContract.class);
 
     }
 
     @Override
     public SmartContract createSmartContract(final SmartContract smartContract) {
 
-        getValidationHelper().validateModel(smartContract, ValidationGroups.Insert.class);
-        getValidationHelper().validateModel(smartContract.getVault(), ValidationGroups.Update.class);
+        getValidationHelper().validateModel(smartContract, Insert.class);
+        getValidationHelper().validateModel(smartContract.getVault(), Read.class);
 
         if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("Must specify non-null networks.");
@@ -136,22 +140,15 @@ public class MongoSmartContractDao implements SmartContractDao {
 
         smartContract.getApi().validate(smartContract.getAddresses().keySet());
 
-        final var mongoWallet = getMongoWalletDao()
-                .findMongoWallet(smartContract.getVault().getId())
-                .orElseThrow(() -> new InvalidDataException("No such wallet: " + smartContract.getVault().getId()));
-
-        if (!smartContract.getApi().equals(mongoWallet.getApi())) {
-            final var msg = format("%s=/=%s", smartContract.getApi(), mongoWallet.getApi());
-            throw new InvalidDataException(msg);
-        }
-
-        mongoWallet.getApi().validate(smartContract.getAddresses().keySet());
+        final var mongoVault = getMongoVaultDao()
+                .findMongoVault(smartContract.getVault().getId())
+                .orElseThrow(() -> new InvalidDataException("No such vault: " + smartContract.getVault().getId()));
 
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
         final var networks = new ArrayList<>(smartContract.getAddresses().keySet());
-        mongoSmartContract.setNetworks(networks);
 
-        mongoSmartContract.setWallet(mongoWallet);
+        mongoSmartContract.setVault(mongoVault);
+        mongoSmartContract.setNetworks(networks);
         getDatastore().insert(mongoSmartContract);
 
         return getMapper().map(mongoSmartContract, SmartContract.class);
@@ -207,13 +204,13 @@ public class MongoSmartContractDao implements SmartContractDao {
         this.validationHelper = validationHelper;
     }
 
-    public MongoWalletDao getMongoWalletDao() {
-        return mongoWalletDao;
+    public MongoVaultDao getMongoVaultDao() {
+        return mongoVaultDao;
     }
 
     @Inject
-    public void setMongoWalletDao(MongoWalletDao mongoWalletDao) {
-        this.mongoWalletDao = mongoWalletDao;
+    public void setMongoVaultDao(MongoVaultDao mongoVaultDao) {
+        this.mongoVaultDao = mongoVaultDao;
     }
 
 }

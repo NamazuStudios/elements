@@ -63,7 +63,6 @@ public class MongoSmartContractDaoTest {
                     wallet.setNetworks(api.networks().collect(toList()));
                     wallet.setDisplayName("Test Wallet: " + api);
                     wallet.setPreferredAccount(0);
-                    wallet.setEncryption(null);
                     wallet.setAccounts(new ArrayList<>(List.of(identity)));
 
                     return getWalletDao().createWallet(wallet);

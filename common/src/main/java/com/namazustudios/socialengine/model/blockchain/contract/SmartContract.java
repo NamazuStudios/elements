@@ -41,7 +41,8 @@ public class SmartContract {
     @NotNull
     @ApiModelProperty(
             "The addresses of the contract from the blockchain. Depending on the network or protocol this " +
-            "may have several meanings. For example, this may be the script has for the Ethereum network.")
+            "may have several meanings. For example, this may be the script has for the Ethereum network."
+    )
     private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull

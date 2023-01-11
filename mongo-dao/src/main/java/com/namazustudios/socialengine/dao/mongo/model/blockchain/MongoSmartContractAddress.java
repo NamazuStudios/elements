@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
+import com.namazustudios.socialengine.model.blockchain.contract.SmartContractAddress;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
@@ -7,6 +8,12 @@ import java.util.Objects;
 
 @Embedded
 public class MongoSmartContractAddress {
+
+    public MongoSmartContractAddress() {}
+
+    public MongoSmartContractAddress(final SmartContractAddress from) {
+        this.address = from.getAddress();
+    }
 
     @Property
     private String address;

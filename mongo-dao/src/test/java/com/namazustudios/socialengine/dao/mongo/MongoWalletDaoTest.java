@@ -136,7 +136,6 @@ public class MongoWalletDaoTest {
         final var wallet = new Wallet();
         wallet.setDisplayName("Wallet for User " + user.getName());
         wallet.setUser(user);
-        wallet.setEncryption(new HashMap<>());
         wallet.setNetworks(List.of(network));
         wallet.setApi(network.api());
 
@@ -149,7 +148,6 @@ public class MongoWalletDaoTest {
         final var created = getUnderTest().createWallet(wallet);
         assertNotNull(created.getId());
         assertEquals(created.getDisplayName(), wallet.getDisplayName());
-        assertEquals(created.getEncryption(), wallet.getEncryption());
         assertEquals(created.getNetworks(), wallet.getNetworks());
         assertEquals(created.getUser(), wallet.getUser());
         assertEquals(created.getApi(), wallet.getApi());
@@ -165,7 +163,6 @@ public class MongoWalletDaoTest {
         update.setId(wallet.getId());
         update.setPreferredAccount(wallet.getPreferredAccount());
         update.setDisplayName(wallet.getDisplayName());
-        update.setEncryption(wallet.getEncryption());
         update.setUser(wallet.getUser());
         update.setNetworks(wallet.getNetworks());
         update.setApi(wallet.getApi());
@@ -336,7 +333,6 @@ public class MongoWalletDaoTest {
         final var wallet = new Wallet();
         wallet.setDisplayName("Wallet for User " + user.getName());
         wallet.setUser(user);
-        wallet.setEncryption(new HashMap<>());
         wallet.setNetworks(List.of(network));
         wallet.setApi(network.api());
 

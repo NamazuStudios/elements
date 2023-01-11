@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.model.blockchain.wallet;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Read;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -11,8 +14,8 @@ import java.util.Objects;
 
 public class Vault {
 
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
+    @Null(groups = {Insert.class})
+    @NotNull(groups = {Update.class, Read.class})
     @ApiModelProperty("The system assigned unique id of the vault.")
     private String id;
 

@@ -38,9 +38,9 @@ public interface WalletDao {
     /**
      * Finds the wallets.
      *
-     * @param walletId
-     * @param vaultId
-     * @return
+     * @param walletId the wallet id
+     * @param vaultId the value id
+     * @return the {@link Optional<Wallet>}
      */
     Optional<Wallet> findWallet(String walletId, String vaultId);
 

@@ -76,11 +76,14 @@ public class MongoVaultDao implements VaultDao {
 
     public Optional<MongoVault> findMongoVault(final String vaultId) {
 
-        final var objectId = getMongoDBUtils().parseOrThrow(vaultId, VaultNotFoundException::new);
+        final var objectId = getMongoDBUtils().parse(vaultId);
+
+        if (objectId.isEmpty())
+            return Optional.empty();
 
         final var query = getDatastore()
                 .find(MongoVault.class)
-                .filter(eq("_id", objectId));
+                .filter(eq("_id", objectId.get()));
 
         final var mongoVault = query.first();
         return Optional.ofNullable(mongoVault);
@@ -89,11 +92,14 @@ public class MongoVaultDao implements VaultDao {
 
     public Optional<MongoVault> findMongoVaultForUser(final String vaultId, final String userId) {
 
-        final var objectId = getMongoDBUtils().parseOrThrow(vaultId, VaultNotFoundException::new);
+        final var objectId = getMongoDBUtils().parse(vaultId);
+
+        if (objectId.isEmpty())
+            return Optional.empty();
 
         final var query = getDatastore()
                 .find(MongoVault.class)
-                .filter(eq("_id", objectId));
+                .filter(eq("_id", objectId.get()));
 
         if (userId != null && !userId.isBlank()) {
 

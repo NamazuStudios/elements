@@ -10,13 +10,14 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.ValidationGroups.Read;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -37,6 +38,8 @@ public class MongoWalletDao implements WalletDao {
     private Datastore datastore;
 
     private MongoUserDao mongoUserDao;
+
+    private MongoVaultDao mongoVaultDao;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -83,34 +86,34 @@ public class MongoWalletDao implements WalletDao {
         return findMongoWallet(walletId, null);
     }
 
-    public Optional<MongoWallet> findMongoWallet(final String walletId, final String userId) {
-        return getMongoDBUtils()
-                .parse(walletId)
-                .flatMap(oid -> {
+    public Optional<MongoWallet> findMongoWallet(final String walletId, final String vaultId) {
 
-                    final var query = getDatastore().find(MongoWallet.class);
-                    query.filter(Filters.eq("_id", oid));
+        final var walletObjectId = getMongoDBUtils().parse(walletId);
 
-                    if (userId != null) {
+        if (walletObjectId.isEmpty()) {
+            return Optional.empty();
+        }
 
-                        final var user = getMongoUserDao().findActiveMongoUser(userId);
+        final var query = getDatastore()
+                .find(MongoWallet.class)
+                .filter(eq("_id", walletObjectId));
 
-                        if (user.isEmpty())
-                            return Optional.empty();
+        if (vaultId != null) {
+            final var mongoVault = getMongoVaultDao().findMongoVault(vaultId);
+            query.filter(eq("vault", mongoVault));
+        }
 
-                        query.filter(eq("user", user.get()));
+        final var result = query.first();
+        return Optional.ofNullable(result);
 
-                    }
-
-                    return Optional.ofNullable(query.first());
-
-                });
     }
 
     @Override
     public Wallet updateWallet(final Wallet wallet) {
 
-        getValidationHelper().validateModel(wallet, ValidationGroups.Update.class);
+        getValidationHelper().validateModel(wallet, Update.class);
+        getValidationHelper().validateModel(wallet.getUser(), Read.class);
+        getValidationHelper().validateModel(wallet.getVault(), Read.class);
 
         if (wallet.getAccounts().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All identities must be non-null.");
@@ -128,17 +131,25 @@ public class MongoWalletDao implements WalletDao {
         query.filter(eq("_id", objectId));
 
         final var mongoUser = getMongoUserDao()
-                .findActiveMongoUser(wallet.getUser())
+                .findActiveMongoUser(wallet.getUser().getId())
                 .orElseThrow(() -> new InvalidDataException("No such user: " + wallet.getUser().getId()));
+
+        final var mongoVault = getMongoVaultDao()
+                .findMongoVault(wallet.getVault().getId())
+                .orElseThrow(() -> new InvalidDataException("No such vault:" + wallet.getVault().getId()));
+
+        if (!Objects.equals(mongoUser.getObjectId(), mongoVault.getUser().getObjectId())) {
+            throw new InvalidDataException("Vault user and wallet user must match.");
+        }
 
         final var mongoWallet = new UpdateBuilder()
                 .with(set("user", mongoUser))
-                .with(set("vault", mongoUser))
+                .with(set("vault", mongoVault))
                 .with(set("displayName", wallet.getDisplayName().trim()))
                 .with(set("api", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
                 .with(set("defaultIdentity", wallet.getPreferredAccount()))
-                .with(set("identities", wallet.getAccounts()))
+                .with(set("accounts", wallet.getAccounts()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 
         if (mongoWallet == null) {
@@ -153,7 +164,8 @@ public class MongoWalletDao implements WalletDao {
     public Wallet createWallet(final Wallet wallet) {
 
         getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
-        getValidationHelper().validateModel(wallet.getUser(), ValidationGroups.Update.class);
+        getValidationHelper().validateModel(wallet.getUser(), Read.class);
+        getValidationHelper().validateModel(wallet.getVault(), Read.class);
 
         if (wallet.getAccounts().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("All identities must be non-null values.");
@@ -168,10 +180,20 @@ public class MongoWalletDao implements WalletDao {
         final var mongoWallet = getMapper().map(wallet, MongoWallet.class);
 
         final var mongoUser = getMongoUserDao()
-                .findActiveMongoUser(wallet.getUser())
+                .findActiveMongoUser(wallet.getUser().getId())
                 .orElseThrow(() -> new InvalidDataException("No such user: " + wallet.getUser().getId()));
 
+        final var mongoVault = getMongoVaultDao()
+                .findMongoVault(wallet.getVault().getId())
+                .orElseThrow(() -> new InvalidDataException("No such vault:" + wallet.getVault().getId()));
+
+        if (!Objects.equals(mongoUser.getObjectId(), mongoVault.getUser().getObjectId())) {
+            throw new InvalidDataException("Vault user and wallet user must match.");
+        }
+
         mongoWallet.setUser(mongoUser);
+        mongoWallet.setVault(mongoVault);
+
         getDatastore().insert(mongoWallet);
 
         return getMapper().map(mongoWallet, Wallet.class);
@@ -180,16 +202,6 @@ public class MongoWalletDao implements WalletDao {
 
     @Override
     public void deleteWalletForUser(final String walletId, final String userId) {
-        deleteWallet(walletId, userId, null);
-    }
-
-
-    @Override
-    public void deleteWalletForVault(String walletId, String vaultId) {
-        // TODO Implement This Method
-    }
-
-    public void deleteWallet(final String walletId, final String userId, final BlockchainApi blockchainApi) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(walletId, WalletNotFoundException::new);
 
@@ -199,17 +211,15 @@ public class MongoWalletDao implements WalletDao {
 
         if (userId != null) {
 
-            final var mongoUser = getMongoUserDao().findActiveMongoUser(userId);
+            final var mongoUser = getMongoUserDao()
+                    .findActiveMongoUser(userId);
 
             if (mongoUser.isEmpty())
-                return;
+                throw new WalletNotFoundException();
 
             query.filter(eq("user", mongoUser.get()));
 
         }
-
-        if (blockchainApi != null)
-            query.filter(eq("protocol", blockchainApi));
 
         final var result = query.delete();
 
@@ -218,7 +228,42 @@ public class MongoWalletDao implements WalletDao {
 
     }
 
-    public void deleteWalletsInMongoVault(final MongoVault vault) {
+    @Override
+    public void deleteWalletForVault(final String walletId, final String vaultId) {
+
+        final var objectId = getMongoDBUtils().parseOrThrow(walletId, WalletNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoWallet.class)
+                .filter(eq("_id", objectId));
+
+        if (vaultId != null) {
+
+            final var mongoVault = getMongoVaultDao()
+                    .findVault(vaultId);
+
+            if (mongoVault.isEmpty())
+                throw new WalletNotFoundException();
+
+            query.filter(eq("vault", mongoVault.get()));
+
+        }
+
+        final var result = query.delete();
+
+        if (result.getDeletedCount() == 0)
+            throw new WalletNotFoundException();
+
+    }
+
+    public long deleteWalletsInMongoVault(final MongoVault vault) {
+
+        final var query = getDatastore()
+                .find(MongoWallet.class)
+                .filter(eq("vault", vault));
+
+        final var result = query.delete();
+        return result.getDeletedCount();
 
     }
 
@@ -247,6 +292,15 @@ public class MongoWalletDao implements WalletDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
+    }
+
+    public MongoVaultDao getMongoVaultDao() {
+        return mongoVaultDao;
+    }
+
+    @Inject
+    public void setMongoVaultDao(MongoVaultDao mongoVaultDao) {
+        this.mongoVaultDao = mongoVaultDao;
     }
 
     public MongoDBUtils getMongoDBUtils() {
