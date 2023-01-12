@@ -17,17 +17,19 @@ import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.filters.Filters.in;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 public class MongoSmartContractDao implements SmartContractDao {
 
@@ -105,7 +107,8 @@ public class MongoSmartContractDao implements SmartContractDao {
                 .getAddresses()
                 .entrySet()
                 .stream()
-                .collect(toMap(Map.Entry::getKey, e -> new MongoSmartContractAddress(e.getValue())));
+                .map(entry -> MongoSmartContractAddress.fromNetworkAndAddress(entry.getKey(), entry.getValue()))
+                .collect(toList());
 
         final var networks = new ArrayList<>(smartContract.getAddresses().keySet());
 
@@ -119,8 +122,6 @@ public class MongoSmartContractDao implements SmartContractDao {
                 .with(set("displayName", smartContract.getDisplayName().trim()))
                 .with(set("wallet", mongoVault))
                 .with(set("addresses", mongoSmartContractAddresses))
-                .with(set("apis", apis))
-                .with(set("networks", smartContract.getAddresses().keySet()))
                 .with(set("metadata", smartContract.getMetadata()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 
@@ -157,8 +158,6 @@ public class MongoSmartContractDao implements SmartContractDao {
 
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
 
-        mongoSmartContract.setApis(apis);
-        mongoSmartContract.setNetworks(networks);
         mongoSmartContract.setVault(mongoVault);
         getDatastore().insert(mongoSmartContract);
 

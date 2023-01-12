@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
-import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
@@ -10,9 +8,9 @@ import java.util.Map;
 
 @Entity(value = "wallet")
 @Indexes({
-        @Index(fields = @Field("apis")),
         @Index(fields = @Field("name")),
-        @Index(fields = @Field("networks"))
+        @Index(fields = @Field("addresses.api")),
+        @Index(fields = @Field("addresses.network"))
 })
 public class MongoSmartContract {
 
@@ -26,13 +24,7 @@ public class MongoSmartContract {
     private String displayName;
 
     @Property
-    private List<BlockchainApi> apis;
-
-    @Property
-    private List<BlockchainNetwork> networks;
-
-    @Property
-    private Map<BlockchainNetwork, MongoSmartContractAddress> addresses;
+    private List<MongoSmartContractAddress> addresses;
 
     @Property
     private MongoVault vault;
@@ -67,27 +59,11 @@ public class MongoSmartContract {
         this.displayName = displayName;
     }
 
-    public List<BlockchainApi> getApis() {
-        return apis;
-    }
-
-    public void setApis(List<BlockchainApi> apis) {
-        this.apis = apis;
-    }
-
-    public List<BlockchainNetwork> getNetworks() {
-        return networks;
-    }
-
-    public void setNetworks(List<BlockchainNetwork> networks) {
-        this.networks = networks;
-    }
-
-    public Map<BlockchainNetwork, MongoSmartContractAddress> getAddresses() {
+    public List<MongoSmartContractAddress> getAddresses() {
         return addresses;
     }
 
-    public void setAddresses(Map<BlockchainNetwork, MongoSmartContractAddress> addresses) {
+    public void setAddresses(List<MongoSmartContractAddress> addresses) {
         this.addresses = addresses;
     }
 
@@ -121,8 +97,6 @@ public class MongoSmartContract {
         sb.append("objectId=").append(objectId);
         sb.append(", name='").append(name).append('\'');
         sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", apis=").append(apis);
-        sb.append(", networks=").append(networks);
         sb.append(", addresses=").append(addresses);
         sb.append(", vault=").append(vault);
         sb.append(", wallet=").append(wallet);

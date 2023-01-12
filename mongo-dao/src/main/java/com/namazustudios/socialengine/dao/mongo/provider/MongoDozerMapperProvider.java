@@ -214,7 +214,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(SmartContract.class, MongoSmartContract.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields("addresses", "addresses", customConverter(MongoSmartContractAddressesConverter.class));
 
             mapping(Vault.class, MongoVault.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));

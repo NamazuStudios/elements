@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContractAddress;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
@@ -18,6 +20,22 @@ public class MongoSmartContractAddress {
     @Property
     private String address;
 
+    @Property
+    private BlockchainApi api;
+
+    @Property
+    private BlockchainNetwork network;
+
+    public static MongoSmartContractAddress fromNetworkAndAddress(
+            final BlockchainNetwork network,
+            final SmartContractAddress smartContractAddress) {
+        final var mongoSmartContractAddress = new MongoSmartContractAddress();
+        mongoSmartContractAddress.setApi(network.api());
+        mongoSmartContractAddress.setNetwork(network);
+        mongoSmartContractAddress.setAddress(smartContractAddress.getAddress());
+        return mongoSmartContractAddress;
+    }
+
     public String getAddress() {
         return address;
     }
@@ -26,24 +44,30 @@ public class MongoSmartContractAddress {
         this.address = address;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MongoSmartContractAddress that = (MongoSmartContractAddress) o;
-        return Objects.equals(address, that.address);
+    public BlockchainApi getApi() {
+        return api;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(address);
+    public void setApi(BlockchainApi api) {
+        this.api = api;
+    }
+
+    public BlockchainNetwork getNetwork() {
+        return network;
+    }
+
+    public void setNetwork(BlockchainNetwork network) {
+        this.network = network;
     }
 
     @Override
     public String toString() {
-        return "MongoSmartContractAddress{" +
-                "address='" + address + '\'' +
-                '}';
+        final StringBuilder sb = new StringBuilder("MongoSmartContractAddress{");
+        sb.append("address='").append(address).append('\'');
+        sb.append(", api=").append(api);
+        sb.append(", network=").append(network);
+        sb.append('}');
+        return sb.toString();
     }
 
 }
