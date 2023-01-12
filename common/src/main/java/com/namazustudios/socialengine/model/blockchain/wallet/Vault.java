@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.blockchain.wallet;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Read;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;

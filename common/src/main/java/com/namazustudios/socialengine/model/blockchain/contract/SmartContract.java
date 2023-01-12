@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain.contract;
 
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
@@ -11,6 +12,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import javax.validation.constraints.Pattern;
 import java.util.Map;
 import java.util.Objects;
 
@@ -31,6 +33,7 @@ public class SmartContract {
     private String id;
 
     @NotNull
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     @ApiModelProperty("The unique symbolic name of the smart contract.")
     private String name;
 

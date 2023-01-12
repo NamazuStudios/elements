@@ -1,12 +1,15 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.SmartContractDao;
+import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContractAddress;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
+import com.namazustudios.socialengine.model.blockchain.wallet.VaultKey;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.model.user.User;
@@ -23,16 +26,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.dao.mongo.MongoWalletDaoTest.randomKey;
+import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoSmartContractDaoTest {
 
+    public static final String SUBJECT_TEST_NAME_BASE = "integration_test_dao_contract";
+
     private SmartContractDao underTest;
+
+    private VaultDao vaultDao;
 
     private WalletDao walletDao;
 
@@ -40,26 +52,50 @@ public class MongoSmartContractDaoTest {
 
     private User adminUser;
 
+    private Vault adminVault;
+
     private List<Wallet> wallets;
 
     private final Map<String, SmartContract> smartContracts = new ConcurrentHashMap<>();
+
+    @DataProvider
+    public Object[][] testContractNames() {
+        return IntStream.range(0, 50)
+                .mapToObj(i -> format("%s_%s", SUBJECT_TEST_NAME_BASE, i))
+                .map(name -> new Object[]{name})
+                .toArray(Object[][]::new);
+    }
 
     @BeforeClass
     public void createTestUsersAndWallet() {
 
         adminUser = getUserTestFactory().createTestUser(u -> u.setLevel(SUPERUSER));
 
+        final var key = new VaultKey();
+        key.setEncrypted(false);
+        key.setAlgorithm(RSA_512);
+        key.setPublicKey(randomKey());
+        key.setPrivateKey(randomKey());
+
+        final var vault = new Vault();
+        vault.setKey(key);
+        vault.setUser(adminUser);
+        vault.setDisplayName("Admin Vault");
+
+        adminVault = getVaultDao().createVault(vault);
+
         wallets = Stream.of(BlockchainApi.values())
                 .map(api -> {
 
                     final var identity = new WalletAccount();
                     identity.setEncrypted(false);
-                    identity.setAddress(MongoWalletDaoTest.randomKey());
-                    identity.setPrivateKey(MongoWalletDaoTest.randomKey());
+                    identity.setAddress(randomKey());
+                    identity.setPrivateKey(randomKey());
 
                     final var wallet = new Wallet();
                     wallet.setApi(api);
                     wallet.setUser(adminUser);
+                    wallet.setVault(adminVault);
                     wallet.setNetworks(api.networks().collect(toList()));
                     wallet.setDisplayName("Test Wallet: " + api);
                     wallet.setPreferredAccount(0);
@@ -104,31 +140,31 @@ public class MongoSmartContractDaoTest {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "wallets", groups = "create")
-    public void testCreateSmartContract(final Wallet wallet) {
+    @Test(dataProvider = "testContractNames", groups = "create")
+    public void testCreateSmartContract(final String testSubjectName) {
 
-        final var addresses = new HashMap<BlockchainNetwork, SmartContractAddress>();
+        final var addresses = Stream
+                .of(BlockchainNetwork.values())
+                .collect(toMap(network -> network, network -> {
+                    final var address = new SmartContractAddress();
+                    address.setAddress(randomKey());
+                    return address;
+                }));
 
-        wallet.getNetworks().forEach(network -> {
-            final var address = new SmartContractAddress();
-            address.setAddress(MongoWalletDaoTest.randomKey());
-            addresses.put(network, address);
-        });
-
-
-        final var metadata = new HashMap<String, Object>();
-        metadata.put("API", wallet.getApi());
-        metadata.put("NETS", wallet.getNetworks());
+        final var metadata = Stream
+                .of(BlockchainNetwork.values())
+                .collect(toMap(BlockchainNetwork::toString, network -> (Object) "Supported"));
 
         final var contract = new SmartContract();
-
+        contract.setName(testSubjectName);
         contract.setMetadata(metadata);
         contract.setAddresses(addresses);
-        contract.setDisplayName("Test Contract: " + wallet.getApi());
+        contract.setDisplayName("Test Contract.");
+        contract.setVault(adminVault);
 
         final var created = getUnderTest().createSmartContract(contract);
         assertNotNull(created.getId());
-        assertEquals(created.getVault(), wallet);
+        assertEquals(created.getVault(), adminVault);
         assertEquals(created.getDisplayName(), contract.getDisplayName());
         assertEquals(created.getAddresses(), contract.getAddresses());
 
@@ -143,7 +179,7 @@ public class MongoSmartContractDaoTest {
 
         smartContract.getAddresses().forEach((network, address) -> {
             final var newAddress = new SmartContractAddress();
-            newAddress.setAddress(MongoWalletDaoTest.randomKey());
+            newAddress.setAddress(randomKey());
             addresses.put(network, address);
         });
 
@@ -151,6 +187,7 @@ public class MongoSmartContractDaoTest {
         metadata.putAll(smartContract.getMetadata());
 
         final var update = new SmartContract();
+        update.setName(smartContract.getName());
         update.setId(smartContract.getId());
         update.setDisplayName(smartContract.getDisplayName());
         update.setMetadata(smartContract.getMetadata());
@@ -255,6 +292,15 @@ public class MongoSmartContractDaoTest {
     @Inject
     public void setUnderTest(SmartContractDao underTest) {
         this.underTest = underTest;
+    }
+
+    public VaultDao getVaultDao() {
+        return vaultDao;
+    }
+
+    @Inject
+    public void setVaultDao(VaultDao vaultDao) {
+        this.vaultDao = vaultDao;
     }
 
 }

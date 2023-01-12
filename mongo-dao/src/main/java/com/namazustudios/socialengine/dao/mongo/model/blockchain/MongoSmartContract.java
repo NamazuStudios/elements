@@ -1,15 +1,16 @@
 package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Entity(value = "wallet")
 @Indexes({
+        @Index(fields = @Field("apis")),
         @Index(fields = @Field("name")),
         @Index(fields = @Field("networks"))
 })
@@ -23,6 +24,9 @@ public class MongoSmartContract {
 
     @Property
     private String displayName;
+
+    @Property
+    private List<BlockchainApi> apis;
 
     @Property
     private List<BlockchainNetwork> networks;
@@ -61,6 +65,14 @@ public class MongoSmartContract {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public List<BlockchainApi> getApis() {
+        return apis;
+    }
+
+    public void setApis(List<BlockchainApi> apis) {
+        this.apis = apis;
     }
 
     public List<BlockchainNetwork> getNetworks() {
@@ -109,6 +121,7 @@ public class MongoSmartContract {
         sb.append("objectId=").append(objectId);
         sb.append(", name='").append(name).append('\'');
         sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", apis=").append(apis);
         sb.append(", networks=").append(networks);
         sb.append(", addresses=").append(addresses);
         sb.append(", vault=").append(vault);
