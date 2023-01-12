@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
+import com.namazustudios.socialengine.model.blockchain.wallet.VaultKey;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 import com.namazustudios.socialengine.model.user.User;
@@ -23,6 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static com.namazustudios.socialengine.rt.util.Hex.Case.UPPER;
 import static com.namazustudios.socialengine.rt.util.Hex.forNibble;
 import static java.util.stream.Collectors.toList;
@@ -35,11 +39,15 @@ public class MongoWalletDaoTest {
 
     private WalletDao underTest;
 
+    private VaultDao vaultDao;
+
     private UserTestFactory userTestFactory;
 
     private User trudyUser;
 
     private List<User> regularUsers;
+
+    private List<Vault> regularUsersVaults;
 
     private final Map<String, Wallet> wallets = new ConcurrentHashMap<>();
 
@@ -51,6 +59,25 @@ public class MongoWalletDaoTest {
         regularUsers = IntStream.range(0, TEST_USER_COUNT)
                 .mapToObj(i -> getUserTestFactory().createTestUser())
                 .collect(toList());
+
+        regularUsersVaults = regularUsers
+                .stream()
+                .map(user -> {
+
+                    final var key = new VaultKey();
+                    key.setAlgorithm(RSA_512);
+                    key.setEncrypted(false);
+                    key.setPublicKey(randomKey());
+                    key.setPrivateKey(randomKey());
+
+                    final var vault = new Vault();
+                    vault.setKey(key);
+                    vault.setUser(user);
+                    vault.setDisplayName("Vault for User:" + user.getName());
+
+                    return getVaultDao().createVault(vault);
+
+                }).collect(toList());
 
     }
 
@@ -65,6 +92,16 @@ public class MongoWalletDaoTest {
     @DataProvider
     public Object[][] regularUsersAndBlockchainNetworks() {
         return regularUsers
+                .stream()
+                .flatMap(user -> Stream
+                        .of(BlockchainNetwork.values())
+                        .map(network -> new Object[]{user, network}))
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] regularUserVaultsAndBlockchainNetworks() {
+        return regularUsersVaults
                 .stream()
                 .flatMap(user -> Stream
                         .of(BlockchainNetwork.values())
@@ -129,12 +166,13 @@ public class MongoWalletDaoTest {
 
     }
 
-    @Test(dataProvider = "regularUsersAndBlockchainNetworks", groups = "create")
-    public void testCreateWallets(final User user, final BlockchainNetwork network) {
+    @Test(dataProvider = "regularUserVaultsAndBlockchainNetworks", groups = "create")
+    public void testCreateWallets(final Vault vault, final BlockchainNetwork network) {
 
         final var wallet = new Wallet();
-        wallet.setDisplayName("Wallet for User " + user.getName());
-        wallet.setUser(user);
+        wallet.setDisplayName("Wallet for User " + vault.getDisplayName());
+        wallet.setVault(vault);
+        wallet.setUser(vault.getUser());
         wallet.setNetworks(List.of(network));
         wallet.setApi(network.api());
 
@@ -163,6 +201,7 @@ public class MongoWalletDaoTest {
         update.setPreferredAccount(wallet.getPreferredAccount());
         update.setDisplayName(wallet.getDisplayName());
         update.setUser(wallet.getUser());
+        update.setVault(wallet.getVault());
         update.setNetworks(wallet.getNetworks());
         update.setApi(wallet.getApi());
 
@@ -185,7 +224,7 @@ public class MongoWalletDaoTest {
 
         final var wallets = new PaginationWalker()
             .toList((offset, count) -> getUnderTest()
-                    .getWallets(offset, count, user.getId(), null, null));
+                    .getWallets(offset, count, null, user.getId(), null, null));
 
         for(var wallet : wallets) {
             assertEquals(wallet.getUser(), user);
@@ -198,7 +237,7 @@ public class MongoWalletDaoTest {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, user.getId(), null, List.of(network)));
+                        .getWallets(offset, count, null, user.getId(), null, List.of(network)));
 
         for(var wallet : wallets) {
             assertEquals(wallet.getUser(), user);
@@ -213,7 +252,7 @@ public class MongoWalletDaoTest {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, user.getId(), protocol, null));
+                        .getWallets(offset, count, null, user.getId(), protocol, null));
 
         for(var wallet : wallets) {
             assertEquals(wallet.getUser(), user);
@@ -227,7 +266,7 @@ public class MongoWalletDaoTest {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, null, null, List.of(network))
+                        .getWallets(offset, count, null, null, null, List.of(network))
                 );
 
         for(var wallet : wallets) {
@@ -238,14 +277,14 @@ public class MongoWalletDaoTest {
     }
 
     @Test(dataProvider = "blockchainProtocols", groups = "read", dependsOnGroups = "update")
-    public void testGetWalletProtocol(final BlockchainApi protocol) {
+    public void testGetWalletApi(final BlockchainApi api) {
 
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, null, protocol, null));
+                        .getWallets(offset, count, null, null, api, null));
 
         for(var wallet : wallets) {
-            assertEquals(wallet.getApi(), protocol);
+            assertEquals(wallet.getApi(), api);
         }
 
     }
@@ -254,7 +293,7 @@ public class MongoWalletDaoTest {
     public void testGetWalletWalletsFilters() {
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, trudyUser.getId(),null, null));
+                        .getWallets(offset, count, null, trudyUser.getId(),null, null));
         assertTrue(wallets.isEmpty());
     }
 
@@ -262,7 +301,8 @@ public class MongoWalletDaoTest {
     public void testEmptyNetworkReturnsNothing() {
         final var wallets = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, null,null, new ArrayList<>()));
+                        .getWallets(offset, count, null, null,null, new ArrayList<>())
+                );
         assertTrue(wallets.isEmpty());
     }
 
@@ -273,8 +313,8 @@ public class MongoWalletDaoTest {
     }
 
     @Test(dataProvider = "walletsById", groups = "read", dependsOnGroups = "update")
-    public void testGetSingleWalletForUser(final String walletId, final Wallet wallet) {
-        final var fetched = getUnderTest().getWallet(walletId, wallet.getUser().getId());
+    public void testGetSingleWalletForVault(final String walletId, final Wallet wallet) {
+        final var fetched = getUnderTest().getWallet(walletId, wallet.getVault().getId());
         assertEquals(fetched, wallet);
     }
 
@@ -363,6 +403,15 @@ public class MongoWalletDaoTest {
     @Inject
     public void setUserTestFactory(UserTestFactory userTestFactory) {
         this.userTestFactory = userTestFactory;
+    }
+
+    public VaultDao getVaultDao() {
+        return vaultDao;
+    }
+
+    @Inject
+    public void setVaultDao(VaultDao vaultDao) {
+        this.vaultDao = vaultDao;
     }
 
 }

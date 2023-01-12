@@ -16,6 +16,7 @@ public interface WalletDao {
      *
      * @param offset the offset
      * @param count the count
+     * @param vaultId
      * @param userId the userId, or null
      * @param protocol the protocol, or null
      * @param networks the network, or null
@@ -23,7 +24,7 @@ public interface WalletDao {
      */
     Pagination<Wallet> getWallets(
             int offset, int count,
-            String userId, BlockchainApi protocol, List<BlockchainNetwork> networks);
+            String vaultId, String userId, BlockchainApi protocol, List<BlockchainNetwork> networks);
 
     /**
      * Finds a {@link Wallet} based on wallet id.

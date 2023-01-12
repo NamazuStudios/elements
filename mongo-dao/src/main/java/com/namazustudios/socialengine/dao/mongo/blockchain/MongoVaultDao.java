@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
-import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
@@ -16,7 +15,6 @@ import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
-import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
 import org.dozer.Mapper;
 

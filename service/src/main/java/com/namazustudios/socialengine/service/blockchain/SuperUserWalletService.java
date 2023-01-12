@@ -19,8 +19,6 @@ import javax.inject.Inject;
 
 import java.util.List;
 
-import static com.google.common.base.Strings.nullToEmpty;
-
 public class SuperUserWalletService implements WalletService {
 
     private UserDao userDao;
@@ -38,11 +36,11 @@ public class SuperUserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId,
             final String vaultId,
+            final String userId,
             final BlockchainApi protocol,
             final List<BlockchainNetwork> networks) {
-        return getWalletDao().getWallets(offset, count, userId, protocol, networks);
+        return getWalletDao().getWallets(offset, count, vaultId, userId, protocol, networks);
     }
 
     @Override

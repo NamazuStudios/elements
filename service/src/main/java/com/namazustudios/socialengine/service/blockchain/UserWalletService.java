@@ -28,10 +28,10 @@ public class UserWalletService implements WalletService {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
-            final String userId, final String vaultId,
+            final String vaultId, final String userId,
             final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         if (userId == null || Objects.equals(userId, getUser().getId())) {
-            return getWalletDao().getWallets(offset, count, getUser().getId(), protocol, networks);
+            return getWalletDao().getWallets(offset, count, vaultId, getUser().getId(), protocol, networks);
         } else {
             return Pagination.empty();
         }

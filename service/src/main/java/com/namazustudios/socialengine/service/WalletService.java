@@ -40,8 +40,8 @@ public interface WalletService {
      *
      * @param offset the offset
      * @param count the count
-     * @param userId the userId, or null
      * @param vaultId
+     * @param userId the userId, or null
      * @param protocol the protocol, or null
      * @return a {@link Pagination} of {@link BscWallet} instances
      */
@@ -49,8 +49,7 @@ public interface WalletService {
     Pagination<Wallet> getWallets(
             @Serialize("offset") int offset,
             @Serialize("count") int count,
-            @Serialize("userId") String userId,
-            @Serialize("vaultId") String vaultId,
+            @Serialize("vaultId") String vaultId, @Serialize("userId") String userId,
             @Serialize("protocol") BlockchainApi protocol,
             @Serialize("networks") List<BlockchainNetwork> networks);
 

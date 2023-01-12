@@ -48,13 +48,14 @@ public class MongoWalletDao implements WalletDao {
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
+            final String vaultId,
             final String userId,
             final BlockchainApi protocol,
             final List<BlockchainNetwork> networks) {
 
         final var query = getDatastore().find(MongoWallet.class);
 
-        if (userId != null) {
+        if (userId != null && !userId.isBlank()) {
 
             final var mongoUser = getMongoUserDao().findActiveMongoUser(userId);
 
@@ -65,8 +66,20 @@ public class MongoWalletDao implements WalletDao {
 
         }
 
-        if (protocol != null)
+        if (vaultId != null && !vaultId.isBlank()) {
+
+            final var mongoVault = getMongoVaultDao().findMongoVault(vaultId);
+
+            if (mongoVault.isEmpty())
+                return Pagination.empty();
+
+            query.filter(eq("vault", mongoVault.get()));
+
+        }
+
+        if (protocol != null) {
             query.filter(eq("api", protocol));
+        }
 
         if (networks != null) {
             if (networks.isEmpty()) return Pagination.empty();
@@ -96,11 +109,18 @@ public class MongoWalletDao implements WalletDao {
 
         final var query = getDatastore()
                 .find(MongoWallet.class)
-                .filter(eq("_id", walletObjectId));
+                .filter(eq("_id", walletObjectId.get()));
 
         if (vaultId != null) {
+
             final var mongoVault = getMongoVaultDao().findMongoVault(vaultId);
-            query.filter(eq("vault", mongoVault));
+
+            if (mongoVault.isEmpty()) {
+                return Optional.empty();
+            }
+
+            query.filter(eq("vault", mongoVault.get()));
+
         }
 
         final var result = query.first();
@@ -148,7 +168,7 @@ public class MongoWalletDao implements WalletDao {
                 .with(set("displayName", wallet.getDisplayName().trim()))
                 .with(set("api", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
-                .with(set("defaultIdentity", wallet.getPreferredAccount()))
+                .with(set("preferredAccount", wallet.getPreferredAccount()))
                 .with(set("accounts", wallet.getAccounts()))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 

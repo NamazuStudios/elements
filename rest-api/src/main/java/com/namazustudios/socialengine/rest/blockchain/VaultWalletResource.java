@@ -62,7 +62,7 @@ public class VaultWalletResource {
 
     ) {
         userId = emptyToNull(userId);
-        return getWalletService().getWallets(offset, count, userId, vaultId, api, network);
+        return getWalletService().getWallets(offset, count, vaultId, userId, api, network);
     }
 
     @POST
