@@ -20,16 +20,20 @@ public class MongoSmartContractAddressesConverter implements CustomConverter {
             final Object sourceFieldValue,
             final Class<?> destinationClass,
             final Class<?> sourceClass) {
-        if (sourceClass.isAssignableFrom(Map.class) && destinationClass.isAssignableFrom(List.class)) {
-            return ((Map<?,?>)sourceFieldValue)
-                    .entrySet()
-                    .stream()
-                    .map(this::toMongoAddress)
-                    .collect(toList());
-        } else if (sourceClass.isAssignableFrom(List.class) && destinationClass.isAssignableFrom(Map.class)) {
-            return ((List<?>)sourceFieldValue)
-                    .stream()
-                    .collect(toMap(this::toNetwork, this::toAddress));
+        if (Map.class.isAssignableFrom(sourceClass) && List.class.isAssignableFrom(destinationClass)) {
+            return sourceFieldValue == null
+                    ? null
+                    : ((Map<?,?>)sourceFieldValue)
+                        .entrySet()
+                        .stream()
+                        .map(this::toMongoAddress)
+                        .collect(toList());
+        } else if (List.class.isAssignableFrom(sourceClass) && Map.class.isAssignableFrom(destinationClass)) {
+            return sourceFieldValue == null
+                    ? null
+                    : ((List<?>)sourceFieldValue)
+                        .stream()
+                        .collect(toMap(this::toNetwork, this::toAddress));
         } else {
             throw new MappingException("No conversion exists between " + sourceClass + " and " + destinationClass);
         }

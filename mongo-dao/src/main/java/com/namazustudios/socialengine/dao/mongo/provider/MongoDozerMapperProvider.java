@@ -47,11 +47,13 @@ import com.namazustudios.socialengine.model.schema.template.TokenTemplate;
 import com.namazustudios.socialengine.model.user.User;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
+import org.dozer.classmap.RelationshipType;
 import org.dozer.loader.api.BeanMappingBuilder;
 
 import javax.inject.Provider;
 
-import static org.dozer.loader.api.FieldsMappingOptions.customConverter;
+import static org.dozer.classmap.RelationshipType.NON_CUMULATIVE;
+import static org.dozer.loader.api.FieldsMappingOptions.*;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -215,7 +217,13 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(SmartContract.class, MongoSmartContract.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                    .fields("addresses", "addresses", customConverter(MongoSmartContractAddressesConverter.class));
+                    .fields(
+                            "addresses",
+                            "addresses",
+                            useMapId("addresses"),
+                            customConverter(MongoSmartContractAddressesConverter.class)
+                    )
+            ;
 
             mapping(Vault.class, MongoVault.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));

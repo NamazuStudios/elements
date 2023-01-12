@@ -26,8 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.filters.Filters.in;
+import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.util.stream.Collectors.toList;
 
@@ -52,12 +51,11 @@ public class MongoSmartContractDao implements SmartContractDao {
         final var query = getDatastore().find(MongoSmartContract.class);
 
         if (blockchainApi != null) {
-            query.filter(in("apis", List.of(blockchainApi)));
+            query.filter(elemMatch("addresses", eq("api", blockchainApi)));
         }
 
         if (blockchainNetworks != null) {
-            if (blockchainNetworks.isEmpty()) return Pagination.empty();
-            blockchainNetworks.forEach(n -> query.filter(in("networks", List.of(n))));
+            query.filter(elemMatch("addresses", eq("api", in("network", blockchainNetworks))));
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, SmartContract.class);
@@ -110,26 +108,20 @@ public class MongoSmartContractDao implements SmartContractDao {
                 .map(entry -> MongoSmartContractAddress.fromNetworkAndAddress(entry.getKey(), entry.getValue()))
                 .collect(toList());
 
-        final var networks = new ArrayList<>(smartContract.getAddresses().keySet());
-
-        final var apis = networks
-                .stream()
-                .map(BlockchainNetwork::api)
-                .distinct()
-                .collect(toList());
-
-        final var mongoSmartContract = new UpdateBuilder()
+        final var mongoSmartContract = getMongoDBUtils().perform(ds -> new UpdateBuilder()
+                .with(set("name", smartContract.getName()))
                 .with(set("displayName", smartContract.getDisplayName().trim()))
-                .with(set("wallet", mongoVault))
+                .with(set("vault", mongoVault))
                 .with(set("addresses", mongoSmartContractAddresses))
                 .with(set("metadata", smartContract.getMetadata()))
-                .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
+                .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false))
+        );
 
         if (mongoSmartContract == null) {
             throw new SmartContractNotFoundException();
         }
 
-        return getMapper().map(mongoVault, SmartContract.class);
+        return getMapper().map(mongoSmartContract, SmartContract.class);
 
     }
 
@@ -146,15 +138,6 @@ public class MongoSmartContractDao implements SmartContractDao {
         final var mongoVault = getMongoVaultDao()
                 .findMongoVault(smartContract.getVault().getId())
                 .orElseThrow(() -> new InvalidDataException("No such vault: " + smartContract.getVault().getId()));
-
-        final var networks = new ArrayList<>(smartContract.getAddresses().keySet());
-
-        final var apis = networks
-                .stream()
-                .map(BlockchainNetwork::api)
-                .distinct()
-                .collect(toList());
-
 
         final var mongoSmartContract = getMapper().map(smartContract, MongoSmartContract.class);
 

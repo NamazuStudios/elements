@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoVault;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoWallet;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoWalletAccount;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -29,6 +30,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.in;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static java.util.stream.Collectors.toList;
 
 
 public class MongoWalletDao implements WalletDao {
@@ -158,6 +160,11 @@ public class MongoWalletDao implements WalletDao {
                 .findMongoVault(wallet.getVault().getId())
                 .orElseThrow(() -> new InvalidDataException("No such vault:" + wallet.getVault().getId()));
 
+        final var mongoAccounts = wallet.getAccounts()
+                .stream()
+                .map(a -> getMapper().map(a, MongoWalletAccount.class))
+                .collect(toList());
+
         if (!Objects.equals(mongoUser.getObjectId(), mongoVault.getUser().getObjectId())) {
             throw new InvalidDataException("Vault user and wallet user must match.");
         }
@@ -169,7 +176,7 @@ public class MongoWalletDao implements WalletDao {
                 .with(set("api", wallet.getApi()))
                 .with(set("networks", wallet.getNetworks()))
                 .with(set("preferredAccount", wallet.getPreferredAccount()))
-                .with(set("accounts", wallet.getAccounts()))
+                .with(set("accounts", mongoAccounts))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false));
 
         if (mongoWallet == null) {

@@ -6,7 +6,7 @@ import org.bson.types.ObjectId;
 import java.util.List;
 import java.util.Map;
 
-@Entity(value = "wallet")
+@Entity(value = "smart_contract")
 @Indexes({
         @Index(fields = @Field("name")),
         @Index(fields = @Field("addresses.api")),
@@ -28,9 +28,6 @@ public class MongoSmartContract {
 
     @Property
     private MongoVault vault;
-
-    @Reference
-    private MongoWallet wallet;
 
     @Property
     private Map<String, Object> metadata;
@@ -75,14 +72,6 @@ public class MongoSmartContract {
         this.vault = vault;
     }
 
-    public MongoWallet getWallet() {
-        return wallet;
-    }
-
-    public void setWallet(MongoWallet wallet) {
-        this.wallet = wallet;
-    }
-
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -99,7 +88,6 @@ public class MongoSmartContract {
         sb.append(", displayName='").append(displayName).append('\'');
         sb.append(", addresses=").append(addresses);
         sb.append(", vault=").append(vault);
-        sb.append(", wallet=").append(wallet);
         sb.append(", metadata=").append(metadata);
         sb.append('}');
         return sb.toString();

@@ -3,7 +3,8 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.SmartContractDao;
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
-import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.SmartContractNotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
@@ -206,26 +207,28 @@ public class MongoSmartContractDaoTest {
     public void testGetContractsByNetwork(final BlockchainNetwork network) {
 
         final var smartContracts = new PaginationWalker()
-                .toList((offset, count) -> getUnderTest()
-                        .getSmartContracts(offset, count, null, List.of(network))
-                );
+                .toList((offset, count) -> getUnderTest().getSmartContracts(offset, count, null, List.of(network)));
 
         for(var smartContract : smartContracts) {
-            assertTrue(smartContract.getAddresses().keySet().contains(network));
+            assertTrue(smartContract.getAddresses().containsKey(network));
         }
 
     }
 
     @Test(dataProvider = "blockchainApi", groups = "read", dependsOnGroups = "update")
-    public void testGetContractsByApi(final BlockchainApi protocol) {
+    public void testGetContractsByApi(final BlockchainApi api) {
 
-        final var wallets = new PaginationWalker()
-                .toList((offset, count) -> getUnderTest()
-                        .getSmartContracts(offset, count, protocol, null));
+        final var contracts = new PaginationWalker()
+                .toList((offset, count) -> getUnderTest().getSmartContracts(offset, count, api, null));
 
-        for(var wallet : wallets) {
-//            assertEquals(wallet.getApi(), protocol);
-        }
+        final var count = contracts
+                .stream()
+                .flatMap(contract -> contract.getAddresses().keySet().stream())
+                .map(BlockchainNetwork::api)
+                .filter(a -> a.equals(api))
+                .count();
+
+        assertTrue(count > 0, "API Must Appear at least once.");
 
     }
 
@@ -238,32 +241,38 @@ public class MongoSmartContractDaoTest {
     }
 
     @Test(dataProvider = "smartContracts", groups = "read", dependsOnGroups = "update")
-    public void testGetSingleSmartContract(final SmartContract smartContract) {
+    public void testGetSingleSmartContractById(final SmartContract smartContract) {
         final var fetched = getUnderTest().getSmartContract(smartContract.getId());
         assertEquals(fetched, smartContract);
     }
 
-    @Test(groups = "read", dependsOnGroups = "update", expectedExceptions = WalletNotFoundException.class)
-    public void testGetSingleWalletNotFound() {
+    @Test(dataProvider = "smartContracts", groups = "read", dependsOnGroups = "update")
+    public void testGetSingleSmartContractByName(final SmartContract smartContract) {
+        final var fetched = getUnderTest().getSmartContract(smartContract.getName());
+        assertEquals(fetched, smartContract);
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update", expectedExceptions = SmartContractNotFoundException.class)
+    public void testGetSingleContractNotFound() {
         getUnderTest().getSmartContract(new ObjectId().toString());
     }
 
     @Test(groups = "read", dependsOnGroups = "update")
-    public void testFindSingleWalletNotFound() {
+    public void testFindSingleContractNotFound() {
         final var wallet = getUnderTest().findSmartContract(new ObjectId().toString());
         assertFalse(wallet.isPresent());
     }
 
     @Test(dataProvider = "smartContracts", groups = "delete", dependsOnGroups = "read")
-    public void deleteWallet(final SmartContract smartContract) {
+    public void deleteContract(final SmartContract smartContract) {
         getUnderTest().deleteContract(smartContract.getId());
     }
 
     @Test(dataProvider = "smartContracts",
             groups = "delete",
-            dependsOnMethods = "deleteWallet",
-            expectedExceptions = WalletNotFoundException.class)
-    public void doubleDeleteWalletFails(final SmartContract smartContract) {
+            dependsOnMethods = "deleteContract",
+            expectedExceptions = SmartContractNotFoundException.class)
+    public void doubleDeleteContractFails(final SmartContract smartContract) {
         getUnderTest().deleteContract(smartContract.getId());
     }
 
