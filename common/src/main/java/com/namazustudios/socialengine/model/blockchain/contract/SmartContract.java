@@ -46,10 +46,6 @@ public class SmartContract {
     private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull
-    @ApiModelProperty("The blockchain API used by this wallet.")
-    private BlockchainApi api;
-
-    @NotNull
     @ApiModelProperty("The Elements vault used to manage the wallets.")
     private Vault vault;
 
@@ -88,14 +84,6 @@ public class SmartContract {
         this.addresses = addresses;
     }
 
-    public BlockchainApi getApi() {
-        return api;
-    }
-
-    public void setApi(BlockchainApi api) {
-        this.api = api;
-    }
-
     public Vault getVault() {
         return vault;
     }
@@ -117,25 +105,26 @@ public class SmartContract {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SmartContract that = (SmartContract) o;
-        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(vault, that.vault) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getAddresses(), that.getAddresses()) && Objects.equals(getVault(), that.getVault()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, displayName, addresses, api, vault, metadata);
+        return Objects.hash(getId(), getName(), getDisplayName(), getAddresses(), getVault(), getMetadata());
     }
 
     @Override
-    public String toString() {
-        return "SmartContract{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", addresses=" + addresses +
-                ", api=" + api +
-                ", vault=" + vault +
-                ", metadata=" + metadata +
-                '}';
+    public String
+    toString() {
+        final StringBuilder sb = new StringBuilder("SmartContract{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", addresses=").append(addresses);
+        sb.append(", vault=").append(vault);
+        sb.append(", metadata=").append(metadata);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

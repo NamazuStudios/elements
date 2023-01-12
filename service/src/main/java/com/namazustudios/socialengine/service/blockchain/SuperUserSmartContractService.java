@@ -50,13 +50,11 @@ public class SuperUserSmartContractService  implements SmartContractService {
         final var metadata = createSmartContractRequest.getMetadata();
 
         final var networks = createSmartContractRequest.getNetworks();
-        smartContract.getApi().validate(networks);
 
         final var wallet = getWalletDao()
                 .findWallet(createSmartContractRequest.getWalletId())
                 .orElseThrow(InvalidDataException::new);
 
-        smartContract.setApi(api);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
         smartContract.setDisplayName(displayName);
@@ -83,7 +81,6 @@ public class SuperUserSmartContractService  implements SmartContractService {
                 .orElseThrow(InvalidDataException::new);
 
         final var networks = updateSmartContractRequest.getNetworks();
-        smartContract.getApi().validate(networks);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
         smartContract.setDisplayName(displayName);

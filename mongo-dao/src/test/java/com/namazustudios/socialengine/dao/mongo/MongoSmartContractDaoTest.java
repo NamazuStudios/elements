@@ -124,14 +124,12 @@ public class MongoSmartContractDaoTest {
 
         contract.setMetadata(metadata);
         contract.setAddresses(addresses);
-        contract.setApi(wallet.getApi());
         contract.setDisplayName("Test Contract: " + wallet.getApi());
 
         final var created = getUnderTest().createSmartContract(contract);
         assertNotNull(created.getId());
         assertEquals(created.getVault(), wallet);
         assertEquals(created.getDisplayName(), contract.getDisplayName());
-        assertEquals(created.getApi(), contract.getApi());
         assertEquals(created.getAddresses(), contract.getAddresses());
 
         smartContracts.put(created.getId(), created);
@@ -155,7 +153,6 @@ public class MongoSmartContractDaoTest {
         final var update = new SmartContract();
         update.setId(smartContract.getId());
         update.setDisplayName(smartContract.getDisplayName());
-        update.setApi(smartContract.getApi());
         update.setMetadata(smartContract.getMetadata());
         update.setVault(smartContract.getVault());
         update.setAddresses(addresses);
@@ -178,7 +175,6 @@ public class MongoSmartContractDaoTest {
 
         for(var smartContract : smartContracts) {
             assertTrue(smartContract.getAddresses().keySet().contains(network));
-            assertEquals(smartContract.getApi(), network.api());
         }
 
     }
@@ -191,7 +187,7 @@ public class MongoSmartContractDaoTest {
                         .getSmartContracts(offset, count, protocol, null));
 
         for(var wallet : wallets) {
-            assertEquals(wallet.getApi(), protocol);
+//            assertEquals(wallet.getApi(), protocol);
         }
 
     }

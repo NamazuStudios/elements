@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoSmartContr
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.blockchain.SmartContractNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Read;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -27,7 +26,6 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.filters.Filters.in;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 
 public class MongoSmartContractDao implements SmartContractDao {
@@ -90,10 +88,6 @@ public class MongoSmartContractDao implements SmartContractDao {
         final var protocols = EnumSet.noneOf(BlockchainApi.class);
         smartContract.getAddresses().keySet().forEach(net -> protocols.add(net.api()));
 
-        if (protocols.size() > 1 && protocols.contains(smartContract.getApi())) {
-            throw new InvalidDataException("All networks must use the same protocol and must match: " + smartContract.getApi());
-        }
-
         final var objectId = getMongoDBUtils()
                 .parseOrThrow(smartContract.getId(), SmartContractNotFoundException::new);
 
@@ -113,7 +107,6 @@ public class MongoSmartContractDao implements SmartContractDao {
 
         final var mongoSmartContract = new UpdateBuilder()
                 .with(set("displayName", smartContract.getDisplayName().trim()))
-                .with(set("api", smartContract.getApi()))
                 .with(set("wallet", mongoVault))
                 .with(set("addresses", mongoSmartContractAddresses))
                 .with(set("networks", smartContract.getAddresses().keySet()))
@@ -137,8 +130,6 @@ public class MongoSmartContractDao implements SmartContractDao {
         if (smartContract.getAddresses().keySet().stream().anyMatch(Objects::isNull)) {
             throw new InvalidDataException("Must specify non-null networks.");
         }
-
-        smartContract.getApi().validate(smartContract.getAddresses().keySet());
 
         final var mongoVault = getMongoVaultDao()
                 .findMongoVault(smartContract.getVault().getId())

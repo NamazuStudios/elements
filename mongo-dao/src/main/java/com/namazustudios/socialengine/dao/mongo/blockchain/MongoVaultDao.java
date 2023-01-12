@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
+import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
@@ -22,6 +23,7 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import java.util.Optional;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
@@ -51,7 +53,7 @@ public class MongoVaultDao implements VaultDao {
             if (user.isEmpty()) {
                 return Pagination.empty();
             } else {
-                query.filter(eq("user", user));
+                query.filter(eq("user", user.get()));
             }
 
         }
@@ -131,15 +133,15 @@ public class MongoVaultDao implements VaultDao {
             throw new InvalidDataException("No user with id: " + mongoUserId);
         }
 
-        final var saved = getDatastore().save(mongoVault);
-        return getMapper().map(saved, Vault.class);
+        getDatastore().insert(mongoVault);
+        return getMapper().map(mongoVault, Vault.class);
 
     }
 
     @Override
     public Vault updateVault(final Vault vault) {
 
-        getValidationHelper().validateModel(vault, Insert.class);
+        getValidationHelper().validateModel(vault, Update.class);
         getValidationHelper().validateModel(vault.getUser(), Read.class);
 
         final var mongoUser = getMongoUserDao()
@@ -158,7 +160,11 @@ public class MongoVaultDao implements VaultDao {
                 .with(set("user", mongoUser))
                 .with(set("displayName", vault.getDisplayName()))
                 .with(set("key", mongoVaultKey))
-                .execute(query, new ModifyOptions().upsert(false));
+                .execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
+
+        if (updated == null) {
+            throw new VaultNotFoundException();
+        }
 
         return getMapper().map(updated, Vault.class);
 
@@ -194,7 +200,7 @@ public class MongoVaultDao implements VaultDao {
         final var deleted = getDatastore()
                 .find(MongoVault.class)
                 .filter(eq("_id", objectId))
-                .filter(eq("usr", mongoUser))
+                .filter(eq("user", mongoUser))
                 .findAndDelete();
 
         if (deleted == null) {

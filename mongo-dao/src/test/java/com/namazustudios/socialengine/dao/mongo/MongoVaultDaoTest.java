@@ -2,14 +2,9 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
-import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.VaultKey;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
-import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.bson.types.ObjectId;
@@ -19,7 +14,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +27,6 @@ import static com.namazustudios.socialengine.rt.util.Hex.Case.UPPER;
 import static com.namazustudios.socialengine.rt.util.Hex.forNibble;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoVaultDaoTest {
@@ -139,12 +132,6 @@ public class MongoVaultDaoTest {
     @Test(dataProvider = "vaults", groups = "update", dependsOnGroups = "create")
     public void testUpdateVaults(final Vault vault) {
 
-        final var update = new Vault();
-        update.setId(vault.getId());
-        update.setDisplayName(vault.getDisplayName());
-        update.setUser(vault.getUser());
-        update.setUser(vault.getUser());
-
         final var encryption = new HashMap<String, Object>();
         encryption.put("Fake Encryption Key", "Fake Encryption Value");
 
@@ -154,6 +141,12 @@ public class MongoVaultDaoTest {
         key.setAlgorithm(RSA_512);
         key.setPublicKey(MongoWalletDaoTest.randomKey());
         key.setPrivateKey(MongoWalletDaoTest.randomKey());
+
+        final var update = new Vault();
+        update.setKey(key);
+        update.setId(vault.getId());
+        update.setDisplayName(vault.getDisplayName());
+        update.setUser(vault.getUser());
 
         final var updated = getUnderTest().updateVault(update);
         assertEquals(updated, update);
@@ -166,26 +159,26 @@ public class MongoVaultDaoTest {
     @Test(dataProvider = "regularUsers", groups = "read", dependsOnGroups = "update")
     public void testGetVaultForUser(final User user) {
 
-        final var wallets = new PaginationWalker()
+        final var vaults = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest().getVaults(offset, count, user.getId()));
 
-        for(var wallet : wallets) {
-            assertEquals(wallet.getUser(), user);
+        for(var vault : vaults) {
+            assertEquals(vault.getUser(), user);
         }
 
     }
 
     @Test(groups = "read", dependsOnGroups = "update")
     public void testGetVaultFilters() {
-        final var wallets = new PaginationWalker()
+        final var vaults = new PaginationWalker()
                 .toList((offset, count) -> getUnderTest().getVaults(offset, count, trudyUser.getId()));
-        assertTrue(wallets.isEmpty());
+        assertTrue(vaults.isEmpty());
     }
 
     @Test(dataProvider = "vaultsById", groups = "read", dependsOnGroups = "update")
-    public void testGetSingleVault(final String vaultId, final Vault wallet) {
+    public void testGetSingleVault(final String vaultId, final Vault vault) {
         final var fetched = getUnderTest().getVault(vaultId);
-        assertEquals(fetched, wallet);
+        assertEquals(fetched, vault);
     }
 
     @Test(dataProvider = "vaultsById", groups = "read", dependsOnGroups = "update")
@@ -199,7 +192,7 @@ public class MongoVaultDaoTest {
         getUnderTest().getVault(new ObjectId().toString());
     }
 
-    @Test(dataProvider = "vaults", groups = "read", dependsOnGroups = "update", expectedExceptions = WalletNotFoundException.class)
+    @Test(dataProvider = "vaults", groups = "read", dependsOnGroups = "update", expectedExceptions = VaultNotFoundException.class)
     public void testGetSingleVaultForUserNotFound(final Vault vault) {
         getUnderTest().getVaultForUser(vault.getId(), trudyUser.getId());
     }
@@ -228,7 +221,7 @@ public class MongoVaultDaoTest {
         }
     }
 
-    @Test(dataProvider = "wallets", groups = "delete", dependsOnGroups = "pre delete")
+    @Test(dataProvider = "vaults", groups = "delete", dependsOnGroups = "pre delete")
     public void deleteVault(final Vault vault) {
         getUnderTest().deleteVault(vault.getId());
     }
@@ -237,13 +230,13 @@ public class MongoVaultDaoTest {
             groups = "delete",
             dependsOnGroups = "pre delete",
             dependsOnMethods = "deleteVault",
-            expectedExceptions = WalletNotFoundException.class)
-    public void doubleDeleteWalletFails(final Vault vault) {
+            expectedExceptions = VaultNotFoundException.class)
+    public void doubleDeleteVaultFails(final Vault vault) {
         getUnderTest().deleteVault(vault.getId());
     }
 
     @Test(dataProvider = "regularUsers", groups = "delete", dependsOnGroups = "pre delete")
-    public void deleteWalletForUser(final User user) {
+    public void deleteVaultForUser(final User user) {
 
         final var encryption = new HashMap<String, Object>();
         encryption.put("Fake Encryption Key", "Fake Encryption Value");
@@ -266,20 +259,8 @@ public class MongoVaultDaoTest {
         assertEquals(created.getUser(), vault.getUser());
         assertEquals(created.getKey(), vault.getKey());
 
-
-        final var vault = new Vault();
-        vault.setDisplayName("Wallet for User " + user.getName());
-        vault.setUser(user);
-
-        final var identity = new VaultKey();
-        identity.setEncrypted(false);
-        identity.setAddress(randomKey());
-        identity.setPrivateKey(randomKey());
-        wallet.setAccounts(List.of(identity));
-
-        final var created = getUnderTest().createWallet(wallet);
-        getUnderTest().deleteWalletForUser(created.getId(), user.getId());
-        assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
+        getUnderTest().deleteVaultForUser(created.getId(), user.getId());
+        assertTrue(getUnderTest().findVault(created.getId()).isEmpty());
 
     }
 

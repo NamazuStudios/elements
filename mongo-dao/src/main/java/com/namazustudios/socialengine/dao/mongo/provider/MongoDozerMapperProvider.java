@@ -22,6 +22,7 @@ import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.model.friend.Friend;
@@ -213,6 +214,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(SmartContract.class, MongoSmartContract.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(Vault.class, MongoVault.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             }

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
-import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
@@ -11,17 +10,16 @@ import java.util.Objects;
 
 @Entity(value = "wallet")
 @Indexes({
-        @Index(fields = @Field("api")),
-        @Index(fields = @Field("networks")),
-        @Index(fields = {
-                @Field("api"),
-                @Field("networks")
-        })
+        @Index(fields = @Field("name")),
+        @Index(fields = @Field("networks"))
 })
 public class MongoSmartContract {
 
     @Id
     private ObjectId objectId;
+
+    @Property
+    private String name;
 
     @Property
     private String displayName;
@@ -47,6 +45,14 @@ public class MongoSmartContract {
 
     public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDisplayName() {
@@ -98,22 +104,10 @@ public class MongoSmartContract {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MongoSmartContract that = (MongoSmartContract) o;
-        return Objects.equals(getObjectId(), that.getObjectId()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getNetworks(), that.getNetworks()) && Objects.equals(getAddresses(), that.getAddresses()) && Objects.equals(getVault(), that.getVault()) && Objects.equals(getWallet(), that.getWallet()) && Objects.equals(getMetadata(), that.getMetadata());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getObjectId(), getDisplayName(), getNetworks(), getAddresses(), getVault(), getWallet(), getMetadata());
-    }
-
-    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MongoSmartContract{");
         sb.append("objectId=").append(objectId);
+        sb.append(", name='").append(name).append('\'');
         sb.append(", displayName='").append(displayName).append('\'');
         sb.append(", networks=").append(networks);
         sb.append(", addresses=").append(addresses);
