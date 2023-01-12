@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
-@Entity(value = "token", useDiscriminator = false)
+@Entity(value = "vault", useDiscriminator = false)
 @Indexes({
         @Index(fields = @Field("user"))
 })
