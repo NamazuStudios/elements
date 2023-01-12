@@ -221,6 +221,22 @@ public class MongoWalletDao implements WalletDao {
     }
 
     @Override
+    public void deleteWallet(final String walletId) {
+
+        final var objectId = getMongoDBUtils().parseOrThrow(walletId, WalletNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoWallet.class)
+                .filter(eq("_id", objectId));
+
+        final var result = query.delete();
+
+        if (result.getDeletedCount() == 0)
+            throw new WalletNotFoundException();
+
+    }
+
+    @Override
     public void deleteWalletForUser(final String walletId, final String userId) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(walletId, WalletNotFoundException::new);
@@ -229,17 +245,13 @@ public class MongoWalletDao implements WalletDao {
                 .find(MongoWallet.class)
                 .filter(eq("_id", objectId));
 
-        if (userId != null) {
+        final var mongoUser = getMongoUserDao()
+                .findActiveMongoUser(userId);
 
-            final var mongoUser = getMongoUserDao()
-                    .findActiveMongoUser(userId);
+        if (mongoUser.isEmpty())
+            throw new WalletNotFoundException();
 
-            if (mongoUser.isEmpty())
-                throw new WalletNotFoundException();
-
-            query.filter(eq("user", mongoUser.get()));
-
-        }
+        query.filter(eq("user", mongoUser.get()));
 
         final var result = query.delete();
 
@@ -257,17 +269,12 @@ public class MongoWalletDao implements WalletDao {
                 .find(MongoWallet.class)
                 .filter(eq("_id", objectId));
 
-        if (vaultId != null) {
+        final var mongoVault = getMongoVaultDao().findMongoVault(vaultId);
 
-            final var mongoVault = getMongoVaultDao()
-                    .findVault(vaultId);
+        if (mongoVault.isEmpty())
+            throw new WalletNotFoundException();
 
-            if (mongoVault.isEmpty())
-                throw new WalletNotFoundException();
-
-            query.filter(eq("vault", mongoVault.get()));
-
-        }
+        query.filter(eq("vault", mongoVault.get()));
 
         final var result = query.delete();
 

@@ -70,7 +70,7 @@ public class UserWalletService implements WalletService {
     @Override
     public void deleteWallet(final String walletId, final String vaultId) {
         final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
-        getWalletDao().deleteWalletForUser(walletId, vault.getId());
+        getWalletDao().deleteWalletForVault(walletId, vault.getId());
     }
 
     public User getUser() {

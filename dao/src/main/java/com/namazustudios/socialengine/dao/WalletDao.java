@@ -90,9 +90,7 @@ public interface WalletDao {
      * @param walletId the template ID.
      * @
      */
-    default void deleteWallet(String walletId) {
-        deleteWalletForUser(walletId, null);
-    }
+    void deleteWallet(String walletId);
 
     /**
      * Deletes a wallet for the supplied user.

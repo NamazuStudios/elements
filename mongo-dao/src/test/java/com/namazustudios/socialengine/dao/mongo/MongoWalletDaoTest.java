@@ -366,12 +366,13 @@ public class MongoWalletDaoTest {
         getUnderTest().deleteWallet(wallet.getId());
     }
 
-    @Test(dataProvider = "regularUsersAndBlockchainNetworks", groups = "delete", dependsOnGroups = "pre delete")
-    public void deleteWalletForUser(final User user, final BlockchainNetwork network) {
+    @Test(dataProvider = "regularUserVaultsAndBlockchainNetworks", groups = "delete", dependsOnGroups = "pre delete")
+    public void deleteWalletForUser(final Vault vault, final BlockchainNetwork network) {
 
         final var wallet = new Wallet();
-        wallet.setDisplayName("Wallet for User " + user.getName());
-        wallet.setUser(user);
+        wallet.setDisplayName("Wallet for User " + vault.getDisplayName());
+        wallet.setUser(vault.getUser());
+        wallet.setVault(vault);
         wallet.setNetworks(List.of(network));
         wallet.setApi(network.api());
 
@@ -382,7 +383,29 @@ public class MongoWalletDaoTest {
         wallet.setAccounts(List.of(identity));
 
         final var created = getUnderTest().createWallet(wallet);
-        getUnderTest().deleteWalletForUser(created.getId(), user.getId());
+        getUnderTest().deleteWalletForUser(created.getId(), vault.getUser().getId());
+        assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
+
+    }
+
+    @Test(dataProvider = "regularUserVaultsAndBlockchainNetworks", groups = "delete", dependsOnGroups = "pre delete")
+    public void deleteWalletForVault(final Vault vault, final BlockchainNetwork network) {
+
+        final var wallet = new Wallet();
+        wallet.setDisplayName("Wallet for User " + vault.getDisplayName());
+        wallet.setUser(vault.getUser());
+        wallet.setVault(vault);
+        wallet.setNetworks(List.of(network));
+        wallet.setApi(network.api());
+
+        final var identity = new WalletAccount();
+        identity.setEncrypted(false);
+        identity.setAddress(randomKey());
+        identity.setPrivateKey(randomKey());
+        wallet.setAccounts(List.of(identity));
+
+        final var created = getUnderTest().createWallet(wallet);
+        getUnderTest().deleteWalletForVault(created.getId(), vault.getId());
         assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
 
     }
