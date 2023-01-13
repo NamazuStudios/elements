@@ -43,7 +43,7 @@ public class UserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet getWallet(final String walletId, final String vaultId) {
+    public Wallet getWalletForVault(final String walletId, final String vaultId) {
         final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
         return getWalletDao().getWallet(walletId, vault.getId());
     }
@@ -68,7 +68,7 @@ public class UserWalletService implements WalletService {
     }
 
     @Override
-    public void deleteWallet(final String walletId, final String vaultId) {
+    public void deleteWalletFromVault(final String walletId, final String vaultId) {
         final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
         getWalletDao().deleteWalletForVault(walletId, vault.getId());
     }

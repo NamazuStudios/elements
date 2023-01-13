@@ -71,8 +71,8 @@ public interface WalletService {
      * @return
      */
     @RemotelyInvokable
-    Wallet getWallet(@Serialize("walletId") String walletId,
-                     @Serialize("vaultId") String vaultId);
+    Wallet getWalletForVault(@Serialize("walletId") String walletId,
+                             @Serialize("vaultId") String vaultId);
 
     /**
      * Updates the supplied {@link BscWallet}.
@@ -113,7 +113,7 @@ public interface WalletService {
      * @param vaultId the vault id
      */
     @RemotelyInvokable
-    void deleteWallet(
+    void deleteWalletFromVault(
             @Serialize("walletId") String walletId,
             @Serialize("vaultId") String vaultId);
 

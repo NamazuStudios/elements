@@ -15,10 +15,7 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServicePro
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.*;
-import com.namazustudios.socialengine.service.blockchain.crypto.AesVaultCryptoUtilities;
-import com.namazustudios.socialengine.service.blockchain.crypto.StandardWalletIdentityFactory;
-import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
-import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
+import com.namazustudios.socialengine.service.blockchain.crypto.*;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.formidium.FormidiumService;
@@ -108,6 +105,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(VaultCryptoUtilities.class)
             .to(AesVaultCryptoUtilities.class)
+            .asEagerSingleton();
+
+        bind(WalletCryptoUtilities.class)
+            .to(StandardWalletCryptoUtilities.class)
             .asEagerSingleton();
 
         bind(Mapper.class)

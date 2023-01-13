@@ -49,7 +49,7 @@ public class SuperUserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet getWallet(final String walletId, final String vaultId) {
+    public Wallet getWalletForVault(final String walletId, final String vaultId) {
         return getWalletDao().getWallet(walletId, vaultId);
     }
 
@@ -125,7 +125,7 @@ public class SuperUserWalletService implements WalletService {
     }
 
     @Override
-    public void deleteWallet(final String walletId, final String vaultId) {
+    public void deleteWalletFromVault(final String walletId, final String vaultId) {
         // TODO Honor Vault ID
         getWalletDao().deleteWallet(walletId);
     }
