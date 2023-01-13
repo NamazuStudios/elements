@@ -61,6 +61,7 @@ public class AesVaultCryptoUtilities implements VaultCryptoUtilities {
 
         final var vaultKey = new VaultKey();
         vaultKey.setEncrypted(false);
+        vaultKey.setAlgorithm(algorithm);
         vaultKey.setPublicKey(encodedKeyPair.getPublicKeyBase64());
         vaultKey.setPrivateKey(encodedKeyPair.getPrivateKeyBase64());
 
