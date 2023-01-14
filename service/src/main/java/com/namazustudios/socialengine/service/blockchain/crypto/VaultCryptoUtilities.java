@@ -48,7 +48,7 @@ public interface VaultCryptoUtilities {
      * @return an {@link Optional<VaultKey>}, if re-encryption was successful
      */
     default Optional<VaultKey> reEncryptKey(VaultKey key, String passphrase, String newPassphrase) {
-        return decryptKey(key, passphrase).map(decrypted -> encryptKey(key, newPassphrase));
+        return decryptKey(key, passphrase).map(decrypted -> encryptKey(decrypted, newPassphrase));
     }
 
     /**
