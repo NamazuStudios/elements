@@ -11,19 +11,19 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.model.blockchain.BlockchainApi.SOLANA;
 import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 public class UserWalletApiTest {
 
@@ -52,10 +52,23 @@ public class UserWalletApiTest {
 
     private Vault emptyVault;
 
+    private Vault trudyVault;
+
+    private final Map<String, Wallet> wallets = new ConcurrentHashMap<>();
+
     @DataProvider
     private Object[][] blockchainApis() {
         return Stream.of(BlockchainApi.values())
                 .map(network -> new Object[]{network})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    private Object[][] walletsById() {
+        return wallets
+                .entrySet()
+                .stream()
+                .map(e -> new Object[]{e.getKey(), e.getValue()})
                 .toArray(Object[][]::new);
     }
 
@@ -64,7 +77,8 @@ public class UserWalletApiTest {
         userClientContext.createUser("vaultboy").createSession();
         trudyClientContext.createUser("trudyuser").createSession();
         vault = createVault(userClientContext);
-        emptyVault = createVault(trudyClientContext);
+        emptyVault = createVault(userClientContext);
+        trudyVault = createVault(trudyClientContext);
     }
 
     private Vault createVault(final ClientContext clientContext) {
@@ -89,17 +103,27 @@ public class UserWalletApiTest {
     @Test(groups = "create", dataProvider = "blockchainApis")
     public void testCreateWallet(final BlockchainApi api) {
 
-        final var account = new WalletAccount();
-        account.setEncrypted(false);
-        account.setAddress("Random Address");
-        account.setPrivateKey("Random Private Key");
+        final var firstAccount = new CreateWalletRequestAccount();
+        firstAccount.setGenerate(false);
+        firstAccount.setAddress("First Random Address");
+        firstAccount.setPrivateKey("First Random Private Key");
+
+        final var secondAccount = new CreateWalletRequestAccount();
+
+        if (SOLANA.equals(api)) {
+            secondAccount.setGenerate(false);
+            secondAccount.setAddress("Second Random Address");
+            secondAccount.setPrivateKey("Second Random Private Key");
+        } else {
+            secondAccount.setGenerate(true);
+        }
 
         final var toCreate = new CreateWalletRequest();
         toCreate.setApi(api);
         toCreate.setDisplayName("Wallet for " + api + " for user " + userClientContext.getUser().getName());
         toCreate.setPreferredAccount(0);
         toCreate.setNetworks(api.networks().collect(toList()));
-        toCreate.setAccounts(List.of(account));
+        toCreate.setAccounts(List.of(firstAccount, secondAccount));
 
         final var response = client
                 .target(format("%s/blockchain/omni/vault/%s/wallet", apiRoot, vault.getId()))
@@ -117,23 +141,16 @@ public class UserWalletApiTest {
         assertEquals(wallet.getPreferredAccount(), toCreate.getPreferredAccount());
         assertEquals(wallet.getVault(), vault);
 
-    }
-
-    @Test(groups = "update", dependsOnGroups = "create")
-    public void testUpdateVault() {
-        final var toUpdate = new UpdateVaultRequest();
-        toUpdate.setUserId(vault.getUser().getId());
-        toUpdate.setDisplayName("Wallet for " + api + " for user " + userClientContext.getUser().getName());
-    }
-
-    @Test(groups = "update", dependsOnGroups = "create")
-    public void testStealVaultFails() {
+        final var existing = wallets.put(wallet.getId(), wallet);
+        assertNull(existing);
 
     }
 
-    @Test(groups = "update", dependsOnGroups = "create")
-    public void testTransferVaultFails() {
-
+    @Test(groups = "update", dependsOnGroups = "create", dataProvider = "walletsById")
+    public void testUpdateWallet(final String walletId, final Wallet wallet) {
+        final var toUpdate = new UpdateWalletRequest();
+        toUpdate.setDefaultIdentity(1);
+        toUpdate.setDisplayName(format("Vault for %s (Encrypted) (Updated)", userClientContext.getUser().getName()));
     }
 
     @Test(groups = "read", dependsOnGroups = "update")

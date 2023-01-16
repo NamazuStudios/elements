@@ -22,33 +22,13 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
     private Provider<SolanaIdentityGenerator> solanaIdentityGeneratorProvider;
 
     @Override
-    public Wallet create(final Wallet wallet, int count) {
+    public IdentityGenerator getGenerator(final BlockchainApi api) {
 
-        if (count < 1) {
-            throw new IllegalArgumentException("Must generate at least one wallet.");
-        }
-
-        final var generated = getObjectMapper().convertValue(wallet, Wallet.class);
-        final var generator = getGenerator(wallet.getApi());
-        final var identities = IntStream.range(0, count)
-                .mapToObj(i -> generator.generate())
-                .collect(toList());
-
-        generated.setPreferredAccount(0);
-        generated.setAccounts(identities);
-
-        return generated;
-
-    }
-
-    @Override
-    public IdentityGenerator getGenerator(final BlockchainApi protocol) {
-
-        if (protocol == null) {
+        if (api == null) {
             throw new IllegalArgumentException("Wallet must specify protocol.");
         }
 
-        switch (protocol) {
+        switch (api) {
             case NEO:
                 return getNeoIdentityGeneratorProvider().get();
             case ETHEREUM:
@@ -56,7 +36,7 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
             case SOLANA:
                 return getSolanaIdentityGeneratorProvider().get();
             default:
-                throw new NotImplementedException("Unsupported Protocol: " + protocol);
+                throw new NotImplementedException("Unsupported API: " + api);
         }
 
     }

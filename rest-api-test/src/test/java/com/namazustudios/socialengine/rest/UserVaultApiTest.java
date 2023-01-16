@@ -216,6 +216,16 @@ public class UserVaultApiTest {
 
     }
 
+    @Test(groups = "update", dependsOnGroups = "create")
+    public void testStealVaultFails() {
+        // TODO Implement Me
+    }
+
+    @Test(groups = "update", dependsOnGroups = "create")
+    public void testTransferVaultFails() {
+        // TODO Implement Me
+    }
+
     @Test(dataProvider = "unencryptedVaultsById", groups = {"encrypt", "update"}, dependsOnGroups = "create")
     public void testEncryptUnencrypted(final String id, final Vault vault) {
 
@@ -275,8 +285,6 @@ public class UserVaultApiTest {
                 .get();
 
         assertEquals(response.getStatus(), 200);
-
-
 
     }
 

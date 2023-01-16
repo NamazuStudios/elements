@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.model.blockchain.wallet;
 
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -43,10 +42,9 @@ public class CreateWalletRequest {
     @ApiModelProperty("The default identity. Must not be larger than the count of identities.")
     private int preferredAccount;
 
-    @Valid
     @NotNull
-    @Size(min = 1)
-    private List<WalletAccount> accounts;
+    @Size(min = 1, max = 25)
+    private List<CreateWalletRequestAccount> accounts;
 
     public String getDisplayName() {
         return displayName;
@@ -80,11 +78,11 @@ public class CreateWalletRequest {
         this.preferredAccount = preferredAccount;
     }
 
-    public List<WalletAccount> getAccounts() {
+    public List<CreateWalletRequestAccount> getAccounts() {
         return accounts;
     }
 
-    public void setAccounts(List<WalletAccount> accounts) {
+    public void setAccounts(List<CreateWalletRequestAccount> accounts) {
         this.accounts = accounts;
     }
 

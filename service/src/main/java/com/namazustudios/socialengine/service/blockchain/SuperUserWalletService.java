@@ -6,9 +6,7 @@ import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
-import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.wallet.UpdateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
+import com.namazustudios.socialengine.model.blockchain.wallet.*;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.service.WalletService;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
@@ -18,6 +16,8 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import javax.inject.Inject;
 
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 public class SuperUserWalletService implements WalletService {
 
@@ -92,32 +92,46 @@ public class SuperUserWalletService implements WalletService {
                 .getApi()
                 .validate(createWalletRequest.getNetworks());
 
-        var wallet = new Wallet();
-        wallet.setApi(createWalletRequest.getApi());
-        wallet.setDisplayName(createWalletRequest.getDisplayName());
-        wallet.setApi(createWalletRequest.getApi());
-        wallet.setNetworks(createWalletRequest.getNetworks());
-        wallet.setAccounts(createWalletRequest.getAccounts());
-        wallet.setPreferredAccount(createWalletRequest.getPreferredAccount());
-
         final var vault = getVaultDao()
                 .findVault(vaultId)
                 .orElseThrow(() -> new InvalidDataException("No such user."));
 
+        final var accounts =  createWalletRequest
+                .getAccounts()
+                .stream()
+                .map(cra -> convertAccount(createWalletRequest.getApi(), cra))
+                .collect(toList());
+
+        var wallet = new Wallet();
+        wallet.setAccounts(accounts);
+        wallet.setApi(createWalletRequest.getApi());
+        wallet.setDisplayName(createWalletRequest.getDisplayName());
+        wallet.setApi(createWalletRequest.getApi());
+        wallet.setNetworks(createWalletRequest.getNetworks());
+        wallet.setPreferredAccount(createWalletRequest.getPreferredAccount());
         wallet.setVault(vault);
         wallet.setUser(vault.getUser());
-        
-        final var identities = createWalletRequest.getAccounts();
-
-        if (identities == null || identities.isEmpty()) {
-            wallet = getWalletIdentityFactory().create(wallet);
-        } else if (wallet.getPreferredAccount() > identities.size()) {
-            throw new InvalidDataException("Default must be less than identity collection.");
-        }
 
         final var encrypted = getWalletCryptoUtilities().encrypt(wallet);
         return getWalletDao().createWallet(encrypted);
 
+    }
+
+    private WalletAccount convertAccount(final BlockchainApi api,
+                                         final CreateWalletRequestAccount createWalletRequestAccount) {
+        if (createWalletRequestAccount == null) {
+            return getWalletIdentityFactory().getGenerator(api).generate();
+        } else if (createWalletRequestAccount.isGenerate()) {
+            getValidationHelper().validateModel(createWalletRequestAccount, CreateWalletRequestAccount.Generate.class);
+            return getWalletIdentityFactory().getGenerator(api).generate();
+        } else {
+            getValidationHelper().validateModel(createWalletRequestAccount, CreateWalletRequestAccount.Import.class);
+            final var account = new WalletAccount();
+            account.setEncrypted(false);
+            account.setAddress(createWalletRequestAccount.getAddress());
+            account.setPrivateKey(createWalletRequestAccount.getPrivateKey());
+            return account;
+        }
     }
 
     @Override
