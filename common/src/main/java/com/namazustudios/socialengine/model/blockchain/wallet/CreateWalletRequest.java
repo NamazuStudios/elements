@@ -41,12 +41,12 @@ public class CreateWalletRequest {
 
     @Min(0)
     @ApiModelProperty("The default identity. Must not be larger than the count of identities.")
-    private int defaultIdentity;
+    private int preferredAccount;
 
     @Valid
     @NotNull
     @Size(min = 1)
-    private List<WalletAccount> identities;
+    private List<WalletAccount> accounts;
 
     public String getDisplayName() {
         return displayName;
@@ -72,20 +72,20 @@ public class CreateWalletRequest {
         this.networks = networks;
     }
 
-    public int getDefaultIdentity() {
-        return defaultIdentity;
+    public int getPreferredAccount() {
+        return preferredAccount;
     }
 
-    public void setDefaultIdentity(int defaultIdentity) {
-        this.defaultIdentity = defaultIdentity;
+    public void setPreferredAccount(int preferredAccount) {
+        this.preferredAccount = preferredAccount;
     }
 
-    public List<WalletAccount> getIdentities() {
-        return identities;
+    public List<WalletAccount> getAccounts() {
+        return accounts;
     }
 
-    public void setIdentities(List<WalletAccount> identities) {
-        this.identities = identities;
+    public void setAccounts(List<WalletAccount> accounts) {
+        this.accounts = accounts;
     }
 
     @Override
@@ -93,12 +93,12 @@ public class CreateWalletRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateWalletRequest that = (CreateWalletRequest) o;
-        return defaultIdentity == that.defaultIdentity && Objects.equals(displayName, that.displayName) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(identities, that.identities);
+        return preferredAccount == that.preferredAccount && Objects.equals(displayName, that.displayName) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(accounts, that.accounts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(displayName, api, networks, defaultIdentity, identities);
+        return Objects.hash(displayName, api, networks, preferredAccount, accounts);
     }
 
     @Override
@@ -107,8 +107,8 @@ public class CreateWalletRequest {
                 "displayName='" + displayName + '\'' +
                 ", api=" + api +
                 ", networks=" + networks +
-                ", defaultIdentity=" + defaultIdentity +
-                ", identities=" + identities +
+                ", defaultIdentity=" + preferredAccount +
+                ", identities=" + accounts +
                 '}';
     }
 

@@ -52,7 +52,7 @@ public class UserVaultService implements VaultService {
         if (request.getUserId() == null) {
             request.setUserId(getUser().getId());
         } else if (!request.getUserId().equals(getUser().getId())) {
-            throw new InvalidDataException("Cannot create for another user.");
+            throw new InvalidDataException("Cannot modify vault user.");
         }
 
         return getSuperUserVaultService().updateVault(vaultId, request);

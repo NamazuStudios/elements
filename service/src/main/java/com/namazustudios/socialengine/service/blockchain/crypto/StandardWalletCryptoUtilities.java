@@ -141,7 +141,11 @@ public class StandardWalletCryptoUtilities implements WalletCryptoUtilities {
 
     private VaultKey getVaultKey(final Wallet wallet) {
 
-        if (!getValidator().validate(wallet).isEmpty()) {
+        if (!getValidator().validateProperty(wallet, "vault").isEmpty()) {
+            throw new IllegalArgumentException("Invalid wallet.");
+        }
+
+        if (!getValidator().validateProperty(wallet, "accounts").isEmpty()) {
             throw new IllegalArgumentException("Invalid wallet.");
         }
 

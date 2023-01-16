@@ -97,16 +97,17 @@ public class SuperUserWalletService implements WalletService {
         wallet.setDisplayName(createWalletRequest.getDisplayName());
         wallet.setApi(createWalletRequest.getApi());
         wallet.setNetworks(createWalletRequest.getNetworks());
-        wallet.setAccounts(createWalletRequest.getIdentities());
-        wallet.setPreferredAccount(createWalletRequest.getDefaultIdentity());
+        wallet.setAccounts(createWalletRequest.getAccounts());
+        wallet.setPreferredAccount(createWalletRequest.getPreferredAccount());
 
         final var vault = getVaultDao()
                 .findVault(vaultId)
                 .orElseThrow(() -> new InvalidDataException("No such user."));
 
         wallet.setVault(vault);
-
-        final var identities = createWalletRequest.getIdentities();
+        wallet.setUser(vault.getUser());
+        
+        final var identities = createWalletRequest.getAccounts();
 
         if (identities == null || identities.isEmpty()) {
             wallet = getWalletIdentityFactory().create(wallet);
