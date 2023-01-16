@@ -297,15 +297,6 @@ public class MongoWalletDaoTest {
         assertTrue(wallets.isEmpty());
     }
 
-    @Test(groups = "read", dependsOnGroups = "update")
-    public void testEmptyNetworkReturnsNothing() {
-        final var wallets = new PaginationWalker()
-                .toList((offset, count) -> getUnderTest()
-                        .getWallets(offset, count, null, null,null, new ArrayList<>())
-                );
-        assertTrue(wallets.isEmpty());
-    }
-
     @Test(dataProvider = "walletsById", groups = "read", dependsOnGroups = "update")
     public void testGetSingleWallet(final String walletId, final Wallet wallet) {
         final var fetched = getUnderTest().getWallet(walletId);

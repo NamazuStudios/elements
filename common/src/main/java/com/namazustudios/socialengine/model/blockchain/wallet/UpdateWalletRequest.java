@@ -28,7 +28,7 @@ public class UpdateWalletRequest {
 
     @Min(1)
     @ApiModelProperty("The default identity. Must not be larger than the count of identities.")
-    private int defaultIdentity;
+    private int preferredAccount;
 
     @NotNull
     @Size(min = 1)
@@ -51,12 +51,12 @@ public class UpdateWalletRequest {
         this.networks = networks;
     }
 
-    public int getDefaultIdentity() {
-        return defaultIdentity;
+    public int getPreferredAccount() {
+        return preferredAccount;
     }
 
-    public void setDefaultIdentity(int defaultIdentity) {
-        this.defaultIdentity = defaultIdentity;
+    public void setPreferredAccount(int preferredAccount) {
+        this.preferredAccount = preferredAccount;
     }
 
     @Override
@@ -64,12 +64,12 @@ public class UpdateWalletRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateWalletRequest that = (UpdateWalletRequest) o;
-        return getDefaultIdentity() == that.getDefaultIdentity() && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getNetworks(), that.getNetworks());
+        return getPreferredAccount() == that.getPreferredAccount() && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getNetworks(), that.getNetworks());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDisplayName(), getDefaultIdentity(), getNetworks());
+        return Objects.hash(getDisplayName(), getPreferredAccount(), getNetworks());
     }
 
     @Override
@@ -77,7 +77,7 @@ public class UpdateWalletRequest {
     toString() {
         final StringBuilder sb = new StringBuilder("UpdateWalletRequest{");
         sb.append("displayName='").append(displayName).append('\'');
-        sb.append(", defaultIdentity=").append(defaultIdentity);
+        sb.append(", defaultIdentity=").append(preferredAccount);
         sb.append(", networks=").append(networks);
         sb.append('}');
         return sb.toString();

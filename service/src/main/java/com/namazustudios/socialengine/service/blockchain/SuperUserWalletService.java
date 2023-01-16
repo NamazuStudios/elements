@@ -61,10 +61,10 @@ public class SuperUserWalletService implements WalletService {
         getValidationHelper().validateModel(walletUpdateRequest);
 
         var wallet = getWalletDao().getWallet(walletId);
-
         wallet.getApi().validate(walletUpdateRequest.getNetworks());
         wallet.setNetworks(walletUpdateRequest.getNetworks());
         wallet.setDisplayName(walletUpdateRequest.getDisplayName());
+        wallet.setPreferredAccount(walletUpdateRequest.getPreferredAccount());
 
         final var vault = getVaultDao()
                 .findVault(vaultId)
@@ -141,8 +141,7 @@ public class SuperUserWalletService implements WalletService {
 
     @Override
     public void deleteWalletFromVault(final String walletId, final String vaultId) {
-        // TODO Honor Vault ID
-        getWalletDao().deleteWallet(walletId);
+        getWalletDao().deleteWalletForVault(walletId, vaultId);
     }
 
     public UserDao getUserDao() {

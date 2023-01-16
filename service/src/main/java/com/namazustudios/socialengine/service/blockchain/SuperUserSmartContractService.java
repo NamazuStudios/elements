@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.SmartContractDao;
-import com.namazustudios.socialengine.dao.WalletDao;
+import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class SuperUserSmartContractService  implements SmartContractService {
 
-    private WalletDao walletDao;
+    private VaultDao vaultDao;
 
     private SmartContractDao smartContractDao;
 
@@ -41,20 +41,16 @@ public class SuperUserSmartContractService  implements SmartContractService {
 
         getValidationHelper().validateModel(createSmartContractRequest);
 
-        final var smartContract = new SmartContract();
-
-        final var api = createSmartContractRequest.getApi();
         final var addresses = createSmartContractRequest.getAddresses();
         final var displayName = createSmartContractRequest.getDisplayName();
-        final var walletId = createSmartContractRequest.getWalletId();
         final var metadata = createSmartContractRequest.getMetadata();
 
-        final var networks = createSmartContractRequest.getNetworks();
-
-        final var wallet = getWalletDao()
-                .findWallet(createSmartContractRequest.getWalletId())
+        final var vault = getVaultDao()
+                .findVault(createSmartContractRequest.getVaultId())
                 .orElseThrow(InvalidDataException::new);
 
+        final var smartContract = new SmartContract();
+        smartContract.setVault(vault);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
         smartContract.setDisplayName(displayName);
@@ -75,12 +71,11 @@ public class SuperUserSmartContractService  implements SmartContractService {
         final var addresses = updateSmartContractRequest.getAddresses();
         final var displayName = updateSmartContractRequest.getDisplayName();
         final var metadata = updateSmartContractRequest.getMetadata();
-
-        final var wallet = getWalletDao()
-                .findWallet(updateSmartContractRequest.getWalletId())
+        final var vault = getVaultDao()
+                .findVault(updateSmartContractRequest.getVaultId())
                 .orElseThrow(InvalidDataException::new);
 
-        final var networks = updateSmartContractRequest.getNetworks();
+        smartContract.setVault(vault);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
         smartContract.setDisplayName(displayName);
@@ -90,13 +85,12 @@ public class SuperUserSmartContractService  implements SmartContractService {
 
     }
 
-    public WalletDao getWalletDao() {
-        return walletDao;
+    public VaultDao getVaultDao() {
+        return vaultDao;
     }
 
-    @Inject
-    public void setWalletDao(WalletDao walletDao) {
-        this.walletDao = walletDao;
+    public void setVaultDao(VaultDao vaultDao) {
+        this.vaultDao = vaultDao;
     }
 
     @Override

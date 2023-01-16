@@ -232,14 +232,6 @@ public class MongoSmartContractDaoTest {
 
     }
 
-    @Test(groups = "read", dependsOnGroups = "update")
-    public void testEmptyNetworkReturnsNothing() {
-        final var smartContracts = new PaginationWalker()
-                .toList((offset, count) -> getUnderTest()
-                        .getSmartContracts(offset, count, null, new ArrayList<>()));
-        assertTrue(smartContracts.isEmpty());
-    }
-
     @Test(dataProvider = "smartContracts", groups = "read", dependsOnGroups = "update")
     public void testGetSingleSmartContractById(final SmartContract smartContract) {
         final var fetched = getUnderTest().getSmartContract(smartContract.getId());

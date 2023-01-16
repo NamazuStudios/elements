@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain.contract;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
@@ -10,8 +9,6 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import javax.validation.constraints.Size;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -42,18 +39,10 @@ public class CreateSmartContractRequest {
     private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull
-    @ApiModelProperty("The blockchain API used by this wallet.")
-    private BlockchainApi api;
-
-    @NotNull
-    @Size(min = 1)
-    @ApiModelProperty("The blockchain networks associated with this wallet.")
-    private List<BlockchainNetwork> networks;
-
-    @NotNull
-    @ApiModelProperty("The Elements database id of the wallet containing the default account to be used for " +
+    @ApiModelProperty(
+            "The Elements database id of the wallet containing the default account to be used for " +
             "contract related requests.")
-    private String walletId;
+    private String vaultId;
 
     @ApiModelProperty("Any metadata for this contract.")
     private Map<String, Object> metadata;
@@ -82,28 +71,12 @@ public class CreateSmartContractRequest {
         this.addresses = addresses;
     }
 
-    public BlockchainApi getApi() {
-        return api;
+    public String getVaultId() {
+        return vaultId;
     }
 
-    public void setApi(BlockchainApi api) {
-        this.api = api;
-    }
-
-    public List<BlockchainNetwork> getNetworks() {
-        return networks;
-    }
-
-    public void setNetworks(List<BlockchainNetwork> networks) {
-        this.networks = networks;
-    }
-
-    public String getWalletId() {
-        return walletId;
-    }
-
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
+    public void setVaultId(String vaultId) {
+        this.vaultId = vaultId;
     }
 
     public Map<String, Object> getMetadata() {
@@ -119,12 +92,12 @@ public class CreateSmartContractRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateSmartContractRequest that = (CreateSmartContractRequest) o;
-        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && api == that.api && Objects.equals(networks, that.networks) && Objects.equals(walletId, that.walletId) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(vaultId, that.vaultId) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, displayName, addresses, api, networks, walletId, metadata);
+        return Objects.hash(id, displayName, addresses, vaultId, metadata);
     }
 
     @Override
@@ -133,9 +106,7 @@ public class CreateSmartContractRequest {
                 "id='" + id + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", addresses=" + addresses +
-                ", api=" + api +
-                ", networks=" + networks +
-                ", walletId='" + walletId + '\'' +
+                ", walletId='" + vaultId + '\'' +
                 ", metadata=" + metadata +
                 '}';
     }

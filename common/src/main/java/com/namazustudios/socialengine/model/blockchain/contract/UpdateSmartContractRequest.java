@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,15 +33,10 @@ public class UpdateSmartContractRequest {
     private Map<BlockchainNetwork, SmartContractAddress> addresses;
 
     @NotNull
-    @Size(min = 1)
-    @ApiModelProperty("The blockchain networks associated with this wallet.")
-    private List<BlockchainNetwork> networks;
-
-    @NotNull
     @ApiModelProperty(
             "The Elements database id of the wallet containing the default account to be used for " +
             "contract related requests.")
-    private String walletId;
+    private String vaultId;
 
     @ApiModelProperty("Any metadata for this contract.")
     private Map<String, Object> metadata;
@@ -63,20 +57,12 @@ public class UpdateSmartContractRequest {
         this.addresses = addresses;
     }
 
-    public List<BlockchainNetwork> getNetworks() {
-        return networks;
+    public String getVaultId() {
+        return vaultId;
     }
 
-    public void setNetworks(List<BlockchainNetwork> networks) {
-        this.networks = networks;
-    }
-
-    public String getWalletId() {
-        return walletId;
-    }
-
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
+    public void setVaultId(String vaultId) {
+        this.vaultId = vaultId;
     }
 
     public Map<String, Object> getMetadata() {
@@ -92,12 +78,12 @@ public class UpdateSmartContractRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateSmartContractRequest that = (UpdateSmartContractRequest) o;
-        return Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(networks, that.networks) && Objects.equals(walletId, that.walletId) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(vaultId, that.vaultId) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(displayName, addresses, networks, walletId, metadata);
+        return Objects.hash(displayName, addresses, vaultId, metadata);
     }
 
     @Override
@@ -105,8 +91,7 @@ public class UpdateSmartContractRequest {
         return "UpdateSmartContractRequest{" +
                 "displayName='" + displayName + '\'' +
                 ", addresses=" + addresses +
-                ", networks=" + networks +
-                ", walletId='" + walletId + '\'' +
+                ", vaultId='" + vaultId + '\'' +
                 ", metadata=" + metadata +
                 '}';
     }

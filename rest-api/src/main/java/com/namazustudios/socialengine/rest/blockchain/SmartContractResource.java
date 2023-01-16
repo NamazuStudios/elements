@@ -20,7 +20,6 @@ import java.util.List;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 @Api(value = "Smart Contracts",
-        hidden = true,
         description = "Allows for the storage and retrieval of compiled Neo smart contracts.",
         authorizations = {
                 @Authorization(AUTH_BEARER),
@@ -67,13 +66,10 @@ public class SmartContractResource {
     }
 
     @POST
-    @Path("{contractId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Patches a  Smart Contract",
             notes = "Patches a  Smart Contract entry, associated with the specified deployed script hash.")
-    public SmartContract createSmartContract(
-            @PathParam("contractId") String contractId,
-            final CreateSmartContractRequest createSmartContractRequest) {
+    public SmartContract createSmartContract(final CreateSmartContractRequest createSmartContractRequest) {
         return getSmartContractService().createSmartContract(createSmartContractRequest);
     }
 
