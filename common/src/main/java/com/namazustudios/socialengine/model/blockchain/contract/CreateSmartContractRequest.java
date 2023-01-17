@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain.contract;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
@@ -8,7 +8,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
+import javax.validation.constraints.Pattern;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,10 +23,10 @@ import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_
 )
 public class CreateSmartContractRequest {
 
-    @Null(groups = ValidationGroups.Insert.class)
-    @NotNull(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The Elements database id of the contract.")
-    private String id;
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @ApiModelProperty("The unique symbolic name of the smart contract.")
+    private String name;
 
     @NotNull
     @ApiModelProperty("The name given to this contract for display purposes.")
@@ -47,12 +47,12 @@ public class CreateSmartContractRequest {
     @ApiModelProperty("Any metadata for this contract.")
     private Map<String, Object> metadata;
 
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDisplayName() {
@@ -92,21 +92,21 @@ public class CreateSmartContractRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateSmartContractRequest that = (CreateSmartContractRequest) o;
-        return Objects.equals(id, that.id) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(vaultId, that.vaultId) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(vaultId, that.vaultId) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, displayName, addresses, vaultId, metadata);
+        return Objects.hash(name, displayName, addresses, vaultId, metadata);
     }
 
     @Override
     public String toString() {
         return "CreateSmartContractRequest{" +
-                "id='" + id + '\'' +
+                "name='" + name + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", addresses=" + addresses +
-                ", walletId='" + vaultId + '\'' +
+                ", vaultId='" + vaultId + '\'' +
                 ", metadata=" + metadata +
                 '}';
     }

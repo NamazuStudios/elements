@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain.contract;
 
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
@@ -7,6 +8,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,6 +23,11 @@ import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_
         }
 )
 public class UpdateSmartContractRequest {
+
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @ApiModelProperty("The unique symbolic name of the smart contract.")
+    private String name;
 
     @NotNull
     @ApiModelProperty("The name given to this contract for display purposes.")
@@ -40,6 +47,14 @@ public class UpdateSmartContractRequest {
 
     @ApiModelProperty("Any metadata for this contract.")
     private Map<String, Object> metadata;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getDisplayName() {
         return displayName;
@@ -78,18 +93,19 @@ public class UpdateSmartContractRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateSmartContractRequest that = (UpdateSmartContractRequest) o;
-        return Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(vaultId, that.vaultId) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(addresses, that.addresses) && Objects.equals(vaultId, that.vaultId) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(displayName, addresses, vaultId, metadata);
+        return Objects.hash(name, displayName, addresses, vaultId, metadata);
     }
 
     @Override
     public String toString() {
         return "UpdateSmartContractRequest{" +
-                "displayName='" + displayName + '\'' +
+                "name='" + name + '\'' +
+                ", displayName='" + displayName + '\'' +
                 ", addresses=" + addresses +
                 ", vaultId='" + vaultId + '\'' +
                 ", metadata=" + metadata +

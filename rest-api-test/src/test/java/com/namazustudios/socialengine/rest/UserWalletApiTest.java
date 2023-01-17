@@ -54,8 +54,6 @@ public class UserWalletApiTest {
 
     private Vault emptyVault;
 
-    private Vault trudyVault;
-
     private final Map<String, Wallet> wallets = new ConcurrentHashMap<>();
 
     @DataProvider
@@ -80,7 +78,6 @@ public class UserWalletApiTest {
         trudyClientContext.createUser("trudyuser").createSession();
         vault = createVault(userClientContext);
         emptyVault = createVault(userClientContext);
-        trudyVault = createVault(trudyClientContext);
     }
 
     private Vault createVault(final ClientContext clientContext) {

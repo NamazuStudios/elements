@@ -41,6 +41,7 @@ public class SuperUserSmartContractService  implements SmartContractService {
 
         getValidationHelper().validateModel(createSmartContractRequest);
 
+        final var name = createSmartContractRequest.getName();
         final var addresses = createSmartContractRequest.getAddresses();
         final var displayName = createSmartContractRequest.getDisplayName();
         final var metadata = createSmartContractRequest.getMetadata();
@@ -50,10 +51,12 @@ public class SuperUserSmartContractService  implements SmartContractService {
                 .orElseThrow(InvalidDataException::new);
 
         final var smartContract = new SmartContract();
+        smartContract.setName(name);
         smartContract.setVault(vault);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
         smartContract.setDisplayName(displayName);
+        smartContract.setName(createSmartContractRequest.getName());
 
         return getSmartContractDao().createSmartContract(smartContract);
 
@@ -68,6 +71,7 @@ public class SuperUserSmartContractService  implements SmartContractService {
 
         final var smartContract = getSmartContractDao().getSmartContract(smartContractId);
 
+        final var name = updateSmartContractRequest.getName();
         final var addresses = updateSmartContractRequest.getAddresses();
         final var displayName = updateSmartContractRequest.getDisplayName();
         final var metadata = updateSmartContractRequest.getMetadata();
@@ -75,6 +79,7 @@ public class SuperUserSmartContractService  implements SmartContractService {
                 .findVault(updateSmartContractRequest.getVaultId())
                 .orElseThrow(InvalidDataException::new);
 
+        smartContract.setName(name);
         smartContract.setVault(vault);
         smartContract.setAddresses(addresses);
         smartContract.setMetadata(metadata);
@@ -89,6 +94,7 @@ public class SuperUserSmartContractService  implements SmartContractService {
         return vaultDao;
     }
 
+    @Inject
     public void setVaultDao(VaultDao vaultDao) {
         this.vaultDao = vaultDao;
     }

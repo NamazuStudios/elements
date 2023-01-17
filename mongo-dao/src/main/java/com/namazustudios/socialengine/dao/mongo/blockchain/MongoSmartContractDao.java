@@ -28,6 +28,7 @@ import java.util.Optional;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 import static java.util.stream.Collectors.toList;
 
 public class MongoSmartContractDao implements SmartContractDao {
@@ -54,7 +55,7 @@ public class MongoSmartContractDao implements SmartContractDao {
             query.filter(elemMatch("addresses", eq("api", blockchainApi)));
         }
 
-        if (blockchainNetworks != null) {
+        if (blockchainNetworks != null && !blockchainNetworks.isEmpty()) {
             query.filter(elemMatch("addresses", eq("api", in("network", blockchainNetworks))));
         }
 
@@ -108,12 +109,14 @@ public class MongoSmartContractDao implements SmartContractDao {
                 .map(entry -> MongoSmartContractAddress.fromNetworkAndAddress(entry.getKey(), entry.getValue()))
                 .collect(toList());
 
+        final var metadata = smartContract.getMetadata();
+
         final var mongoSmartContract = getMongoDBUtils().perform(ds -> new UpdateBuilder()
                 .with(set("name", smartContract.getName()))
                 .with(set("displayName", smartContract.getDisplayName().trim()))
                 .with(set("vault", mongoVault))
                 .with(set("addresses", mongoSmartContractAddresses))
-                .with(set("metadata", smartContract.getMetadata()))
+                .with(metadata == null ? unset("metadata") : set("metadata", metadata))
                 .execute(query, new ModifyOptions().returnDocument(AFTER).upsert(false))
         );
 
