@@ -112,8 +112,6 @@ public class UserVaultApiTest {
         assertNotNull(key.getPrivateKey());
         assertEquals(key.getAlgorithm(), algorithm);
 
-        encryptedVaults.put(vault.getId(), vault);
-
     }
 
     @Test(invocationCount = 5, dataProvider = "encryptionAlgorithms", groups = "create")
@@ -216,14 +214,42 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(groups = "update", dependsOnGroups = "create")
-    public void testStealVaultFails() {
-        // TODO Implement Me
+    @Test(dataProvider = "encryptedVaultsById", groups = "update", dependsOnGroups = "create")
+    public void testStealVaultFails(final String id, final Vault vault) {
+
+        final var toUpdate = new UpdateVaultRequest();
+        toUpdate.setUserId(trudyClientContext.getUser().getId());
+        toUpdate.setDisplayName("Vault for (Re-Encrypted): " + vault.getUser().getName());
+        toUpdate.setPassphrase(vault.getUser().getName());
+        toUpdate.setNewPassphrase(vault.getUser().getId() + "1");
+
+        final var response = client
+                .target(apiRoot + "/blockchain/omni/vault/" + id)
+                .request()
+                .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
+                .put(Entity.entity(toUpdate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 400);
+
     }
 
-    @Test(groups = "update", dependsOnGroups = "create")
-    public void testTransferVaultFails() {
-        // TODO Implement Me
+    @Test(dataProvider = "encryptedVaultsById", groups = "update", dependsOnGroups = "create")
+    public void testTransferVaultFails(final String id, final Vault vault) {
+
+        final var toUpdate = new UpdateVaultRequest();
+        toUpdate.setUserId(trudyClientContext.getUser().getId());
+        toUpdate.setDisplayName("Vault for (Re-Encrypted): " + vault.getUser().getName());
+        toUpdate.setPassphrase(vault.getUser().getName());
+        toUpdate.setNewPassphrase(vault.getUser().getId() + "1");
+
+        final var response = client
+                .target(apiRoot + "/blockchain/omni/vault/" + id)
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .put(Entity.entity(toUpdate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 400);
+
     }
 
     @Test(dataProvider = "unencryptedVaultsById", groups = {"encrypt", "update"}, dependsOnGroups = "create")
