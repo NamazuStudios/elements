@@ -198,14 +198,15 @@ public class UserWalletApiTest {
     }
 
     @Test(groups = "read", dependsOnGroups = "update")
-    public void testGetWallets() {
+    public void testGetWalletsFromVault() {
 
         final var wallets = new PaginationWalker().toList((offset, count) -> client
-                .target(format("%s/blockchain/omni/wallet?offset=%d&count=%d", apiRoot, offset, count))
+                .target(format("%s/blockchain/omni/vault/%s/wallet?offset=%d&count=%d",
+                        apiRoot, vault.getId(),
+                        offset, count))
                 .request()
                 .header(SESSION_SECRET, userClientContext.getSessionSecret())
-                .get(WalletPagination.class)
-        );
+                .get(WalletPagination.class));
 
         assertFalse(wallets.isEmpty());
 
@@ -233,7 +234,7 @@ public class UserWalletApiTest {
     }
 
     @Test(groups = "read", dependsOnGroups = "update")
-    public void testGetWalletsForWrongUserFails() {
+    public void testGetWalletsFromVaultForWrongUserFails() {
 
         final var response = client
                 .target(format("%s/blockchain/omni/vault/%s/wallet", apiRoot, vault.getId()))
@@ -241,7 +242,39 @@ public class UserWalletApiTest {
                 .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
                 .get();
 
-//        assertEquals(response.getStatus(), 404);
+        assertEquals(response.getStatus(), 404);
+
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update", dataProvider = "walletsById")
+    public void testGetSpecificWallet(final String walletId, final Wallet wallet) {
+
+        final var response = client
+                .target(format("%s/blockchain/omni/wallet/%s", apiRoot, walletId))
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var fetched = response.readEntity(Wallet.class);
+        assertEquals(fetched, wallet);
+
+    }
+
+    @Test(groups = "read", dependsOnGroups = "update", dataProvider = "walletsById")
+    public void testGetSpecificWalletForVault(final String walletId, final Wallet wallet) {
+
+        final var response = client
+                .target(format("%s/blockchain/omni/vault/%s/wallet/%s", apiRoot, vault.getId(), walletId))
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var fetched = response.readEntity(Wallet.class);
+        assertEquals(fetched, wallet);
 
     }
 

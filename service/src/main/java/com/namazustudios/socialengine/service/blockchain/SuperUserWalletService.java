@@ -49,8 +49,8 @@ public class SuperUserWalletService implements WalletService {
     }
 
     @Override
-    public Wallet getWalletForVault(final String walletId, final String vaultId) {
-        return getWalletDao().getWallet(walletId, vaultId);
+    public Wallet getWalletInVault(final String walletId, final String vaultId) {
+        return getWalletDao().getWalletInVault(walletId, vaultId);
     }
 
     @Override

@@ -92,15 +92,11 @@ public class MongoWalletDao implements WalletDao {
     }
 
     @Override
-    public Optional<Wallet> findWallet(final String walletId, final String vaultId) {
-        return findMongoWallet(walletId, vaultId).map(mw -> getMapper().map(mw, Wallet.class));
+    public Optional<Wallet> findWallet(String walletId) {
+        return findMongoWallet(walletId).map(mw -> getMapper().map(mw, Wallet.class));
     }
 
     public Optional<MongoWallet> findMongoWallet(final String walletId) {
-        return findMongoWallet(walletId, null);
-    }
-
-    public Optional<MongoWallet> findMongoWallet(final String walletId, final String vaultId) {
 
         final var walletObjectId = getMongoDBUtils().parse(walletId);
 
@@ -112,17 +108,65 @@ public class MongoWalletDao implements WalletDao {
                 .find(MongoWallet.class)
                 .filter(eq("_id", walletObjectId.get()));
 
-        if (vaultId != null) {
+        final var result = query.first();
+        return Optional.ofNullable(result);
 
-            final var mongoVault = getMongoVaultDao().findMongoVault(vaultId);
+    }
 
-            if (mongoVault.isEmpty()) {
-                return Optional.empty();
-            }
+    @Override
+    public Optional<Wallet> findWalletInVault(final String walletId, final String vaultId) {
+        return findMongoWalletInVault(walletId, vaultId).map(mw -> getMapper().map(mw, Wallet.class));
+    }
 
-            query.filter(eq("vault", mongoVault.get()));
+    public Optional<MongoWallet> findMongoWalletInVault(final String walletId, final String vaultId) {
 
+        final var walletObjectId = getMongoDBUtils().parse(walletId);
+
+        if (walletObjectId.isEmpty()) {
+            return Optional.empty();
         }
+
+        final var query = getDatastore()
+                .find(MongoWallet.class)
+                .filter(eq("_id", walletObjectId.get()));
+
+        final var mongoVault = getMongoVaultDao().findMongoVault(vaultId);
+
+        if (mongoVault.isEmpty()) {
+            return Optional.empty();
+        }
+
+        query.filter(eq("vault", mongoVault.get()));
+
+        final var result = query.first();
+        return Optional.ofNullable(result);
+
+    }
+
+    @Override
+    public Optional<Wallet> findWalletForUser(final String walletId, final String userId) {
+        return findMongoWalletForUser(walletId, userId).map(mw -> getMapper().map(mw, Wallet.class));
+    }
+
+    public Optional<MongoWallet> findMongoWalletForUser(final String walletId, final String userId) {
+
+        final var walletObjectId = getMongoDBUtils().parse(walletId);
+
+        if (walletObjectId.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final var query = getDatastore()
+                .find(MongoWallet.class)
+                .filter(eq("_id", walletObjectId.get()));
+
+        final var mongoUser = getMongoUserDao().findActiveMongoUser(userId);
+
+        if (mongoUser.isEmpty()) {
+            return Optional.empty();
+        }
+
+        query.filter(eq("user", mongoUser.get()));
 
         final var result = query.first();
         return Optional.ofNullable(result);

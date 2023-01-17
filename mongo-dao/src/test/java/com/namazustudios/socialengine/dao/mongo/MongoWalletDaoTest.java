@@ -18,7 +18,6 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -305,7 +304,7 @@ public class MongoWalletDaoTest {
 
     @Test(dataProvider = "walletsById", groups = "read", dependsOnGroups = "update")
     public void testGetSingleWalletForVault(final String walletId, final Wallet wallet) {
-        final var fetched = getUnderTest().getWallet(walletId, wallet.getVault().getId());
+        final var fetched = getUnderTest().getWalletInVault(walletId, wallet.getVault().getId());
         assertEquals(fetched, wallet);
     }
 
@@ -316,7 +315,7 @@ public class MongoWalletDaoTest {
 
     @Test(dataProvider = "wallets", groups = "read", dependsOnGroups = "update", expectedExceptions = WalletNotFoundException.class)
     public void testGetSingleWalletForUserNotFound(final Wallet wallet) {
-        getUnderTest().getWallet(wallet.getId(), trudyUser.getId());
+        getUnderTest().getWalletInVault(wallet.getId(), trudyUser.getId());
     }
 
     @Test(groups = "read", dependsOnGroups = "update")
@@ -327,7 +326,7 @@ public class MongoWalletDaoTest {
 
     @Test(dataProvider = "wallets", groups = "read", dependsOnGroups = "update")
     public void testFindSingleWalletForUserNotFound(final Wallet wallet) {
-        final var result = getUnderTest().findWallet(wallet.getId(), trudyUser.getId());
+        final var result = getUnderTest().findWalletInVault(wallet.getId(), trudyUser.getId());
         assertFalse(result.isPresent());
     }
 

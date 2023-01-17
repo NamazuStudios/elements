@@ -31,7 +31,8 @@ public class UserWalletService implements WalletService {
             final String vaultId, final String userId,
             final BlockchainApi protocol, final List<BlockchainNetwork> networks) {
         if (userId == null || Objects.equals(userId, getUser().getId())) {
-            return getWalletDao().getWallets(offset, count, vaultId, getUser().getId(), protocol, networks);
+            final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
+            return getWalletDao().getWallets(offset, count, vault.getId(), getUser().getId(), protocol, networks);
         } else {
             return Pagination.empty();
         }
@@ -39,13 +40,13 @@ public class UserWalletService implements WalletService {
 
     @Override
     public Wallet getWallet(final String walletId) {
-        return getWalletDao().getWallet(walletId, getUser().getId());
+        return getWalletDao().getWalletForUser(walletId, getUser().getId());
     }
 
     @Override
-    public Wallet getWalletForVault(final String walletId, final String vaultId) {
+    public Wallet getWalletInVault(final String walletId, final String vaultId) {
         final var vault = getVaultDao().getVaultForUser(vaultId, getUser().getId());
-        return getWalletDao().getWallet(walletId, vault.getId());
+        return getWalletDao().getWalletInVault(walletId, vault.getId());
     }
 
     @Override

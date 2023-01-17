@@ -116,7 +116,7 @@ public class VaultWalletResource {
             @PathParam("walletId")
             final String walletId
     ) {
-        return getWalletService().getWalletForVault(walletId, vaultId);
+        return getWalletService().getWalletInVault(walletId, vaultId);
     }
 
     @DELETE

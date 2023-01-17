@@ -32,18 +32,25 @@ public interface WalletDao {
      * @param walletId the wallet id
      * @return the {@link Optional<Wallet>}
      */
-    default Optional<Wallet> findWallet(final String walletId) {
-        return findWallet(walletId, null);
-    }
+    Optional<Wallet> findWallet(String walletId);
 
     /**
-     * Finds the wallets.
+     * Finds a wallet belonging to the specified user..
      *
      * @param walletId the wallet id
-     * @param vaultId the value id
+     * @param userId the user id
      * @return the {@link Optional<Wallet>}
      */
-    Optional<Wallet> findWallet(String walletId, String vaultId);
+    Optional<Wallet> findWalletForUser(String walletId, String userId);
+
+    /**
+     * Finds a wallet in the specified vault.
+     *
+     * @param walletId the wallet id
+     * @param vaultId the vault id
+     * @return the {@link Optional<Wallet>}
+     */
+    Optional<Wallet> findWalletInVault(String walletId, String vaultId);
 
     /**
      * Fetches a specific {@link Wallet} instance based on ID. If not found, an
@@ -53,7 +60,7 @@ public interface WalletDao {
      * @return the {@link Wallet}, never null
      */
     default Wallet getWallet(final String walletId) {
-        return findWallet(walletId, null).orElseThrow(WalletNotFoundException::new);
+        return findWallet(walletId).orElseThrow(WalletNotFoundException::new);
     }
 
     /**
@@ -64,8 +71,20 @@ public interface WalletDao {
      * @param vaultId
      * @return the {@link Wallet}, never null
      */
-    default Wallet getWallet(final String walletId, final String vaultId) {
-        return findWallet(walletId, vaultId).orElseThrow(WalletNotFoundException::new);
+    default Wallet getWalletInVault(final String walletId, final String vaultId) {
+        return findWalletInVault(walletId, vaultId).orElseThrow(WalletNotFoundException::new);
+    }
+
+    /**
+     * Fetches a specific {@link Wallet} instance based on ID. If not found, an
+     * exception is raised.
+     *
+     * @param walletId the wallet id to
+     * @param userId the user id
+     * @return the {@link Wallet}, never null
+     */
+    default Wallet getWalletForUser(final String walletId, final String userId) {
+        return findWalletForUser(walletId, userId).orElseThrow(WalletNotFoundException::new);
     }
 
     /**

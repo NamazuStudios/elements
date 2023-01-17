@@ -30,38 +30,6 @@ public class WalletResource {
     private WalletService walletService;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets  wallets. Optionally filtered for a specific user",
-            notes = "Gets a pagination of  Wallets. Optionally a user Id can be specified to filter for a given user.")
-    public Pagination<Wallet> getWallets(
-
-            @QueryParam("offset")
-            @DefaultValue("0")
-            final int offset,
-
-            @QueryParam("count")
-            @DefaultValue("20")
-            final int count,
-
-            @QueryParam("userId")
-            String userId,
-
-            @QueryParam("vaultId")
-            String vaultId,
-
-            @QueryParam("api")
-            final BlockchainApi api,
-
-            @QueryParam("network")
-            final List<BlockchainNetwork> network
-
-    ) {
-        userId = emptyToNull(userId);
-        vaultId = emptyToNull(vaultId);
-        return getWalletService().getWallets(offset, count, vaultId, userId, api, network);
-    }
-
-    @GET
     @Path("{walletId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific  Wallet",

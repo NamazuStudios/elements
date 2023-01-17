@@ -66,7 +66,7 @@ public class SmartContractResource {
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Patches a  Smart Contract",
             notes = "Patches a  Smart Contract entry, associated with the specified deployed script hash.")
     public SmartContract createSmartContract(final CreateSmartContractRequest createSmartContractRequest) {
@@ -75,7 +75,7 @@ public class SmartContractResource {
 
     @PUT
     @Path("{contractId}")
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Patches a  Smart Contract",
             notes = "Patches a  Smart Contract entry, associated with the specified deployed script hash.")
     public SmartContract updateSmartContract(
