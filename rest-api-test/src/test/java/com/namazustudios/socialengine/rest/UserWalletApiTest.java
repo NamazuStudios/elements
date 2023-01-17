@@ -275,4 +275,56 @@ public class UserWalletApiTest {
 
     }
 
+    @Test(groups = "delete", dependsOnGroups = "read", dataProvider = "walletsById", dependsOnMethods = "testDeleteWalletWrongUserFails")
+    public void testDeleteWallet(final String walletId, final Wallet wallet) {
+
+        final var response = client
+                .target(format("%s/blockchain/omni/vault/%s/wallet/%s", apiRoot, vault.getId(), walletId))
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 204);
+
+    }
+
+    @Test(groups = "delete", dependsOnGroups = "read", dataProvider = "walletsById")
+    public void testDeleteWalletWrongUserFails(final String walletId, final Wallet wallet) {
+
+        final var response = client
+                .target(format("%s/blockchain/omni/vault/%s/wallet/%s", apiRoot, vault.getId(), walletId))
+                .request()
+                .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
+    @Test(groups = "delete", dependsOnGroups = "read", dataProvider = "walletsById", dependsOnMethods = "testDeleteWallet")
+    public void testDoubleDeleteWallet(final String walletId, final Wallet wallet) {
+
+        final var response = client
+                .target(format("%s/blockchain/omni/vault/%s/wallet/%s", apiRoot, vault.getId(), walletId))
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
+    @Test(groups = "delete", dependsOnGroups = "read", dataProvider = "walletsById", dependsOnMethods = "testDeleteWallet")
+    public void testWalletWasDeleted(final String walletId, final Wallet wallet) {
+
+        final var response = client
+                .target(format("%s/blockchain/omni/vault/%s/wallet/%s", apiRoot, vault.getId(), walletId))
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
 }

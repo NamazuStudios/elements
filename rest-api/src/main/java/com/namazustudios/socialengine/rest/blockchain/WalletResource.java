@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.service.WalletService;
 import io.swagger.annotations.Api;
@@ -11,11 +8,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
-import static com.google.common.base.Strings.emptyToNull;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 @Api(value = "Blockchain Wallets",
@@ -37,15 +35,6 @@ public class WalletResource {
     public Wallet getWallet(@PathParam("walletId") String walletId) {
         walletId = Strings.nullToEmpty(walletId).trim();
         return getWalletService().getWallet(walletId);
-    }
-
-    @DELETE
-    @Path("{walletId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deletes a  Wallet",
-            notes = "Deletes a  Wallet with the specified id.")
-    public void deleteWallet(@PathParam("walletId") final String walletId) {
-        getWalletService().deleteWallet(walletId);
     }
 
     public WalletService getWalletService() {
