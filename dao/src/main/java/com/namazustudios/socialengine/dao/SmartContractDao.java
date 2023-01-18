@@ -29,21 +29,41 @@ public interface SmartContractDao {
 
     /**
      * Gets the specific smart contract.
-     * @param contractNameOrId the contract id
+     * @param contractId the contract id
      *
      * @return the contract, never null
      */
-    default SmartContract getSmartContract(final String contractNameOrId) {
-        return findSmartContract(contractNameOrId).orElseThrow(SmartContractNotFoundException::new);
+    default SmartContract getSmartContractById(final String contractId) {
+        return findSmartContractById(contractId).orElseThrow(SmartContractNotFoundException::new);
     }
 
     /**
      * Finds a specific {@link SmartContract}.
      *
-     * @param contractNameOrId
+     * @param contractId
      * @return the {@link Optional<SmartContract>}
      */
-    Optional<SmartContract> findSmartContract(String contractNameOrId);
+    Optional<SmartContract> findSmartContractById(String contractId);
+
+    /**
+     * Gets the specific smart contract.
+     *
+     * @param contractNameOrId the contract unique name or id
+     *
+     * @return the contract, never null
+     */
+    default SmartContract getSmartContractByNameOrId(final String contractNameOrId) {
+        return findSmartContractByNameOrId(contractNameOrId).orElseThrow(SmartContractNotFoundException::new);
+    }
+
+    /**
+     * Finds a specific {@link SmartContract}.
+     *
+     * @param contractNameOrId the contract unique name or id
+     *
+     * @return the {@link Optional<SmartContract>}
+     */
+    Optional<SmartContract> findSmartContractByNameOrId(String contractNameOrId);
 
     /**
      * Updates a {@link SmartContract} in the database.

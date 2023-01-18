@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.dao.SmartContractDao;
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.blockchain.SmartContractNotFoundException;
-import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
@@ -234,24 +233,24 @@ public class MongoSmartContractDaoTest {
 
     @Test(dataProvider = "smartContracts", groups = "read", dependsOnGroups = "update")
     public void testGetSingleSmartContractById(final SmartContract smartContract) {
-        final var fetched = getUnderTest().getSmartContract(smartContract.getId());
+        final var fetched = getUnderTest().getSmartContractById(smartContract.getId());
         assertEquals(fetched, smartContract);
     }
 
     @Test(dataProvider = "smartContracts", groups = "read", dependsOnGroups = "update")
     public void testGetSingleSmartContractByName(final SmartContract smartContract) {
-        final var fetched = getUnderTest().getSmartContract(smartContract.getName());
+        final var fetched = getUnderTest().getSmartContractByNameOrId(smartContract.getName());
         assertEquals(fetched, smartContract);
     }
 
     @Test(groups = "read", dependsOnGroups = "update", expectedExceptions = SmartContractNotFoundException.class)
     public void testGetSingleContractNotFound() {
-        getUnderTest().getSmartContract(new ObjectId().toString());
+        getUnderTest().getSmartContractById(new ObjectId().toString());
     }
 
     @Test(groups = "read", dependsOnGroups = "update")
     public void testFindSingleContractNotFound() {
-        final var wallet = getUnderTest().findSmartContract(new ObjectId().toString());
+        final var wallet = getUnderTest().findSmartContractById(new ObjectId().toString());
         assertFalse(wallet.isPresent());
     }
 

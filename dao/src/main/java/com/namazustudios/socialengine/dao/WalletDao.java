@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
+
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
@@ -86,6 +88,18 @@ public interface WalletDao {
     default Wallet getWalletForUser(final String walletId, final String userId) {
         return findWalletForUser(walletId, userId).orElseThrow(WalletNotFoundException::new);
     }
+
+    /**
+     * Attempts to find a single wallet for the supplied vault ID and blockchain network.
+     *
+     * @param vaultId the vault id
+     * @param blockchainNetwork the network
+     *
+     * @return the wallet
+     * @throws WalletNotFoundException if no wallet matches
+     * @throws DuplicateException if more than one wallet matches
+     */
+    Wallet getSingleWalletFromVaultForNetwork(String vaultId, BlockchainNetwork blockchainNetwork);
 
     /**
      * Updates the supplied {@link Wallet}.

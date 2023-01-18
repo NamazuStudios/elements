@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.exception.crypto.CryptoException;
+import com.namazustudios.socialengine.service.blockchain.bsc.Bscw3jClient;
+import com.namazustudios.socialengine.service.blockchain.bsc.StandardBscw3jClient;
 import org.testng.annotations.Test;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;

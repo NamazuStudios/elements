@@ -64,7 +64,25 @@ public class MongoSmartContractDao implements SmartContractDao {
     }
 
     @Override
-    public Optional<SmartContract> findSmartContract(final String contractNameOrId) {
+    public Optional<SmartContract> findSmartContractById(final String contractNameOrId) {
+
+        final var query = getDatastore().find(MongoSmartContract.class);
+
+        final var objectId = getMongoDBUtils().parse(contractNameOrId);
+
+        if (objectId.isPresent()) {
+            query.filter(eq("_id", objectId.get()));
+        } else {
+            return Optional.empty();
+        }
+
+        final var contract = query.first();
+        return Optional.ofNullable(contract).map(msc -> getMapper().map(msc, SmartContract.class));
+
+    }
+
+    @Override
+    public Optional<SmartContract> findSmartContractByNameOrId(String contractNameOrId) {
 
         final var query = getDatastore().find(MongoSmartContract.class);
 

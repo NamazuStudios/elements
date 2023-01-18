@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.model.blockchain;
 import com.namazustudios.socialengine.rt.annotation.RemoteModel;
 import com.namazustudios.socialengine.rt.annotation.RemoteScope;
 
+import java.util.Optional;
+
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.API_SCOPE;
 import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static java.lang.String.format;
@@ -74,12 +76,24 @@ public enum BlockchainNetwork {
     }
 
     /**
+     * The IoC Name for anything related to the blockchain network. Used to dynamically resolve components in the
+     * system for anything. This also serves as the base IoC name for external configuration.
+     *
+     * It always carries the same format.
+     *
+     * @return the urls
+     */
+    public String iocName() {
+        return format("com.namazustudios.socialengine.blockchain.network.%s", toString().toLowerCase());
+    }
+
+    /**
      * The name of the URLs configured for the network.
      *
      * @return the urls
      */
     public String urlsName() {
-        return format("com.namazustudios.socialengine.blockchain.network.%s.urls", toString().toLowerCase());
+        return format("%s.urls", iocName());
     }
 
     /**

@@ -3,9 +3,7 @@ package com.namazustudios.socialengine.rest.blockchain;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
-import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
-import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
-import io.neow3j.protocol.core.response.NeoApplicationLog;
+import com.namazustudios.socialengine.service.blockchain.neo.NeoSmartContractService;
 import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.swagger.annotations.Api;
@@ -18,8 +16,6 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;

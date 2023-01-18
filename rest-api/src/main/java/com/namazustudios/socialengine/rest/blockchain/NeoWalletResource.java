@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
-import com.namazustudios.socialengine.service.blockchain.NeoWalletService;
+import com.namazustudios.socialengine.service.blockchain.neo.NeoWalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

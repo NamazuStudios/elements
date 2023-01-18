@@ -7,7 +7,9 @@ import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoVault;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoWalletAccount;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
 import com.namazustudios.socialengine.exception.blockchain.WalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
@@ -19,6 +21,7 @@ import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -170,6 +173,27 @@ public class MongoWalletDao implements WalletDao {
 
         final var result = query.first();
         return Optional.ofNullable(result);
+
+    }
+
+    @Override
+    public Wallet getSingleWalletFromVaultForNetwork(final String vaultId, final BlockchainNetwork blockchainNetwork) {
+
+        final var mongoVault = getMongoVaultDao().getMongoVault(vaultId);
+
+        final var query = getDatastore().find(MongoWallet.class)
+            .filter(eq("vault", mongoVault))
+            .filter(in("networks", List.of(blockchainNetwork)));
+
+        final var count = query.count();
+
+        if (count == 1) {
+            return getMapper().map(query.first(), Wallet.class);
+        } else if (count == 0) {
+            throw new WalletNotFoundException();
+        } else {
+            throw new DuplicateException();
+        }
 
     }
 

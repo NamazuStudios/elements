@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
 import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractRequest;
 import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
-import com.namazustudios.socialengine.service.blockchain.BscSmartContractService;
+import com.namazustudios.socialengine.service.blockchain.bsc.BscSmartContractService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

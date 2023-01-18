@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
-import com.namazustudios.socialengine.service.blockchain.BscWalletService;
+import com.namazustudios.socialengine.service.blockchain.bsc.BscWalletService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContrac
 import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
-import com.namazustudios.socialengine.service.blockchain.Bscw3jClient;
+import com.namazustudios.socialengine.service.blockchain.bsc.Bscw3jClient;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;

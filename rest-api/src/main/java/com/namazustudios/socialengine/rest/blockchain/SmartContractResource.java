@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.CreateSmartContractRequest;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.contract.UpdateSmartContractRequest;
-import com.namazustudios.socialengine.service.blockchain.SmartContractService;
+import com.namazustudios.socialengine.service.SmartContractService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

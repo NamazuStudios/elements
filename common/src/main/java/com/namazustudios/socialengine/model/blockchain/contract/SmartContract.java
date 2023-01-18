@@ -33,7 +33,7 @@ public class SmartContract {
     private String id;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
     @ApiModelProperty("The unique symbolic name of the smart contract.")
     private String name;
 
