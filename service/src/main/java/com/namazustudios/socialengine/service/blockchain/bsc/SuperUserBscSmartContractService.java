@@ -220,6 +220,7 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             }
 
             return null;
+
         });
     }
 
@@ -383,4 +384,5 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
         txLog.setType(l.getType());
         return txLog;
     }
+
 }

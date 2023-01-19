@@ -2,12 +2,14 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.blockchain.VaultNotFoundException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Expose({
@@ -24,6 +26,20 @@ import java.util.List;
  * EVM based networks.
  */
 public interface EvmSmartContractService {
+
+    /**
+     * Gas Price
+     *
+     * @deprecated migrate this to a configurable parameter
+     */
+   BigInteger DEFAULT_GAS_PRICE = BigInteger.valueOf(20000000000L);
+
+    /**
+     * Gas Limits
+     *
+     * @deprecated migrate this to a configurable parameter
+     */
+    BigInteger DEFAULT_GAS_LIMIT = BigInteger.valueOf(6721975);
 
     /**
      * Generates a {@link Resolution} for the supplied contract, which can be used to invoke the underlying smart
@@ -76,7 +92,7 @@ public interface EvmSmartContractService {
          * @param outputTypes the return types
          * @return the return result of the call
          */
-        Object send(
+        EVMInvokeContractResponse send(
                 String network,
                 String method,
                 List<String> inputTypes,

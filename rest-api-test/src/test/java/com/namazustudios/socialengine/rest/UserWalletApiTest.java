@@ -110,6 +110,7 @@ public class UserWalletApiTest {
         final var secondAccount = new CreateWalletRequestAccount();
 
         if (SOLANA.equals(api)) {
+            // Solana Does not currently support generation. Until that's supported we don't support that operation
             secondAccount.setGenerate(false);
             secondAccount.setAddress("Second Random Address");
             secondAccount.setPrivateKey("Second Random Private Key");

@@ -1,64 +1,49 @@
 package com.namazustudios.socialengine.service.blockchain.evm;
 
 import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
-import com.namazustudios.socialengine.model.blockchain.contract.SmartContractAddress;
-import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
-import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
-import com.namazustudios.socialengine.service.EvmSmartContractService;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMTransactionLog;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.TransactionManager;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.utils.Numeric;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.web3j.abi.FunctionEncoder.encode;
 import static org.web3j.abi.FunctionReturnDecoder.decode;
 
-public class Web3jInvoker implements EvmSmartContractService.Invoker {
+public class Web3jInvoker implements ScopedInvoker {
 
     private Web3j web3j;
 
-    private Vault vault;
+    private EvmInvocationScope evmInvocationScope;
 
-    private Wallet wallet;
-
-    private WalletAccount walletAccount;
-
-    private SmartContract smartContract;
-
-    private BlockchainNetwork blockchainNetwork;
-
-    private SmartContractAddress smartContractAddress;
-
-    private BigInteger gasLimit;
-
-    private BigInteger gasPrice;
-
-    public void init(
-            final Vault vault,
-            final Wallet wallet,
-            final SmartContract smartContract,
-            final BlockchainNetwork blockchainNetwork,
-            final SmartContractAddress smartContractAddress) {
-        this.vault = vault;
-        this.wallet = wallet;
-        this.smartContract = smartContract;
-        this.blockchainNetwork = blockchainNetwork;
-        this.smartContractAddress = smartContractAddress;
+    @Override
+    public void initialize(final EvmInvocationScope evmInvocationScope) {
+        this.evmInvocationScope = evmInvocationScope;
     }
 
     @Override
@@ -71,8 +56,10 @@ public class Web3jInvoker implements EvmSmartContractService.Invoker {
         final var function = getFunction(method, inputTypes, arguments, outputTypes);
 
         final var transaction = Transaction.createEthCallTransaction(
-                getWalletAccount() == null ? null : getWalletAccount().getAddress(),
-                getSmartContractAddress().getAddress(),
+                evmInvocationScope.getWalletAccount() == null
+                        ? null
+                        : evmInvocationScope.getWalletAccount().getAddress(),
+                evmInvocationScope.getSmartContractAddress().getAddress(),
                 encode(function)
         );
 
@@ -95,22 +82,125 @@ public class Web3jInvoker implements EvmSmartContractService.Invoker {
     }
 
     @Override
-    public Object send(
+    public EVMInvokeContractResponse send(
             final String network,
             final String method,
             final List<String> inputTypes,
             final List<Object> arguments,
             final List<String> outputTypes) {
 
-        if (getWalletAccount().isEncrypted()) {
+        if (evmInvocationScope.getWalletAccount().isEncrypted()) {
             throw new IllegalStateException("Wallet must be decrypted.");
         }
 
         final var function = getFunction(method, inputTypes, arguments, outputTypes);
-        final var credentials = Credentials.create(getWalletAccount().getPrivateKey());
+        final var credentials = Credentials.create(evmInvocationScope.getWalletAccount().getPrivateKey());
+        final var nonce = getNonce(credentials);
 
+        final var rawTransaction = RawTransaction.createTransaction(
+                nonce,
+                evmInvocationScope.getGasPrice(),
+                evmInvocationScope.getGasLimit(),
+                evmInvocationScope.getSmartContractAddress().getAddress(),
+                BigInteger.ZERO,
+                encode(function)
+        );
 
-        return null;
+        final var signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+        final var hexValue = Numeric.toHexString(signedMessage);
+
+        final EthSendTransaction ethSendTransaction;
+
+        try {
+            ethSendTransaction = getWeb3j()
+                    .ethSendRawTransaction(hexValue)
+                    .send();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
+        final var transactionHash = ethSendTransaction.getTransactionHash();
+
+        final var receiptProcessor = new PollingTransactionReceiptProcessor(
+                getWeb3j(),
+                TransactionManager.DEFAULT_POLLING_FREQUENCY,
+                TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH
+        );
+
+        final TransactionReceipt txReceipt;
+
+        try {
+            txReceipt = receiptProcessor.waitForTransactionReceipt(transactionHash);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        } catch (TransactionException ex) {
+            throw new InternalException(ex);
+        }
+
+        final var response = convertTransactionReceipt(txReceipt);
+
+        if(response.getLogs() != null && response.getLogs().size() > 0) {
+
+            final var data = response.getLogs().get(0).getData();
+
+            final var decodedData = FunctionReturnDecoder.decode(data, function.getOutputParameters())
+                    .stream()
+                    .map(Type::getValue)
+                    .collect(Collectors.toList());
+
+            response.setDecodedLog(decodedData);
+
+        }
+
+        return response;
+
+    }
+
+    private EVMInvokeContractResponse convertTransactionReceipt(final TransactionReceipt txReceipt) {
+        final var response = new EVMInvokeContractResponse();
+        response.setBlockHash(txReceipt.getBlockHash());
+        response.setBlockNumber(txReceipt.getBlockNumber().longValue());
+        response.setContractAddress(txReceipt.getContractAddress());
+        response.setCumulativeGasUsed(txReceipt.getCumulativeGasUsed().longValue());
+        response.setEffectiveGasPrice(txReceipt.getEffectiveGasPrice());
+        response.setFrom(txReceipt.getFrom());
+        response.setGasUsed(txReceipt.getGasUsed().longValue());
+        response.setLogs(txReceipt.getLogs().stream().map(this::convertLog).collect(Collectors.toList()));
+        response.setLogsBloom(txReceipt.getLogsBloom());
+        response.setRevertReason(txReceipt.getRevertReason());
+        response.setRoot(txReceipt.getRoot());
+        response.setStatus(txReceipt.getStatus() == null ? 1 : Numeric.decodeQuantity(txReceipt.getStatus()).longValue());
+        response.setTo(txReceipt.getTo());
+        response.setTransactionHash(txReceipt.getTransactionHash());
+        response.setTransactionIndex(txReceipt.getTransactionIndex().longValue());
+        response.setType(txReceipt.getType());
+        return response;
+    }
+
+    private EVMTransactionLog convertLog(final Log l) {
+        final var txLog = new EVMTransactionLog();
+        txLog.setAddress(l.getAddress());
+        txLog.setBlockHash(l.getBlockHash());
+        txLog.setBlockNumber(l.getBlockNumber().longValue());
+        txLog.setData(l.getData());
+        txLog.setLogIndex(l.getLogIndex().longValue());
+        txLog.setRemoved(l.isRemoved());
+        txLog.setTopics(l.getTopics());
+        txLog.setTransactionHash(l.getTransactionHash());
+        txLog.setTransactionIndex(l.getTransactionIndex().longValue());
+        txLog.setType(l.getType());
+        return txLog;
+    }
+
+    private BigInteger getNonce(final Credentials credentials) {
+        try {
+            return getWeb3j()
+                    .ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.LATEST)
+                    .send()
+                    .getTransactionCount();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     private Function getFunction(
@@ -118,9 +208,6 @@ public class Web3jInvoker implements EvmSmartContractService.Invoker {
             final List<String> inputTypes,
             final List<Object> arguments,
             final List<String> outputTypes) {
-
-        final Function function;
-
         try {
             return FunctionEncoder.makeFunction(method, inputTypes, arguments, outputTypes);
         } catch (
@@ -131,71 +218,6 @@ public class Web3jInvoker implements EvmSmartContractService.Invoker {
                 InvocationTargetException ex) {
             throw new InternalException(ex);
         }
-
-    }
-
-    public Vault getVault() {
-        return vault;
-    }
-
-    public void setVault(Vault vault) {
-        this.vault = vault;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
-    }
-
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
-    }
-
-    public WalletAccount getWalletAccount() {
-        return walletAccount;
-    }
-
-    public void setWalletAccount(WalletAccount walletAccount) {
-        this.walletAccount = walletAccount;
-    }
-
-    public SmartContract getSmartContract() {
-        return smartContract;
-    }
-
-    public void setSmartContract(SmartContract smartContract) {
-        this.smartContract = smartContract;
-    }
-
-    public BlockchainNetwork getBlockchainNetwork() {
-        return blockchainNetwork;
-    }
-
-    public void setBlockchainNetwork(BlockchainNetwork blockchainNetwork) {
-        this.blockchainNetwork = blockchainNetwork;
-    }
-
-    public SmartContractAddress getSmartContractAddress() {
-        return smartContractAddress;
-    }
-
-    public void setSmartContractAddress(SmartContractAddress smartContractAddress) {
-        this.smartContractAddress = smartContractAddress;
-    }
-
-    public BigInteger getGasLimit() {
-        return gasLimit;
-    }
-
-    public void setGasLimit(BigInteger gasLimit) {
-        this.gasLimit = gasLimit;
-    }
-
-    public BigInteger getGasPrice() {
-        return gasPrice;
-    }
-
-    public void setGasPrice(BigInteger gasPrice) {
-        this.gasPrice = gasPrice;
     }
 
     public Web3j getWeb3j() {

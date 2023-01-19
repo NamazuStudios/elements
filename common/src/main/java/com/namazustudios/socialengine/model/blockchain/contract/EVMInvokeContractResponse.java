@@ -57,7 +57,8 @@ public class EVMInvokeContractResponse {
     @ApiModelProperty("The effective gas price.")
     private String effectiveGasPrice;
 
-    @ApiModelProperty("The decoded log. Elements will attempt to decode the first log using the passed in " +
+    @ApiModelProperty(
+            "The decoded log. Elements will attempt to decode the first log using the passed in " +
             "output types. This is made available to get any sort of return value from an emitted event, " +
             "as transactions that affect state or storage on a contract cannot directly return values.")
     private List<Object> decodedLog;
