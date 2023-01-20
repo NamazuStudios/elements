@@ -1,9 +1,6 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.mongo;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +9,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

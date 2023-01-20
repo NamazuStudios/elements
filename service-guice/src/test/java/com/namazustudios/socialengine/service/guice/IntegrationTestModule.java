@@ -1,30 +1,25 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.mongo.MongoTestInstanceModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.mongo.MongoTestInstanceModule;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import dev.morphia.Datastore;
 import org.dozer.Mapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 
-
 public class IntegrationTestModule extends AbstractModule {
-
-    private static final Logger logger = LoggerFactory.getLogger(IntegrationTestModule.class);
 
     public static final String TEST_COMPONENT = "com.namazustudios.socialengine.dao.mongo.IntegrationTestModule.test";
 
@@ -55,21 +50,19 @@ public class IntegrationTestModule extends AbstractModule {
         });
 
         bind(Mapper.class)
-            .annotatedWith(Names.named(TEST_COMPONENT))
-            .toProvider(MongoDozerMapperProvider.class);
+                .annotatedWith(Names.named(TEST_COMPONENT))
+                .toProvider(MongoDozerMapperProvider.class);
 
         bind(PasswordGenerator.class)
                 .to(SecureRandomPasswordGenerator.class)
                 .asEagerSingleton();
 
-        bind(UserTestFactory.class).asEagerSingleton();
-        bind(ProfileTestFactory.class).asEagerSingleton();
-        bind(ApplicationTestFactory.class).asEagerSingleton();
-
         install(new MongoTestInstanceModule(port));
         install(new MongoCoreModule());
         install(new MongoSearchModule());
         install(new ValidationModule());
+        install(new AppleIapReceiptInvokerModule());
+        install(new ServicesModule(TestScope.scope, TestScope.AttributesProvider.class));
 
     }
 
