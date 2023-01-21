@@ -94,11 +94,6 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>service-test</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>service-redis</artifactId>
             <version>${project.version}</version>
         </dependency>
