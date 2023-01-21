@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.*;
 import com.namazustudios.socialengine.dao.FirebaseApplicationConfigurationDao;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.model.session.FirebaseSessionRequest;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
@@ -17,7 +17,7 @@ import javax.inject.Provider;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 
-import static com.namazustudios.socialengine.FirebaseServiceAccountCredentials.loadServiceAccountCredentials;
+import static com.namazustudios.socialengine.service.FirebaseServiceAccountCredentials.loadServiceAccountCredentials;
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;

@@ -145,7 +145,6 @@ public class ServicesModule extends PrivateModule {
         expose(ScoreService.class).annotatedWith(Unscoped.class);
         expose(LeaderboardService.class).annotatedWith(Unscoped.class);
         expose(MockSessionService.class).annotatedWith(Unscoped.class);
-
         expose(ItemService.class).annotatedWith(Unscoped.class);
         expose(SimpleInventoryItemService.class).annotatedWith(Unscoped.class);
         expose(AdvancedInventoryItemService.class).annotatedWith(Unscoped.class);
