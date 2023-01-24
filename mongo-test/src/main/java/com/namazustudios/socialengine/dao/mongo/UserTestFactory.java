@@ -25,11 +25,11 @@ public class UserTestFactory {
         return createTestUser(null, addToDB);
     }
 
-    public User createTestUser(Consumer<User> precreateConsumer) {
+    public User createTestUser(final Consumer<User> precreateConsumer) {
         return createTestUser(precreateConsumer, true);
     }
 
-    public User createTestUser(Consumer<User> precreateConsumer, boolean addToDB) {
+    public User createTestUser(final Consumer<User> precreateConsumer, boolean addToDB) {
 
         final var testUser = buildTestUser(precreateConsumer);
 

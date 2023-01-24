@@ -31,4 +31,15 @@ public interface WalletCryptoUtilities {
      */
     Optional<Wallet> decrypt(VaultKey unencryptedVaultKey, Wallet wallet);
 
+    /**
+     * Decrypts the wallet. If decryption fails, such as for bad passphrase, then the method will return
+     * {@link Optional#empty()}
+     *
+     *
+     * @param unencryptedVaultKey
+     * @param encryptedWalletAccount the {@link WalletAccount}
+     * @return the {@link Optional<Wallet>}
+     */
+    Optional<WalletAccount> decrypt(VaultKey unencryptedVaultKey, WalletAccount encryptedWalletAccount);
+
 }

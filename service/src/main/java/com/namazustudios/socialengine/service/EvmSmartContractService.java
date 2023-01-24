@@ -27,6 +27,8 @@ import java.util.List;
  */
 public interface EvmSmartContractService {
 
+    String IOC_NAME = "namazu.elements.service.smartcontract.evm";
+
     /**
      * Gas Price
      *
@@ -93,7 +95,6 @@ public interface EvmSmartContractService {
          * @return the return result of the call
          */
         EVMInvokeContractResponse send(
-                String network,
                 String method,
                 List<String> inputTypes,
                 List<Object> arguments,

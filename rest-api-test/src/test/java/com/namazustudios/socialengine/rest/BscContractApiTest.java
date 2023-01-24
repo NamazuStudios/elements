@@ -153,7 +153,7 @@ public class BscContractApiTest {
         listingId = responseId;
     }
 
-    //TODO: This test currently requires a GAS fee, so it should be left disabled for C
+    //TODO: This test currently requires a GAS fee, so it should be left disabled and run manually as needed.
     @Test(dataProvider = "getAuthHeader", dependsOnMethods = "testSend", enabled = false)
     public void testCall(final String authHeader) {
 
@@ -180,6 +180,7 @@ public class BscContractApiTest {
         assertTrue(response.get(1) instanceof String);
         assertTrue(response.get(2) instanceof Integer);
         assertTrue(response.get(3) instanceof Integer);
+
     }
 
 

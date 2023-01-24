@@ -83,7 +83,6 @@ public class Web3jInvoker implements ScopedInvoker {
 
     @Override
     public EVMInvokeContractResponse send(
-            final String network,
             final String method,
             final List<String> inputTypes,
             final List<Object> arguments,

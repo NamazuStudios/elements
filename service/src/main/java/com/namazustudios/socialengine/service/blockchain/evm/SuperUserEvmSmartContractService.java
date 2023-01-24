@@ -8,8 +8,11 @@ import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.service.EvmSmartContractService;
 import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
+import jdk.jfr.Name;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import static java.lang.String.format;
 
@@ -22,6 +25,8 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
     private SmartContractDao smartContractDao;
 
     private VaultCryptoUtilities vaultCryptoUtilities;
+
+    private WalletCryptoUtilities walletCryptoUtilities;
 
     private IocResolver iocResolver;
 
@@ -56,6 +61,7 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
         evmInvocationScope.setWallet(wallet);
         evmInvocationScope.setWalletAccount(walletAccount);
         evmInvocationScope.setSmartContract(smartContract);
+        evmInvocationScope.setSmartContractAddress(smartContractAddress);
         evmInvocationScope.setBlockchainNetwork(blockchainNetwork);
         evmInvocationScope.setGasLimit(DEFAULT_GAS_LIMIT);
         evmInvocationScope.setGasPrice(DEFAULT_GAS_PRICE);
@@ -105,8 +111,17 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
     }
 
     @Inject
-    public void setIocResolver(IocResolver iocResolver) {
+    public void setIocResolver(@Named(IOC_NAME) IocResolver iocResolver) {
         this.iocResolver = iocResolver;
+    }
+
+    public WalletCryptoUtilities getWalletCryptoUtilities() {
+        return walletCryptoUtilities;
+    }
+
+    @Inject
+    public void setWalletCryptoUtilities(WalletCryptoUtilities walletCryptoUtilities) {
+        this.walletCryptoUtilities = walletCryptoUtilities;
     }
 
     private class StandardResolution implements Resolution {
@@ -126,6 +141,24 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
                     ScopedInvoker.class,
                     blockchainNetwork.iocName()
             );
+
+            final var walletAccount = evmInvocationScope.getWalletAccount();
+
+            if (walletAccount.isEncrypted()) {
+
+                final var vaultKey = evmInvocationScope.getVault().getKey();
+
+                if (vaultKey.isEncrypted()) {
+                    throw new IllegalStateException("Vault key must not be encrypted.");
+                }
+
+                final var decryptedWalletAccount = getWalletCryptoUtilities()
+                        .decrypt(vaultKey, evmInvocationScope.getWalletAccount())
+                        .orElseThrow(() -> new IllegalArgumentException("Failed to decrypted wallet account."));
+
+                evmInvocationScope.setWalletAccount(decryptedWalletAccount);
+
+            }
 
             invoker.initialize(evmInvocationScope);
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.guice;
 
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -23,10 +24,15 @@ import com.namazustudios.socialengine.service.schema.*;
 
 import javax.inject.Provider;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.service.EvmSmartContractService.IOC_NAME;
+
 /**
  * Configures all of the services, using a {@link Scope} for {@link User}, {@link Profile} injections.
  */
 public class ServicesModule extends PrivateModule {
+
+    private static final String INTERNAL_SERVICE_NAME = "com.namazustudios.socialengine.service.guice";
 
     private final Scope scope;
 
@@ -49,7 +55,6 @@ public class ServicesModule extends PrivateModule {
     protected void configure() {
 
         bind(Attributes.class).toProvider(attributesProvider);
-        bind(IocResolver.class).to(GuiceIoCResolver.class);
 
         install(new ServiceUtilityModule());
         install(new DatabaseHealthStatusDaoAggregator());

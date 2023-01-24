@@ -139,6 +139,51 @@ public class StandardWalletCryptoUtilities implements WalletCryptoUtilities {
 
     }
 
+    @Override
+    public Optional<WalletAccount> decrypt(final VaultKey unencryptedVaultKey,
+                                           final WalletAccount encryptedWalletAccount) {
+
+        if (unencryptedVaultKey.isEncrypted()) {
+            throw new IllegalArgumentException("Vault is encrypted.");
+        }
+
+        final var privateKey = getCryptoKeyPairUtility().getPrivateKey(
+                unencryptedVaultKey.getAlgorithm(),
+                unencryptedVaultKey.getPrivateKey()
+        );
+
+        if (!encryptedWalletAccount.isEncrypted()) {
+            throw new IllegalArgumentException("Account must be encrypted.");
+        }
+
+        final var encryptedPrivateKey = encryptedWalletAccount.getPrivateKey();
+
+        if (encryptedPrivateKey == null) {
+            throw new IllegalArgumentException("Account must have a private key.");
+        }
+
+        final var decryptedPrivateKey = getCipherUtility().decryptString(
+                unencryptedVaultKey.getAlgorithm(),
+                privateKey,
+                encryptedPrivateKey
+        );
+
+        if (decryptedPrivateKey.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final var decryptedAccount = getObjectMapper().convertValue(
+                encryptedWalletAccount,
+                WalletAccount.class
+        );
+
+        decryptedAccount.setEncrypted(false);
+        decryptedAccount.setPrivateKey(decryptedPrivateKey.get());
+
+        return Optional.of(decryptedAccount);
+
+    }
+
     private VaultKey getVaultKey(final Wallet wallet) {
 
         if (!getValidator().validateProperty(wallet, "vault").isEmpty()) {
