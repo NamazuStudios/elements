@@ -184,9 +184,13 @@ public class BscContractApiTest {
     }
 
 
-    private Credentials getCredentials() {
-        Credentials credentials = Credentials.create("0xc9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943");
-        return credentials;
+    private static Credentials getCredentials() {
+        return Credentials.create("0xc9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943");
+    }
+
+    public static void main(String[] args) {
+        final var credentials = getCredentials();
+        System.out.println(credentials.getAddress());
     }
 
 }

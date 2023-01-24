@@ -16,6 +16,7 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,18 +37,16 @@ public class TestEvmSmartContractService {
     );
 
     public static final Map<BlockchainNetwork, String> WALLET_ADDRESSES = Map.of(
-            BlockchainNetwork.BSC_TEST, "0x511663912ac4b4e55bdca865aebae6a58d2e5050"
+            BlockchainNetwork.BSC_TEST, "0x05011bba59d302d5ff4ee1be2468bb8572aae286"
     );
 
     public static final Map<BlockchainNetwork, String> WALLET_PRIVATE_KEYS = Map.of(
-            BlockchainNetwork.BSC_TEST, "71e934f755e89effbb6436cdff469c7577261a366cab94e95f16f1d29da4e685"
+            BlockchainNetwork.BSC_TEST, "c9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943"
     );
 
     private User user;
 
     private Vault vault;
-
-    private SmartContract smartContract;
 
     private UserTestFactory userTestFactory;
 
@@ -123,7 +122,7 @@ public class TestEvmSmartContractService {
         request.setVaultId(vault.getId());
         request.setAddresses(addresses);
 
-        smartContract = getSmartContractService().createSmartContract(request);
+        getSmartContractService().createSmartContract(request);
 
     }
 
@@ -136,7 +135,7 @@ public class TestEvmSmartContractService {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "testNetworks", enabled = false)
+    @Test(dataProvider = "testNetworks")
     public void testSend(final BlockchainNetwork blockchainNetwork) {
 
         final var name = "Test";
@@ -172,7 +171,7 @@ public class TestEvmSmartContractService {
 
     }
 
-    @Test(dataProvider = "testNetworks", dependsOnMethods = "testSend", enabled = false)
+    @Test(dataProvider = "testNetworks", dependsOnMethods = "testSend")
     public void testCall(final BlockchainNetwork blockchainNetwork) {
 
         final var listingId = listingIds.get(blockchainNetwork);
@@ -180,7 +179,7 @@ public class TestEvmSmartContractService {
         final var response = getUnderTest()
                 .resolve(CONTRACT_NAME, blockchainNetwork)
                 .open()
-                .send(
+                .call(
                         "listings",
                         List.of("uint256"),
                         List.of(listingId),
@@ -193,8 +192,8 @@ public class TestEvmSmartContractService {
         assertEquals(responseList.size(), 4);
         assertTrue(responseList.get(0) instanceof String);
         assertTrue(responseList.get(1) instanceof String);
-        assertTrue(responseList.get(2) instanceof Integer);
-        assertTrue(responseList.get(3) instanceof Integer);
+        assertTrue(responseList.get(2) instanceof Integer || ((List<?>) response).get(2) instanceof BigInteger);
+        assertTrue(responseList.get(3) instanceof Integer || ((List<?>) response).get(3) instanceof BigInteger);
 
     }
 
