@@ -45,7 +45,7 @@ public class BlockchainNetworkRpcAppProvider extends AbstractLifeCycle implement
     @Override
     protected void doStart() {
         Stream.of(BlockchainNetwork.values())
-                .filter(p -> p.api().getProtocols().contains(ELEMENTS_JSON_RPC_PROTOCOL))
+                .filter(p -> p.api().getApis().contains(ELEMENTS_JSON_RPC_PROTOCOL))
                 .forEach(this::startJsonRpcNetwork);
     }
 

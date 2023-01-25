@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.blockchain.evm;
+package com.namazustudios.socialengine.service.blockchain.invoke.evm;
 
 import com.namazustudios.socialengine.dao.SmartContractDao;
 import com.namazustudios.socialengine.dao.VaultDao;
@@ -6,17 +6,19 @@ import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.IocResolver;
-import com.namazustudios.socialengine.service.EvmSmartContractService;
+import com.namazustudios.socialengine.service.EvmSmartContractInvocationService;
+import com.namazustudios.socialengine.service.SmartContractInvocationResolution;
 import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
-import jdk.jfr.Name;
+import com.namazustudios.socialengine.service.blockchain.invoke.InvocationScope;
+import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import static java.lang.String.format;
 
-public class SuperUserEvmSmartContractService implements EvmSmartContractService {
+public class SuperUserEvmSmartContractInvocationService implements EvmSmartContractInvocationService {
 
     private VaultDao vaultDao;
 
@@ -31,7 +33,9 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
     private IocResolver iocResolver;
 
     @Override
-    public Resolution resolve(final String contractNameOrId, final BlockchainNetwork blockchainNetwork) {
+    public SmartContractInvocationResolution<Invoker> resolve(
+            final String contractNameOrId,
+            final BlockchainNetwork blockchainNetwork) {
 
         final var smartContract = getSmartContractDao()
                 .findSmartContractByNameOrId(contractNameOrId)
@@ -63,10 +67,11 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
         evmInvocationScope.setSmartContract(smartContract);
         evmInvocationScope.setSmartContractAddress(smartContractAddress);
         evmInvocationScope.setBlockchainNetwork(blockchainNetwork);
+
         evmInvocationScope.setGasLimit(DEFAULT_GAS_LIMIT);
         evmInvocationScope.setGasPrice(DEFAULT_GAS_PRICE);
 
-        return new StandardResolution(evmInvocationScope);
+        return new StandardSmartContractInvocationResolution(evmInvocationScope);
 
     }
 
@@ -124,11 +129,11 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
         this.walletCryptoUtilities = walletCryptoUtilities;
     }
 
-    private class StandardResolution implements Resolution {
+    private class StandardSmartContractInvocationResolution implements SmartContractInvocationResolution {
 
         private EvmInvocationScope evmInvocationScope;
 
-        public StandardResolution(final EvmInvocationScope evmInvocationScope) {
+        public StandardSmartContractInvocationResolution(final EvmInvocationScope evmInvocationScope) {
             this.evmInvocationScope = evmInvocationScope;
         }
 
@@ -181,7 +186,7 @@ public class SuperUserEvmSmartContractService implements EvmSmartContractService
         }
 
         @Override
-        public Resolution vault(final String vaultId) {
+        public SmartContractInvocationResolution vault(final String vaultId) {
             final var vault = getVaultDao().getVault(vaultId);
             evmInvocationScope.setVault(vault);
             return this;

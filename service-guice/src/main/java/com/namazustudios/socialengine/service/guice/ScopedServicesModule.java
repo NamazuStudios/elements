@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServicePro
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.bsc.*;
-import com.namazustudios.socialengine.service.blockchain.evm.EvmSmartContractServiceProvider;
+import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmSmartContractServiceProvider;
 import com.namazustudios.socialengine.service.blockchain.neo.*;
 import com.namazustudios.socialengine.service.blockchain.omni.SmartContractServiceProvider;
 import com.namazustudios.socialengine.service.blockchain.omni.VaultServiceProvider;
@@ -273,7 +273,7 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(VaultServiceProvider.class)
                 .in(scope);
 
-        bind(EvmSmartContractService.class)
+        bind(EvmSmartContractInvocationService.class)
                 .toProvider(EvmSmartContractServiceProvider.class)
                 .in(scope);
 

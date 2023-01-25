@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.dao.mongo.UserTestFactory;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.CreateSmartContractRequest;
-import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContractAddress;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateVaultRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequest;
@@ -28,7 +27,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.testng.Assert.*;
 import static org.testng.Assert.assertEquals;
 
-public class TestEvmSmartContractService {
+public class TestEvmSmartContractInvocationService {
 
     private static final String CONTRACT_NAME = "evm_integration_test";
 
@@ -50,7 +49,7 @@ public class TestEvmSmartContractService {
 
     private UserTestFactory userTestFactory;
 
-    private EvmSmartContractService underTest;
+    private EvmSmartContractInvocationService underTest;
 
     private VaultService vaultService;
 
@@ -63,8 +62,8 @@ public class TestEvmSmartContractService {
     @Factory
     public Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(TestEvmSmartContractService.class),
-                TestUtils.getInstance().getUnixFSTest(TestEvmSmartContractService.class)
+                TestUtils.getInstance().getXodusTest(TestEvmSmartContractInvocationService.class),
+                TestUtils.getInstance().getUnixFSTest(TestEvmSmartContractInvocationService.class)
         };
     }
 
@@ -206,12 +205,12 @@ public class TestEvmSmartContractService {
         this.userTestFactory = userTestFactory;
     }
 
-    public EvmSmartContractService getUnderTest() {
+    public EvmSmartContractInvocationService getUnderTest() {
         return underTest;
     }
 
     @Inject
-    public void setUnderTest(@Unscoped EvmSmartContractService underTest) {
+    public void setUnderTest(@Unscoped EvmSmartContractInvocationService underTest) {
         this.underTest = underTest;
     }
 

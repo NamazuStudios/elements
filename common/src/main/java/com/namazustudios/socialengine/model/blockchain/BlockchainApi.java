@@ -26,19 +26,24 @@ import static java.lang.String.format;
 public enum BlockchainApi {
 
     /**
-     * The Neo Protocol.
+     * The Neo API.
      */
     NEO(ELEMENTS_JSON_RPC_PROTOCOL),
 
     /**
-     * The Ethereum Protocol.
+     * The Ethereum API.
      */
     ETHEREUM(ELEMENTS_JSON_RPC_PROTOCOL),
 
     /**
      * The Solana protocol.
      */
-    SOLANA(ELEMENTS_JSON_RPC_PROTOCOL);
+    SOLANA(ELEMENTS_JSON_RPC_PROTOCOL),
+
+    /**
+     * The Flow API.
+     */
+    FLOW;
 
     /**
      * Lists all protocols supported by this {@link BlockchainApi}.
@@ -92,7 +97,7 @@ public enum BlockchainApi {
      *
      * @return the protocols supported by this API
      */
-    public Set<String> getProtocols() {
+    public Set<String> getApis() {
         return protocols;
     }
 

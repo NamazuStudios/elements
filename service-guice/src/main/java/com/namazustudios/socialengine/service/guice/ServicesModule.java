@@ -1,13 +1,10 @@
 package com.namazustudios.socialengine.service.guice;
 
-import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.IocResolver;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.advancement.AdvancementService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
@@ -23,9 +20,6 @@ import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServi
 import com.namazustudios.socialengine.service.schema.*;
 
 import javax.inject.Provider;
-
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.service.EvmSmartContractService.IOC_NAME;
 
 /**
  * Configures all of the services, using a {@link Scope} for {@link User}, {@link Profile} injections.
@@ -129,7 +123,7 @@ public class ServicesModule extends PrivateModule {
         expose(WalletService.class);
         expose(VaultService.class);
         expose(SmartContractService.class);
-        expose(EvmSmartContractService.class);
+        expose(EvmSmartContractInvocationService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -182,7 +176,7 @@ public class ServicesModule extends PrivateModule {
         expose(WalletService.class).annotatedWith(Unscoped.class);
         expose(SmartContractService.class).annotatedWith(Unscoped.class);
         expose(VaultService.class).annotatedWith(Unscoped.class);
-        expose(EvmSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(EvmSmartContractInvocationService.class).annotatedWith(Unscoped.class);
 
     }
 

@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.model.blockchain.BlockchainApi.ETHEREUM;
-import static com.namazustudios.socialengine.service.EvmSmartContractService.IOC_NAME;
+import static com.namazustudios.socialengine.service.EvmSmartContractInvocationService.IOC_NAME;
 
 public class Web3jBlockchainSupportModule extends AbstractModule {
 

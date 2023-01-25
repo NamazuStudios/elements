@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.config;
 
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+
 import java.util.List;
 import java.util.Properties;
 
@@ -41,6 +43,9 @@ public class BlockchainModuleDefaults implements ModuleDefaults {
 
         properties.put(SOLANA.urlsName(), "http://localhost:8899/");
         properties.put(SOLANA_TEST.urlsName(), "http://localhost:8899/");
+
+        properties.put(FLOW.urlsName(), "https://access.devnet.nodes.onflow.org:9000");
+        properties.put(FLOW_TEST.urlsName(), "https://access.devnet.nodes.onflow.org:9000");
 
         return properties;
 

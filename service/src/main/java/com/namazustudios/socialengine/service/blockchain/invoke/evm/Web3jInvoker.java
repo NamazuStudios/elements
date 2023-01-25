@@ -1,8 +1,9 @@
-package com.namazustudios.socialengine.service.blockchain.evm;
+package com.namazustudios.socialengine.service.blockchain.invoke.evm;
 
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.model.blockchain.contract.EVMTransactionLog;
+import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.datatypes.Function;
@@ -35,7 +36,7 @@ import static java.util.stream.Collectors.toList;
 import static org.web3j.abi.FunctionEncoder.encode;
 import static org.web3j.abi.FunctionReturnDecoder.decode;
 
-public class Web3jInvoker implements ScopedInvoker {
+public class Web3jInvoker implements ScopedInvoker<EvmInvocationScope> {
 
     private Web3j web3j;
 

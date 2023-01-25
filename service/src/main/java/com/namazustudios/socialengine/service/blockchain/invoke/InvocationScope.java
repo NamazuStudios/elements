@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.blockchain.evm;
+package com.namazustudios.socialengine.service.blockchain.invoke;
 
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
@@ -7,9 +7,9 @@ import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 
-import java.math.BigInteger;
+import java.util.Objects;
 
-public class EvmInvocationScope {
+public class InvocationScope {
 
     private Vault vault;
 
@@ -22,10 +22,6 @@ public class EvmInvocationScope {
     private BlockchainNetwork blockchainNetwork;
 
     private SmartContractAddress smartContractAddress;
-
-    private BigInteger gasLimit;
-
-    private BigInteger gasPrice;
 
     public Vault getVault() {
         return vault;
@@ -75,20 +71,30 @@ public class EvmInvocationScope {
         this.smartContractAddress = smartContractAddress;
     }
 
-    public BigInteger getGasLimit() {
-        return gasLimit;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InvocationScope that = (InvocationScope) o;
+        return Objects.equals(getVault(), that.getVault()) && Objects.equals(getWallet(), that.getWallet()) && Objects.equals(getWalletAccount(), that.getWalletAccount()) && Objects.equals(getSmartContract(), that.getSmartContract()) && getBlockchainNetwork() == that.getBlockchainNetwork() && Objects.equals(getSmartContractAddress(), that.getSmartContractAddress());
     }
 
-    public void setGasLimit(BigInteger gasLimit) {
-        this.gasLimit = gasLimit;
+    @Override
+    public int hashCode() {
+        return Objects.hash(getVault(), getWallet(), getWalletAccount(), getSmartContract(), getBlockchainNetwork(), getSmartContractAddress());
     }
 
-    public BigInteger getGasPrice() {
-        return gasPrice;
-    }
-
-    public void setGasPrice(BigInteger gasPrice) {
-        this.gasPrice = gasPrice;
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("InvocationScope{");
+        sb.append("vault=").append(vault);
+        sb.append(", wallet=").append(wallet);
+        sb.append(", walletAccount=").append(walletAccount);
+        sb.append(", smartContract=").append(smartContract);
+        sb.append(", blockchainNetwork=").append(blockchainNetwork);
+        sb.append(", smartContractAddress=").append(smartContractAddress);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

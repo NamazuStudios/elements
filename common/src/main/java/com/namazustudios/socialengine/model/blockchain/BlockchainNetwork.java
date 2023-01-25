@@ -67,7 +67,17 @@ public enum BlockchainNetwork {
     /**
      * The Solana Test Network. Uses the {@link BlockchainApi#SOLANA} API.
      */
-    SOLANA_TEST(BlockchainApi.SOLANA);
+    SOLANA_TEST(BlockchainApi.SOLANA),
+
+    /**
+     * The Flow blockchain network.
+     */
+    FLOW(BlockchainApi.FLOW),
+
+    /**
+     * The Flow blockchain test network.
+     */
+    FLOW_TEST(BlockchainApi.FLOW);
 
     private final BlockchainApi api;
 
