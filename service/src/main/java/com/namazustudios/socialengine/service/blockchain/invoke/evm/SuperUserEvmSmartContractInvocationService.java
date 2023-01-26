@@ -5,16 +5,13 @@ import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.service.EvmSmartContractInvocationService;
 import com.namazustudios.socialengine.service.SmartContractInvocationResolution;
 import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
-import com.namazustudios.socialengine.service.blockchain.invoke.InvocationScope;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import static java.lang.String.format;
 
@@ -30,7 +27,7 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
 
     private WalletCryptoUtilities walletCryptoUtilities;
 
-    private IocResolver iocResolver;
+    private ScopedInvoker.Factory<EvmInvocationScope> scopedInvokerFactory;
 
     @Override
     public SmartContractInvocationResolution<Invoker> resolve(
@@ -111,13 +108,13 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
         this.vaultCryptoUtilities = vaultCryptoUtilities;
     }
 
-    public IocResolver getIocResolver() {
-        return iocResolver;
+    public ScopedInvoker.Factory<EvmInvocationScope> getScopedInvokerFactory() {
+        return scopedInvokerFactory;
     }
 
     @Inject
-    public void setIocResolver(@Named(IOC_NAME) IocResolver iocResolver) {
-        this.iocResolver = iocResolver;
+    public void setScopedInvokerFactory(ScopedInvoker.Factory<EvmInvocationScope> scopedInvokerFactory) {
+        this.scopedInvokerFactory = scopedInvokerFactory;
     }
 
     public WalletCryptoUtilities getWalletCryptoUtilities() {
@@ -129,7 +126,7 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
         this.walletCryptoUtilities = walletCryptoUtilities;
     }
 
-    private class StandardSmartContractInvocationResolution implements SmartContractInvocationResolution {
+    private class StandardSmartContractInvocationResolution implements SmartContractInvocationResolution<Invoker> {
 
         private EvmInvocationScope evmInvocationScope;
 
@@ -141,11 +138,7 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
         public Invoker open() {
 
             final var blockchainNetwork = evmInvocationScope.getBlockchainNetwork();
-
-            final var invoker = getIocResolver().inject(
-                    ScopedInvoker.class,
-                    blockchainNetwork.iocName()
-            );
+            final var scopedInvoker = getScopedInvokerFactory().create(blockchainNetwork);
 
             final var walletAccount = evmInvocationScope.getWalletAccount();
 
@@ -165,9 +158,9 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
 
             }
 
-            invoker.initialize(evmInvocationScope);
+            scopedInvoker.initialize(evmInvocationScope);
 
-            return invoker;
+            return scopedInvoker;
 
         }
 

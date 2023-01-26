@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.blockchain.invoke.evm;
 import com.namazustudios.socialengine.service.blockchain.invoke.InvocationScope;
 
 import java.math.BigInteger;
+import java.util.Objects;
 
 public class EvmInvocationScope extends InvocationScope {
 
@@ -24,6 +25,20 @@ public class EvmInvocationScope extends InvocationScope {
 
     public void setGasPrice(BigInteger gasPrice) {
         this.gasPrice = gasPrice;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        EvmInvocationScope that = (EvmInvocationScope) o;
+        return Objects.equals(gasLimit, that.gasLimit) && Objects.equals(gasPrice, that.gasPrice);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), gasLimit, gasPrice);
     }
 
 }
