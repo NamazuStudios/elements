@@ -1,9 +1,13 @@
 package com.namazustudios.socialengine.service;
 
-public interface FlowSmartContractInvocationService {
+public interface FlowSmartContractInvocationService extends SmartContractInvocationService<FlowSmartContractInvocationService.Invoker> {
 
-    SmartContractInvocationResolution<Invoker> resolve();
+    interface Invoker {
 
-    interface Invoker {}
+        Object send();
+
+        Object call();
+
+    }
 
 }

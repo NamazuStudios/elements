@@ -25,7 +25,7 @@ public interface SmartContractInvocationResolution<InvokerT> {
      * @param passphrase the passphrase
      * @return the {@link EvmSmartContractInvocationService.Invoker} used to invoke the smart contract methods
      */
-    EvmSmartContractInvocationService.Invoker unlock(String passphrase);
+    InvokerT unlock(String passphrase);
 
     /**
      * Creates a new {@link SmartContractInvocationResolution} with a {@link Vault} not necessarily with the underlying
@@ -35,6 +35,6 @@ public interface SmartContractInvocationResolution<InvokerT> {
      * @return a new {@link SmartContractInvocationResolution} associated with the new vault
      * @throws VaultNotFoundException if there is no vault with the supplied id
      */
-    SmartContractInvocationResolution vault(String vaultId);
+    SmartContractInvocationResolution<InvokerT> vault(String vaultId);
 
 }

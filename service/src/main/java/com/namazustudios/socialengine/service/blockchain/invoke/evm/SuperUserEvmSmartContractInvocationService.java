@@ -2,11 +2,10 @@ package com.namazustudios.socialengine.service.blockchain.invoke.evm;
 
 import com.namazustudios.socialengine.dao.SmartContractDao;
 import com.namazustudios.socialengine.dao.VaultDao;
-import com.namazustudios.socialengine.dao.WalletDao;
-import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.service.EvmSmartContractInvocationService;
 import com.namazustudios.socialengine.service.SmartContractInvocationResolution;
+import com.namazustudios.socialengine.service.blockchain.invoke.StandardSmartContractInvocationResolution;
+import com.namazustudios.socialengine.service.blockchain.invoke.SuperUserSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
@@ -15,11 +14,9 @@ import javax.inject.Inject;
 
 import static java.lang.String.format;
 
-public class SuperUserEvmSmartContractInvocationService implements EvmSmartContractInvocationService {
-
-    private VaultDao vaultDao;
-
-    private WalletDao walletDao;
+public class SuperUserEvmSmartContractInvocationService
+        extends SuperUserSmartContractInvocationService<EvmInvocationScope, EvmSmartContractInvocationService.Invoker>
+        implements EvmSmartContractInvocationService {
 
     private SmartContractDao smartContractDao;
 
@@ -27,67 +24,24 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
 
     private WalletCryptoUtilities walletCryptoUtilities;
 
-    private ScopedInvoker.Factory<EvmInvocationScope> scopedInvokerFactory;
+    private ScopedInvoker.Factory<EvmInvocationScope, Invoker> scopedInvokerFactory;
 
     @Override
-    public SmartContractInvocationResolution<Invoker> resolve(
-            final String contractNameOrId,
-            final BlockchainNetwork blockchainNetwork) {
-
-        final var smartContract = getSmartContractDao()
-                .findSmartContractByNameOrId(contractNameOrId)
-                .orElseThrow(() -> new IllegalArgumentException("No such contract: " + contractNameOrId));
-
-        final var smartContractAddress = smartContract
-                .getAddresses()
-                .get(blockchainNetwork);
-
-        if (smartContractAddress == null) {
-            final var msg = format("Contract %s does not contain address for %s", contractNameOrId, blockchainNetwork);
-            throw new InternalException(msg);
-        }
-
-        final var vault = smartContract.getVault();
-
-        final var wallet = getWalletDao().getSingleWalletFromVaultForNetwork(
-                vault.getId(),
-                blockchainNetwork
-        );
-
-        final var preferredAccount = wallet.getPreferredAccount();
-        final var walletAccount = wallet.getAccounts().get(preferredAccount);
-
+    protected EvmInvocationScope newInvocationScope() {
         final var evmInvocationScope = new EvmInvocationScope();
-        evmInvocationScope.setVault(vault);
-        evmInvocationScope.setWallet(wallet);
-        evmInvocationScope.setWalletAccount(walletAccount);
-        evmInvocationScope.setSmartContract(smartContract);
-        evmInvocationScope.setSmartContractAddress(smartContractAddress);
-        evmInvocationScope.setBlockchainNetwork(blockchainNetwork);
-
         evmInvocationScope.setGasLimit(DEFAULT_GAS_LIMIT);
         evmInvocationScope.setGasPrice(DEFAULT_GAS_PRICE);
-
-        return new StandardSmartContractInvocationResolution(evmInvocationScope);
-
+        return evmInvocationScope;
     }
 
-    public VaultDao getVaultDao() {
-        return vaultDao;
-    }
-
-    @Inject
-    public void setVaultDao(VaultDao vaultDao) {
-        this.vaultDao = vaultDao;
-    }
-
-    public WalletDao getWalletDao() {
-        return walletDao;
-    }
-
-    @Inject
-    public void setWalletDao(WalletDao walletDao) {
-        this.walletDao = walletDao;
+    @Override
+    protected SmartContractInvocationResolution<EvmSmartContractInvocationService.Invoker> newResolution(final EvmInvocationScope evmInvocationScope) {
+        return new StandardSmartContractInvocationResolution<>(
+                getVaultDao(),
+                getVaultCryptoUtilities(),
+                getWalletCryptoUtilities(),
+                getScopedInvokerFactory()
+        );
     }
 
     public SmartContractDao getSmartContractDao() {
@@ -108,12 +62,12 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
         this.vaultCryptoUtilities = vaultCryptoUtilities;
     }
 
-    public ScopedInvoker.Factory<EvmInvocationScope> getScopedInvokerFactory() {
+    public ScopedInvoker.Factory<EvmInvocationScope, Invoker> getScopedInvokerFactory() {
         return scopedInvokerFactory;
     }
 
     @Inject
-    public void setScopedInvokerFactory(ScopedInvoker.Factory<EvmInvocationScope> scopedInvokerFactory) {
+    public void setScopedInvokerFactory(ScopedInvoker.Factory<EvmInvocationScope, Invoker> scopedInvokerFactory) {
         this.scopedInvokerFactory = scopedInvokerFactory;
     }
 
@@ -124,67 +78,6 @@ public class SuperUserEvmSmartContractInvocationService implements EvmSmartContr
     @Inject
     public void setWalletCryptoUtilities(WalletCryptoUtilities walletCryptoUtilities) {
         this.walletCryptoUtilities = walletCryptoUtilities;
-    }
-
-    private class StandardSmartContractInvocationResolution implements SmartContractInvocationResolution<Invoker> {
-
-        private EvmInvocationScope evmInvocationScope;
-
-        public StandardSmartContractInvocationResolution(final EvmInvocationScope evmInvocationScope) {
-            this.evmInvocationScope = evmInvocationScope;
-        }
-
-        @Override
-        public Invoker open() {
-
-            final var blockchainNetwork = evmInvocationScope.getBlockchainNetwork();
-            final var scopedInvoker = getScopedInvokerFactory().create(blockchainNetwork);
-
-            final var walletAccount = evmInvocationScope.getWalletAccount();
-
-            if (walletAccount.isEncrypted()) {
-
-                final var vaultKey = evmInvocationScope.getVault().getKey();
-
-                if (vaultKey.isEncrypted()) {
-                    throw new IllegalStateException("Vault key must not be encrypted.");
-                }
-
-                final var decryptedWalletAccount = getWalletCryptoUtilities()
-                        .decrypt(vaultKey, evmInvocationScope.getWalletAccount())
-                        .orElseThrow(() -> new IllegalArgumentException("Failed to decrypted wallet account."));
-
-                evmInvocationScope.setWalletAccount(decryptedWalletAccount);
-
-            }
-
-            scopedInvoker.initialize(evmInvocationScope);
-
-            return scopedInvoker;
-
-        }
-
-        @Override
-        public Invoker unlock(final String passphrase) {
-
-            final var key = evmInvocationScope.getVault().getKey();
-
-            final var unlocked = getVaultCryptoUtilities()
-                    .decryptKey(key, passphrase)
-                    .orElseThrow(() -> new IllegalStateException("Unable to unlock vault."));
-
-            evmInvocationScope.getVault().setKey(unlocked);
-            return open();
-
-        }
-
-        @Override
-        public SmartContractInvocationResolution vault(final String vaultId) {
-            final var vault = getVaultDao().getVault(vaultId);
-            evmInvocationScope.setVault(vault);
-            return this;
-        }
-
     }
 
 }

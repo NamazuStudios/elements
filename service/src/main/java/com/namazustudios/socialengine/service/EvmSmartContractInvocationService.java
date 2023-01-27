@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContrac
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
+import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmInvocationScope;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -22,7 +24,7 @@ import java.util.List;
  * are EVM based even if the API is not ETH based. Therefore this service can handle the invocation details for the
  * EVM based networks.
  */
-public interface EvmSmartContractInvocationService {
+public interface EvmSmartContractInvocationService extends SmartContractInvocationService<EvmSmartContractInvocationService.Invoker> {
 
     String IOC_NAME = "namazu.elements.service.smartcontract.evm";
 
@@ -41,30 +43,9 @@ public interface EvmSmartContractInvocationService {
     BigInteger DEFAULT_GAS_LIMIT = BigInteger.valueOf(6721975);
 
     /**
-     * Generates a {@link SmartContractInvocationResolution} for the supplied contract, which can be used to invoke the underlying smart
-     * contract methods.
-     *
-     * @param contractNameOrId the contract name or ID
-     * @param network the network
-     * @return the {@link SmartContractInvocationResolution}
-     */
-    SmartContractInvocationResolution<Invoker> resolve(String contractNameOrId, BlockchainNetwork network);
-
-    /**
-     * {@see {@link EvmSmartContractInvocationService#resolve(String, String)}}. Used to support scripting components.
-     *
-     * @param contractNameOrId the contract name or ID
-     * @param network the network
-     * @return the {@link SmartContractInvocationResolution}
-     */
-    default SmartContractInvocationResolution<Invoker> resolve(final String contractNameOrId, final String network) {
-        return resolve(contractNameOrId, BlockchainNetwork.valueOf(network));
-    }
-
-    /**
      * A type which performs the final invocation to the underlying smart contract.
      */
-    interface Invoker {
+    interface Invoker extends ScopedInvoker<EvmInvocationScope> {
 
         /**
          * Calls the smart contract method with the supplied parameter types and return types.
