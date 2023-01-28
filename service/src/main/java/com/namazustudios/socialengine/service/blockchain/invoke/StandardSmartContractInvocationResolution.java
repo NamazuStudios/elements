@@ -10,6 +10,8 @@ import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmInvocationScope;
 import com.namazustudios.socialengine.service.blockchain.invoke.evm.SuperUserEvmSmartContractInvocationService;
 
+import javax.inject.Inject;
+
 public class StandardSmartContractInvocationResolution<
             InvocationScopeT extends InvocationScope,
             InvokerT extends ScopedInvoker<InvocationScopeT>>
@@ -17,24 +19,13 @@ public class StandardSmartContractInvocationResolution<
 
     protected InvocationScopeT scope;
 
-    private final VaultDao vaultDao;
+    private VaultDao vaultDao;
 
-    private final VaultCryptoUtilities vaultCryptoUtilities;
+    private VaultCryptoUtilities vaultCryptoUtilities;
 
-    private final WalletCryptoUtilities walletCryptoUtilities;
+    private WalletCryptoUtilities walletCryptoUtilities;
 
-    private final ScopedInvoker.Factory<InvocationScopeT, InvokerT> scopedInvokerFactory;
-
-    public StandardSmartContractInvocationResolution(
-            final VaultDao vaultDao,
-            final VaultCryptoUtilities vaultCryptoUtilities,
-            final WalletCryptoUtilities walletCryptoUtilities,
-            final ScopedInvoker.Factory<InvocationScopeT, InvokerT> scopedInvokerFactory) {
-        this.vaultDao = vaultDao;
-        this.vaultCryptoUtilities = vaultCryptoUtilities;
-        this.walletCryptoUtilities = walletCryptoUtilities;
-        this.scopedInvokerFactory = scopedInvokerFactory;
-    }
+    private ScopedInvoker.Factory<InvocationScopeT, InvokerT> scopedInvokerFactory;
 
     @Override
     public InvokerT open() {
@@ -84,6 +75,42 @@ public class StandardSmartContractInvocationResolution<
         final var vault = vaultDao.getVault(vaultId);
         scope.setVault(vault);
         return this;
+    }
+
+    public VaultDao getVaultDao() {
+        return vaultDao;
+    }
+
+    @Inject
+    public void setVaultDao(VaultDao vaultDao) {
+        this.vaultDao = vaultDao;
+    }
+
+    public VaultCryptoUtilities getVaultCryptoUtilities() {
+        return vaultCryptoUtilities;
+    }
+
+    @Inject
+    public void setVaultCryptoUtilities(VaultCryptoUtilities vaultCryptoUtilities) {
+        this.vaultCryptoUtilities = vaultCryptoUtilities;
+    }
+
+    public WalletCryptoUtilities getWalletCryptoUtilities() {
+        return walletCryptoUtilities;
+    }
+
+    @Inject
+    public void setWalletCryptoUtilities(WalletCryptoUtilities walletCryptoUtilities) {
+        this.walletCryptoUtilities = walletCryptoUtilities;
+    }
+
+    public ScopedInvoker.Factory<InvocationScopeT, InvokerT> getScopedInvokerFactory() {
+        return scopedInvokerFactory;
+    }
+
+    @Inject
+    public void setScopedInvokerFactory(ScopedInvoker.Factory<InvocationScopeT, InvokerT> scopedInvokerFactory) {
+        this.scopedInvokerFactory = scopedInvokerFactory;
     }
 
 }

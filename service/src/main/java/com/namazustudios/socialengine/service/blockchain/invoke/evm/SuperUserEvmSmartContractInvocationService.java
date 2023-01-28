@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtil
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import static java.lang.String.format;
 
@@ -26,6 +27,8 @@ public class SuperUserEvmSmartContractInvocationService
 
     private ScopedInvoker.Factory<EvmInvocationScope, Invoker> scopedInvokerFactory;
 
+    private Provider<StandardSmartContractInvocationResolution<EvmInvocationScope, Invoker>> resolutionProvider;
+
     @Override
     protected EvmInvocationScope newInvocationScope() {
         final var evmInvocationScope = new EvmInvocationScope();
@@ -36,12 +39,9 @@ public class SuperUserEvmSmartContractInvocationService
 
     @Override
     protected SmartContractInvocationResolution<EvmSmartContractInvocationService.Invoker> newResolution(final EvmInvocationScope evmInvocationScope) {
-        return new StandardSmartContractInvocationResolution<>(
-                getVaultDao(),
-                getVaultCryptoUtilities(),
-                getWalletCryptoUtilities(),
-                getScopedInvokerFactory()
-        );
+        final var resolution = getResolutionProvider().get();
+        resolution.setScopedInvokerFactory(getScopedInvokerFactory());
+        return resolution;
     }
 
     public SmartContractDao getSmartContractDao() {
@@ -78,6 +78,15 @@ public class SuperUserEvmSmartContractInvocationService
     @Inject
     public void setWalletCryptoUtilities(WalletCryptoUtilities walletCryptoUtilities) {
         this.walletCryptoUtilities = walletCryptoUtilities;
+    }
+
+    public Provider<StandardSmartContractInvocationResolution<EvmInvocationScope, Invoker>> getResolutionProvider() {
+        return resolutionProvider;
+    }
+
+    @Inject
+    public void setResolutionProvider(Provider<StandardSmartContractInvocationResolution<EvmInvocationScope, Invoker>> resolutionProvider) {
+        this.resolutionProvider = resolutionProvider;
     }
 
 }

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.blockchain.invoke;
 
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.service.EvmSmartContractInvocationService.Invoker;
-import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmInvocationScope;
 
 /**
  * Internal interface used to handle scoping of {@link Invoker} instances.
@@ -12,9 +11,9 @@ public interface ScopedInvoker<InvocationScopeT extends InvocationScope> {
     /**
      * Initializes the {@link Invoker} with the invocation scope.
      *
-     * @param evmInvocationScope the {@link EvmInvocationScope}
+     * @param invocationScope the {@link InvocationScope}
      */
-    void initialize(InvocationScopeT evmInvocationScope);
+    void initialize(InvocationScopeT invocationScope);
 
     /**
      * A Factory type which is used to make instances of {@Link }

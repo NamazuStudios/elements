@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.toList;
 import static org.web3j.abi.FunctionEncoder.encode;
 import static org.web3j.abi.FunctionReturnDecoder.decode;
 
-public class Web3jInvoker implements ScopedInvoker<EvmInvocationScope>, EvmSmartContractInvocationService.Invoker {
+public class Web3jInvoker implements EvmSmartContractInvocationService.Invoker {
 
     private Web3j web3j;
 

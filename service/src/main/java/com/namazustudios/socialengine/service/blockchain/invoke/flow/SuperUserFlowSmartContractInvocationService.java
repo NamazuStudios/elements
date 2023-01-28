@@ -3,36 +3,54 @@ package com.namazustudios.socialengine.service.blockchain.invoke.flow;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.SmartContractInvocationResolution;
-import org.onflow.sdk.FlowAccessApi;
-import org.onflow.sdk.FlowTransaction;
+import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
+import com.namazustudios.socialengine.service.blockchain.invoke.StandardSmartContractInvocationResolution;
 
 import javax.inject.Inject;
-import java.util.regex.Pattern;
+import javax.inject.Provider;
 
 public class SuperUserFlowSmartContractInvocationService implements FlowSmartContractInvocationService {
 
-    private static final Pattern METHOD_NAME =Pattern.compile("\\w+");
+    private ScopedInvoker.Factory<FlowInvocationScope, Invoker> scopedInvokerFactory;
 
-    private static final Pattern CONTRACT_ADDRESS = Pattern.compile("0[xX][0-9a-fA-F]+");
+    private Provider<FlowInvoker> flowScopedInvokerProvider;
 
-    private static final String SCRIPT_HEADER = "import %s";
-
-    private FlowAccessApi flowAccessApi;
+    private Provider<StandardSmartContractInvocationResolution<FlowInvocationScope, Invoker>> resolutionProvider;
 
     @Override
     public SmartContractInvocationResolution<Invoker> resolve(
             final String contractNameOrId,
             final BlockchainNetwork network) {
-        return null;
+        final var resolution = getResolutionProvider().get();
+        resolution.setScopedInvokerFactory(getScopedInvokerFactory());
+        return resolution;
     }
 
-    public FlowAccessApi getFlowAccessApi() {
-        return flowAccessApi;
+    public ScopedInvoker.Factory<FlowInvocationScope, Invoker> getScopedInvokerFactory() {
+        return scopedInvokerFactory;
     }
 
     @Inject
-    public void setFlowAccessApi(FlowAccessApi flowAccessApi) {
-        this.flowAccessApi = flowAccessApi;
+    public void setScopedInvokerFactory(ScopedInvoker.Factory<FlowInvocationScope, Invoker> scopedInvokerFactory) {
+        this.scopedInvokerFactory = scopedInvokerFactory;
+    }
+
+    public Provider<FlowInvoker> getFlowScopedInvokerProvider() {
+        return flowScopedInvokerProvider;
+    }
+
+    @Inject
+    public void setFlowScopedInvokerProvider(Provider<FlowInvoker> flowScopedInvokerProvider) {
+        this.flowScopedInvokerProvider = flowScopedInvokerProvider;
+    }
+
+    public Provider<StandardSmartContractInvocationResolution<FlowInvocationScope, Invoker>> getResolutionProvider() {
+        return resolutionProvider;
+    }
+
+    @Inject
+    public void setResolutionProvider(Provider<StandardSmartContractInvocationResolution<FlowInvocationScope, Invoker>> resolutionProvider) {
+        this.resolutionProvider = resolutionProvider;
     }
 
 }
