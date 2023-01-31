@@ -4,15 +4,19 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 import org.onflow.sdk.*;
+import org.onflow.sdk.cadence.*;
 import org.onflow.sdk.crypto.Crypto;
 import org.onflow.sdk.crypto.PrivateKey;
 
 import javax.inject.Inject;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
+import static java.util.Map.entry;
 import static java.util.stream.Collectors.toList;
 import static org.onflow.sdk.FlowTransactionStatus.EXPIRED;
 import static org.onflow.sdk.FlowTransactionStatus.SEALED;
@@ -20,9 +24,42 @@ import static org.onflow.sdk.crypto.Crypto.getSigner;
 
 public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmartContractInvocationService.Invoker {
 
-    private static final long POLL_RATE_MSEC = 1000l;
+    private static final int POLL_ATTEMPTS = 30;
+
+    private static final long POLL_RATE_MSEC = 1000L;
 
     private static final String SCRIPT_HEADER_FORMAT = "import %s\n\n%s";
+
+    private static final Map<String, Function<Object, Field<?>>> ARGUMENT_CONVERTERS = Map.ofEntries(
+            // Signed Integer Types
+            entry("Int", s -> new IntNumberField(s.toString())),
+            entry("Int8", s -> new Int8NumberField(s.toString())),
+            entry("Int16", s -> new Int16NumberField(s.toString())),
+            entry("Int32", s -> new Int32NumberField(s.toString())),
+            entry("Int64", s -> new Int16NumberField(s.toString())),
+            entry("Int128", s -> new Int128NumberField(s.toString())),
+            entry("Int256", s -> new Int256NumberField(s.toString())),
+            // Unsigned Integer Types
+            entry("UInt8", s -> new UInt8NumberField(s.toString())),
+            entry("UInt16", s -> new UInt16NumberField(s.toString())),
+            entry("UInt32", s -> new UInt32NumberField(s.toString())),
+            entry("UInt64", s -> new UInt16NumberField(s.toString())),
+            entry("UInt128", s -> new UInt128NumberField(s.toString())),
+            entry("UInt256", s -> new UInt256NumberField(s.toString())),
+            // Word Types
+            entry("Word8", s -> new Word8NumberField(s.toString())),
+            entry("Word16", s -> new Word16NumberField(s.toString())),
+            entry("Word32", s -> new Word32NumberField(s.toString())),
+            entry("Word64", s -> new Word16NumberField(s.toString())),
+            // Fixed Point Types
+            entry("Fix64", s -> new Fix64NumberField(s.toString())),
+            entry("UFix64", s -> new UFix64NumberField(s.toString())),
+            // String Types
+            entry("String", s -> new StringField(s.toString())),
+            entry("Address", s -> new AddressField(s.toString())),
+            // Logical Types
+            entry("Boolean", s -> new BooleanField(Boolean.parseBoolean(s.toString())))
+    );
 
     private FlowAccessApi flowAccessApi;
 
@@ -35,15 +72,33 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
     private FlowAddress contractFlowAddress;
 
     @Override
-    public Object send(final String script, final List<?> arguments) {
+    public Object send(
+            final String script,
+            final List<String> argumentTypes,
+            final List<?> arguments) {
 
-        final var fullScript = format(SCRIPT_HEADER_FORMAT, contractFlowAddress.getFormatted(), script);
+        final var fullScript = format(
+                SCRIPT_HEADER_FORMAT,
+                contractFlowAddress.getFormatted(),
+                script
+        );
+
+        if (arguments.size() != argumentTypes.size()) {
+
+            final var msg = format(
+                    "Argument type array does not match argument counts (%d!=%d)",
+                    arguments.size(),
+                    argumentTypes.size()
+            );
+
+            throw new IllegalArgumentException(msg);
+
+        }
 
         final var flowScript = new FlowScript(fullScript);
 
-        final var flowArguments = arguments
-                .stream()
-                .map(this::getFlowArgument)
+        final var flowArguments = IntStream.range(0, arguments.size())
+                .mapToObj(index -> getFlowArgument(argumentTypes.get(index), arguments.get(index)))
                 .collect(toList());
 
         final var latestBlockId = getFlowAccessApi()
@@ -74,14 +129,29 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
         txn.addEnvelopeSignature(senderFlowAddress, senderAccountKey.getId(), signer);
 
         final var txnId = flowAccessApi.sendTransaction(txn);
-        final var txnResult = waitForSeal(txnId);
-
-        return null;
+        return waitForSeal(txnId);
 
     }
 
-    private FlowArgument getFlowArgument(Object o) {
+    @Override
+    public Object call(
+            final String script,
+            final List<String> argumentTypes,
+            final List<?> arguments) {
         return null;
+    }
+
+    private FlowArgument getFlowArgument(final String type, final Object argument) {
+
+        final var converter = ARGUMENT_CONVERTERS.get(type);
+
+        if (converter == null) {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
+
+        final var field = converter.apply(argument);
+        return new FlowArgument(field);
+
     }
 
     private FlowAccountKey getAccountKey() {
@@ -120,9 +190,7 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
 
     private FlowTransactionResult waitForSeal(final FlowId txnId) {
 
-        long attempts = 0;
-
-        while(true) {
+        for (int attempts = 0; attempts < POLL_ATTEMPTS; ++attempts) {
 
             final var txnResult = flowAccessApi.getTransactionResultById(txnId);
 
@@ -141,11 +209,9 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
             }
 
         }
-    }
 
-    @Override
-    public Object call() {
-        return null;
+        throw new InternalException("Transaction timeout.");
+
     }
 
     @Override
