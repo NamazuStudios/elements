@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain.invoke.flow;
 
+import com.google.protobuf.ByteString;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
@@ -9,6 +10,7 @@ import org.onflow.sdk.crypto.Crypto;
 import org.onflow.sdk.crypto.PrivateKey;
 
 import javax.inject.Inject;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -77,12 +79,6 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
             final List<String> argumentTypes,
             final List<?> arguments) {
 
-        final var fullScript = format(
-                SCRIPT_HEADER_FORMAT,
-                contractFlowAddress.getFormatted(),
-                script
-        );
-
         if (arguments.size() != argumentTypes.size()) {
 
             final var msg = format(
@@ -94,6 +90,12 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
             throw new IllegalArgumentException(msg);
 
         }
+
+        final var fullScript = format(
+                SCRIPT_HEADER_FORMAT,
+                contractFlowAddress.getFormatted(),
+                script
+        );
 
         final var flowScript = new FlowScript(fullScript);
 
@@ -134,11 +136,21 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
     }
 
     @Override
-    public Object call(
-            final String script,
-            final List<String> argumentTypes,
-            final List<?> arguments) {
-        return null;
+    public Object call(final String script, final List<?> arguments) {
+
+        final var fullScript = format(
+                SCRIPT_HEADER_FORMAT,
+                contractFlowAddress.getFormatted(),
+                script
+        );
+
+        final var flowScript = new FlowScript(fullScript);
+
+        return getFlowAccessApi().executeScriptAtLatestBlock(flowScript, arguments
+            .stream()
+            .map(arg -> ByteString.copyFrom(arg.toString(), StandardCharsets.UTF_8))
+            .collect(toList()));
+
     }
 
     private FlowArgument getFlowArgument(final String type, final Object argument) {

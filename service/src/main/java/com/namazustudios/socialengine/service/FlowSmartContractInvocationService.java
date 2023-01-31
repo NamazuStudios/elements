@@ -32,11 +32,10 @@ public interface FlowSmartContractInvocationService extends SmartContractInvocat
          * Exectues a script, but does not write, to the blockchain.
          *
          * @param script the Cadence script to execute
-         * @param argumentTypes the argument types to pass to the script
          * @param arguments the arguments passed to the script itself
          * @return the return value
          */
-        Object call(String script, List<String> argumentTypes, List<?> arguments);
+        Object call(String script, List<?> arguments);
 
     }
 

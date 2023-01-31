@@ -3,26 +3,24 @@ package com.namazustudios.socialengine.service.blockchain.crypto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.stream.IntStream;
 
-import static java.util.stream.Collectors.toList;
-
-public class StandardWalletIdentityFactory implements WalletIdentityFactory {
+public class StandardWalletAccountFactory implements WalletAccountFactory {
 
     private ObjectMapper objectMapper;
 
-    private Provider<EthIdentityGenerator> ethIdentityGeneratorProvider;
+    private Provider<EthAccountGenerator> ethIdentityGeneratorProvider;
 
-    private Provider<NeoIdentityGenerator> neoIdentityGeneratorProvider;
+    private Provider<NeoAccountGenerator> neoIdentityGeneratorProvider;
 
-    private Provider<SolanaIdentityGenerator> solanaIdentityGeneratorProvider;
+    private Provider<FlowAccountGenerator> flowAccountGeneratorProvider;
+
+    private Provider<SolanaAccountGenerator> solanaIdentityGeneratorProvider;
 
     @Override
-    public IdentityGenerator getGenerator(final BlockchainApi api) {
+    public AccountGenerator getGenerator(final BlockchainApi api) {
 
         if (api == null) {
             throw new IllegalArgumentException("Wallet must specify protocol.");
@@ -35,6 +33,8 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
                 return getEthIdentityGeneratorProvider().get();
             case SOLANA:
                 return getSolanaIdentityGeneratorProvider().get();
+            case FLOW:
+                return getFlowAccountGeneratorProvider().get();
             default:
                 throw new NotImplementedException("Unsupported API: " + api);
         }
@@ -50,30 +50,39 @@ public class StandardWalletIdentityFactory implements WalletIdentityFactory {
         this.objectMapper = objectMapper;
     }
 
-    public Provider<EthIdentityGenerator> getEthIdentityGeneratorProvider() {
+    public Provider<EthAccountGenerator> getEthIdentityGeneratorProvider() {
         return ethIdentityGeneratorProvider;
     }
 
     @Inject
-    public void setEthIdentityGeneratorProvider(Provider<EthIdentityGenerator> ethIdentityGeneratorProvider) {
+    public void setEthIdentityGeneratorProvider(Provider<EthAccountGenerator> ethIdentityGeneratorProvider) {
         this.ethIdentityGeneratorProvider = ethIdentityGeneratorProvider;
     }
 
-    public Provider<NeoIdentityGenerator> getNeoIdentityGeneratorProvider() {
+    public Provider<NeoAccountGenerator> getNeoIdentityGeneratorProvider() {
         return neoIdentityGeneratorProvider;
     }
 
     @Inject
-    public void setNeoIdentityGeneratorProvider(Provider<NeoIdentityGenerator> neoIdentityGeneratorProvider) {
+    public void setNeoIdentityGeneratorProvider(Provider<NeoAccountGenerator> neoIdentityGeneratorProvider) {
         this.neoIdentityGeneratorProvider = neoIdentityGeneratorProvider;
     }
 
-    public Provider<SolanaIdentityGenerator> getSolanaIdentityGeneratorProvider() {
+    public Provider<FlowAccountGenerator> getFlowAccountGeneratorProvider() {
+        return flowAccountGeneratorProvider;
+    }
+
+    @Inject
+    public void setFlowAccountGeneratorProvider(Provider<FlowAccountGenerator> flowAccountGeneratorProvider) {
+        this.flowAccountGeneratorProvider = flowAccountGeneratorProvider;
+    }
+
+    public Provider<SolanaAccountGenerator> getSolanaIdentityGeneratorProvider() {
         return solanaIdentityGeneratorProvider;
     }
 
     @Inject
-    public void setSolanaIdentityGeneratorProvider(Provider<SolanaIdentityGenerator> solanaIdentityGeneratorProvider) {
+    public void setSolanaIdentityGeneratorProvider(Provider<SolanaAccountGenerator> solanaIdentityGeneratorProvider) {
         this.solanaIdentityGeneratorProvider = solanaIdentityGeneratorProvider;
     }
 

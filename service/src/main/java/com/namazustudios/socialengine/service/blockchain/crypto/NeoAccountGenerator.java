@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
-import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory.IdentityGenerator;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletAccountFactory.AccountGenerator;
 import io.neow3j.wallet.Wallet;
 
-public class NeoIdentityGenerator implements IdentityGenerator {
+public class NeoAccountGenerator implements AccountGenerator {
 
     @Override
     public WalletAccount generate() {

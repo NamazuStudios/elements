@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.service.blockchain.crypto.StandardWalletIdentityFactory;
-import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
+import com.namazustudios.socialengine.service.blockchain.crypto.StandardWalletAccountFactory;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletAccountFactory;
 
 public class TestWalletGenerator {
 
@@ -14,9 +14,9 @@ public class TestWalletGenerator {
         final var factory = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
-                bind(WalletIdentityFactory.class).to(StandardWalletIdentityFactory.class);
+                bind(WalletAccountFactory.class).to(StandardWalletAccountFactory.class);
             }
-        }).getInstance(WalletIdentityFactory.class);
+        }).getInstance(WalletAccountFactory.class);
 
         final var account = factory.getGenerator(BlockchainApi.ETHEREUM).generate();
 

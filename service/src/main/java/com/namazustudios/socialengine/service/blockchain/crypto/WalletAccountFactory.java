@@ -1,26 +1,25 @@
 package com.namazustudios.socialengine.service.blockchain.crypto;
 
 import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
-import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.blockchain.wallet.WalletAccount;
 
 /**
  * Creates instances of {@link WalletAccount} securely.
  */
-public interface WalletIdentityFactory {
+public interface WalletAccountFactory {
 
     /**
-     * Gets the {@link IdentityGenerator} for the supplied {@link BlockchainApi}.
+     * Gets the {@link AccountGenerator} for the supplied {@link BlockchainApi}.
      *
-     * @return the {@link IdentityGenerator}
+     * @return the {@link AccountGenerator}
      */
-    IdentityGenerator getGenerator(BlockchainApi api);
+    AccountGenerator getGenerator(BlockchainApi api);
 
     /**
      * Generates instances of {@link WalletAccount}.
      */
     @FunctionalInterface
-    interface IdentityGenerator {
+    interface AccountGenerator {
 
         /**
          * Generates a {@link WalletAccount} unencrypted in raw form.

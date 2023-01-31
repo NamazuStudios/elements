@@ -16,8 +16,8 @@ public class OmniBlockchainServicesUtilityModule extends AbstractModule {
                 .to(StandardWalletCryptoUtilities.class)
                 .asEagerSingleton();
 
-        bind(WalletIdentityFactory.class)
-                .to(StandardWalletIdentityFactory.class)
+        bind(WalletAccountFactory.class)
+                .to(StandardWalletAccountFactory.class)
                 .asEagerSingleton();
 
     }

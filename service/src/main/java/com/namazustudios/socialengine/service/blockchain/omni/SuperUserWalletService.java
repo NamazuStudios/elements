@@ -3,23 +3,29 @@ package com.namazustudios.socialengine.service.blockchain.omni;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.VaultDao;
 import com.namazustudios.socialengine.dao.WalletDao;
-import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
-import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
-import com.namazustudios.socialengine.model.blockchain.wallet.*;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
+import com.namazustudios.socialengine.model.blockchain.wallet.*;
 import com.namazustudios.socialengine.service.WalletService;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
-import com.namazustudios.socialengine.service.blockchain.crypto.WalletIdentityFactory;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletAccountFactory;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-
+import javax.inject.Named;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 
 public class SuperUserWalletService implements WalletService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SuperUserWalletService.class);
 
     private UserDao userDao;
 
@@ -31,7 +37,11 @@ public class SuperUserWalletService implements WalletService {
 
     private WalletCryptoUtilities walletCryptoUtilities;
 
-    private WalletIdentityFactory walletIdentityFactory;
+    private WalletAccountFactory walletAccountFactory;
+
+    private Map<BlockchainApi, Consumer<Wallet>> createLifecycle;
+
+    private Map<BlockchainApi, Consumer<Wallet>> deleteLifecycle;
 
     @Override
     public Pagination<Wallet> getWallets(
@@ -113,8 +123,13 @@ public class SuperUserWalletService implements WalletService {
         wallet.setUser(vault.getUser());
 
         final var encrypted = getWalletCryptoUtilities().encrypt(wallet);
-        return getWalletDao().createWallet(encrypted);
+        final var created =  getWalletDao().createWallet(encrypted);
 
+        getCreateLifecycle()
+                .getOrDefault(wallet.getApi(), w -> logger.trace("No create listener for {}", w.getApi()))
+                .accept(wallet);
+
+        return created;
     }
 
     private WalletAccount convertAccount(final BlockchainApi api,
@@ -136,7 +151,15 @@ public class SuperUserWalletService implements WalletService {
 
     @Override
     public void deleteWallet(final String walletId) {
+
+        final var wallet = getWalletDao().getWallet(walletId);
+
+        getCreateLifecycle()
+                .getOrDefault(wallet.getApi(), w -> logger.trace("No delete listener for {}", w.getApi()))
+                .accept(wallet);
+
         getWalletDao().deleteWallet(walletId);
+
     }
 
     @Override
@@ -189,13 +212,31 @@ public class SuperUserWalletService implements WalletService {
         this.walletCryptoUtilities = walletCryptoUtilities;
     }
 
-    public WalletIdentityFactory getWalletIdentityFactory() {
-        return walletIdentityFactory;
+    public WalletAccountFactory getWalletIdentityFactory() {
+        return walletAccountFactory;
     }
 
     @Inject
-    public void setWalletIdentityFactory(WalletIdentityFactory walletIdentityFactory) {
-        this.walletIdentityFactory = walletIdentityFactory;
+    public void setWalletIdentityFactory(WalletAccountFactory walletAccountFactory) {
+        this.walletAccountFactory = walletAccountFactory;
+    }
+
+    public Map<BlockchainApi, Consumer<Wallet>> getCreateLifecycle() {
+        return createLifecycle;
+    }
+
+    @Inject
+    public void setCreateLifecycle(@Named(LIFECYCLE_CREATE) Map<BlockchainApi, Consumer<Wallet>> createLifecycle) {
+        this.createLifecycle = createLifecycle;
+    }
+
+    public Map<BlockchainApi, Consumer<Wallet>> getDeleteLifecycle() {
+        return deleteLifecycle;
+    }
+
+    @Inject
+    public void setDeleteLifecycle(@Named(LIFECYCLE_DELETE) Map<BlockchainApi, Consumer<Wallet>> deleteLifecycle) {
+        this.deleteLifecycle = deleteLifecycle;
     }
 
 }

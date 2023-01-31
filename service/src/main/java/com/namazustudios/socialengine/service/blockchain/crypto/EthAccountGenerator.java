@@ -10,7 +10,7 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
-public class EthIdentityGenerator implements WalletIdentityFactory.IdentityGenerator {
+public class EthAccountGenerator implements WalletAccountFactory.AccountGenerator {
 
     @Override
     public WalletAccount generate() {
