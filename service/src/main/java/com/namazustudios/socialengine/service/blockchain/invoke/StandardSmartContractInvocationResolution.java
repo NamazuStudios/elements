@@ -77,6 +77,14 @@ public class StandardSmartContractInvocationResolution<
         return this;
     }
 
+    public InvocationScopeT getScope() {
+        return scope;
+    }
+
+    public void setScope(InvocationScopeT scope) {
+        this.scope = scope;
+    }
+
     public VaultDao getVaultDao() {
         return vaultDao;
     }

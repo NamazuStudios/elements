@@ -40,7 +40,7 @@ public class SuperUserEvmSmartContractInvocationService
     @Override
     protected SmartContractInvocationResolution<EvmSmartContractInvocationService.Invoker> newResolution(final EvmInvocationScope evmInvocationScope) {
         final var resolution = getResolutionProvider().get();
-        resolution.setScopedInvokerFactory(getScopedInvokerFactory());
+        resolution.setScope(evmInvocationScope);
         return resolution;
     }
 

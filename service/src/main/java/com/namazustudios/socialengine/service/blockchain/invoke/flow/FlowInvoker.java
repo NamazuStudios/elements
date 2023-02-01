@@ -8,6 +8,8 @@ import org.onflow.sdk.*;
 import org.onflow.sdk.cadence.*;
 import org.onflow.sdk.crypto.Crypto;
 import org.onflow.sdk.crypto.PrivateKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +28,8 @@ import static org.onflow.sdk.crypto.Crypto.getSigner;
 
 public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmartContractInvocationService.Invoker {
 
+    private static final Logger logger = LoggerFactory.getLogger(FlowInvoker.class);
+
     private static final int POLL_ATTEMPTS = 30;
 
     private static final long POLL_RATE_MSEC = 1000L;
@@ -38,21 +42,21 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
             entry("Int8", s -> new Int8NumberField(s.toString())),
             entry("Int16", s -> new Int16NumberField(s.toString())),
             entry("Int32", s -> new Int32NumberField(s.toString())),
-            entry("Int64", s -> new Int16NumberField(s.toString())),
+            entry("Int64", s -> new Int64NumberField(s.toString())),
             entry("Int128", s -> new Int128NumberField(s.toString())),
             entry("Int256", s -> new Int256NumberField(s.toString())),
             // Unsigned Integer Types
             entry("UInt8", s -> new UInt8NumberField(s.toString())),
             entry("UInt16", s -> new UInt16NumberField(s.toString())),
             entry("UInt32", s -> new UInt32NumberField(s.toString())),
-            entry("UInt64", s -> new UInt16NumberField(s.toString())),
+            entry("UInt64", s -> new UInt64NumberField(s.toString())),
             entry("UInt128", s -> new UInt128NumberField(s.toString())),
             entry("UInt256", s -> new UInt256NumberField(s.toString())),
             // Word Types
             entry("Word8", s -> new Word8NumberField(s.toString())),
             entry("Word16", s -> new Word16NumberField(s.toString())),
             entry("Word32", s -> new Word32NumberField(s.toString())),
-            entry("Word64", s -> new Word16NumberField(s.toString())),
+            entry("Word64", s -> new Word64NumberField(s.toString())),
             // Fixed Point Types
             entry("Fix64", s -> new Fix64NumberField(s.toString())),
             entry("UFix64", s -> new UFix64NumberField(s.toString())),
@@ -207,7 +211,7 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
             final var txnResult = flowAccessApi.getTransactionResultById(txnId);
 
             if (txnResult == null) {
-
+                logger.warn("Got null response from Flow while waiting on transaction.");
             } else if (txnResult.getStatus().equals(SEALED)) {
                 return txnResult;
             } else if (txnResult.getStatus().equals(EXPIRED)) {

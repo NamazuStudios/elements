@@ -62,6 +62,9 @@ public class ServicesModule extends PrivateModule {
         install(new Web3jBlockchainSupportModule());
         install(new OmniBlockchainServicesUtilityModule());
 
+        install(new EvmInvokerModule());
+        install(new FlowInvokerModule());
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -124,6 +127,7 @@ public class ServicesModule extends PrivateModule {
         expose(VaultService.class);
         expose(SmartContractService.class);
         expose(EvmSmartContractInvocationService.class);
+        expose(FlowSmartContractInvocationService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -177,6 +181,7 @@ public class ServicesModule extends PrivateModule {
         expose(SmartContractService.class).annotatedWith(Unscoped.class);
         expose(VaultService.class).annotatedWith(Unscoped.class);
         expose(EvmSmartContractInvocationService.class).annotatedWith(Unscoped.class);
+        expose(FlowSmartContractInvocationService.class).annotatedWith(Unscoped.class);
 
     }
 

@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.service.guice;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provider;
+import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.util.Monitor;
+import com.namazustudios.socialengine.service.EvmSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 import com.namazustudios.socialengine.service.blockchain.invoke.evm.Web3jInvoker;
 import com.namazustudios.socialengine.util.RoundRobin;
@@ -21,8 +23,14 @@ class Web3jNetworkModule extends PrivateModule {
 
     private final BlockchainNetwork network;
 
-    Web3jNetworkModule(BlockchainNetwork network) {
+    Web3jNetworkModule(final BlockchainNetwork network) {
+
+        if (!BlockchainApi.ETHEREUM.equals(network.api())) {
+            throw new IllegalArgumentException("Must be ETHEREUM API Network.");
+        }
+
         this.network = network;
+
     }
 
     @Override
@@ -31,11 +39,11 @@ class Web3jNetworkModule extends PrivateModule {
         bind(Web3j.class)
                 .toProvider(new RoundRobinWeb3jProvider());
 
-        bind(ScopedInvoker.class)
+        bind(EvmSmartContractInvocationService.Invoker.class)
                 .annotatedWith(named(network.iocName()))
                 .to(Web3jInvoker.class);
 
-        expose(ScopedInvoker.class)
+        expose(EvmSmartContractInvocationService.Invoker.class)
                 .annotatedWith(named(network.iocName()));
 
     }

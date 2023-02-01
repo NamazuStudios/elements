@@ -26,8 +26,6 @@ import java.util.List;
  */
 public interface EvmSmartContractInvocationService extends SmartContractInvocationService<EvmSmartContractInvocationService.Invoker> {
 
-    String IOC_NAME = "namazu.elements.service.smartcontract.evm";
-
     /**
      * Gas Price
      *
