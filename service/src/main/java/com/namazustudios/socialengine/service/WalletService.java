@@ -35,10 +35,6 @@ import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_
 )
 public interface WalletService {
 
-    String LIFECYCLE_CREATE = "com.namazustudios.socialengine.service.wallet.service.wallet.create";
-
-    String LIFECYCLE_DELETE = "com.namazustudios.socialengine.service.wallet.service.wallet.delete";
-
     /**
      * Lists all {@link BscWallet} instances, specifying a search query.
      *

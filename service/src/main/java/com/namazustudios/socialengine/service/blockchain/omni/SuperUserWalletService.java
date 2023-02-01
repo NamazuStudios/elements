@@ -39,10 +39,6 @@ public class SuperUserWalletService implements WalletService {
 
     private WalletAccountFactory walletAccountFactory;
 
-    private Map<BlockchainApi, Consumer<Wallet>> createLifecycle;
-
-    private Map<BlockchainApi, Consumer<Wallet>> deleteLifecycle;
-
     @Override
     public Pagination<Wallet> getWallets(
             final int offset, final int count,
@@ -123,13 +119,8 @@ public class SuperUserWalletService implements WalletService {
         wallet.setUser(vault.getUser());
 
         final var encrypted = getWalletCryptoUtilities().encrypt(wallet);
-        final var created =  getWalletDao().createWallet(encrypted);
+        return getWalletDao().createWallet(encrypted);
 
-        getCreateLifecycle()
-                .getOrDefault(wallet.getApi(), w -> logger.trace("No create listener for {}", w.getApi()))
-                .accept(wallet);
-
-        return created;
     }
 
     private WalletAccount convertAccount(final BlockchainApi api,
@@ -151,15 +142,7 @@ public class SuperUserWalletService implements WalletService {
 
     @Override
     public void deleteWallet(final String walletId) {
-
-        final var wallet = getWalletDao().getWallet(walletId);
-
-        getCreateLifecycle()
-                .getOrDefault(wallet.getApi(), w -> logger.trace("No delete listener for {}", w.getApi()))
-                .accept(wallet);
-
         getWalletDao().deleteWallet(walletId);
-
     }
 
     @Override
@@ -219,24 +202,6 @@ public class SuperUserWalletService implements WalletService {
     @Inject
     public void setWalletIdentityFactory(WalletAccountFactory walletAccountFactory) {
         this.walletAccountFactory = walletAccountFactory;
-    }
-
-    public Map<BlockchainApi, Consumer<Wallet>> getCreateLifecycle() {
-        return createLifecycle;
-    }
-
-    @Inject
-    public void setCreateLifecycle(@Named(LIFECYCLE_CREATE) Map<BlockchainApi, Consumer<Wallet>> createLifecycle) {
-        this.createLifecycle = createLifecycle;
-    }
-
-    public Map<BlockchainApi, Consumer<Wallet>> getDeleteLifecycle() {
-        return deleteLifecycle;
-    }
-
-    @Inject
-    public void setDeleteLifecycle(@Named(LIFECYCLE_DELETE) Map<BlockchainApi, Consumer<Wallet>> deleteLifecycle) {
-        this.deleteLifecycle = deleteLifecycle;
     }
 
 }

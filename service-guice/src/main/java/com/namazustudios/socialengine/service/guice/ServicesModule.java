@@ -59,6 +59,7 @@ public class ServicesModule extends PrivateModule {
 
         install(new DeprecatedServicesModule());
 
+        install(new FlowBlockchainSupportModule());
         install(new Web3jBlockchainSupportModule());
         install(new OmniBlockchainServicesUtilityModule());
 

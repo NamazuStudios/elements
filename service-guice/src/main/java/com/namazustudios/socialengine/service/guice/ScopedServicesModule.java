@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.bsc.*;
 import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmSmartContractServiceProvider;
+import com.namazustudios.socialengine.service.blockchain.invoke.flow.FlowSmartContractInvocationServiceProvider;
 import com.namazustudios.socialengine.service.blockchain.neo.*;
 import com.namazustudios.socialengine.service.blockchain.omni.SmartContractServiceProvider;
 import com.namazustudios.socialengine.service.blockchain.omni.VaultServiceProvider;
@@ -275,6 +276,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(EvmSmartContractInvocationService.class)
                 .toProvider(EvmSmartContractServiceProvider.class)
+                .in(scope);
+
+        bind(FlowSmartContractInvocationService.class)
+                .toProvider(FlowSmartContractInvocationServiceProvider.class)
                 .in(scope);
 
     }

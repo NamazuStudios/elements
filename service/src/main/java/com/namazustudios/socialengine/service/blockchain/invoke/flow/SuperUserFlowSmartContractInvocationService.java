@@ -13,8 +13,6 @@ public class SuperUserFlowSmartContractInvocationService implements FlowSmartCon
 
     private ScopedInvoker.Factory<FlowInvocationScope, Invoker> scopedInvokerFactory;
 
-    private Provider<FlowInvoker> flowScopedInvokerProvider;
-
     private Provider<StandardSmartContractInvocationResolution<FlowInvocationScope, Invoker>> resolutionProvider;
 
     @Override
@@ -33,15 +31,6 @@ public class SuperUserFlowSmartContractInvocationService implements FlowSmartCon
     @Inject
     public void setScopedInvokerFactory(ScopedInvoker.Factory<FlowInvocationScope, Invoker> scopedInvokerFactory) {
         this.scopedInvokerFactory = scopedInvokerFactory;
-    }
-
-    public Provider<FlowInvoker> getFlowScopedInvokerProvider() {
-        return flowScopedInvokerProvider;
-    }
-
-    @Inject
-    public void setFlowScopedInvokerProvider(Provider<FlowInvoker> flowScopedInvokerProvider) {
-        this.flowScopedInvokerProvider = flowScopedInvokerProvider;
     }
 
     public Provider<StandardSmartContractInvocationResolution<FlowInvocationScope, Invoker>> getResolutionProvider() {

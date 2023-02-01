@@ -4,10 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.service.EvmSmartContractInvocationService;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
-import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmInvocationScope;
 import com.namazustudios.socialengine.service.blockchain.invoke.flow.FlowInvocationScope;
 
 import static com.google.inject.name.Names.named;

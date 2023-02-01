@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.blockchain.bsc.*;
 import com.namazustudios.socialengine.service.blockchain.invoke.evm.SuperUserEvmSmartContractInvocationService;
+import com.namazustudios.socialengine.service.blockchain.invoke.flow.SuperUserFlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.neo.*;
 import com.namazustudios.socialengine.service.blockchain.omni.SuperUserSmartContractService;
 import com.namazustudios.socialengine.service.blockchain.omni.SuperUserVaultService;
@@ -218,6 +219,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(EvmSmartContractInvocationService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserEvmSmartContractInvocationService.class);
+
+        bind(FlowSmartContractInvocationService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserFlowSmartContractInvocationService.class);
 
     }
 
