@@ -9,21 +9,28 @@ import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletReques
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletRequestAccount;
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.user.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toMap;
 
 public class TestFlowSmartContractInvocationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TestFlowSmartContractInvocationService.class);
 
     private static final String CONTRACT_NAME = "flow_integration_test";
 
@@ -36,8 +43,19 @@ public class TestFlowSmartContractInvocationService {
     );
 
     public static final Map<BlockchainNetwork, String> CONTACT_ADDRESSES = Map.of(
-            BlockchainNetwork.FLOW_TEST, "a56bb9f26ebbe55b511c181316d52e9f33071a0b6f0d1819bec8832b622d5290f793cc7a1cb8a2de4e678d52baa28b0d8a57360fc99443195a79cdba198dd261"
+            BlockchainNetwork.FLOW_TEST, "0xf8d6e0586b0a20c7"
     );
+
+    private static final String TEST_SCRIPT;
+
+    static {
+        try (final var is = TestFlowSmartContractInvocationService.class.getResourceAsStream("/flow_integration_test.cdc")) {
+            final var bytes = is.readAllBytes();
+            TEST_SCRIPT = new String(bytes, UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     private User user;
 
@@ -128,10 +146,36 @@ public class TestFlowSmartContractInvocationService {
                 .toArray(Object[][]::new);
     }
 
-    public void test() {
-        getUnderTest();
+    @Test(dataProvider = "testNetworks", enabled = false)
+    public void testSend(final BlockchainNetwork blockchainNetwork) {
+
+        final var response = getUnderTest()
+                .resolve(CONTRACT_NAME, blockchainNetwork)
+                .open()
+                .send(
+                        TEST_SCRIPT,
+                        List.of("String", "Int"),
+                        List.of("Jack", 42)
+                );
+
+        logger.info("Got result {}", response);
+
     }
 
+    @Test(dataProvider = "testNetworks", enabled = false)
+    public void testCall(final BlockchainNetwork blockchainNetwork) {
+
+        final var response = getUnderTest()
+                .resolve(CONTRACT_NAME, blockchainNetwork)
+                .open()
+                .call(
+                        TEST_SCRIPT,
+                        List.of("Jack", 42)
+                );
+
+        logger.info("Got result {}", response);
+
+    }
 
     public UserTestFactory getUserTestFactory() {
         return userTestFactory;

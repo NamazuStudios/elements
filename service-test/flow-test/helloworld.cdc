@@ -6,10 +6,8 @@ pub contract HelloWorld {
         return self.greeting
     }
 
-
     init() {
-        self.greeting = "Hello World!"
-
+        self.greeting = "Hello World: "
     }
 
 }

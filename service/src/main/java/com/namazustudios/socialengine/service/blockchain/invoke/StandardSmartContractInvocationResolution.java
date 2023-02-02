@@ -32,15 +32,10 @@ public class StandardSmartContractInvocationResolution<
 
         final var blockchainNetwork = scope.getBlockchainNetwork();
 
+        final var vaultKey = scope.getVault().getKey();
         final var walletAccount = scope.getWalletAccount();
 
-        if (walletAccount.isEncrypted()) {
-
-            final var vaultKey = scope.getVault().getKey();
-
-            if (vaultKey.isEncrypted()) {
-                throw new IllegalStateException("Vault key must not be encrypted.");
-            }
+        if (walletAccount.isEncrypted() && !vaultKey.isEncrypted()) {
 
             final var decryptedWalletAccount = walletCryptoUtilities
                     .decrypt(vaultKey, scope.getWalletAccount())

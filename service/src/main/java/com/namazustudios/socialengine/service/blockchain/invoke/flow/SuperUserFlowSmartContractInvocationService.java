@@ -5,21 +5,32 @@ import com.namazustudios.socialengine.service.FlowSmartContractInvocationService
 import com.namazustudios.socialengine.service.SmartContractInvocationResolution;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 import com.namazustudios.socialengine.service.blockchain.invoke.StandardSmartContractInvocationResolution;
+import com.namazustudios.socialengine.service.blockchain.invoke.SuperUserSmartContractInvocationService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class SuperUserFlowSmartContractInvocationService implements FlowSmartContractInvocationService {
+public class SuperUserFlowSmartContractInvocationService
+        extends SuperUserSmartContractInvocationService<FlowInvocationScope, FlowSmartContractInvocationService.Invoker>
+        implements FlowSmartContractInvocationService {
+
+    private static final long DEFAULT_GAS_LIMIT = 100L;
 
     private ScopedInvoker.Factory<FlowInvocationScope, Invoker> scopedInvokerFactory;
 
     private Provider<StandardSmartContractInvocationResolution<FlowInvocationScope, Invoker>> resolutionProvider;
 
     @Override
-    public SmartContractInvocationResolution<Invoker> resolve(
-            final String contractNameOrId,
-            final BlockchainNetwork network) {
+    protected FlowInvocationScope newInvocationScope() {
+        final var scope = new FlowInvocationScope();
+        scope.setGasLimit(DEFAULT_GAS_LIMIT);
+        return scope;
+    }
+
+    @Override
+    protected SmartContractInvocationResolution<Invoker> newResolution(final FlowInvocationScope flowInvocationScope) {
         final var resolution = getResolutionProvider().get();
+        resolution.setScope(flowInvocationScope);
         resolution.setScopedInvokerFactory(getScopedInvokerFactory());
         return resolution;
     }

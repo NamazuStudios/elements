@@ -83,6 +83,10 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
             final List<String> argumentTypes,
             final List<?> arguments) {
 
+        if (flowInvocationScope.getWalletAccount().isEncrypted()) {
+            throw new IllegalStateException("Wallet must be decrypted.");
+        }
+
         if (arguments.size() != argumentTypes.size()) {
 
             final var msg = format(
