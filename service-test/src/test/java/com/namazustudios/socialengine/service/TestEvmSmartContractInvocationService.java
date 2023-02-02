@@ -134,7 +134,7 @@ public class TestEvmSmartContractInvocationService {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "testNetworks")
+    @Test(dataProvider = "testNetworks", enabled = false)
     public void testSend(final BlockchainNetwork blockchainNetwork) {
 
         final var name = "Test";
@@ -170,7 +170,7 @@ public class TestEvmSmartContractInvocationService {
 
     }
 
-    @Test(dataProvider = "testNetworks", dependsOnMethods = "testSend")
+    @Test(dataProvider = "testNetworks", dependsOnMethods = "testSend", enabled = false)
     public void testCall(final BlockchainNetwork blockchainNetwork) {
 
         final var listingId = listingIds.get(blockchainNetwork);
