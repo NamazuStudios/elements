@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service;
 
-import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
@@ -11,6 +10,11 @@ import com.namazustudios.socialengine.service.blockchain.invoke.evm.EvmInvocatio
 import java.math.BigInteger;
 import java.util.List;
 
+/**
+ * A service which allows for the invocation of methods belonging to an EVM Smart Contract. Several blockchain networks
+ * are EVM based even if the API is not ETH based. Therefore this service can handle the invocation details for the
+ * EVM based networks.
+ */
 @Expose({
         @ModuleDefinition(
                 value = "namazu.elements.service.smartcontract.evm"),
@@ -19,11 +23,6 @@ import java.util.List;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
-/**
- * A service which allows for the invocation of methods belonging to an EVM Smart Contract. Several blockchain networks
- * are EVM based even if the API is not ETH based. Therefore this service can handle the invocation details for the
- * EVM based networks.
- */
 public interface EvmSmartContractInvocationService extends SmartContractInvocationService<EvmSmartContractInvocationService.Invoker> {
 
     /**

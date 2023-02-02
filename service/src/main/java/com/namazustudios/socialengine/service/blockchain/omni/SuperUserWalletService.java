@@ -9,17 +9,14 @@ import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.model.blockchain.wallet.*;
 import com.namazustudios.socialengine.service.WalletService;
-import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
 import com.namazustudios.socialengine.service.blockchain.crypto.WalletAccountFactory;
+import com.namazustudios.socialengine.service.blockchain.crypto.WalletCryptoUtilities;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 

@@ -1,11 +1,25 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
 import com.namazustudios.socialengine.service.blockchain.invoke.flow.FlowInvocationScope;
 
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * A service which allows for invocation of Flow based smart contracts.
+ */
+@Expose({
+        @ModuleDefinition(
+                value = "namazu.elements.service.smartcontract.flow"),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.smartcontract.flow",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        )
+})
 public interface FlowSmartContractInvocationService extends SmartContractInvocationService<FlowSmartContractInvocationService.Invoker> {
 
     /**
