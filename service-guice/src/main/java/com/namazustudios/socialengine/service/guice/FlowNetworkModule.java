@@ -3,29 +3,34 @@ package com.namazustudios.socialengine.service.guice;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.model.blockchain.BlockchainApi;
 import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.invoke.flow.FlowInvoker;
 import org.onflow.sdk.Flow;
 import org.onflow.sdk.FlowAccessApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.model.blockchain.BlockchainApi.FLOW;
 
 public class FlowNetworkModule extends PrivateModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(FlowNetworkModule.class);
 
     private final BlockchainNetwork network;
 
     public FlowNetworkModule(final BlockchainNetwork network) {
 
-        if (!BlockchainApi.FLOW.equals(network.api())) {
+        if (!FLOW.equals(network.api())) {
             throw new IllegalArgumentException("Must be FLOW API Network.");
         }
 
         this.network = network;
+
     }
 
     @Override
@@ -42,6 +47,10 @@ public class FlowNetworkModule extends PrivateModule {
                 uri = new URI(urlProvider.get());
             } catch (URISyntaxException ex) {
                 throw new InternalException(ex);
+            }
+
+            if (!"grpc".equals(uri.getScheme())) {
+                logger.warn("Incorrect Flow scheme specification: Expected grpc but got {}.", uri.getScheme());
             }
 
             return Flow.newAccessApi(uri.getHost(), uri.getPort());

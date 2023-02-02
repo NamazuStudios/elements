@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.notification;
 
 import com.google.api.core.ApiFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.firebase.ErrorCode;
 import com.google.firebase.messaging.*;
 import com.namazustudios.socialengine.dao.FCMRegistrationDao;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -16,9 +17,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.EnumSet;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import static com.google.firebase.messaging.MessagingErrorCode.UNREGISTERED;
 
 public class StandardNotificationDestinationFactoryProvider implements Provider<NotificationDestinationFactory> {
 
@@ -27,6 +32,8 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
     private static final String MESSAGE_ERROR_PREFIX = "messaging";
 
     private static final String TOKEN_NOT_REGISTERED = "messaging/registration-token-not-registered";
+
+    private static final Set<MessagingErrorCode> DELETE_REGISTRATION_CODE = EnumSet.of(UNREGISTERED);
 
     private Provider<FCMRegistrationDao> fcmRegistrationDaoProvider;
 
@@ -50,8 +57,13 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
 
             return fcmRegistrationList.map(fcmRegistration -> (p, success, failure) -> {
 
-                final Message message = Message.builder()
-                    .setNotification(new Notification(p.getTitle(), p.getMessage()))
+                final var notification = Notification.builder()
+                        .setTitle(p.getTitle())
+                        .setBody(p.getMessage())
+                        .build();
+
+                final var message = Message.builder()
+                    .setNotification(notification)
                     .setToken(fcmRegistration.getRegistrationToken())
                     .setAndroidConfig(AndroidConfig.builder()
                         .setNotification(AndroidNotification.builder()
@@ -68,7 +80,7 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
                     .putAllData(p.getExtraProperties())
                 .build();
 
-                final ApiFuture<String> apiFuture = firebaseMessaging.sendAsync(message);
+                final var apiFuture = firebaseMessaging.sendAsync(message);
 
                 apiFuture.addListener(
                     () -> handle(apiFuture, p, fcmRegistrationDao, fcmRegistration, success, failure),
@@ -100,7 +112,7 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
         } catch (ExecutionException e) {
             if (e.getCause() instanceof FirebaseMessagingException) {
                 final FirebaseMessagingException fex = (FirebaseMessagingException) e.getCause();
-                processFirebaseError(fex.getErrorCode(), fcmRegistrationDao, fcmRegistration);
+                processFirebaseError(fex.getMessagingErrorCode(), fcmRegistrationDao, fcmRegistration);
                 failure.accept(fex);
             } else if (e.getCause() instanceof Exception) {
                 failure.accept((Exception)e.getCause());
@@ -112,10 +124,11 @@ public class StandardNotificationDestinationFactoryProvider implements Provider<
         }
     }
 
-    private void processFirebaseError(final String result,
-                                      final FCMRegistrationDao fcmRegistrationDao,
-                                      final FCMRegistration fcmRegistration) {
-        if (TOKEN_NOT_REGISTERED.equals(result)) {
+    private void  processFirebaseError(
+            final MessagingErrorCode result,
+            final FCMRegistrationDao fcmRegistrationDao,
+            final FCMRegistration fcmRegistration) {
+        if (DELETE_REGISTRATION_CODE.contains(result)) {
             safeDeleteRegistration(fcmRegistrationDao, fcmRegistration);
         }
     }

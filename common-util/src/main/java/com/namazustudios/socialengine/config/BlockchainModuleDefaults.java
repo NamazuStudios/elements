@@ -44,8 +44,8 @@ public class BlockchainModuleDefaults implements ModuleDefaults {
         properties.put(SOLANA.urlsName(), "http://localhost:8899/");
         properties.put(SOLANA_TEST.urlsName(), "http://localhost:8899/");
 
-        properties.put(FLOW.urlsName(), "https://access.devnet.nodes.onflow.org:9000");
-        properties.put(FLOW_TEST.urlsName(), "https://access.devnet.nodes.onflow.org:9000");
+        properties.put(FLOW.urlsName(), "grpc://access.devnet.nodes.onflow.org:9000");
+        properties.put(FLOW_TEST.urlsName(), "grpc://access.devnet.nodes.onflow.org:9000");
 
         return properties;
 

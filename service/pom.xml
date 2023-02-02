@@ -88,6 +88,13 @@
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
             <version>${firebase.admin.version}</version>
+            <exclusions>
+                <!-- We dont' use this and the gRPC dependencies clash with the Flow SDK. -->
+                <exclusion>
+                    <groupId>com.google.cloud</groupId>
+                    <artifactId>google-cloud-firestore</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.dozermapper</groupId>

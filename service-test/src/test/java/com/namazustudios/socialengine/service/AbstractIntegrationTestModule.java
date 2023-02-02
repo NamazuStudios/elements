@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
+import com.namazustudios.socialengine.model.blockchain.BlockchainNetwork;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
@@ -26,6 +27,8 @@ import ru.vyarus.guice.validator.ValidationModule;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
+import static com.namazustudios.socialengine.model.blockchain.BlockchainNetwork.FLOW;
+import static com.namazustudios.socialengine.model.blockchain.BlockchainNetwork.FLOW_TEST;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
@@ -74,6 +77,8 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
             properties.put(REDIS_URL, format("redis://127.0.0.1:%d", redisPort));
             properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d", mongoPort));
             properties.put(STATIC_HOST_INFO, format("tcp://127.0.0.1:%d", nodePort));
+            properties.put(FLOW.urlsName(), "grpc://localhost:3569");
+            properties.put(FLOW_TEST.urlsName(), "grpc://localhost:3569");
             return properties;
         }));
 
@@ -116,3 +121,4 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
     public abstract EmbeddedTestService embeddedTestService(int mongoPort, int redisPort, int nodePort);
 
 }
+
