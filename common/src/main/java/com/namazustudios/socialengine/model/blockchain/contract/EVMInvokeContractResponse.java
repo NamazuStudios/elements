@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.model.blockchain.contract;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
 import java.util.Objects;
 
+@ApiModel
 public class EVMInvokeContractResponse {
 
     @ApiModelProperty("The transaction hash.")

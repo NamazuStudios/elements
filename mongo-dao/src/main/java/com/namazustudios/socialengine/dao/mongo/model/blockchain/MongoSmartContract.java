@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Entity(value = "smart_contract")
 @Indexes({
-        @Index(fields = @Field("name")),
+        @Index(fields = @Field("name"), options = @IndexOptions(unique = true)),
         @Index(fields = @Field("addresses.api")),
         @Index(fields = @Field("addresses.network"))
 })

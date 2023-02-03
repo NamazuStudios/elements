@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.service.blockchain.invoke.flow;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.model.blockchain.contract.FlowInvokeContractResponse;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
 import com.namazustudios.socialengine.service.blockchain.invoke.ScopedInvoker;
+import org.dozer.Mapper;
 import org.onflow.sdk.*;
 import org.onflow.sdk.cadence.*;
 import org.onflow.sdk.crypto.Crypto;
@@ -17,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -34,7 +38,13 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
 
     private static final long POLL_RATE_MSEC = 1000L;
 
-    private static final String SCRIPT_HEADER_FORMAT = "import %s\n\n%s";
+    private static final String CONTRACT_DELIMITER = ":";
+
+    private static final Pattern CONTRACT_NAME = Pattern.compile("\\w+");
+
+    private static final String SCRIPT_STAR_HEADER_FORMAT = "import %s\n\n%s";
+
+    private static final String SCRIPT_SPECIFIC_HEADER_FORMAT = "import %s from %s\n\n%s";
 
     private static final Map<String, Function<Object, Field<?>>> ARGUMENT_CONVERTERS = Map.ofEntries(
             // Signed Integer Types
@@ -75,10 +85,12 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
 
     private PrivateKey senderPrivateKey;
 
-    private FlowAddress contractFlowAddress;
+    private Mapper mapper;
+
+    private Function<String, String> contractFormatter;
 
     @Override
-    public Object send(
+    public FlowInvokeContractResponse send(
             final String script,
             final List<String> argumentTypes,
             final List<?> arguments) {
@@ -99,13 +111,7 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
 
         }
 
-        final var fullScript = format(
-                SCRIPT_HEADER_FORMAT,
-                contractFlowAddress.getFormatted(),
-                script
-        );
-
-        final var flowScript = new FlowScript(fullScript);
+        final var flowScript = new FlowScript(contractFormatter.apply(script));
 
         final var flowArguments = IntStream.range(0, arguments.size())
                 .mapToObj(index -> getFlowArgument(argumentTypes.get(index), arguments.get(index)))
@@ -123,6 +129,8 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
                 senderAccountKey.getSequenceNumber()
         );
 
+        final var signer = getSigner(senderPrivateKey, senderAccountKey.getHashAlgo());
+
         final var txn = new FlowTransaction(
                 flowScript,
                 flowArguments,
@@ -133,26 +141,17 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
                 List.of(senderFlowAddress),
                 Collections.emptyList(),
                 Collections.emptyList()
-        );
-
-        final var signer = getSigner(senderPrivateKey, senderAccountKey.getHashAlgo());
-        txn.addEnvelopeSignature(senderFlowAddress, senderAccountKey.getId(), signer);
+        ).addEnvelopeSignature(senderFlowAddress, senderAccountKey.getId(), signer);
 
         final var txnId = flowAccessApi.sendTransaction(txn);
-        return waitForSeal(txnId);
+        return getMapper().map(waitForSeal(txnId), FlowInvokeContractResponse.class);
 
     }
 
     @Override
     public Object call(final String script, final List<?> arguments) {
 
-        final var fullScript = format(
-                SCRIPT_HEADER_FORMAT,
-                contractFlowAddress.getFormatted(),
-                script
-        );
-
-        final var flowScript = new FlowScript(fullScript);
+        final var flowScript = new FlowScript(contractFormatter.apply(script));
 
         return getFlowAccessApi().executeScriptAtLatestBlock(flowScript, arguments
             .stream()
@@ -241,9 +240,35 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
         final var senderPrivateKey = flowInvocationScope.getWalletAccount().getPrivateKey();
         final var contractAddress = flowInvocationScope.getSmartContractAddress().getAddress();
 
+        final var contractAddressSplit = contractAddress.split(CONTRACT_DELIMITER);
+
+        if (contractAddressSplit.length == 1) {
+
+            final var contractFlowAddress = new FlowAddress(contractAddress);
+
+            contractFormatter = script -> format(
+                    SCRIPT_STAR_HEADER_FORMAT,
+                    contractFlowAddress.getFormatted(),
+                    script
+            );
+
+        } else if (contractAddressSplit.length == 2 && CONTRACT_NAME.matcher(contractAddressSplit[1]).matches()) {
+
+            final var contractFlowAddress = new FlowAddress(contractAddressSplit[0]);
+
+            contractFormatter = script -> format(
+                    SCRIPT_SPECIFIC_HEADER_FORMAT,
+                    contractAddressSplit[1],
+                    contractFlowAddress.getFormatted(),
+                    script
+            );
+
+        } else {
+            throw new IllegalArgumentException("Invalid Flow contract address.");
+        }
+
         this.senderFlowAddress =  new FlowAddress(senderAddress);
         this.senderPrivateKey = Crypto.decodePrivateKey(senderPrivateKey);
-        this.contractFlowAddress = new FlowAddress(contractAddress);
 
         this.flowInvocationScope = flowInvocationScope;
 
@@ -256,6 +281,15 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
     @Inject
     public void setFlowAccessApi(FlowAccessApi flowAccessApi) {
         this.flowAccessApi = flowAccessApi;
+    }
+
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
     }
 
 }
