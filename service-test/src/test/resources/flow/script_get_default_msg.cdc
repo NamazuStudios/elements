@@ -1,4 +1,4 @@
 
-pub fun main(): String {
-  return HelloWorld.hello()
+pub fun main(prefix: String): String {
+  return prefix.concat(": ").concat(HelloWorld.hello())
 }

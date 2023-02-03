@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.blockchain.invoke.flow;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.blockchain.contract.FlowInvokeContractResponse;
@@ -23,6 +22,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
+import static com.namazustudios.socialengine.service.blockchain.invoke.flow.FlowCallArgument.fromFlowScriptResponse;
 import static java.lang.String.format;
 import static java.util.Map.entry;
 import static java.util.stream.Collectors.toList;
@@ -148,18 +148,6 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
 
     }
 
-    @Override
-    public Object call(final String script, final List<?> arguments) {
-
-        final var flowScript = new FlowScript(contractFormatter.apply(script));
-
-        return getFlowAccessApi().executeScriptAtLatestBlock(flowScript, arguments
-            .stream()
-            .map(arg -> ByteString.copyFrom(arg.toString(), StandardCharsets.UTF_8))
-            .collect(toList()));
-
-    }
-
     private FlowArgument getFlowArgument(final String type, final Object argument) {
 
         final var converter = ARGUMENT_CONVERTERS.get(type);
@@ -230,6 +218,39 @@ public class FlowInvoker implements ScopedInvoker<FlowInvocationScope>, FlowSmar
         }
 
         throw new InternalException("Transaction timeout.");
+
+    }
+
+    @Override
+    public Object call(final String script, final List<String> argumentTypes, final List<?> arguments) {
+
+        final var flowScript = new FlowScript(contractFormatter.apply(script));
+
+        if (arguments.size() != argumentTypes.size()) {
+
+            final var msg = format(
+                    "Argument type array does not match argument counts (%d!=%d)",
+                    arguments.size(),
+                    argumentTypes.size()
+            );
+
+            throw new IllegalArgumentException(msg);
+
+        }
+
+        final var flowCallArguments = IntStream.range(0, arguments.size())
+                .mapToObj(index -> new FlowCallArgument(argumentTypes.get(index), arguments.get(index)))
+                .map(FlowCallArgument::asByteString)
+                .collect(toList());
+
+        final var flowScriptResponse = getFlowAccessApi().executeScriptAtLatestBlock(
+                flowScript,
+                flowCallArguments
+        );
+
+        final var flowCallArgumentResponse = fromFlowScriptResponse(flowScriptResponse);
+
+        return flowCallArgumentResponse.getValue();
 
     }
 

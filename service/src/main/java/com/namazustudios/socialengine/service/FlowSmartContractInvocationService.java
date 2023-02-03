@@ -56,7 +56,7 @@ public interface FlowSmartContractInvocationService extends SmartContractInvocat
          * @return the return value
          */
         default Object call(final String script) {
-            return call(script, Collections.emptyList());
+            return call(script, Collections.emptyList(), Collections.emptyList());
         }
 
         /**
@@ -66,7 +66,7 @@ public interface FlowSmartContractInvocationService extends SmartContractInvocat
          * @param arguments the arguments passed to the script itself
          * @return the return value
          */
-        Object call(String script, List<?> arguments);
+        Object call(String script, List<String> argumentTypes, List<?> arguments);
 
     }
 

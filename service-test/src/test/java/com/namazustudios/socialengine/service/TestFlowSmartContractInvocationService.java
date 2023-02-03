@@ -32,6 +32,7 @@ import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toMap;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestFlowSmartContractInvocationService {
 
@@ -61,7 +62,9 @@ public class TestFlowSmartContractInvocationService {
 
     private static final String TEST_SEND_SET_MESSAGE;
 
-    private static final Set<String> TEST_CALL_SCRIPTS;
+    private static final String TEST_CALL_SCRIPT_SINGLE_ARG;
+
+    private static final Set<String> TEST_CALL_SCRIPTS_NOARG;
 
     static {
 
@@ -84,8 +87,7 @@ public class TestFlowSmartContractInvocationService {
 
         };
 
-        TEST_CALL_SCRIPTS = Stream.of(
-                "script_get_default_msg.cdc",
+        TEST_CALL_SCRIPTS_NOARG = Stream.of(
                 "script_get_total_count.cdc",
                 "script_get_total_count2.cdc")
                 .map(loader)
@@ -94,6 +96,8 @@ public class TestFlowSmartContractInvocationService {
         TEST_SEND_GET_MESSAGE = loader.apply("tx_get_message.cdc");
 
         TEST_SEND_SET_MESSAGE = loader.apply("tx_set_message.cdc");
+
+        TEST_CALL_SCRIPT_SINGLE_ARG = loader.apply("script_get_default_msg.cdc");
 
     }
 
@@ -209,11 +213,11 @@ public class TestFlowSmartContractInvocationService {
     }
 
     @DataProvider
-    public Object[][] testNetworksAndCallScripts() {
+    public Object[][] testNetworksAndNoArgCallScripts() {
         return CONTACT_ADDRESSES
                 .keySet()
                 .stream()
-                .flatMap(n -> TEST_CALL_SCRIPTS.stream().map(s -> new Object[]{n, s}))
+                .flatMap(n -> TEST_CALL_SCRIPTS_NOARG.stream().map(s -> new Object[]{n, s}))
                 .toArray(Object[][]::new);
     }
 
@@ -262,8 +266,8 @@ public class TestFlowSmartContractInvocationService {
 
     }
 
-    @Test(dataProvider = "testNetworksAndCallScripts", enabled = false)
-    public void testCall(final BlockchainNetwork blockchainNetwork, final String script) {
+    @Test(dataProvider = "testNetworksAndNoArgCallScripts")
+    public void testCallNoArg(final BlockchainNetwork blockchainNetwork, final String script) {
 
         final var response = getUnderTest()
                 .resolve(CONTRACT_NAME, blockchainNetwork)
@@ -271,6 +275,22 @@ public class TestFlowSmartContractInvocationService {
                 .call(script);
 
         logger.info("Got result {}", response);
+
+    }
+
+    @Test(dataProvider = "testNetworks")
+    public void testCallSingleArg(final BlockchainNetwork blockchainNetwork) {
+
+        final var arg = "My Message Prefix";
+
+        final var response = getUnderTest()
+                .resolve(CONTRACT_NAME, blockchainNetwork)
+                .open()
+                .call(TEST_CALL_SCRIPT_SINGLE_ARG, List.of("String"), List.of(arg));
+
+        logger.info("Got result {}", response);
+        assertTrue(response instanceof String);
+        assertTrue(((String) response).startsWith(arg));
 
     }
 
