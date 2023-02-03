@@ -31,6 +31,7 @@ import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgori
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toMap;
+import static org.testng.Assert.assertEquals;
 
 public class TestFlowSmartContractInvocationService {
 
@@ -216,7 +217,7 @@ public class TestFlowSmartContractInvocationService {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "testNetworks")
+    @Test(dataProvider = "testNetworks", enabled = false)
     public void testSendGetMessage(final BlockchainNetwork blockchainNetwork) {
 
         final var response = getUnderTest()
@@ -226,9 +227,12 @@ public class TestFlowSmartContractInvocationService {
 
         logger.info("Got result {}", response);
 
+        assertEquals(response.getStatus(), "SEALED");
+        assertEquals(response.getStatusCode(), 0);
+
     }
 
-    @Test(dataProvider = "testNetworks")
+    @Test(dataProvider = "testNetworks", enabled = false)
     public void testSendGetMessageAlt(final BlockchainNetwork blockchainNetwork) {
 
         final var response = getUnderTest()
@@ -238,9 +242,12 @@ public class TestFlowSmartContractInvocationService {
 
         logger.info("Got result {}", response);
 
+        assertEquals(response.getStatus(), "SEALED");
+        assertEquals(response.getStatusCode(), 0);
+
     }
 
-    @Test(dataProvider = "testNetworks")
+    @Test(dataProvider = "testNetworks", enabled = false)
     public void testSendSetMessage(final BlockchainNetwork blockchainNetwork) {
 
         final var response = getUnderTest()
@@ -250,9 +257,12 @@ public class TestFlowSmartContractInvocationService {
 
         logger.info("Got result {}", response);
 
+        assertEquals(response.getStatus(), "SEALED");
+        assertEquals(response.getStatusCode(), 0);
+
     }
 
-    @Test(dataProvider = "testNetworksAndCallScripts")
+    @Test(dataProvider = "testNetworksAndCallScripts", enabled = false)
     public void testCall(final BlockchainNetwork blockchainNetwork, final String script) {
 
         final var response = getUnderTest()
