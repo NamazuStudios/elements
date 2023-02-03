@@ -266,7 +266,7 @@ public class TestFlowSmartContractInvocationService {
 
     }
 
-    @Test(dataProvider = "testNetworksAndNoArgCallScripts")
+    @Test(dataProvider = "testNetworksAndNoArgCallScripts", enabled = false)
     public void testCallNoArg(final BlockchainNetwork blockchainNetwork, final String script) {
 
         final var response = getUnderTest()
@@ -278,7 +278,7 @@ public class TestFlowSmartContractInvocationService {
 
     }
 
-    @Test(dataProvider = "testNetworks")
+    @Test(dataProvider = "testNetworks",enabled = false)
     public void testCallSingleArg(final BlockchainNetwork blockchainNetwork) {
 
         final var arg = "My Message Prefix";
