@@ -153,6 +153,7 @@
         <morphia.version>2.1.4</morphia.version>
         <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
+        <kotlin.version>1.5.10</kotlin.version>
     </properties>
     <dependencies>
         <dependency>
