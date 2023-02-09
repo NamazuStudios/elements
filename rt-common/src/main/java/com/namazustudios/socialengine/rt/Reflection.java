@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
+import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -23,6 +25,52 @@ public class Reflection {
     private static final Logger logger = LoggerFactory.getLogger(Reflection.class);
 
     private Reflection(){}
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isObjectInteger(final Class<?> cls) {
+        return
+            Byte.class.equals(cls) ||
+            Short.class.equals(cls) ||
+            Character.class.equals(cls) ||
+            Integer.class.equals(cls) ||
+            Long.class.equals(cls);
+    }
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isPrimitiveInteger(final Class<?> cls) {
+        return
+            byte.class.equals(cls) ||
+            short.class.equals(cls) ||
+            char.class.equals(cls) ||
+            int.class.equals(cls) ||
+            long.class.equals(cls);
+    }
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isObjectFloat(final Class<?> cls) {
+        return Float.class.equals(cls) || Double.class.equals(cls);
+    }
+
+    /**
+     * Checks if the supplied {@link Class<?>} is a primitive float.
+     * @param cls the class
+     * @return true if the number is a primitive number
+     */
+    public static boolean isPrimitiveFloat(final Class<?> cls) {
+        return float.class.equals(cls) || double.class.equals(cls);
+    }
 
     /**
      * Formats a {@link Method} for use in logging.
@@ -47,11 +95,14 @@ public class Reflection {
 
         Stream<Method> methodStream = empty();
 
+        boolean isInterface = false;
+
         for (Class<?> cls = aClass; cls != null; cls = cls.getSuperclass()) {
+            isInterface = cls.isInterface();
             methodStream = concat(methodStream, stream(cls.getMethods()));
         }
 
-        return aClass.isInterface() ? concat(methodStream, stream(Object.class.getMethods())) : methodStream;
+        return isInterface ? concat(methodStream, stream(Object.class.getMethods())) : methodStream;
 
     }
 
@@ -75,7 +126,10 @@ public class Reflection {
      * @param args the argument types
      * @return the {@link IllegalArgumentException}
      */
-    public static IllegalArgumentException noSuchMethod(final Class<?> cls, final String name, final Collection<Class<?>> args) {
+    public static IllegalArgumentException noSuchMethod(
+            final Class<?> cls,
+            final String name,
+            final Collection<Class<?>> args) {
         return noSuchMethod(cls, name, args.stream().toArray(Class[]::new));
     }
 
@@ -164,6 +218,96 @@ public class Reflection {
 
         return handlerMethod;
 
+    }
+
+    /**
+     * Gets the default value for the supplied type. For primitive types, this is always "0" and for non-primitive
+     * types, this is null.
+     *
+     * @param parameter the {@link Parameter}
+     * @return the default value
+     */
+    public static Object getDefaultValue(final Parameter parameter) {
+        return getDefaultValue(parameter.getType());
+    }
+
+    /**
+     * Gets the default value for the supplied type. For primitive types, this is always "0" and for non-primitive
+     * types, this is null.
+     *
+     * @param type the type
+     * @return the default value
+     */
+    public static Object getDefaultValue(final Class<?> type) {
+        if (byte.class.equals(type)) {
+            return (byte) 0;
+        } else if (short.class.equals(type)) {
+            return (short) 0;
+        } else if (char.class.equals(type)) {
+            return (char) 0;
+        } else if (int.class.equals(type)) {
+            return 0;
+        } else if (long.class.equals(type)) {
+            return 0L;
+        } else if (float.class.equals(type)) {
+            return 0f;
+        } else if (double.class.equals(type)) {
+            return 0;
+        } else if (boolean.class.equals(type)) {
+            return false;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the default value for the supplied type. For primitive types, this is always "0" and for non-primitive
+     * types, this is null.
+     *
+     * @param type the type
+     * @return the default value
+     */
+    public static Object getBoxedPrimitive(final Class<?> type, final Object boxedPrimitive) {
+
+        if (boxedPrimitive == null) {
+            return getDefaultValue(type);
+        }
+
+        if (!type.isPrimitive()) {
+            throw new IllegalArgumentException(type + " is not a primitive type.");
+        }
+
+        final Number number = boxedPrimitive instanceof Boolean
+            ? Double.valueOf(0)
+            : (Number) boxedPrimitive;
+
+        if (byte.class.equals(type)) {
+            return number.byteValue();
+        } else if (short.class.equals(type)) {
+            return number.shortValue();
+        } else if (char.class.equals(type)) {
+            return (char) number.shortValue();
+        } else if (int.class.equals(type)) {
+            return number.intValue();
+        } else if (long.class.equals(type)) {
+            return number.longValue();
+        } else if (float.class.equals(type)) {
+            return number.floatValue();
+        } else if (double.class.equals(type)) {
+            return number.doubleValue();
+        } else if (boolean.class.equals(type)) {
+            return number.doubleValue() != 0;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
+        }
+
+    }
+
+    public static int count(final Method method, final Class<? extends Annotation> annotationClass) {
+        return Stream.of(method.getParameters())
+            .filter(p -> p.getAnnotation(annotationClass) != null)
+            .mapToInt(p -> 1)
+            .reduce(0, Integer::sum);
     }
 
 }

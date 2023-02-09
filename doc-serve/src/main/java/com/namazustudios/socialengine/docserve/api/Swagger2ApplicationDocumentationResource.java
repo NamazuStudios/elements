@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ParameterizedPath;
-import com.namazustudios.socialengine.rt.manifest.Header;
+import com.namazustudios.socialengine.rt.manifest.http.Header;
 import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpModule;

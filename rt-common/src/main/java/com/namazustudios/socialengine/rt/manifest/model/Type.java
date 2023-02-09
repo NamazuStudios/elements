@@ -1,5 +1,10 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import com.namazustudios.socialengine.rt.Reflection;
+
+import java.util.Collection;
+
+import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.stream;
 
 /**
@@ -57,6 +62,22 @@ public enum Type {
         return stream(values())
             .filter(t -> t.value.equals(value))
             .findFirst().orElseThrow(() -> new IllegalArgumentException(value + "type not supported."));
+    }
+
+    public static Type findByClass(final Class<?> cls) {
+        if (String.class.equals(cls)) {
+            return STRING;
+        } else if (isObjectFloat(cls) || isPrimitiveFloat(cls)) {
+            return NUMBER;
+        } else if (isObjectInteger(cls) || isPrimitiveInteger(cls)) {
+            return INTEGER;
+        } else if (Boolean.class.equals(cls) || boolean.class.equals(cls)) {
+            return BOOLEAN;
+        } else if (Collection.class.isAssignableFrom(cls) || cls.isArray()) {
+            return ARRAY;
+        } else {
+            return OBJECT;
+        }
     }
 
 }

@@ -8,7 +8,6 @@ import java.io.UncheckedIOException;
 /**
  * Handles the actual details of writing an {@link Object} to a byte stream.
  */
-@FunctionalInterface
 public interface PayloadWriter {
 
     /**

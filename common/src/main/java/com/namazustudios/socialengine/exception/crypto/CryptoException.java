@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.exception.crypto;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.exception.InternalException;
 
 public class CryptoException extends InternalException {
 

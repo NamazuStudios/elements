@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.manifest.startup;
 
-import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
-
+import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 /**
@@ -10,6 +9,7 @@ import java.util.Map;
  */
 public class StartupManifest {
 
+    @NotNull
     private Map<String, StartupModule> modulesByName;
 
     /**

@@ -5,27 +5,32 @@ import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 
-@ApiModel
+@Deprecated
+@ApiModel(description = "BSC Blockchain Wallet. Deprecated. Use Wallet Instead.")
 public class BscWallet {
 
+    @Deprecated
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @ApiModelProperty("The unique ID of the wallet itself.")
     private String id;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull
     @ApiModelProperty("The User associated with this wallet.")
     private User user;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull
     @ApiModelProperty("The name given to this wallet.")
     private String displayName;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The Web3j wallet file.")
+    @Valid
+    @NotNull
+    @Deprecated
+    @ApiModelProperty(value = "The Web3j wallet file.", hidden = true)
     private Web3jWallet wallet;
 
     public String getId() {
@@ -59,4 +64,5 @@ public class BscWallet {
     public void setUser(User user) {
         this.user = user;
     }
+
 }

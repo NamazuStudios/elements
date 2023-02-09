@@ -12,6 +12,8 @@ import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.jetty.DynamicMultiAppServerProvider;
 import com.namazustudios.socialengine.jetty.ServletContextHandlerProvider;
+import com.namazustudios.socialengine.rpc.BlockchainNetworkRpcAppProvider;
+import com.namazustudios.socialengine.rpc.ElementsRpcAppProvider;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jersey.JerseyHttpClientModule;
 import com.namazustudios.socialengine.rt.remote.guice.*;
@@ -76,7 +78,9 @@ public class RestAPIServerModule extends AbstractModule {
         install(new RandomInstanceIdModule());
 
         var apps = Multibinder.newSetBinder(binder(), AppProvider.class);
+        apps.addBinding().to(ElementsRpcAppProvider.class);
         apps.addBinding().to(RestAPIAppProvider.class);
+        apps.addBinding().to(BlockchainNetworkRpcAppProvider.class);
         apps.addBinding().to(FormidiumAppProvider.class);
 
     }

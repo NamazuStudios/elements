@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Reflection;
-import com.namazustudios.socialengine.rt.annotation.Dispatch;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
-import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +17,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.LOWER_CAMEL;
 import static com.namazustudios.socialengine.rt.remote.LocalInvocationProcessor.*;
 import static java.util.Arrays.stream;
 
@@ -37,16 +36,27 @@ public class LocalInvocationProcessorBuilder {
     private LocalInvocationProcessor.ReturnValueStrategy returnValueStrategy;
 
     public LocalInvocationProcessorBuilder(
-            final Class<?> type, final String name,
+            RemoteScope remoteScope,
+            final Class<?> type,
+            final String name,
             final List<String> parameters) throws ClassNotFoundException { ;
 
         final Class<?>[] parameterTypes = lookupParameterTypes(parameters);
 
-        this.method = methods(type).filter(m -> m.getName().equals(name))
+        final var methodCaseFormat = remoteScope.style().methodCaseFormat();
+        final var jvmMethodName = LOWER_CAMEL.to(methodCaseFormat, name);
+
+        this.method = methods(type).filter(m -> m.getName().equals(jvmMethodName))
                                    .filter(m -> Arrays.equals(m.getParameterTypes(), parameterTypes))
                                    .findFirst().orElseThrow(() -> Reflection.noSuchMethod(type, name, parameterTypes));
 
         this.dispatchType = Dispatch.Type.determine(method);
+
+        final var remotelyInvokable = method.getAnnotationsByType(RemotelyInvokable.class);
+
+        if (remotelyInvokable.length == 0) {
+            throw Reflection.noSuchMethod(type, name, parameterTypes);
+        }
 
         switch (getDispatchType()) {
 
@@ -104,6 +114,8 @@ public class LocalInvocationProcessorBuilder {
                 parameterTypes.add(float.class);
             } else if (double.class.getName().equals(parameter)) {
                 parameterTypes.add(double.class);
+            } else if (boolean.class.getName().equals(parameter)) {
+                parameterTypes.add(boolean.class);
             } else {
                 parameterTypes.add(Class.forName(parameter));
             }

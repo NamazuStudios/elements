@@ -12,7 +12,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 
-import static com.namazustudios.socialengine.AppleIapConstants.*;
+import static com.namazustudios.socialengine.service.appleiap.AppleIapConstants.*;
 import static com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment.PRODUCTION;
 import static com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment.SANDBOX;
 import static javax.ws.rs.client.Entity.entity;

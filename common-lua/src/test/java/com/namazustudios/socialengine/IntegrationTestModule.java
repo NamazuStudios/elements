@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.dao.mongo.MongoTestInstanceModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;

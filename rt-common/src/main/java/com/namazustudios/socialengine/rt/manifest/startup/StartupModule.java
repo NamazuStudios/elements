@@ -1,11 +1,14 @@
 package com.namazustudios.socialengine.rt.manifest.startup;
 
+import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 public class StartupModule {
 
+    @NotNull
     private String module;
 
+    @NotNull
     private Map<String, StartupOperation> operationsByName;
 
     /**

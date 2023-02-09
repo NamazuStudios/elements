@@ -1,0 +1,74 @@
+package com.namazustudios.socialengine.service.blockchain.neo;
+
+import com.namazustudios.socialengine.BlockchainConstants;
+import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.service.Unscoped;
+
+import java.util.List;
+
+/**
+ * Manages instances of {@link NeoToken}.
+ *
+ * Created by keithhudnall on 9/22/21.
+ */
+@Expose({
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.token"),
+    @ModuleDefinition(
+            value = "namazu.elements.service.blockchain.unscoped.neo.token",
+            annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
+})
+public interface NeoTokenService {
+
+    /**
+     * Lists all {@link NeoToken} instances, specifying a search query.
+     *
+     * @param offset
+     * @param count
+     * @param tags
+     * @param mintStatus
+     * @param search
+     * @return a {@link Pagination} of {@link NeoToken} instances
+     */
+    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, List<BlockchainConstants.MintStatus> mintStatus, String search);
+
+    /**
+     * Fetches a specific {@link NeoToken} instance based on ID or name.  If not found, an
+     * exception is raised.
+     *
+     * @param tokenIdOrName the profile ID
+     * @return the {@link NeoToken}, never null
+     */
+    NeoToken getToken(String tokenIdOrName);
+
+    /**
+     * Updates the supplied {@link NeoToken}.
+     *
+     * @param tokenId the id of the token to update
+     * @param tokenRequest the token information to update
+     * @return the {@link NeoToken} as it was changed by the service.
+     */
+    NeoToken updateToken(String tokenId, UpdateNeoTokenRequest tokenRequest);
+
+    /**
+     * Creates a new token using a pre-created template.
+     *
+     * @param tokenRequest the {@link CreateNeoTokenRequest} with the information to create
+     * @return the {@link NeoToken} as it was created by the service.
+     */
+    NeoToken createToken(CreateNeoTokenRequest tokenRequest);
+
+    /**
+     * Deletes the {@link NeoToken} with the supplied token ID.
+     *
+     * @param tokenId the token ID.
+     */
+    void deleteToken(String tokenId);
+
+}

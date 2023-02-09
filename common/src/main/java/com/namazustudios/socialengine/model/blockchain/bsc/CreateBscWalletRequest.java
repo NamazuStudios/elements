@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 
+@Deprecated
 @ApiModel(description = "Represents a request to create a bsc wallet.")
 public class CreateBscWalletRequest {
 

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.guice;
 import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
+import com.namazustudios.socialengine.util.RoundRobin;
 import org.nnsoft.guice.rocoto.converters.FileConverter;
 import org.nnsoft.guice.rocoto.converters.URIConverter;
 import org.slf4j.Logger;

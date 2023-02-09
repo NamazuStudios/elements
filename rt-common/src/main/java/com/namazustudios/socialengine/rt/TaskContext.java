@@ -7,12 +7,16 @@ import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_RT_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.WORKER_SCOPE;
+
 /**
  * Manages the global state of currently operating tasks.  This allows a callers to listen for tasks as they are running
  * and receive callbacks that the task has completed.  While each {@link Resource} is responsible for managing tasks,
  * this is the hub through which all tasks are managed.
  */
 @Proxyable
+@RemoteService(scopes = @RemoteScope(scope = WORKER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public interface TaskContext {
 
     /**

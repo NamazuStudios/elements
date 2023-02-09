@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.fst;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;

@@ -7,12 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.dao.CustomAuthUserDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ErrorCode;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.auth.*;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.CustomJWTCredentials;
-import com.namazustudios.socialengine.service.auth.CryptoKeyUtility;
-import com.namazustudios.socialengine.service.auth.StandardCryptoKeyUtility;
+import com.namazustudios.socialengine.service.util.CryptoKeyPairUtility;
+import com.namazustudios.socialengine.service.util.StandardCryptoKeyPairUtility;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -77,7 +78,7 @@ public class CustomAuthTest {
     @Inject
     private CustomAuthUserDao customAuthUserDao;
 
-    private CryptoKeyUtility cryptoKeyUtility;
+    private CryptoKeyPairUtility cryptoKeyPairUtility;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -86,14 +87,14 @@ public class CustomAuthTest {
     @BeforeClass
     public void setupAuthSchemes() throws NoSuchAlgorithmException {
 
-        cryptoKeyUtility = new StandardCryptoKeyUtility();
+        cryptoKeyPairUtility = new StandardCryptoKeyPairUtility();
 
         superUser
             .createSuperuser("root")
             .createSession();
 
         for (var level : User.Level.values()) {
-            for (var authSchemeAlgorithm : AuthSchemeAlgorithm.values()) {
+            for (var authSchemeAlgorithm : PrivateKeyCrytpoAlgorithm.values()) {
 
                 final var createRequest = new CreateAuthSchemeRequest();
 
@@ -138,13 +139,13 @@ public class CustomAuthTest {
 
     private Algorithm getRSASigningAlgorithm(final CreateAuthSchemeResponse schemeCreation) {
 
-        final var rsaPublicKey = cryptoKeyUtility.getPublicKey(
+        final var rsaPublicKey = cryptoKeyPairUtility.getPublicKey(
             schemeCreation.getScheme().getAlgorithm(),
             schemeCreation.getPublicKey(),
             RSAPublicKey.class
         );
 
-        final var rsaPrivateKey = cryptoKeyUtility.getPrivateKey(
+        final var rsaPrivateKey = cryptoKeyPairUtility.getPrivateKey(
             schemeCreation.getScheme().getAlgorithm(),
             schemeCreation.getPrivateKey(),
             RSAPrivateKey.class
@@ -165,13 +166,13 @@ public class CustomAuthTest {
 
     private Algorithm getECDSASigningAlgorithm(final CreateAuthSchemeResponse schemeCreation) {
 
-        final var ecdsaPublicKey = cryptoKeyUtility.getPublicKey(
+        final var ecdsaPublicKey = cryptoKeyPairUtility.getPublicKey(
             schemeCreation.getScheme().getAlgorithm(),
             schemeCreation.getPublicKey(),
             ECPublicKey.class
         );
 
-        final var ecdsaPrivateKey = cryptoKeyUtility.getPrivateKey(
+        final var ecdsaPrivateKey = cryptoKeyPairUtility.getPrivateKey(
             schemeCreation.getScheme().getAlgorithm(),
             schemeCreation.getPrivateKey(),
             ECPrivateKey.class

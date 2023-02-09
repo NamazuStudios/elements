@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
-import com.google.common.base.CaseFormat;
+import com.namazustudios.socialengine.rt.annotation.CaseFormat;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.UPPER_UNDERSCORE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 

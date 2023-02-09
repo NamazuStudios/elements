@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.Map;
 
+@Deprecated
 public class ElementsSmartContract {
 
     @NotNull(groups = ValidationGroups.Update.class)

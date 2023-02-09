@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>namazu-socialengine-system</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>namazu-socialengine-system</name>
+
     <scm>
         <url>ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</url>
         <connection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</connection>
         <developerConnection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git
         </developerConnection>
     </scm>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <modules>
         <module>common</module>
         <module>common-util</module>
@@ -61,6 +73,8 @@
         <module>rt-jackson</module>
         <module>rt-jackson-guice</module>
         <module>rt-server-guice</module>
+        <module>rt-jersey-guice</module>
+        <module>rt-server-lua-testkit</module>
         <module>docker</module>
         <module>code-serve</module>
         <module>code-serve-guice</module>
@@ -72,7 +86,6 @@
         <module>app-serve</module>
         <module>app-serve-testkit</module>
         <module>app-node</module>
-        <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
         <module>web-ui-angular</module>
@@ -82,9 +95,13 @@
         <module>doc-serve</module>
         <module>doclet</module>
         <module>mongo-test</module>
-        <module>rt-jersey-guice</module>
         <module>formidium-jetty</module>
         <module>common-servlet-guice</module>
+        <module>rpc-api</module>
+        <module>rpc-api-guice</module>
+        <module>rpc-api-jetty</module>
+        <module>rpc-api-ethereum</module>
+        <module>mongo-guice</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
@@ -121,7 +138,7 @@
         <jopt.version>4.9-beta-1</jopt.version>
         <jeromq.version>0.5.2</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
-        <firebase.admin.version>6.2.0</firebase.admin.version>
+        <firebase.admin.version>9.1.1</firebase.admin.version>
         <netty.version>4.1.22.Final</netty.version>
         <xodus.version>1.3.232</xodus.version>
         <jetty.version>10.0.4</jetty.version>
@@ -132,6 +149,11 @@
         <annotations.version>2.11.3</annotations.version>
         <neow3j.version>3.14.0</neow3j.version>
         <web3j.version>4.9.4</web3j.version>
+        <solanaj.version>0.0.7</solanaj.version>
+        <morphia.version>2.1.4</morphia.version>
+        <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
+        <flow.sdk.version>0.4.0</flow.sdk.version>
+        <kotlin.version>1.5.10</kotlin.version>
     </properties>
     <dependencies>
         <dependency>

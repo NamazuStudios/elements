@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -8,12 +10,15 @@ import java.util.Map;
  */
 public class HttpModule implements Serializable {
 
+    @NotNull
     private String module;
 
-    private Map<String, HttpOperation> operationsByName;
+    @Valid
+    @NotNull
+    private Map<@NotNull String, @NotNull HttpOperation> operationsByName;
 
     /**
-     * Gets the name fo the module.  This typically names the language-specific type or class name
+     * Gets the name of the module.  This typically names the language-specific type or class name
      * which is used to load the underlying logic.
      *
      * @return the name of the module

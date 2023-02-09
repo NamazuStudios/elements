@@ -116,7 +116,10 @@ public class TokenTemplateApiTest {
                 .submit(ElementsSmartContractPagination.class)
                 .get();
 
-        ElementsSmartContract contract = contractPagination!=null && contractPagination.getObjects().size() > 0?contractPagination.getObjects().get(0):null;
+        ElementsSmartContract contract =
+                contractPagination!=null && contractPagination.getObjects().size() > 0
+                        ? contractPagination.getObjects().get(0)
+                        : null;
 
         if (contract == null){
             final var request = new PatchSmartContractRequest();

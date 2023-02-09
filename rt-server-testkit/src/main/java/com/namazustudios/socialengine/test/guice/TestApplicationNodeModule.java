@@ -15,6 +15,9 @@ import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
 
 import java.util.Collection;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_RT_PROTOCOL;
 import static com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.MAXIMUM_CONNECTIONS;
 import static com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.MINIMUM_CONNECTIONS;
 
@@ -67,6 +70,13 @@ public class TestApplicationNodeModule extends PrivateModule {
             .withSchedulerContextModules(new XodusSchedulerContextModule())
         );
 
+        bind(String.class)
+                .annotatedWith(named(REMOTE_SCOPE))
+                .toInstance(WORKER_SCOPE);
+
+        bind(String.class)
+                .annotatedWith(named(REMOTE_PROTOCOL))
+                .toInstance(ELEMENTS_RT_PROTOCOL);
 
     }
 

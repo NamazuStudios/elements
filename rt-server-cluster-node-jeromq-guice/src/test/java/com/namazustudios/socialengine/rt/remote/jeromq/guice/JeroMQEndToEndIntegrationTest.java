@@ -32,6 +32,8 @@ import java.util.stream.IntStream;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.SchedulerEnvironment.noopSchedulerEnvironment;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.ELEMENTS_RT_PROTOCOL;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
@@ -445,6 +447,14 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(SimpleRemoteInvokerRegistry.class).asEagerSingleton();
             bind(RemoteInvokerRegistry.class).to(SimpleRemoteInvokerRegistry.class);
+
+            bind(String.class)
+                    .annotatedWith(named(REMOTE_SCOPE))
+                    .toInstance(MASTER_SCOPE);
+
+            bind(String.class)
+                    .annotatedWith(named(REMOTE_PROTOCOL))
+                    .toInstance(ELEMENTS_RT_PROTOCOL);
 
             final Random threadLocalRandom = ThreadLocalRandom.current();
             final InstanceMetadataContext mock = mock(InstanceMetadataContext.class);

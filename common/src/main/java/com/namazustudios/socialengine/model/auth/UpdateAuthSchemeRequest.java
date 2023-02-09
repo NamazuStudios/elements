@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.auth;
 
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -30,7 +31,7 @@ public class UpdateAuthSchemeRequest {
 
     @NotNull
     @ApiModelProperty("The algorithm that Elements will use with the supplied key.")
-    private AuthSchemeAlgorithm algorithm;
+    private PrivateKeyCrytpoAlgorithm algorithm;
 
     @NotNull
     @ApiModelProperty("The highest permitted user level this particular scheme will authorize.")
@@ -68,11 +69,11 @@ public class UpdateAuthSchemeRequest {
         this.publicKey = publicKey;
     }
 
-    public AuthSchemeAlgorithm getAlgorithm() {
+    public PrivateKeyCrytpoAlgorithm getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(AuthSchemeAlgorithm algorithm) {
+    public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
         this.algorithm = algorithm;
     }
 

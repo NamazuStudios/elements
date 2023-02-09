@@ -1,18 +1,24 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 8/16/17.
  */
 public class Property implements Serializable {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String description;
 
+    @NotNull
     private Type type;
 
+    @NotNull
     private String model;
 
     /**
@@ -87,6 +93,30 @@ public class Property implements Serializable {
      */
     public void setModel(String model) {
         this.model = model;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Property property = (Property) o;
+        return Objects.equals(getName(), property.getName()) && Objects.equals(getDescription(), property.getDescription()) && getType() == property.getType() && Objects.equals(getModel(), property.getModel());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName(), getDescription(), getType(), getModel());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Property{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", type=").append(type);
+        sb.append(", model='").append(model).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 
 }

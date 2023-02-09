@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
  * Result of the invocation response when calling methods on a smart contract.
  */
 @ApiModel
+@Deprecated
 public class InvokeContractResponse {
 
     @ApiModelProperty("The block which handled the invocation. This is the network's block identifier, whatever that " +

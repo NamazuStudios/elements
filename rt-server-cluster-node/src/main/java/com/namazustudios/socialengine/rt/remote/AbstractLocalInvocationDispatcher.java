@@ -3,27 +3,51 @@ package com.namazustudios.socialengine.rt.remote;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.namazustudios.socialengine.rt.annotation.RemoteService;
+import com.namazustudios.socialengine.rt.exception.ServiceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.REMOTE_SCOPE;
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 
 public abstract class AbstractLocalInvocationDispatcher implements LocalInvocationDispatcher {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractLocalInvocationDispatcher.class);
 
+    private String scope;
+
+    private String protocol;
+
     private final LoadingCache<MethodKey, LocalInvocationProcessor> localDispatcherCache = CacheBuilder
         .newBuilder()
         .weakKeys()
-        .build(new CacheLoader<MethodKey, LocalInvocationProcessor>() {
+        .build(new CacheLoader<>() {
+
             @Override
             public LocalInvocationProcessor load(final MethodKey key) throws Exception {
-                return new LocalInvocationProcessorBuilder(key.getType(), key.getMethod(), key.getParameters()).build();
+
+                final var definition = RemoteService.Util.getScope(
+                    key.getType(),
+                    getProtocol(),
+                    getScope()
+                );
+
+                return new LocalInvocationProcessorBuilder(
+                    definition,
+                    key.getType(),
+                    key.getMethod(),
+                    key.getParameters()).build();
+
             }
         });
 
@@ -34,17 +58,29 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
                          final List<Consumer<InvocationResult>> additionalInvocationResultConsumerList,
                          final Consumer<InvocationError> asyncInvocationErrorConsumer) {
 
+        final Class<?> type;
+
+        try {
+            type = Class.forName(invocation.getType());
+        } catch (final ClassNotFoundException e) {
+            throw new ServiceNotFoundException(format(
+                "Service Not found for %s (%s - %s)",
+                invocation.getType(),
+                getScope(),
+                getProtocol()
+            ));
+        }
+
         try {
 
-            final Class<?> type = Class.forName(invocation.getType());
-            final Object object = resolve(type, invocation);
+            final var object = resolve(type, invocation);
 
             doDispatch(
                 type, object, invocation,
                 syncInvocationResultConsumer, syncInvocationErrorConsumer,
                 additionalInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             logger.error("Caught exception resolving target for invocation.", ex);
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(ex);
@@ -72,14 +108,14 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
             logger.error("Caught exception resolving target for invocation.", ex);
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(ex);
-            asyncInvocationErrorConsumer.accept(invocationError);
+            syncInvocationErrorConsumer.accept(invocationError);
             return;
         }
 
         localInvocationDispatcher.processInvocation(
-                object, invocation,
-                syncInvocationResultConsumer, syncInvocationErrorConsumer,
-                asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+            object, invocation,
+            syncInvocationResultConsumer, syncInvocationErrorConsumer,
+            asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
 
     }
 
@@ -89,11 +125,29 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
     }
 
     protected Object resolve(Class<?> type) {
-        throw new InternalError("No target for " + type);
+        throw new InternalError("No target for " + type.getName());
     }
 
     protected Object resolve(Class<?> type, String name) {
-        throw new InternalError("No target for " + type + " with name " + name);
+        throw new InternalError("No target for " + type.getName() + " with name " + name);
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    @Inject
+    public void setScope(@Named(REMOTE_SCOPE) String scope) {
+        this.scope = scope;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    @Inject
+    public void setProtocol(@Named(REMOTE_PROTOCOL) String protocol) {
+        this.protocol = protocol;
     }
 
     private static class MethodKey {
@@ -104,13 +158,13 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
 
         private final List<String> parameters;
 
-        public MethodKey(final Class<?> type, final Invocation invocation) throws ClassNotFoundException {
+        public MethodKey(final Class<?> type, final Invocation invocation) {
             this(type, invocation.getMethod(), invocation.getParameters());
         }
 
         public MethodKey(final Class<?> type,
                          final String name,
-                         final List<String> parameters) throws ClassNotFoundException {
+                         final List<String> parameters) {
             this.type = type;
             this.method = name;
             this.parameters = unmodifiableList(new CopyOnWriteArrayList<>(parameters));

@@ -31,6 +31,11 @@ import java.util.List;
 })
 public class MongoBscToken {
 
+    public MongoBscToken() {
+        System.out.println("");
+    }
+
+
     @Id
     private ObjectId objectId;
 

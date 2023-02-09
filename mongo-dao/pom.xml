@@ -16,11 +16,6 @@
     <version>1.0-SNAPSHOT</version>
     <name>mongo-dao</name>
 
-    <properties>
-        <morphia.version>2.1.4</morphia.version>
-        <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
@@ -56,12 +51,6 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>${mongo.java.driver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -105,20 +94,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
             <version>${jeromq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ru.vyarus</groupId>
-            <artifactId>guice-validator</artifactId>
-            <version>${hibernate.validator.guice.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -146,12 +124,6 @@
             <groupId>io.neow3j</groupId>
             <artifactId>contract</artifactId>
             <version>${neow3j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>mongo-test</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

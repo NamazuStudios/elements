@@ -19,8 +19,11 @@ import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
+import com.namazustudios.socialengine.model.blockchain.contract.SmartContract;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
+import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
 import com.namazustudios.socialengine.model.formidium.FormidiumInvestor;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.goods.Item;
@@ -44,11 +47,13 @@ import com.namazustudios.socialengine.model.schema.template.TokenTemplate;
 import com.namazustudios.socialengine.model.user.User;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
+import org.dozer.classmap.RelationshipType;
 import org.dozer.loader.api.BeanMappingBuilder;
 
 import javax.inject.Provider;
 
-import static org.dozer.loader.api.FieldsMappingOptions.customConverter;
+import static org.dozer.classmap.RelationshipType.NON_CUMULATIVE;
+import static org.dozer.loader.api.FieldsMappingOptions.*;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -206,6 +211,22 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(FormidiumInvestor.class, MongoFormidiumInvestor.class)
                     .fields("id", "id", customConverter(MongoHexableIdConverter.class));
+
+            mapping(Wallet.class, MongoWallet.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(SmartContract.class, MongoSmartContract.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields(
+                            "addresses",
+                            "addresses",
+                            useMapId("addresses"),
+                            customConverter(MongoSmartContractAddressesConverter.class)
+                    )
+            ;
+
+            mapping(Vault.class, MongoVault.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             }
         };

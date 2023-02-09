@@ -1,16 +1,20 @@
 package com.namazustudios.socialengine.model.user;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+
+import static com.namazustudios.socialengine.model.ValidationGroups.*;
 
 /**
  * Represents a user in the system.  Users are differing from entrants in that they are active users
@@ -21,6 +25,8 @@ import java.util.Objects;
 @ApiModel
 public class User implements Serializable {
 
+    @Null(groups = Insert.class)
+    @NotNull(groups = {Update.class, Read.class})
     @ApiModelProperty("The user's database assigned unique ID.")
     private String id;
 

@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscTokenRequest;
-import com.namazustudios.socialengine.service.blockchain.BscTokenService;
+import com.namazustudios.socialengine.service.blockchain.bsc.BscTokenService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

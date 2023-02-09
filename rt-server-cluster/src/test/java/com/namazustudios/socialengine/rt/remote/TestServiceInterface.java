@@ -5,7 +5,13 @@ import com.namazustudios.socialengine.rt.annotation.*;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
+
 @Proxyable
+@RemoteService(scopes = {
+        @RemoteScope(scope = MASTER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL),
+        @RemoteScope(scope = WORKER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL)
+})
 public interface TestServiceInterface {
 
     @RemotelyInvokable

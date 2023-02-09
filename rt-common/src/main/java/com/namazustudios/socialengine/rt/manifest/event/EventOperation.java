@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.rt.manifest.event;
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 public class EventOperation {
 
+    @NotNull
     private String module;
 
+    @NotNull
     private String method;
 
     public String getModule() {

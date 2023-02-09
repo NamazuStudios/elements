@@ -3,33 +3,25 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.BscSmartContractDao;
 import com.namazustudios.socialengine.dao.BscWalletDao;
-import com.namazustudios.socialengine.model.blockchain.EVMInvokeContractRequest;
-import com.namazustudios.socialengine.model.blockchain.EVMInvokeContractResponse;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractRequest;
+import com.namazustudios.socialengine.model.blockchain.contract.EVMInvokeContractResponse;
 import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
-import com.namazustudios.socialengine.service.blockchain.Bscw3jClient;
+import com.namazustudios.socialengine.service.blockchain.bsc.Bscw3jClient;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
-import org.web3j.abi.FunctionReturnDecoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
-import org.web3j.protocol.core.methods.request.EthFilter;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
-import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
@@ -43,7 +35,7 @@ public class BscContractApiTest {
     public Object[] getTests() {
         return new Object[] {
                 TestUtils.getInstance().getXodusTest(BscContractApiTest.class),
-//                TestUtils.getInstance().getUnixFSTest(BscContractApiTest.class)
+                TestUtils.getInstance().getUnixFSTest(BscContractApiTest.class)
         };
     }
 
@@ -161,7 +153,7 @@ public class BscContractApiTest {
         listingId = responseId;
     }
 
-    //TODO: This test currently requires a GAS fee, so it should be left disabled for C
+    //TODO: This test currently requires a GAS fee, so it should be left disabled and run manually as needed.
     @Test(dataProvider = "getAuthHeader", dependsOnMethods = "testSend", enabled = false)
     public void testCall(final String authHeader) {
 
@@ -188,14 +180,17 @@ public class BscContractApiTest {
         assertTrue(response.get(1) instanceof String);
         assertTrue(response.get(2) instanceof Integer);
         assertTrue(response.get(3) instanceof Integer);
+
     }
 
 
-    private Credentials getCredentials() {
-        Credentials credentials = Credentials.create(
-                "0xc9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943");
+    private static Credentials getCredentials() {
+        return Credentials.create("0xc9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943");
+    }
 
-        return credentials;
+    public static void main(String[] args) {
+        final var credentials = getCredentials();
+        System.out.println(credentials.getAddress());
     }
 
 }

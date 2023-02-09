@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.exception.blockchain.BscWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
@@ -87,4 +86,5 @@ public interface BscWalletDao {
      * @param walletId the template ID.
      */
     void deleteWallet(String walletId);
+
 }

@@ -11,7 +11,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>service</artifactId>
     <name>service</name>
 
@@ -89,6 +88,13 @@
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
             <version>${firebase.admin.version}</version>
+            <exclusions>
+                <!-- We dont' use this and the gRPC dependencies clash with the Flow SDK. -->
+                <exclusion>
+                    <groupId>com.google.cloud</groupId>
+                    <artifactId>google-cloud-firestore</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.dozermapper</groupId>
@@ -101,9 +107,39 @@
             <version>${auth0.java.jwt.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.paymennt</groupId>
+            <artifactId>solanaj</artifactId>
+            <version>${solanaj.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>io.neow3j</groupId>
             <artifactId>contract</artifactId>
             <version>${neow3j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.nftco</groupId>
+            <artifactId>flow-jvm-sdk</artifactId>
+            <version>${flow.sdk.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-reflect</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib-jdk8</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.web3j</groupId>
@@ -114,7 +150,28 @@
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-annotations</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.jetbrains.kotlin</groupId>
+                    <artifactId>kotlin-stdlib-jdk8</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Manual Kotlin Dependencies -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-common</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
     </dependencies>
 

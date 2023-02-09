@@ -1,18 +1,25 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 8/16/17.
  */
 public class Model implements Serializable {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String description;
 
-    private Map<String, Property> properties;
+    @Valid
+    @NotNull
+    private Map<@NotNull String, @NotNull Property> properties;
 
     /**
      * Get the name of the model.
@@ -66,6 +73,29 @@ public class Model implements Serializable {
      */
     public void setProperties(Map<String, Property> properties) {
         this.properties = properties;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Model model = (Model) o;
+        return Objects.equals(getName(), model.getName()) && Objects.equals(getDescription(), model.getDescription()) && Objects.equals(getProperties(), model.getProperties());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName(), getDescription(), getProperties());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Model{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", properties=").append(properties);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

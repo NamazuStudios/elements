@@ -13,6 +13,11 @@ public class FSTPayloadReader implements PayloadReader {
     private FSTConfiguration fstConfiguration;
 
     @Override
+    public <T> T convert(Class<T> to, Object from) {
+        throw new UnsupportedOperationException("Unsupported.");
+    }
+
+    @Override
     public <T> T read(final Class<T> payloadType, final InputStream stream) throws IOException {
         try {
             final FSTObjectInput fstObjectInput = getFstConfiguration().getObjectInput(stream);

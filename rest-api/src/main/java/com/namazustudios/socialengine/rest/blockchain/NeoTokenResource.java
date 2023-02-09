@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.BlockchainConstants.MintStatus;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -9,7 +8,7 @@ import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
-import com.namazustudios.socialengine.service.blockchain.NeoTokenService;
+import com.namazustudios.socialengine.service.blockchain.neo.NeoTokenService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

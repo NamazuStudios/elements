@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.model.blockchain.bsc;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
 import java.util.Objects;
 
+@ApiModel
+@Deprecated
 public class Web3jWallet {
 
     @ApiModelProperty("The IV for encrypting this wallet.")
@@ -22,7 +25,7 @@ public class Web3jWallet {
     @ApiModelProperty("The accounts associated with this wallet.")
     private List<String> accounts;
 
-    @ApiModelProperty("The public addresses associated with this wallet.")
+    @ApiModelProperty(value = "The accounts associated with this wallet.")
     private List<String> addresses;
 
     @ApiModelProperty("The extra object data associated with this wallet.")

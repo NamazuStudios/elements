@@ -6,8 +6,6 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 import static com.namazustudios.socialengine.Constants.API_OUTSIDE_URL;
 import static com.namazustudios.socialengine.Constants.DOC_OUTSIDE_URL;

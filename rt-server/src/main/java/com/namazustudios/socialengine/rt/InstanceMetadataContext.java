@@ -1,15 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
-import com.namazustudios.socialengine.rt.annotation.Proxyable;
-import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.annotation.ResultHandler;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.remote.AsyncOperation;
 
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static com.namazustudios.socialengine.rt.annotation.RemoteScope.*;
 
 /**
  * Provides data for an Instance, which is representative of the physical machine running one or more nodes.  Each
@@ -17,6 +15,7 @@ import java.util.function.Consumer;
  * underlying instance.
  */
 @Proxyable
+@RemoteService(scopes = @RemoteScope(scope = MASTER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public interface InstanceMetadataContext {
 
     /**
