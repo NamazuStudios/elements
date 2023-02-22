@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.blockchain.invoke.flow;
 
-import com.google.protobuf.ByteString;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.blockchain.contract.FlowInvokeContractResponse;
 import com.namazustudios.socialengine.service.FlowSmartContractInvocationService;
@@ -14,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.friend.Friend;
 /**
  * Provides database-level access to {@link Friend} instances.
  */
-public interface FriendDao {
+public interface   FriendDao {
 
     /**
      * Fetches all {@link Friend} instances for the supplied {@link User}.
