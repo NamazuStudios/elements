@@ -39,6 +39,15 @@ mat-header-cell {
   background: #1d7c33;
 }
 
+/** START global for dialogs **/
+
+.modal-container .mat-dialog-container {
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/** END global for dialogs **/
+
 
 /** START global for tables **/
 
@@ -73,7 +82,7 @@ mat-cell > span.truncate-text-left {
   text-align:left;
 }
 
-mat-cell > span.truncate-text-right {
+mat-cell > span.truncate-text-right, td > .truncate-text-right {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
