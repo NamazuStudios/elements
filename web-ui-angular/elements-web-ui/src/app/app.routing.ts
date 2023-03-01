@@ -13,6 +13,7 @@ import { TokensMenuComponent } from "./tokens-menu/tokens-menu.component";
 import { AuthSchemesListComponent } from "./auth-schemes-list/auth-schemes-list.component";
 import { NeoSmartContractsListComponent } from "./neo-smart-contracts-list/neo-smart-contracts-list.component";
 import { CustomizationMenuComponent } from "./customization-menu/customization-menu.component";
+import { OmniChainComponent } from "./omni-chain/omni-chain.component";
 
 const appRoutes: Routes = [
   { path: "login", component: LoginComponent },
@@ -46,6 +47,11 @@ const appRoutes: Routes = [
   {
     path: "leaderboards",
     component: LeaderboardsListComponent,
+    canActivate: [AuthenticationGuard],
+  },
+  {
+    path: "omni-chain",
+    component: OmniChainComponent,
     canActivate: [AuthenticationGuard],
   },
   {

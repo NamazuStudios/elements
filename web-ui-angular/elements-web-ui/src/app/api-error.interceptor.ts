@@ -14,8 +14,8 @@ export class ApiErrorInterceptor implements HttpInterceptor {
     return next.handle(request).pipe(catchError(err => {
       if (err.status === 401 || err.status === 403) {
         // auto logout if 401 or 403 response returned from api
-        this.authenticationService.logout();
-        location.reload();
+        // this.authenticationService.logout();
+        // location.reload();
       }
 
       const error: APIError = {

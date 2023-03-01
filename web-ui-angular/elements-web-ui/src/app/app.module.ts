@@ -89,6 +89,17 @@ import { NeoTokenDialogUpdatedDefineComponent } from './neo-token-dialog-updated
 import { NeoSmartTokenSpecsDuplicateDialogComponent } from './neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
 import { TokenDefinationDuplicateDialogComponent } from './token-defination-duplicate-dialog/token-defination-duplicate-dialog.component';
 import { NeoSmartTokenSpecsComponent } from './neo-smart-token-specs/neo-smart-token-specs/neo-smart-token-specs.component';
+import { OmniChainComponent } from './omni-chain/omni-chain.component';
+import { OmniChainVaultsComponent } from './omni-chain-vaults/omni-chain-vaults.component';
+import { OmniChainVaultsDialogComponent } from './omni-chain-vaults-dialog/omni-chain-vaults-dialog.component';
+import { OmniChainVaultsWalletsDialogComponent } from './omni-chain-vaults-wallets-dialog/omni-chain-vaults-wallets-dialog.component';
+import { OmniChainWalletsComponent } from './omni-chain-wallets/omni-chain-wallets.component';
+import { OmniChainContractsComponent } from './omni-chain-contracts/omni-chain-contracts.component';
+import { OmniChainContractsDialogComponent } from './omni-chain-contracts-dialog/omni-chain-contracts-dialog.component';
+import { OmniChainWalletsDialogComponent } from './omni-chain-wallets-dialog/omni-chain-wallets-dialog.component';
+import { OmniChainWalletsVaultSearchDialogComponent } from './omni-chain-wallets-vault-search-dialog/omni-chain-wallets-vault-search-dialog.component';
+import { OmniChainUserSearchDialogComponent } from './omni-chain-user-search-dialog/omni-chain-user-search-dialog.component';
+import { OmniChainWalletsAccountsDialogComponent } from './omni-chain-wallets-accounts-dialog/omni-chain-wallets-accounts-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -184,7 +195,18 @@ export function initialize(configService: ConfigService) {
     NeoTokenDialogUpdatedDefineComponent,
     NeoSmartTokenSpecsDuplicateDialogComponent,
     TokenDefinationDuplicateDialogComponent,
-    NeoSmartTokenSpecsComponent
+    NeoSmartTokenSpecsComponent,
+    OmniChainComponent,
+    OmniChainVaultsComponent,
+    OmniChainVaultsDialogComponent,
+    OmniChainVaultsWalletsDialogComponent,
+    OmniChainWalletsComponent,
+    OmniChainContractsComponent,
+    OmniChainContractsDialogComponent,
+    OmniChainWalletsDialogComponent,
+    OmniChainWalletsVaultSearchDialogComponent,
+    OmniChainUserSearchDialogComponent,
+    OmniChainWalletsAccountsDialogComponent
   ],
   imports: [
     BrowserModule,
