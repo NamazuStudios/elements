@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
+import static com.namazustudios.socialengine.service.VaultService.DEFAULT_VAULT_ALGORITHM;
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
@@ -55,7 +56,7 @@ public class UserVaultApiTest {
 
     @DataProvider
     public Object[][] encryptionAlgorithms() {
-        return Stream.of(PrivateKeyCrytpoAlgorithm.values())
+        return Stream.concat(Stream.of(PrivateKeyCrytpoAlgorithm.values()), Stream.of((PrivateKeyCrytpoAlgorithm)null))
                 .map(algo -> new Object[]{algo})
                 .toArray(Object[][]::new);
     }
@@ -110,7 +111,7 @@ public class UserVaultApiTest {
         assertTrue(key.isEncrypted());
         assertNotNull(key.getPublicKey());
         assertNotNull(key.getPrivateKey());
-        assertEquals(key.getAlgorithm(), algorithm);
+        assertEquals(key.getAlgorithm(), algorithm == null ? DEFAULT_VAULT_ALGORITHM : algorithm);
 
     }
 
@@ -140,7 +141,7 @@ public class UserVaultApiTest {
         assertTrue(key.isEncrypted());
         assertNotNull(key.getPublicKey());
         assertNotNull(key.getPrivateKey());
-        assertEquals(key.getAlgorithm(), algorithm);
+        assertEquals(key.getAlgorithm(), algorithm == null ? DEFAULT_VAULT_ALGORITHM : algorithm);
 
         encryptedVaults.put(vault.getId(), vault);
 
@@ -152,7 +153,7 @@ public class UserVaultApiTest {
         final var toCreate = new CreateVaultRequest();
         toCreate.setAlgorithm(algorithm);
         toCreate.setUserId(userClientContext.getUser().getId());
-        toCreate.setPassphrase("");
+        toCreate.setPassphrase(null);
         toCreate.setDisplayName(format("Vault for %s (Unencrypted)", userClientContext.getUser().getName()));
 
         final var response = client
@@ -173,7 +174,7 @@ public class UserVaultApiTest {
         assertFalse(key.isEncrypted());
         assertNotNull(key.getPublicKey());
         assertNotNull(key.getPrivateKey());
-        assertEquals(key.getAlgorithm(), algorithm);
+        assertEquals(key.getAlgorithm(), algorithm == null ? DEFAULT_VAULT_ALGORITHM : algorithm);
 
         unencryptedVaults.put(vault.getId(), vault);
 

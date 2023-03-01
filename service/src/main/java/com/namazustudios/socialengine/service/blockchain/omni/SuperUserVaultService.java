@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.wallet.CreateVaultRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateVaultRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
 import com.namazustudios.socialengine.service.VaultService;
 import com.namazustudios.socialengine.service.blockchain.crypto.VaultCryptoUtilities;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -14,6 +15,7 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 
 public class SuperUserVaultService implements VaultService {
 
@@ -49,7 +51,10 @@ public class SuperUserVaultService implements VaultService {
         vault.setUser(user);
         vault.setDisplayName(createVaultRequest.getDisplayName());
 
-        final var algorithm = createVaultRequest.getAlgorithm();
+        final var algorithm = createVaultRequest.getAlgorithm() == null ?
+                DEFAULT_VAULT_ALGORITHM :
+                createVaultRequest.getAlgorithm();
+
         final var passphrase = nullToEmpty(createVaultRequest.getPassphrase()).trim();
 
         final var key = passphrase.isBlank()

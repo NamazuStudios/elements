@@ -43,8 +43,6 @@ public class AesVaultCryptoUtilities implements VaultCryptoUtilities {
 
     private static final SecureRandom sr = new SecureRandom();
 
-    public static final PrivateKeyCrytpoAlgorithm VAULT_ALGORITHM = RSA_512;
-
     private Validator validator;
 
     private ObjectMapper objectMapper;
@@ -54,10 +52,7 @@ public class AesVaultCryptoUtilities implements VaultCryptoUtilities {
     @Override
     public VaultKey generateKey(final PrivateKeyCrytpoAlgorithm algorithm) {
 
-        final var encodedKeyPair = getCryptoKeyPairUtility().generateKeyPair(algorithm == null
-                ? VAULT_ALGORITHM
-                : algorithm
-        );
+        final var encodedKeyPair = getCryptoKeyPairUtility().generateKeyPair(algorithm);
 
         final var vaultKey = new VaultKey();
         vaultKey.setEncrypted(false);
