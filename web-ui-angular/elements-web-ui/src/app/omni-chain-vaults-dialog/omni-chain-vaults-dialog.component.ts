@@ -20,7 +20,7 @@ interface Data {
 })
 export class OmniChainVaultsDialogComponent implements OnInit {
   displayName: string = '';
-  algorithm: string = '';
+  algorithm: string = 'RSA_256';
   userId: string = '';
   userName: string = '';
   pass: string = '';

@@ -36,6 +36,7 @@
         [disalbed]="wallet"
         [value]="vaultId"
         (input)="vaultId = $event.target.value"
+        readonly
       >
     </mat-form-field>
     <mat-form-field>
@@ -50,7 +51,7 @@
         readonly
       >
     </mat-form-field>
-    <button mat-raised-button color="primary" (click)="openVaultsSearchDialog()">Search</button>
+    <div></div>
   </div>
   <div class="networks">
     <div class="networks__title">Networks</div>

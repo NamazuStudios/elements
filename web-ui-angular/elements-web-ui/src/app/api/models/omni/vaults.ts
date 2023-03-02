@@ -17,7 +17,7 @@ export interface CreateVaultParams {
   userId: string;
   displayName: string;
   passphrase: string;
-  algorithm: string;
+  algorithm?: string;
 }
 
 export interface UpdateVaultRequest {

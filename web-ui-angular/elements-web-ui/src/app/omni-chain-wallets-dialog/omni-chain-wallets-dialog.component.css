@@ -18,7 +18,7 @@
 
 .vaults-search {
   display: grid;
-  grid-template-columns: 0.6fr 1fr max-content;
+  grid-template-columns: 0.6fr 1fr 50px;
   column-gap: 18px;
   align-items: center;
 }

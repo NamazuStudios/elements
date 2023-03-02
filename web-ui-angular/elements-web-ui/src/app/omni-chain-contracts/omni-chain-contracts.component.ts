@@ -190,8 +190,8 @@ export class OmniChainContractsComponent implements OnInit {
       this.dataSource.loadContracts(
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize,
-        this.api,
-        this.network,
+        this.api || null,
+        this.network.length === 0 ? null : this.network,
         this.userType,
       );
     }, delay);
