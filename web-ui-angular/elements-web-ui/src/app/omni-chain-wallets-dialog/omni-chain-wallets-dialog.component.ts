@@ -78,7 +78,6 @@ export class OmniChainWalletsDialogComponent implements OnInit {
       panelClass: 'modal-container',
       data: {
         onSelect: (vault: Vault) => {
-          console.log(vault);
           this.vaultId = vault.id;
           this.vaultName = vault.displayName;
         }

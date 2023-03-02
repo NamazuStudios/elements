@@ -54,7 +54,6 @@ class WalletsService extends BaseService {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body = params.body;
-    console.log('===>', __body);
     let req = new HttpRequest<any>(
       'POST',
        `${this.rootUrl}/blockchain/omni/vault/${params.vaultId}/wallet`,
@@ -64,12 +63,10 @@ class WalletsService extends BaseService {
         params: __params,
         responseType: 'json',
       });
-    console.log('===>', req);
 
     return this.http.request<any>(req).pipe(
       __filter((_r) => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        console.log('===>', _r);
         return _r as StrictHttpResponse<Wallet>;
       })
     );
