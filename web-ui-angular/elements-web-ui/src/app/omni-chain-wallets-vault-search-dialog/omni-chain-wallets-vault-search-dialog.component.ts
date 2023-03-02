@@ -27,6 +27,7 @@ export class OmniChainWalletsVaultSearchDialogComponent implements OnInit {
   ];
   dataSource: VaultsDataSource;
   vaults: Vault[];
+  search = '';
 
   constructor(
     public dialogRef: MatDialogRef<OmniChainWalletsVaultSearchDialogComponent>,
@@ -51,12 +52,17 @@ export class OmniChainWalletsVaultSearchDialogComponent implements OnInit {
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }
 
+  changeSearch(value: string) {
+    this.search = value;
+    this.refresh();
+  }
+
   refresh(delay = 0) {
     setTimeout(() => {
       this.dataSource.loadVaults(
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize,
-        ''
+        this.search,
       );
     }, delay);
   }
