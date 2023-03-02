@@ -127,7 +127,7 @@
     <button
       mat-raised-button
       color="primary"
-      [disabled]="!pass || !userId || !displayName"
+      [disabled]="(!pass && !vault) || !userId || !displayName"
       (click)="submit()"
       isLoading
     >

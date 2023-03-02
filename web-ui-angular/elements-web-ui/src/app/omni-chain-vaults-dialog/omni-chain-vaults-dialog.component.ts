@@ -119,14 +119,14 @@ export class OmniChainVaultsDialogComponent implements OnInit {
   }
 
   submit() {
-    if (this.pass === this.passConfirm) {
-      if (this.vault) {
-        this.editVault();
-      } else {
-        this.createVault();
-      }
+    if (this.vault) {
+      this.editVault();
     } else {
-      this.error = 'Passwords doesn\'t match';
+      if (this.pass === this.passConfirm) {
+        this.createVault();
+      } else {
+        this.error = 'Passwords doesn\'t match';
+      }
     }
   }
 
