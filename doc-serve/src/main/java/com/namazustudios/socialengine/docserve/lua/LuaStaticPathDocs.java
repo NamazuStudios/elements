@@ -15,6 +15,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -32,11 +33,16 @@ public class LuaStaticPathDocs implements StaticPathDocs {
     private static final String ELEMENTS_PREFIX = "elements";
 
     private static final List<Pattern> EXCLUSIONS = List.of(
-        Pattern.compile("main.lua"),
-        Pattern.compile("example.*")
+            Pattern.compile("main.lua"),
+            Pattern.compile("example.*")
     );
 
-    private static final Pattern LUA_SOURCE_FILES = Pattern.compile(".*\\.lua");
+    private static final Map<String, String> LDOC_TEMPLATE = Map.<String, String>of(
+            "ldoc/template/ldoc.css", "ldoc.css",
+            "ldoc/template/ldoc.ltp", "ldoc.ltp"
+    );
+
+    private static final Pattern LUA_SOURCE_FILES = Pattern.compile("(.*\\.lua)");
 
     private static final TemporaryFiles files = new TemporaryFiles(LuaStaticPathDocs.class);
 
@@ -122,11 +128,12 @@ public class LuaStaticPathDocs implements StaticPathDocs {
     private void loadLuaDocs(final Path sources) {
 
         final var paths = sources.getParent().resolve(DOCS_PREFIX);
+        final var templates = loadLuaTemplates();
 
         try {
 
             final var process = new ProcessBuilder()
-                .command("ldoc", "-d", paths.toString(), sources.toString())
+                .command("ldoc", "-l", templates.toString(), "-d", paths.toString(), sources.toString())
                 .start();
 
             final var processLogger = new ProcessLogger("ldoc", process, logger);
@@ -137,6 +144,34 @@ public class LuaStaticPathDocs implements StaticPathDocs {
         } catch (IOException | InterruptedException e) {
             throw new InternalException(e);
         }
+
+    }
+
+    private Path loadLuaTemplates() {
+
+        final var template = files.createTempDirectory();
+
+        for (var entry : LDOC_TEMPLATE.entrySet()) {
+
+            final var dst = template.resolve(entry.getValue());
+
+            try (final var fos = new FileOutputStream(dst.toFile());
+                 final var bos = new BufferedOutputStream(fos);
+                 final var ris = getSystemClassLoader().getResourceAsStream(entry.getKey())) {
+
+                if (ris == null) throw new InternalException("Unable to read Template source " + entry.getKey());
+
+                try (final var bis = new BufferedInputStream(ris)) {
+                    bis.transferTo(bos);
+                }
+
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+
+        }
+
+        return template;
 
     }
 
