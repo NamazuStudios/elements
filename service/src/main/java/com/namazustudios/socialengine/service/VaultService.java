@@ -6,11 +6,19 @@ import com.namazustudios.socialengine.model.blockchain.wallet.CreateWalletReques
 import com.namazustudios.socialengine.model.blockchain.wallet.UpdateVaultRequest;
 import com.namazustudios.socialengine.model.blockchain.wallet.Vault;
 import com.namazustudios.socialengine.model.blockchain.wallet.Wallet;
+import com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm;
+
+import static com.namazustudios.socialengine.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 
 /**
  * Manages instances of {@link Vault}s
  */
 public interface VaultService {
+
+    /**
+     * The default vault storage algorithm.
+     */
+    PrivateKeyCrytpoAlgorithm DEFAULT_VAULT_ALGORITHM = RSA_512;
 
     /**
      * Gets all vaults, optionally filtered by user ID
