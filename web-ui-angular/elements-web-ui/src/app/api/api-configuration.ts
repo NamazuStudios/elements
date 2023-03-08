@@ -8,5 +8,5 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class ApiConfiguration {
-  rootUrl: string = 'https://elements-dev.namazustudios.net/api/rest';
+  rootUrl: string = 'https://api-dev.real2digital.com/api/rest';
 }
