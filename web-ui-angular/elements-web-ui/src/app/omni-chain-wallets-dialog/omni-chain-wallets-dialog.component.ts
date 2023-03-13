@@ -112,7 +112,7 @@ export class OmniChainWalletsDialogComponent implements OnInit {
 
   isNetworkDisabled(network: string): boolean {
     const availableNetworks = API_NETWORK_MAP[this.api];
-    if (availableNetworks) {
+    if (availableNetworks && !this.wallet) {
       return !API_NETWORK_MAP[this.api].includes(network);
     }
     return true;
