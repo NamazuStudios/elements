@@ -5,8 +5,8 @@
     <mat-checkbox
       class="dialog-head__encrypted"
       [disabled]="vault"
-      [checked]="algorithm"
-      (click)="$event.preventDefault()"
+      [checked]="encrypted"
+      (change)="changeEncrypted($event.checked)"
     >
       Encrypted
     </mat-checkbox>
@@ -70,7 +70,7 @@
           type="password"
           [value]="pass"
           (input)="pass = $event.target.value"
-          [disabled]="vault"
+          [disabled]="vault || !encrypted"
         >
       </mat-form-field>
     </div>
@@ -84,7 +84,7 @@
           type="password"
           [value]="passConfirm"
           (input)="passConfirm = $event.target.value"
-          [disabled]="vault"
+          [disabled]="vault || !encrypted"
         >
       </mat-form-field>
       <mat-error *ngIf="error">{{error}}</mat-error>
@@ -127,7 +127,7 @@
     <button
       mat-raised-button
       color="primary"
-      [disabled]="(!pass && !vault) || !userId || !displayName"
+      [disabled]="!userId || !displayName"
       (click)="submit()"
       isLoading
     >

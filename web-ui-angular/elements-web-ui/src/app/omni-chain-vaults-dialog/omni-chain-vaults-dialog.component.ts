@@ -86,6 +86,12 @@ export class OmniChainVaultsDialogComponent implements OnInit {
     this.algorithm = value;
   }
 
+  changeEncrypted(value: boolean) {
+    this.encrypted = value;
+    this.pass = '';
+    this.passConfirm = '';
+  }
+
   createVault() {
     this.vaultService.createVault({
       userId: this.userId,
