@@ -1,5 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { User } from '../api/models';
 import { UpdateVaultRequest, Vault } from '../api/models/omni/vaults';
 import { VaultsService } from '../api/services/blockchain/omni/vaults.service';
@@ -25,6 +27,8 @@ export class OmniChainVaultsDialogComponent implements OnInit {
   userName: string = '';
   pass: string = '';
   passConfirm: string = '';
+  oldPass: string = '';
+  newPass: string = '';
   algorithms = [
     { value: 'RSA_512', label: 'RSA 512' },
     { value: 'RSA_384', label: 'RSA 384' },
@@ -110,16 +114,35 @@ export class OmniChainVaultsDialogComponent implements OnInit {
       userId: this.userId,
       displayName: this.displayName,
     };
-    if (this.pass) {
-      body.newPassphrase = this.pass;
+    if (this.oldPass && !this.newPass) {
+      this.error = 'New password is required';
+      return;
+    }
+    if (!this.oldPass && this.newPass) {
+      this.error = 'Old password is required';
+      return;
+    }
+    if (this.newPass && this.oldPass) {
+      body.passphrase = this.oldPass;
+      body.newPassphrase = this.newPass;
     }
     this.vaultService.editVault({
       id: this.vault.id,
       body,
     })
-    .subscribe(() => {
-      this.data.refresher.refresh();
-      this.close();
+    .pipe(
+      catchError((err) => {
+        if (err.message.includes('Incorrect passphrase')) {
+          this.error = 'Incorrect old password';
+        }
+        return of(null);
+      }),
+    )
+    .subscribe((res) => {
+      if (res) {
+        this.data.refresher.refresh();
+        this.close();
+      }
     });
     this.error = '';
   }

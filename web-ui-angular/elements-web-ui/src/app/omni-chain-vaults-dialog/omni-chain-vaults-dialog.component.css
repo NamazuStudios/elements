@@ -39,6 +39,10 @@ mat-form-field {
   width: 100%;
 }
 
+mat-error {
+  margin-bottom: 20px;
+}
+
 .dialog-footer {
   display: grid;
   grid-template-columns: max-content max-content;
