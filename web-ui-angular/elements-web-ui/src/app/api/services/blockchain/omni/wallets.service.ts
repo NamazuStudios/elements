@@ -84,7 +84,7 @@ class WalletsService extends BaseService {
     let __body = params.body;
     let req = new HttpRequest<any>(
       'PUT',
-       `${this.rootUrl}/blockchain/omni/vault/${params.id}`,
+       `${this.rootUrl}/blockchain/omni/vault/${params.vaultId}/wallet/${params.walletId}`,
       __body,
       {
         headers: __headers,
@@ -186,7 +186,8 @@ module WalletsService {
   }
 
   export interface UpdateWalletParams {
-    id: string;
+    vaultId: string;
+    walletId: string;
     body: UpdateWalletRequest;
   }
 

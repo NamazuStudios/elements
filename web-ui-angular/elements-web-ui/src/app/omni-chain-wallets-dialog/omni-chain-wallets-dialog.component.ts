@@ -134,9 +134,12 @@ export class OmniChainWalletsDialogComponent implements OnInit {
     }
     if (this.wallet) {
       this.walletsService.editWallet({
-        id: this.wallet.id,
+        vaultId: this.vaultId,
+        walletId: this.wallet.id,
         body: {
           displayName: this.displayName,
+          preferredAccount: this.preferredAccount,
+          networks: this.networks,
         },
       })
       .subscribe(() => {
