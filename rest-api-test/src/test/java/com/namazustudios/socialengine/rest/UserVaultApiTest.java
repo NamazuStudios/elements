@@ -90,20 +90,20 @@ public class UserVaultApiTest {
 
         final var toCreate = new CreateVaultRequest();
         toCreate.setAlgorithm(algorithm);
-        toCreate.setUserId(userClientContext.getUser().getId());
-        toCreate.setPassphrase(userClientContext.getUser().getName());
+        toCreate.setUserId(trudyClientContext.getUser().getId());
+        toCreate.setPassphrase(trudyClientContext.getUser().getName());
         toCreate.setDisplayName(format("Vault for %s (Encrypted)", trudyClientContext.getUser().getName()));
 
         final var response = client
                 .target(apiRoot + "/blockchain/omni/vault")
                 .request()
-                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
                 .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         assertEquals(response.getStatus(), 200);
 
         final var vault = response.readEntity(Vault.class);
-        assertEquals(vault.getUser().getId(), userClientContext.getUser().getId());
+        assertEquals(vault.getUser().getId(), trudyClientContext.getUser().getId());
         assertEquals(vault.getDisplayName(), toCreate.getDisplayName());
 
         final var key = vault.getKey();
