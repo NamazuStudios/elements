@@ -28,7 +28,7 @@
 }
 
 .dialog-body .dialog-body__tab {
-  height: 300px;
+  min-height: 300px;
   max-height: 300px;
   overflow: auto;
   border-top: 1px solid #979797;
@@ -58,6 +58,7 @@ mat-card {
   background-color: white;
   height: 100%;
   box-sizing: border-box;
+  min-height: 300px;
 }
 
 .dialog-body__address-row {

@@ -5,8 +5,8 @@
     <mat-checkbox
       class="dialog-head__encrypted"
       [disabled]="vault"
-      [checked]="algorithm"
-      (click)="$event.preventDefault()"
+      [checked]="encrypted"
+      (change)="changeEncrypted($event.checked)"
     >
       Encrypted
     </mat-checkbox>
@@ -60,34 +60,65 @@
       </mat-form-field>
       <button mat-raised-button color="primary"  (click)="openSearchUsersDialog()">Search</button>
     </div>
-    <div>
-      <mat-form-field>
-        <mat-label>Vault Password</mat-label>
-        <input
-          matInput
-          placeholder="Vault Password"
-          name="vaultPassword"
-          type="password"
-          [value]="pass"
-          (input)="pass = $event.target.value"
-          [disabled]="vault"
-        >
-      </mat-form-field>
+    <div *ngIf="vault">
+      <div>
+        <mat-form-field>
+          <mat-label>Old Vault Password</mat-label>
+          <input
+            matInput
+            placeholder="Old Vault Password"
+            type="password"
+            [value]="oldPass"
+            (input)="oldPass = $event.target.value"
+            [disabled]="!vault || !encrypted"
+          >
+        </mat-form-field>
+      </div>
+      <div>
+        <mat-form-field>
+          <mat-label>New Vault Password</mat-label>
+          <input
+            matInput
+            placeholder="New Vault Password"
+            type="password"
+            [value]="newPass"
+            (input)="newPass = $event.target.value"
+            [disabled]="!vault || !encrypted"
+          >
+        </mat-form-field>
+        <mat-error *ngIf="error">{{error}}</mat-error>
+      </div>
     </div>
-    <div>
-      <mat-form-field>
-        <mat-label>Reenter Vault Password</mat-label>
-        <input
-          matInput
-          placeholder="Vault Password"
-          name="reenterVaultPassword"
-          type="password"
-          [value]="passConfirm"
-          (input)="passConfirm = $event.target.value"
-          [disabled]="vault"
-        >
-      </mat-form-field>
-      <mat-error *ngIf="error">{{error}}</mat-error>
+    <div *ngIf="!vault">
+      <div>
+        <mat-form-field>
+          <mat-label>Vault Password</mat-label>
+          <input
+            matInput
+            placeholder="Vault Password"
+            name="vaultPassword"
+            type="password"
+            [value]="pass"
+            (input)="pass = $event.target.value"
+            [disabled]="vault || !encrypted"
+          >
+        </mat-form-field>
+      </div>
+      <div>
+        <mat-form-field>
+          <mat-label>Reenter Vault Password</mat-label>
+          <input
+            matInput
+            placeholder="Vault Password"
+            name="reenterVaultPassword"
+            type="password"
+            [value]="passConfirm"
+            (input)="passConfirm = $event.target.value"
+            [disabled]="vault || !encrypted"
+          >
+        </mat-form-field>
+        <mat-error *ngIf="error">{{error}}</mat-error>
+      </div>
     </div>
 
     <!-- ONLY IN EDIT MODE AND FOR SUPERUSERS-->
@@ -109,7 +140,7 @@
         <div class="hidden-field__value" *ngIf="showPrivateKey">{{vault.key.privateKey}}</div>
       </div>
 
-      <div class="hidden-field" *ngIf="isSuperUser">
+      <div class="hidden-field" *ngIf="isSuperUser && vault.key.encrypted">
         <div class="hidden-field__label">Encryption</div>
         <div
           class="hidden-field__reveal"
@@ -127,7 +158,7 @@
     <button
       mat-raised-button
       color="primary"
-      [disabled]="(!pass && !vault) || !userId || !displayName"
+      [disabled]="!userId || !displayName"
       (click)="submit()"
       isLoading
     >

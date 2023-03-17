@@ -59,7 +59,7 @@
           <mat-card>
             <div class="dialog-body__address-row" *ngFor="let address of addresses">
               <mat-form-field>
-                <mat-label class="label">Encryption Algorithm</mat-label>
+                <mat-label class="label">Network</mat-label>
                 <mat-select class="select" [value]="address.network" (selectionChange)="changeNetwork($event)">
                   <mat-option *ngFor="let network of networks" [value]="network">
                     {{network}}
@@ -85,7 +85,7 @@
             </div>
             <div class="dialog-body__address-row">
               <mat-form-field>
-                <mat-label class="label">Encryption Algorithm</mat-label>
+                <mat-label class="label">Network</mat-label>
                 <mat-select class="select" [value]="newNetwork" (selectionChange)="changeNewNetwork($event.value)">
                   <mat-option *ngFor="let network of availableNetworks" [value]="network">
                     {{network}}

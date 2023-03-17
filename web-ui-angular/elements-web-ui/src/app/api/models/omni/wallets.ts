@@ -28,6 +28,6 @@ export interface CreateWalletRequest {
 
 export interface UpdateWalletRequest {
   displayName?: string;
-  userId?: string;
-  newUserId?: string;
+  preferredAccount?: number;
+  networks: string[];
 }

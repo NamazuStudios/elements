@@ -29,7 +29,7 @@
             <input
               matInput
               placeholder="Address"
-              [disabled]="account.generate"
+              [disabled]="account.generate || wallet"
               [value]="account.address"
               readonly
             >
@@ -42,7 +42,7 @@
               matInput
               placeholder="Private Key"
               [type]="isPrivateKeyHidden ? 'password' : 'text'"
-              [disabled]="account.generate"
+              [disabled]="account.generate || wallet"
               [value]="account.privateKey"
               readonly
             >

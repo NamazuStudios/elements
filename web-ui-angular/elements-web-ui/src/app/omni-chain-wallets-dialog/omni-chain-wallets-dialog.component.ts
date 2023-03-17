@@ -112,7 +112,7 @@ export class OmniChainWalletsDialogComponent implements OnInit {
 
   isNetworkDisabled(network: string): boolean {
     const availableNetworks = API_NETWORK_MAP[this.api];
-    if (availableNetworks) {
+    if (availableNetworks && !this.wallet) {
       return !API_NETWORK_MAP[this.api].includes(network);
     }
     return true;
@@ -134,9 +134,12 @@ export class OmniChainWalletsDialogComponent implements OnInit {
     }
     if (this.wallet) {
       this.walletsService.editWallet({
-        id: this.wallet.id,
+        vaultId: this.vaultId,
+        walletId: this.wallet.id,
         body: {
           displayName: this.displayName,
+          preferredAccount: this.preferredAccount,
+          networks: this.networks,
         },
       })
       .subscribe(() => {
