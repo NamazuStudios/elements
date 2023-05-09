@@ -21,12 +21,16 @@ function refactor_java_source {
     new_file=${old_file/$new_package_path_subst/$old_package_path_subst}
 
     new_directory="$(dirname "$new_file")"
+    old_directory="$(dirname "$old_file")"
+
     sed_package_expression="s#$old_package#$new_package#"
 
     diff_audit_file="$audit_directory/$new_file.diff"
     diff_audit_directory=$(dirname "$diff_audit_file")
 
-    if [ "$(git rev-parse --show-toplevel)" = "$(pwd)" ] && [ "$old_file" != "$new_file" ]
+    git_root="$(pushd "$old_directory" > /dev/null && git rev-parse --show-toplevel && popd > /dev/null)"
+
+    if [ "${git_root}" = "$(pwd)" ] && [ "$old_file" != "$new_file" ]
     then
       echo "echo Refactoring ${old_file}"
       echo mkdir -p "$diff_audit_directory"
@@ -42,6 +46,7 @@ function refactor_java_source {
 function refactor_maven_pom {
 
     pom_file=$1
+    directory=$(dirname "$pom_file")
 
     old_group_id=$2
     new_group_id=$3
@@ -53,7 +58,9 @@ function refactor_maven_pom {
     diff_audit_file="$audit_directory/$pom_file.diff"
     diff_audit_directory=$(dirname "$diff_audit_file")
 
-    if [ "$(git rev-parse --show-toplevel)" = "$(pwd)" ]
+    git_root="$(pushd "$directory" > /dev/null && git rev-parse --show-toplevel && popd > /dev/null)"
+
+    if [ "${git_root}" = "$(pwd)" ]
     then
       echo "echo Refactoring ${pom_file}"
       echo mkdir -p "$diff_audit_directory"
