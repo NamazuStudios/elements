@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 
-NEW_PACKAGE="dev.getelements"
-OLD_PACKAGE="com.namazustudios.socialengine"
+NEW_PACKAGE=${NEW_PACKAGE:="dev.eci.elements"}
+OLD_PACKAGE=${OLD_PACKAGE:="com.namazustudios.socialengine"}
 
-OLD_MAVEN_GROUPID="com.namazustudios.socialengine"
-NEW_MAVEN_GROUPID="dev.getelements"
-
-AUDIT_DIRECTORY=${AUDIT_DIRECTORY:=$(mktemp -d --suffix=-audit)}
+NEW_MAVEN_GROUPID=${NEW_MAVEN_GROUPID:="dev.eci.elements"}
+OLD_MAVEN_GROUPID=${OLD_MAVEN_GROUPID:="com.namazustudios.socialengine"}
 
 function refactor_java_source {
 
@@ -30,7 +28,7 @@ function refactor_java_source {
 
     if [ "$(git rev-parse --show-toplevel)" = "$(pwd)" ] && [ "$old_file" != "$new_file" ]
     then
-      echo "Refactoring ${old_file}"
+      echo "echo Refactoring ${old_file}"
       echo mkdir -p "$diff_audit_directory"
       echo mkdir -p "${new_directory}"
       echo git mv "${old_file}" "${new_file}"
@@ -41,13 +39,47 @@ function refactor_java_source {
 
 }
 
+function refactor_maven_pom {
+
+    pom_file=$1
+
+    old_group_id=$2
+    new_group_id=$3
+
+    audit_directory=$4
+
+    sed_group_id_expression="s#$old_group_id#$new_group_id#"
+
+    diff_audit_file="$audit_directory/$pom_file.diff"
+    diff_audit_directory=$(dirname "$diff_audit_file")
+
+    if [ "$(git rev-parse --show-toplevel)" = "$(pwd)" ]
+    then
+      echo "echo Refactoring ${pom_file}"
+      echo mkdir -p "$diff_audit_directory"
+      echo sed -i".orig" "$sed_group_id_expression" "$pom_file"
+      echo diff "${pom_file}.orig" "$pom_file" ">" "$diff_audit_file"
+      echo rm "${pom_file}.orig"
+    fi
+
+}
+
+export -f refactor_maven_pom
 export -f refactor_java_source
 
-echo "Renaming ${OLD_PACKAGE} -> ${NEW_PACKAGE}"
-echo "Renaming Artifact Groups ${OLD_MAVEN_GROUPID} -> ${NEW_MAVEN_GROUPID}"
-echo "Using Audit Directory ${audit_directory}"
+AUDIT_DIRECTORY=${AUDIT_DIRECTORY:=$(mktemp -d --suffix=-audit)}
+
+echo "#!$(which bash)"
+echo "echo Renaming ${OLD_PACKAGE} -> ${NEW_PACKAGE}"
+echo "echo Renaming Artifact Groups ${OLD_MAVEN_GROUPID} -> ${NEW_MAVEN_GROUPID}"
+echo "echo Using Audit Directory ${AUDIT_DIRECTORY}"
 
 find . -ipath "*/src/*/*.java" -type f -exec bash -c 'refactor_java_source "$1" "$2" "$3" $4' -- {} "${OLD_PACKAGE}" "${NEW_PACKAGE}" "${AUDIT_DIRECTORY}" \;
-#find . -ipath "*/src/*/*.java" -type f -exec bash -c 'echo refactor_java_source "$1" "$2" "$3" && refactor_java_source "$1" "$2" "$3"' -- {} ${OLD_PACKAGE} ${NEW_PACKAGE} \;
-#find . -ipath "*/src/*" -type f f -exec bash -c 'echo git mv $0 $(echo "$0" | sed s#com/namazustudios/socialengine#dev/eci#)' {} \;
-#find . -name -not "pom.xml" -type f -exec bash -c 'echo sed -i.bak #com.namazustudios.socialengine#dev.eci $0' {} \;
+find . -ipath "*/pom.xml" -type f -exec bash -c 'refactor_maven_pom "$1" "$2" "$3" $4' -- {} "${OLD_PACKAGE}" "${NEW_PACKAGE}" "${AUDIT_DIRECTORY}" \;
+
+echo
+echo "echo Review changes and diffs in ${AUDIT_DIRECTORY}"
+
+echo
+echo "# NOTE: This script generates the operations to refactor. Use '$0 | bash' to apply operations."
+echo
