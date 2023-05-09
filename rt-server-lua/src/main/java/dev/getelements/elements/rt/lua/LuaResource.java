@@ -1,0 +1,638 @@
+package dev.getelements.elements.rt.lua;
+
+import dev.getelements.elements.jnlua.JavaFunction;
+import dev.getelements.elements.jnlua.LuaState;
+import dev.getelements.elements.jnlua.LuaType;
+import dev.getelements.elements.rt.*;
+import dev.getelements.elements.rt.exception.*;
+import dev.getelements.elements.rt.id.HasNodeId;
+import dev.getelements.elements.rt.id.NodeId;
+import dev.getelements.elements.rt.id.ResourceId;
+import dev.getelements.elements.rt.id.TaskId;
+import dev.getelements.elements.rt.lua.builtin.*;
+import dev.getelements.elements.rt.lua.builtin.coroutine.CoroutineBuiltin;
+import dev.getelements.elements.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
+import dev.getelements.elements.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
+import dev.getelements.elements.rt.lua.persist.ErisPersistence;
+import dev.getelements.elements.rt.util.FinallyAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static dev.getelements.elements.jnlua.LuaState.*;
+import static dev.getelements.elements.rt.Context.LOCAL;
+import static dev.getelements.elements.rt.Context.REMOTE;
+import static dev.getelements.elements.rt.Path.fromPathString;
+import static dev.getelements.elements.rt.id.ResourceId.randomResourceIdForNode;
+import static dev.getelements.elements.rt.lua.Constants.*;
+import static dev.getelements.elements.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
+
+/**
+ * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
+ * to drive the script.
+ *
+ * Note that this eschews the traditional static {@link Logger} instance, and creates an individual
+ * instance named for the script itself.
+ *
+ * Created by patricktwohig on 8/25/15.
+ */
+public class LuaResource implements Resource {
+
+    public static final String MODULE = "namazu.module";
+
+    public static final String RESOURCE_BUILTIN = "namazu.resource.this";
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
+
+    private SharedLock lock;
+
+    private ResourceId resourceId;
+
+    private MutableAttributes attributes = new SimpleAttributes();
+
+    private final Context localContext;
+
+    private final Context remoteContext;
+
+    private final LuaState luaState;
+
+    private final LogAssist logAssist;
+
+    private final ErisPersistence erisPersistence;
+
+    private final BuiltinManager builtinManager;
+
+    private final ResourceLockService resourceLockService;
+
+    private Logger scriptLog = logger;
+
+    /**
+     * Redirects the assert function to one that plays nicely with the logger
+     */
+    private final JavaFunction scriptAssert = new ScriptAssert(s -> getScriptLog().error("{}", s));
+
+    /**
+     * Redirects the print function to the logger returned by {@link #getScriptLog()}.
+     */
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> getScriptLog().info("{}", s));
+
+    /**
+     * Creates an instance of {@link LuaResource} with the given {@link LuaState}
+     * type.j
+     *
+     * If instantiation fails, it is the responsiblity of the caller to deallocate the {@link LuaState}
+     * object.  If the constructor completes without error, then the caller does not need to close
+     * the state as it will be handled by this object's {@link #close()} method.
+     *
+     * @param luaState the luaState
+     */
+    @Inject
+    public LuaResource(
+            final LuaState luaState,
+            final @Named(LOCAL) Context localContext,
+            final @Named(REMOTE) Context remoteContext,
+            final PersistenceStrategy persistenceStrategy,
+            final ResourceLockService resourceLockService,
+            final NodeId nodeId) {
+        try {
+
+            this.resourceLockService = resourceLockService;
+            this.resourceId = randomResourceIdForNode(nodeId);
+            this.lock = resourceLockService.getLock(resourceId);
+            this.localContext = localContext;
+            this.remoteContext = remoteContext;
+            this.luaState = luaState;
+            this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
+            this.erisPersistence = new ErisPersistence(this, this::getScriptLog);
+            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, erisPersistence);
+
+            this.luaState.setLock(lock.getLock());
+
+            openLibs();
+            setupFunctionOverrides();
+            getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, persistenceStrategy));
+            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this));
+            getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this));
+            getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
+            getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
+            getBuiltinManager().installBuiltin(new LoggerDetailBuiltin(this::getScriptLog));
+
+        } catch (Throwable th) {
+            luaState.close();
+            throw th;
+        }
+    }
+
+    private void openLibs() {
+
+        luaState.openLibs();
+        luaState.rawGet(REGISTRYINDEX, RIDX_GLOBALS);
+
+        luaState.pushNil();
+        while (luaState.next(-2)) {
+
+            final String name;
+
+            if (!luaState.rawEqual(-1, -3)) {
+
+                // Copies the key name on the stack and then extracts it.
+                luaState.pushValue(-2);
+                name = luaState.toString(-1);
+                luaState.pop(1);
+
+                // Adds it as a permanent object and then pops it off the stack.
+                erisPersistence.addPermanentObject(-1, LuaResource.class, name);
+
+            }
+
+            luaState.pop(1);
+
+        }
+
+        luaState.pop(1);
+
+    }
+
+    private void setupFunctionOverrides() {
+
+        // We hijack the standard lua functions to better log output.  We also have to make them persistence aware so
+        // they are properly serialized and deserialized.
+
+        luaState.pushJavaFunction(scriptAssert);
+        luaState.setGlobal(ASSERT_FUNCTION);
+
+        luaState.pushJavaFunction(printToScriptLog);
+        luaState.setGlobal(PRINT_FUNCTION);
+
+        erisPersistence.addPermanentJavaObject(scriptAssert, LuaResource.class, ASSERT_FUNCTION);
+        erisPersistence.addPermanentJavaObject(printToScriptLog, LuaResource.class, PRINT_FUNCTION);
+
+    }
+
+    @Override
+    public ResourceId getId() {
+        return resourceId;
+    }
+
+    @Override
+    public MutableAttributes getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Attributes attributes) {
+        this.attributes = new SimpleAttributes.Builder().from(attributes).build();
+    }
+
+    /**
+     * Loads the main module of the script.  This should correspond to a module name as by the parameters of the
+     * {@link ResourceLoader#load(String, Object...)}.  The resource internally uses a table in the registry to
+     * store the module execution as not to pollute any of the global state.
+     *
+     * @param moduleName the name of the module
+     * @param params the parameters to pass to the underlying {@link Resource}
+     *
+     * @throws IOException if the loading fails
+     */
+    public void loadModule(final AssetLoader assetLoader, final String moduleName, final Object ... params) {
+
+        final var luaState = getLuaState();
+        final var modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
+
+        try (var mon = lock.acquireMonitor();
+             var is = assetLoader.open(modulePath);
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
+
+            // We substitute the logger for the name of the file we actually are trying to open.  This way the
+            // actual logger reads the name of the source file.
+            scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
+            luaState.load(is, moduleName, "bt");
+            scriptLog.debug("Loaded script {}", moduleName);
+
+            for (final Object object : params) {
+                luaState.pushJavaObject(object);
+            }
+
+            try (var c = CurrentResource.getInstance().enter(this)) {
+                luaState.call(params.length, 1);
+            }
+
+            if (luaState.isNil(-1)) {
+                throw new ModuleNotFoundException("got nil module for " + moduleName);
+            }
+
+            luaState.setField(REGISTRYINDEX, MODULE);
+
+        } catch (IOException ex) {
+            logAssist.error("Failed to load script.", ex);
+            throw new InternalException(ex);
+        } catch (AssetNotFoundException ex) {
+            logAssist.error("Module not found: " + moduleName, ex);
+            throw new ModuleNotFoundException(ex);
+        } finally {
+            if (luaState.isOpen()) {
+                luaState.setTop(0);
+            }
+        }
+
+    }
+
+    @Override
+    public void setVerbose(boolean verbose) {
+        try (var mon = lock.acquireMonitor();
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
+            luaState.pushBoolean(verbose);
+            luaState.setPersistenceSetting("path", -1);
+        }
+    }
+
+    @Override
+    public boolean isVerbose() {
+        try (var mon = lock.acquireMonitor();
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
+            luaState.getPersistenceSetting("debug");
+            return luaState.toBoolean(-1);
+        } finally {
+            luaState.pop(1);
+        }
+    }
+
+    @Override
+    public void serialize(final OutputStream os) throws IOException {
+        try (var mon = lock.acquireMonitor()) {
+            getErisPersistence().serialize(os);
+        }
+    }
+
+    @Override
+    public void deserialize(final InputStream is) throws IOException {
+
+        final var original = resourceId;
+
+        getErisPersistence().deserialize(is, sh -> {
+            attributes = new SimpleAttributes.Builder().from(sh.getAttributes()).build();
+            resourceId = sh.getResourceId();
+        });
+
+        lock = resourceLockService.getLock(resourceId);
+        resourceLockService.delete(original);
+        luaState.setLock(lock.getLock());
+
+    }
+
+    @Override
+    public Set<TaskId> getTasks() {
+        try (var mon = lock.acquireMonitor()) {
+
+            luaState.pushJavaFunction(l -> {
+
+                int index = 0;
+                luaState.newTable();
+
+                luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
+
+                if (luaState.isNil(-1)) {
+                    luaState.newTable();
+                    return 1;
+                }
+
+                luaState.pushNil();
+                while (luaState.next(2)) {
+
+                    luaState.pushValue(-2);
+                    luaState.rawSet(1, ++index);
+
+                    if (logger.isErrorEnabled() && !LuaType.THREAD.equals(luaState.type(-1))) {
+                        logger.error("Expected THREAD got: ", luaState.type(-1));
+                    }
+
+                    luaState.pop(1);
+
+                }
+
+                luaState.setTop(1);
+                return 1;
+
+            });
+
+            try (var c = CurrentResource.getInstance().enter(this)) {
+                luaState.call(0, 1);
+            }
+
+            final List<String> taskIds = luaState.toJavaObject(-1, List.class);
+            luaState.pop(1);
+
+            return taskIds.stream().map(TaskId::new).collect(Collectors.toSet());
+
+        }
+
+    }
+
+    /**
+     * Invokes {@link LuaState#close()} and removes any resources from memory.  After this is called, this
+     * {@link LuaResource} may not be reused.
+     *
+     * @see {@link Resource#close()}
+     *
+     */
+    @Override
+    public void close() {
+
+        try(var mon = lock.acquireMonitor()) {
+
+            getTasks().forEach(taskId -> {
+                final var resourceDestroyedException = new ResourceDestroyedException(getId());
+                getLocalContext().getTaskContext().finishWithError(taskId, resourceDestroyedException);
+            });
+
+            getLuaState().close();
+
+        } finally {
+            resourceLockService.delete(resourceId);
+        }
+
+    }
+
+    @Override
+    public void unload() {
+        try (var mon = lock.acquireMonitor()) {
+            getLuaState().close();
+        }
+    }
+
+    @Override
+    public MethodDispatcher getMethodDispatcher(final String name) {
+        return params -> (consumer, throwableConsumer) -> {
+
+            final LuaState luaState = getLuaState();
+
+            try (var mon = lock.acquireMonitor();
+                 var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
+
+                luaState.getGlobal(REQUIRE);
+                luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+
+                try (var c = CurrentResource.getInstance().enter(this)) {
+                    luaState.call(1, 1);
+                }
+
+                luaState.getField(-1, CoroutineBuiltin.START);
+                luaState.remove(-2);
+
+                luaState.getField(REGISTRYINDEX, MODULE);
+                luaState.getField(-1, name);
+                luaState.remove(-2);
+
+                if (!luaState.isFunction(-1)){
+                    getScriptLog().error("No such method {}", name);
+                    throw new MethodNotFoundException("No such method: " + name);
+                }
+
+                luaState.newThread();
+                for (Object param : params) luaState.pushJavaObject(param);
+
+                try (var c = CurrentResource.getInstance().enter(this)) {
+                    luaState.call(params.length + 1, 3);
+                }
+
+                final var taskId = new TaskId(luaState.checkString(1));            // task id
+                final var status = luaState.checkInteger(2);                          // thread status
+
+                if (status == YIELD) {
+                    getLocalContext().getTaskContext().register(taskId, consumer, throwableConsumer);
+                } else {
+                    final Object result = luaState.checkJavaObject(3, Object.class);      // result
+                    finish(taskId, consumer, result);
+                }
+
+                return taskId;
+
+            } catch (Exception ex) {
+                logAssist.error("Error dispatching method: " + name, ex);
+                throwableConsumer.accept(ex);
+                throw ex;
+            }
+
+        };
+    }
+
+    private void finish(final TaskId taskId, final Consumer<Object> consumer, final Object result) {
+        try {
+            consumer.accept(result);
+        } catch (Exception ex) {
+            logger.error("Caught exception finishing task {}", taskId, ex);
+        }
+    }
+
+    public static void main(final String[] args) throws Exception {
+
+        class Mon implements AutoCloseable {
+            @Override
+            public void close() throws Exception {
+                System.out.println("Closed Mon");
+            }
+        }
+
+        try (var mon = new Mon();
+             var faa = FinallyAction.begin(logger).then(() -> System.out.println("Executed Finally Action."))) {
+            System.out.println("Critical Section.");
+        }
+
+    }
+
+    @Override
+    public void resume(final TaskId taskId, final Object ... results) {
+
+        final var luaState = getLuaState();
+
+        try (var mon = lock.acquireMonitor();
+             var faa = FinallyAction.begin(logger).then(luaState::tryClearStack)) {
+
+            luaState.getGlobal(REQUIRE);
+            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+
+            try (var c = CurrentResource.getInstance().enter(this)) {
+                luaState.call(1, 1);
+            }
+
+            luaState.getField(-1, CoroutineBuiltin.RESUME);
+            luaState.remove(1);
+
+            luaState.pushString(taskId.asString());
+            for (final var result : results) luaState.pushJavaObject(result);
+
+            try (var c = CurrentResource.getInstance().enter(this)) {
+                luaState.call(results.length + 1, 3);
+            }
+
+            if (luaState.isNil(1)) {
+                throw new NoSuchTaskException(taskId);
+            }
+
+            final var taskIdString = luaState.checkString(1);                        // task id
+            final var status = luaState.checkInteger(2);                                // thread status
+
+            if (!taskId.asString().equals(taskIdString)) {
+                getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);
+                throw new IllegalStateException("task ID mismatch");
+            } else if (status == YIELD) {
+                getScriptLog().debug("Resuming task {} from network yielded.  Resuming later.", taskId);
+            }
+
+        } catch (NoSuchTaskException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            if (getLocalContext().getTaskContext().finishWithError(taskId, ex)) {
+                getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
+                throw ex;
+            } else {
+                // We presume that the task was actually finished and nothing else was waiting on the task while
+                // we were waiting.
+                logger.debug("Caught exception but task already finished. Ignoring exception.");
+            }
+        }
+
+    }
+
+    @Override
+    public void resumeFromNetwork(final TaskId taskId, final Object result) {
+        resume(taskId, ResumeReason.NETWORK.toString(), result);
+    }
+
+    @Override
+    public void resumeWithError(final TaskId taskId, final Throwable throwable) {
+
+        final ResponseCode responseCode = throwable instanceof BaseException ?
+                ((BaseException)throwable).getResponseCode() :
+                ResponseCode.INTERNAL_ERROR_FATAL;
+
+        resume(taskId, ResumeReason.ERROR.toString(), responseCode.getCode());
+
+    }
+
+    @Override
+    public void resumeFromScheduler(final TaskId taskId, final double elapsedTime) {
+        resume(taskId, ResumeReason.SCHEDULER.toString(), elapsedTime);
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
+    /**
+     * Gets the remote {@link Context} associated with this {@link LuaResource}.
+     *
+     * @return the {@link Context}.
+     */
+    public Context getLocalContext() {
+        return localContext;
+    }
+
+    /**
+     * Gets the local {@link Context} associated with this {@link LuaResource}.
+     *
+     * @return the {@link Context}.
+     */
+    public Context getRemoteContext() {
+        return remoteContext;
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getRemoteContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getRemoteContext);
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getLocalContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getLocalContext);
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link Path}. If the supplied {@link Path} has
+     * a wildcard context or explicitly specifies a {@link NodeId}, then this method will return the remote context. If
+     * the {@link NodeId} hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param path the {@link Path} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getLocalContextOrContextForPath(final Path path) {
+        return path.isWildcardContext() ? getRemoteContext() : path
+            .getOptionalNodeId()
+            .map(nid -> getRemoteContext())
+            .orElseGet(this::getLocalContext);
+    }
+
+    /**
+     * Gets the {@link Context} for the supplied {@link HasNodeId} and if unable to determine the NodeId it will return
+     * the {@link Context} returned by the.
+     *
+     * @param hasNodeId
+     * @param contextSupplier
+     * @return the {@link Context}
+     */
+    public Context getContextFor(final HasNodeId hasNodeId, final Supplier<Context> contextSupplier) {
+        return hasNodeId.getOptionalNodeId()
+            .map(nodeId -> getId().getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
+            .orElseGet(contextSupplier);
+    }
+
+    /**
+     * Gets the {@link BuiltinManager} used by this {@link LuaResource}.
+     *
+     * @return the {@link BuiltinManager}
+     */
+    public BuiltinManager getBuiltinManager() {
+        return builtinManager;
+    }
+
+    /**
+     * Gets the {@link LuaState} backing this {@link LuaResource}.
+     *
+     * @return the {@link LuaState} instance
+     */
+    public LuaState getLuaState() {
+        return luaState;
+    }
+
+    /**
+     * Gets the {@link ErisPersistence} instance used by this {@link LuaResource}.
+     *
+     * @return the {@link ErisPersistence} instance
+     */
+    public ErisPersistence getErisPersistence() {
+        return erisPersistence;
+    }
+
+    /**
+     * Gets a special instance of {@link Logger} which the script can use for script logging.
+     *
+     * @return the {@link Logger} instance
+     */
+    public Logger getScriptLog() {
+        return scriptLog;
+    }
+
+}

@@ -4,39 +4,39 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.namazustudios.socialengine</groupId>
+        <groupId>dev.getelements.elements</groupId>
         <artifactId>namazu-socialengine-system</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
+    <groupId>dev.getelements.elements</groupId>
     <artifactId>cdn-serve-jetty</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>cdn-serve-jetty</name>
 
     <dependencies>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>cdn-serve</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>cdn-serve-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-util</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-servlet</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -51,17 +51,17 @@
             <version>${javax.servlet.api.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>dao</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-jetty</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>service</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -81,17 +81,17 @@
             <version>${guice.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>service-redis</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-dao</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -116,7 +116,7 @@
             <version>${logback.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>code-serve-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -131,12 +131,12 @@
             <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rest-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rest-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -189,7 +189,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.namazustudios.socialengine.cdnserve.CdnServeMain</mainClass>
+                            <mainClass>dev.getelements.elements.cdnserve.CdnServeMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

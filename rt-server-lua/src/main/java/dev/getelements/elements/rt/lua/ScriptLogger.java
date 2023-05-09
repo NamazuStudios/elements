@@ -1,0 +1,34 @@
+package dev.getelements.elements.rt.lua;
+
+import dev.getelements.elements.jnlua.JavaFunction;
+import dev.getelements.elements.jnlua.LuaState;
+
+import java.util.function.Consumer;
+
+/**
+ * Created by patricktwohig on 8/18/17.
+ */
+public class ScriptLogger implements JavaFunction {
+
+    private final Consumer<String> messageConsumer;
+
+    public ScriptLogger(Consumer<String> messageConsumer) {
+        this.messageConsumer = messageConsumer;
+    }
+
+    @Override
+    public int invoke(final LuaState luaState) {
+
+        final StringBuffer stringBuffer = new StringBuffer();
+
+        for (int i = 1; i <= luaState.getTop(); ++i) {
+            stringBuffer.append(luaState.toJavaObject(i, String.class));
+        }
+
+        messageConsumer.accept(stringBuffer.toString());
+        luaState.setTop(0);
+        return 0;
+
+    }
+
+}

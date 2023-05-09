@@ -1,0 +1,120 @@
+package dev.getelements.elements;
+
+import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.rt.*;
+import dev.getelements.elements.rt.id.ResourceId;
+import dev.getelements.elements.service.Notification;
+import dev.getelements.elements.service.NotificationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Factory;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
+
+import javax.inject.Inject;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static dev.getelements.elements.TestUtils.getUnixFSTest;
+import static dev.getelements.elements.TestUtils.getXodusTest;
+import static java.util.UUID.randomUUID;
+import static org.mockito.Mockito.*;
+
+public class LuaNotificationIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaNotificationIntegrationTest.class);
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                getXodusTest(LuaNotificationIntegrationTest.class),
+                getUnixFSTest(LuaNotificationIntegrationTest.class)
+        };
+    }
+
+    private Context context;
+
+    private NotificationBuilder mockNotificationBuilder;
+
+    private Application application;
+
+    @BeforeMethod
+    public void resetMocks() {
+        reset(getMockNotificationBuilder());
+    }
+
+    @Test
+    public void testSendWithBuilder() throws Exception {
+
+        final Profile mockProfile = new Profile();
+
+        final Attributes attributes = new SimpleAttributes.Builder()
+            .setAttribute(Profile.PROFILE_ATTRIBUTE, mockProfile)
+            .build();
+
+        final Notification mockNotification = mock(Notification.class);
+        when(getMockNotificationBuilder().application(any())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().recipient(any())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().message(any())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().title(any())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().add(anyString(), anyString())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().addAll(anyMap())).thenReturn(getMockNotificationBuilder());
+        when(getMockNotificationBuilder().build()).thenReturn(mockNotification);
+
+        performLuaTest("namazu.elements.test.notification","test_send_with_builder", attributes);
+
+        verify(mockNotification, times(1)).send();
+        verify(getMockNotificationBuilder(), times(1)).title(eq("Hello World!"));
+        verify(getMockNotificationBuilder(), times(1)).message(eq("Hello World!"));
+        verify(getMockNotificationBuilder(), times(1)).application(eq(getApplication()));
+        verify(getMockNotificationBuilder(), times(1)).recipient(eq(mockProfile));
+        verify(getMockNotificationBuilder(), times(1)).add(eq("single"), eq("property"));
+
+        Map<String,String> allProps = new HashMap<>();
+        allProps.put("extraA","foo");
+        allProps.put("extraB","bar");
+        verify(getMockNotificationBuilder(), times(1)).addAll(eq(allProps));
+
+    }
+
+    public void performLuaTest(final String moduleName,
+                               final String methodName,
+                               final Attributes attributes) throws InterruptedException {
+        final Path path = new Path("socialengine-auth-test-" + randomUUID().toString());
+        final ResourceId resourceId = getContext().getResourceContext().createAttributes(moduleName, path, attributes);
+        final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
+        logger.info("Successfuly got test result {}", result);
+        getContext().getResourceContext().destroy(resourceId);
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    @Inject
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public NotificationBuilder getMockNotificationBuilder() {
+        return mockNotificationBuilder;
+    }
+
+    @Inject
+    public void setMockNotificationBuilder(NotificationBuilder mockNotificationBuilder) {
+        this.mockNotificationBuilder = mockNotificationBuilder;
+    }
+
+    public Application getApplication() {
+        return application;
+    }
+
+    @Inject
+    public void setApplication(Application application) {
+        this.application = application;
+    }
+
+}

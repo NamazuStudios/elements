@@ -5,20 +5,20 @@
 
     <parent>
         <artifactId>docker</artifactId>
-        <groupId>com.namazustudios.socialengine</groupId>
+        <groupId>dev.getelements.elements</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
 
-    <groupId>com.namazustudios.socialengine</groupId>
+    <groupId>dev.getelements.elements</groupId>
     <artifactId>namazu-socialengine-ui</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>web-ui-angular</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
@@ -39,7 +39,7 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.namazustudios.socialengine</groupId>
+                                    <groupId>dev.getelements.elements</groupId>
                                     <artifactId>web-ui-angular</artifactId>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>

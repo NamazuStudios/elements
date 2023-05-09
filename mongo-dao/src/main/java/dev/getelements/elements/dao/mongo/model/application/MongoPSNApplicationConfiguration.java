@@ -1,0 +1,24 @@
+package dev.getelements.elements.dao.mongo.model.application;
+
+import com.namazustudios.elements.fts.annotation.SearchableDocument;
+import dev.morphia.annotations.*;
+
+/**
+ * Created by patricktwohig on 7/10/15.
+ */
+@SearchableDocument
+@Entity(value = "application_configuration", useDiscriminator = false)
+public class MongoPSNApplicationConfiguration extends MongoApplicationConfiguration {
+
+    @Property
+    private String clientSecret;
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
+}

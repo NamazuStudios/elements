@@ -6,11 +6,11 @@
 
     <parent>
         <artifactId>namazu-socialengine-system</artifactId>
-        <groupId>com.namazustudios.socialengine</groupId>
+        <groupId>dev.getelements.elements</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
+    <groupId>dev.getelements.elements</groupId>
     <artifactId>web-ui-angular</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>

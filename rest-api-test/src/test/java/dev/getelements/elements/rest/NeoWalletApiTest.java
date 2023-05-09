@@ -1,0 +1,174 @@
+package dev.getelements.elements.rest;
+
+import dev.getelements.elements.model.blockchain.neo.CreateNeoWalletRequest;
+import dev.getelements.elements.model.blockchain.neo.NeoWallet;
+import dev.getelements.elements.model.blockchain.neo.UpdateNeoWalletRequest;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
+import org.testng.annotations.Test;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+
+import static dev.getelements.elements.Headers.SESSION_SECRET;
+import static dev.getelements.elements.Headers.SOCIALENGINE_SESSION_SECRET;
+import static dev.getelements.elements.rest.TestUtils.*;
+import static java.util.UUID.randomUUID;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.testng.Assert.*;
+
+public class NeoWalletApiTest {
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                TestUtils.getInstance().getXodusTest(NeoWalletApiTest.class),
+                TestUtils.getInstance().getUnixFSTest(NeoWalletApiTest.class)
+        };
+    }
+
+    @Inject
+    @Named(TEST_API_ROOT)
+    private String apiRoot;
+
+    @Inject
+    private Client client;
+
+    @Inject
+    private ClientContext superUserClientContext;
+
+    @DataProvider
+    public Object[][] getAuthHeader() {
+        return new Object[][] {
+                new Object[] { SESSION_SECRET },
+                new Object[] { SOCIALENGINE_SESSION_SECRET }
+        };
+    }
+
+    @Test
+    public void createUser() {
+        superUserClientContext
+                .createSuperuser("walletAdmin")
+                .createSession();
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    public void testCreateAndDeleteWallet(final String authHeader) {
+
+        String walletName = "WalletTest-" + randomUUID().toString();
+
+        final var request = new CreateNeoWalletRequest();
+        request.setUserId(superUserClientContext.getUser().getId());
+        request.setDisplayName(walletName);
+
+        NeoWallet neoWallet = client
+                .target(apiRoot + "/blockchain/neo/wallet")
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON))
+                .readEntity(NeoWallet.class);
+
+        assertNotNull(neoWallet);
+        assertNotNull(neoWallet.getId());
+        assertEquals(neoWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertEquals(neoWallet.getDisplayName(), walletName);
+
+        String req = "/blockchain/neo/wallet/" + neoWallet.getId();
+
+        Response response = client
+                .target(apiRoot + req)
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 204);
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    public void testGetWallet(final String authHeader) {
+
+        String walletName = "WalletTest-" + randomUUID().toString();
+
+        final var request = new CreateNeoWalletRequest();
+        request.setUserId(superUserClientContext.getUser().getId());
+        request.setDisplayName(walletName);
+
+        Response response = client
+                .target(apiRoot + "/blockchain/neo/wallet")
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 200);
+
+        var neoWallet = client
+                .target(apiRoot + "/blockchain/neo/wallet/" + walletName)
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .get()
+                .readEntity(NeoWallet.class);
+
+        assertNotNull(neoWallet);
+        assertNotNull(neoWallet.getId());
+        assertEquals(neoWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertEquals(neoWallet.getDisplayName(), walletName);
+
+        response = client
+                .target(apiRoot + "/blockchain/neo/wallet/" + neoWallet.getId())
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 204);
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    public void testUpdateWallet(final String authHeader) {
+
+        String walletName = "WalletTest-" + randomUUID().toString();
+
+        final var request = new CreateNeoWalletRequest();
+        request.setUserId(superUserClientContext.getUser().getId());
+        request.setDisplayName(walletName);
+
+        NeoWallet neoWallet = client
+                .target(apiRoot + "/blockchain/neo/wallet")
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON))
+                .readEntity(NeoWallet.class);
+
+        assertNotNull(neoWallet);
+        assertNotNull(neoWallet.getId());
+        assertEquals(neoWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertEquals(neoWallet.getDisplayName(), walletName);
+
+        String updatedWalletName = "WalletTest-" + randomUUID().toString();
+        UpdateNeoWalletRequest updateRequest = new UpdateNeoWalletRequest();
+        updateRequest.setDisplayName(updatedWalletName);
+
+        var updatedNeoWallet = client
+                .target(apiRoot + "/blockchain/neo/wallet/" + neoWallet.getId())
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .put(Entity.entity(updateRequest, APPLICATION_JSON))
+                .readEntity(NeoWallet.class);
+
+        assertNotNull(updatedNeoWallet);
+        assertNotNull(updatedNeoWallet.getId());
+        assertEquals(updatedNeoWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertNotEquals(updatedNeoWallet.getDisplayName(), walletName);
+        assertEquals(updatedNeoWallet.getDisplayName(), updatedWalletName);
+
+        Response response = client
+                .target(apiRoot + "/blockchain/neo/wallet/" + neoWallet.getId())
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 204);
+    }
+}

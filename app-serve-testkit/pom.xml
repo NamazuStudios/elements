@@ -5,29 +5,29 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.namazustudios.socialengine</groupId>
+        <groupId>dev.getelements.elements</groupId>
         <artifactId>namazu-socialengine-system</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
+    <groupId>dev.getelements.elements</groupId>
     <artifactId>app-serve-testkit</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>app-serve-testkit</name>
 
     <dependencies>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-lua-testkit</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>app-serve</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>app-node</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -37,7 +37,7 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-jersey-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -50,7 +50,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.namazustudios.socialengine.appserve.testkit.AppServeTestKitMain</mainClass>
+                            <mainClass>dev.getelements.elements.appserve.testkit.AppServeTestKitMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

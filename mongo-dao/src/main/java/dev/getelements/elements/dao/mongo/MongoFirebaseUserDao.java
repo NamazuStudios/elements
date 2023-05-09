@@ -1,0 +1,207 @@
+package dev.getelements.elements.dao.mongo;
+
+import com.namazustudios.elements.fts.ObjectIndex;
+import dev.getelements.elements.dao.FirebaseUserDao;
+import dev.getelements.elements.dao.mongo.model.MongoUser;
+import dev.getelements.elements.exception.InvalidDataException;
+import dev.getelements.elements.exception.user.UserNotFoundException;
+import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.util.ValidationHelper;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
+import org.bson.types.ObjectId;
+import org.dozer.Mapper;
+
+import javax.inject.Inject;
+
+import static com.google.common.base.Strings.emptyToNull;
+import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
+
+public class MongoFirebaseUserDao implements FirebaseUserDao {
+
+    private Datastore datastore;
+
+    private ValidationHelper validationHelper;
+
+    private ObjectIndex objectIndex;
+
+    private MongoDBUtils mongoDBUtils;
+
+    private Mapper dozerMapper;
+
+    private MongoPasswordUtils mongoPasswordUtils;
+
+    private MongoConcurrentUtils mongoConcurrentUtils;
+
+    private MongoUserDao mongoUserDao;
+
+    @Override
+    public User connectActiveUserIfNecessary(final User user) {
+
+        validate(user);
+
+        final var query = getDatastore().find(MongoUser.class);
+
+        if (user.getId() == null) {
+            throw new IllegalArgumentException("User must have user id.");
+        }
+
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+
+        query.filter(
+            eq("_id", objectId),
+            eq("active", true),
+            or(
+                exists("firebaseId").not(),
+                eq("firebaseId", user.getFirebaseId())
+            )
+        );
+
+        final var mongoUser = getMongoDBUtils().perform(ds ->
+            query.modify(set("firebaseId", user.getFirebaseId()))
+                 .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("No matching user found.");
+        }
+
+        getObjectIndex().index(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
+
+    }
+
+    @Override
+    public User createReactivateOrUpdateUser(final User user) {
+
+        validate(user);
+
+        final var query = getDatastore().find(MongoUser.class);
+
+        query.filter(
+            or(
+                eq("email", user.getEmail()),
+                eq("firebaseId", user.getFirebaseId())
+            )
+        );
+
+        final var insertMap = getMongoPasswordUtils().scramblePasswordOnInsert();
+
+        insertMap.put("_id", new ObjectId());
+        insertMap.put("name", user.getName());
+        insertMap.put("email", user.getEmail());
+        insertMap.put("level", user.getLevel());
+
+        // We only reactivate the existing user, all other fields are left untouched if the user exists.
+
+        final var mongoUser = getMongoDBUtils().perform(db -> query.modify(
+                set("active", true),
+                set("firebaseId", user.getFirebaseId()),
+                setOnInsert(insertMap)
+            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("No matching user found.");
+        }
+
+        getObjectIndex().index(mongoUser);
+        return getDozerMapper().map(mongoUser, User.class);
+
+    }
+
+    public void validate(final User user) {
+
+        if (user == null) {
+            throw new InvalidDataException("User must not be null.");
+        }
+
+        if (user.getFirebaseId() == null || user.getFirebaseId().trim().isEmpty()) {
+            throw new InvalidDataException("User must specify Firebase ID.");
+        }
+
+        getValidationHelper().validateModel(user);
+
+        user.setEmail(nullToEmpty(user.getEmail()).trim());
+        user.setName(nullToEmpty(user.getName()).trim());
+        user.setFirebaseId(emptyToNull(nullToEmpty(user.getFirebaseId()).trim()));
+
+    }
+
+    public Datastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(Datastore datastore) {
+        this.datastore = datastore;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
+
+    public MongoPasswordUtils getMongoPasswordUtils() {
+        return mongoPasswordUtils;
+    }
+
+    @Inject
+    public void setMongoPasswordUtils(MongoPasswordUtils mongoPasswordUtils) {
+        this.mongoPasswordUtils = mongoPasswordUtils;
+    }
+
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
+    }
+
+    @Inject
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
+    }
+
+    public MongoUserDao getMongoUserDao() {
+        return mongoUserDao;
+    }
+
+    @Inject
+    public void setMongoUserDao(MongoUserDao mongoUserDao) {
+        this.mongoUserDao = mongoUserDao;
+    }
+
+}

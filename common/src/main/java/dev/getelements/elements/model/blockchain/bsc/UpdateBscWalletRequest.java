@@ -1,0 +1,64 @@
+package dev.getelements.elements.model.blockchain.bsc;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@Deprecated
+@ApiModel(description = "Represents a request to update a Bsc Wallet.")
+public class UpdateBscWalletRequest {
+
+    @ApiModelProperty("The new display name of the wallet.")
+    private String displayName;
+
+    @ApiModelProperty("The user Id of the current wallet owner. If left null the current logged in user will be assumed to be the wallet owner.")
+    private String userId;
+
+    @ApiModelProperty("The user Id of the new wallet owner.")
+    private String newUserId;
+
+    @ApiModelProperty("The current password used to log into the wallet.")
+    private String password;
+
+    @ApiModelProperty("The new password to be used to encrypt the wallet.")
+    private String newPassword;
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getNewUserId() {
+        return newUserId;
+    }
+
+    public void setNewUserId(String newUserId) {
+        this.newUserId = newUserId;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String newPassword) {
+        this.password = password;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+}

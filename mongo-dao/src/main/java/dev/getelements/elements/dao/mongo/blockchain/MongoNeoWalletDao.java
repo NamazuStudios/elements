@@ -1,0 +1,253 @@
+package dev.getelements.elements.dao.mongo.blockchain;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.namazustudios.elements.fts.ObjectIndex;
+import dev.getelements.elements.dao.NeoWalletDao;
+import dev.getelements.elements.dao.mongo.MongoDBUtils;
+import dev.getelements.elements.dao.mongo.MongoUserDao;
+import dev.getelements.elements.dao.mongo.UpdateBuilder;
+import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
+import dev.getelements.elements.dao.mongo.model.MongoUser;
+import dev.getelements.elements.dao.mongo.model.blockchain.MongoNeoWallet;
+import dev.getelements.elements.exception.blockchain.NeoWalletNotFoundException;
+import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.ValidationGroups;
+import dev.getelements.elements.model.blockchain.neo.NeoWallet;
+import dev.getelements.elements.model.blockchain.neo.Nep6Wallet;
+import dev.getelements.elements.model.blockchain.neo.UpdateNeoWalletRequest;
+import dev.getelements.elements.util.ValidationHelper;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import io.neow3j.wallet.Wallet;
+import org.dozer.Mapper;
+
+import javax.inject.Inject;
+
+import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+
+public class MongoNeoWalletDao implements NeoWalletDao {
+
+    private ObjectIndex objectIndex;
+
+    private MongoDBUtils mongoDBUtils;
+
+    private Datastore datastore;
+
+    private Mapper beanMapper;
+
+    private ValidationHelper validationHelper;
+
+    private MongoUserDao mongoUserDao;
+
+    private MongoApplicationDao mongoApplicationDao;
+
+    @Override
+    public Pagination<NeoWallet> getWallets(final int offset,
+                                            final int count,
+                                            final String userId) {
+
+        var query = getDatastore().find(MongoNeoWallet.class);
+
+        if (!nullToEmpty(userId).trim().isEmpty()) {
+            final var mongoUser = getMongoUserDao().getActiveMongoUser(userId);
+            query.filter(eq("user", mongoUser));
+        }
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
+    }
+
+    @Override
+    public NeoWallet getWallet(String walletNameOrId) {
+
+        final var objectId = getMongoDBUtils().parseOrReturnNull(walletNameOrId);
+
+        var mongoNeoWallet = getDatastore().find(MongoNeoWallet.class)
+                .filter(Filters.or(
+                                Filters.eq("_id", objectId),
+                                Filters.eq("displayName", walletNameOrId)
+                        )
+                ).first();
+
+        if (mongoNeoWallet == null) {
+            throw new NeoWalletNotFoundException("Wallet not found: " + walletNameOrId);
+        }
+
+        return transform(mongoNeoWallet);
+    }
+
+    @Override
+    public NeoWallet getWalletForUser(String userId, String walletName){
+
+        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var user = getMongoUser(userId);
+
+        query.filter(and(
+                eq("user", user),
+                eq("displayName", walletName)
+        ));
+
+        final var mongoNeoWallet = query.first();
+        return mongoNeoWallet == null ? null : transform(mongoNeoWallet);
+    }
+
+    @Override
+    public NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException {
+
+        getValidationHelper().validateModel(updatedWalletRequest, ValidationGroups.Update.class);
+
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
+        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var displayName = nullToEmpty(updatedWalletRequest.getDisplayName()).trim();
+        final var newUserId = nullToEmpty(updatedWalletRequest.getNewUserId()).trim();
+
+        final var builder = new UpdateBuilder();
+
+        query.filter(eq("_id", objectId));
+
+        if (!displayName.isEmpty()) {
+            builder.with(set("displayName", displayName));
+        }
+        if (!newUserId.isEmpty()){
+            final var newUser = getMongoUser(newUserId);
+            builder.with(set("user", newUser));
+        }
+
+        builder.with(set("wallet", Wallet.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
+
+        final MongoNeoWallet mongoNeoWallet = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoNeoWallet == null) {
+            throw new NeoWalletNotFoundException("Wallet not found: " + walletId);
+        }
+
+        getObjectIndex().index(mongoNeoWallet);
+        return transform(mongoNeoWallet);
+    }
+
+    @Override
+    public NeoWallet createWallet(NeoWallet wallet) throws JsonProcessingException {
+
+        getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
+
+        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var user = getMongoUser(wallet.getUser().getId());
+
+        query.filter(and(
+                eq("user", user),
+                eq("displayName", nullToEmpty(wallet.getDisplayName()).trim())
+        ));
+
+        final var builder = new UpdateBuilder().with(
+                set("user", user),
+                set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
+                set("wallet", Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
+        );
+
+        final var mongoWallet = getMongoDBUtils().perform(
+                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
+        getObjectIndex().index(mongoWallet);
+        return transform(mongoWallet);
+    }
+
+    @Override
+    public void deleteWallet(final String walletId) {
+        final var objectId = getMongoDBUtils().parseOrThrow(walletId, NeoWalletNotFoundException::new);
+
+        final var result = getDatastore()
+                .find(MongoNeoWallet.class)
+                .filter(eq("_id", objectId))
+                .delete();
+
+        if(result.getDeletedCount() == 0){
+            throw new NeoWalletNotFoundException("NeoWallet not deleted: " + walletId);
+        }
+    }
+
+
+    public NeoWallet transform(final MongoNeoWallet input) {
+
+        if (!input.getUser().isActive()) {
+            input.setUser(null);
+        }
+
+        return getBeanMapper().map(input, NeoWallet.class);
+    }
+
+    private MongoUser getMongoUser(final String userId) {
+        return getMongoUserDao().getActiveMongoUser(userId);
+    }
+
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Datastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(Datastore datastore) {
+        this.datastore = datastore;
+    }
+
+    public Mapper getBeanMapper() {
+        return beanMapper;
+    }
+
+    @Inject
+    public void setBeanMapper(Mapper beanMapper) {
+        this.beanMapper = beanMapper;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public MongoUserDao getMongoUserDao() {
+        return mongoUserDao;
+    }
+
+    @Inject
+    public void setMongoUserDao(MongoUserDao mongoUserDao) {
+        this.mongoUserDao = mongoUserDao;
+    }
+
+    public MongoApplicationDao getMongoApplicationDao() {
+        return mongoApplicationDao;
+    }
+
+    @Inject
+    public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
+        this.mongoApplicationDao = mongoApplicationDao;
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
+    }
+
+}

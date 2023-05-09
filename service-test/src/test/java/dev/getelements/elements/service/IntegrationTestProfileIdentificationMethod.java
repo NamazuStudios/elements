@@ -1,0 +1,33 @@
+package dev.getelements.elements.service;
+
+import dev.getelements.elements.exception.profile.UnidentifiedProfileException;
+import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.security.ProfileIdentificationMethod;
+
+import javax.inject.Inject;
+
+import static dev.getelements.elements.model.profile.Profile.PROFILE_ATTRIBUTE;
+
+public class IntegrationTestProfileIdentificationMethod implements ProfileIdentificationMethod {
+
+    private TestScope.Context testScopeContext;
+
+    @Override
+    public Profile attempt() throws UnidentifiedProfileException {
+        return getTestScopeContext()
+                .getAttributes()
+                .getAttributeOptional(PROFILE_ATTRIBUTE)
+                .map(Profile.class::cast)
+                .orElseThrow(UnidentifiedProfileException::new);
+    }
+
+    public TestScope.Context getTestScopeContext() {
+        return testScopeContext;
+    }
+
+    @Inject
+    public void setTestScopeContext(TestScope.Context testScopeContext) {
+        this.testScopeContext = testScopeContext;
+    }
+
+}
