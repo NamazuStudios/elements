@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-NEW_PACKAGE=${NEW_PACKAGE:="dev.eci.elements"}
+NEW_PACKAGE=${NEW_PACKAGE:="dev.getelements.elements"}
 OLD_PACKAGE=${OLD_PACKAGE:="com.namazustudios.socialengine"}
 
-NEW_MAVEN_GROUPID=${NEW_MAVEN_GROUPID:="dev.eci.elements"}
+NEW_MAVEN_GROUPID=${NEW_MAVEN_GROUPID:="dev.getelements.elements"}
 OLD_MAVEN_GROUPID=${OLD_MAVEN_GROUPID:="com.namazustudios.socialengine"}
 
 function refactor_java_source {
@@ -39,6 +39,7 @@ function refactor_java_source {
       echo sed -i".orig" "$sed_package_expression" "$new_file"
       echo diff "${new_file}.orig" "$new_file" ">" "$diff_audit_file"
       echo rm "${new_file}.orig"
+      echo git add "${new_file}"
     fi
 
 }
@@ -67,6 +68,7 @@ function refactor_maven_pom {
       echo sed -i".orig" "$sed_group_id_expression" "$pom_file"
       echo diff "${pom_file}.orig" "$pom_file" ">" "$diff_audit_file"
       echo rm "${pom_file}.orig"
+      echo git add "${pom_file}"
     fi
 
 }
@@ -77,8 +79,8 @@ export -f refactor_java_source
 AUDIT_DIRECTORY=${AUDIT_DIRECTORY:=$(mktemp -d --suffix=-audit)}
 
 echo "#!$(which bash)"
-echo "echo Renaming ${OLD_PACKAGE} -> ${NEW_PACKAGE}"
-echo "echo Renaming Artifact Groups ${OLD_MAVEN_GROUPID} -> ${NEW_MAVEN_GROUPID}"
+echo "echo Renaming ${OLD_PACKAGE} \"->\" ${NEW_PACKAGE}"
+echo "echo Renaming Artifact Groups ${OLD_MAVEN_GROUPID} \"->\" ${NEW_MAVEN_GROUPID}"
 echo "echo Using Audit Directory ${AUDIT_DIRECTORY}"
 
 find . -ipath "*/src/*/*.java" -type f -exec bash -c 'refactor_java_source "$1" "$2" "$3" $4' -- {} "${OLD_PACKAGE}" "${NEW_PACKAGE}" "${AUDIT_DIRECTORY}" \;
