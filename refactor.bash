@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NEW_PACKAGE="dev.eci"
+NEW_PACKAGE="dev.getelements"
 OLD_PACKAGE="com.namazustudios.socialengine"
 
 OLD_MAVEN_GROUPID="com.namazustudios.socialengine"
@@ -25,24 +25,18 @@ function refactor_java_source {
     new_directory="$(dirname "$new_file")"
     sed_package_expression="s#$old_package#$new_package#"
 
-#    echo "$old_file -> $new_file"
+    diff_audit_file="$audit_directory/$new_file.diff"
+    diff_audit_directory=$(dirname "$diff_audit_file")
 
     if [ "$(git rev-parse --show-toplevel)" = "$(pwd)" ] && [ "$old_file" != "$new_file" ]
     then
-
-      temporary_copy=$(mktemp)
-      diff_audit_file="$audit_directory/$new_file.diff"
-      diff_audit_directory=$(dirname "$diff_audit_file")
-
-      echo sed "$sed_package_expression" "$old_file" ">" "$temporary_copy"
-
+      echo "Refactoring ${old_file}"
       echo mkdir -p "$diff_audit_directory"
-      echo diff "$old_file" "$temporary_diff" ">" "$diff_audit_file"
-
       echo mkdir -p "${new_directory}"
       echo git mv "${old_file}" "${new_file}"
-      echo sed -i".bak" "$sed_package_expression" "$new_file"
-
+      echo sed -i".orig" "$sed_package_expression" "$new_file"
+      echo diff "${new_file}.orig" "$new_file" ">" "$diff_audit_file"
+      echo rm "${new_file}.orig"
     fi
 
 }
