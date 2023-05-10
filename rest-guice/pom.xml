@@ -171,13 +171,6 @@
         </dependency>
 
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jersey-guice</artifactId>
-            <version>${project.version}</version>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
             <version>${jersey.version}</version>
@@ -193,6 +186,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
