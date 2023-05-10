@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.lua.builtin;
 
-import dev.getelements.elements.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.ResponseCode;
 import dev.getelements.elements.rt.http.HttpStatus;
 import org.slf4j.Logger;

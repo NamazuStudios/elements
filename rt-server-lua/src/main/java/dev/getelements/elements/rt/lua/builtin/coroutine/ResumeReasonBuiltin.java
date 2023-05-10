@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.lua.builtin.coroutine;
 
-import dev.getelements.elements.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.ResumeReason;
 import dev.getelements.elements.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;

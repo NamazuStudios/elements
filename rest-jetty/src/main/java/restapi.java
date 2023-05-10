@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.rest.RestAPIMain;
+import dev.getelements.elements.rest.RestAPIMain;
 
 public class restapi {
 

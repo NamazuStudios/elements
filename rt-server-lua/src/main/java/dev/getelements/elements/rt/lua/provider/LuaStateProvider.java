@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt.lua.provider;
 
-import dev.getelements.elements.jnlua.Converter;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

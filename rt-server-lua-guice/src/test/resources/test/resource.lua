@@ -32,7 +32,7 @@ end
 function test_resource.test_create()
 
     local path = "/test/helloworld/" .. util.uuid()
-    local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
+    local ResourceId = java.require "dev.getelements.elements.rt.id.ResourceId"
 
     log.info("Making Resource")
     local rid = resource.create("test.helloworld", path)

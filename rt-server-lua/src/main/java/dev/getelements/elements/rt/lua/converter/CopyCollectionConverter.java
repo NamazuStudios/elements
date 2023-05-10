@@ -1,15 +1,15 @@
 package dev.getelements.elements.rt.lua.converter;
 
-import dev.getelements.elements.jnlua.LuaState;
-import dev.getelements.elements.jnlua.LuaType;
-import dev.getelements.elements.jnlua.LuaValueProxy;
+import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaType;
+import com.namazustudios.socialengine.jnlua.LuaValueProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static dev.getelements.elements.jnlua.DefaultConverter.getInstance;
-import static dev.getelements.elements.jnlua.LuaType.TABLE;
+import static com.namazustudios.socialengine.jnlua.DefaultConverter.getInstance;
+import static com.namazustudios.socialengine.jnlua.LuaType.TABLE;
 import static dev.getelements.elements.rt.lua.Constants.MANIFEST_TYPE_METAFIELD;
 import static dev.getelements.elements.rt.manifest.model.Type.*;
 

@@ -2,8 +2,8 @@ package dev.getelements.elements.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import dev.getelements.elements.jnlua.Converter;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.lua.converter.*;
 import dev.getelements.elements.rt.lua.provider.LuaStateProvider;
 import dev.getelements.elements.rt.manifest.security.SecurityManifest;

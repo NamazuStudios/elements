@@ -8,7 +8,7 @@
 
 local test_request = {}
 local request = require "namazu.request"
-local SimpleRequest = java.require "com.namazustudios.socialengine.rt.SimpleRequest"
+local SimpleRequest = java.require "dev.getelements.elements.rt.SimpleRequest"
 
 local function do_formulate()
     return request.formulate_table{

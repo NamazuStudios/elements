@@ -11,8 +11,8 @@ local resource = require "namazu.resource"
 
 local auth = require "namazu.socialengine.auth"
 
-local User = java.require "com.namazustudios.socialengine.model.user.User"
-local Profile = java.require "com.namazustudios.socialengine.model.profile.Profile"
+local User = java.require "dev.getelements.elements.model.user.User"
+local Profile = java.require "dev.getelements.elements.model.profile.Profile"
 
 local responsecode = require "namazu.response.code"
 

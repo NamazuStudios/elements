@@ -2,7 +2,7 @@ package dev.getelements.elements.rt.lua.guice;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.getelements.elements.jnlua.LuaRuntimeException;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.Path;
 import dev.getelements.elements.rt.id.ResourceId;

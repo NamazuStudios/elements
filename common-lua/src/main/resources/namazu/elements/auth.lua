@@ -7,8 +7,8 @@
 --
 
 local attributes = require "namazu.resource.attributes"
-local User = java.require "com.namazustudios.socialengine.model.user.User"
-local Profile = java.require "com.namazustudios.socialengine.model.profile.Profile"
+local User = java.require "dev.getelements.elements.model.user.User"
+local Profile = java.require "dev.getelements.elements.model.profile.Profile"
 
 local auth = {}
 
@@ -30,7 +30,7 @@ end
 --- Fetches the current Profile
 -- This fetches the current profile executing the request.  This defers to the attributes set when the resource was
 -- created.  If no profile exists, this returns nil
--- @treturn com.namazustudios.socialengine.model.profile.Profile the profile, or nil
+-- @treturn dev.getelements.elements.model.profile.Profile the profile, or nil
 function auth.profile()
     return attributes:getAttribute(Profile.PROFILE_ATTRIBUTE)
 end

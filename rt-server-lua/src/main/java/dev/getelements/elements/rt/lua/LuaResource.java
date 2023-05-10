@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt.lua;
 
-import dev.getelements.elements.jnlua.JavaFunction;
-import dev.getelements.elements.jnlua.LuaState;
-import dev.getelements.elements.jnlua.LuaType;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaType;
 import dev.getelements.elements.rt.*;
 import dev.getelements.elements.rt.exception.*;
 import dev.getelements.elements.rt.id.HasNodeId;
@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static dev.getelements.elements.jnlua.LuaState.*;
+import static com.namazustudios.socialengine.jnlua.LuaState.*;
 import static dev.getelements.elements.rt.Context.LOCAL;
 import static dev.getelements.elements.rt.Context.REMOTE;
 import static dev.getelements.elements.rt.Path.fromPathString;

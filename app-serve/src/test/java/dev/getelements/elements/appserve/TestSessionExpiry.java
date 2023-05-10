@@ -58,7 +58,7 @@ public class TestSessionExpiry {
         final User userModel = new User();
         final Profile profileModel = new Profile();
         final Application applicationModel = new Application();
-        final dev.getelements.elements.model.session.Session sessionModel = new com.namazustudios.socialengine.model.session.Session();
+        final dev.getelements.elements.model.session.Session sessionModel = new dev.getelements.elements.model.session.Session();
 
         userModel.setLevel(USER);
         sessionModel.setUser(userModel);
@@ -102,7 +102,7 @@ public class TestSessionExpiry {
         final User userModel = new User();
         final Profile profileModel = new Profile();
         final Application applicationModel = new Application();
-        final dev.getelements.elements.model.session.Session sessionModel = new com.namazustudios.socialengine.model.session.Session();
+        final dev.getelements.elements.model.session.Session sessionModel = new dev.getelements.elements.model.session.Session();
 
         userModel.setLevel(USER);
         sessionModel.setUser(userModel);
@@ -147,7 +147,7 @@ public class TestSessionExpiry {
         final User userModel = new User();
         final Profile profileModel = new Profile();
         final Application applicationModel = new Application();
-        final dev.getelements.elements.model.session.Session sessionModel = new com.namazustudios.socialengine.model.session.Session();
+        final dev.getelements.elements.model.session.Session sessionModel = new dev.getelements.elements.model.session.Session();
 
         userModel.setLevel(USER);
         sessionModel.setUser(userModel);

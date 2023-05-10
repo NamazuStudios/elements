@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.docserve.DocServeMain;
+import dev.getelements.elements.docserve.DocServeMain;
 
 public class docserve {
 

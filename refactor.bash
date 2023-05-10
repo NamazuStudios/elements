@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 NEW_PACKAGE=${NEW_PACKAGE:="dev.getelements.elements"}
-OLD_PACKAGE=${OLD_PACKAGE:="com.namazustudios.socialengine"}
+OLD_PACKAGE=${OLD_PACKAGE:="dev.getelements.elements"}
 
 NEW_MAVEN_GROUPID=${NEW_MAVEN_GROUPID:="dev.getelements.elements"}
-OLD_MAVEN_GROUPID=${OLD_MAVEN_GROUPID:="com.namazustudios.socialengine"}
+OLD_MAVEN_GROUPID=${OLD_MAVEN_GROUPID:="dev.getelements.elements"}
 
 function refactor_java_source {
 

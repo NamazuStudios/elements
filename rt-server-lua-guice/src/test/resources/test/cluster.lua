@@ -9,7 +9,7 @@
 local cluster = require "namazu.cluster"
 local this = require "namazu.resource.this"
 
-local NodeId = java.require "com.namazustudios.socialengine.rt.id.NodeId"
+local NodeId = java.require "dev.getelements.elements.rt.id.NodeId"
 
 local test_cluster = {}
 

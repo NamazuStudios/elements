@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.cdnserve.CdnServeMain;
+import dev.getelements.elements.cdnserve.CdnServeMain;
 
 public class cdnserve {
 

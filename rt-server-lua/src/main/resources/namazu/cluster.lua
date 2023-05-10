@@ -7,12 +7,12 @@
 --
 
 local ioc = require "namazu.ioc.resolver"
-local registry = ioc:inject("com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry")
+local registry = ioc:inject("dev.getelements.elements.rt.remote.RemoteInvokerRegistry")
 
 local this = require "namazu.resource.this"
 
 local Collectors = java.require "java.util.stream.Collectors"
-local ApplicationId = java.require "com.namazustudios.socialengine.rt.id.ApplicationId"
+local ApplicationId = java.require "dev.getelements.elements.rt.id.ApplicationId"
 
 local cluster = {}
 

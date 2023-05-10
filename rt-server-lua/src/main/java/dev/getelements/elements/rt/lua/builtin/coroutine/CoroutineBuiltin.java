@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt.lua.builtin.coroutine;
 
-import dev.getelements.elements.jnlua.JavaFunction;
-import dev.getelements.elements.jnlua.LuaState;
-import dev.getelements.elements.jnlua.LuaType;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaType;
 import dev.getelements.elements.rt.CurrentResource;
 import dev.getelements.elements.rt.PersistenceStrategy;
 import dev.getelements.elements.rt.annotation.*;
@@ -21,8 +21,8 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static dev.getelements.elements.jnlua.LuaState.REGISTRYINDEX;
-import static dev.getelements.elements.jnlua.LuaState.YIELD;
+import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static dev.getelements.elements.rt.lua.builtin.coroutine.YieldInstruction.IMMEDIATE;
 import static java.lang.Math.max;
 import static java.lang.StrictMath.round;

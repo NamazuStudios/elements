@@ -58,6 +58,8 @@
 
                         <id>luastubs-javadoc</id>
 
+                        <phase>none</phase>
+
                         <goals>
                             <goal>jar</goal>
                         </goals>

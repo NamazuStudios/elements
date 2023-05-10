@@ -1,9 +1,9 @@
 package dev.getelements.elements.rt.lua.converter;
 
-import dev.getelements.elements.jnlua.Converter;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.Converter;
+import com.namazustudios.socialengine.jnlua.LuaState;
 
-import static dev.getelements.elements.jnlua.DefaultConverter.getInstance;
+import static com.namazustudios.socialengine.jnlua.DefaultConverter.getInstance;
 
 /**
  * Created by patricktwohig on 8/18/17.

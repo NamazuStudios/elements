@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt.lua;
 
-import dev.getelements.elements.jnlua.JavaFunction;
-import dev.getelements.elements.jnlua.LuaException;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaException;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.AssetLoader;
 import dev.getelements.elements.rt.CurrentResource;
 import dev.getelements.elements.rt.ManifestLoader;

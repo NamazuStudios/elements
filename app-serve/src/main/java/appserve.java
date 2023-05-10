@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.appserve.AppServeMain;
+import dev.getelements.elements.appserve.AppServeMain;
 
 /**
  * A shortcut to run {@link AppServeMain}.

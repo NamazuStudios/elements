@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.lua.persist;
 
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.IocResolver;
 
 import javax.inject.Inject;

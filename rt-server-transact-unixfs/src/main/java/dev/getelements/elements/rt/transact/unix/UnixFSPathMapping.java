@@ -134,7 +134,7 @@ public class UnixFSPathMapping {
                 components.add(component.toString());
             }
 
-            final dev.getelements.elements.rt.Path rtPath = new com.namazustudios.socialengine.rt.Path(
+            final dev.getelements.elements.rt.Path rtPath = new dev.getelements.elements.rt.Path(
                 nodeId.asString(),
                 components
             );
@@ -168,7 +168,7 @@ public class UnixFSPathMapping {
                 components.add(stripped.toString());
             });
 
-            final dev.getelements.elements.rt.Path rtPath = new com.namazustudios.socialengine.rt.Path(
+            final dev.getelements.elements.rt.Path rtPath = new dev.getelements.elements.rt.Path(
                 nodeId.asString(),
                 components
             );

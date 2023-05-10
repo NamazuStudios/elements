@@ -8,10 +8,10 @@
 
 local runtime = require "namazu.runtime"
 
-local InstanceId = java.require "com.namazustudios.socialengine.rt.id.InstanceId"
-local NodeId = java.require "com.namazustudios.socialengine.rt.id.NodeId"
-local ApplicationId = java.require "com.namazustudios.socialengine.rt.id.ApplicationId"
-local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
+local InstanceId = java.require "dev.getelements.elements.rt.id.InstanceId"
+local NodeId = java.require "dev.getelements.elements.rt.id.NodeId"
+local ApplicationId = java.require "dev.getelements.elements.rt.id.ApplicationId"
+local ResourceId = java.require "dev.getelements.elements.rt.id.ResourceId"
 
 local test_runtime = {}
 

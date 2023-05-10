@@ -51,7 +51,7 @@
                 <executions>
                     <execution>
                         <id>standard-javadoc</id>
-                        <phase>package</phase>
+                        <phase>none</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -59,6 +59,8 @@
                     <execution>
 
                         <id>luastubs-javadoc</id>
+
+                        <phase>none</phase>
 
                         <goals>
                             <goal>jar</goal>

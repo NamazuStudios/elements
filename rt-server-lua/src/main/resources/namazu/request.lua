@@ -10,8 +10,8 @@ local table = require "table"
 
 local request = {}
 
-local Request       = java.require "com.namazustudios.socialengine.rt.Request"
-local RequestHeader = java.require "com.namazustudios.socialengine.rt.RequestHeader"
+local Request       = java.require "dev.getelements.elements.rt.Request"
+local RequestHeader = java.require "dev.getelements.elements.rt.RequestHeader"
 
 local function formulate_request_header(path, method, headers, sequence)
 

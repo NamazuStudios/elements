@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt.lua.builtin;
 
 import com.google.common.collect.ImmutableSet;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.Path;
 import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.LuaResource;

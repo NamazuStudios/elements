@@ -14,7 +14,7 @@ local coroutine = require "coroutine"
 local runtime = require "namazu.runtime"
 local cluster = require "namazu.cluster"
 
-local Path = java.require "com.namazustudios.socialengine.rt.Path"
+local Path = java.require "dev.getelements.elements.rt.Path"
 
 local TEST_INDEX_PREFIX = "test_index"
 local TEST_INDEX_PREFIX_ALIAS = "test_index_alias"

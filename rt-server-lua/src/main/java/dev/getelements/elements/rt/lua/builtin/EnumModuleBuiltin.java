@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt.lua.builtin;
 
 import dev.getelements.elements.rt.annotation.CaseFormat;
-import dev.getelements.elements.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

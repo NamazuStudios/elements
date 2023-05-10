@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.appnode.ApplicationNodeMain;
+import dev.getelements.elements.appnode.ApplicationNodeMain;
 
 /**
  * Easy-to-use entrypoint for appnode. {@see {@link ApplicationNodeMain}}

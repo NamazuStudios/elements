@@ -280,11 +280,11 @@
             <artifactId>guice-bridge</artifactId>
             <version>${guice.bridge.version}</version>
         </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>jetty-util</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>dev.getelements.elements</groupId>-->
+<!--            <artifactId>jetty-util</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>

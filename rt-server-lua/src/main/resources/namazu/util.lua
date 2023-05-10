@@ -10,7 +10,7 @@
 --
 
 local UUID = java.require("java.util.UUID")
-local Path = java.require("com.namazustudios.socialengine.rt.Path")
+local Path = java.require("dev.getelements.elements.rt.Path")
 
 local table = require "table"
 

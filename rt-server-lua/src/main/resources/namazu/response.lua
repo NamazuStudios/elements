@@ -1,14 +1,14 @@
 
 require "table"
 
-local Response       = java.require "com.namazustudios.socialengine.rt.Response"
-local ResponseHeader = java.require "com.namazustudios.socialengine.rt.ResponseHeader"
-local SimpleResponse = java.require "com.namazustudios.socialengine.rt.SimpleResponse"
+local Response       = java.require "dev.getelements.elements.rt.Response"
+local ResponseHeader = java.require "dev.getelements.elements.rt.ResponseHeader"
+local SimpleResponse = java.require "dev.getelements.elements.rt.SimpleResponse"
 
 local response = {}
 
 --- Corresponds to the ResponseCode enumeration.  The set of builtin codes for returning responses.  See
--- com.namazustudios.socialengine.rt.ResponseCode for more information on this.
+-- dev.getelements.elements.rt.ResponseCode for more information on this.
 response.code = require "namazu.response.code"
 
 local function forumulate_headers(code, headers, sequence)

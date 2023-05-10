@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.lua.builtin;
 
-import dev.getelements.elements.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.*;
 import dev.getelements.elements.rt.id.ResourceId;
 import dev.getelements.elements.rt.id.TaskId;

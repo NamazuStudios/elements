@@ -1,9 +1,9 @@
 package dev.getelements.elements.rt.lua.builtin;
 
 import com.google.common.base.Function;
-import dev.getelements.elements.jnlua.JavaFunction;
-import dev.getelements.elements.jnlua.JavaReflector;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.JavaReflector;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.CurrentResource;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 import dev.getelements.elements.rt.exception.InternalException;

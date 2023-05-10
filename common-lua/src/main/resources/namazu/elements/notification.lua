@@ -7,8 +7,8 @@
 
 local ioc = require "namazu.ioc.resolver"
 
-local application_builder_provider = ioc:provider("com.namazustudios.socialengine.service.NotificationBuilder")
-local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
+local application_builder_provider = ioc:provider("dev.getelements.elements.service.NotificationBuilder")
+local application_provider = ioc:provider("dev.getelements.elements.model.application.Application")
 
 local notification = {}
 

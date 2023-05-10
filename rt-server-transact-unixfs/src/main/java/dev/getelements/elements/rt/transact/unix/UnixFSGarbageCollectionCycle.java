@@ -56,7 +56,7 @@ public class UnixFSGarbageCollectionCycle {
         this.pessimisticLocking = transactionJournal.newPessimisticLocking();
     }
 
-    private int sort(final dev.getelements.elements.rt.Path l, final com.namazustudios.socialengine.rt.Path r) {
+    private int sort(final dev.getelements.elements.rt.Path l, final dev.getelements.elements.rt.Path r) {
         // We sort paths by their length (in components) and then lexicographically after that. This ensures that the
         // shortest paths are at the beginning of the collection.
         final int lengthDifference = l.getComponents().size() - r.getComponents().size();

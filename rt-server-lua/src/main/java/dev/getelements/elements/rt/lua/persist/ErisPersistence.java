@@ -1,9 +1,9 @@
 package dev.getelements.elements.rt.lua.persist;
 
 import com.google.common.collect.MapMaker;
-import dev.getelements.elements.jnlua.JavaFunction;
-import dev.getelements.elements.jnlua.LuaRuntimeException;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.CurrentResource;
 import dev.getelements.elements.rt.Resource;
@@ -20,9 +20,9 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.jnlua.LuaState.JNLUA_OBJECT;
-import static dev.getelements.elements.jnlua.LuaState.REGISTRYINDEX;
-import static dev.getelements.elements.jnlua.LuaState.RIDX_GLOBALS;
+import static com.namazustudios.socialengine.jnlua.LuaState.JNLUA_OBJECT;
+import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
+import static com.namazustudios.socialengine.jnlua.LuaState.RIDX_GLOBALS;
 import static java.lang.String.format;
 
 /**

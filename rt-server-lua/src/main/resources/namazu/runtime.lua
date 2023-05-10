@@ -7,7 +7,7 @@
 --
 
 local this = require "namazu.resource.this"
-local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
+local ResourceId = java.require "dev.getelements.elements.rt.id.ResourceId"
 
 local runtime = {}
 

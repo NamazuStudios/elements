@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.lua.builtin;
 
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.LogAssist;
 import dev.getelements.elements.rt.lua.persist.ErisPersistence;

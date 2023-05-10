@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt.lua.builtin;
 
-import dev.getelements.elements.jnlua.JavaFunction;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.AssetLoader;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.rt.exception.ModuleNotFoundException;

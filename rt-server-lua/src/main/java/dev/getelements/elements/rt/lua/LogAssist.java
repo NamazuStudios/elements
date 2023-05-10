@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt.lua;
 
-import dev.getelements.elements.jnlua.LuaRuntimeException;
-import dev.getelements.elements.jnlua.LuaStackTraceElement;
-import dev.getelements.elements.jnlua.LuaState;
+import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
+import com.namazustudios.socialengine.jnlua.LuaStackTraceElement;
+import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.Resource;
 import org.slf4j.Logger;
 

@@ -5,4 +5,4 @@ FROM docker.namazustudios.net/namazu-elements-base:$BASE_TAG
 COPY --chown=elements:elements target/lib/*.jar $ELEMENTS_LIB/
 EXPOSE 8081
 
-ENTRYPOINT ["java", "com.namazustudios.socialengine.rest.RestAPIMain"]
+ENTRYPOINT ["java", "dev.getelements.elements.rest.RestAPIMain"]

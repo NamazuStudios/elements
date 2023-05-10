@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.codeserve.CodeServeMain;
+import dev.getelements.elements.codeserve.CodeServeMain;
 
 public class codeserve {
 
