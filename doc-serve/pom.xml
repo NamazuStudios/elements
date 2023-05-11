@@ -165,16 +165,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>mongo-dao</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>mongo-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>
             <version>${hibernate.validator.guice.version}</version>
@@ -209,11 +199,6 @@
             <artifactId>service-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>dev.getelements.elements</groupId>-->
-<!--            <artifactId>rest-api</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
@@ -232,13 +217,7 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-http-servlet</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>common-lua</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
