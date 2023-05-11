@@ -2,6 +2,7 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -12,11 +13,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 7/10/15.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.application"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.application",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.application"
+        ),
+        @ModuleDefinition(
+                value = "cci.elements.service.unscoped.application",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.application",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.application instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.application",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use cci.elements.service.unscoped.application instead.")
+        )
 })
 public interface ApplicationService {
 

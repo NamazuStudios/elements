@@ -5,6 +5,7 @@ import dev.getelements.elements.model.blockchain.neo.NeoToken;
 import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
@@ -12,7 +13,11 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by garrettmcspadden on 11/23/21.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.metadata.spec")
+        @ModuleDefinition("eci.elements.dao.metadata.spec"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.metadata.spec",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.metadata.spec instead.")
+        )
 })
 public interface MetadataSpecDao {
 
@@ -65,4 +70,5 @@ public interface MetadataSpecDao {
      * @param metadataSpecId the metadataSpec ID.
      */
     void deleteMetadataSpec(String metadataSpecId);
+
 }

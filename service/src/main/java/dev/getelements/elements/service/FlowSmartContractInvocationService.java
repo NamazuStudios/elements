@@ -1,6 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.blockchain.contract.FlowInvokeContractResponse;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -16,10 +17,20 @@ import java.util.regex.Pattern;
  */
 @Expose({
         @ModuleDefinition(
-                value = "namazu.elements.service.smartcontract.flow"),
+                value = "eci.elements.service.smartcontract.flow"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.smartcontract.flow",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.smartcontract.flow",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.smartcontract.flow instead.")
+        ),
         @ModuleDefinition(
                 value = "namazu.elements.service.unscoped.smartcontract.flow",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.smartcontract.flow instead.")
         )
 })
 public interface FlowSmartContractInvocationService extends SmartContractInvocationService<FlowSmartContractInvocationService.Invoker> {

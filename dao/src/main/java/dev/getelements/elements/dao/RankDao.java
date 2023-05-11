@@ -12,10 +12,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Provides access to {@link Rank} instances stored in the database, correlating and filtering data as necessary.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.rank"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.rank",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.rank instead"))
+        @ModuleDefinition("eci.elements.dao.rank"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.rank",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.rank instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.rank",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.rank instead")
+        )
 })
 public interface RankDao {
 

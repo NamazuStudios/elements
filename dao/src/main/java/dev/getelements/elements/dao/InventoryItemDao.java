@@ -15,10 +15,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by davidjbrooks on 11/11/18.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.inventoryitem"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.inventoryitem",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.inventoryitem instead"))
+        @ModuleDefinition("eci.elements.dao.inventoryitem"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.inventoryitem",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.inventoryitem instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.inventoryitem",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.inventoryitem instead")
+        )
 })
 public interface InventoryItemDao {
 

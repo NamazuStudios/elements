@@ -17,10 +17,15 @@ import java.util.Optional;
  * Created by patricktwohig on 6/28/17.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.profile"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.profile",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.profile instead"))
+        @ModuleDefinition("eci.elements.dao.profile"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.profile",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.profile instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.profile",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.profile instead")
+        )
 })
 public interface ProfileDao {
 

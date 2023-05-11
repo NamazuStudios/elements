@@ -19,20 +19,30 @@ import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_R
 /**
  * Manages blockchain wallets.
  */
-@Expose({
-        @ModuleDefinition(
-                value = "namazu.elements.service.blockchain.wallet"),
-        @ModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.wallet",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
-})
 @RemoteService(
         value = "wallet",
         scopes = {
                 @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
         }
 )
+@Expose({
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.wallet"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.unscoped.wallet",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.wallet instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.unscoped.wallet",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.unscoped.wallet instead.")
+        )
+})
 public interface WalletService {
 
     /**

@@ -5,6 +5,7 @@ import dev.getelements.elements.model.blockchain.Token;
 import dev.getelements.elements.model.blockchain.neo.CreateNeoWalletRequest;
 import dev.getelements.elements.model.blockchain.neo.NeoWallet;
 import dev.getelements.elements.model.blockchain.neo.UpdateNeoWalletRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -18,11 +19,22 @@ import java.util.List;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.wallet"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.unscoped.neo.wallet",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.neo.wallet"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.unscoped.neo.wallet",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.neo.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.neo.wallet instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.unscoped.neo.wallet",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.unscoped.neo.wallet instead.")
+        )
 })
 public interface NeoWalletService {
 

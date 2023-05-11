@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.blockchain.neo;
 
 import dev.getelements.elements.model.blockchain.neo.Nep6Wallet;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -23,13 +24,6 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
  *
  * Created by keithhudnall on 9/22/21.
  */
-@Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.client"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.unscoped.neo.client",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
-})
 public interface Neow3jClient {
 
     /**

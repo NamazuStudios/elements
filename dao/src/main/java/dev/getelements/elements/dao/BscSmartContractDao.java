@@ -11,10 +11,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 6/28/17.
  */
 @Expose({
-        @ModuleDefinition("namazu.elements.dao.bsc.smartcontract"),
+        @ModuleDefinition("eci.elements.dao.bsc.smartcontract"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.bsc.smartcontract",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.bsc.smartcontract instead")
+        ),
         @ModuleDefinition(
                 value = "namazu.socialengine.dao.bsc.smartcontract",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.smartcontract instead"))
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.bsc.smartcontract instead")
+        )
 })
 public interface BscSmartContractDao {
 

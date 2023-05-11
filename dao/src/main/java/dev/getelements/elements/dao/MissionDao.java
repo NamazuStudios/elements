@@ -15,10 +15,15 @@ import java.util.List;
  * Created by davidjbrooks on 11/24/18.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.mission"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.mission",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.mission instead"))
+        @ModuleDefinition("eci.elements.dao.mission"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.mission",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.mission instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.mission",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.mission instead")
+        )
 })
 public interface MissionDao {
 

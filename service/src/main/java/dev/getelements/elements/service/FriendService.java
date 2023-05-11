@@ -3,7 +3,9 @@ package dev.getelements.elements.service;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.friend.Friend;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
+import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 /**
@@ -11,7 +13,13 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * and ensuring that the associated {@link Friend} instances are properly filtered and represented.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.friend")
+        @ModuleDefinition(
+                value = "eci.elements.service.friend"
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.friend",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.friend instead.")
+        )
 })
 public interface FriendService {
 

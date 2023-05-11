@@ -2,6 +2,7 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -11,11 +12,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * 
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.leaderboard"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.leaderboard",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.leaderboard"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.leaderboard",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.leaderboard",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.item instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.leaderboard",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.leaderboard instead.")
+        )
 })
 public interface LeaderboardService {
 

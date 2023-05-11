@@ -5,6 +5,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.blockchain.bsc.CreateBscTokenRequest;
 import dev.getelements.elements.model.blockchain.bsc.BscToken;
 import dev.getelements.elements.model.blockchain.bsc.UpdateBscTokenRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -18,11 +19,22 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.token"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.bsc.unscoped.token",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.token"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.unscoped.token",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.token",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.token instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.unscoped.token",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.unscoped.token instead.")
+        )
 })
 public interface BscTokenService {
 

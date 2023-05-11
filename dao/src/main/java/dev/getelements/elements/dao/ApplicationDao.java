@@ -11,10 +11,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 7/10/15.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.application"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.application",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.application instead"))
+        @ModuleDefinition("eci.elements.dao.application"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.application",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.application instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.application",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.application instead")
+        )
 })
 public interface ApplicationDao {
 

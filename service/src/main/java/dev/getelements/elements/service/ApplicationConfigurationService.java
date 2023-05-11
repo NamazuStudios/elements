@@ -4,6 +4,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.application.ApplicationConfiguration;
 import dev.getelements.elements.model.application.ProductBundle;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -16,11 +17,22 @@ import java.util.List;
  * Created by patricktwohig on 7/13/15.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.service.application.configuration"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.application.configuration",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.application.configuration"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.application.configuration",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.application.configuration",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.application.configuration instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.application.configuration",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.application.configuration instead.")
+        )
 })
 public interface ApplicationConfigurationService {
 

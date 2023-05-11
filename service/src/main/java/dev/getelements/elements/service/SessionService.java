@@ -3,16 +3,28 @@ package dev.getelements.elements.service;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.session"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.session",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "namazu.elements.service.session"
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.session",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.score",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.score instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.score",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.score instead.")
+        )
 })
 public interface SessionService {
 

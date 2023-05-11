@@ -15,11 +15,15 @@ import java.util.List;
  * Created by garrettmcspadden on 11/23/21.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.neo.token"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.neo.token",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.token instead")
-    )
+        @ModuleDefinition("eci.elements.dao.neo.token"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.neo.token",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.neo.token instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.neo.token",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.neo.token instead")
+        )
 })
 public interface NeoTokenDao {
 
@@ -84,4 +88,5 @@ public interface NeoTokenDao {
      * @param tokenId the neo token ID.
      */
     void deleteToken(String tokenId);
+
 }

@@ -11,10 +11,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 5/25/17.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.ios"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.ios",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.ios instead"))
+        @ModuleDefinition("eci.elements.dao.ios"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.ios",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.ios instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.ios",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.ios instead")
+        )
 })
 public interface IosApplicationConfigurationDao {
 

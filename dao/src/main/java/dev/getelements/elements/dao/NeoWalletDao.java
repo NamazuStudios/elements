@@ -13,10 +13,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by garrettmcspadden on 11/12/21.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.neo.wallet"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.neo.wallet",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.wallet instead"))
+        @ModuleDefinition("eci.elements.dao.neo.wallet"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.neo.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.neo.wallet instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.neo.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.neo.wallet instead")
+        )
 })
 public interface NeoWalletDao {
 
@@ -72,4 +77,5 @@ public interface NeoWalletDao {
      * @param walletId the template ID.
      */
     void deleteWallet(String walletId);
+
 }

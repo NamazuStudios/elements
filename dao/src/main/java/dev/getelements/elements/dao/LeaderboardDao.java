@@ -11,10 +11,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Provides CRUD operations for Leaderboard instances in the database.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.leaderboard"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.leaderboard",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.leaderboard instead"))
+        @ModuleDefinition("eci.elements.dao.leaderboard"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.leaderboard",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.leaderboard instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.leaderboard",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.leaderboard instead")
+        )
 })
 public interface LeaderboardDao {
 

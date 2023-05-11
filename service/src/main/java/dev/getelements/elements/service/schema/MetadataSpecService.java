@@ -4,6 +4,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -15,11 +16,22 @@ import dev.getelements.elements.service.Unscoped;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.metadata.spec"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.unscoped.metadata.spec",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.metadata.spec"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.unscoped.metadata.spec",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.metadata.spec",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.metadata.spec instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.unscoped.metadata.spec",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.unscoped.metadata.spec instead.")
+        )
 })
 public interface MetadataSpecService {
 

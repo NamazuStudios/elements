@@ -2,6 +2,7 @@ package dev.getelements.elements.service.formidium;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.formidium.FormidiumInvestor;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -15,10 +16,21 @@ import java.util.Map;
  * Elements database.
  */
 @Expose({
-        @ModuleDefinition(value = "namazu.elements.service.kyc.formidium"),
+        @ModuleDefinition(
+                value = "eci.elements.service.kyc.formidium"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.kyc.formidium",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.kyc.formidium",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.kyc.formidium instead.")
+        ),
         @ModuleDefinition(
                 value = "namazu.elements.service.unscoped.kyc.formidium",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.kyc.formidium instead.")
         )
 })
 public interface FormidiumService {

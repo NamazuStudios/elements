@@ -24,10 +24,15 @@ import static com.google.common.base.Strings.nullToEmpty;
  * Created by patricktwohig on 3/26/15.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.user"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.user",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.user instead"))
+        @ModuleDefinition("eci.elements.dao.user"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.user",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.user instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.user",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.user instead")
+        )
 })
 public interface UserDao {
 

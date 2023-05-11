@@ -4,6 +4,7 @@ import dev.getelements.elements.exception.notification.NotificationConfiguration
 import dev.getelements.elements.exception.notification.applicationconfiguration.ApplicationConfigurationNotFoundException;
 import dev.getelements.elements.model.application.ConfigurationCategory;
 import dev.getelements.elements.model.application.ProductBundle;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
@@ -15,7 +16,13 @@ import java.util.List;
 /**
  * Created by patricktwohig on 7/13/15.
  */
-@Expose(@ModuleDefinition("namazu.socialengine.dao.applicationconfiguration"))
+@Expose({
+        @ModuleDefinition("eci.elements.dao.applicationconfiguration"),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.applicationconfiguration",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.applicationconfiguration instead.")
+        )
+})
 public interface ApplicationConfigurationDao {
 
     /**

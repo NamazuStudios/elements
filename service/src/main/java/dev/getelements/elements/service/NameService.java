@@ -1,6 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -14,10 +15,22 @@ import static java.lang.String.format;
  * Generates names based on the system configuration.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.name"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.name",
-        annotation = @ExposedBindingAnnotation(Unscoped.class))
+        @ModuleDefinition(
+                value = "eci.elements.service.name"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.name",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.name",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.item instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.name",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.name instead.")
+        )
 })
 public interface NameService {
 

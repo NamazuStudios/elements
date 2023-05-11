@@ -12,10 +12,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  *
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.score"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.score",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.score instead"))
+        @ModuleDefinition("eci.elements.dao.score"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.score",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.score instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.score",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.score instead")
+        )
 })
 public interface ScoreDao {
 

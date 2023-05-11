@@ -5,6 +5,7 @@ import dev.getelements.elements.model.blockchain.*;
 import dev.getelements.elements.model.blockchain.bsc.MintBscTokenResponse;
 import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractRequest;
 import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractResponse;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -19,10 +20,21 @@ import java.util.function.Consumer;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.smartcontract"),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.smartcontract"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.unscoped.smartcontract",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.smartcontract",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.smartcontract instead.")
+        ),
         @ModuleDefinition(
                 value = "namazu.elements.service.blockchain.bsc.unscoped.smartcontract",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.unscoped.smartcontract instead.")
         )
 })
 public interface BscSmartContractService {

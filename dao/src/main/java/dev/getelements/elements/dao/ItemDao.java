@@ -11,9 +11,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
 import java.util.List;
 
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.item"),
-    @ModuleDefinition(value = "namazu.socialengine.dao.item",
-                             deprecated = @DeprecationDefinition("Use namazu.elements.dao.item instead"))
+        @ModuleDefinition("eci.elements.dao.item"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.item",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.item instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.item",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.item instead")
+        )
 })
 public interface ItemDao {
 

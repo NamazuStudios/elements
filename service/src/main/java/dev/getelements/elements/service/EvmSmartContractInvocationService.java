@@ -1,6 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractResponse;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -17,10 +18,20 @@ import java.util.List;
  */
 @Expose({
         @ModuleDefinition(
-                value = "namazu.elements.service.smartcontract.evm"),
+                value = "eci.elements.service.smartcontract.evm"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.smartcontract.evm",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.smartcontract.evm",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.smartcontract.evm instead.")
+        ),
         @ModuleDefinition(
                 value = "namazu.elements.service.unscoped.smartcontract.evm",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.smartcontract.evm instead.")
         )
 })
 public interface EvmSmartContractInvocationService extends SmartContractInvocationService<EvmSmartContractInvocationService.Invoker> {

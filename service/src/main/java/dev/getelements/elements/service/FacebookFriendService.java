@@ -3,15 +3,23 @@ package dev.getelements.elements.service;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.FacebookApplicationConfiguration;
 import dev.getelements.elements.model.friend.FacebookFriend;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
+import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 /**
  * Provides access to {@link FacebookFriend} instances.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.facebook.friend")
-})
+        @ModuleDefinition(
+                value = "eci.elements.service.facebook.friend"
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.facebook.friend",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.facebook.friend instead.")
+        )}
+)
 public interface FacebookFriendService {
 
     /**

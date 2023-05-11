@@ -6,6 +6,7 @@ import dev.getelements.elements.model.auth.CreateAuthSchemeRequest;
 import dev.getelements.elements.model.auth.CreateAuthSchemeResponse;
 import dev.getelements.elements.model.auth.UpdateAuthSchemeRequest;
 import dev.getelements.elements.model.auth.UpdateAuthSchemeResponse;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -19,11 +20,22 @@ import java.util.List;
  * Created by robb on 11/12/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.auth.authscheme"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.auth.unscoped.authscheme",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.auth.authscheme"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.auth.unscoped.authscheme",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.auth.authscheme",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.auth.authscheme instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.auth.unscoped.authscheme",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.auth.unscoped.authscheme instead.")
+        )
 })
 public interface AuthSchemeService {
 

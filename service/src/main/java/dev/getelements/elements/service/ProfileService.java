@@ -5,6 +5,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -15,11 +16,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 6/27/17.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.profile"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.profile",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.profile"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.profile",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.profile",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.profile instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.profile",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.profile instead.")
+        )
 })
 public interface ProfileService {
 
