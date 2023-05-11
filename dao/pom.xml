@@ -96,7 +96,7 @@
                 <version>2.4</version>
                 <executions>
                     <execution>
-                        <phase>install</phase>
+                        <phase>none</phase>
                         <goals>
                             <goal>install-file</goal>
                         </goals>

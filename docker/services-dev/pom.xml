@@ -25,7 +25,7 @@
                 <executions>
                     <execution>
                         <id>my-exec</id>
-                        <phase>install</phase>
+                        <phase>none</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
