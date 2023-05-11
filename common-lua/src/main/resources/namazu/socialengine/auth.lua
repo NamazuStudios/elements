@@ -7,7 +7,7 @@
 --
 
 -- Moved to namazu.elements.auth
-local log = require "namazu.log"
+local log = require "eci.log"
 local auth = require "namazu.elements.auth"
 log.warn("namazu.socialengine.auth is deprecated.  Use namazu.elements.auth instead.")
 return auth

@@ -1,29 +1,14 @@
 --
 -- Created by IntelliJ IDEA.
 -- User: patricktwohig
--- Date: 3/29/18
--- Time: 1:59 PM
+-- Date: 11/19/17
+-- Time: 10:22 AM
+-- To change this template use File | Settings | File Templates.
 --
 
-local ioc = require "namazu.ioc.resolver"
+-- Moved to eci.elements.mongodb
 
-local application_builder_provider = ioc:provider("dev.getelements.elements.service.NotificationBuilder")
-local application_provider = ioc:provider("dev.getelements.elements.model.application.Application")
-
-local notification = {}
-
---- Creates a NotificationBuilder
--- This creates an instance of NotificationBuilder which can be used to create and send Notifications.  If available,
--- this will query the current Attributes to see if an instance of Application is availble, and it will pre-configure
--- the instance with the application.
---
--- Note that the returned NotificationBuilder will allow for reconfiguring any desired attribute.
---
--- @return a new instance of NotificationBuilder
-function notification.builder()
-    local builder = application_builder_provider:get()
-    local application = application_provider:get()
-    return builder:application(application)
-end
-
+local log = require "eci.log"
+local notification = require "eci.elements.notification"
+log.warn("namazu.elements.notification is deprecated.  Use eci.elements.notification instead.")
 return notification
