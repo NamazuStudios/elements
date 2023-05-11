@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.rt.lua.Constants.ATTRIBUTES_MODULE;
+import static dev.getelements.elements.rt.lua.Constants.ATTRIBUTES_MODULES;
 
 public class AttributesBuiltin implements Builtin {
 
@@ -27,12 +28,12 @@ public class AttributesBuiltin implements Builtin {
 
             @Override
             public String getChunkName() {
-                return ATTRIBUTES_MODULE;
+                return name;
             }
 
             @Override
             public boolean exists() {
-                return ATTRIBUTES_MODULE.equals(name);
+                return ATTRIBUTES_MODULES.contains(name);
             }
 
         };

@@ -3,16 +3,17 @@ package dev.getelements.elements.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.ResponseCode;
 import dev.getelements.elements.rt.exception.BaseException;
+import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.LogAssist;
 import dev.getelements.elements.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static dev.getelements.elements.rt.lua.Constants.RESPONSE_CODE_MODULES;
+
 public class ResponseCodeBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(ResponseCodeBuiltin.class);
-
-    public static final String RESPONSE_CODE_MODULE = "namazu.response.code";
 
     public static final String EXTRACT = "extract";
 
@@ -45,12 +46,12 @@ public class ResponseCodeBuiltin implements Builtin {
 
             @Override
             public String getChunkName() {
-                return RESPONSE_CODE_MODULE;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return RESPONSE_CODE_MODULE.equals(moduleName);
+                return RESPONSE_CODE_MODULES.contains(moduleName);
             }
 
         };

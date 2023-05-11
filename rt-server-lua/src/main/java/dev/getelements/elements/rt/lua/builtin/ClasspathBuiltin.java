@@ -16,7 +16,7 @@ import java.util.Set;
 import static dev.getelements.elements.rt.Path.fromPathString;
 
 /**
- * Allows the {@link LuaState} load scripts from the classpath.  The Lua server packge contains a builtin library
+ * Allows the {@link LuaState} load scripts from the classpath.  The Lua server package contains a builtin library
  * which scripts may use to assist with interfacing with the rest of the system.
  *
  * Created by patricktwohig on 11/3/15.

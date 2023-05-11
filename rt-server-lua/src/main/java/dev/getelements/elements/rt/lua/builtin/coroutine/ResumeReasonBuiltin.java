@@ -2,6 +2,7 @@ package dev.getelements.elements.rt.lua.builtin.coroutine;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.ResumeReason;
+import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,7 @@ public class ResumeReasonBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(ResumeReasonBuiltin.class);
 
-    public static final String MODULE_NAME = CoroutineBuiltin.MODULE_NAME + ".resumereason";
+    public static final String MODULE_NAME = Constants.COROUTINE_MODULE_NAME + ".resumereason";
 
     @Override
     public Module getModuleNamed(final String moduleName) {

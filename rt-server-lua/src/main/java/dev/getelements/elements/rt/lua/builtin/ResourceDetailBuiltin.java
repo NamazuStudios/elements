@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.*;
 import dev.getelements.elements.rt.id.ResourceId;
 import dev.getelements.elements.rt.id.TaskId;
+import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.LogAssist;
 import dev.getelements.elements.rt.lua.LuaResource;
 import dev.getelements.elements.rt.lua.persist.ErisPersistence;
@@ -11,10 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static dev.getelements.elements.rt.Attributes.emptyAttributes;
 import static dev.getelements.elements.rt.id.ResourceId.resourceIdFromString;
+import static dev.getelements.elements.rt.lua.Constants.RESOURCE_DETAIL_MODULES;
 import static dev.getelements.elements.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static java.util.stream.Collectors.toMap;
 
@@ -24,8 +25,6 @@ import static java.util.stream.Collectors.toMap;
 public class ResourceDetailBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceDetailBuiltin.class);
-
-    public static final String MODULE_NAME = "namazu.resource.detail";
 
     public static final String CREATE = "schedule_create";
 
@@ -175,12 +174,12 @@ public class ResourceDetailBuiltin implements Builtin {
         return new Module() {
             @Override
             public String getChunkName() {
-                return MODULE_NAME;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return MODULE_NAME.equals(moduleName);
+                return RESOURCE_DETAIL_MODULES.contains(moduleName);
             }
         };
     }

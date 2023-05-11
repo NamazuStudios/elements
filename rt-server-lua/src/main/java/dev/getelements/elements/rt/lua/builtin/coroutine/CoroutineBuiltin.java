@@ -9,6 +9,7 @@ import dev.getelements.elements.rt.annotation.*;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.rt.id.ResourceId;
 import dev.getelements.elements.rt.id.TaskId;
+import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.LogAssist;
 import dev.getelements.elements.rt.lua.LuaResource;
 import dev.getelements.elements.rt.lua.builtin.Builtin;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.REGISTRYINDEX;
 import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
+import static dev.getelements.elements.rt.lua.Constants.COROUTINE_MODULES;
 import static dev.getelements.elements.rt.lua.builtin.coroutine.YieldInstruction.IMMEDIATE;
 import static java.lang.Math.max;
 import static java.lang.StrictMath.round;
@@ -30,7 +32,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Intrinsic(
-    value = @ModuleDefinition("namazu.coroutine"),
+    value = @ModuleDefinition("eci.coroutine"),
     authors = "ptwohig",
     summary = "System-managed Coroutines.",
     description = "This API controls the managed coroutines used by the system allowing hte caller to create, " +
@@ -88,8 +90,6 @@ public class CoroutineBuiltin implements Builtin {
     private static final long TIME_UNIT_CORRECTION_FACTOR_L = 10000;
 
     private static final double TIME_UNIT_CORRECTION_FACTOR_D = TIME_UNIT_CORRECTION_FACTOR_L;
-
-    public static final String MODULE_NAME = "namazu.coroutine";
 
     public static final String COROUTINES_TABLE = "dev.getelements.elements.rt.lua.builtin.coroutine.CoroutineBuiltin.coroutines";
 
@@ -383,12 +383,12 @@ public class CoroutineBuiltin implements Builtin {
         return new Module() {
             @Override
             public String getChunkName() {
-                return MODULE_NAME;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return MODULE_NAME.equals(moduleName);
+                return COROUTINE_MODULES.contains(moduleName);
             }
         };
     }

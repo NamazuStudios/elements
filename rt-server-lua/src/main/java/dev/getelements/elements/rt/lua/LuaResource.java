@@ -380,7 +380,7 @@ public class LuaResource implements Resource {
                  var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
                 luaState.getGlobal(REQUIRE);
-                luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+                luaState.pushString(COROUTINE_MODULE_NAME);
 
                 try (var c = CurrentResource.getInstance().enter(this)) {
                     luaState.call(1, 1);
@@ -459,7 +459,7 @@ public class LuaResource implements Resource {
              var faa = FinallyAction.begin(logger).then(luaState::tryClearStack)) {
 
             luaState.getGlobal(REQUIRE);
-            luaState.pushString(CoroutineBuiltin.MODULE_NAME);
+            luaState.pushString(COROUTINE_MODULE_NAME);
 
             try (var c = CurrentResource.getInstance().enter(this)) {
                 luaState.call(1, 1);

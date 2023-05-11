@@ -3,7 +3,6 @@ package dev.getelements.elements.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.Context;
-import dev.getelements.elements.rt.id.TaskId;
 import dev.getelements.elements.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +20,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static dev.getelements.elements.rt.Context.LOCAL;
+import static dev.getelements.elements.rt.lua.Constants.HTTP_CLIENT_MODULES;
 import static dev.getelements.elements.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static dev.getelements.elements.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
 import static java.lang.String.format;
@@ -31,8 +31,6 @@ import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 public class HttpClientBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientBuiltin.class);
-
-    public static final String MODULE_NAME = "namazu.http.client";
 
     public static final String SEND = "send";
 
@@ -229,12 +227,12 @@ public class HttpClientBuiltin implements Builtin {
         return new Module() {
             @Override
             public String getChunkName() {
-                return MODULE_NAME;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return MODULE_NAME.equals(moduleName);
+                return HTTP_CLIENT_MODULES.equals(moduleName);
             }
         };
     }

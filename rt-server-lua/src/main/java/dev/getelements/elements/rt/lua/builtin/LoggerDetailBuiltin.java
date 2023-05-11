@@ -1,16 +1,17 @@
 package dev.getelements.elements.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
+import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 
 import java.util.function.Supplier;
 
+import static dev.getelements.elements.rt.lua.Constants.LOG_DETAIL_MODULES;
+
 public class LoggerDetailBuiltin implements Builtin {
 
     private static final String LOGGER = "logger";
-
-    public static final String MODULE_NAME = "namazu.log.detail";
 
     private final JavaFunction logger;
 
@@ -26,12 +27,12 @@ public class LoggerDetailBuiltin implements Builtin {
         return new Module() {
             @Override
             public String getChunkName() {
-                return MODULE_NAME;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return MODULE_NAME.equals(moduleName);
+                return LOG_DETAIL_MODULES.contains(moduleName);
             }
         };
     }

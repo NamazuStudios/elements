@@ -6,11 +6,11 @@ import dev.getelements.elements.rt.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static dev.getelements.elements.rt.lua.Constants.HTTP_STATUS_MODULES;
+
 public class HttpStatusBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(ResponseCodeBuiltin.class);
-
-    public static final String HTTP_STATUS_MODULE = "namazu.http.status";
 
     @Override
     public Module getModuleNamed(final String moduleName) {
@@ -18,12 +18,12 @@ public class HttpStatusBuiltin implements Builtin {
 
             @Override
             public String getChunkName() {
-                return HTTP_STATUS_MODULE;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return HTTP_STATUS_MODULE.equals(moduleName);
+                return HTTP_STATUS_MODULES.contains(moduleName);
             }
 
         };

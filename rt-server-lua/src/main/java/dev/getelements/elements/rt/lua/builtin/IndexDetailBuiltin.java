@@ -14,12 +14,11 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static dev.getelements.elements.rt.id.ResourceId.resourceIdFromString;
+import static dev.getelements.elements.rt.lua.Constants.INDEX_DETAIL_MODULES;
 import static dev.getelements.elements.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
 public class IndexDetailBuiltin implements Builtin {
     private static final Logger logger = LoggerFactory.getLogger(ResourceDetailBuiltin.class);
-
-    public static final String MODULE_NAME = "namazu.index.detail";
 
     public static final String LIST = "schedule_list";
 
@@ -183,12 +182,12 @@ public class IndexDetailBuiltin implements Builtin {
         return new Module() {
             @Override
             public String getChunkName() {
-                return MODULE_NAME;
+                return moduleName;
             }
 
             @Override
             public boolean exists() {
-                return MODULE_NAME.equals(moduleName);
+                return INDEX_DETAIL_MODULES.contains(moduleName);
             }
         };
     }

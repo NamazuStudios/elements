@@ -16,6 +16,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.Set;
 
 import static dev.getelements.elements.rt.IocResolver.IOC_RESOLVER_MODULE_NAME;
+import static dev.getelements.elements.rt.IocResolver.IOC_RESOLVER_MODULE_NAME_LEGACY;
 
 public class LuaResourceLoader implements ResourceLoader {
 
@@ -112,6 +113,7 @@ public class LuaResourceLoader implements ResourceLoader {
         luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
         luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
         luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+        luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME_LEGACY, iocResolver));
         luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
 
         final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
