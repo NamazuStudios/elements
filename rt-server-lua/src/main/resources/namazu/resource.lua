@@ -9,11 +9,11 @@
 local table = require "table"
 local coroutine = require "coroutine"
 
-local this = require "namazu.resource.this"
-local detail = require "namazu.resource.detail"
-local responsecode = require "namazu.response.code"
-local resumereason = require "namazu.coroutine.resumereason"
-local yieldinstruction = require "namazu.coroutine.yieldinstruction"
+local this = require "eci.resource.this"
+local detail = require "eci.resource.detail"
+local responsecode = require "eci.response.code"
+local resumereason = require "eci.coroutine.resumereason"
+local yieldinstruction = require "eci.coroutine.yieldinstruction"
 
 local resource = {}
 

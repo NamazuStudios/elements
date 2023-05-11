@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local detail = require "namazu.log.detail"
+local detail = require "eci.log.detail"
 
 local log = {}
 

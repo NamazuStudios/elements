@@ -16,7 +16,7 @@ local table = require "table"
 
 local util = {}
 
-util.java = require "namazu.util.java"
+util.java = require "eci.util.java"
 
 --- Returns a Path object.
 -- This can accept a single string, which will be parsed out accordingly.  Alternatively,

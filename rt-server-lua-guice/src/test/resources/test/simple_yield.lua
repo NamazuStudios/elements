@@ -7,7 +7,7 @@
 --
 
 local coroutine = require "coroutine"
-local namazu_coroutine = require "namazu.coroutine"
+local namazu_coroutine = require "eci.coroutine"
 
 local simple_yield = {}
 

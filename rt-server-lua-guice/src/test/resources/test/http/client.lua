@@ -6,11 +6,11 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local log = require "namazu.log"
+local log = require "eci.log"
 
 local client = {}
 
-local namazu_http_client = require "namazu.http.client"
+local namazu_http_client = require "eci.http.client"
 
 function client.post(base)
 

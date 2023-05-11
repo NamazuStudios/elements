@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local model = require "namazu.model"
+local model = require "eci.model"
 
 local pagination = {}
 

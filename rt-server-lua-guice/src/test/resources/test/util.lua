@@ -8,7 +8,7 @@
 
 local test_util = {}
 
-local util = require "namazu.util"
+local util = require "eci.util"
 
 function test_util.test_uuid()
     local UUID = java.require "java.util.UUID"

@@ -6,8 +6,8 @@
 -- To change this template use File | Settings | File Templates.
 --
 
--- Moved to namazu.elements.auth
+-- Moved to eci.elements.auth
 local log = require "eci.log"
-local auth = require "eci.elements.auth"
+local auth = require "namazu.elements.auth"
 log.warn("namazu.elements.auth is deprecated.  Use eci.elements.auth instead.")
 return auth

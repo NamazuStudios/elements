@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local runtime = require "namazu.runtime"
+local runtime = require "eci.runtime"
 
 local InstanceId = java.require "dev.getelements.elements.rt.id.InstanceId"
 local NodeId = java.require "dev.getelements.elements.rt.id.NodeId"

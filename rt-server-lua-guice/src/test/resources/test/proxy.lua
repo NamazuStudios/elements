@@ -6,10 +6,10 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local util = require "namazu.util"
-local namazu_log = require "namazu.log"
-local namazu_proxy = require "namazu.proxy"
-local responsecode = require "namazu.response.code"
+local util = require "eci.util"
+local namazu_log = require "eci.log"
+local namazu_proxy = require "eci.proxy"
+local responsecode = require "eci.response.code"
 
 local TEST_PREFIX = "test_proxy"
 

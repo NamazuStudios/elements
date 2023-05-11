@@ -15,7 +15,7 @@
 -- the type a table indicating the type and referenced module object must be used.
 
 local namazu_log = require "eci.log"
-local pagination = require "namazu.pagination"
+local pagination = require "eci.pagination"
 
 -- A simple example model which contains primitives
 

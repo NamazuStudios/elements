@@ -3,7 +3,7 @@
 --- DateTime: 3/22/22 3:32 PM
 ---
 
-local mongodb = require "namazu.elements.mongodb"
+local mongodb = require "eci.elements.mongodb"
 
 local mongodb_test = {}
 

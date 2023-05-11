@@ -6,10 +6,10 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local namazu_util = require "namazu.util"
-local namazu_index = require "namazu.index"
-local namazu_resource = require "namazu.resource"
-local namazu_response_code = require "namazu.response.code"
+local namazu_util = require "eci.util"
+local namazu_index = require "eci.index"
+local namazu_resource = require "eci.resource"
+local namazu_response_code = require "eci.response.code"
 
 local link_and_list = {}
 

@@ -6,9 +6,9 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local util = require "namazu.util"
-local model = require "namazu.model"
-local resource = require "namazu.resource"
+local util = require "eci.util"
+local model = require "eci.model"
+local resource = require "eci.resource"
 
 local test_model = {}
 

@@ -8,8 +8,8 @@
 
 local test_notification = {}
 
-local auth = require "namazu.socialengine.auth"
-local notification = require "namazu.socialengine.notification"
+local auth = require "eci.socialengine.auth"
+local notification = require "eci.socialengine.notification"
 
 function test_notification.test_send_with_builder()
 

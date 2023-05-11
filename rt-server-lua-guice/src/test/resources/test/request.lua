@@ -7,7 +7,7 @@
 --
 
 local test_request = {}
-local request = require "namazu.request"
+local request = require "eci.request"
 local SimpleRequest = java.require "dev.getelements.elements.rt.SimpleRequest"
 
 local function do_formulate()

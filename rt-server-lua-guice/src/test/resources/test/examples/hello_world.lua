@@ -1,9 +1,9 @@
 
 local os = require "os"
 local coroutine = require "coroutine"
-local namazu_response = require "namazu.response"
-local http_status = require "namazu.http.status"
-local pagination = require "namazu.pagination"
+local namazu_response = require "eci.response"
+local http_status = require "eci.http.status"
+local pagination = require "eci.pagination"
 
 
 local hello_world = {}

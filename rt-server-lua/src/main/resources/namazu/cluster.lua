@@ -6,10 +6,10 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local ioc = require "namazu.ioc.resolver"
+local ioc = require "eci.ioc.resolver"
 local registry = ioc:inject("dev.getelements.elements.rt.remote.RemoteInvokerRegistry")
 
-local this = require "namazu.resource.this"
+local this = require "eci.resource.this"
 
 local Collectors = java.require "java.util.stream.Collectors"
 local ApplicationId = java.require "dev.getelements.elements.rt.id.ApplicationId"

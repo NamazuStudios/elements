@@ -8,10 +8,10 @@
 
 local coroutine = require "coroutine"
 
-local detail = require "namazu.index.detail"
-local responsecode = require "namazu.response.code"
-local resumereason = require "namazu.coroutine.resumereason"
-local yieldinstruction = require "namazu.coroutine.yieldinstruction"
+local detail = require "eci.index.detail"
+local responsecode = require "eci.response.code"
+local resumereason = require "eci.coroutine.resumereason"
+local yieldinstruction = require "eci.coroutine.yieldinstruction"
 
 local index = {}
 

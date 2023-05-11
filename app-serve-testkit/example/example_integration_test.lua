@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local user_dao = require "namazu.socialengine.dao.user"
+local user_dao = require "eci.socialengine.dao.user"
 
 local example_integration_test = {}
 

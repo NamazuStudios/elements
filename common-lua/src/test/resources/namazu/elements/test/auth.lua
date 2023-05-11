@@ -6,17 +6,17 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local util = require "namazu.util"
-local resource = require "namazu.resource"
+local util = require "eci.util"
+local resource = require "eci.resource"
 
-local auth = require "namazu.socialengine.auth"
+local auth = require "eci.socialengine.auth"
 
 local User = java.require "dev.getelements.elements.model.user.User"
 local Profile = java.require "dev.getelements.elements.model.profile.Profile"
 
-local responsecode = require "namazu.response.code"
+local responsecode = require "eci.response.code"
 
-local inventory_item_dao = require "namazu.elements.dao.inventoryitem"
+local inventory_item_dao = require "eci.elements.dao.inventoryitem"
 
 local test_auth = {}
 
@@ -106,7 +106,7 @@ local function make_resource()
     }
 
     local path = "/test/auth/" .. util.uuid()
-    local rid, code = resource.create("namazu.elements.test.auth", path, attributes)
+    local rid, code = resource.create("eci.elements.test.auth", path, attributes)
     print("Created resource " .. tostring(rid) .. " (" .. code .. ") at path " .. path)
     return rid, code
 

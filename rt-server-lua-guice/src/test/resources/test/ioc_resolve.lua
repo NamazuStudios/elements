@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local ioc = require "namazu.ioc.resolver"
+local ioc = require "eci.ioc.resolver"
 local service = ioc:inject("dev.getelements.elements.rt.lua.guice.TestJavaService")
 local provider = ioc:provider("dev.getelements.elements.rt.lua.guice.TestJavaService")
 

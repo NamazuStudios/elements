@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local util = require "namazu.util"
+local util = require "eci.util"
 local test_java_event = require "test.java.event"
 
 local event = {}

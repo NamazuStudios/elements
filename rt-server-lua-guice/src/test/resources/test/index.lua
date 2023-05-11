@@ -6,13 +6,13 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local util = require "namazu.util"
-local index = require "namazu.index"
-local resource = require "namazu.resource"
-local responsecode = require "namazu.response.code"
+local util = require "eci.util"
+local index = require "eci.index"
+local resource = require "eci.resource"
+local responsecode = require "eci.response.code"
 local coroutine = require "coroutine"
-local runtime = require "namazu.runtime"
-local cluster = require "namazu.cluster"
+local runtime = require "eci.runtime"
+local cluster = require "eci.cluster"
 
 local Path = java.require "dev.getelements.elements.rt.Path"
 

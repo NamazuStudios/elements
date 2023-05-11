@@ -9,7 +9,7 @@ local response = {}
 
 --- Corresponds to the ResponseCode enumeration.  The set of builtin codes for returning responses.  See
 -- dev.getelements.elements.rt.ResponseCode for more information on this.
-response.code = require "namazu.response.code"
+response.code = require "eci.response.code"
 
 local function forumulate_headers(code, headers, sequence)
 

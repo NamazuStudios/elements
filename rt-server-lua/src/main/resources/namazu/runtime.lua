@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local this = require "namazu.resource.this"
+local this = require "eci.resource.this"
 local ResourceId = java.require "dev.getelements.elements.rt.id.ResourceId"
 
 local runtime = {}

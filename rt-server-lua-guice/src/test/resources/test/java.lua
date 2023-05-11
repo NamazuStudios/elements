@@ -12,7 +12,7 @@ local java_lang_illegal_argument_exception = java.require "java.lang.IllegalArgu
 
 local obscure_exception_type = java.require "dev.getelements.elements.rt.lua.guice.ObscureException"
 
-local util = require "namazu.util"
+local util = require "eci.util"
 local test_java_exceptions = require "test.java.exceptions"
 
 local java_util_test = {}
