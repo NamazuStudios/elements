@@ -2,6 +2,7 @@ package dev.getelements.elements.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import dev.getelements.elements.rt.*;
+import dev.getelements.elements.rt.annotation.*;
 import dev.getelements.elements.rt.id.ResourceId;
 import dev.getelements.elements.rt.id.TaskId;
 import dev.getelements.elements.rt.lua.Constants;
@@ -19,9 +20,84 @@ import static dev.getelements.elements.rt.lua.Constants.RESOURCE_DETAIL_MODULES;
 import static dev.getelements.elements.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static java.util.stream.Collectors.toMap;
 
-/**
- * Provides the details for the resource manipulation operations.
- */
+@Intrinsic(
+        value = @ModuleDefinition("eci.index"),
+        authors = "ptwohig, khudnall",
+        summary = "Resource index management system.",
+        description = "This API controls the various paths that a resource is indexed to, and provides a means to " +
+                "search paths for indices. An index is defined as a link between a resource id and a path. This " +
+                "allows for resources to be organized and fetched in a controllable way.",
+        methods = {
+                @MethodDefinition(
+                        value = "create",
+                        summary = "Creates a resource at the supplied path.",
+                        description =
+                                "This will create a resource at the supplied path, specifying the module as well as " +
+                                "any additional parameters which will be read by the remote resource.  This returns " +
+                                "both the network response as well as the resource ID. This function yields until " +
+                                "the response is available and must be invoked from within a system-managed coroutine.",
+                        parameters = {
+                                @ParameterDefinition(value="module", type = "string", comment = "the module name"),
+                                @ParameterDefinition(value="path", type = "string", comment = "the initial path of the module"),
+                                @ParameterDefinition(value="attributes", type = "string", comment = "the resource attributes")
+                        },
+                        returns = {
+                                @ReturnDefinition(comment = "the resource id", type = "string"),
+                                @ReturnDefinition(comment = "the response code", type = "number"),
+                        }
+                ),
+                @MethodDefinition(
+                        value = "invoke",
+                        summary = "Invokes a method (possibly remotely) on the supplied resource.",
+                        description =
+                                "This will invoke, possibly remotely, a method on the supplied resource_id. All " +
+                                "arguments passed to the method are handed through the variadic arguments. This " +
+                                "function yields until the response is available and must be invoked from within a " +
+                                "system-managed coroutine.",
+                        parameters = {
+                                @ParameterDefinition(value="resource_id", type = "string", comment = "the resource id to link to the new path"),
+                                @ParameterDefinition(value="method", type = "string", comment = "the name of the remote method"),
+                                @ParameterDefinition(value="arguments", type = "...", comment = "any arguments to pass to the method"),
+                        },
+                        returns = {
+                                @ReturnDefinition(comment = "the response", type = "object"),
+                                @ReturnDefinition(comment = "the response code", type = "number"),
+                        }
+                ),
+                @MethodDefinition(
+                        value = "invoke_path",
+                        summary = "Invokes a method (possibly remotely) on the supplied resource.",
+                        description = "This will invoke, possibly remotely, a method on the supplied path. All " +
+                                "arguments passed to the method are handed through the variadic arguments. This " +
+                                "function yields until the response is available and must be invoked from within a " +
+                                "system-managed coroutine.",
+                        parameters = {
+                                @ParameterDefinition(value="path", type = "string", comment = "the initial path of the module"),
+                                @ParameterDefinition(value="method", type = "string", comment = "the name of the remote method"),
+                                @ParameterDefinition(value="arguments", type = "...", comment = "any arguments to pass to the method"),
+                        },
+                        returns = {
+                                @ReturnDefinition(comment = "the response", type = "object"),
+                                @ReturnDefinition(comment = "the response code", type = "number"),
+                        }
+                ),
+                @MethodDefinition(
+                        value = "destroy",
+                        summary = "Destroys a resource (possibly remotely).",
+                        description = "This will permanently destroy and unlink the resource with the supplied ID. " +
+                                "Once destroyed, the resource will no longer accept method requests, and will no " +
+                                "longer be indexable. This function yields until the response is available and must " +
+                                "be invoked from within a system-managed coroutine.",
+                        parameters = {
+                                @ParameterDefinition(value="resource_id", type = "string", comment = "The id of the resource to destroy.")
+                        },
+                        returns = {
+                                @ReturnDefinition(comment = "the resource_id of the destroyed resource", type = "string"),
+                                @ReturnDefinition(comment = "the response code", type = "number"),
+                        }
+                )
+        }
+)
 public class ResourceDetailBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceDetailBuiltin.class);

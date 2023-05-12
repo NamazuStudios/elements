@@ -35,7 +35,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
     value = @ModuleDefinition("eci.coroutine"),
     authors = "ptwohig",
     summary = "System-managed Coroutines.",
-    description = "This API controls the managed coroutines used by the system allowing hte caller to create, " +
+    description = "This API controls the managed coroutines used by the system allowing the caller to create, " +
                   "manage, and schedule tasks modeled as coroutines. Coroutines in this module have special yield " +
                   "semantics enabling the system to manage the lifecycle of the VMs contained in the cluster.",
     methods = {

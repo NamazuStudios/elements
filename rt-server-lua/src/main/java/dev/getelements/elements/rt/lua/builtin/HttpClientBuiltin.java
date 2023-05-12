@@ -3,6 +3,7 @@ package dev.getelements.elements.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import dev.getelements.elements.rt.Context;
+import dev.getelements.elements.rt.annotation.*;
 import dev.getelements.elements.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,42 @@ import static javax.ws.rs.HttpMethod.POST;
 import static javax.ws.rs.HttpMethod.PUT;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
+@Intrinsic(
+        value = @ModuleDefinition("eci.coroutine.resumereason"),
+        authors = "ptwohig, khudnall",
+        summary = "HTTP Request System.",
+        description = "This API provides a simple means to send an HTTP request, and receive a response.",
+        methods = {
+                @MethodDefinition(
+                        value = "send",
+                        summary = "Sends an HTTP request.",
+                        description =
+                                "Attempts to send the defined request object, and returns any response data. " +
+                                "This request is sent synchronously within the current coroutine, which means it " +
+                                "will block the coroutine until a response is generated or the request times out.",
+                        parameters = {
+                                @ParameterDefinition(value="request", type = "table", comment =
+                                    "The request object:\n" +
+                                    "base (string) = (Required) the base url (e.g. \"https://my.base.url/\")\n" +
+                                    "path (string) = (Required) the path to be appended to the base url (e.g. \"this/is/a/path\")\n" +
+                                    "method (string) = (Required) the request method (GET, PUT, POST, DELETE)\n" +
+                                    "query (table<string, (string | number)>) = (Optional) the query parameters\n" +
+                                    "params (same as query)\n" +
+                                    "matrix (table<string, (string | number)>) = (Optional) the matrix value\n" +
+                                    "headers (table) = (Optional) the request headers\n" +
+                                    "cookies (table<string, (string | number)>) = (Optional) any cookies to send with the request\n" +
+                                    "accept (string) = (Optional) the accept value\n" +
+                                    "accept_language (string) = (Optional) the accept_language value\n" +
+                                    "entity (table<string, object>) = (Optional) the request entity, or body. Only available for PUT or POST requests.\n")
+                        },
+                        returns = {
+                                @ReturnDefinition(comment = "the http response code.", type = "number"),
+                                @ReturnDefinition(comment = "the response headers (string, object).", type = "table"),
+                                @ReturnDefinition(comment = "the response object, if any.", type = "table"),
+                        }
+                )
+        }
+)
 public class HttpClientBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientBuiltin.class);
