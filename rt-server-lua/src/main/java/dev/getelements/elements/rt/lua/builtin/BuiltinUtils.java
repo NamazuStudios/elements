@@ -5,6 +5,7 @@ import dev.getelements.elements.rt.id.TaskId;
 import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.builtin.coroutine.CoroutineBuiltin;
 
+import static dev.getelements.elements.rt.lua.Constants.COROUTINE_MODULE;
 import static dev.getelements.elements.rt.lua.Constants.REQUIRE;
 
 public interface BuiltinUtils {
@@ -18,7 +19,7 @@ public interface BuiltinUtils {
     static TaskId currentTaskId(final LuaState luaState) {
 
         luaState.getGlobal(REQUIRE);
-        luaState.pushString(Constants.COROUTINE_MODULE_NAME);
+        luaState.pushString(COROUTINE_MODULE);
         luaState.call(1, 1);
         luaState.getField(-1, CoroutineBuiltin.CURRENT_TASK_ID);
         luaState.remove(-2);

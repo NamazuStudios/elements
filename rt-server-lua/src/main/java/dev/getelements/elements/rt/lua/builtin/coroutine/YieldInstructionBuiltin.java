@@ -1,16 +1,17 @@
 package dev.getelements.elements.rt.lua.builtin.coroutine;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import dev.getelements.elements.rt.lua.Constants;
 import dev.getelements.elements.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static dev.getelements.elements.rt.lua.Constants.COROUTINE_MODULE;
 
 public class YieldInstructionBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(YieldInstructionBuiltin.class);
 
-    public static final String MODULE_NAME = Constants.COROUTINE_MODULE_NAME + ".yieldinstruction";
+    public static final String MODULE_NAME = COROUTINE_MODULE + ".yieldinstruction";
 
     @Override
     public Module getModuleNamed(final String moduleName) {

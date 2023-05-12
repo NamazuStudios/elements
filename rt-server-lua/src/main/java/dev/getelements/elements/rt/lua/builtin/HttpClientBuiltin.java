@@ -232,7 +232,7 @@ public class HttpClientBuiltin implements Builtin {
 
             @Override
             public boolean exists() {
-                return HTTP_CLIENT_MODULES.equals(moduleName);
+                return HTTP_CLIENT_MODULES.contains(moduleName);
             }
         };
     }

@@ -64,6 +64,11 @@ public interface Constants {
     /**
      * All coroutine module names.
      */
+    String COROUTINE_MODULE = "eci.coroutine";
+
+    /**
+     * All coroutine module names.
+     */
     Set<String> COROUTINE_MODULES = Set.of("eci.coroutine", "namazu.coroutine");
 
     /**
