@@ -45,7 +45,7 @@ public interface Constants {
     /**
      * The system property which defines the configuration file path
      */
-    String PROPERTIES_FILE = "com.namazustudios.elements.configuration.properties";
+    String PROPERTIES_FILE = "dev.getelements.elements.configuration.properties";
 
     /**
      * The default property file to configure the server.

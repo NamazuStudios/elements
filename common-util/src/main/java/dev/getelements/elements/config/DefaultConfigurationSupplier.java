@@ -37,7 +37,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private static final char ENVIRONMENT_SEPARATOR = '_';
 
-    private static final String PROPERTY_PREFIX = "com.namazustudios";
+    private static final String PROPERTY_PREFIX = "dev.getelements";
 
     private static final String ENVIRONMENT_PROPERTY_PREFIX = PROPERTY_PREFIX.replace(PROPERTY_SEPARATOR, ENVIRONMENT_SEPARATOR);
 
@@ -234,7 +234,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private Properties scanForDefaults(final ClassLoader classLoader) {
 
-        final var reflections = new Reflections("com.namazustudios", classLoader);
+        final var reflections = new Reflections("dev.getelements", classLoader);
         final var classSet = reflections.getSubTypesOf(ModuleDefaults.class);
 
         final Properties defaultProperties = new Properties();

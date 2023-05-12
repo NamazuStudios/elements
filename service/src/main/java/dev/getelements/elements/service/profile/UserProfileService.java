@@ -51,7 +51,7 @@ public class UserProfileService implements ProfileService {
 
     private Provider<Attributes> attributesProvider;
 
-    public static final String PROFILE_CREATED_EVENT = "com.namazustudios.elements.service.profile.created";
+    public static final String PROFILE_CREATED_EVENT = "dev.getelements.elements.service.profile.created";
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
