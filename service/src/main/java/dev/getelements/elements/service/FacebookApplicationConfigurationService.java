@@ -3,6 +3,7 @@ package dev.getelements.elements.service;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.application.ApplicationConfiguration;
 import dev.getelements.elements.model.application.FacebookApplicationConfiguration;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -11,13 +12,25 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 6/14/17.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.application.configuration.facebook"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.application.configuration.facebook",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.application.configuration.facebook"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.application.configuration.facebook",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.application.configuration.facebook",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.application.configuration.facebook instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.application.configuration.facebook",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.application.configuration.facebook instead.")
+        )
 })
 public interface FacebookApplicationConfigurationService {
+
     /**
      * Deletes an {@link FacebookApplicationConfiguration} using the ID as reference.
      *

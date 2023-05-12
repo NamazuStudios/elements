@@ -33,7 +33,7 @@ public class TestLuadoclet {
         final var result = ToolProvider.getSystemDocumentationTool().run(
             System.in, System.out, System.err,
             "-sourcepath", path.toAbsolutePath().toString(),
-            "-subpackages", "com.namazustudios",
+            "-subpackages", "dev.getelements",
             "-d", testDirectory.toString(),
             "-doclet", LDocStubDoclet.class.getName()
         );

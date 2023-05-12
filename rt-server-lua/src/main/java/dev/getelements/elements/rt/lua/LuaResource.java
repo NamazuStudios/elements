@@ -48,9 +48,11 @@ import static dev.getelements.elements.rt.lua.builtin.coroutine.CoroutineBuiltin
  */
 public class LuaResource implements Resource {
 
-    public static final String MODULE = "namazu.module";
+    public static final String MODULE = "eci.module";
 
-    public static final String RESOURCE_BUILTIN = "namazu.resource.this";
+    public static final String RESOURCE_BUILTIN = "eci.resource.this";
+
+    public static final String RESOURCE_BUILTIN_LEGACY = "namazu.resource.this";
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
@@ -121,6 +123,7 @@ public class LuaResource implements Resource {
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
+            getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN_LEGACY, this));
             getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, persistenceStrategy));
             getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this));
             getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this));
@@ -380,7 +383,7 @@ public class LuaResource implements Resource {
                  var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
                 luaState.getGlobal(REQUIRE);
-                luaState.pushString(COROUTINE_MODULE_NAME);
+                luaState.pushString(COROUTINE_MODULE);
 
                 try (var c = CurrentResource.getInstance().enter(this)) {
                     luaState.call(1, 1);
@@ -459,7 +462,7 @@ public class LuaResource implements Resource {
              var faa = FinallyAction.begin(logger).then(luaState::tryClearStack)) {
 
             luaState.getGlobal(REQUIRE);
-            luaState.pushString(COROUTINE_MODULE_NAME);
+            luaState.pushString(COROUTINE_MODULE);
 
             try (var c = CurrentResource.getInstance().enter(this)) {
                 luaState.call(1, 1);

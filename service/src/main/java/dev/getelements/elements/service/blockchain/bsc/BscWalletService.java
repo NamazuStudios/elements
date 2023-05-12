@@ -4,6 +4,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.blockchain.bsc.BscWallet;
 import dev.getelements.elements.model.blockchain.bsc.CreateBscWalletRequest;
 import dev.getelements.elements.model.blockchain.bsc.UpdateBscWalletRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -15,11 +16,22 @@ import dev.getelements.elements.service.Unscoped;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.wallet"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.bsc.unscoped.wallet",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.wallet"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.unscoped.wallet",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.wallet instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.unscoped.wallet",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.unscoped.wallet instead.")
+        )
 })
 public interface BscWalletService {
 

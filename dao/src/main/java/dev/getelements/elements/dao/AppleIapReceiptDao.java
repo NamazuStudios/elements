@@ -11,10 +11,15 @@ import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.appleiapreceipt"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.appleiapreceipt",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.appleiapreceipt instead"))
+        @ModuleDefinition("eci.elements.dao.appleiapreceipt"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.appleiapreceipt",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.appleiapreceipt instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.appleiapreceipt",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.appleiapreceipt instead")
+        )
 })
 public interface AppleIapReceiptDao {
 

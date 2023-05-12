@@ -14,10 +14,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 7/20/17.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.match"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.match",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.match instead"))
+        @ModuleDefinition("eci.elements.dao.match"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.match",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.match instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.match",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.match instead")
+        )
 })
 public interface MatchDao {
 

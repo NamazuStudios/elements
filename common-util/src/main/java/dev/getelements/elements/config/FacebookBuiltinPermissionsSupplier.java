@@ -27,7 +27,7 @@ public class FacebookBuiltinPermissionsSupplier implements Supplier<List<Faceboo
 
     public FacebookBuiltinPermissionsSupplier(final ClassLoader classLoader) {
 
-        final Reflections reflections = new Reflections("com.namazustudios", classLoader);
+        final Reflections reflections = new Reflections("dev.getelements", classLoader);
         final Set<Class<?>> classSet = reflections.getTypesAnnotatedWith(FacebookPermissions.class);
 
         facebookPermissionList = classSet.stream()

@@ -6,6 +6,7 @@ import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.user.UserCreateRequest;
 import dev.getelements.elements.model.user.UserCreateResponse;
 import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -20,11 +21,22 @@ import static java.lang.String.format;
  * Created by patricktwohig on 3/19/15.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.user"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.user",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.user"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.user",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.user",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.user instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.user",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.user instead.")
+        )
 })
 public interface UserService {
 

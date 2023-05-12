@@ -1,6 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.notification.FCMRegistration;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -10,11 +11,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * with the Firebase Notification Service.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.firebase.registration"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.firebase.registration",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.firebase.registration"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.firebase.registration",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.firebase.registration",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.firebase.registration instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.firebase.registration",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.firebase.registration instead.")
+        )
 })
 public interface FCMRegistrationService {
 

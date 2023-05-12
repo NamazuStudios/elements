@@ -3,6 +3,7 @@ package dev.getelements.elements.service;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.application.ApplicationConfiguration;
 import dev.getelements.elements.model.application.GooglePlayApplicationConfiguration;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -11,11 +12,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 5/24/17.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.application.configuration.googleplay"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.application.configuration.googleplay",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.application.configuration.googleplay"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.application.configuration.googleplay",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.application.configuration.googleplay",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.application.configuration.googleplay instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.application.configuration.googleplay",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.application.configuration.googleplay instead.")
+        )
 })
 public interface GooglePlayApplicationConfigurationService {
 

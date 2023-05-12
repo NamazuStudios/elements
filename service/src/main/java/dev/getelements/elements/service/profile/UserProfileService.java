@@ -51,7 +51,9 @@ public class UserProfileService implements ProfileService {
 
     private Provider<Attributes> attributesProvider;
 
-    public static final String PROFILE_CREATED_EVENT = "com.namazustudios.elements.service.profile.created";
+    public static final String PROFILE_CREATED_EVENT = "dev.getelements.elements.service.profile.created";
+
+    public static final String PROFILE_CREATED_EVENT_LEGACY = "com.namazustudios.elements.service.profile.created";
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -124,6 +126,12 @@ public class UserProfileService implements ProfileService {
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+        } catch (NodeNotFoundException ex) {
+            logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
+        }
+
+        try {
+            eventContext.postAsync(PROFILE_CREATED_EVENT_LEGACY, attributes, createdProfile);
         } catch (NodeNotFoundException ex) {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }

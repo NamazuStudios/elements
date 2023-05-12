@@ -18,10 +18,15 @@ import static java.util.Collections.emptyList;
  * inserted into the database and credited to a user's inventory in an atomic way.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.rewardissuance"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.rewardissuance",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.rewardissuance instead"))
+        @ModuleDefinition("eci.elements.dao.rewardissuance"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.rewardissuance",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.rewardissuance instead")
+        ),
+        @ModuleDefinition(
+            value = "namazu.socialengine.dao.rewardissuance",
+            deprecated = @DeprecationDefinition("Use eci.elements.dao.rewardissuance instead")
+        )
 })
 public interface RewardIssuanceDao {
 

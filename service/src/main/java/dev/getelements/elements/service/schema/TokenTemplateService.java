@@ -4,6 +4,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.schema.template.CreateTokenTemplateRequest;
 import dev.getelements.elements.model.schema.template.TokenTemplate;
 import dev.getelements.elements.model.schema.template.UpdateTokenTemplateRequest;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -15,11 +16,22 @@ import dev.getelements.elements.service.Unscoped;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.metadata.tokentemplate"),
-    @ModuleDefinition(
-            value = "namazu.elements.service.blockchain.unscoped.metadata.tokentemplate",
-            annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.metadata.tokentemplate"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.unscoped.metadata.tokentemplate",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.metadata.tokentemplate",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.metadata.tokentemplate instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.unscoped.metadata.tokentemplate",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.unscoped.metadata.tokentemplate instead.")
+        )
 })
 public interface TokenTemplateService {
 

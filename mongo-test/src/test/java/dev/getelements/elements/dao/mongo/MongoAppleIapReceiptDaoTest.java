@@ -41,7 +41,7 @@ public class MongoAppleIapReceiptDaoTest {
         appleIapReceipt.setReceiptData("receiptData." + invocation);
         appleIapReceipt.setQuantity(invocation + 1);
         appleIapReceipt.setProductId("productId." + invocation);
-        appleIapReceipt.setBundleId("com.namazustudios.test_app");
+        appleIapReceipt.setBundleId("dev.getelements.test_app");
         appleIapReceipt.setOriginalPurchaseDate(new Date());
 
         final AppleIapReceipt resultAppleIapReceipt =
@@ -92,7 +92,7 @@ public class MongoAppleIapReceiptDaoTest {
         newAppleIapReceipt.setReceiptData("receiptData." + -1);
         newAppleIapReceipt.setQuantity(1);
         newAppleIapReceipt.setProductId("productId." + -1);
-        newAppleIapReceipt.setBundleId("com.namazustudios.test_app");
+        newAppleIapReceipt.setBundleId("dev.getelements.test_app");
         newAppleIapReceipt.setOriginalPurchaseDate(new Date());
 
         final AppleIapReceipt resultAppleIapReceipt =

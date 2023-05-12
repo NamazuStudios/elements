@@ -8,7 +8,6 @@ import org.testng.annotations.Test;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -86,8 +85,8 @@ public class DefaultConfigurationSupplierTest {
 
         final var processBuilder = new ProcessBuilder();
         processBuilder.environment().put("CLASSPATH", classpath);
-        processBuilder.environment().put("com.namazustudios.test.dot", "dot");
-        processBuilder.environment().put("com_namazustudios_test_underscore", "underscore");
+        processBuilder.environment().put("dev.getelements.test.dot", "dot");
+        processBuilder.environment().put("dev_getelements_test_underscore", "underscore");
         processBuilder.environment().put("ELEMENTS_ENVIRONMENT_UPPERCASE", "uppercase");
         processBuilder.command(jvmExecutable.toString(), TestExecutable.class.getName());
 
@@ -104,8 +103,8 @@ public class DefaultConfigurationSupplierTest {
         public static void main(final String[] args) {
 
             final var properties = DefaultConfigurationSupplier.loadProperties();
-            final var dot = properties.get("com.namazustudios.test.dot");
-            final var underscore = properties.get("com.namazustudios.test.underscore");
+            final var dot = properties.get("dev.getelements.test.dot");
+            final var underscore = properties.get("dev.getelements.test.underscore");
             final var uppercase = properties.get("ELEMENTS_ENVIRONMENT_UPPERCASE");
 
             assertEquals(dot, "dot");

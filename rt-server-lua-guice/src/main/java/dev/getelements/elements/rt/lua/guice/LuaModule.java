@@ -111,7 +111,7 @@ public class LuaModule extends PrivateModule {
      * @return this instance
      */
     public LuaModule enableBuiltinJavaExtensions() {
-        return enableJavaExtensions("com.namazustudios");
+        return enableJavaExtensions("dev.getelements");
     }
 
     /**

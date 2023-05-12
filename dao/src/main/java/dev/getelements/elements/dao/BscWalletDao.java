@@ -13,11 +13,15 @@ import java.util.Optional;
  * Created by garrettmcspadden on 11/12/21.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.bsc.wallet"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.bsc.wallet",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.wallet instead")
-    )
+        @ModuleDefinition("eci.elements.dao.bsc.wallet"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.bsc.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.bsc.wallet instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.bsc.wallet",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.bsc.wallet instead")
+        )
 })
 public interface BscWalletDao {
 

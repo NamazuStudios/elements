@@ -2,15 +2,22 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.application.PSNApplicationConfiguration;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
+import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 /**
  * Created by patricktwohig on 5/24/17.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.application.configuration.psn")
-})
+        @ModuleDefinition(
+                value = "eci.elements.service.application.configuration.psn"
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.application.configuration.psn",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.application.configuration.psn instead.")
+        )})
 public interface PSNApplicationConfigurationService {
 
     /**

@@ -5,14 +5,22 @@ import dev.getelements.elements.model.leaderboard.Leaderboard;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
+import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 /**
  * Queries and combines instances of {@link Leaderboard} and {@link Score} to calculate player rank.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.rank")
+        @ModuleDefinition(
+                value = "eci.elements.service.rank"
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.rank",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.rank instead.")
+        )
 })
 public interface RankService {
 

@@ -3,6 +3,7 @@ package dev.getelements.elements.service.blockchain.neo;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.blockchain.*;
 import dev.getelements.elements.model.blockchain.neo.MintNeoTokenResponse;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -20,11 +21,22 @@ import java.util.function.Consumer;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.smartcontract"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.unscoped.neo.smartcontract",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.neo.smartcontract"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.unscoped.neo.smartcontract",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.neo.smartcontract",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.neo.smartcontract instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.unscoped.neo.smartcontract",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.unscoped.neo.smartcontract instead.")
+        )
 })
 public interface NeoSmartContractService {
 

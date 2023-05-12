@@ -11,10 +11,15 @@ import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.googleplayiapreceipt"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.googleplayiapreceipt",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.googleplayiapreceipt instead"))
+        @ModuleDefinition("eci.elements.dao.googleplayiapreceipt"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.googleplayiapreceipt",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.googleplayiapreceipt instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.googleplayiapreceipt",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.googleplayiapreceipt instead")
+        )
 })
 public interface GooglePlayIapReceiptDao {
 

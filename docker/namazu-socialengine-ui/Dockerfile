@@ -31,7 +31,7 @@ COPY bin/nginx.sh "$ELEMENTS_BIN"
 COPY conf/config.json.template "$ELEMENTS_CONF"
 COPY conf/default.conf.template "$ELEMENTS_CONF"
 
-RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine_http_path_prefix}/">#' \
+RUN sed 's#<base href="/web-ui/">#<base href="/\${dev_getelements_socialengine_http_path_prefix}/">#' \
         "/usr/share/nginx/html/index.html" > \
         "$ELEMENTS_CONF/index.html.template" && \
     chmod ugo+x "$ELEMENTS_BIN/nginx.sh"

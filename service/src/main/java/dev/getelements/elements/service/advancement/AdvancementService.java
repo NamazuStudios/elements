@@ -12,23 +12,27 @@ import dev.getelements.elements.service.Unscoped;
 /**
  * Provides logic to advance a {@link Profile} through a {@link Mission}.
  */
-@Expose(value = {
-
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.advancement",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    ),
-
-    @ModuleDefinition(
-        value = "namazu.elements.service.advancement",
-        deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.advancement")
-    ),
-
-    @ModuleDefinition(
-        value = "namazu.socialengine.service.advancement",
-        deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.advancement")
-    )
-
+@Expose({
+        @ModuleDefinition(
+                value = "eci.elements.service.advancement"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.advancement",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.advancement",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.advancement instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.service.advancement",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.advancement instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.advancement",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.advancement instead.")
+        )
 })
 public interface AdvancementService {
 

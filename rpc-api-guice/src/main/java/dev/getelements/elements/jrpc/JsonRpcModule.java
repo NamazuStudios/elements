@@ -93,7 +93,7 @@ public class JsonRpcModule extends PrivateModule {
 
         bindings.add(() -> {
 
-            final var reflections = new Reflections("com.namazustudios", classLoader);
+            final var reflections = new Reflections("dev.getelements", classLoader);
 
             final var models = newSetBinder(
                     binder(),

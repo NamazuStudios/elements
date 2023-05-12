@@ -13,11 +13,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by garrettmcspadden on 11/23/21.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.token.template"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.token.template",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.token.template instead")
-    )
+        @ModuleDefinition("eci.elements.dao.token.template"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.token.template",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.token.template instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.token.template",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.token.template instead")
+        )
 })
 public interface TokenTemplateDao {
 

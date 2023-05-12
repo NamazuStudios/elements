@@ -10,11 +10,15 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 6/28/17.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.neo.smartcontract"),
-    @ModuleDefinition(
-            value = "namazu.socialengine.dao.neo.smartcontract",
-            deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.smartcontract instead")
-    )
+        @ModuleDefinition("eci.elements.dao.neo.smartcontract"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.neo.smartcontract",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.neo.smartcontract instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.neo.smartcontract",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.smartcontract instead")
+        )
 })
 public interface NeoSmartContractDao {
 

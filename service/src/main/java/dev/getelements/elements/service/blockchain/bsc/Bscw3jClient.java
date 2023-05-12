@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.blockchain.bsc;
 
 import dev.getelements.elements.model.blockchain.bsc.Web3jWallet;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -14,11 +15,22 @@ import org.web3j.protocol.Web3j;
  * Created by Tuan Tran on 3/24/21.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.client"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.blockchain.bsc.unscoped.client",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.client"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.blockchain.bsc.unscoped.client",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.client",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.token instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.blockchain.bsc.unscoped.client",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.blockchain.bsc.unscoped.token instead.")
+        )
 })
 public interface Bscw3jClient {
 

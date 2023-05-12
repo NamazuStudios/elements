@@ -1,6 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.session.FacebookSessionCreation;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -12,11 +13,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * Created by patricktwohig on 6/22/17.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.facebook.auth"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.facebook.auth",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.facebook.auth"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.facebook.auth",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.facebook.auth",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.facebook.auth instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.facebook.auth",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.facebook.auth instead.")
+        )
 })
 public interface FacebookAuthService {
 

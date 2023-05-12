@@ -7,11 +7,13 @@ import dev.getelements.elements.rt.lua.builtin.Builtin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static dev.getelements.elements.rt.lua.Constants.COROUTINE_MODULE;
+
 public class ResumeReasonBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(ResumeReasonBuiltin.class);
 
-    public static final String MODULE_NAME = Constants.COROUTINE_MODULE_NAME + ".resumereason";
+    public static final String MODULE_NAME = COROUTINE_MODULE + ".resumereason";
 
     @Override
     public Module getModuleNamed(final String moduleName) {

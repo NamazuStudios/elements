@@ -17,10 +17,15 @@ import java.util.List;
  * Created by davidjbrooks on 12/05/18.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.progress"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.progress",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.progress instead"))
+        @ModuleDefinition("eci.elements.dao.progress"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.progress",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.progress instead")
+        ),
+        @ModuleDefinition(
+                value = "namazu.socialengine.dao.progress",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.progress instead")
+        )
 })
 public interface ProgressDao {
     /**

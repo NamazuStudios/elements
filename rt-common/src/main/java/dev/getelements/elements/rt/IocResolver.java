@@ -22,7 +22,12 @@ public interface IocResolver {
     /**
      * The name of the module that will have access to the underlying instance of {@link IocResolver}.
      */
-    String IOC_RESOLVER_MODULE_NAME = "namazu.ioc.resolver";
+    String IOC_RESOLVER_MODULE_NAME = "eci.ioc.resolver";
+
+    /**
+     * The name of the module that will have access to the underlying instance of {@link IocResolver}.
+     */
+    String IOC_RESOLVER_MODULE_NAME_LEGACY = "namazu.ioc.resolver";
 
     /**
      * Gets the type as if it was annotated with the {@link javax.inject.Inject} annotation.

@@ -3,6 +3,7 @@ package dev.getelements.elements.service;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.application.ApplicationConfiguration;
 import dev.getelements.elements.model.application.FirebaseApplicationConfiguration;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -12,11 +13,22 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  * within the database.
  */
 @Expose({
-    @ModuleDefinition(value = "namazu.elements.service.application.configuration.firebase"),
-    @ModuleDefinition(
-        value = "namazu.elements.service.unscoped.application.configuration.firebase",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+        @ModuleDefinition(
+                value = "eci.elements.service.application.configuration.firebase"
+        ),
+        @ModuleDefinition(
+                value = "eci.elements.service.unscoped.application.configuration.firebase",
+                annotation = @ExposedBindingAnnotation(Unscoped.class)
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.application.configuration.firebase",
+                deprecated = @DeprecationDefinition("Use eci.elements.service.application.configuration.firebase instead.")
+        ),
+        @ModuleDefinition(
+                value = "namazu.elements.service.unscoped.application.configuration.firebase",
+                annotation = @ExposedBindingAnnotation(Unscoped.class),
+                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.application.configuration.firebase instead.")
+        )
 })
 public interface FirebaseApplicationConfigurationService {
 

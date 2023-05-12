@@ -3,6 +3,7 @@ package dev.getelements.elements.dao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.inventory.InventoryItem;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
@@ -12,7 +13,11 @@ import java.util.Optional;
  * Distinct inventory item Dao.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.distinctinventoryitem"),
+        @ModuleDefinition("eci.elements.dao.distinctinventoryitem"),
+        @ModuleDefinition(
+                value = "namazu.elements.dao.distinctinventoryitem",
+                deprecated = @DeprecationDefinition("Use eci.elements.dao.distinctinventoryitem instead.")
+        ),
 })
 public interface DistinctInventoryItemDao {
 

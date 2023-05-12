@@ -37,7 +37,7 @@ public class JerseyHttpClientModule extends PrivateModule {
 
     private static final Logger logger = LoggerFactory.getLogger(JerseyHttpClientModule.class);
 
-    public static final String DISABLE_SSL_VERIFICATION = "com.namazustudios.ssl.verification.disable";
+    public static final String DISABLE_SSL_VERIFICATION = "dev.getelements.ssl.verification.disable";
 
     static {
 
