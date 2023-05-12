@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
+import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT_LEGACY;
 
 /**
  * Provides full access to the {@link Profile} and related types.  Should be
@@ -95,6 +96,12 @@ public class SuperUserProfileService implements ProfileService {
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+        } catch (NodeNotFoundException ex) {
+            logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
+        }
+
+        try {
+            eventContext.postAsync(PROFILE_CREATED_EVENT_LEGACY, attributes, createdProfile);
         } catch (NodeNotFoundException ex) {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }
