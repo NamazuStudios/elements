@@ -1,21 +1,21 @@
 server {
 
-    error_page 404 =200 /${com_namazustudios_socialengine_http_path_prefix}/index.html;
+    error_page 404 =200 /${dev_getelements_socialengine_http_path_prefix}/index.html;
 
-    listen	${com_namazustudios_socialengine_http_port};
-    server_name  ${com_namazustudios_socialengine_dns_name};
+    listen	${dev_getelements_socialengine_http_port};
+    server_name  ${dev_getelements_socialengine_dns_name};
 
     location = / {
         add_header Content-Type text/plain;
         return 200 'angular:1.0';
     }
 
-    location = /${com_namazustudios_socialengine_http_path_prefix}/ui/version {
+    location = /${dev_getelements_socialengine_http_path_prefix}/ui/version {
         add_header Content-Type text/plain;
         return 200 'angular:1.0';
     }
 
-    location ~ ^/${com_namazustudios_socialengine_http_path_prefix}(?:/(.*))?$ {
+    location ~ ^/${dev_getelements_socialengine_http_path_prefix}(?:/(.*))?$ {
         alias   /usr/share/nginx/html/$1;
         index  index.html;
     }

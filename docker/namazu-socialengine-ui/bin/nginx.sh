@@ -12,26 +12,26 @@ echo ""
 
 # shellcheck disable=SC2034
 
-export com_namazustudios_socialengine_dollar='$'
+export dev_getelements_socialengine_dollar='$'
 
-if [ -z ${com_namazustudios_socialengine_http_port+x} ]
+if [ -z ${dev_getelements_socialengine_http_port+x} ]
 then
-  export com_namazustudios_socialengine_http_port=8080
+  export dev_getelements_socialengine_http_port=8080
 fi
 
-if [ -z ${com_namazustudios_socialengine_http_path_prefix+x} ]
+if [ -z ${dev_getelements_socialengine_http_path_prefix+x} ]
 then
-  export com_namazustudios_socialengine_http_path_prefix=web-ui
+  export dev_getelements_socialengine_http_path_prefix=web-ui
 fi
 
-if [ -z ${com_namazustudios_socialengine_dns_name+x} ]
+if [ -z ${dev_getelements_socialengine_dns_name+x} ]
 then
-  export com_namazustudios_socialengine_dns_name=localhost:8080
+  export dev_getelements_socialengine_dns_name=localhost:8080
 fi
 
-if [ -z ${com_namazustudios_socialengine_api_url+x} ]
+if [ -z ${dev_getelements_socialengine_api_url+x} ]
 then
-  export com_namazustudios_socialengine_api_url=http://localhost:8080/api/rest
+  export dev_getelements_socialengine_api_url=http://localhost:8080/api/rest
 fi
 
 index_html="/usr/share/nginx/html/index.html"

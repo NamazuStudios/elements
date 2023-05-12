@@ -8,7 +8,6 @@ import org.testng.annotations.Test;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -87,7 +86,7 @@ public class DefaultConfigurationSupplierTest {
         final var processBuilder = new ProcessBuilder();
         processBuilder.environment().put("CLASSPATH", classpath);
         processBuilder.environment().put("dev.getelements.test.dot", "dot");
-        processBuilder.environment().put("com_namazustudios_test_underscore", "underscore");
+        processBuilder.environment().put("dev_getelements_test_underscore", "underscore");
         processBuilder.environment().put("ELEMENTS_ENVIRONMENT_UPPERCASE", "uppercase");
         processBuilder.command(jvmExecutable.toString(), TestExecutable.class.getName());
 
