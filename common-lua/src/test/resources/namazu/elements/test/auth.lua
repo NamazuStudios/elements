@@ -9,7 +9,7 @@
 local util = require "eci.util"
 local resource = require "eci.resource"
 
-local auth = require "eci.socialengine.auth"
+local auth = require "eci.elements.auth"
 
 local User = java.require "dev.getelements.elements.model.user.User"
 local Profile = java.require "dev.getelements.elements.model.profile.Profile"
