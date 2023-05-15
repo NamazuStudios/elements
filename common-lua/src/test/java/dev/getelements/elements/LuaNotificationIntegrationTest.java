@@ -64,7 +64,7 @@ public class LuaNotificationIntegrationTest {
         when(getMockNotificationBuilder().addAll(anyMap())).thenReturn(getMockNotificationBuilder());
         when(getMockNotificationBuilder().build()).thenReturn(mockNotification);
 
-        performLuaTest("namazu.elements.test.notification","test_send_with_builder", attributes);
+        performLuaTest("eci.elements.test.notification","test_send_with_builder", attributes);
 
         verify(mockNotification, times(1)).send();
         verify(getMockNotificationBuilder(), times(1)).title(eq("Hello World!"));

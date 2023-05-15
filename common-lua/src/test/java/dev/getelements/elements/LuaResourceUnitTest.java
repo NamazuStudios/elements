@@ -41,7 +41,7 @@ public class LuaResourceUnitTest {
     @DataProvider
     public static Object[][] resourcesToTest() {
         return new Object[][] {
-            {"namazu.elements.test.auth", "test_facebook_security_manifest"},
+            {"eci.elements.test.auth", "test_facebook_security_manifest"},
         };
     }
 

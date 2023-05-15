@@ -41,7 +41,7 @@ public class LuaAuthUnitTest {
             .setAttribute(Profile.PROFILE_ATTRIBUTE, profile)
             .build();
 
-        performLuaTest("namazu.elements.test.auth", "test_profile", attributes);
+        performLuaTest("eci.elements.test.auth", "test_profile", attributes);
 
     }
 
@@ -53,7 +53,7 @@ public class LuaAuthUnitTest {
             .setAttribute(Profile.PROFILE_ATTRIBUTE, profile)
             .build();
 
-        performLuaTest("namazu.elements.test.auth", "test_profile_remote", attributes);
+        performLuaTest("eci.elements.test.auth", "test_profile_remote", attributes);
 
     }
 
@@ -61,7 +61,7 @@ public class LuaAuthUnitTest {
     @Test
     public void testProfileUnknown() throws Exception {
         final Attributes attributes = Attributes.emptyAttributes();
-        performLuaTest("namazu.elements.test.auth", "test_profile_unknown", attributes);
+        performLuaTest("eci.elements.test.auth", "test_profile_unknown", attributes);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class LuaAuthUnitTest {
             .setAttribute(User.USER_ATTRIBUTE, user)
             .build();
 
-        performLuaTest("namazu.elements.test.auth", "test_authenticated_user", attributes);
+        performLuaTest("eci.elements.test.auth", "test_authenticated_user", attributes);
 
     }
 
@@ -84,14 +84,14 @@ public class LuaAuthUnitTest {
                 .setAttribute(User.USER_ATTRIBUTE, user)
                 .build();
 
-        performLuaTest("namazu.elements.test.auth", "test_authenticated_user_remote", attributes);
+        performLuaTest("eci.elements.test.auth", "test_authenticated_user_remote", attributes);
 
     }
 
     @Test
     public void testUnauthenticatedUser() throws Exception {
         final Attributes attributes = Attributes.emptyAttributes();
-        performLuaTest("namazu.elements.test.auth", "test_unauthenticated_user", attributes);
+        performLuaTest("eci.elements.test.auth", "test_unauthenticated_user", attributes);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class LuaAuthUnitTest {
                 .setAttribute(User.USER_ATTRIBUTE, user)
                 .build();
 
-        performLuaTest("namazu.elements.test.auth", "test_auth_inventory", attributes);
+        performLuaTest("eci.elements.test.auth", "test_auth_inventory", attributes);
 
     }
 
@@ -116,7 +116,7 @@ public class LuaAuthUnitTest {
                 .setAttribute(User.USER_ATTRIBUTE, user)
                 .build();
 
-        performLuaTest("namazu.elements.test.auth", "test_auth_inventory_remote", attributes);
+        performLuaTest("eci.elements.test.auth", "test_auth_inventory_remote", attributes);
 
     }
 

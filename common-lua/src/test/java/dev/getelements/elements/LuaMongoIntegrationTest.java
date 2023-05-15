@@ -52,12 +52,12 @@ public class LuaMongoIntegrationTest {
         final Function<Consumer<Object>, Consumer<Object>> expected = c -> c;
 
         return new Object[][] {
-                {"namazu.elements.test.mongodb", "test_get_elements_database", expected.apply(result -> assertNull(result, "Expected null"))},
-                {"namazu.elements.test.mongodb", "test_get_application_collection", expected.apply(result -> assertNull(result, "Expected null"))},
-                {"namazu.elements.test.mongodb", "test_get_users_collection", expected.apply(result -> assertNull(result, "Expected null"))},
-                {"namazu.elements.test.mongodb", "test_create_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
-                {"namazu.elements.test.mongodb", "test_modify_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
-                {"namazu.elements.test.mongodb", "test_delete_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
+                {"eci.elements.test.mongodb", "test_get_elements_database", expected.apply(result -> assertNull(result, "Expected null"))},
+                {"eci.elements.test.mongodb", "test_get_application_collection", expected.apply(result -> assertNull(result, "Expected null"))},
+                {"eci.elements.test.mongodb", "test_get_users_collection", expected.apply(result -> assertNull(result, "Expected null"))},
+                {"eci.elements.test.mongodb", "test_create_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
+                {"eci.elements.test.mongodb", "test_modify_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
+                {"eci.elements.test.mongodb", "test_delete_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
         };
 
     }
