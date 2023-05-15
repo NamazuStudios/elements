@@ -103,6 +103,7 @@
         <module>rpc-api-ethereum</module>
         <module>mongo-guice</module>
     </modules>
+
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>4.2.3</guice.version>
@@ -155,6 +156,7 @@
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.5.10</kotlin.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -168,6 +170,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -237,4 +240,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>
