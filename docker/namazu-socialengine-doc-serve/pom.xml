@@ -15,86 +15,94 @@
     <version>1.0-SNAPSHOT</version>
     <name>namazu-socialengine-doc-serve</name>
 
-    <dependencies>
+    <profiles>
+        <profile>
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>doc-serve</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+            <id>docker</id>
 
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
+            <dependencies>
 
-        <!-- These are the actual documentation artifacts -->
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>doc-serve</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
+                <dependency>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                    <version>${logback.version}</version>
+                </dependency>
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>common-lua</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+                <!-- These are the actual documentation artifacts -->
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-lua</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>common</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>luastubs</classifier>
+                </dependency>
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>service</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>common-lua</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>dao</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>rt-server-lua</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>luastubs</classifier>
+                </dependency>
 
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>common-util</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>service</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>luastubs</classifier>
+                </dependency>
 
-        <!-- End Documentation Artifacts -->
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>dao</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>luastubs</classifier>
+                </dependency>
 
-    </dependencies>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>common-util</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>luastubs</classifier>
+                </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <includeScope>runtime</includeScope>
-                            <overWriteReleases>false</overWriteReleases>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+                <!-- End Documentation Artifacts -->
+
+            </dependencies>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <includeScope>runtime</includeScope>
+                                    <overWriteReleases>false</overWriteReleases>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+
+        </profile>
+    </profiles>
 
 </project>
