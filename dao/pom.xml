@@ -39,80 +39,85 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
+    <profiles>
+        <profile>
+            <id>javadoc</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.3.0</version>
 
-                <executions>
-                    <execution>
-                        <id>standard-javadoc</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                    <execution>
+                        <executions>
+                            <execution>
+                                <id>standard-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                            <execution>
 
-                        <id>luastubs-javadoc</id>
+                                <id>luastubs-javadoc</id>
 
-                        <phase>none</phase>
+                                <phase>none</phase>
 
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
 
-                        <configuration>
+                                <configuration>
 
-                            <doclet>dev.getelements.elements.doclet.lua.LDocStubDoclet</doclet>
+                                    <doclet>dev.getelements.elements.doclet.lua.LDocStubDoclet</doclet>
 
-                            <docletArtifact>
-                                <groupId>dev.getelements.elements</groupId>
-                                <artifactId>doclet</artifactId>
-                                <version>${project.version}</version>
-                            </docletArtifact>
+                                    <docletArtifact>
+                                        <groupId>dev.getelements.elements</groupId>
+                                        <artifactId>doclet</artifactId>
+                                        <version>${project.version}</version>
+                                    </docletArtifact>
 
-                            <additionalOptions>
-                                <additionalOption>-d</additionalOption>
-                                <additionalOption>'${project.build.directory}/site/luastubs'</additionalOption>
-                            </additionalOptions>
+                                    <additionalOptions>
+                                        <additionalOption>-d</additionalOption>
+                                        <additionalOption>'${project.build.directory}/site/luastubs'</additionalOption>
+                                    </additionalOptions>
 
-                            <useStandardDocletOptions>false</useStandardDocletOptions>
+                                    <useStandardDocletOptions>false</useStandardDocletOptions>
 
-                            <classifier>luastubs</classifier>
-                            <outputDirectory>${project.build.directory}/site/luastubs</outputDirectory>
+                                    <classifier>luastubs</classifier>
+                                    <outputDirectory>${project.build.directory}/site/luastubs</outputDirectory>
 
-                        </configuration>
+                                </configuration>
 
-                    </execution>
-                </executions>
-            </plugin>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <phase>none</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <version>${project.version}</version>
-                            <packaging>${project.packaging}</packaging>
-                            <classifier>luastubs</classifier>
-                            <file>${project.build.directory}/${project.artifactId}-${project.version}-luastubs.jar</file>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <phase>none</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>${project.artifactId}</artifactId>
+                                    <version>${project.version}</version>
+                                    <packaging>${project.packaging}</packaging>
+                                    <classifier>luastubs</classifier>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-luastubs.jar</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-        </plugins>
-    </build>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
