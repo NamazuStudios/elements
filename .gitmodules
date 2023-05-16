@@ -7,6 +7,3 @@
 [submodule "index-storage"]
 	path = index-storage
 	url = ssh://git@bitbucket.namazustudios.net:7999/soc/index-storage.git
-[submodule "docker/neo3-privatenet-docker"]
-	path = docker/neo3-privatenet-docker
-	url = https://github.com/AxLabs/neo3-privatenet-docker.git
