@@ -86,7 +86,7 @@
 
                                 <id>luastubs-javadoc</id>
 
-                                <phase>none</phase>
+                                <phase>package</phase>
 
                                 <goals>
                                     <goal>jar</goal>

@@ -171,20 +171,6 @@
         </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>javadoc</id>
-            <modules>
-                <module>common</module>
-                <module>common-lua</module>
-                <module>common-util</module>
-                <module>dao</module>
-                <module>service</module>
-                <module>rt-server-lua</module>
-            </modules>
-        </profile>
-    </profiles>
-
     <build>
         <pluginManagement>
             <plugins>
