@@ -7,4 +7,4 @@ MAVEN_REPO_LOCAL=${MAVEN_REPO_LOCAL:-"$(mvn help:evaluate -Dexpression=settings.
 
 MAVEN_OPTIONS="-Pjavadoc -DskipTests -Djava.io.tmpdir=${JAVA_TMPDIR} -Dmaven.repo.local=${MAVEN_REPO_LOCAL}"
 
-echo mvn "${MAVEN_OPTIONS}" --projects "${MAVEN_PROJECTS}" clean package install
+mvn "${MAVEN_OPTIONS}" --projects "${MAVEN_PROJECTS}" clean package install
