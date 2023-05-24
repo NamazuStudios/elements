@@ -47,7 +47,7 @@ public class ElementsWebServiceModule extends AbstractModule {
                 .stream()
                 .map(PROVIDERS::get)
                 .collect(toList())
-                .forEach(c -> multibinder.addBinding().to(PROVIDERS.get(c)));
+                .forEach(c -> multibinder.addBinding().to(c));
 
     }
 

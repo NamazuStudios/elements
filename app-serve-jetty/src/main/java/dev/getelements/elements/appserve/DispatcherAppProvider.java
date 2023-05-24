@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import dev.getelements.elements.appserve.guice.*;
+import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
@@ -57,7 +58,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private DeploymentManager deploymentManager;
 
-    private ApplicationService applicationService;
+    private ApplicationDao applicationDao;
 
     private String healthEndpoint;
 
@@ -107,7 +108,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     public ContextHandler createContextHandlerForApplication(final App app) {
 
-        final var application = getApplicationService().getApplication(app.getOriginId());
+        final var application = getApplicationDao().getActiveApplication(app.getOriginId());
 
         final var injector = injectorFor(application);
 
@@ -155,7 +156,10 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final var version = new App(getDeploymentManager(), this, metadataOriginId);
         getDeploymentManager().addApp(version);
 
-        getApplicationService().getApplications().getObjects().forEach(this::deploy);
+        getApplicationDao()
+                .getActiveApplications()
+                .getObjects()
+                .forEach(this::deploy);
 
     }
 
@@ -198,13 +202,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.injector = injector;
     }
 
-    public ApplicationService getApplicationService() {
-        return applicationService;
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
     }
 
     @Inject
-    public void setApplicationService(@Unscoped ApplicationService applicationService) {
-        this.applicationService = applicationService;
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
     }
 
     public DeploymentManager getDeploymentManager() {

@@ -100,6 +100,11 @@
             <groupId>dev.getelements.elements</groupId>
             <artifactId>app-node</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

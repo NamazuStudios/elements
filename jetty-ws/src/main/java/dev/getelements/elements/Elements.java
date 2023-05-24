@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-public class Elements {
+public class Elements implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(Elements.class);
 

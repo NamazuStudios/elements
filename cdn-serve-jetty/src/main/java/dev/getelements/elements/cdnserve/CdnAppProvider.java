@@ -8,6 +8,7 @@ import dev.getelements.elements.cdnserve.guice.CdnGuiceResourceConfig;
 import dev.getelements.elements.cdnserve.guice.CdnJerseyModule;
 import dev.getelements.elements.cdnserve.guice.CdnServeSecurityModule;
 import dev.getelements.elements.codeserve.GitSecurityModule;
+import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.service.ApplicationService;
@@ -54,7 +55,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private DeploymentManager deploymentManager;
 
-    private ApplicationService applicationService;
+    private ApplicationDao applicationDao;
 
     public DeploymentManager getDeploymentManager() {
         return deploymentManager;
@@ -151,11 +152,14 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private void startCdnApps() {
-        Pagination<Application> applications = getApplicationService().getApplications();
+
+        final var applications = getApplicationDao().getActiveApplications();
+
         for(Application a : applications){
             final App app = new App(getDeploymentManager(), this, a.getName());
             getDeploymentManager().addApp(app);
         }
+
     }
 
     @Override
@@ -190,13 +194,13 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         this.serveEndpoint = serveEndpoint;
     }
 
-    public ApplicationService getApplicationService() {
-        return applicationService;
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
     }
 
     @Inject
-    public void setApplicationService(ApplicationService applicationService) {
-        this.applicationService = applicationService;
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
     }
 
     public String getPathPrefix() {
