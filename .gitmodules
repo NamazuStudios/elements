@@ -1,12 +1,13 @@
 [submodule "socialengine-jnlua"]
 	path = socialengine-jnlua
-	url = ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-jnlua.git
+	url = https://bitbucket.org/eci-elements/socialengine-jnlua.git
 [submodule "search-tools"]
 	path = search-tools
-	url = ssh://git@bitbucket.namazustudios.net:7999/soc/search-tools.git
+	url = https://bitbucket.org/eci-elements/search-tools.git
 [submodule "index-storage"]
 	path = index-storage
-	url = ssh://git@bitbucket.namazustudios.net:7999/soc/index-storage.git
+	url = https://bitbucket.org/eci-elements/index-storage.git
 [submodule "docker/neo3-privatenet-docker"]
 	path = docker/neo3-privatenet-docker
 	url = https://github.com/AxLabs/neo3-privatenet-docker.git
+
