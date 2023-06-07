@@ -23,10 +23,10 @@ pipelines:
           # Run a security scan for sensitive data.
           # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
           - pipe: atlassian/git-secrets-scan:0.5.1
-#    - step:
-#        name: Git Submodule Checkout
-#        script:
-#          - git submodule update --init
+    - step:
+        name: Git Submodule Checkout
+        script:
+          - git submodule update --init
     - step:
         name: Build and Test
         caches:
