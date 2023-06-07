@@ -5,7 +5,15 @@
 
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
-image: maven:3.6.3
+image:
+  name: distribution.getelements.dev/elements-deployment-web-services-ci
+  username: $REGISTRY_USER
+  password: $REGISTRY_PASS
+
+options:
+  max-time: 30
+  docker: true
+  size: 2x
 
 pipelines:
   default:
