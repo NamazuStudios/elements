@@ -26,13 +26,13 @@ pipelines:
     - step:
         name: Git Submodule Checkout
         script:
-          - git submodule update --init
+          - git submodule update --init --recursive
     - step:
         name: Build and Test
         caches:
           - maven
         script:
-          - mvn clean test install
+          - ls -al index-storage && mvn clean test install
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
