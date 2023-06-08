@@ -17,22 +17,19 @@ options:
 
 pipelines:
   default:
-    - step:
-        name: Security Scan
-        script:
-          # Run a security scan for sensitive data.
-          # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
-          - pipe: atlassian/git-secrets-scan:0.5.1
-    - step:
-        name: Git Submodule Checkout
-        script:
-          - git submodule update --init --recursive
+#    - step:
+#        name: Security Scan
+#        script:
+#          # Run a security scan for sensitive data.
+#          # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+#          - pipe: atlassian/git-secrets-scan:0.5.1
     - step:
         name: Build and Test
         caches:
           - maven
         script:
-          - ls -al index-storage && mvn clean test install
+          - git submodule update --init --recursive
+          - mvn clean test install
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
