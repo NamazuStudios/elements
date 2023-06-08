@@ -11,7 +11,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>monolith</artifactId>
+    <artifactId>jetty-ws</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>jetty-ws</name>
 
