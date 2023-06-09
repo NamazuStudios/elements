@@ -11,14 +11,17 @@ image:
   password: $REGISTRY_PASS
 
 options:
-  max-time: 30
+  max-time: 60
   docker: true
-  size: 2x
+  size: 8x
 
 pipelines:
   default:
     - step:
         name: Build and Test
+        runs-on:
+          - "linux"
+          - "self.hosted"
         caches:
           - maven
         script:
