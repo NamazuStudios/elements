@@ -13,11 +13,12 @@ image:
 options:
   max-time: 60
   docker: true
-  size: 8x
+  size: 2x
 
 pipelines:
   default:
     - step:
+        size: 4x
         name: Build and Test
         runs-on:
           - "linux"
