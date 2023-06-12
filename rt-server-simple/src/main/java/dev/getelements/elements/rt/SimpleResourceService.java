@@ -35,6 +35,10 @@ public class SimpleResourceService implements ResourceService {
 
     private static final int RETRY_COUNT = 5;
 
+    private static final int MIN_WAIT = 1;
+
+    private static final int MAX_WAIT = 5;
+
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceService.class);
 
     private final AtomicReference<Storage> storageAtomicReference = new AtomicReference<>(new Storage());
@@ -536,36 +540,51 @@ public class SimpleResourceService implements ResourceService {
         this.resourceIdOptimisticLockService = resourceIdOptimisticLockService;
     }
 
-    private <T> T doOptimistic(final Supplier<T> supplier) {
+        private <T> T doOptimistic(final Supplier<T> supplier) {
 
-        for (int i = 0; i < RETRY_COUNT; ++i) {
-            try {
-                return supplier.get();
-            } catch (LockedException ex) {
-                yield();
-                continue;
+            for (int i = 0; i < RETRY_COUNT; ++i) {
+                try {
+                    return supplier.get();
+                } catch (LockedException ex) {
+                    if (i < RETRY_COUNT / 2) {
+                        doWait();
+                    }
+                }
             }
+
+            throw new ContentionException();
+
         }
 
-        throw new ContentionException();
+        private void doOptimisticV(final Runnable runnable) {
 
-    }
-
-    private void doOptimisticV(final Runnable runnable) {
-
-        for (int i = 0; i < RETRY_COUNT; ++i) {
-            try {
-                runnable.run();
-                return;
-            } catch (LockedException ex) {
-                yield();
-                continue;
+            for (int i = 0; i < RETRY_COUNT; ++i) {
+                try {
+                    runnable.run();
+                    return;
+                } catch (LockedException ex) {
+                    if (i < RETRY_COUNT / 2) {
+                        doWait();
+                    }
+                }
             }
+
+            throw new ContentionException();
+
         }
 
-        throw new ContentionException();
+        private static void doWait() {
 
-    }
+            final var tlr = ThreadLocalRandom.current();
+
+            try {
+                final var time = tlr.nextInt(MIN_WAIT, MAX_WAIT);
+                Thread.sleep(time);
+            } catch (InterruptedException ex) {
+                throw new InternalException(ex);
+            }
+
+        }
 
     private static final class Storage {
 
