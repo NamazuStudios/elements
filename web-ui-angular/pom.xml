@@ -46,6 +46,7 @@
                             <executable>npm</executable>
                             <arguments>
                                 <argument>ci</argument>
+                                <argument>--legacy-peer-deps</argument>
                             </arguments>
                         </configuration>
                         <goals>
@@ -60,7 +61,6 @@
                             <executable>ng</executable>
                             <arguments>
                                 <argument>build</argument>
-                                <argument>--legacy-peer-dep</argument>
                                 <argument>--prod</argument>
                                 <argument>--base-href</argument>
                                 <argument>/web-ui/</argument>
