@@ -6,7 +6,7 @@
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
 image:
-  name: distribution.getelements.dev/elements-deployment-web-services-ci:647e9551660a1ec7ba7b437610a399afa74e7c52
+  name: distribution.getelements.dev/elements-deployment-web-services-ci:647e955
   username: $REGISTRY_USER
   password: $REGISTRY_PASS
 
