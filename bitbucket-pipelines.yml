@@ -27,7 +27,7 @@ pipelines:
           - maven
         script:
           - git submodule update --init --recursive
-          - mvn -B clean test install
+          - mvn --no-transfer-progress -B clean test install
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
