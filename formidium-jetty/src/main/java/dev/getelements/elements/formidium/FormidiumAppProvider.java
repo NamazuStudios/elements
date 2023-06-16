@@ -5,6 +5,7 @@ import com.google.inject.servlet.GuiceFilter;
 import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
 import dev.getelements.elements.guice.StandardServletSecurityModule;
 import dev.getelements.elements.guice.StandardServletServicesModule;
+import dev.getelements.elements.servlet.security.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -31,32 +32,30 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
     /**
      * Specifies the formidium context root.
      */
-    public static final String FORMIDIUM_CONTEXT_ROOT = "dev.getelements.elements.formidium.context.root";
+    public static final String FORMIDIUM_CONTEXT_ROOT = "/api/formidium";
 
     private static final Logger logger = LoggerFactory.getLogger(FormidiumProxyServlet.class);
 
     private Injector injector;
 
-    private String rootContext;
-
     private String formidiumApiKey;
 
     private String formidiumApiUrl;
 
-    private String formidiumContext;
-
     private DeploymentManager deploymentManager;
+
+    private HttpContextRoot httpContextRoot;
 
     @Override
     protected void doStart() throws Exception {
-
-        final var formidiumContextRoot = normalize(format("%s/%s", getRootContext(), getFormidiumContext()));
 
         if (getFormidiumApiKey().isBlank()) {
             logger.info("No Formidium API Key Configured. Disabling Formidium support.");
         } else {
 
-            logger.info("Formidium API Key Configured. Enabling Formidium support.");
+            final var formidiumContextRoot = getHttpContextRoot().normalize(FORMIDIUM_CONTEXT_ROOT);
+
+            logger.info("Formidium API Key Configured. Enabling Formidium support at {}.", formidiumContextRoot);
 
             final var app = new App(
                     getDeploymentManager(),
@@ -104,15 +103,6 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
         return null;
     }
 
-    public String getRootContext() {
-        return rootContext;
-    }
-
-    @Inject
-    public void setRootContext(@Named(HTTP_PATH_PREFIX) String rootContext) {
-        this.rootContext = rootContext;
-    }
-
     public String getFormidiumApiKey() {
         return formidiumApiKey;
     }
@@ -131,15 +121,6 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
         this.formidiumApiUrl = formidiumApiUrl;
     }
 
-    public String getFormidiumContext() {
-        return formidiumContext;
-    }
-
-    @Inject
-    public void setFormidiumContext(@Named(FORMIDIUM_CONTEXT_ROOT) String formidiumContext) {
-        this.formidiumContext = formidiumContext;
-    }
-
     public Injector getInjector() {
         return injector;
     }
@@ -147,6 +128,15 @@ public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvid
     @Inject
     public void setInjector(Injector injector) {
         this.injector = injector;
+    }
+
+    public HttpContextRoot getHttpContextRoot() {
+        return httpContextRoot;
+    }
+
+    @Inject
+    public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
+        this.httpContextRoot = httpContextRoot;
     }
 
 }

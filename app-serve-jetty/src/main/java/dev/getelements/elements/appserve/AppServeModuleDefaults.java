@@ -28,8 +28,6 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         final var properties = new Properties();
         properties.setProperty(HTTP_PORT, "8083");
         properties.setProperty(HTTP_PATH_PREFIX, "app");
-        properties.setProperty(HEALTH_ENDPOINT, "health");
-        properties.setProperty(VERSION_ENDPOINT, "version");
         properties.setProperty(HTTP_TIMEOUT_MSEC, "180000");
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));

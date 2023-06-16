@@ -27,7 +27,7 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
     public Properties get() {
         final Properties properties = new Properties();
         properties.put(HTTP_PORT, Integer.toString(DEFAULT_PORT));
-        properties.put(HTTP_PATH_PREFIX, DEFAULT_API_CONTEXT);
+        properties.put(API_PREFIX, "rest");
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.put(STATIC_HOST_INFO, "tcp://localhost:28883");

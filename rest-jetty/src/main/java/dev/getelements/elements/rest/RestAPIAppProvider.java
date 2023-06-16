@@ -7,6 +7,7 @@ import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
 import dev.getelements.elements.guice.StandardServletServicesModule;
 import dev.getelements.elements.rest.guice.RestAPIJerseyModule;
 import dev.getelements.elements.service.guice.NotificationServiceModule;
+import dev.getelements.elements.servlet.security.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -14,38 +15,49 @@ import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.DispatcherType;
 
 import java.util.EnumSet;
 
-import static dev.getelements.elements.Constants.API_PREFIX;
-import static dev.getelements.elements.Constants.HTTP_PATH_PREFIX;
 import static dev.getelements.elements.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
-import static dev.getelements.elements.servlet.security.HttpPathUtils.normalize;
 import static java.lang.String.format;
 
 public class RestAPIAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    private String rootContext;
+    private static final Logger logger = LoggerFactory.getLogger(RestAPIAppProvider.class);
 
-    private String apiContext;
+    private static final String REST_API_CONTEXT_ROOT = "/api/rest";
 
     private Injector injector;
 
     private DeploymentManager deploymentManager;
 
+    private HttpContextRoot httpContextRoot;
+
     @Override
-    protected void doStart() throws Exception {
-        final var apiContextRoot = normalize(format("%s/%s", getRootContext(), getApiContext()));
-        deploymentManager.addApp(new App(deploymentManager, this, apiContextRoot, buildRestApiContext(apiContextRoot)));
+    protected void doStart() {
+
+        final var apiContextRoot = getHttpContextRoot().normalize(REST_API_CONTEXT_ROOT);
+        logger.info("Running REST API at {}", apiContextRoot);
+
+        final var app = new App(
+                deploymentManager,
+                this,
+                apiContextRoot,
+                buildRestApiContext(apiContextRoot)
+        );
+
+        deploymentManager.addApp(app);
+
     }
 
     private ContextHandler buildRestApiContext(final String apiContextRoot) {
 
-        final var injector = this.injector.createChildInjector(
+        final var injector = getInjector().createChildInjector(
             new RestAPIJerseyModule(),
             new NotificationServiceModule(),
             new StandardServletSecurityModule(),
@@ -77,22 +89,13 @@ public class RestAPIAppProvider extends AbstractLifeCycle implements AppProvider
         this.deploymentManager = deploymentManager;
     }
 
-    public String getRootContext() {
-        return rootContext;
+    public HttpContextRoot getHttpContextRoot() {
+        return httpContextRoot;
     }
 
     @Inject
-    public void setRootContext(@Named(HTTP_PATH_PREFIX) String rootContext) {
-        this.rootContext = rootContext;
-    }
-
-    public String getApiContext() {
-        return apiContext;
-    }
-
-    @Inject
-    public void setApiContext(@Named(API_PREFIX) String apiContext) {
-        this.apiContext = apiContext;
+    public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
+        this.httpContextRoot = httpContextRoot;
     }
 
     public Injector getInjector() {

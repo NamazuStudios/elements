@@ -38,7 +38,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
     public static final Stage DEFAULT_STAGE = DEVELOPMENT;
 
-    public static final String DEFAULT_API_CONTEXT = "api";
+    public static final String API_CONTEXT = "api";
 
     private static final OptionSpec<Stage> stageOptionSpec = optionParser
         .accepts("stage", "Is this running in development or production?")
