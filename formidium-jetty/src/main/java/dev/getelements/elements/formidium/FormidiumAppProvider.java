@@ -5,7 +5,7 @@ import com.google.inject.servlet.GuiceFilter;
 import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
 import dev.getelements.elements.guice.StandardServletSecurityModule;
 import dev.getelements.elements.guice.StandardServletServicesModule;
-import dev.getelements.elements.servlet.security.HttpContextRoot;
+import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -19,13 +19,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
-
 import java.util.EnumSet;
 
-import static dev.getelements.elements.Constants.HTTP_PATH_PREFIX;
-import static dev.getelements.elements.service.formidium.FormidiumConstants.*;
-import static dev.getelements.elements.servlet.security.HttpPathUtils.normalize;
-import static java.lang.String.format;
+import static dev.getelements.elements.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
+import static dev.getelements.elements.service.formidium.FormidiumConstants.FORMIDIUM_API_URL;
 
 public class FormidiumAppProvider extends AbstractLifeCycle implements AppProvider {
 

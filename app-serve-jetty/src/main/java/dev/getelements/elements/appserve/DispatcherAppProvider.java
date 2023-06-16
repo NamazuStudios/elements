@@ -12,6 +12,7 @@ import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQContextModule;
 import dev.getelements.elements.rt.servlet.DispatcherServlet;
+import dev.getelements.elements.servlet.HttpContextRoot;
 import dev.getelements.elements.servlet.security.*;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;

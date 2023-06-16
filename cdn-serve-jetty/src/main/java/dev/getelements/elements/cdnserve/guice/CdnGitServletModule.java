@@ -6,7 +6,6 @@ import dev.getelements.elements.cdnserve.resolver.CdnServeRepositoryResolver;
 import dev.getelements.elements.codeserve.GitServletProvider;
 import dev.getelements.elements.servlet.security.HttpServletBasicAuthFilter;
 import dev.getelements.elements.servlet.security.HttpServletGlobalSecretHeaderFilter;
-import dev.getelements.elements.servlet.security.VersionServlet;
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
 

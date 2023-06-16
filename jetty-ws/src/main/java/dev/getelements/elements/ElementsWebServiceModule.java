@@ -5,6 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import dev.getelements.elements.appserve.DispatcherAppProvider;
 import dev.getelements.elements.cdnserve.CdnAppProvider;
 import dev.getelements.elements.codeserve.CodeServeAppProvider;
+import dev.getelements.elements.docserve.DocAppProvider;
 import dev.getelements.elements.formidium.FormidiumAppProvider;
 import dev.getelements.elements.rest.RestAPIAppProvider;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -24,6 +25,7 @@ public class ElementsWebServiceModule extends AbstractModule {
         providers.put(api, RestAPIAppProvider.class);
         providers.put(cdn, CdnAppProvider.class);
         providers.put(app, DispatcherAppProvider.class);
+        providers.put(doc, DocAppProvider.class);
         providers.put(code, CodeServeAppProvider.class);
         providers.put(formidium_proxy, FormidiumAppProvider.class);
         PROVIDERS = Collections.unmodifiableMap(providers);

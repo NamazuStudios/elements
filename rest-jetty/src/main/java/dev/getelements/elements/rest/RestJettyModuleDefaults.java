@@ -4,8 +4,7 @@ import dev.getelements.elements.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.Constants.*;
-import static dev.getelements.elements.rest.RestAPIMain.*;
+import static dev.getelements.elements.Constants.API_PREFIX;
 import static dev.getelements.elements.rt.Constants.*;
 import static dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
@@ -14,7 +13,6 @@ import static dev.getelements.elements.rt.remote.JndiSrvInstanceDiscoveryService
 import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
 import static dev.getelements.elements.rt.remote.SimpleRemoteInvokerRegistry.*;
-import static dev.getelements.elements.rt.remote.SimpleRemoteInvokerRegistry.DEFAULT_TOTAL_REFRESH_TIMEOUT;
 import static dev.getelements.elements.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static dev.getelements.elements.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -26,7 +24,6 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(HTTP_PORT, Integer.toString(DEFAULT_PORT));
         properties.put(API_PREFIX, "rest");
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");

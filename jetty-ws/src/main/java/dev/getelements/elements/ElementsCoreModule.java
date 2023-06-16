@@ -76,10 +76,6 @@ public class ElementsCoreModule extends AbstractModule {
         bind(Server.class).toProvider(DynamicMultiAppServerProvider.class);
         bind(ServletContextHandler.class).toProvider(ServletContextHandlerProvider.class);
 
-//        var apps = Multibinder.newSetBinder(binder(), AppProvider.class);
-//        apps.addBinding().to(RestAPIAppProvider.class);
-//        apps.addBinding().to(FormidiumAppProvider.class);
-
     }
 
 }

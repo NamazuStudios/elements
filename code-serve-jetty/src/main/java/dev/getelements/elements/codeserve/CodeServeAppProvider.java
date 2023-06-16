@@ -2,7 +2,7 @@ package dev.getelements.elements.codeserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import dev.getelements.elements.servlet.security.HttpContextRoot;
+import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
-import java.util.EnumSet;
 
 import static java.util.EnumSet.allOf;
 

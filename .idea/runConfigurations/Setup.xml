@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Setup" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.setup.Setup" />
+    <option name="MAIN_CLASS_NAME" value="setup" />
     <module name="setup" />
     <option name="PROGRAM_PARAMETERS" value="shell" />
     <method v="2">

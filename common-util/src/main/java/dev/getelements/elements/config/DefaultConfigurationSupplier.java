@@ -111,9 +111,6 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
             // ELEMENTS_HOME/config/elements-configuration.properties
             Paths.get(home, CONFIGURATION_DIRECTORY, DEFAULT_PROPERTIES_FILE),
 
-            // Loads the old-style configuration file
-            Paths.get(properties.getProperty(PROPERTIES_FILE_OLD, DEFAULT_PROPERTIES_FILE_OLD)),
-
             // Loads the new-style configuration file
             Paths.get(properties.getProperty(PROPERTIES_FILE, DEFAULT_PROPERTIES_FILE))
 

@@ -1,10 +1,11 @@
-package dev.getelements.elements.servlet.security;
+package dev.getelements.elements.servlet;
+
+import dev.getelements.elements.servlet.security.HttpPathUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import static dev.getelements.elements.Constants.HTTP_PATH_PREFIX;
-import static java.lang.String.format;
 
 public class HttpContextRoot {
 

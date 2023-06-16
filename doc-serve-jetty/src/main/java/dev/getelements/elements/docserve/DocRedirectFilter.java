@@ -14,7 +14,6 @@ import java.net.URISyntaxException;
 import static dev.getelements.elements.Constants.*;
 import static dev.getelements.elements.util.URIs.appendPath;
 import static java.lang.String.format;
-import static java.net.URLEncoder.encode;
 import static javax.servlet.http.HttpServletResponse.SC_MOVED_PERMANENTLY;
 
 @Singleton
@@ -116,4 +115,3 @@ public class DocRedirectFilter implements Filter {
     }
 
 }
-

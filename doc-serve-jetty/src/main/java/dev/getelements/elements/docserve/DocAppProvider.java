@@ -5,9 +5,11 @@ import com.google.inject.servlet.GuiceFilter;
 import com.google.inject.servlet.ServletScopes;
 import dev.getelements.elements.docserve.guice.DocJerseyModule;
 import dev.getelements.elements.docserve.guice.LuaStaticPathDocsModule;
+import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.guice.StandardServletSecurityModule;
 import dev.getelements.elements.guice.StandardServletServicesModule;
 import dev.getelements.elements.service.guice.RedissonServicesModule;
+import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -21,14 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.DispatcherType;
 import java.util.HashMap;
 import java.util.List;
 
-import static dev.getelements.elements.Constants.HTTP_PATH_PREFIX;
 import static dev.getelements.elements.docserve.DocGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
-import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.util.Loader.getResource;
 
@@ -36,55 +35,38 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(DocAppProvider.class);
 
-    public static final String LUA_CONTEXT_FORMAT = "%s/lua";
+    public static final String LUA_CONTEXT = "/doc/lua";
 
-    public static final String REST_CONTEXT_FORMAT = "%s/rest";
+    public static final String REST_CONTEXT = "/doc/rest";
 
-    public static final String SWAGGER_CONTEXT_FORMAT = "%s/swagger";
-
-    private String pathPrefix;
-
-    private String luaContext;
-
-    private String restContext;
-
-    private String swaggerContext;
+    public static final String SWAGGER_CONTEXT = "/doc/swagger";
 
     private Injector injector;
+
+    private HttpContextRoot httpContextRoot;
 
     private DeploymentManager deploymentManager;
 
     @Override
     protected void doStart() {
+
+        final var luaContextRoot = getHttpContextRoot().normalize(LUA_CONTEXT);
+        final var restContextRoot = getHttpContextRoot().normalize(REST_CONTEXT);
+        final var swaggerContextRoot = getHttpContextRoot().normalize(SWAGGER_CONTEXT);
+
         List.of(
-            new App(getDeploymentManager(), this, getLuaContext()),
-            new App(getDeploymentManager(), this, getRestContext()),
-            new App(getDeploymentManager(), this, getSwaggerContext())
+            new App(getDeploymentManager(), this, luaContextRoot, createLuaContext(luaContextRoot)),
+            new App(getDeploymentManager(), this, restContextRoot, createRestContext(restContextRoot)),
+            new App(getDeploymentManager(), this, swaggerContextRoot, createSwaggerContext(swaggerContextRoot))
         ).forEach(getDeploymentManager()::addApp);
     }
 
     @Override
-    public ContextHandler createContextHandler(final App app) throws Exception {
-
-        final var originId = app.getOriginId();
-
-        if (originId.equals(getLuaContext())) {
-            return createLuaContext(app);
-        } else if (originId.equals(getRestContext())) {
-            return createRestContext(app);
-        } else if (originId.equals(getSwaggerContext())) {
-            return createSwaggerContext(app);
-        }
-
-        throw new IllegalStateException("Unknown App: " + app.getOriginId());
-
+    public ContextHandler createContextHandler(final App app) {
+        throw new InternalException("No context handler for app: " + app);
     }
 
-    private ContextHandler createLuaContext(final App app) {
-
-        if (!getLuaContext().equals(app.getOriginId())) {
-            throw new IllegalStateException("Expected: " + getLuaContext());
-        }
+    private ContextHandler createLuaContext(final String luaContextRoot) {
 
         final var injector = getInjector().createChildInjector(new LuaStaticPathDocsModule());
         final var pathDocs = injector.getInstance(StaticPathDocs.class);
@@ -100,7 +82,7 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         final var servletContextHandler = new ServletContextHandler();
 
         servletContextHandler.addServlet(defaultServletHolder, "/*");
-        servletContextHandler.setContextPath(getLuaContext());
+        servletContextHandler.setContextPath(luaContextRoot);
         servletContextHandler
             .getMimeTypes()
             .addMimeMapping("lua", "text/plain");
@@ -109,11 +91,7 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
     }
 
-    private ContextHandler createRestContext(final App app) {
-
-        if (!getRestContext().equals(app.getOriginId())) {
-            throw new IllegalStateException("Expected: " + getRestContext());
-        }
+    private ContextHandler createRestContext(final String restContextRoot) {
 
         final var injector = getInjector().createChildInjector(
             new DocJerseyModule(),
@@ -127,16 +105,16 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
         servletContextHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
-        servletContextHandler.setContextPath(getRestContext());
+        servletContextHandler.setContextPath(restContextRoot);
 
         return servletContextHandler;
 
     }
 
-    private ContextHandler createSwaggerContext(final App app) {
+    private ContextHandler createSwaggerContext(final String swaggerContextRoot) {
 
         final var servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(getSwaggerContext());
+        servletContextHandler.setContextPath(swaggerContextRoot);
 
         final var redirect = injector.createChildInjector().getInstance(DocRedirectFilter.class);
         servletContextHandler.addFilter(new FilterHolder(redirect), "/*", allOf(DispatcherType.class));
@@ -149,45 +127,6 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         defaultServletHolder.setInitParameters(defaultInitParameters);
 
         return servletContextHandler;
-
-    }
-
-    public String getPathPrefix() {
-        return pathPrefix;
-    }
-
-    public String getLuaContext() {
-        return luaContext;
-    }
-
-    public String getRestContext() {
-        return restContext;
-    }
-
-    public String getSwaggerContext() {
-        return swaggerContext;
-    }
-
-    @Inject
-    public void setPathPrefix(@Named(HTTP_PATH_PREFIX) final String pathPrefix) {
-
-        this.pathPrefix = pathPrefix;
-
-        this.luaContext = format(LUA_CONTEXT_FORMAT, getPathPrefix());
-        this.restContext = format(REST_CONTEXT_FORMAT, getPathPrefix());
-        this.swaggerContext = format(SWAGGER_CONTEXT_FORMAT, getPathPrefix());
-
-        this.luaContext = this.luaContext.startsWith("/")
-            ? this.luaContext
-            : "/" + this.luaContext;
-
-        this.restContext = this.restContext.startsWith("/")
-            ? this.restContext
-            : "/" + this.restContext;
-
-        this.swaggerContext = this.swaggerContext.startsWith("/")
-            ? this.swaggerContext
-            : "/" + this.swaggerContext;
 
     }
 
@@ -207,6 +146,15 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
     @Override
     public void setDeploymentManager(final DeploymentManager deploymentManager) {
         this.deploymentManager = deploymentManager;
+    }
+
+    public HttpContextRoot getHttpContextRoot() {
+        return httpContextRoot;
+    }
+
+    @Inject
+    public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
+        this.httpContextRoot = httpContextRoot;
     }
 
 }

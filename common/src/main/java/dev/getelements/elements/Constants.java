@@ -6,16 +6,16 @@ package dev.getelements.elements;
 public interface Constants {
 
     /**
+     * The Digest provider instance for hashing passwords.
+     */
+    String PASSWORD_DIGEST = "dev.getelements.elements.password.digest";
+
+    /**
      * Used to controlt he maxmimum number of results returned via the REST api.  This cap is
      * enforced to avoid an undue strain on the server by malicicous users requesting
      * exceptionally large number of search results.
      */
     String QUERY_MAX_RESULTS = "dev.getelements.elements.query.max.results";
-
-    /**
-     * The Digest provider instance for hashing passwords.
-     */
-    String PASSWORD_DIGEST = "dev.getelements.elements.password.digest";
 
     /**
      * The algorithm for hashing passwords.
@@ -51,27 +51,6 @@ public interface Constants {
      * The default property file to configure the server.
      */
     String DEFAULT_PROPERTIES_FILE = "elements.properties";
-
-    /**
-     * The system property which defines the configuration file path
-     *
-     * @deprecated Use the file specified in {@link #PROPERTIES_FILE}
-     */
-    @Deprecated
-    String PROPERTIES_FILE_OLD = "dev.getelements.elements.configuration.properties";
-
-    /**
-     * The (deprecated) default property file to configure the server
-     *
-     * @deprecated Use the file specified in {@link #DEFAULT_PROPERTIES_FILE}
-     */
-    @Deprecated
-    String DEFAULT_PROPERTIES_FILE_OLD = "socialengine-configuration.properties";
-
-    /**
-     * The DNS Name for the running instance of the application.
-     */
-    String DNS_NAME = "dev.getelements.elements.dns.name";
 
     /**
      * The web API prefix.  This is the location from which all API requests are served relative to

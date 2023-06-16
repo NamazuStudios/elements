@@ -7,7 +7,7 @@ import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
 import dev.getelements.elements.guice.StandardServletServicesModule;
 import dev.getelements.elements.rest.guice.RestAPIJerseyModule;
 import dev.getelements.elements.service.guice.NotificationServiceModule;
-import dev.getelements.elements.servlet.security.HttpContextRoot;
+import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;

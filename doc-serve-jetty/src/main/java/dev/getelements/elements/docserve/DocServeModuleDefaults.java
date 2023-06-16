@@ -4,8 +4,6 @@ import dev.getelements.elements.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.Constants.HTTP_PATH_PREFIX;
-import static dev.getelements.elements.Constants.HTTP_PORT;
 import static dev.getelements.elements.rt.Constants.*;
 import static dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
@@ -26,8 +24,6 @@ public class DocServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final var properties = new Properties();
-        properties.setProperty(HTTP_PORT, "8085");
-        properties.setProperty(HTTP_PATH_PREFIX, "doc");
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));

@@ -91,7 +91,7 @@
         <module>rest-api-test</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
-        <module>doc-serve</module>
+        <module>doc-serve-jetty</module>
         <module>doclet</module>
         <module>mongo-test</module>
         <module>formidium-jetty</module>
@@ -280,6 +280,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rest-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>doc-serve-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

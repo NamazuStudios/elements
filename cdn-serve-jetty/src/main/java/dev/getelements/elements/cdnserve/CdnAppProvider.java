@@ -2,7 +2,6 @@ package dev.getelements.elements.cdnserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import dev.getelements.elements.Constants;
 import dev.getelements.elements.cdnserve.guice.CdnGitServletModule;
 import dev.getelements.elements.cdnserve.guice.CdnGuiceResourceConfig;
 import dev.getelements.elements.cdnserve.guice.CdnJerseyModule;
@@ -11,7 +10,7 @@ import dev.getelements.elements.codeserve.GitSecurityModule;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.servlet.security.HttpContextRoot;
+import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
