@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
-    <artifactId>code-serve-guice</artifactId>
+    <artifactId>common-git-guice</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>code-serve-guice</name>
 
@@ -28,7 +28,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>code-serve</artifactId>
+            <artifactId>common-git</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

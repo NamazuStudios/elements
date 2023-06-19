@@ -59,10 +59,10 @@ public class RestAPIAppProvider extends AbstractLifeCycle implements AppProvider
 
         final var injector = getInjector().createChildInjector(
             new RestAPIJerseyModule(),
-            new NotificationServiceModule(),
-            new StandardServletSecurityModule(),
-            new StandardServletServicesModule(),
-            new StandardServletRedissonServicesModule()
+            new NotificationServiceModule()
+//            new StandardServletSecurityModule(),
+//            new StandardServletServicesModule(),
+//            new StandardServletRedissonServicesModule()
         );
 
         final var servletContextHandler = new ServletContextHandler();

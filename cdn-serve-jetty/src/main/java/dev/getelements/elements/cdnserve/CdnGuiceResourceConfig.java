@@ -1,4 +1,4 @@
-package dev.getelements.elements.cdnserve.guice;
+package dev.getelements.elements.cdnserve;
 
 import com.google.inject.Injector;
 import dev.getelements.elements.rest.VersionResource;

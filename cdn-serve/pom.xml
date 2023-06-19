@@ -38,7 +38,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>code-serve</artifactId>
+            <artifactId>common-git</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

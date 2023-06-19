@@ -75,8 +75,8 @@
         <module>rt-jersey-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>docker</module>
-        <module>code-serve</module>
-        <module>code-serve-guice</module>
+        <module>common-git</module>
+        <module>common-git-guice</module>
         <module>code-serve-jetty</module>
         <module>common-jetty</module>
         <module>cdn-serve</module>
@@ -290,6 +290,16 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>app-node</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>common-git</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>common-git-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

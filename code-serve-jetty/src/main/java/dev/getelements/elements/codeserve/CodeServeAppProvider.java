@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 
+import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 import static java.util.EnumSet.allOf;
 
 public class CodeServeAppProvider extends AbstractLifeCycle implements AppProvider {
@@ -38,8 +39,8 @@ public class CodeServeAppProvider extends AbstractLifeCycle implements AppProvid
     protected void doStart() {
 
         final var injector = getInjector().createChildInjector(
-                new CodeServeGitServletModule(),
-                new GitSecurityModule(),
+                new GitServletModule(),
+                new CodeServeStorageModule(),
                 new LuaBootstrapResourcesModule()
         );
 

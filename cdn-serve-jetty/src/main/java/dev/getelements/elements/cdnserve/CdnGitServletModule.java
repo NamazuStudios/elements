@@ -1,4 +1,4 @@
-package dev.getelements.elements.cdnserve.guice;
+package dev.getelements.elements.cdnserve;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.ServletModule;

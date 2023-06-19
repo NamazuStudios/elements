@@ -2,10 +2,6 @@ package dev.getelements.elements.cdnserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import dev.getelements.elements.cdnserve.guice.CdnGitServletModule;
-import dev.getelements.elements.cdnserve.guice.CdnGuiceResourceConfig;
-import dev.getelements.elements.cdnserve.guice.CdnJerseyModule;
-import dev.getelements.elements.cdnserve.guice.CdnServeSecurityModule;
 import dev.getelements.elements.codeserve.GitSecurityModule;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.InternalException;
@@ -90,8 +86,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     private void startManageApp() {
 
         final var injector = getInjector().createChildInjector(
-                new CdnJerseyModule(),
-                new CdnServeSecurityModule()
+                new CdnJerseyModule()
         );
 
         final var manageContext = getHttpContextRoot().normalize(MANAGE_CONTEXT);
