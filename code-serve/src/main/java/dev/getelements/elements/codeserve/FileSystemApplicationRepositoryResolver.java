@@ -1,7 +1,6 @@
 package dev.getelements.elements.codeserve;
 
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.rt.git.Constants;
 import dev.getelements.elements.rt.id.ApplicationId;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
@@ -9,16 +8,10 @@ import org.eclipse.jgit.transport.ServiceMayNotContinueException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.util.function.Consumer;
 
-import static dev.getelements.elements.rt.git.Constants.GIT_STORAGE_DIRECTORY;
-import static dev.getelements.elements.rt.git.FilesystemGitLoader.*;
+import static dev.getelements.elements.rt.git.FilesystemGitLoader.getBareStorageDirectory;
 
 /**
  * This loads an instance of {@link Repository} from a place on the filesystem.
@@ -49,6 +42,10 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
 
     private final File getStorageDirectoryForApplication(final Application application) throws ServiceMayNotContinueException {
 
+        if (getGitStorageDirectory() == null) {
+            throw new IllegalStateException();
+        }
+
         final var applicationId = ApplicationId.forUniqueName(application.getId());
         final var repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), applicationId);
 
@@ -66,8 +63,7 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
         return gitStorageDirectory;
     }
 
-    @Inject
-    public void setGitStorageDirectory(@Named(GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
+    public void initDirectory(final File gitStorageDirectory) {
 
         if (gitStorageDirectory.mkdirs()) {
             logger.info("Created git storage directory {}", gitStorageDirectory);

@@ -5,6 +5,6 @@ public interface Constants {
     /**
      * The storage directory for the git repositories housing the application's script storage.
      */
-    String GIT_STORAGE_DIRECTORY = "dev.getelements.elements.rt.git.storage.directory";
+    String GIT_SCRIPT_STORAGE_DIRECTORY = "dev.getelements.elements.rt.git.script.storage.directory";
 
 }

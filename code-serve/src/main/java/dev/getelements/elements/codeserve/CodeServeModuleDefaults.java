@@ -4,7 +4,7 @@ import dev.getelements.elements.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.rt.git.Constants.GIT_STORAGE_DIRECTORY;
+import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 
 /**
  * Module defaults for the code server.
@@ -16,7 +16,7 @@ public class CodeServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final var properties = new Properties();
-        properties.put(GIT_STORAGE_DIRECTORY, "script-repos/git");
+        properties.put(GIT_SCRIPT_STORAGE_DIRECTORY, "script-repos/git");
         return properties;
     }
 

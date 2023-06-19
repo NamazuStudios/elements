@@ -8,7 +8,7 @@ import static dev.getelements.elements.remote.jeromq.JeroMQNode.JEROMQ_NODE_MAX_
 import static dev.getelements.elements.remote.jeromq.JeroMQNode.JEROMQ_NODE_MIN_CONNECTIONS;
 import static dev.getelements.elements.rt.Constants.*;
 import static dev.getelements.elements.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
-import static dev.getelements.elements.rt.git.Constants.GIT_STORAGE_DIRECTORY;
+import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 import static dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
 import static dev.getelements.elements.rt.jeromq.ZContextProvider.MAX_SOCKETS;
@@ -57,7 +57,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(MAX_SOCKETS, "500000");
-        properties.setProperty(GIT_STORAGE_DIRECTORY, "script-repos/git");
+        properties.setProperty(GIT_SCRIPT_STORAGE_DIRECTORY, "script-repos/git");
         properties.setProperty(SRV_QUERY, "_elements._tcp.internal");
         properties.setProperty(SRV_SERVERS, "");
         properties.setProperty(SRV_AUTHORITATIVE, "false");

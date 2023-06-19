@@ -31,17 +31,16 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static dev.getelements.elements.rt.git.Constants.GIT_STORAGE_DIRECTORY;
+import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static java.nio.file.Files.*;
 
 /**
  * A special class which will load an {@link ApplicationId}'s code to a local temporary directory where it can be
  * processed and run.
  *
  * The source of the {@link org.eclipse.jgit.lib.Repository} is a path on the file system, and therefore it clones from
- * a git repository stored elsewhere on disk.  This is specified using the {@link Constants#GIT_STORAGE_DIRECTORY}
+ * a git repository stored elsewhere on disk.  This is specified using the {@link Constants#GIT_SCRIPT_STORAGE_DIRECTORY}
  * configuration parameter.
  *
  * Note that the {@link GitLoader} interface essentially calls for unpacking of the {@link ApplicationId} code to a
@@ -258,7 +257,7 @@ public class FilesystemGitLoader implements GitLoader {
     }
 
     @Inject
-    public void setGitStorageDirectory(@Named(GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
+    public void setGitStorageDirectory(@Named(GIT_SCRIPT_STORAGE_DIRECTORY) File gitStorageDirectory) {
         this.gitStorageDirectory = gitStorageDirectory;
     }
 

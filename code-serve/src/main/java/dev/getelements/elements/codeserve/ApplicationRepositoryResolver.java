@@ -13,7 +13,7 @@ public interface ApplicationRepositoryResolver {
 
     /**
      * Gets the {@link Repository} for the supplied {@link Application}.  This simply returns
-     * the instance of {@link Repository}.  It safe ot assume this method will be called after
+     * the instance of {@link Repository}.  It is safe to assume this method will be called after
      * the necessary security checks, therefore any security checking in this method would
      * be redundant.
      *

@@ -10,6 +10,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
+ * The GitLoader takes a clone of an existing git repository, and allows downstream code access to that directory. In
+ * addition to the clone process, this provides a {@link File} indicating the root of the cloned directory. When
+ * loading, this will ensure the local copy of the code is available to the downstream code.
+ *
  * Created by patricktwohig on 8/22/17.
  */
 public interface GitLoader {
