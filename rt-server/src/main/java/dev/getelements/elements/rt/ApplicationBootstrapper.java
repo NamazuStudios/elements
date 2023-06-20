@@ -48,6 +48,7 @@ public interface ApplicationBootstrapper {
     /**
      * Created by patricktwohig on 8/22/17.
      */
+    @FunctionalInterface
     interface BootstrapResources {
 
         /**
@@ -58,6 +59,11 @@ public interface ApplicationBootstrapper {
          * @return a {@link Map<Path, Supplier<InputStream>>} instance
          */
         Map<Path, Supplier<InputStream>> getBootstrapResources();
+
+        /**
+         * Bootstraps a bare repository.
+         */
+        BootstrapResources BARE = Map::of;
 
     }
 

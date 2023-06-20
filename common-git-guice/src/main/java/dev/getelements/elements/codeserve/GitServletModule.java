@@ -12,13 +12,14 @@ import javax.servlet.http.HttpServletRequest;
  * Created by patricktwohig on 8/2/17.
  */
 public class GitServletModule extends ServletModule {
+
     @Override
     protected void configureServlets() {
 
         bind(HttpServletBasicAuthFilter.class).asEagerSingleton();
         bind(GitServlet.class).toProvider(GitServletProvider.class).asEagerSingleton();
 
-        bind(new TypeLiteral<RepositoryResolver<HttpServletRequest>>(){}).to(CodeServeRepositoryResolver.class);
+        bind(new TypeLiteral<RepositoryResolver<HttpServletRequest>>(){}).to(HttpServletRepositoryResolver.class);
 
         // Serving Configuration.
         serve("/git/*").with(GitServlet.class);
@@ -27,4 +28,5 @@ public class GitServletModule extends ServletModule {
         filter("/git/*").through(HttpServletBasicAuthFilter.class);
 
     }
+
 }

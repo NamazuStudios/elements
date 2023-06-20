@@ -2,7 +2,6 @@ package dev.getelements.elements.codeserve;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import dev.getelements.elements.rt.ApplicationBootstrapper;
 import dev.getelements.elements.rt.ApplicationBootstrapper.BootstrapResources;
 import dev.getelements.elements.rt.id.ApplicationId;
 import dev.getelements.elements.rt.lua.LuaBootstrapResources;

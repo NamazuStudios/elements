@@ -1,14 +1,11 @@
-package dev.getelements.elements.cdnserve.resolver;
+package dev.getelements.elements.codeserve;
 
-import dev.getelements.elements.codeserve.ApplicationRepositoryResolver;
-import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
-import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.rt.git.GitLoader;
+import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.rt.ApplicationBootstrapper;
+import dev.getelements.elements.rt.id.ApplicationId;
 import dev.getelements.elements.service.ApplicationService;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ServiceMayNotContinueException;
@@ -21,22 +18,21 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 
 import static dev.getelements.elements.model.user.User.Level.SUPERUSER;
 
 /**
- * Created by garrettmcspadden on 12/21/20.
+ * Created by patricktwohig on 8/1/17.
  */
-public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
+public class HttpServletRepositoryResolver implements RepositoryResolver<HttpServletRequest> {
 
-    private static final Logger logger = LoggerFactory.getLogger(CdnServeRepositoryResolver.class);
-
-    private GitLoader gitLoader;
+    private static final Logger logger = LoggerFactory.getLogger(HttpServletRepositoryResolver.class);
 
     private Provider<User> userProvider;
 
     private ApplicationService applicationService;
+
+    private ApplicationBootstrapper applicationBootstrapper;
 
     private ApplicationRepositoryResolver applicationRepositoryResolver;
 
@@ -72,11 +68,36 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
         }
 
         try {
-            logger.info("Resolving content repository for application {}", application.getId());
+
+            logger.info("Resolving repository for application {}", application.getId());
+
             return getApplicationRepositoryResolver().resolve(application, r -> {
-                getGitLoader().performInGit(application.getId(), (g, f) -> doInit(user, g));
-                logger.info("Created content repository for application {} ({})", application.getName(), application.getId());
+
+                logger.info("Created repository for application {} ({})", application.getName(), application.getId());
+
+                logger.info("Bootstrapping application repository {} ({})", application.getName(), application.getId());
+
+                final var userMetadata = new ApplicationBootstrapper.BootstrapUserMetadata() {
+
+                    @Override
+                    public String getName() {
+                        return user.getName();
+                    }
+
+                    @Override
+                    public String getEmail() {
+                        return user.getEmail();
+                    }
+
+                };
+
+                final var applicationId = ApplicationId.forUniqueName(application.getId());
+                getApplicationBootstrapper().bootstrap(userMetadata, applicationId);
+
+                logger.info("Bootstrapped application repository {} ({})", application.getName(), application.getId());
+
             });
+
         } catch (RepositoryNotFoundException   |
                  ServiceNotAuthorizedException |
                  ServiceNotEnabledException    |
@@ -89,45 +110,13 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
 
     }
 
-    private void doInit(final User user, final Git git) {
-        checkMainBranch(git);
-        commit(user, git);
-        push(git);
+    public ApplicationBootstrapper getApplicationBootstrapper() {
+        return applicationBootstrapper;
     }
 
-    private void checkMainBranch(final Git git) {
-        try {
-
-            final String branch = git.getRepository().getBranch();
-
-            if (GitLoader.DEFAULT_MAIN_BRANCH.equals(branch)) {
-                logger.info("Using git branch {}", branch);
-            } else {
-                throw new InternalException("Invalid branch checked out: " + branch);
-            }
-
-        } catch (IOException ex) {
-            throw new InternalException(ex);
-        }
-    }
-
-    private void commit(final User user, final Git git) {
-        try {
-            git.commit()
-                    .setMessage("Initial Commit")
-                    .setCommitter(user.getName(), user.getEmail())
-                    .call();
-        } catch (GitAPIException ex) {
-            throw new InternalException(ex);
-        }
-    }
-
-    private void push(final Git git) {
-        try {
-            git.push().call();
-        } catch (GitAPIException ex) {
-            throw new InternalException(ex);
-        }
+    @Inject
+    public void setApplicationBootstrapper(ApplicationBootstrapper applicationBootstrapper) {
+        this.applicationBootstrapper = applicationBootstrapper;
     }
 
     public Provider<User> getUserProvider() {
@@ -155,15 +144,6 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
     @Inject
     public void setApplicationRepositoryResolver(ApplicationRepositoryResolver applicationRepositoryResolver) {
         this.applicationRepositoryResolver = applicationRepositoryResolver;
-    }
-
-    public GitLoader getGitLoader() {
-        return gitLoader;
-    }
-
-    @Inject
-    public void setGitLoader(GitLoader gitLoader) {
-        this.gitLoader = gitLoader;
     }
 
 }

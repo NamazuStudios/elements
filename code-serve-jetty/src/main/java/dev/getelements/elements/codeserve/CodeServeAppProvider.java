@@ -40,6 +40,7 @@ public class CodeServeAppProvider extends AbstractLifeCycle implements AppProvid
 
         final var injector = getInjector().createChildInjector(
                 new GitServletModule(),
+                new GitSecurityModule(),
                 new CodeServeStorageModule(),
                 new LuaBootstrapResourcesModule()
         );
