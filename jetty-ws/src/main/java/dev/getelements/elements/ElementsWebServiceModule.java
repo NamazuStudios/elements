@@ -22,12 +22,12 @@ public class ElementsWebServiceModule extends AbstractModule {
 
     static {
         final var providers = new EnumMap<ElementsWebService, Class<? extends AppProvider>>(ElementsWebService.class);
-//        providers.put(api, RestAPIAppProvider.class);
-//        providers.put(cdn, CdnAppProvider.class);
+        providers.put(api, RestAPIAppProvider.class);
+        providers.put(cdn, CdnAppProvider.class);
         providers.put(app, DispatcherAppProvider.class);
-//        providers.put(doc, DocAppProvider.class);
-//        providers.put(code, CodeServeAppProvider.class);
-//        providers.put(formidium_proxy, FormidiumAppProvider.class);
+        providers.put(doc, DocAppProvider.class);
+        providers.put(code, CodeServeAppProvider.class);
+        providers.put(formidium_proxy, FormidiumAppProvider.class);
         PROVIDERS = Collections.unmodifiableMap(providers);
     }
 

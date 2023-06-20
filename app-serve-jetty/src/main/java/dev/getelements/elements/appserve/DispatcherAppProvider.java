@@ -43,8 +43,6 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private final ConcurrentMap<String, Injector> applicationInjectorMap = new ConcurrentHashMap<>();
 
-    private Instance instance;
-
     private Injector injector;
 
     private ApplicationDao applicationDao;
@@ -61,14 +59,10 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStart() {
-
-        getInstance().start();
-
         getApplicationDao()
                 .getActiveApplications()
                 .getObjects()
                 .forEach(this::deploy);
-
     }
 
     private void deploy(final Application application) {
@@ -132,15 +126,11 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     }
     @Override
     protected void doStop() throws Exception {
-
         applicationInjectorMap
             .values()
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
-
-        getInstance().close();
-
     }
 
     private void shutdown(final Context context) {
@@ -176,15 +166,6 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     @Override
     public void setDeploymentManager(DeploymentManager deploymentManager) {
         this.deploymentManager = deploymentManager;
-    }
-
-    public Instance getInstance() {
-        return instance;
-    }
-
-    @Inject
-    public void setInstance(final Instance instance) {
-        this.instance = instance;
     }
 
     public HttpContextRoot getHttpContextRoot() {
