@@ -1,13 +1,11 @@
 package dev.getelements.elements.servlet.security;
 
-import dev.getelements.elements.exception.security.AuthorizationHeaderParseException;
+import dev.getelements.elements.Headers;
 import dev.getelements.elements.exception.BaseException;
-import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.UnauthorizedException;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.security.AuthenticatedRequest;
 import dev.getelements.elements.security.AuthorizationHeader;
-import dev.getelements.elements.security.BasicAuthorizationHeader;
 import dev.getelements.elements.service.UsernamePasswordAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +14,6 @@ import javax.inject.Inject;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 import static dev.getelements.elements.exception.StatusMapping.map;
 import static dev.getelements.elements.security.AuthorizationHeader.AUTH_TYPE_BASIC;
@@ -27,11 +24,6 @@ import static dev.getelements.elements.security.AuthorizationHeader.AUTH_TYPE_BA
 public class HttpServletBasicAuthFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpServletBasicAuthFilter.class);
-
-    /**
-     * Constant for the WWW-Authenticate header.
-     */
-    public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 
     private UsernamePasswordAuthService usernamePasswordAuthService;
 
@@ -52,9 +44,9 @@ public class HttpServletBasicAuthFilter implements Filter {
             filterChain.doFilter(authorized, servletResponse);
         } catch (UnauthorizedException ex) {
             final int status = map(ex);
-            httpServletResponse.setHeader(WWW_AUTHENTICATE, AUTH_TYPE_BASIC);
+            httpServletResponse.setHeader(Headers.WWW_AUTHENTICATE, AUTH_TYPE_BASIC);
             httpServletResponse.setStatus(status);
-            logger.info("Request unauthorized.  Specifying auth type {} in {}", AUTH_TYPE_BASIC, WWW_AUTHENTICATE);
+            logger.info("Request unauthorized.  Specifying auth type {} in {}", AUTH_TYPE_BASIC, Headers.WWW_AUTHENTICATE);
         } catch (BaseException ex) {
             final int status = map(ex);
             httpServletResponse.setStatus(status);

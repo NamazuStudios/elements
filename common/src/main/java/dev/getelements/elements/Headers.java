@@ -98,4 +98,8 @@ public interface Headers {
         AC_ALLOW_ALLOW_METHODS
     );
 
+    /**
+     * Constant for the WWW-Authenticate header.
+     */
+    String WWW_AUTHENTICATE = "WWW-Authenticate";
 }

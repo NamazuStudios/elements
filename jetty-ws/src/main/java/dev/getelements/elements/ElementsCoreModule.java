@@ -76,11 +76,6 @@ public class ElementsCoreModule extends AbstractModule {
         install(new JerseyHttpClientModule());
         install(new RandomInstanceIdModule());
 
-        install(new ServletModule());
-        install(new StandardServletSecurityModule());
-        install(new StandardServletServicesModule());
-        install(new StandardServletRedissonServicesModule());
-
         bind(Server.class).toProvider(DynamicMultiAppServerProvider.class);
         bind(ServletContextHandler.class).toProvider(ServletContextHandlerProvider.class);
 
