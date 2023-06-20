@@ -2,6 +2,12 @@ package dev.getelements.elements.codeserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
+import dev.getelements.elements.git.GitSecurityModule;
+import dev.getelements.elements.git.GitServletModule;
+import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
+import dev.getelements.elements.guice.StandardServletServicesModule;
+import dev.getelements.elements.rt.git.GitApplicationBootstrapperModule;
+import dev.getelements.elements.rt.lua.LuaBootstrapResources;
 import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -16,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 
-import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 import static java.util.EnumSet.allOf;
 
 public class CodeServeAppProvider extends AbstractLifeCycle implements AppProvider {
@@ -42,7 +47,9 @@ public class CodeServeAppProvider extends AbstractLifeCycle implements AppProvid
                 new GitServletModule(),
                 new GitSecurityModule(),
                 new CodeServeStorageModule(),
-                new LuaBootstrapResourcesModule()
+                new StandardServletServicesModule(),
+                new StandardServletRedissonServicesModule(),
+                new GitApplicationBootstrapperModule().withResourcesFunction(aid -> new LuaBootstrapResources())
         );
 
         final var path = getHttpContextRoot().normalize(CODE_SERVE_CONTEXT_ROOT);

@@ -6,6 +6,7 @@ import dev.getelements.elements.exception.UnauthorizedException;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.security.AuthenticatedRequest;
 import dev.getelements.elements.security.AuthorizationHeader;
+import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.service.UsernamePasswordAuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +86,7 @@ public class HttpServletBasicAuthFilter implements Filter {
     }
 
     @Inject
-    public void setUsernamePasswordAuthService(UsernamePasswordAuthService usernamePasswordAuthService) {
+    public void setUsernamePasswordAuthService(@Unscoped UsernamePasswordAuthService usernamePasswordAuthService) {
         this.usernamePasswordAuthService = usernamePasswordAuthService;
     }
 

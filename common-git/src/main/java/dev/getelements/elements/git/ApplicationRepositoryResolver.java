@@ -1,4 +1,4 @@
-package dev.getelements.elements.codeserve;
+package dev.getelements.elements.git;
 
 import dev.getelements.elements.model.application.Application;
 import org.eclipse.jgit.lib.Repository;

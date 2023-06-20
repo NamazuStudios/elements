@@ -1,6 +1,5 @@
 package dev.getelements.elements.appnode;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -13,11 +12,10 @@ import dev.getelements.elements.dao.mongo.guice.MongoSearchModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
-import dev.getelements.elements.rt.git.FilesystemGitLoaderModule;
+import dev.getelements.elements.rt.git.FilesystemScriptStorageGitLoaderModule;
 import dev.getelements.elements.rt.guice.ResourceScope;
 import dev.getelements.elements.rt.guice.SimpleExecutorsModule;
 import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
-import dev.getelements.elements.rt.jersey.OctetStreamJsonMessageBodyReader;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.SimpleWatchdogServiceModule;
 import dev.getelements.elements.rt.remote.Worker;
@@ -29,16 +27,9 @@ import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.rt.remote.watchdog.WatchdogService;
 import dev.getelements.elements.service.guice.*;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
-import dev.getelements.elements.rt.util.AppleDateFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
-
-import java.text.DateFormat;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class ApplicationNode {
 
@@ -93,7 +84,7 @@ public class ApplicationNode {
             new MongoDaoModule(),
             new ValidationModule(),
             new MongoSearchModule(),
-            new FilesystemGitLoaderModule(),
+            new FilesystemScriptStorageGitLoaderModule(),
             new WorkerInstanceModule(),
             new FirebaseAppFactoryModule(),
             new GuiceStandardNotificationFactoryModule(),

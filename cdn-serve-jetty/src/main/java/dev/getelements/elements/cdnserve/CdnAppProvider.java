@@ -2,11 +2,15 @@ package dev.getelements.elements.cdnserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import dev.getelements.elements.codeserve.GitSecurityModule;
-import dev.getelements.elements.codeserve.GitServletModule;
+import dev.getelements.elements.git.GitSecurityModule;
+import dev.getelements.elements.git.GitServletModule;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.InternalException;
+import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
+import dev.getelements.elements.guice.StandardServletSecurityModule;
+import dev.getelements.elements.guice.StandardServletServicesModule;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.rt.git.GitApplicationBootstrapperModule;
 import dev.getelements.elements.servlet.HttpContextRoot;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -75,7 +79,10 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         final var injector = getInjector().createChildInjector(
                 new GitServletModule(),
                 new GitSecurityModule(),
-                new CdnServeStorageModule()
+                new CdnServeStorageModule(),
+                new StandardServletServicesModule(),
+                new StandardServletRedissonServicesModule(),
+                new GitApplicationBootstrapperModule().withBareRepository()
         );
 
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
@@ -93,7 +100,12 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var injector = getInjector().createChildInjector(
                 new CdnJerseyModule(),
-                new CdnServicesModule()
+                new CdnServicesModule(),
+                new CdnServeStorageModule(),
+                new StandardServletSecurityModule(),
+                new StandardServletServicesModule(),
+                new StandardServletRedissonServicesModule(),
+                new GitApplicationBootstrapperModule().withBareRepository()
         );
 
         final var manageContext = getHttpContextRoot().normalize(MANAGE_CONTEXT);

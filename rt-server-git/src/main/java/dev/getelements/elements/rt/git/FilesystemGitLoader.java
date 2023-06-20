@@ -17,8 +17,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.Collection;
@@ -31,7 +29,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 import static java.lang.String.format;
 import static java.lang.String.join;
 
@@ -256,8 +253,7 @@ public class FilesystemGitLoader implements GitLoader {
         return gitStorageDirectory;
     }
 
-    @Inject
-    public void setGitStorageDirectory(@Named(GIT_SCRIPT_STORAGE_DIRECTORY) File gitStorageDirectory) {
+    public void setGitStorageDirectory(File gitStorageDirectory) {
         this.gitStorageDirectory = gitStorageDirectory;
     }
 

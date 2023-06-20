@@ -11,6 +11,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.rt.git.GitLoader;
 import dev.getelements.elements.service.ApplicationService;
+import dev.getelements.elements.service.Unscoped;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -234,7 +235,7 @@ public class SuperuserDeploymentService implements DeploymentService {
     }
 
     @Inject
-    public void setApplicationService(ApplicationService applicationService) {
+    public void setApplicationService(@Unscoped ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 

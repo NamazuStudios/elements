@@ -2,8 +2,8 @@
 //
 //import com.google.inject.TypeLiteral;
 //import com.google.inject.servlet.ServletModule;
-//import dev.getelements.elements.codeserve.GitServletProvider;
-//import dev.getelements.elements.codeserve.HttpServletRepositoryResolver;
+//import dev.getelements.elements.git.GitServletProvider;
+//import dev.getelements.elements.git.HttpServletRepositoryResolver;
 //import dev.getelements.elements.servlet.security.HttpServletBasicAuthFilter;
 //import dev.getelements.elements.servlet.security.HttpServletGlobalSecretHeaderFilter;
 //import org.eclipse.jgit.http.server.GitServlet;

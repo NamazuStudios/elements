@@ -1,6 +1,8 @@
-package dev.getelements.elements.codeserve;
+package dev.getelements.elements.git;
 
 import com.google.inject.PrivateModule;
+import dev.getelements.elements.git.ApplicationRepositoryResolver;
+import dev.getelements.elements.git.FileSystemApplicationRepositoryResolver;
 
 /**
  * Created by patricktwohig on 8/2/17.

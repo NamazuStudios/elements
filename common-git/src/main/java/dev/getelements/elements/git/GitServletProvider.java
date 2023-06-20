@@ -1,4 +1,4 @@
-package dev.getelements.elements.codeserve;
+package dev.getelements.elements.git;
 
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;

@@ -1,11 +1,12 @@
-package dev.getelements.elements.codeserve;
+package dev.getelements.elements.git;
 
 import dev.getelements.elements.exception.NotFoundException;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.rt.ApplicationBootstrapper;
 import dev.getelements.elements.rt.id.ApplicationId;
 import dev.getelements.elements.service.ApplicationService;
+import dev.getelements.elements.service.Unscoped;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ServiceMayNotContinueException;
@@ -133,7 +134,7 @@ public class HttpServletRepositoryResolver implements RepositoryResolver<HttpSer
     }
 
     @Inject
-    public void setApplicationService(ApplicationService applicationService) {
+    public void setApplicationService(@Unscoped ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 

@@ -1,7 +1,10 @@
-package dev.getelements.elements.codeserve;
+package dev.getelements.elements.git;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.ServletModule;
+import com.google.inject.servlet.ServletScopes;
+import dev.getelements.elements.git.GitServletProvider;
+import dev.getelements.elements.git.HttpServletRepositoryResolver;
 import dev.getelements.elements.servlet.security.HttpServletBasicAuthFilter;
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
@@ -19,7 +22,8 @@ public class GitServletModule extends ServletModule {
         bind(HttpServletBasicAuthFilter.class).asEagerSingleton();
         bind(GitServlet.class).toProvider(GitServletProvider.class).asEagerSingleton();
 
-        bind(new TypeLiteral<RepositoryResolver<HttpServletRequest>>(){}).to(HttpServletRepositoryResolver.class);
+        bind(new TypeLiteral<RepositoryResolver<HttpServletRequest>>(){})
+                .to(HttpServletRepositoryResolver.class);
 
         // Serving Configuration.
         serve("/git/*").with(GitServlet.class);
