@@ -1,5 +1,7 @@
 package dev.getelements.elements.service;
 
+import dev.getelements.elements.exception.InternalException;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
@@ -52,11 +54,22 @@ public class FirebaseTestClient {
     }
 
     public void deleteAccount(final FirebaseDeleteAccountRequest request) {
-        client
+
+        final var response = client
             .target("https://identitytoolkit.googleapis.com/v1/accounts:delete")
             .queryParam("key", API_KEY)
             .request()
-            .post(entity(request, APPLICATION_JSON_TYPE), Void.class);
+            .post(entity(request, APPLICATION_JSON_TYPE));
+
+        final var status = response.getStatus();
+
+        if (status != 200) {
+            throw new InternalException(
+                    "Got response from firebase: " + status +
+                    "(" + response.readEntity(String.class)+ ")"
+            );
+        }
+
     }
 
 }
