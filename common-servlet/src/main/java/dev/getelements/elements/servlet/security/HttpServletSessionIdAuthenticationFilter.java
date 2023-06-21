@@ -81,7 +81,7 @@ public class HttpServletSessionIdAuthenticationFilter implements Filter {
                 getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
 
         final var user = session.getUser();
-        final var profile = getProfile(request, session);
+        final var profile = session.getProfile();
         final var application = session.getApplication();
 
         request.setAttribute(SESSION_ATTRIBUTE, session);
