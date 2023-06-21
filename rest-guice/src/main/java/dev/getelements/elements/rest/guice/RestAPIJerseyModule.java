@@ -1,24 +1,20 @@
 package dev.getelements.elements.rest.guice;
 
-import com.google.inject.servlet.ServletModule;
-import dev.getelements.elements.rest.*;
+import dev.getelements.elements.guice.BaseServletModule;
+import dev.getelements.elements.rest.MethodOverrideFilter;
+import dev.getelements.elements.rest.ShortLinkForwardingFilter;
+import dev.getelements.elements.rest.VersionResource;
 import dev.getelements.elements.rest.support.DefaultExceptionMapper;
 import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
-import dev.getelements.elements.servlet.security.HttpPathUtils;
-import dev.getelements.elements.servlet.security.HttpServletCORSFilter;
-import dev.getelements.elements.servlet.security.HttpServletGlobalSecretHeaderFilter;
-import dev.getelements.elements.servlet.security.HttpServletSessionIdAuthenticationFilter;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.util.Map;
 
-import static dev.getelements.elements.servlet.security.HttpPathUtils.normalize;
-
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public class RestAPIJerseyModule extends ServletModule {
+public class RestAPIJerseyModule extends BaseServletModule {
 
     @Override
     protected final void configureServlets() {
@@ -35,15 +31,11 @@ public class RestAPIJerseyModule extends ServletModule {
         // Setup servlet and servlet-related features.
 
         bind(ServletContainer.class).asEagerSingleton();
-        bind(HttpServletCORSFilter.class).asEagerSingleton();
-        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
-        bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
 
-        final var params = Map.of("javax.ws.rs.Application", GuiceResourceConfig.class.getName());
+        final var params = Map.of("javax.ws.rs.Application", RestAPIGuiceResourceConfig.class.getName());
         serve("/*").with(ServletContainer.class, params);
-        filter("/*").through(HttpServletCORSFilter.class);
-        filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
-        filter("/*").through(HttpServletSessionIdAuthenticationFilter.class);
+        useStandardSecurityFilters();
 
     }
+
 }

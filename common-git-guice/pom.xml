@@ -19,27 +19,30 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common-servlet</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-servlet-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-servlet-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common-git</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
-            <version>${guice.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -50,42 +53,34 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-git</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-git-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-cluster</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-cluster-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service-redis</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-dao</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.vyarus</groupId>
@@ -105,7 +100,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

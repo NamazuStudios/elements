@@ -12,10 +12,24 @@ import dev.getelements.elements.exception.security.SessionExpiredException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.compile;
 
 public class JWTCredentials {
 
+    private static final Pattern JWT_PATTERN = compile("(^[\\w-]*\\.[\\w-]*\\.[\\w-]*$)");
     private final DecodedJWT decoded;
+
+    /**
+     * Checks if a set of credentials is a valid JWT.
+     *
+     * @param credentials the credentials
+     * @return true if JWT, or false otherwise.
+     */
+    public static boolean isJwt(final String credentials) {
+        return JWT_PATTERN.matcher(credentials).matches();
+    }
 
     /**
      * Generic JWT Credentials.

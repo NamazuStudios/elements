@@ -184,6 +184,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
+                <artifactId>guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
                 <artifactId>common-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -200,6 +205,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>service-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -235,6 +245,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-cluster</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>rt-http-servlet</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -327,6 +342,16 @@
                 <artifactId>jetty-ws</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>rt-server-git</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>rt-server-git-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Third-party Dependencies -->
 
@@ -358,6 +383,11 @@
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-multibindings</artifactId>
+                <version>${guice.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
             </dependency>
             <dependency>
@@ -414,6 +444,12 @@
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>${jersey.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${javax.servlet.api.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->

@@ -3,10 +3,8 @@ package dev.getelements.elements.rest.guice;
 import com.google.inject.Injector;
 import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
 import dev.getelements.elements.rt.exception.InternalException;
-import dev.getelements.elements.rt.jersey.GenericMultipartFeature;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
@@ -21,14 +19,14 @@ import javax.servlet.ServletContext;
  * Created by patricktwohig on 3/20/15.
  *
  */
-public class GuiceResourceConfig extends ResourceConfig {
+public class RestAPIGuiceResourceConfig extends ResourceConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(GuiceResourceConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(RestAPIGuiceResourceConfig.class);
 
-    public static final String INJECTOR_ATTRIBUTE_NAME = GuiceResourceConfig.class.getName() + ".Injector";
+    public static final String INJECTOR_ATTRIBUTE_NAME = RestAPIGuiceResourceConfig.class.getName() + ".Injector";
 
     @Inject
-    public GuiceResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
+    public RestAPIGuiceResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
 
         register(SwaggerSerializers.class);
         register(EnhancedApiListingResource.class);

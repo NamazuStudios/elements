@@ -1,6 +1,8 @@
 package dev.getelements.elements.formidium;
 
 import com.google.inject.servlet.ServletModule;
+import dev.getelements.elements.guice.BaseServletModule;
+import dev.getelements.elements.servlet.security.HttpServletBearerAuthenticationFilter;
 import dev.getelements.elements.servlet.security.HttpServletCORSFilter;
 import dev.getelements.elements.servlet.security.HttpServletGlobalSecretHeaderFilter;
 import dev.getelements.elements.servlet.security.HttpServletSessionIdAuthenticationFilter;
@@ -9,7 +11,7 @@ import java.util.Map;
 
 import static dev.getelements.elements.servlet.security.HttpServletCORSFilter.INTERCEPT;
 
-public class FormidiumServletModule extends ServletModule {
+public class FormidiumServletModule extends BaseServletModule {
 
     private final String formidiumApiUrl;
 
@@ -21,9 +23,6 @@ public class FormidiumServletModule extends ServletModule {
     protected void configureServlets() {
 
         bind(FormidiumProxyServlet.class).asEagerSingleton();
-        bind(HttpServletCORSFilter.class).asEagerSingleton();
-        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
-        bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
 
         final var params = Map.of(
                 "prefix", "/",
@@ -39,9 +38,8 @@ public class FormidiumServletModule extends ServletModule {
                 INTERCEPT, "true"
         ));
 
-        filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
-        filter("/*").through(HttpServletSessionIdAuthenticationFilter.class);
-
+        useStandardSecurityFilters();
+        
     }
 
 }

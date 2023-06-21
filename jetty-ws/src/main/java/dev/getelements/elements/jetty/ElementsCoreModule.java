@@ -1,5 +1,6 @@
 package dev.getelements.elements.jetty;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;

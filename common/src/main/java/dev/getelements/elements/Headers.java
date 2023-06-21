@@ -102,4 +102,5 @@ public interface Headers {
      * Constant for the WWW-Authenticate header.
      */
     String WWW_AUTHENTICATE = "WWW-Authenticate";
+
 }

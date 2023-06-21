@@ -27,8 +27,6 @@ public class DocGuiceResourceConfig extends ResourceConfig {
     @Inject
     public DocGuiceResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
 
-        register(HealthResource.class);
-        register(VersionResource.class);
         register(SwaggerSerializers.class);
         register(ISODateParamConverter.class);
         register(DefaultExceptionMapper.class);

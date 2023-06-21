@@ -22,7 +22,7 @@ import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 
-import static dev.getelements.elements.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
+import static dev.getelements.elements.rest.guice.RestAPIGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 
 public class RestAPIAppProvider extends AbstractLifeCycle implements AppProvider {
 

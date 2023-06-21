@@ -89,8 +89,8 @@ public class AuthorizationHeader {
             }
 
         } else {
-            // If there is nothing here, we just presume that the token is a bearer token. I think this is a somehwat
-            // loose interpretation of the specification.
+            // If there is nothing here, we just presume that the token is a bearer token. I think this is a somewhat
+            // loose interpretation of the specification and many APIs accept the token if "Bearer" is omitted.
             credentials = first;
             type = AUTH_TYPE_BEARER;
         }

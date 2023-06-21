@@ -24,7 +24,7 @@ public class HttpRequestHeaderProfileIdentificationMethod implements ProfileIden
 
         return getProfileOverrideService()
             .findOverrideProfile(profileId)
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .orElseThrow(UnidentifiedProfileException::new);
 
     }
 
