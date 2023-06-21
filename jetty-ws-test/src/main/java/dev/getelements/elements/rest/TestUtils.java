@@ -28,6 +28,7 @@ public class TestUtils {
 
         final var unixFSModule = new UnixFSEmbeddedRestApiIntegrationTestModule();
         unixFSInjector = createInjector(unixFSModule);
+
     }
 
     /**

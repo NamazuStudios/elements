@@ -1,4 +1,4 @@
-package dev.getelements.elements;
+package dev.getelements.elements.jetty;
 
 import dev.getelements.elements.config.ModuleDefaults;
 

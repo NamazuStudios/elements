@@ -50,7 +50,7 @@ public class FirebaseJWTIntegrationTest {
     private String apiRoot;
 
     @Inject
-    private EmbeddedRestApi embeddedRestApi;
+    private EmbeddedElementsWebServices embeddedElementsWebServices;
 
     @Inject
     private Client client;

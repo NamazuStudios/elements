@@ -1,4 +1,4 @@
-import dev.getelements.elements.ElementsMain;
+import dev.getelements.elements.jetty.ElementsMain;
 
 public class elements {
 

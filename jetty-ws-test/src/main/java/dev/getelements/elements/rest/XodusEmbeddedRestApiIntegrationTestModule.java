@@ -7,32 +7,28 @@ import dev.getelements.elements.appnode.guice.AppNodeServicesModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.ApplicationDao;
+import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoSearchModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
+import dev.getelements.elements.jetty.ElementsCoreModule;
+import dev.getelements.elements.jetty.ElementsWebServiceComponentModule;
+import dev.getelements.elements.jetty.ElementsWebServices;
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.rest.guice.EmbeddedRestAPIModule;
 import dev.getelements.elements.rt.guice.ClasspathAssetLoaderModule;
 import dev.getelements.elements.rt.guice.ResourceScope;
 import dev.getelements.elements.rt.lua.guice.LuaModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
-import dev.getelements.elements.service.formidium.FormidiumConstants;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.RedissonServicesModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.getelements.elements.test.JeroMQEmbeddedTestService;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.mongo.distribution.Version;
 import redis.embedded.RedisServer;
 import ru.vyarus.guice.validator.ValidationModule;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -47,8 +43,6 @@ import static dev.getelements.elements.rt.xodus.XodusSchedulerEnvironment.SCHEDU
 import static dev.getelements.elements.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT_PATH;
 import static dev.getelements.elements.service.RedissonClientProvider.REDIS_URL;
 import static dev.getelements.elements.service.formidium.FormidiumConstants.FORMIDIUM_API_KEY;
-import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
-import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
@@ -83,15 +77,9 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
             }
         };
 
-        try {
-            final var executable = mongodExecutable();
-            getRuntime().addShutdownHook(new Thread(executable::stop));
-            bind(MongodExecutable.class).toInstance(executable);
-            bind(MongodProcess.class).toInstance(executable.start());
-        } catch (Exception e) {
-            addError(e);
-            return;
-        }
+        install(new MongoTestInstanceModule(TEST_MONGO_PORT));
+        install(new ElementsWebServiceComponentModule());
+        install(new ElementsCoreModule(configurationSupplier));
 
         try {
             final var redisServer = new RedisServer(TEST_REDIS_PORT);
@@ -113,7 +101,7 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
             return;
         }
 
-        final var restApiMainProvider = getProvider(RestAPIMain.class);
+        final var restApiMainProvider = getProvider(ElementsWebServices.class);
         final var applicationDaoProvider = getProvider(ApplicationDao.class);
         final var embeddedTestServiceProvider = getProvider(EmbeddedTestService.class);
 
@@ -136,23 +124,8 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         }).in(SINGLETON);
 
-        install(new RestAPITestServerModule());
-        install(new EmbeddedRestAPIModule(configurationSupplier));
-
-        bind(RestAPIMain.class).asEagerSingleton();
-        bind(EmbeddedRestApi.class).asEagerSingleton();
-
-    }
-
-    public MongodExecutable mongodExecutable() throws IOException {
-
-        final var config = MongodConfig.builder()
-                .version(Version.V3_4_5)
-                .net(new Net(TEST_MONGO_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
-            .build();
-
-        final var starter = getDefaultInstance();
-        return starter.prepare(config);
+        bind(ElementsWebServices.class).asEagerSingleton();
+        bind(EmbeddedElementsWebServices.class).asEagerSingleton();
 
     }
 

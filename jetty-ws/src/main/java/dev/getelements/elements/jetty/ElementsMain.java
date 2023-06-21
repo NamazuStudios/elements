@@ -1,4 +1,4 @@
-package dev.getelements.elements;
+package dev.getelements.elements.jetty;
 
 import com.google.inject.Guice;
 import joptsimple.OptionException;
@@ -14,11 +14,11 @@ public class ElementsMain {
             .accepts("help", "Prints Help.")
             .forHelp();
 
-    private static final OptionSpec<ElementsWebService> servicesOptionSpec = optionParser
+    private static final OptionSpec<ElementsWebServiceComponent> servicesOptionSpec = optionParser
             .accepts("web-service", "Specifies all web services to run.")
-            .withRequiredArg().ofType(ElementsWebService.class)
-            .defaultsTo(ElementsWebService.values())
-            .ofType(ElementsWebService.class);
+            .withRequiredArg().ofType(ElementsWebServiceComponent.class)
+            .defaultsTo(ElementsWebServiceComponent.values())
+            .ofType(ElementsWebServiceComponent.class);
 
     public static void main(final String[] args) throws Exception {
         try {
@@ -44,10 +44,10 @@ public class ElementsMain {
 
         final var injector = Guice.createInjector(
                 new ElementsCoreModule(),
-                new ElementsWebServiceModule(services)
+                new ElementsWebServiceComponentModule(services)
         );
 
-        final var elements = injector.getInstance(Elements.class);
+        final var elements = injector.getInstance(ElementsWebServices.class);
 
         try {
             elements.start();

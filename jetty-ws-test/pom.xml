@@ -12,34 +12,25 @@
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
-    <artifactId>rest-api-test</artifactId>
+    <artifactId>jetty-ws-test</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-dao</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>jetty-ws</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rest-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rest-jetty</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
@@ -49,47 +40,34 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>app-node</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service-test</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
         </dependency>
-        <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
-            <version>${flapdoodle.mongo.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.github.kstyrc</groupId>
-            <artifactId>embedded-redis</artifactId>
-            <version>${embedded.redis.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.github.kstyrc</groupId>-->
+<!--            <artifactId>embedded-redis</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
         </dependency>
         <dependency>
             <groupId>com.spotify</groupId>
             <artifactId>dns</artifactId>
-            <version>${spotify.dns.version}</version>
         </dependency>
     </dependencies>
 

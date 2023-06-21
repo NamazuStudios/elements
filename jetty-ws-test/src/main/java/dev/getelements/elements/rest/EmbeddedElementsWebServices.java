@@ -1,46 +1,40 @@
 package dev.getelements.elements.rest;
 
+import dev.getelements.elements.dao.mongo.MongoTestInstance;
+import dev.getelements.elements.jetty.ElementsWebServices;
 import dev.getelements.elements.test.EmbeddedTestService;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.MongodProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.embedded.RedisServer;
 
 import javax.inject.Inject;
 
-import java.util.concurrent.Callable;
-
 import static java.lang.Runtime.getRuntime;
 
-public class EmbeddedRestApi {
+public class EmbeddedElementsWebServices {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmbeddedRestApi.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmbeddedElementsWebServices.class);
 
-    private final RestAPIMain restAPIMain;
+    private final ElementsWebServices elementsWebServices;
 
     private final RedisServer redisServer;
 
-    private final MongodProcess mongodProcess;
-
-    private final MongodExecutable mongodExecutable;
+    private final MongoTestInstance mongoTestInstance;
 
     private final EmbeddedTestService embeddedTestService;
 
     @Inject
-    public EmbeddedRestApi(final RestAPIMain restAPIMain,
-                           final RedisServer redisServer,
-                           final MongodProcess mongodProcess,
-                           final MongodExecutable mongodExecutable,
-                           final EmbeddedTestService embeddedTestService) throws Exception {
+    public EmbeddedElementsWebServices(final ElementsWebServices elementsWebService,
+                                       final RedisServer redisServer,
+                                       final MongoTestInstance mongoTestInstance,
+                                       final EmbeddedTestService embeddedTestService) throws Exception {
 
-        this.restAPIMain = restAPIMain;
+        this.elementsWebServices = elementsWebService;
         this.redisServer = redisServer;
-        this.mongodProcess = mongodProcess;
-        this.mongodExecutable = mongodExecutable;
+        this.mongoTestInstance = mongoTestInstance;
         this.embeddedTestService = embeddedTestService;
 
-        getRestAPIMain().start();
+        getElementsWebServices().start();
 
         getRuntime().addShutdownHook(new Thread(() ->{
             try {
@@ -55,13 +49,13 @@ public class EmbeddedRestApi {
     public void stop() {
 
         try {
-            getRestAPIMain().stop();
+            getElementsWebServices().stop();
         } catch (Exception ex) {
             logger.warn("Caught exception stopping API.  Disregarding.", ex);
         }
 
         try {
-            getMongodExecutable().stop();
+            getMongoTestInstance().stop();
         } catch (Exception ex) {
             logger.warn("Caught exception MongoDB.  Disregarding.", ex);
         }
@@ -80,20 +74,16 @@ public class EmbeddedRestApi {
 
     }
 
-    public RestAPIMain getRestAPIMain() {
-        return restAPIMain;
+    public ElementsWebServices getElementsWebServices() {
+        return elementsWebServices;
     }
 
     public RedisServer getRedisServer() {
         return redisServer;
     }
 
-    public MongodProcess getMongodProcess() {
-        return mongodProcess;
-    }
-
-    public MongodExecutable getMongodExecutable() {
-        return mongodExecutable;
+    public MongoTestInstance getMongoTestInstance() {
+        return mongoTestInstance;
     }
 
     public EmbeddedTestService getEmbeddedTestService() {

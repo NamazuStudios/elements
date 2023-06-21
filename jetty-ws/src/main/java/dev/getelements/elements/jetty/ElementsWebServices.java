@@ -1,4 +1,4 @@
-package dev.getelements.elements;
+package dev.getelements.elements.jetty;
 
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.rt.remote.Instance;
@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-public class Elements implements Runnable {
+public class ElementsWebServices implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(Elements.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElementsWebServices.class);
 
     private Server server;
 

@@ -1,4 +1,4 @@
-package dev.getelements.elements;
+package dev.getelements.elements.jetty;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -12,16 +12,15 @@ import org.eclipse.jetty.deploy.AppProvider;
 
 import java.util.*;
 
-import static dev.getelements.elements.ElementsWebService.*;
-import static java.util.stream.Collectors.toList;
+import static dev.getelements.elements.jetty.ElementsWebServiceComponent.*;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
-public class ElementsWebServiceModule extends AbstractModule {
+public class ElementsWebServiceComponentModule extends AbstractModule {
 
-    private static final Map<ElementsWebService, Class<? extends AppProvider>> PROVIDERS;
+    private static final Map<ElementsWebServiceComponent, Class<? extends AppProvider>> PROVIDERS;
 
     static {
-        final var providers = new EnumMap<ElementsWebService, Class<? extends AppProvider>>(ElementsWebService.class);
+        final var providers = new EnumMap<ElementsWebServiceComponent, Class<? extends AppProvider>>(ElementsWebServiceComponent.class);
         providers.put(api, RestAPIAppProvider.class);
         providers.put(cdn, CdnAppProvider.class);
         providers.put(app, DispatcherAppProvider.class);
@@ -31,10 +30,14 @@ public class ElementsWebServiceModule extends AbstractModule {
         PROVIDERS = Collections.unmodifiableMap(providers);
     }
 
-    private final List<ElementsWebService> elementsWebServices;
+    private final List<ElementsWebServiceComponent> elementsWebServiceComponents;
 
-    public ElementsWebServiceModule(final Collection<ElementsWebService> elementsWebServices) {
-        this.elementsWebServices = elementsWebServices
+    public ElementsWebServiceComponentModule() {
+        this.elementsWebServiceComponents = List.of(ElementsWebServiceComponent.values());
+    }
+
+    public ElementsWebServiceComponentModule(final Collection<ElementsWebServiceComponent> elementsWebServiceComponents) {
+        this.elementsWebServiceComponents = elementsWebServiceComponents
             .stream()
             .sorted()
             .collect(toUnmodifiableList());
@@ -45,7 +48,7 @@ public class ElementsWebServiceModule extends AbstractModule {
 
         final var multibinder = Multibinder.newSetBinder(binder(), AppProvider.class);
 
-        elementsWebServices
+        elementsWebServiceComponents
                 .stream()
                 .filter(PROVIDERS::containsKey)
                 .map(PROVIDERS::get)

@@ -19,16 +19,6 @@ import static dev.getelements.elements.servlet.security.HttpPathUtils.normalize;
  */
 public class RestAPIJerseyModule extends ServletModule {
 
-    private final String apiRoot;
-
-    public RestAPIJerseyModule() {
-        this("");
-    }
-
-    public RestAPIJerseyModule(final String apiRoot) {
-        this.apiRoot = normalize(apiRoot.isBlank() ? "/*" : apiRoot + "/*");
-    }
-
     @Override
     protected final void configureServlets() {
 
@@ -48,9 +38,9 @@ public class RestAPIJerseyModule extends ServletModule {
         bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
 
         final var params = Map.of("javax.ws.rs.Application", GuiceResourceConfig.class.getName());
-        serve(apiRoot).with(ServletContainer.class, params);
-        filter(apiRoot).through(HttpServletCORSFilter.class);
-        filter(apiRoot).through(HttpServletGlobalSecretHeaderFilter.class);
+        serve("/*").with(ServletContainer.class, params);
+        filter("/*").through(HttpServletCORSFilter.class);
+        filter("/*").through(HttpServletGlobalSecretHeaderFilter.class);
 
     }
 }

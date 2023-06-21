@@ -1,27 +1,26 @@
-package dev.getelements.elements.rest;
+package dev.getelements.elements.jetty;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.servlet.ServletModule;
+import com.google.inject.servlet.ServletScopes;
 import dev.getelements.elements.annotation.FacebookPermission;
+import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoSearchModule;
-import dev.getelements.elements.formidium.FormidiumAppProvider;
-import dev.getelements.elements.guice.ConfigurationModule;
-import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
+import dev.getelements.elements.guice.*;
 import dev.getelements.elements.jetty.DynamicMultiAppServerProvider;
 import dev.getelements.elements.jetty.ServletContextHandlerProvider;
-import dev.getelements.elements.rpc.BlockchainNetworkRpcAppProvider;
-import dev.getelements.elements.rpc.ElementsRpcAppProvider;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
 import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.guice.*;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.GuiceStandardNotificationFactoryModule;
+import dev.getelements.elements.service.guice.RedissonServicesModule;
+import dev.getelements.elements.service.guice.ServicesModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
-import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -30,19 +29,22 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-@Deprecated
-public class RestAPIServerModule extends AbstractModule {
+public class ElementsCoreModule extends AbstractModule {
 
     private final Supplier<Properties> configurationSupplier;
 
     private final Supplier<List<FacebookPermission>> facebookPermissionSupplier;
 
-    public RestAPIServerModule(final Supplier<Properties> propertiesSupplier) {
+    public ElementsCoreModule() {
+        this(new DefaultConfigurationSupplier());
+    }
+
+    public ElementsCoreModule(final Supplier<Properties> propertiesSupplier) {
         this(propertiesSupplier, new FacebookBuiltinPermissionsSupplier());
     }
 
-    public RestAPIServerModule(final Supplier<Properties> configurationSupplier,
-                               final Supplier<List<FacebookPermission>> facebookPermissionSupplier) {
+    public ElementsCoreModule(final Supplier<Properties> configurationSupplier,
+                              final Supplier<List<FacebookPermission>> facebookPermissionSupplier) {
         this.configurationSupplier = configurationSupplier;
         this.facebookPermissionSupplier = facebookPermissionSupplier;
     }
@@ -50,11 +52,7 @@ public class RestAPIServerModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        bind(Server.class).toProvider(DynamicMultiAppServerProvider.class);
-        bind(ServletContextHandler.class).toProvider(ServletContextHandlerProvider.class);
-
         final Properties properties = configurationSupplier.get();
-//        bind(ObjectMapper.class).asEagerSingleton();
 
         install(new ConfigurationModule(() -> properties));
         install(new InstanceDiscoveryServiceModule(() -> properties));
@@ -78,11 +76,8 @@ public class RestAPIServerModule extends AbstractModule {
         install(new JerseyHttpClientModule());
         install(new RandomInstanceIdModule());
 
-        var apps = Multibinder.newSetBinder(binder(), AppProvider.class);
-        apps.addBinding().to(ElementsRpcAppProvider.class);
-        apps.addBinding().to(RestAPIAppProvider.class);
-        apps.addBinding().to(BlockchainNetworkRpcAppProvider.class);
-        apps.addBinding().to(FormidiumAppProvider.class);
+        bind(Server.class).toProvider(DynamicMultiAppServerProvider.class);
+        bind(ServletContextHandler.class).toProvider(ServletContextHandlerProvider.class);
 
     }
 

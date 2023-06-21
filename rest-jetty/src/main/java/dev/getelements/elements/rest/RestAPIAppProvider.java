@@ -2,8 +2,8 @@ package dev.getelements.elements.rest;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import dev.getelements.elements.guice.StandardServletSecurityModule;
 import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
+import dev.getelements.elements.guice.StandardServletSecurityModule;
 import dev.getelements.elements.guice.StandardServletServicesModule;
 import dev.getelements.elements.rest.guice.RestAPIJerseyModule;
 import dev.getelements.elements.service.guice.NotificationServiceModule;
@@ -20,11 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.DispatcherType;
-
 import java.util.EnumSet;
 
 import static dev.getelements.elements.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
-import static java.lang.String.format;
 
 public class RestAPIAppProvider extends AbstractLifeCycle implements AppProvider {
 
