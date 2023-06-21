@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="elements" type="Application" factoryName="Application" nameIsGenerated="true">
+  <configuration default="false" name="jettyws" type="Application" factoryName="Application">
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
-    <option name="MAIN_CLASS_NAME" value="elements" />
+    <option name="MAIN_CLASS_NAME" value="jettyws" />
     <module name="jetty-ws" />
     <method v="2">
       <option name="Make" enabled="true" />
