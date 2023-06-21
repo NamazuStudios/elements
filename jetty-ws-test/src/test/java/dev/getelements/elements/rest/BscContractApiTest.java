@@ -3,10 +3,10 @@ package dev.getelements.elements.rest;
 import dev.getelements.elements.BlockchainConstants;
 import dev.getelements.elements.dao.BscSmartContractDao;
 import dev.getelements.elements.dao.BscWalletDao;
-import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractRequest;
-import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractResponse;
 import dev.getelements.elements.model.blockchain.PatchSmartContractRequest;
 import dev.getelements.elements.model.blockchain.bsc.BscWallet;
+import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractRequest;
+import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractResponse;
 import dev.getelements.elements.service.blockchain.bsc.Bscw3jClient;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -23,6 +23,7 @@ import java.util.List;
 
 import static dev.getelements.elements.Headers.SESSION_SECRET;
 import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
+import static dev.getelements.elements.rest.TestUtils.TEST_INSTANCE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 
@@ -56,6 +57,7 @@ public class BscContractApiTest {
     private BscSmartContractDao bscContractDao;
 
     @Inject
+    @Named(TEST_INSTANCE)
     private Bscw3jClient bscw3JClient;
 
     private static final String BSC_TESTNET_URL = "https://data-seed-prebsc-1-s1.binance.org:8545";

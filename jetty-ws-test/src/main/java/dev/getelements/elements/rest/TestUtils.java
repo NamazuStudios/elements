@@ -9,6 +9,8 @@ import static com.google.inject.Guice.createInjector;
 
 public class TestUtils {
 
+    public static final String TEST_INSTANCE = "dev.getelements.elements.test.instance";
+
     public static final String TEST_API_ROOT = "dev.getelements.elements.rest.test.api.root";
 
     private static final TestUtils instance = new TestUtils();

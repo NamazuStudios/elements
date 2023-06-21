@@ -77,6 +77,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
             }
         };
 
+        install(new TestInstanceModule());
         install(new MongoTestInstanceModule(TEST_MONGO_PORT));
         install(new ElementsWebServiceComponentModule());
         install(new ElementsCoreModule(configurationSupplier));

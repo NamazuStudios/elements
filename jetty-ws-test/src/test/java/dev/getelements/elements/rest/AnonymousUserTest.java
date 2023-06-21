@@ -30,6 +30,7 @@ public class AnonymousUserTest {
     private Client client;
 
     @Inject
+    @Named(TEST_INSTANCE)
     private VersionService versionService;
 
     @Test

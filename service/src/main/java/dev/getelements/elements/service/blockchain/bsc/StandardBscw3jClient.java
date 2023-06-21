@@ -276,4 +276,5 @@ public class StandardBscw3jClient implements Bscw3jClient {
         httpService = new HttpService(bscHost);
         web3j = Web3j.build(httpService);
     }
+
 }
