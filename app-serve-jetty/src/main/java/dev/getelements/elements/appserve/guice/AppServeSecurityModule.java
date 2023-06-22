@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
+@Deprecated
 public class AppServeSecurityModule extends PrivateModule {
 
     @Override

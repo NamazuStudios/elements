@@ -2,7 +2,7 @@ package dev.getelements.elements.jetty;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import dev.getelements.elements.appserve.DispatcherAppProvider;
+import dev.getelements.elements.appserve.AppServeDispatcherAppProvider;
 import dev.getelements.elements.cdnserve.CdnAppProvider;
 import dev.getelements.elements.codeserve.CodeServeAppProvider;
 import dev.getelements.elements.docserve.DocAppProvider;
@@ -23,7 +23,7 @@ public class ElementsWebServiceComponentModule extends AbstractModule {
         final var providers = new EnumMap<ElementsWebServiceComponent, Class<? extends AppProvider>>(ElementsWebServiceComponent.class);
         providers.put(api, RestAPIAppProvider.class);
         providers.put(cdn, CdnAppProvider.class);
-        providers.put(app, DispatcherAppProvider.class);
+        providers.put(app, AppServeDispatcherAppProvider.class);
         providers.put(doc, DocAppProvider.class);
         providers.put(code, CodeServeAppProvider.class);
         providers.put(formidium_proxy, FormidiumAppProvider.class);

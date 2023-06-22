@@ -30,9 +30,6 @@ public class AppServeDispatcherModule extends PrivateModule {
         bind(HttpRequestService.class).to(DefaultHttpRequestService.class);
         bind(HttpResponseService.class).to(DefaultHttpResponseService.class);
         bind(new TypeLiteral<SessionRequestDispatcher<HttpRequest>>(){}).to(RequestScopedHttpSessionDispatcher.class);
-        bind(DispatcherServlet.class).asEagerSingleton();
-
-        expose(DispatcherServlet.class);
 
     }
 

@@ -3,13 +3,13 @@ package dev.getelements.elements.appserve;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import com.google.inject.servlet.GuiceFilter;
 import dev.getelements.elements.appserve.guice.*;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
-import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQContextModule;
 import dev.getelements.elements.rt.servlet.DispatcherServlet;
 import dev.getelements.elements.servlet.HttpContextRoot;
@@ -35,9 +35,9 @@ import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.rt.Context.REMOTE;
 import static java.lang.String.format;
 
-public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
+public class AppServeDispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(AppServeDispatcherAppProvider.class);
 
     private static final String APP_PREFIX_FORMAT = "/app/%s/rest";
 
@@ -88,19 +88,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final var injector = injectorFor(application);
 
         final var path = getHttpContextRoot().formatNormalized(APP_PREFIX_FORMAT, application.getName());
-        final var dispatcherServlet = injector.getInstance(DispatcherServlet.class);
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
 
         logger.info("Running application {} at path {}.", application.getName(), path);
 
-        // Filters
-        final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
-        final var sessionIdAuthenticationFilter = injector.getInstance(HttpServletSessionIdAuthenticationFilter.class);
-
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(path);
-        servletContextHandler.addServlet(new ServletHolder(dispatcherServlet), "/*");
-        servletContextHandler.addFilter(new FilterHolder(corsFilter), "/*", EnumSet.allOf(DispatcherType.class));
-        servletContextHandler.addFilter(new FilterHolder(sessionIdAuthenticationFilter), "/*", EnumSet.allOf(DispatcherType.class));
+        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
         return servletContextHandler;
 
@@ -112,6 +106,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final var injector = getInjector().createChildInjector(
                     new GuiceIoCResolverModule(),
                     new AppServeDispatcherModule(),
+                    new AppServeDispatcherServletModule(),
                     new RemoteInvocationDispatcherModule(),
                     new JeroMQContextModule().withApplicationUniqueName(application.getId())
             );

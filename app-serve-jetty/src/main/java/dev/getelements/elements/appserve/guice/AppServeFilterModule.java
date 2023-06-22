@@ -5,6 +5,7 @@ import dev.getelements.elements.appserve.RequestAttributeSessionFilter;
 import dev.getelements.elements.appserve.RequestAttributeUserFilter;
 import dev.getelements.elements.rt.guice.FilterModule;
 
+@Deprecated
 public class AppServeFilterModule extends FilterModule {
 
     @Override
