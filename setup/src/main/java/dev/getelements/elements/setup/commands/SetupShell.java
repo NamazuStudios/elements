@@ -111,6 +111,7 @@ public class SetupShell implements SetupCommand {
                 return;
             } catch (Exception ex) {
                 completableFuture.complete(-1);
+                logger.error("Caught exception.", ex);
                 return;
             }
         }

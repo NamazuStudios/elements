@@ -37,7 +37,7 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
         while (isNullOrEmpty(user.getId())) {
 
-            var found = userDao.findActiveUserByNameOrEmail(user.getName());
+            var found = userDao.findActiveUser(user.getId());
 
             if (found.isEmpty()) {
                 found = userDao.findActiveUserByNameOrEmail(user.getName());
@@ -57,9 +57,9 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
             } else {
 
-                final var input = secureReader.read("No user exists for %s %s<%s>. Please supply ID: ",
-                    found.get().getName(),
-                    found.get().getEmail()
+                final var input = secureReader.read("No user exists for %s %s. Please supply ID: ",
+                    user.getName(),
+                    user.getEmail()
                 ).trim();
 
                 user.setId(input);

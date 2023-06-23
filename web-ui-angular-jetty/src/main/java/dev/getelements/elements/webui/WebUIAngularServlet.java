@@ -7,7 +7,9 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -23,43 +25,58 @@ public class WebUIAngularServlet extends DefaultServlet {
 
     private static final String BASE_TAG = Pattern.quote("<base href=\"/\">");
 
+    private static final String INDEX_HTML = "/index.html";
+
+    private static final String CONFIG_JSON = "/config.json";
+
     private String apiOutsideUrl;
 
     private HttpContextRoot httpContextRoot;
 
     private ObjectMapper objectMapper;
 
+    private String index;
+
     private final Map<String, HttpHandler> handlers = Map.of(
-            "/index.html", this::doGetIndex,
-            "/config.json", this::doGetConfig
+            INDEX_HTML, this::doGetIndex,
+            CONFIG_JSON, this::doGetConfig
     );
 
     @Override
-    protected void doGet(final HttpServletRequest req,
-                         final HttpServletResponse resp) throws ServletException, IOException {
-        handlers.getOrDefault(req.getPathInfo(), super::doGet).handle(req, resp);
-    }
+    public void init(ServletConfig servletConfig) throws ServletException {
 
-    protected void doGetIndex(final HttpServletRequest req,
-                              final HttpServletResponse resp) throws ServletException, IOException {
+        super.init(servletConfig);
 
-        final var replacement =  format("<base href=\"%s\">", getHttpContextRoot().normalize("web-ui"));
-        final var index = loadIndex(req).replaceAll(BASE_TAG, replacement);
-
-        resp.setStatus(SC_OK);
-        resp.getWriter().print(index);
+        try {
+            final var replacement =  format("<base href=\"%s/\">", getHttpContextRoot().normalize("web-ui"));
+            this.index = loadIndex().replaceAll(BASE_TAG, replacement);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 
-    protected String loadIndex(final HttpServletRequest req) throws IOException {
+    protected String loadIndex() throws IOException {
 
-        final var resource = getResource(req.getPathInfo());
+        final var resource = getResource(INDEX_HTML);
 
         try (var input = resource.getInputStream()) {
             final var bytes = input.readAllBytes();
             return new String(bytes, StandardCharsets.UTF_8);
         }
 
+    }
+
+    @Override
+    protected void doGet(final HttpServletRequest req,
+                         final HttpServletResponse resp) throws ServletException, IOException {
+        handlers.getOrDefault(req.getPathInfo(), this::doGetDefault).handle(req, resp);
+    }
+
+    protected void doGetIndex(final HttpServletRequest req,
+                              final HttpServletResponse resp) throws ServletException, IOException {
+        resp.setStatus(SC_OK);
+        resp.getWriter().print(index);
     }
 
     protected void doGetConfig(final HttpServletRequest req,
@@ -76,7 +93,20 @@ public class WebUIAngularServlet extends DefaultServlet {
         resp.setStatus(SC_OK);
         resp.setContentType("application/json");
         resp.getWriter().print(json);
-        
+
+    }
+
+    protected void doGetDefault(final HttpServletRequest req,
+                                final HttpServletResponse resp) throws ServletException, IOException {
+
+        final var resource = getResource(req.getPathInfo());
+
+        if (resource.exists()) {
+            super.doGet(req, resp);
+        } else {
+            doGetIndex(req, resp);
+        }
+
     }
 
     public String getApiOutsideUrl() {
