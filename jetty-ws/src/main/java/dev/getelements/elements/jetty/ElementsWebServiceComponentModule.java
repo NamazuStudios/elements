@@ -8,6 +8,7 @@ import dev.getelements.elements.codeserve.CodeServeAppProvider;
 import dev.getelements.elements.docserve.DocAppProvider;
 import dev.getelements.elements.formidium.FormidiumAppProvider;
 import dev.getelements.elements.rest.RestAPIAppProvider;
+import dev.getelements.elements.webui.WebUIAppProvider;
 import org.eclipse.jetty.deploy.AppProvider;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class ElementsWebServiceComponentModule extends AbstractModule {
         providers.put(doc, DocAppProvider.class);
         providers.put(code, CodeServeAppProvider.class);
         providers.put(formidium_proxy, FormidiumAppProvider.class);
+        providers.put(web_ui, WebUIAppProvider.class);
         PROVIDERS = Collections.unmodifiableMap(providers);
     }
 

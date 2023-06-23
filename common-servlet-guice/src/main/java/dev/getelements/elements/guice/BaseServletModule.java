@@ -5,6 +5,15 @@ import dev.getelements.elements.servlet.security.*;
 
 public abstract class BaseServletModule extends ServletModule {
 
+    protected void useGlobalSecretOnly() {
+        useGlobalSecretOnly("/*");
+    }
+
+    private void useGlobalSecretOnly(final String pattern) {
+        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
+        filter(pattern).through(HttpServletGlobalSecretHeaderFilter.class);
+    }
+
     protected void useHttpBasicSecurityFilters() {
         useHttpBasicSecurityFilters("/*");
     }

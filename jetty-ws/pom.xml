@@ -101,6 +101,10 @@
             <artifactId>doc-serve-jetty</artifactId>
         </dependency>
         <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>web-ui-angular-jetty</artifactId>
+        </dependency>
+        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <scope>provided</scope>

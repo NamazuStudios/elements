@@ -87,7 +87,6 @@
         <module>app-node</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
-        <module>web-ui-angular</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
         <module>doc-serve-jetty</module>
@@ -102,6 +101,7 @@
         <module>mongo-guice</module>
         <module>jetty-ws</module>
         <module>jetty-ws-test</module>
+        <module>web-ui-angular-jetty</module>
     </modules>
 
     <properties>
@@ -390,6 +390,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>common-lua</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>web-ui-angular-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

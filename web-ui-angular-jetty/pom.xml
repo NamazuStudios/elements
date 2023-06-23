@@ -10,29 +10,35 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>dev.getelements.elements</groupId>
-    <artifactId>web-ui-angular</artifactId>
+    <artifactId>web-ui-angular-jetty</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-deploy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-servlet-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>dist</directory>
-            </resource>
-        </resources>
         <plugins>
-            <!-- skip compile -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-compile</id>
-                        <phase />
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -61,29 +67,16 @@
                             <executable>ng</executable>
                             <arguments>
                                 <argument>build</argument>
-                                <argument>--prod</argument>
+                                <argument>--output-path</argument>
+                                <argument>${project.build.outputDirectory}/dev/getelements/elements/webui/angular</argument>
+                                <argument>--configuration</argument>
+                                <argument>production</argument>
                                 <argument>--base-href</argument>
-                                <argument>/web-ui/</argument>
+                                <argument>/</argument>
                             </arguments>
                         </configuration>
                         <goals>
                             <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptor>assembly.xml</descriptor>
-                    <finalName>web-ui-angular-${project.version}</finalName>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>

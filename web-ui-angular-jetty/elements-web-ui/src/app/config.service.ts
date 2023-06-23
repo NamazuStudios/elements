@@ -11,7 +11,7 @@ export class ConfigService {
     const storedAppConfig = JSON.parse(localStorage.getItem('appConfig'));
 
     if(!storedAppConfig){
-      return this.http.get('./assets/config.json')
+      return this.http.get('./config.json')
       .toPromise()
       .then(data => {
         this.appConfig = data;
@@ -20,7 +20,7 @@ export class ConfigService {
       .catch(reason => {
         console.log(reason);
       });
-    } 
+    }
     else {
       this.appConfig = storedAppConfig;
       return Promise.resolve(storedAppConfig) ;

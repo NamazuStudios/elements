@@ -33,6 +33,11 @@ public enum ElementsWebServiceComponent {
     app,
 
     /**
+     * The Web UI Admin Panel for Elements.
+     */
+    web_ui,
+
+    /**
      * The Formidium Proxy service.
      */
     formidium_proxy
