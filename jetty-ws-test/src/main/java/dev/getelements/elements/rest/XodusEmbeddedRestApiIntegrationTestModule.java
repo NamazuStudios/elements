@@ -68,7 +68,7 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
             public Properties get() {
                 final var properties = super.get();
                 properties.put(HTTP_PORT, "8081");
-                properties.put(TEST_API_ROOT, "http://localhost:8080/api/rest");
+                properties.put(TEST_API_ROOT, "http://localhost:8081/api/rest");
                 properties.put(FORMIDIUM_API_KEY, "UW3hB42v9Lmsx3BlELfPlBijad61SFSs");
                 properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
                 properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
