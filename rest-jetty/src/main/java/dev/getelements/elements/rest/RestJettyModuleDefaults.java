@@ -4,7 +4,6 @@ import dev.getelements.elements.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.Constants.API_PREFIX;
 import static dev.getelements.elements.rt.Constants.*;
 import static dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
@@ -24,7 +23,6 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(API_PREFIX, "rest");
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.put(STATIC_HOST_INFO, "tcp://localhost:28883");

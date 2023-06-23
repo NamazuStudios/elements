@@ -1,9 +1,9 @@
 
 ARG BASE_TAG
-FROM docker.namazustudios.net/namazu-elements-base:$BASE_TAG
+FROM distribution.getelements.dev/elements-base:$BASE_TAG
 
 COPY --chown=elements:elements target/lib/*.jar $ELEMENTS_LIB/
-EXPOSE 28883
+EXPOSE 8080
 
 USER root:root
 
@@ -17,6 +17,4 @@ RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsas
     rm -rf luarocks-3.9.1 && \
     luarocks install lua-mongo
 
-USER elements:elements
-
-ENTRYPOINT ["java", "dev.getelements.elements.appnode.ApplicationNodeMain"]
+ENTRYPOINT ["java", "dev.getelements.elements.rest.RestAPIMain"]

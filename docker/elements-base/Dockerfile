@@ -1,6 +1,6 @@
 FROM jwilder/dockerize:0.6.1 as dockerize
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 ENV DOCKERIZE_VERSION v0.6.1
 
 RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk musl

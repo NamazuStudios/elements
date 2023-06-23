@@ -1,6 +1,6 @@
 
 ARG BASE_TAG
-FROM docker.namazustudios.net/namazu-elements-base:$BASE_TAG
+FROM distribution.getelements.dev/elements-base:$BASE_TAG
 
 USER root:root
 

@@ -1,5 +1,0 @@
-{
-  "api": {
-    "url": "${dev_getelements_socialengine_api_url}"
-  }
-}

@@ -53,12 +53,6 @@ public interface Constants {
     String DEFAULT_PROPERTIES_FILE = "elements.properties";
 
     /**
-     * The web API prefix.  This is the location from which all API requests are served relative to
-     * the context root.  Leaving this unspecified will serve the API out of the context root.
-     */
-    String API_PREFIX = "dev.getelements.elements.api.prefix";
-
-    /**
      * The web API root.  This is the full outside URL of the API endpoint.
      */
     String API_OUTSIDE_URL = "dev.getelements.elements.api.url";

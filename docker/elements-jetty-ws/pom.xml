@@ -1,19 +1,20 @@
-<?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
-    <modelVersion>4.0.0</modelVersion>
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <groupId>dev.getelements.elements</groupId>
         <artifactId>docker</artifactId>
+        <groupId>dev.getelements.elements</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>namazu-socialengine-doc-serve</artifactId>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>pom</packaging>
+
+    <groupId>dev.getelements.elements</groupId>
+    <artifactId>elements-jetty-ws</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>namazu-socialengine-doc-serve</name>
 
     <profiles>
         <profile>
@@ -22,62 +23,51 @@
 
             <dependencies>
 
+                <!-- Core dependencies -->
+
                 <dependency>
                     <groupId>dev.getelements.elements</groupId>
-                    <artifactId>doc-serve</artifactId>
+                    <artifactId>jetty-ws</artifactId>
                     <version>${project.version}</version>
                 </dependency>
-
                 <dependency>
                     <groupId>ch.qos.logback</groupId>
                     <artifactId>logback-classic</artifactId>
                     <version>${logback.version}</version>
                 </dependency>
 
-                <!-- These are the actual documentation artifacts -->
+                <!-- Required for Documentation Services -->
 
                 <dependency>
                     <groupId>dev.getelements.elements</groupId>
                     <artifactId>common</artifactId>
-                    <version>${project.version}</version>
                     <classifier>luastubs</classifier>
                 </dependency>
-
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>common-lua</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>rt-server-lua</artifactId>
-                    <version>${project.version}</version>
-                    <classifier>luastubs</classifier>
-                </dependency>
-
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>service</artifactId>
-                    <version>${project.version}</version>
-                    <classifier>luastubs</classifier>
-                </dependency>
-
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>dao</artifactId>
-                    <version>${project.version}</version>
-                    <classifier>luastubs</classifier>
-                </dependency>
-
                 <dependency>
                     <groupId>dev.getelements.elements</groupId>
                     <artifactId>common-util</artifactId>
-                    <version>${project.version}</version>
                     <classifier>luastubs</classifier>
                 </dependency>
-
-                <!-- End Documentation Artifacts -->
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>common-lua</artifactId>
+                    <classifier>luastubs</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>dao</artifactId>
+                    <classifier>luastubs</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>service</artifactId>
+                    <classifier>luastubs</classifier>
+                </dependency>
+                <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>rt-server-lua</artifactId>
+                    <classifier>luastubs</classifier>
+                </dependency>
 
             </dependencies>
 
@@ -87,13 +77,14 @@
                         <artifactId>maven-dependency-plugin</artifactId>
                         <executions>
                             <execution>
-                                <phase>initialize</phase>
+                                <phase>package</phase>
                                 <goals>
                                     <goal>copy-dependencies</goal>
                                 </goals>
                                 <configuration>
                                     <includeScope>runtime</includeScope>
-                                    <overWriteReleases>false</overWriteReleases>
+                                    <overWriteReleases>true</overWriteReleases>
+                                    <overWriteSnapshots>true</overWriteSnapshots>
                                     <outputDirectory>${project.build.directory}/lib</outputDirectory>
                                 </configuration>
                             </execution>

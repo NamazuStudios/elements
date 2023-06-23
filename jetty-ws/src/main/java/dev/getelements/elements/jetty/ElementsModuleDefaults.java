@@ -11,7 +11,7 @@ public class ElementsModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final var properties = new Properties();
-        properties.put(HTTP_PORT, "8081");
+        properties.put(HTTP_PORT, "8080");
         properties.put(HTTP_PATH_PREFIX, "/");
         return properties;
     }
