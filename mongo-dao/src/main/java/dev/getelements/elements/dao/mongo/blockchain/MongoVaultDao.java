@@ -169,6 +169,41 @@ public class MongoVaultDao implements VaultDao {
     }
 
     @Override
+    public Optional<Vault> findAndUpdateVaultBelongingToUser(final Vault vault, final String userId) {
+
+        getValidationHelper().validateModel(vault, Update.class);
+        getValidationHelper().validateModel(vault.getUser(), Read.class);
+
+        final var mongoVaultKey = getMapper().map(vault.getKey(), MongoVaultKey.class);
+        final var objectId = getMongoDBUtils().parseOrThrow(vault.getId(), VaultNotFoundException::new);
+
+        final var mongoUser = getMongoUserDao().findActiveMongoUser(userId);
+
+        if (mongoUser.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final var query = getDatastore()
+                .find(MongoVault.class)
+                .filter(eq("_id", objectId))
+                .filter(eq("user", mongoUser.get()));
+
+        final var updated = new UpdateBuilder()
+                .with(set("user", mongoUser.get()))
+                .with(set("displayName", vault.getDisplayName()))
+                .with(set("key", mongoVaultKey))
+                .execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
+
+        if (updated == null) {
+            return Optional.empty();
+        } else {
+            final var mapped = getMapper().map(updated, Vault.class);
+            return Optional.of(mapped);
+        }
+
+    }
+
+    @Override
     public void deleteVault(final String vaultId) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(vaultId, VaultNotFoundException::new);

@@ -7,8 +7,10 @@ import dev.getelements.elements.model.blockchain.wallet.CreateVaultRequest;
 import dev.getelements.elements.model.blockchain.wallet.UpdateVaultRequest;
 import dev.getelements.elements.model.blockchain.wallet.Vault;
 import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.rt.exception.BadRequestException;
 import dev.getelements.elements.service.VaultService;
 
+import javax.crypto.BadPaddingException;
 import javax.inject.Inject;
 
 public class UserVaultService implements VaultService {
@@ -49,13 +51,11 @@ public class UserVaultService implements VaultService {
     @Override
     public Vault updateVault(final String vaultId, final UpdateVaultRequest request) {
 
-        if (request.getUserId() == null) {
-            request.setUserId(getUser().getId());
-        } else if (!request.getUserId().equals(getUser().getId())) {
-            throw new InvalidDataException("Cannot modify vault user.");
-        }
+        final var vault = getSuperUserVaultService().getVaultForUpdate(vaultId, request);
 
-        return getSuperUserVaultService().updateVault(vaultId, request);
+        return getVaultDao()
+                .findAndUpdateVaultBelongingToUser(vault, getUser().getId())
+                .orElseThrow(() -> new InvalidDataException("Cannot update Vault for User."));
 
     }
 

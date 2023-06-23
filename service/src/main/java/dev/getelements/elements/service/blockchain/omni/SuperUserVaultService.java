@@ -69,6 +69,11 @@ public class SuperUserVaultService implements VaultService {
 
     @Override
     public Vault updateVault(final String vaultId, final UpdateVaultRequest updateVaultRequest) {
+        final var vault = getVaultForUpdate(vaultId, updateVaultRequest);
+        return getVaultDao().updateVault(vault);
+    }
+
+    public Vault getVaultForUpdate(final String vaultId, final UpdateVaultRequest updateVaultRequest) {
 
         getValidationHelper().validateModel(updateVaultRequest);
 
@@ -107,7 +112,7 @@ public class SuperUserVaultService implements VaultService {
             vault.setKey(key);
         }
 
-        return getVaultDao().updateVault(vault);
+        return vault;
 
     }
 

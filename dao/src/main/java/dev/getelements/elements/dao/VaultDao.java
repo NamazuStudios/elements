@@ -77,6 +77,19 @@ public interface VaultDao {
     Vault updateVault(Vault vault);
 
     /**
+     * Updates a vault with the provided user. If the requested vault exists for the supplied user, then the specifed
+     * vault will be updated.
+     *
+     * If no vault exists for the supplied user, then no changes will be made to the database and the returned Optional
+     * will be empty.
+     *
+     * @param vault the vault to update
+     * @param userId the user ID to search
+     * @return an {@link Optional<Vault>}
+     */
+    Optional<Vault> findAndUpdateVaultBelongingToUser(Vault vault, String userId);
+
+    /**
      * Deletes a {@link Vault} with the supplied identifier.
      *
      * @param vaultId the Vault ID
