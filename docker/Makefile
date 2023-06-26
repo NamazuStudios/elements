@@ -23,7 +23,6 @@ define DOCKER_BUILD_TAG
 	@echo "Building Base Image for $(1)"
 	$(DOCKER_BUILD) $(1) \
 		--push \
-		--pull \
 		--platform $(TARGET_ARCHITECTURES) \
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
