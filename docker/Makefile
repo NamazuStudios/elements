@@ -23,6 +23,7 @@ define DOCKER_BUILD_TAG
 	@echo "Building Base Image for $(1)"
 	$(DOCKER_BUILD) $(1) \
 		--pull \
+		--output=type=registry \
 		--platform $(TARGET_ARCHITECTURES) \
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
@@ -34,6 +35,7 @@ define DOCKER_BUILD_TAG_JAVA
 	@echo "Building Java Image for $(1)"
 	$(DOCKER_BUILD) $(1) \
 		--pull \
+		--output=type=registry \
 		--platform $(TARGET_ARCHITECTURES) \
 		--build-arg BASE_TAG=$(TAG) \
 		--tag distribution.getelements.dev/$(1):$(REV) \
