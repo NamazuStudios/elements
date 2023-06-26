@@ -2,6 +2,7 @@ package dev.getelements.elements.service.blockchain.omni;
 
 import dev.getelements.elements.dao.VaultDao;
 import dev.getelements.elements.exception.InvalidDataException;
+import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.blockchain.wallet.CreateVaultRequest;
 import dev.getelements.elements.model.blockchain.wallet.UpdateVaultRequest;
@@ -51,11 +52,17 @@ public class UserVaultService implements VaultService {
     @Override
     public Vault updateVault(final String vaultId, final UpdateVaultRequest request) {
 
+        if (request.getUserId() == null) {
+            request.setUserId(getUser().getId());
+        } else if (!request.getUserId().equals(getUser().getId())) {
+            throw new InvalidDataException("Cannot update vault owner.");
+        }
+
         final var vault = getSuperUserVaultService().getVaultForUpdate(vaultId, request);
 
         return getVaultDao()
                 .findAndUpdateVaultBelongingToUser(vault, getUser().getId())
-                .orElseThrow(() -> new InvalidDataException("Cannot update Vault for User."));
+                .orElseThrow(() -> new InvalidDataException("Cannot update vault owner."));
 
     }
 

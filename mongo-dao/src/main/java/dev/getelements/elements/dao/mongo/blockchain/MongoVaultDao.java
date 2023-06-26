@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
@@ -185,8 +186,10 @@ public class MongoVaultDao implements VaultDao {
 
         final var query = getDatastore()
                 .find(MongoVault.class)
-                .filter(eq("_id", objectId))
-                .filter(eq("user", mongoUser.get()));
+                .filter(and(
+                        eq("_id", objectId),
+                        eq("user", mongoUser.get())
+                ));
 
         final var updated = new UpdateBuilder()
                 .with(set("user", mongoUser.get()))

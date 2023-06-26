@@ -215,8 +215,8 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(dataProvider = "encryptedVaultsById", groups = "update", dependsOnGroups = "create")
-    public void testStealVaultFails(final String id, final Vault vault) {
+    @Test(dataProvider = "encryptedVaultsById", groups = "steal", dependsOnGroups = "create")
+    public void testStealEncryptedVaultFails(final String id, final Vault vault) {
 
         final var toUpdate = new UpdateVaultRequest();
         toUpdate.setUserId(trudyClientContext.getUser().getId());
@@ -234,8 +234,25 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(dataProvider = "encryptedVaultsById", groups = "update", dependsOnGroups = "create")
-    public void testTransferVaultFails(final String id, final Vault vault) {
+    @Test(dataProvider = "unencryptedVaultsById", groups = "steal", dependsOnGroups = "create")
+    public void testStealUnencryptedVaultFails(final String id, final Vault vault) {
+
+        final var toUpdate = new UpdateVaultRequest();
+        toUpdate.setUserId(trudyClientContext.getUser().getId());
+        toUpdate.setDisplayName("Vault for (Re-Encrypted): " + vault.getUser().getName());
+
+        final var response = client
+                .target(apiRoot + "/blockchain/omni/vault/" + id)
+                .request()
+                .header(SESSION_SECRET, trudyClientContext.getSessionSecret())
+                .put(Entity.entity(toUpdate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 400);
+
+    }
+
+    @Test(dataProvider = "encryptedVaultsById", groups = "transfer", dependsOnGroups = "create")
+    public void testTransferEncryptedVaultFails(final String id, final Vault vault) {
 
         final var toUpdate = new UpdateVaultRequest();
         toUpdate.setUserId(trudyClientContext.getUser().getId());
@@ -253,7 +270,28 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(dataProvider = "unencryptedVaultsById", groups = {"encrypt", "update"}, dependsOnGroups = "create")
+    @Test(dataProvider = "encryptedVaultsById", groups = "transfer", dependsOnGroups = "create")
+    public void testTransferUnencryptedVaultFails(final String id, final Vault vault) {
+
+        final var toUpdate = new UpdateVaultRequest();
+        toUpdate.setUserId(trudyClientContext.getUser().getId());
+        toUpdate.setDisplayName("Vault for (Re-Encrypted): " + vault.getUser().getName());
+
+        final var response = client
+                .target(apiRoot + "/blockchain/omni/vault/" + id)
+                .request()
+                .header(SESSION_SECRET, userClientContext.getSessionSecret())
+                .put(Entity.entity(toUpdate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 400);
+
+    }
+
+    @Test(
+            dataProvider = "unencryptedVaultsById",
+            groups = {"encrypt", "update"},
+            dependsOnGroups = {"create", "steal", "transfer"}
+    )
     public void testEncryptUnencrypted(final String id, final Vault vault) {
 
         final var toUpdate = new UpdateVaultRequest();
@@ -287,7 +325,7 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(groups = "read", dependsOnGroups = {"update", "encrypt"})
+    @Test(groups = "read", dependsOnGroups = {"update", "encrypt", "steal", "transfer"})
     public void testGetVaults() {
 
         final var vaults = new PaginationWalker().toList(((offset, count) -> client
@@ -302,7 +340,11 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(dataProvider = "encryptedVaultsById", groups = "read", dependsOnGroups = {"update", "encrypt"})
+    @Test(
+            dataProvider = "encryptedVaultsById",
+            groups = "read",
+            dependsOnGroups = {"update", "encrypt", "steal", "transfer"}
+    )
     public void testGetVaultsAllowsForCorrectUser(final String vaultId, final Vault vault) {
 
         final var response = client
@@ -315,7 +357,11 @@ public class UserVaultApiTest {
 
     }
 
-    @Test(dataProvider = "encryptedVaultsById", groups = "read", dependsOnGroups = {"update", "encrypt"})
+    @Test(
+            dataProvider = "encryptedVaultsById",
+            groups = "read",
+            dependsOnGroups = {"update", "encrypt", "steal", "transfer"}
+    )
     public void testGetVaultsDeniesForWrongUser(final String vaultId, final Vault vault) {
 
         final var response = client
