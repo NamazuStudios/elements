@@ -46,7 +46,7 @@ define DOCKER_BUILD_TAG_JAVA
 		$(1)
 endef
 
-revision: deps
+revision: # deps
 	$(call DOCKER_BUILD_TAG,elements-base)
 	$(call DOCKER_BUILD_TAG,elements-app-node)
 	$(call DOCKER_BUILD_TAG,elements-jetty-ws)
