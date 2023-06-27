@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.namazustudios.socialengine</groupId>
-        <artifactId>namazu-socialengine-system</artifactId>
+        <groupId>dev.getelements.elements</groupId>
+        <artifactId>eci-elements</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
+    <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-lua</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>rt-server-lua</name>
@@ -23,14 +23,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>jnlua</artifactId>
-            <version>${project.version}</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
@@ -64,77 +64,81 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
+    <profiles>
+        <profile>
+            <id>javadoc</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.3.0</version>
 
-                <executions>
-                    <execution>
-                        <id>standard-javadoc</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                    <execution>
+                        <executions>
+                            <execution>
+                                <id>standard-javadoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                            <execution>
 
-                        <id>luastubs-javadoc</id>
+                                <id>luastubs-javadoc</id>
 
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
+                                <phase>package</phase>
 
-                        <configuration>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
 
-                            <doclet>com.namazustudios.socialengine.doclet.lua.LDocStubDoclet</doclet>
+                                <configuration>
 
-                            <docletArtifact>
-                                <groupId>com.namazustudios.socialengine</groupId>
-                                <artifactId>doclet</artifactId>
-                                <version>${project.version}</version>
-                            </docletArtifact>
+                                    <doclet>dev.getelements.elements.doclet.lua.LDocStubDoclet</doclet>
 
-                            <additionalOptions>
-                                <additionalOption>-d</additionalOption>
-                                <additionalOption>'${project.build.directory}/site/luastubs'</additionalOption>
-                            </additionalOptions>
+                                    <docletArtifact>
+                                        <groupId>dev.getelements.elements</groupId>
+                                        <artifactId>doclet</artifactId>
+                                        <version>${project.version}</version>
+                                    </docletArtifact>
 
-                            <useStandardDocletOptions>false</useStandardDocletOptions>
+                                    <additionalOptions>
+                                        <additionalOption>-d</additionalOption>
+                                        <additionalOption>'${project.build.directory}/site/luastubs'</additionalOption>
+                                    </additionalOptions>
 
-                            <classifier>luastubs</classifier>
-                            <outputDirectory>${project.build.directory}/site/luastubs</outputDirectory>
+                                    <useStandardDocletOptions>false</useStandardDocletOptions>
+                                    <classifier>luastubs</classifier>
+                                    <outputDirectory>${project.build.directory}/site/luastubs</outputDirectory>
 
-                        </configuration>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-install-plugin</artifactId>
+                        <version>2.4</version>
+                        <executions>
+                            <execution>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>install-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>${project.groupId}</groupId>
+                                    <artifactId>${project.artifactId}</artifactId>
+                                    <version>${project.version}</version>
+                                    <packaging>${project.packaging}</packaging>
+                                    <classifier>luastubs</classifier>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}-luastubs.jar</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.4</version>
-                <executions>
-                    <execution>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <version>${project.version}</version>
-                            <packaging>${project.packaging}</packaging>
-                            <classifier>luastubs</classifier>
-                            <file>${project.build.directory}/${project.artifactId}-${project.version}-luastubs.jar</file>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
-    </build>
 </project>

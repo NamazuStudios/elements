@@ -5,23 +5,48 @@
 
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
-image: maven:3.6.3
+image:
+  name: distribution.getelements.dev/elements-deployment-web-services-ci:c313ae099a36ed7adbe1203a2b9de2e700be3a10
+  username: $REGISTRY_USER
+  password: $REGISTRY_PASS
+
+options:
+  max-time: 60
+  docker: true
+  size: 2x
+
+definitions:
+  services:
+    docker:
+      image: docker:dind
 
 pipelines:
   default:
-    - parallel:
-      - step:
-          name: Build and Test
-          caches:
-            - maven
-          script:
-            - mvn -B verify --file pom.xml
-          after-script:
-              # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
-      - step:
-          name: Security Scan
-          script:
-            # Run a security scan for sensitive data.
-            # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
-            - pipe: atlassian/git-secrets-scan:0.5.1
+    - step:
+        size: 4x
+        name: Build and Test
+        runs-on:
+          - "linux"
+          - "self.hosted"
+        caches:
+          - maven
+        services:
+          - docker
+        script:
+          # The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
+          # the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
+          # The reason we do this is because the doclet will crash on some parts of the code and needs more testing. At
+          # this point it may not be worth it to fix if we are going to move more towards a different scripting system.
+          - docker buildx create --use
+          - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+          - git submodule update --init --recursive
+          - mvn --no-transfer-progress -B clean install
+          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
+          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common-util install
+          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects dao install
+          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects service install
+          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects rt-server-lua install
+          - make -C docker-config
+        after-script:
+          # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+          - pipe: atlassian/checkstyle-report:0.3.0

@@ -11,7 +11,7 @@ local testjavamoduleb = require "test.java.module.a"
 
 local javamodule = {}
 
-local simple_model = java.require("com.namazustudios.socialengine.rt.lua.guice.rest.SimpleModel")
+local simple_model = java.require("dev.getelements.elements.rt.lua.guice.rest.SimpleModel")
 
 function javamodule.test_hello_world()
     testjavamodulea.hello_world()

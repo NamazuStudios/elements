@@ -1,0 +1,116 @@
+package dev.getelements.elements.rt.servlet;
+
+import dev.getelements.elements.rt.MutableAttributes;
+import dev.getelements.elements.rt.RequestHeader;
+import dev.getelements.elements.rt.exception.BadRequestException;
+import dev.getelements.elements.rt.http.CompositeHttpManifestMetadata;
+import dev.getelements.elements.rt.http.HttpManifestMetadata;
+import dev.getelements.elements.rt.http.HttpRequest;
+import dev.getelements.elements.rt.manifest.http.HttpContent;
+import dev.getelements.elements.rt.manifest.http.HttpManifest;
+import dev.getelements.elements.rt.manifest.http.HttpVerb;
+import dev.getelements.elements.rt.util.LazyValue;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static dev.getelements.elements.rt.manifest.http.HttpVerb.POST;
+import static dev.getelements.elements.rt.manifest.http.HttpVerb.PUT;
+import static java.lang.String.format;
+import static java.util.Collections.list;
+import static java.util.stream.Collectors.toList;
+
+public class ServletHttpRequest implements HttpRequest {
+
+    private final UUID uniqueId = UUID.randomUUID();
+
+    private final ServletRequestHeader servletRequestHeader;
+
+    private final ServletRequestAttributes servletRequestAttributes;
+
+    private final CompositeHttpManifestMetadata compositeHttpManifestMetadata;
+
+    private final Supplier<HttpServletRequest> httpServletRequestSupplier;
+
+    private final Function<HttpContent, Object> payloadDeserializerFunction;
+
+    private final LazyValue<Object> payloadValue = new LazyValue<>(this::deserializePayload);
+
+    public ServletHttpRequest(final HttpManifest httpManifest,
+                              final Supplier<HttpServletRequest> httpServletRequestSupplier,
+                              final Function<HttpContent, Object> payloadDeserializerFunction) {
+        this.httpServletRequestSupplier = httpServletRequestSupplier;
+        this.payloadDeserializerFunction = payloadDeserializerFunction;
+        this.compositeHttpManifestMetadata = new CompositeHttpManifestMetadata(this, httpManifest);
+        this.servletRequestHeader = new ServletRequestHeader(compositeHttpManifestMetadata, httpServletRequestSupplier);
+        this.servletRequestAttributes = new ServletRequestAttributes(httpServletRequestSupplier::get);
+    }
+
+    @Override
+    public String getId() {
+        return uniqueId.toString();
+    }
+
+    @Override
+    public HttpVerb getVerb() {
+        try {
+            return HttpVerb.valueOf(httpServletRequestSupplier.get().getMethod());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex);
+        }
+    }
+
+    @Override
+    public HttpManifestMetadata getManifestMetadata() {
+        return compositeHttpManifestMetadata;
+    }
+
+    @Override
+    public RequestHeader getHeader() {
+        return servletRequestHeader;
+    }
+
+    @Override
+    public MutableAttributes getAttributes() {
+        return servletRequestAttributes;
+    }
+
+    @Override
+    public Object getPayload() {
+        return payloadValue.get();
+    }
+
+    @Override
+    public List<String> getParameterNames() {
+        return list(httpServletRequestSupplier.get().getParameterNames());
+    }
+
+    @Override
+    public List<Object> getParameters(final String parameterName) {
+        final HttpServletRequest httpServletRequest = httpServletRequestSupplier.get();
+        return Stream.of(httpServletRequest.getParameterValues(parameterName)).collect(toList());
+    }
+
+    private Object deserializePayload() {
+
+        final HttpVerb verb = getVerb();
+
+        if (POST.equals(verb) || PUT.equals(verb)) {
+            final HttpContent requestContent = getManifestMetadata().getPreferredRequestContent();
+            return payloadDeserializerFunction.apply(requestContent);
+        } else {
+            return null;
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        return format("%s -> %s %s", uniqueId, getVerb(), getHeader().getPath());
+    }
+
+}

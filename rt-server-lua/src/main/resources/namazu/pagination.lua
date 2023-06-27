@@ -6,44 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local model = require "namazu.model"
-
-local pagination = {}
-
-function pagination.of(offset, total, objects)
-    return {
-        ["offset"] = offset,
-        ["total"] = total,
-        ["objects"] = model.array(objects)
-    }
-end
-
-function pagination.manifest_for(model)
-    return {
-
-        description = "Pagination of " .. model,
-
-        properties = {
-
-            offset = {
-                description = "The starting offset in the dataset of " .. model .. " objects",
-                type = "number"
-            },
-
-            total = {
-                description = "The total number of " .. model .. " objects in the dataset",
-                type = "number"
-            },
-
-            objects = {
-                description = "The list of " .. model .. " objects",
-                type = "array",
-                model = model
-            }
-
-        }
-
-    }
-end
-
-return pagination
+local log = require "eci.log"
+local module = require "eci.pagination"
+log.warn("namazu.pagination is deprecated.  Use eci.pagination instead.")
+return module

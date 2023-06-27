@@ -6,7 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local pagination = require "namazu.pagination"
+local pagination = require "eci.pagination"
 
 local test_pagination = {}
 

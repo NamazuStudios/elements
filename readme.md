@@ -206,7 +206,7 @@ You can run the Setup tool in the IDE which will connect to the local instance
 and add a user to your specifications.  This is the only easy way to add an 
 initial test user.
 
-Pass the following argumetns to ```com.namazustudios.socialengine.setup.Setup``` as a
+Pass the following argumetns to ```dev.getelements.elements.setup.Setup``` as a
 standalone Java application.
 
 ```

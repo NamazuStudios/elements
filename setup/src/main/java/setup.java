@@ -1,4 +1,4 @@
-import com.namazustudios.socialengine.setup.Setup;
+import dev.getelements.elements.setup.Setup;
 
 public class setup {
 

@@ -6,11 +6,11 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local log = require "namazu.log"
-local util = require "namazu.util"
-local resource = require "namazu.resource"
-local responsecode = require "namazu.response.code"
-local this_resource = require "namazu.resource.this"
+local log = require "eci.log"
+local util = require "eci.util"
+local resource = require "eci.resource"
+local responsecode = require "eci.response.code"
+local this_resource = require "eci.resource.this"
 
 local test_resource = {}
 
@@ -32,7 +32,7 @@ end
 function test_resource.test_create()
 
     local path = "/test/helloworld/" .. util.uuid()
-    local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
+    local ResourceId = java.require "dev.getelements.elements.rt.id.ResourceId"
 
     log.info("Making Resource")
     local rid = resource.create("test.helloworld", path)

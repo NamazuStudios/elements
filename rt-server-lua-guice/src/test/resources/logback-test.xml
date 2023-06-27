@@ -22,7 +22,7 @@
     <!-- Turn this to level trace to see a complete tracing of all calls and steps made making the calls. Enabling this
          is terribly detrimental to performance so it's not enabled by default.
       -->
-    <logger name="com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvocation.trace" level="debug">
+    <logger name="dev.getelements.elements.rt.remote.jeromq.JeroMQRemoteInvocation.trace" level="debug">
         <appender-ref ref="REMOTE-CALL-TRACE" />
     </logger>
 

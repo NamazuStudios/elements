@@ -6,10 +6,10 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local cluster = require "namazu.cluster"
-local this = require "namazu.resource.this"
+local cluster = require "eci.cluster"
+local this = require "eci.resource.this"
 
-local NodeId = java.require "com.namazustudios.socialengine.rt.id.NodeId"
+local NodeId = java.require "dev.getelements.elements.rt.id.NodeId"
 
 local test_cluster = {}
 

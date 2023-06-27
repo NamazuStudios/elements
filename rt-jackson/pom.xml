@@ -4,12 +4,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.namazustudios.socialengine</groupId>
-        <artifactId>namazu-socialengine-system</artifactId>
+        <groupId>dev.getelements.elements</groupId>
+        <artifactId>eci-elements</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
+    <groupId>dev.getelements.elements</groupId>
 
     <artifactId>rt-jackson</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -22,7 +22,7 @@
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-common</artifactId>
             <version>${project.version}</version>
         </dependency>

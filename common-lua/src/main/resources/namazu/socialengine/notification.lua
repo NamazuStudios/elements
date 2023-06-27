@@ -7,7 +7,7 @@
 
 -- Moved to namazu.elements.auth
 
-local log = require "namazu.log"
+local log = require "eci.log"
 local notification = require "namazu.elements.notification"
 log.warn("namazu.socialengine.notification is deprecated.  Use namazu.elements.notification instead.")
 return notification

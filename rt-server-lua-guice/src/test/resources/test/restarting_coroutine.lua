@@ -10,7 +10,7 @@
 -- resource until it's complete.  Essentially only one coroutine may run at a time which doesn't work.
 
 local coroutine = require "coroutine"
-local namazu_coroutine = require "namazu.coroutine"
+local namazu_coroutine = require "eci.coroutine"
 
 local task_id = nil
 local finished = false

@@ -1,8 +1,8 @@
-local util = require "namazu.util"
-local resource = require "namazu.resource"
-local responsecode = require "namazu.response.code"
-local index = require "namazu.index"
-local log = require "namazu.log"
+local util = require "eci.util"
+local resource = require "eci.resource"
+local responsecode = require "eci.response.code"
+local index = require "eci.index"
+local log = require "eci.log"
 
 local pass_table = {}
 

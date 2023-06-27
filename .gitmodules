@@ -1,13 +1,9 @@
 [submodule "socialengine-jnlua"]
 	path = socialengine-jnlua
-	url = https://bitbucket.org/eci-elements/socialengine-jnlua.git
+	url = git@bitbucket.org:eci-elements/socialengine-jnlua.git
 [submodule "search-tools"]
 	path = search-tools
-	url = https://bitbucket.org/eci-elements/search-tools.git
+	url = git@bitbucket.org:eci-elements/search-tools.git
 [submodule "index-storage"]
 	path = index-storage
-	url = https://bitbucket.org/eci-elements/index-storage.git
-[submodule "docker/neo3-privatenet-docker"]
-	path = docker/neo3-privatenet-docker
-	url = https://github.com/AxLabs/neo3-privatenet-docker.git
-
+	url = git@bitbucket.org:eci-elements/index-storage.git

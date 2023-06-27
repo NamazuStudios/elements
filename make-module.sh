@@ -4,7 +4,7 @@ read -p "Artifact: " artifact
 
 mvn -B archetype:generate \
     -DarchetypeGroupId=org.apache.maven.archetypes \
-    -DgroupId=com.namazustudios.socialengine \
+    -DgroupId=dev.getelements.elements \
     -DartifactId=${artifact}
 
 mvn_status=$?
