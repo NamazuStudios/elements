@@ -38,7 +38,7 @@ pipelines:
           # The reason we do this is because the doclet will crash on some parts of the code and needs more testing. At
           # this point it may not be worth it to fix if we are going to move more towards a different scripting system.
           - docker buildx create --use
-          - docker login --username $REGISTRY_USER --password $REGISTRY_PASS
+          - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
           - git submodule update --init --recursive
           - mvn --no-transfer-progress -B clean install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
