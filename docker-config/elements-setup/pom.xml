@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <parent>
-        <artifactId>docker</artifactId>
+        <artifactId>docker-config</artifactId>
         <groupId>dev.getelements.elements</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <groupId>dev.getelements.elements</groupId>
-    <artifactId>elements-jetty-ws</artifactId>
+    <artifactId>elements-setup</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <profiles>
@@ -22,12 +22,9 @@
             <id>docker</id>
 
             <dependencies>
-
-                <!-- Core dependencies -->
-
                 <dependency>
                     <groupId>dev.getelements.elements</groupId>
-                    <artifactId>jetty-ws</artifactId>
+                    <artifactId>setup</artifactId>
                     <version>${project.version}</version>
                 </dependency>
                 <dependency>
@@ -35,35 +32,6 @@
                     <artifactId>logback-classic</artifactId>
                     <version>${logback.version}</version>
                 </dependency>
-
-                <!-- Required for Documentation Services -->
-
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>common</artifactId>
-                    <classifier>luastubs</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>common-util</artifactId>
-                    <classifier>luastubs</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>dao</artifactId>
-                    <classifier>luastubs</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>service</artifactId>
-                    <classifier>luastubs</classifier>
-                </dependency>
-                <dependency>
-                    <groupId>dev.getelements.elements</groupId>
-                    <artifactId>rt-server-lua</artifactId>
-                    <classifier>luastubs</classifier>
-                </dependency>
-
             </dependencies>
 
             <build>
