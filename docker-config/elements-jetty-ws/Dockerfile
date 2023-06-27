@@ -7,7 +7,7 @@ EXPOSE 8080
 
 USER root:root
 
-RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsasl2-dev lua5.3 lua5.3-dev libmongoc-dev libbson-dev && \
+RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsasl2-dev lua5.3 lua5.3-dev && \
     wget https://luarocks.org/releases/luarocks-3.9.1.tar.gz && \
     tar zxpf luarocks-3.9.1.tar.gz && \
     cd luarocks-3.9.1 && \
@@ -15,6 +15,6 @@ RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsas
     cd .. && \
     rm luarocks-3.9.1.tar.gz && \
     rm -rf luarocks-3.9.1 && \
-    luarocks install lua-mongo
+    luarocks install ldoc
 
 ENTRYPOINT ["java", "dev.getelements.elements.rest.RestAPIMain"]
