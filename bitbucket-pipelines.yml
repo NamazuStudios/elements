@@ -44,7 +44,7 @@ pipelines:
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects dao install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects service install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects rt-server-lua install
-          - make -C docker
+          - make -C docker_config
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
