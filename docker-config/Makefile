@@ -19,7 +19,7 @@ MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q
 
 TARGET_ARCHITECTURES="linux/amd64,linux/arm64"
 
-define DOCKER_BUILD_TAG
+define DOCKER_BUILD_TAG_BASE
 	@echo "Building Base Image for $(1)"
 	$(DOCKER_BUILD) \
 		--pull \
@@ -32,7 +32,7 @@ define DOCKER_BUILD_TAG
 		$(1)
 endef
 
-define DOCKER_BUILD_TAG_JAVA
+define DOCKER_BUILD_TAG_DERIVED
 	@echo "Building Java Image for $(1)"
 	$(DOCKER_BUILD) \
 		--pull \
@@ -47,10 +47,10 @@ define DOCKER_BUILD_TAG_JAVA
 endef
 
 revision: deps
-	$(call DOCKER_BUILD_TAG,elements-base)
-	$(call DOCKER_BUILD_TAG,elements-app-node)
-	$(call DOCKER_BUILD_TAG,elements-jetty-ws)
-	$(call DOCKER_BUILD_TAG,elements-setup)
+	$(call DOCKER_BUILD_TAG_BASE,elements-base)
+	$(call DOCKER_BUILD_TAG_DERIVED,elements-app-node)
+	$(call DOCKER_BUILD_TAG_DERIVED,elements-jetty-ws)
+	$(call DOCKER_BUILD_TAG_DERIVED,elements-setup)
 
 deps:
 	$(MAVEN_COPY_DEPS)
