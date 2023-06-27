@@ -39,7 +39,7 @@ pipelines:
           # this point it may not be worth it to fix if we are going to move more towards a different scripting system.
           - docker buildx create --use
           - git submodule update --init --recursive
-          - mvn --no-transfer-progress -B -DskipTests clean install
+          - mvn --no-transfer-progress -B clean install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common-util install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects dao install
