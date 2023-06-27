@@ -37,6 +37,7 @@ pipelines:
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects dao install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects service install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects rt-server-lua install
+          - chmod ugo+x $(which docker)
           - make -C docker
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
