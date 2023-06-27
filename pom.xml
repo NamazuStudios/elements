@@ -24,6 +24,13 @@
     </repositories>
 
     <modules>
+
+        <!-- Submodules Slated for Removal -->
+        <module>search-tools</module>
+        <module>index-storage</module>
+        <module>socialengine-jnlua/jnlua</module>
+
+        <!-- Main Project Modules -->
         <module>common</module>
         <module>common-util</module>
         <module>common-servlet</module>
@@ -38,8 +45,6 @@
         <module>rest-jetty</module>
         <module>guice</module>
         <module>rest-guice</module>
-        <module>search-tools</module>
-        <module>index-storage</module>
         <module>rt-common</module>
         <module>rt-jeromq</module>
         <module>rt-jeromq-guice</module>
@@ -85,7 +90,6 @@
         <module>app-serve-jetty</module>
         <module>app-serve-testkit</module>
         <module>app-node</module>
-        <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
@@ -725,88 +729,5 @@
             </plugins>
         </pluginManagement>
     </build>
-
-    <profiles>
-        <profile>
-            <id>release</id>
-            <modules>
-                <module>common</module>
-                <module>common-util</module>
-                <module>common-servlet</module>
-                <module>common-rt</module>
-                <module>rest-api</module>
-                <module>service</module>
-                <module>service-redis</module>
-                <module>service-guice</module>
-                <module>mongo-dao</module>
-                <module>dao</module>
-                <module>setup</module>
-                <module>rest-jetty</module>
-                <module>guice</module>
-                <module>rest-guice</module>
-                <module>rt-common</module>
-                <module>rt-jeromq</module>
-                <module>rt-jeromq-guice</module>
-                <module>rt-server</module>
-                <module>rt-server-git</module>
-                <module>rt-server-git-guice</module>
-                <module>rt-server-simple</module>
-                <module>rt-server-simple-guice</module>
-                <module>rt-server-xodus</module>
-                <module>rt-server-xodus-guice</module>
-                <module>rt-server-cluster</module>
-                <module>rt-server-cluster-guice</module>
-                <module>rt-server-cluster-jeromq</module>
-                <module>rt-server-cluster-jeromq-guice</module>
-                <module>rt-server-cluster-node</module>
-                <module>rt-server-cluster-node-jeromq</module>
-                <module>rt-server-cluster-node-jeromq-guice</module>
-                <module>rt-server-transact</module>
-                <module>rt-server-transact-unixfs</module>
-                <module>rt-server-transact-unixfs-guice</module>
-                <module>rt-server-transact-guice</module>
-                <module>rt-server-cluster-node-guice</module>
-                <module>rt-server-lua</module>
-                <module>rt-server-lua-guice</module>
-                <module>rt-server-lua-stress-tests</module>
-                <module>rt-client</module>
-                <module>rt-http-servlet</module>
-                <module>rt-fst</module>
-                <module>rt-fst-guice</module>
-                <module>rt-jackson</module>
-                <module>rt-jackson-guice</module>
-                <module>rt-server-guice</module>
-                <module>rt-jersey-guice</module>
-                <module>rt-server-lua-testkit</module>
-                <module>docker-config</module>
-                <module>common-git</module>
-                <module>common-git-guice</module>
-                <module>code-serve-jetty</module>
-                <module>common-jetty</module>
-                <module>cdn-serve</module>
-                <module>cdn-serve-api</module>
-                <module>cdn-serve-jetty</module>
-                <module>app-serve-jetty</module>
-                <module>app-serve-testkit</module>
-                <module>app-node</module>
-                <module>common-lua</module>
-                <module>rt-server-testkit</module>
-                <module>service-test</module>
-                <module>doc-serve-jetty</module>
-                <module>doclet</module>
-                <module>mongo-test</module>
-                <module>formidium-jetty</module>
-                <module>common-servlet-guice</module>
-                <module>rpc-api</module>
-                <module>rpc-api-guice</module>
-                <module>rpc-api-jetty</module>
-                <module>rpc-api-ethereum</module>
-                <module>mongo-guice</module>
-                <module>jetty-ws</module>
-                <module>jetty-ws-test</module>
-                <module>web-ui-angular-jetty</module>
-            </modules>
-        </profile>
-    </profiles>
 
 </project>
