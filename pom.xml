@@ -74,7 +74,7 @@
         <module>rt-server-guice</module>
         <module>rt-jersey-guice</module>
         <module>rt-server-lua-testkit</module>
-        <module>docker</module>
+        <module>docker_config</module>
         <module>common-git</module>
         <module>common-git-guice</module>
         <module>code-serve-jetty</module>
