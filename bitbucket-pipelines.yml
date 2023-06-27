@@ -6,7 +6,7 @@
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
 image:
-  name: distribution.getelements.dev/elements-deployment-web-services-ci:e12d003bec20f42434adf2aafbd3fe0e810eabf8
+  name: distribution.getelements.dev/elements-deployment-web-services-ci:c313ae099a36ed7adbe1203a2b9de2e700be3a10
   username: $REGISTRY_USER
   password: $REGISTRY_PASS
 
@@ -14,6 +14,11 @@ options:
   max-time: 60
   docker: true
   size: 2x
+
+definitions:
+  services:
+    docker:
+      image: docker:dind
 
 pipelines:
   default:
@@ -25,13 +30,13 @@ pipelines:
           - "self.hosted"
         caches:
           - maven
+        services:
+          - docker
         script:
           # The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
           # the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
           # The reason we do this is because the doclet will crash on some parts of the code and needs more testing. At
           # this point it may not be worth it to fix if we are going to move more towards a different scripting system.
-          - chown -R root:root $BITBUCKET_CLONE_DIR
-          - which docker && echo $(which docker)
           - git submodule update --init --recursive
           - mvn --no-transfer-progress -B -DskipTests clean install
           - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
