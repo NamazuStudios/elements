@@ -12,7 +12,7 @@ endif
 
 	mvn release:branch \
 		--batch-mode \
-		-0activate-profiles \
 		-Ddry-run=true \
+		-DcommitByProject=true \
 		-DautoVersionSubmodules=true \
 		-DbranchName=release/$MAJOR_VERSION

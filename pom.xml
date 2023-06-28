@@ -9,12 +9,11 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <scm>
-        <url>ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</url>
-        <connection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</connection>
-        <developerConnection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git
-        </developerConnection>
-    </scm>
+<!--    <scm>-->
+<!--        <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>-->
+<!--        <connection>scm:git:ssh://git@bitbucket.org:eci-elements/web-services.git</connection>-->
+<!--        <developerConnection>scm:git:git@bitbucket.org:eci-elements/web-services.git</developerConnection>-->
+<!--    </scm>-->
 
     <repositories>
         <repository>
