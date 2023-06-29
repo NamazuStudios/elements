@@ -10,9 +10,10 @@ ifndef MAJOR_VERSION
 	$(error MAJOR_VERSION is not set)
 endif
 
-	mvn release:branch \
+	mvn release:prepare \
 		--batch-mode \
-		-Ddry-run=true \
+		-DskipTests=true \
+		-DdryRun=true \
 		-DcommitByProject=true \
 		-DautoVersionSubmodules=true \
 		-DbranchName=release/$MAJOR_VERSION

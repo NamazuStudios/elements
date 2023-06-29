@@ -126,7 +126,6 @@
         <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>3.0.0-M5</surefire.version>
-        <maven.release.plugin.version>3.0.0-M5</maven.release.plugin.version>
         <jackson.version>2.12.0</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.12</reflections.version>
@@ -718,16 +717,6 @@
                         <argLine>
                             --illegal-access=permit
                         </argLine>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>${maven.release.plugin.version}</version>
-                    <configuration>
-                        <checkModificationExcludes>
-                            <checkModificationExclude>Makefile</checkModificationExclude>
-                        </checkModificationExcludes>
                     </configuration>
                 </plugin>
             </plugins>
