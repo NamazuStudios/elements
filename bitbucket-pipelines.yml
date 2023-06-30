@@ -77,6 +77,7 @@ pipelines:
         services:
           - docker
         script:
+          - echo "Running Default Build."
           # The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
           # the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
           # The reason we do this is because the doclet will crash on some parts of the code and needs more testing. At
