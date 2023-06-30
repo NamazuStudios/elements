@@ -3,7 +3,7 @@
 .PHONY=login,tag,push,clean
 
 REV ?= $(shell git rev-parse --verify HEAD)
-TAG ?= $(shell git rev-parse --verify HEAD)
+TAG ?= $(shell git describe --tags >2 /dev/null | git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
@@ -15,7 +15,6 @@ DOCKER_BUILD=docker buildx build
 DOCKER_LOGIN=docker login
 
 MAVEN_COPY_DEPS=mvn -Pdocker $(MAVEN_OPTIONS) package
-MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
 
 TARGET_ARCHITECTURES="linux/amd64,linux/arm64"
 
@@ -27,8 +26,7 @@ define DOCKER_BUILD_TAG_BASE
 		--platform $(TARGET_ARCHITECTURES) \
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
-		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
-		--tag distribution.getelements.dev/$(1):$(MAVEN_PROJECT_VERSION) \
+		--tag distribution.getelements.dev/$(1):$(TAG_SHORT)
 		$(1)
 endef
 
@@ -42,7 +40,6 @@ define DOCKER_BUILD_TAG_DERIVED
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
 		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
-		--tag distribution.getelements.dev/$(1):$(MAVEN_PROJECT_VERSION) \
 		$(1)
 endef
 

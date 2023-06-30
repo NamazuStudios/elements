@@ -1,4 +1,6 @@
 
+.PHONY=help,path,release,tag,commit,push
+
 define git
 	@echo git submodule foreach git $(1)
 	@echo git $(1)
