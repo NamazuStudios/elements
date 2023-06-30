@@ -31,7 +31,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Release Build"
-            # - ci/release.sh
+            - ci/release.sh
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -44,7 +44,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
-            # - ci/patch.sh
+            - ci/patch.sh
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
