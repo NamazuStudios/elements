@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+git submodule update --init --recursive
+
 mvn_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
 if [[ ${mvn_version} == *-SNAPSHOT ]]

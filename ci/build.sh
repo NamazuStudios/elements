@@ -4,6 +4,9 @@
 
 docker buildx create --use
 echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+
+# Gets all submodules
+
 git submodule update --init --recursive
 
 # The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
