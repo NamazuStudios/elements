@@ -31,8 +31,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Release Build"
-#            - make release
-#            - make commit tag push
+            # - ci/release.sh
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -45,8 +44,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
-#            - make patch
-#            - make commit tag push
+            # - ci/patch.sh
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -60,8 +58,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Tag Build"
-          #            - make patch
-          #            - make commit tag push
+            # - ci/build.sh
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -78,20 +75,7 @@ pipelines:
           - docker
         script:
           - echo "Running Default Build."
-          # The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
-          # the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
-          # The reason we do this is because the doclet will crash on some parts of the code and needs more testing. At
-          # this point it may not be worth it to fix if we are going to move more towards a different scripting system.
-#          - docker buildx create --use
-#          - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-#          - git submodule update --init --recursive
-#          - mvn --no-transfer-progress -B -DskipTests install
-#          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
-#          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common-util install
-#          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects dao install
-#          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects service install
-#          - mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects rt-server-lua install
-#          - make -C docker-config
+          # - ci/build.sh
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
