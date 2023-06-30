@@ -238,9 +238,20 @@ The project follows (well attempts to) follow Google coding standards.
 - [Google Java Standards](https://google.github.io/styleguide/javaguide.html)
 - [Literate Coding](https://en.wikipedia.org/wiki/Literate_programming)
 
+If, during the development process, you observe a deviation from these 
+standards (or any other standards mentioned in this document) use your best
+judgement in one of the following:
+
+- If the change is simple and non-breaking, incorporate it into existing work.
+  In the relevant git commmit, note why a change was made and ensure all 
+  appropriate tests pass.
+- If the change is not simple and requires some refactoring, create a bug
+  ticket for the technical debt. We can address that debt separately.
+
 ## Formatting, Syntax, and Structure
 
-However there are a few notable changes you will observe.
+However, there are a few notable changes you will observe from the standard
+Java coding style.
 
 - The column limit is 120 characters, in a few places it makes sense to go
   beyond that limit and we're not picky about that.
@@ -260,18 +271,142 @@ However there are a few notable changes you will observe.
   project was deliberately designed to avoid it, except where necessary.  The
   only exception is logging.
   
-## Development Process
+# Development Process
 
 - Every git commit must reference the associated ticket so that Jira can 
   associate the ticket with the repository.  This is enforced on the honor 
   system becuase every once in a great while you need to break this rule.
 - Everything should be committed to a branch, built, and tested before 
-  merging ot master.  It is okay if a feature branch has issues building
-  but master should always be clean.
-- Code should only be merged into master as the product of a pull request and
-  should almost never be pushed right to master.
-- There is no CI (yet) so clean pushes are on the honor system.
-- At least one other person must review and collectionPassExecutionHandler code before committing it to
-  master.
+  merging.  It is okay if a feature or bugfix branches have issues building
+  but master development, and release branches should always be clean.
+- Code should only be merged into master, development, or release branches 
+  as the product of a pull request and should almost never be pushed direct 
+  to master, development, or release branches.
+- At least one other person must review and test code before committing it to 
+  master, features, or release branches.
 - If a branch conflicts with master, it is the responsibility of the coder who
   owns the branch to merge master back and ensure it does not conflict.
+- If somebody commits bad code to master, development, or 
+
+# Database Standards
+
+We use MongoDB. Some code is not consistent across the board because it was
+written at different times.
+
+In general every object's primary
+
+# Arechitectural Standards
+
+
+## N-Tiered Architecture
+
+Elements follows N-Tiered architecture. This means that there are approximately
+three layers in the application for any given component. Headless services, 
+such as the scripting engine, may lack the presentation layer but have access 
+to all APIs in the system.
+
+### Presentation Layer
+
+This is typically the JAX-RS annotated code, servlet code, and filtering code.
+This is responsible for only dealing with the data presented by the client. It
+does not make business decisions about the code path, and rather relies on
+lower layers for that task.
+
+* Deals in the DTO models (eg Request/Response Objects).
+* Performs minimal data validation.
+* Defers most business logic decisions to the Service layer
+* Never deals directly with the dao/database layer.
+
+### Service Layer
+
+TODO:
+
+### Database Layer
+
+TODO:
+
+# Release Process
+
+Bitbucket Pipelines implement and automate most of this process. However, some 
+parts may require manual intervention due to some technical limitations in 
+Maven. Elements follows [Semantic Versioning](https://semver.org/). Briefly 
+summarized, the following rules apply.
+
+* **Major Release** - Breaking API changes. Breaking API changes include changes
+  within the REST API or the scripting engine. 
+* **Minor release** - Non-Breaking API changes which enhance the existing feature
+  set. This includes REST API changes or changes to the scripting engine.
+* **Patch release** - Non-breaking and non-enhancing changes. This includes bug
+  fixes or patches only.
+
+The rest of this section dives into deep detail of how we handle tags, 
+branches, and releases. The quick guide to making is release is as follows.
+
+* Create a Development Branch from the latest release branch. See the section on 
+  Development Branches below for more information.
+  * Example: Major Release (2.1.0-SNAPSHOT -> 3.0.0-SNAPSHOT)
+  * Example: Minor Release (2.1.0-SNAPSHOT -> 2.1.0-SNAPSHOT)
+* Push new branch to Bitbucket and allow CI jobs to run.
+* Develop against the development branch using the normal workflow. Observing 
+  carefully that changes in this branch are limited only to bug fixes and 
+  enhancements which do not add features. Each revision to the development
+  branch will ensure a new versioned SNAPSHOT build.
+* When a release is ready, create a release branch from the development branch.
+  In doing so, bitbucket will automatically drop the -SNAPSHOT designation from 
+  the build and create a tag which will kick off a tagged build.
+* As patches continue down that branch, merge changes to the associated release
+  branch to ensure releases are made.
+
+## Docker Tagging Scheme
+
+Every successful build in Bitbucket will generate a set of Docker with the 
+following tags.
+
+- The long-form git commit 
+- The short-form git commit
+- The current git tag. (If Available)
+
+Bitbucket Pipelines ensure that if a build passes, a fully testable image will
+be made available for testing and evaluation.
+
+Note: This does not immediately make all releases available to the public. 
+However, the all images will end up in the public distribution system. The 
+license keys will determine which versions the public can access.
+
+## Git Tagging Scheme
+
+Bitbucket will automatically build any tag generated and assign the appropriate
+Docker tag. The tag may or may not be a snapshot build and Bitbucket will ensure
+that, if the build passes, it will be appropriately tagged in the Docker 
+registry.
+
+## Master Branch
+
+There is no master branch. Only development branches for each major/minor 
+version of Elements. This may change if master is to simply serve as the
+latest development branch.
+
+## Development Branches (/development/*)
+
+When preparing a release, development branches are for the current release in
+development. As features develop, pull requests for this version land in a
+development branch. Additionally, The latest in-development version of Elements
+will be set to the project's main branch.
+
+When committing to a development branch
+
+## Release Branches (/release/*)
+
+Release branches are not meant to commit directly. Rather, a merge to a release
+branch will trigger a build for distribution. When a release branch changes,
+Bitbucket will drop the SNAPSHOT designation, make a tag, which will trigger
+a subsequent tag build for formal release. It is expected to merge POMs with
+the SNAPSHOT designation into a release branch as Bitbucket will immediately
+update the branch and make a tag.
+
+If successful, this will tag a public release in Docker.
+
+## Other Branches
+
+Other branches (eg bugfix and feature) will build and, if the build passes,
+Bitbucket will create tags in the Docker registry for the specific tag.
