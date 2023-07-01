@@ -31,7 +31,9 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Release Build"
-            - ci/release.sh
+            - make release
+            - make git commit tag push
+            - make build docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -44,12 +46,16 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
-            - ci/patch.sh
+            - make build docker
+            - make patch
+            - make git commit tag push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
-  tags:
-    "*":
+  custom:
+    tag:
+      - variables:
+          - name: Tag
       - step:
           size: 4x
           name: Build and Test
@@ -57,8 +63,9 @@ pipelines:
             - "linux"
             - "self.hosted"
           script:
-            - echo "Executing Tag Build"
-            # - ci/build.sh
+            - echo "Executing Build for $Tag"
+            - make git checkout TAG=$Tag
+            - make build docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -75,7 +82,7 @@ pipelines:
           - docker
         script:
           - echo "Running Default Build."
-          # - ci/build.sh
+          - make build docker
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0

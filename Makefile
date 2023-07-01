@@ -1,5 +1,5 @@
 
-.PHONY=help,patch,release,tag,commit,push,git,rollback
+.PHONY=help,patch,release,tag,commit,push,git,rollbackk,checkout
 
 GIT_USER?="Continuous Integration"
 GIT_EMAIL?="ci@getelements.dev"
@@ -18,6 +18,30 @@ help:
 	echo "push - Pushes all changes, including submodules to the remotes."
 	echo "tag - Tags the current Maven version in git."
 
+build:
+
+	# Gets all submodules
+	git submodule update --init --recursive
+
+	# The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
+	# the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
+	# The reason we do this iss because the doclet will crash on some parts of the code and needs more testing. At
+	# this point it may not be worth it to fix if we are going to move more towards a different scripting system.
+	# Main Build
+	mvn --no-transfer-progress -B -DskipTests install
+
+	# Second Build Phase. Skips tests as well as activates only projects.
+	mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
+	mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common-util install
+	mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects dao install
+	mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects service install
+	mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects rt-server-lua install
+
+docker:
+	docker buildx create --use
+	echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+	make -C docker_config
+
 patch:
 	mvn versions:set -DprocessAllModules=true -DnextSnapshot=true
 
@@ -32,9 +56,16 @@ git:
 	git config --global user.name $(GIT_USER)
 	git config --global user.email $(GIT_EMAIL)
 
+checkout:
+ifndef $(TAG)
+	$(error TAG must be specified)
+else
+	$(call git, checkout $(TAG))
+endif
+
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
-	$(call git, commit -a -m "\"[notag] CI Generated Release $(MAVEN_VERSION)\"")
+	$(call git, commit -a -m "\"[ci skip] CI Generated Release $(MAVEN_VERSION)\"")
 
 push:
 	$(call git, push)
