@@ -25,7 +25,7 @@ tag:
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
-	$(call git, commit -a -m "\"CI Generated Release $(MAVEN_VERSION)\"")
+	$(call git, commit -a -m "\"[notag] CI Generated Release $(MAVEN_VERSION)\"")
 
 push:
 	$(call git, push)

@@ -3,7 +3,7 @@
 .PHONY=login,tag,push,clean
 
 REV ?= $(shell git rev-parse --verify HEAD)
-TAG ?= $(shell git describe --tags >2 /dev/null | git rev-parse --verify HEAD)
+TAG ?= $(shell git describe --tags 2> /dev/null | git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
