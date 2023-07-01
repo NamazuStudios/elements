@@ -2,6 +2,8 @@
 
 git submodule update --init --recursive
 git submodule foreach git checkout master
+git submodule foreach git remote --verbose
+
 
 comment=$(git log -1 --pretty=%B)
 mvn_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -14,5 +16,7 @@ then
   echo "Skipping patch build. Contains [notag] ${mvn_version}"
 else
   echo "Processing patch build for version ${mvn_version}"
-  make patch git commit tag push || exit $?
+  make git
+  make tag commit || exit $?
+  make patch commit || exit $?
 fi
