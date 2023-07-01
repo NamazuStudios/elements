@@ -30,7 +30,7 @@ tag:
 
 git:
 	git config --global user.name $(GIT_USER)
-	git config --glbocal user.email $(GIT_EMAIL)
+	git config --global user.email $(GIT_EMAIL)
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
