@@ -13,5 +13,5 @@ then
   echo "Skipping patch build. Contains [notag] ${mvn_version}"
 else
   echo "Processing patch build for version ${mvn_version}"
-  make patch tag commit push || exit $?
+  make patch git tag commit push || exit $?
 fi

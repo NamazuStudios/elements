@@ -13,5 +13,5 @@ then
   echo "Skipping release build. Contains [notag] ${mvn_version}"
 else
   echo "Processing release build for version ${mvn_version}"
-  make release tag commit push || exit $?
+  make release git tag commit push || exit $?
 fi
