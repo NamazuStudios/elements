@@ -17,6 +17,7 @@ then
 else
   echo "Processing patch build for version ${mvn_version}"
   make git
-  make tag commit || exit $?
-  make patch commit || exit $?
+  make tag || exit $?
+  make patch || exit $?
+  make commit push || exit $?
 fi
