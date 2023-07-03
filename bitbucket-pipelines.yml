@@ -46,8 +46,8 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
-            - make build docker
             - make patch
+            - make build docker
             - make git commit tag push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
