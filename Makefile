@@ -17,11 +17,9 @@ help:
 	@echo "git - Configures git with email and name. Also checks out master in submodules. Run this before all other git commands"
 	@echo "push - Pushes all changes, including submodules to the remotes."
 	@echo "tag - Tags the current Maven version in git."
+	@echo "submodules - Initializes all submodules."
 
 build:
-
-	# Gets all submodules
-	git submodule update --init --recursive
 
 	# The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
 	# the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
@@ -56,6 +54,10 @@ git:
 	git submodule foreach git checkout master
 	git config --global user.name $(GIT_USER)
 	git config --global user.email $(GIT_EMAIL)
+
+submodules:
+	# Gets all submodules
+	git submodule update --init --recursive
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
