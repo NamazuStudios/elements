@@ -33,8 +33,8 @@ pipelines:
             - echo "Executing Release Build"
             - make submodules
             - make release
-            - make git commit tag push
             - make build docker
+            - make git commit tag push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
