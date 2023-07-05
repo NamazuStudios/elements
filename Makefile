@@ -1,11 +1,11 @@
 
-.PHONY=help,patch,release,tag,commit,push,git,rollbackk,checkout
+.PHONY=help,patch,release,tag,commit,push,git,rollbackk,checkout,pull
 
 GIT_USER?="Continuous Integration"
 GIT_EMAIL?="ci@getelements.dev"
 
 define git
-	@echo echo "Performing Commit"
+	@echo echo "Performing git $(1)"
 	git submodule foreach git $(1)
 	git $(1)
 endef
@@ -68,6 +68,10 @@ commit:
 push:
 	$(call git, push)
 	$(call git, push --tags)
+
+pull:
+	git pull
+	git submodule foreach git pull
 
 checkout:
 
