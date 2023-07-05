@@ -39,7 +39,7 @@ build:
 
 docker:
 	docker buildx create --use
-	make -C docker_config
+	make -C docker-config
 
 patch:
 	mvn versions:set -DprocessAllModules=true -DnextSnapshot=true
