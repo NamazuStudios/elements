@@ -28,7 +28,7 @@ build:
 	# The reason we do this iss because the doclet will crash on some parts of the code and needs more testing. At
 	# this point it may not be worth it to fix if we are going to move more towards a different scripting system.
 	# Main Build
-	mvn --no-transfer-progress -B -DskipTests install
+	mvn --no-transfer-progress -B install
 
 	# Second Build Phase. Skips tests as well as activates only projects.
 	mvn --no-transfer-progress -B -DskipTests --activate-profiles javadoc --projects common install
