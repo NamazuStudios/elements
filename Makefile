@@ -55,6 +55,8 @@ tag:
 git:
 	git config --global user.name $(GIT_USER)
 	git config --global user.email $(GIT_EMAIL)
+	git submodule foreach git checkout master
+	git diff --exit-code
 
 checkout:
 ifndef $(TAG)
