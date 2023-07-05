@@ -6,8 +6,8 @@ GIT_EMAIL?="ci@getelements.dev"
 
 define git
 	@echo echo "Performing Commit"
-	@echo git submodule foreach git $(1)
-	@echo git $(1)
+	git submodule foreach git $(1)
+	git $(1)
 endef
 
 help:
