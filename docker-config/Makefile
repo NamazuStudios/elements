@@ -26,7 +26,7 @@ define DOCKER_BUILD_TAG_BASE
 		--platform $(TARGET_ARCHITECTURES) \
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
-		--tag distribution.getelements.dev/$(1):$(TAG_SHORT)
+		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
 		$(1)
 endef
 
