@@ -39,7 +39,6 @@ build:
 
 docker:
 	docker buildx create --use
-	echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
 	make -C docker_config
 
 patch:

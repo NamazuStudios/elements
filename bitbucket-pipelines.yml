@@ -31,6 +31,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Release Build"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make submodules git
             - make release
             - make commit tag push
@@ -47,6 +48,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make submodules git
             - make patch
             - make commit tag push
@@ -66,6 +68,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Tag Build for $Tag"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make submodules TAG=$Tag
             - make git checkout TAG=$Tag
             - make build docker
@@ -85,6 +88,7 @@ pipelines:
           - docker
         script:
           - echo "Running Default Build."
+          - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
           - make submodules
           - make build docker
         after-script:
