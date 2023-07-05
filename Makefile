@@ -6,8 +6,8 @@ GIT_EMAIL?="ci@getelements.dev"
 
 define git
 	@echo echo "Performing git $(1)"
-	git submodule foreach git $(1)
-	git $(1)
+	@echo git submodule foreach git $(1)
+	@echo git $(1)
 endef
 
 help:
@@ -49,7 +49,8 @@ release:
 
 tag: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 tag:
-	$(git, tag $(MAVEN_VERSION))
+	@echo "Tagging Release"
+	$(call git, tag $(MAVEN_VERSION))
 
 git:
 	git config --global user.name $(GIT_USER)
