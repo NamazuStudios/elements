@@ -5,8 +5,9 @@ GIT_USER?="Continuous Integration"
 GIT_EMAIL?="ci@getelements.dev"
 
 define git
-	git submodule foreach git $(1)
-	git $(1)
+	@echo echo "Performing Commit"
+	@echo git submodule foreach git $(1)
+	@echo git $(1)
 endef
 
 help:
@@ -49,7 +50,7 @@ release:
 
 tag: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 tag:
-	git tag $(MAVEN_VERSION)
+	$(git, tag $(MAVEN_VERSION))
 
 git:
 	git config --global user.name $(GIT_USER)
@@ -63,19 +64,19 @@ submodules:
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
-	$(call git, commit -a -m "\"[ci skip] CI Generated Release $(MAVEN_VERSION)\"")
-
-checkout:
-
-ifndef TAG
-$(error TAG is not set)
-endif
-
-	$(call git, checkout $(TAG))
+	$(call git, commit -a -m "\"[ci skip] $(MAVEN_VERSION)\"")
 
 push:
 	$(call git, push)
 	$(call git, push --tags)
+
+checkout:
+
+ifndef TAG
+	$(error TAG is not set)
+endif
+
+	$(call git, checkout $(TAG))
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
