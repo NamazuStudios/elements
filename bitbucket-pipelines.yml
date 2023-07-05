@@ -31,9 +31,10 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Release Build"
+            - make submodules
             - make release
-            - make git commit tag push
             - make build docker
+            - make git commit tag push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -46,8 +47,9 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
-            - make build docker
+            - make submodules
             - make patch
+            - make build docker
             - make git commit tag push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
@@ -64,6 +66,7 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Build for $Tag"
+            - make submodules
             - make git checkout TAG=$Tag
             - make build docker
           after-script:
@@ -82,6 +85,7 @@ pipelines:
           - docker
         script:
           - echo "Running Default Build."
+          - make submodules
           - make build docker
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.

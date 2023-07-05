@@ -10,18 +10,16 @@ define git
 endef
 
 help:
-	echo "Manages Semantic Versioning for Elements using Maven and Git."
-	echo "patch - Increments the revision (least significant) number (Snapshot Builds Only)"
-	echo "release - Drops -SNAPSHOT from the current revision number (Snapshot Builds Only)"
-	echo "commit - Commits all changes, including submodules with a message indicating release."
-	echo "git - Configures git with email and name. Supplying defaults if environment variable aren't set."
-	echo "push - Pushes all changes, including submodules to the remotes."
-	echo "tag - Tags the current Maven version in git."
+	@echo "Manages Semantic Versioning for Elements using Maven and Git."
+	@echo "patch - Increments the revision (least significant) number (Snapshot Builds Only)"
+	@echo "release - Drops -SNAPSHOT from the current revision number (Snapshot Builds Only)"
+	@echo "commit - Commits all changes, including submodules with a message indicating release."
+	@echo "git - Configures git with email and name. Also checks out master in submodules. Run this before all other git commands"
+	@echo "push - Pushes all changes, including submodules to the remotes."
+	@echo "tag - Tags the current Maven version in git."
+	@echo "submodules - Initializes all submodules."
 
 build:
-
-	# Gets all submodules
-	git submodule update --init --recursive
 
 	# The build is in two Maven passes. The first is to do the base build, which builds the Doclet. Once built,
 	# the Doclet will be installed. The subsequent builds ensure each of the individual javadoc modules get built.
@@ -50,20 +48,18 @@ release:
 
 tag: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 tag:
-	$(call git, tag $(MAVEN_VERSION))
+	git tag $(MAVEN_VERSION)
 
 git:
+	git submodule foreach git checkout master
 	git config --global user.name $(GIT_USER)
 	git config --global user.email $(GIT_EMAIL)
 	git submodule foreach git checkout master
 	git diff --exit-code
 
-checkout:
-ifndef $(TAG)
-	$(error TAG must be specified)
-else
-	$(call git, checkout $(TAG))
-endif
+submodules:
+	# Gets all submodules
+	git submodule update --init --recursive
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
