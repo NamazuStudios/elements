@@ -33,11 +33,11 @@
  */
 public class SimpleResourceService implements ResourceService {
 
-    private static final int RETRY_COUNT = 5;
+    private static final int RETRY_COUNT = 250;
 
     private static final int MIN_WAIT = 1;
 
-    private static final int MAX_WAIT = 5;
+    private static final int MAX_WAIT = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceService.class);
 
