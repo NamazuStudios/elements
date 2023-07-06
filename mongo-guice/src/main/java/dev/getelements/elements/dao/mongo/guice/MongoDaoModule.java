@@ -11,7 +11,9 @@ import dev.getelements.elements.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import dev.getelements.elements.dao.mongo.application.*;
 import dev.getelements.elements.dao.mongo.auth.MongoAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoCustomAuthUserDao;
-import dev.getelements.elements.dao.mongo.blockchain.*;
+import dev.getelements.elements.dao.mongo.blockchain.MongoSmartContractDao;
+import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
+import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
 import dev.getelements.elements.dao.mongo.formidium.MongoFormidiumInvestorDao;
 import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
@@ -23,7 +25,6 @@ import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
-import dev.getelements.elements.dao.mongo.schema.MongoTokenTemplateDao;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
 import dev.morphia.Datastore;
 import org.dozer.Mapper;
@@ -33,9 +34,6 @@ import java.util.function.Function;
 
 /**
  * Configures any Mongo-specific system properties.
- *
- * This is intentionally separated from the {@link MongoSearchModule} as it may or
- * may not be desirable to use the mongo search, depending on the application.
  *
  * Created by patricktwohig on 4/3/15.
  */
@@ -76,14 +74,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(FollowerDao.class).to(MongoFollowerDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
-        bind(NeoSmartContractDao.class).to(MongoNeoSmartContractDao.class);
-        bind(BscSmartContractDao.class).to(MongoBscSmartContractDao.class);
-        bind(NeoTokenDao.class).to(MongoNeoTokenDao.class);
-        bind(BscTokenDao.class).to(MongoBscTokenDao.class);
-        bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
-        bind(TokenTemplateDao.class).to(MongoTokenTemplateDao.class);
-        bind(BscWalletDao.class).to(MongoBscWalletDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(CustomAuthUserDao.class).to(MongoCustomAuthUserDao.class);
@@ -140,14 +131,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FollowerDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
-        expose(NeoSmartContractDao.class);
-        expose(BscSmartContractDao.class);
-        expose(NeoTokenDao.class);
-        expose(NeoWalletDao.class);
-        expose(BscTokenDao.class);
         expose(MetadataSpecDao.class);
-        expose(TokenTemplateDao.class);
-        expose(BscWalletDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(CustomAuthUserDao.class);

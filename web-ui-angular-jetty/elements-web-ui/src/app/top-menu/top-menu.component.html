@@ -10,7 +10,6 @@
       <a mat-list-item routerLink="/profiles" (click)="toggle()">Profiles</a>
       <a mat-list-item routerLink="/leaderboards" (click)="toggle()">Leaderboards</a>
       <a mat-list-item routerLink="/omni-chain" (click)="toggle()">OmniChain</a>
-      <a mat-list-item routerLink="/tokens" (click)="toggle()">Legacy Blockchain</a>
       <a mat-list-item routerLink="/auth-schemes" (click)="toggle()">Auth</a>
       <a mat-list-item routerLink="/customization" (click)="toggle()">Customization</a>
       <hr />
@@ -42,7 +41,6 @@
         *ngIf="(this.authenticationService.isLoggedIn() | async)">Leaderboards</a>
       <a mat-button routerLink="/omni-chain"
         *ngIf="(this.authenticationService.isLoggedIn() | async)">OmniChain</a>
-      <a mat-button routerLink="/tokens" *ngIf="(this.authenticationService.isLoggedIn() | async)">Legacy Blockchain</a>
       <a mat-button routerLink="/auth-schemes" *ngIf="(this.authenticationService.isLoggedIn() | async)">Auth</a>
       <a mat-button routerLink="/customization" *ngIf="(this.authenticationService.isLoggedIn() | async)">Customization</a>
 

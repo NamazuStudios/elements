@@ -7,10 +7,8 @@ import dev.getelements.elements.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
-import dev.getelements.elements.service.blockchain.bsc.*;
 import dev.getelements.elements.service.blockchain.invoke.evm.EvmSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.invoke.flow.FlowSmartContractInvocationServiceProvider;
-import dev.getelements.elements.service.blockchain.neo.*;
 import dev.getelements.elements.service.blockchain.omni.SmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.omni.VaultServiceProvider;
 import dev.getelements.elements.service.blockchain.omni.WalletServiceProvider;
@@ -41,8 +39,6 @@ import dev.getelements.elements.service.rewardissuance.RewardIssuanceServiceProv
 import dev.getelements.elements.service.savedata.SaveDataDocumentServiceProvider;
 import dev.getelements.elements.service.schema.MetadataSpecService;
 import dev.getelements.elements.service.schema.MetadataSpecServiceProvider;
-import dev.getelements.elements.service.schema.TokenTemplateService;
-import dev.getelements.elements.service.schema.TokenTemplateServiceProvider;
 import dev.getelements.elements.service.shortlink.ShortLinkServiceProvider;
 import dev.getelements.elements.service.user.UserServiceProvider;
 
@@ -87,14 +83,6 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(ProfileService.class)
                 .toProvider(ProfileServiceProvider.class)
-                .in(scope);
-
-        bind(NeoSmartContractService.class)
-                .toProvider(NeoSmartContractServiceProvider.class)
-                .in(scope);
-
-        bind(BscSmartContractService.class)
-                .toProvider(BscSmartContractServiceProvider.class)
                 .in(scope);
 
         bind(FollowerService.class)
@@ -205,40 +193,12 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(AppleSignInAuthServiceProvider.class)
                 .in(scope);
 
-        bind(NeoWalletService.class)
-                .toProvider(NeoWalletServiceProvider.class)
-                .in(scope);
-
-        bind(BscWalletService.class)
-                .toProvider(BscWalletServiceProvider.class)
-                .in(scope);
-
         bind(AuthSchemeService.class)
                 .toProvider(AuthSchemeServiceProvider.class)
                 .in(scope);
 
-        bind(NeoTokenService.class)
-                .toProvider(NeoTokenServiceProvider.class)
-                .in(scope);
-
-        bind(BscTokenService.class)
-                .toProvider(BscTokenServiceProvider.class)
-                .in(scope);
-
         bind(MetadataSpecService.class)
                 .toProvider(MetadataSpecServiceProvider.class)
-                .in(scope);
-
-        bind(TokenTemplateService.class)
-                .toProvider(TokenTemplateServiceProvider.class)
-                .in(scope);
-
-        bind(NeoSmartContractService.class)
-                .toProvider(NeoSmartContractServiceProvider.class)
-                .in(scope);
-
-        bind(BscSmartContractService.class)
-                .toProvider(BscSmartContractServiceProvider.class)
                 .in(scope);
 
         bind(HealthStatusService.class)

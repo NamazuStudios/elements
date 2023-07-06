@@ -47,9 +47,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>jnlua</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>

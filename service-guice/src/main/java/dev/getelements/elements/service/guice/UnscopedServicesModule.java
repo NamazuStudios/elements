@@ -6,10 +6,8 @@ import dev.getelements.elements.service.advancement.AdvancementService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
-import dev.getelements.elements.service.blockchain.bsc.*;
 import dev.getelements.elements.service.blockchain.invoke.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.invoke.flow.SuperUserFlowSmartContractInvocationService;
-import dev.getelements.elements.service.blockchain.neo.*;
 import dev.getelements.elements.service.blockchain.omni.SuperUserSmartContractService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserVaultService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserWalletService;
@@ -31,8 +29,6 @@ import dev.getelements.elements.service.progress.SuperUserProgressService;
 import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.MetadataSpecService;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
-import dev.getelements.elements.service.schema.TokenTemplateService;
-import dev.getelements.elements.service.schema.UserTokenTemplateService;
 import dev.getelements.elements.service.shortlink.SuperuserShortLinkService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 
@@ -167,21 +163,9 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserMetadataSpecService.class);
 
-        bind(TokenTemplateService.class)
-                .annotatedWith(Unscoped.class)
-                .to(UserTokenTemplateService.class);
-
         bind(AuthSchemeService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserAuthSchemeService.class);
-
-        bind(NeoSmartContractService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserNeoSmartContractService.class);
-
-        bind(BscSmartContractService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserBscSmartContractService.class);
 
         bind(SaveDataDocumentService.class)
                 .annotatedWith(Unscoped.class)
