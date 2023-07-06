@@ -1,33 +1,13 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.util.Objects;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
-
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class)
-)
-@SearchableDocument(
-        fields = {
-                @SearchableField(name = "name", path = "/name"),
-                @SearchableField(name = "description", path = "/description"),
-                @SearchableField(name = "active", path = "/active")
-        }
-)
 @Entity(value = "application", useDiscriminator = false)
 @Indexes({
         @Index(fields = @Field("name"), options = @IndexOptions(unique = true))

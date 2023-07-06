@@ -1,26 +1,19 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.mongodb.MongoCommandException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
-import dev.getelements.elements.exception.*;
+import dev.getelements.elements.exception.InvalidDataException;
+import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 
 import javax.inject.Inject;
@@ -40,9 +33,6 @@ public class MongoApplicationDao implements ApplicationDao {
 
     @Inject
     private ValidationHelper validationHelper;
-
-    @Inject
-    private ObjectIndex objectIndex;
 
     @Inject
     private StandardQueryParser standardQueryParser;
@@ -75,7 +65,6 @@ public class MongoApplicationDao implements ApplicationDao {
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        objectIndex.index(mongoApplication);
         return transform(mongoApplication);
 
     }
@@ -109,26 +98,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
     @Override
     public Pagination<Application> getActiveApplications(int offset, int count, String search) {
-
-        final var booleanQueryBuilder = new BooleanQuery.Builder();
-
-        try {
-
-            final var activeTerm = new Term("active", "true");
-
-            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(standardQueryParser.parse(search, "name"), BooleanClause.Occur.FILTER);
-
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
-        }
-
-        return mongoDBUtils.paginationFromSearch(
-            MongoApplication.class,
-            booleanQueryBuilder.build(),
-            offset, count,
-            this::transform);
-
+        return Pagination.empty();
     }
 
     @Override
@@ -181,7 +151,6 @@ public class MongoApplicationDao implements ApplicationDao {
             throw new NotFoundException("application not found: " + nameOrId);
         }
 
-        objectIndex.index(mongoApplication);
         return transform(mongoApplication);
 
     }
@@ -216,8 +185,6 @@ public class MongoApplicationDao implements ApplicationDao {
         if (mongoApplication == null) {
             throw new NotFoundException("application not found: " + nameOrId);
         }
-
-        objectIndex.index(mongoApplication);
 
     }
 

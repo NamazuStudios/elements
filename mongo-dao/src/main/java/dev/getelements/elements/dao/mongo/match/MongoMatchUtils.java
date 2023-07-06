@@ -8,15 +8,12 @@ import dev.getelements.elements.dao.mongo.model.match.MongoMatchLock;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NoSuitableMatchException;
 import dev.getelements.elements.model.match.Match;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
-import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
+import dev.morphia.query.experimental.filters.Filters;
+import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

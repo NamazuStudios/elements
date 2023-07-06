@@ -1,35 +1,11 @@
 package dev.getelements.elements.dao.mongo.model.goods;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
-import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
 import java.util.Objects;
 import java.util.Set;
 
-import static java.util.stream.Collectors.toSet;
-
-
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = MongoInventoryItemIdProcessor.class))
-@SearchableDocument(fields = {
-        @SearchableField(name = "itemName",         path = "/item/name"),
-        @SearchableField(name = "itemDisplayName",  path = "/item/displayName"),
-        @SearchableField(name = "itemDescription",  path = "/item/description"),
-        @SearchableField(name = "itemTags",         path = "/item/tags"),
-        @SearchableField(name = "userName",         path = "/user/name"),
-        @SearchableField(name = "userEmail",        path = "/user/email")
-})
 @Entity(value = "inventoryitems", useDiscriminator = false)
 public class MongoInventoryItem {
 

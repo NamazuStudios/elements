@@ -22,7 +22,7 @@ public class WebUIAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(WebUIAppProvider.class);
 
-    private String WEB_UI_CONTEXT_ROOT = "/web-ui";
+    private static final String WEB_UI_CONTEXT_ROOT = "/admin";
 
     private Injector injector;
 

@@ -1,21 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.schema;
 
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.getelements.elements.dao.mongo.model.blockchain.MongoTemplateTab;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.List;
 
-@SearchableIdentity(@SearchableField(
-        name = "objectId",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
+
 @Entity(value = "metadata_spec", useDiscriminator = false)
 public class MongoMetadataSpec {
 

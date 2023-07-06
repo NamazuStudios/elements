@@ -1,11 +1,9 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.getelements.elements.model.application.ConfigurationCategory;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Property;
 import org.bson.types.ObjectId;
-import dev.morphia.annotations.*;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 @Embedded

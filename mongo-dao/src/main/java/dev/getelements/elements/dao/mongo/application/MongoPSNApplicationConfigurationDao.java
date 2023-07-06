@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.PSNApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.application.MongoPSNApplicationConfiguration;
@@ -28,8 +27,6 @@ import static java.util.Arrays.asList;
  * Created by patricktwohig on 5/25/17.
  */
 public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfigurationDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoApplicationDao mongoApplicationDao;
 
@@ -70,7 +67,6 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoPSNApplicationProfile);
         return getBeanMapper().map(mongoPSNApplicationProfile, PSNApplicationConfiguration.class);
 
     }
@@ -141,7 +137,6 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
             throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoPSNApplicationConfiguration);
         return getBeanMapper().map(mongoPSNApplicationConfiguration, PSNApplicationConfiguration.class);
 
     }
@@ -177,8 +172,6 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
             throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoPSNApplicationConfiguration);
-
     }
 
     public void validate(final PSNApplicationConfiguration psnApplicationProfile) {
@@ -197,15 +190,6 @@ public class MongoPSNApplicationConfigurationDao implements PSNApplicationConfig
 
         getValidationHelper().validateModel(psnApplicationProfile);
 
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoApplicationDao getMongoApplicationDao() {

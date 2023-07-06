@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.auth;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -26,8 +25,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.util.stream.Collectors.toList;
 
 public class MongoAuthSchemeDao implements AuthSchemeDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -89,7 +86,6 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         getValidationHelper().validateModel(authScheme, ValidationGroups.Insert.class);
         final var mongoAuthScheme = getBeanMapper().map(authScheme, MongoAuthScheme.class);
         final var result = getMongoDBUtils().perform(ds -> getDatastore().save(mongoAuthScheme));
-        getObjectIndex().index(result);
         return transform(result);
     }
 
@@ -121,8 +117,6 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         if (mongoAuthScheme == null) {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authScheme.getId());
         }
-
-        getObjectIndex().index(mongoAuthScheme);
 
         return transform(mongoAuthScheme);
 
@@ -182,15 +176,6 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

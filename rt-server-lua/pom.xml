@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>2.0.7-SNAPSHOT</version>
+        <version>2.0.9-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-lua</artifactId>
-    <version>2.0.7-SNAPSHOT</version>
+    <version>2.0.9-SNAPSHOT</version>
     <name>rt-server-lua</name>
 
     <properties>
@@ -28,7 +28,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>jnlua</artifactId>
             <version>${project.version}</version>
         </dependency>

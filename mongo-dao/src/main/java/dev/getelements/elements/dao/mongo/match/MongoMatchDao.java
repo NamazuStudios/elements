@@ -1,15 +1,12 @@
 package dev.getelements.elements.dao.mongo.match;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.MatchDao;
 import dev.getelements.elements.dao.Matchmaker;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
-import dev.getelements.elements.dao.mongo.model.match.MongoMatch;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.MongoUser;
-import dev.getelements.elements.exception.BadQueryException;
+import dev.getelements.elements.dao.mongo.model.match.MongoMatch;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
@@ -17,18 +14,13 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.match.Match;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
 import dev.getelements.elements.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
@@ -48,8 +40,6 @@ public class MongoMatchDao implements MatchDao {
     private Mapper dozerMapper;
 
     private MongoProfileDao mongoProfileDao;
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -120,22 +110,7 @@ public class MongoMatchDao implements MatchDao {
 
     @Override
     public Pagination<Match> getMatchesForPlayer(String playerId, int offset, int count, String queryString) {
-
-        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-
-        try {
-
-            final Term playerTerm = new Term("player", playerId);
-
-            booleanQueryBuilder.add(new TermQuery(playerTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(getStandardQueryParser().parse(queryString, "player"), BooleanClause.Occur.FILTER);
-
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
-        }
-
-        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQueryBuilder.build(), offset, count, u -> getDozerMapper().map(u, Match.class));
-
+        return Pagination.empty();
     }
 
     @Override
@@ -156,7 +131,6 @@ public class MongoMatchDao implements MatchDao {
         mongoMatch.setLastUpdatedTimestamp(now);
 
         getDatastore().save(mongoMatch);
-        getObjectIndex().index(mongoMatch);
 
         return getDozerMapper().map(mongoMatch, Match.class);
 
@@ -220,15 +194,6 @@ public class MongoMatchDao implements MatchDao {
     @Inject
     public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
         this.mongoProfileDao = mongoProfileDao;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoDBUtils getMongoDBUtils() {

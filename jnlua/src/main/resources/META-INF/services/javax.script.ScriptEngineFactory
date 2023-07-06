@@ -1,0 +1,2 @@
+# List of script engine factories in this JAR
+com.namazustudios.socialengine.jnlua.script.LuaScriptEngineFactory

@@ -1,13 +1,7 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-        import com.namazustudios.elements.fts.annotation.SearchableField;
-        import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-        import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-        import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
-        import dev.getelements.elements.model.application.ConfigurationCategory;
-        import org.bson.types.ObjectId;
-        import dev.morphia.annotations.*;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Property;
 
 import java.util.*;
 

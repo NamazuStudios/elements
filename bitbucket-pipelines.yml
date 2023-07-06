@@ -32,7 +32,7 @@ pipelines:
           script:
             - echo "Executing Release Build"
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make submodules git
+            - make git
             - make release
             - make commit tag push
             - make build
@@ -50,7 +50,7 @@ pipelines:
           script:
             - echo "Executing Branch Build"
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make submodules git
+            - make git
             - make patch
             - make commit tag push
             - make build
@@ -71,7 +71,6 @@ pipelines:
           script:
             - echo "Executing Tag Build for $Tag"
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make submodules TAG=$Tag
             - make git checkout TAG=$Tag
             - make build
             - make docker
@@ -92,7 +91,6 @@ pipelines:
         script:
           - echo "Running Default Build."
           - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-          - make submodules
           - make build
           - make docker
         after-script:

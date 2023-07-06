@@ -10,7 +10,6 @@ import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
-import dev.getelements.elements.dao.mongo.guice.MongoSearchModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.jetty.ElementsCoreModule;
@@ -150,7 +149,6 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 modules.add(new ValidationModule());
                 modules.add(new MongoCoreModule());
                 modules.add(new MongoDaoModule());
-                modules.add(new MongoSearchModule());
                 modules.add(new AppNodeServicesModule());
                 modules.add(new FirebaseAppFactoryModule());
                 modules.add(new ClasspathAssetLoaderModule().withDefaultPackageRoot());

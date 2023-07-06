@@ -1,29 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.goods;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.getelements.elements.model.goods.ItemCategory;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.util.*;
 
 
-@SearchableIdentity(@SearchableField(
-    name = "id",
-    path = "/objectId",
-    type = ObjectId.class,
-    extractor = ObjectIdExtractor.class,
-    processors = ObjectIdProcessor.class))
-@SearchableDocument(fields = {
-    @SearchableField(name = "name", path = "/name"),
-    @SearchableField(name = "displayName", path = "/displayName"),
-    @SearchableField(name = "description", path = "/description"),
-    @SearchableField(name = "tags", path = "/tags")
-})
 @Entity(value = "items", useDiscriminator = false)
 public class MongoItem {
 

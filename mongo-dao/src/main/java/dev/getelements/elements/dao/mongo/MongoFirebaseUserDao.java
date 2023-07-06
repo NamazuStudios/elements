@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.FirebaseUserDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.exception.InvalidDataException;
@@ -26,8 +25,6 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
     private Datastore datastore;
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -70,7 +67,6 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
             throw new UserNotFoundException("No matching user found.");
         }
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -109,7 +105,6 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
             throw new UserNotFoundException("No matching user found.");
         }
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -148,15 +143,6 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoDBUtils getMongoDBUtils() {

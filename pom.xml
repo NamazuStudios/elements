@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
-    <version>2.0.7-SNAPSHOT</version>
+    <version>2.0.9-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -23,13 +23,6 @@
     </repositories>
 
     <modules>
-
-        <!-- Submodules Slated for Removal -->
-        <module>search-tools</module>
-        <module>index-storage</module>
-        <module>socialengine-jnlua/jnlua</module>
-
-        <!-- Main Project Modules -->
         <module>common</module>
         <module>common-util</module>
         <module>common-servlet</module>
@@ -105,6 +98,7 @@
         <module>jetty-ws</module>
         <module>jetty-ws-test</module>
         <module>web-ui-angular-jetty</module>
+        <module>jnlua</module>
     </modules>
 
     <properties>
@@ -403,6 +397,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>web-ui-angular-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>jnlua</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

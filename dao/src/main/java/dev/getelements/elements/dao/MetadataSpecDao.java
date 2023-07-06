@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao;
 
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.blockchain.neo.NeoToken;
 import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
@@ -26,7 +25,7 @@ public interface MetadataSpecDao {
      *
      * @param offset
      * @param count
-     * @return a {@link Pagination} of {@link NeoToken} instances
+     * @return a {@link Pagination} of {@link MetadataSpec} instances
      */
     Pagination<MetadataSpec> getMetadataSpecs(int offset, int count);
 

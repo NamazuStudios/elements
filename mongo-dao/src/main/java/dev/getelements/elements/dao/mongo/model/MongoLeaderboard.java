@@ -1,32 +1,16 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import static dev.getelements.elements.model.leaderboard.Leaderboard.*;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Objects;
 
+import static dev.getelements.elements.model.leaderboard.Leaderboard.ScoreStrategyType;
+import static dev.getelements.elements.model.leaderboard.Leaderboard.TimeStrategyType;
 import static java.lang.System.currentTimeMillis;
 
-@SearchableIdentity(@SearchableField(
-    name = "id",
-    path = "/objectId",
-    type = ObjectId.class,
-    extractor = ObjectIdExtractor.class,
-    processors = ObjectIdProcessor.class))
-@SearchableDocument(
-    fields = {
-        @SearchableField(name = "name", path = "/name"),
-        @SearchableField(name = "title", path = "/title"),
-        @SearchableField(name = "scoreUnits",  path = "/scoreUnits"),
-        @SearchableField(name = "timeStrategyType",  path = "/timeStrategyType"),
-        @SearchableField(name = "scoreStrategyType",  path = "/scoreStrategyType"),
-    })
 @Entity(value = "leaderboard", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "name"), options = @IndexOptions(unique = true))

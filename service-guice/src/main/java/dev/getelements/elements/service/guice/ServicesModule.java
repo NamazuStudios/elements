@@ -8,16 +8,15 @@ import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.service.*;
 import dev.getelements.elements.service.advancement.AdvancementService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptService;
-import dev.getelements.elements.service.auth.*;
-import dev.getelements.elements.service.blockchain.bsc.*;
-import dev.getelements.elements.service.blockchain.neo.*;
+import dev.getelements.elements.service.auth.AuthSchemeService;
 import dev.getelements.elements.service.formidium.FormidiumService;
 import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptService;
-import dev.getelements.elements.service.inventory.*;
+import dev.getelements.elements.service.inventory.DistinctInventoryItemService;
+import dev.getelements.elements.service.inventory.SimpleInventoryItemService;
 import dev.getelements.elements.service.mission.MissionService;
 import dev.getelements.elements.service.progress.ProgressService;
 import dev.getelements.elements.service.rewardissuance.RewardIssuanceService;
-import dev.getelements.elements.service.schema.*;
+import dev.getelements.elements.service.schema.MetadataSpecService;
 
 import javax.inject.Provider;
 
@@ -57,8 +56,6 @@ public class ServicesModule extends PrivateModule {
         install(new UnscopedServicesModule());
         install(new ScopedServicesModule(scope));
 
-        install(new DeprecatedServicesModule());
-
         install(new FlowBlockchainSupportModule());
         install(new Web3jBlockchainSupportModule());
         install(new OmniBlockchainServicesUtilityModule());
@@ -68,7 +65,6 @@ public class ServicesModule extends PrivateModule {
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
-        expose(SocialCampaignService.class);
         expose(UserService.class);
         expose(ShortLinkService.class);
         expose(ApplicationService.class);
@@ -107,22 +103,11 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class);
         expose(NameService.class);
         expose(HealthStatusService.class);
-        expose(NeoWalletService.class);
-        expose(Neow3jClient.class);
-        expose(NeoTokenService.class);
         expose(MetadataSpecService.class);
-        expose(TokenTemplateService.class);
-        expose(NeoSmartContractService.class);
-        expose(BscSmartContractService.class);
         expose(AuthSchemeService.class);
         expose(SaveDataDocumentService.class);
-        expose(NeoSmartContractService.class);
-        expose(BscSmartContractService.class);
         expose(CustomAuthSessionService.class);
         expose(DistinctInventoryItemService.class);
-        expose(BscWalletService.class);
-        expose(Bscw3jClient.class);
-        expose(BscTokenService.class);
         expose(FormidiumService.class);
         expose(WalletService.class);
         expose(VaultService.class);
@@ -132,7 +117,6 @@ public class ServicesModule extends PrivateModule {
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
-        expose(SocialCampaignService.class).annotatedWith(Unscoped.class);
         expose(UserService.class).annotatedWith(Unscoped.class);
         expose(ShortLinkService.class).annotatedWith(Unscoped.class);
         expose(ApplicationService.class).annotatedWith(Unscoped.class);
@@ -162,21 +146,11 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
-        expose(NeoWalletService.class).annotatedWith(Unscoped.class);
-        expose(Neow3jClient.class).annotatedWith(Unscoped.class);
-        expose(NeoTokenService.class).annotatedWith(Unscoped.class);
         expose(MetadataSpecService.class).annotatedWith(Unscoped.class);
-        expose(TokenTemplateService.class).annotatedWith(Unscoped.class);
-        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
-        expose(BscSmartContractService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
-        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
         expose(DistinctInventoryItemService.class).annotatedWith(Unscoped.class);
-        expose(BscWalletService.class).annotatedWith(Unscoped.class);
-        expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
-        expose(BscTokenService.class).annotatedWith(Unscoped.class);
         expose(FormidiumService.class).annotatedWith(Unscoped.class);
         expose(WalletService.class).annotatedWith(Unscoped.class);
         expose(SmartContractService.class).annotatedWith(Unscoped.class);

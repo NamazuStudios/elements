@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.AppleIapReceiptDao;
 import dev.getelements.elements.dao.mongo.model.MongoAppleIapReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -29,8 +28,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoAppleIapReceiptDao.class);
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -93,8 +90,6 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
             throw new DuplicateException(e);
         }
 
-        getObjectIndex().index(mongoAppleIapReceipt);
-
         final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().find(MongoAppleIapReceipt.class);
 
         receiptQuery.filter(Filters.eq("_id", appleIapReceipt.getOriginalTransactionId()));
@@ -150,15 +145,6 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoUserDao getMongoUserDao() {

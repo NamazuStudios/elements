@@ -1,11 +1,8 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.model.blockchain.BlockchainApi;
-import dev.getelements.elements.model.blockchain.bsc.BscWallet;
-import dev.getelements.elements.model.blockchain.bsc.CreateBscWalletRequest;
-import dev.getelements.elements.model.blockchain.bsc.UpdateBscWalletRequest;
+import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.model.blockchain.wallet.CreateWalletRequest;
 import dev.getelements.elements.model.blockchain.wallet.UpdateWalletRequest;
 import dev.getelements.elements.model.blockchain.wallet.Wallet;
@@ -46,14 +43,14 @@ import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_R
 public interface WalletService {
 
     /**
-     * Lists all {@link BscWallet} instances, specifying a search query.
+     * Lists all {@link Wallet} instances, specifying a search query.
      *
      * @param offset the offset
      * @param count the count
      * @param vaultId
      * @param userId the userId, or null
      * @param protocol the protocol, or null
-     * @return a {@link Pagination} of {@link BscWallet} instances
+     * @return a {@link Pagination} of {@link Wallet} instances
      */
     @RemotelyInvokable
     Pagination<Wallet> getWallets(
@@ -64,11 +61,11 @@ public interface WalletService {
             @Serialize("networks") List<BlockchainNetwork> networks);
 
     /**
-     * Fetches a specific {@link BscWallet} instance based on ID or name.  If not found, an
+     * Fetches a specific {@link Wallet} instance based on ID or name.  If not found, an
      * exception is raised.
      *
      * @param walletId the wallet Id or name
-     * @return the {@link BscWallet}, never null
+     * @return the {@link Wallet}, never null
      */
     @RemotelyInvokable
     Wallet getWallet(@Serialize("walletId") String walletId);
@@ -85,13 +82,13 @@ public interface WalletService {
                             @Serialize("vaultId") String vaultId);
 
     /**
-     * Updates the supplied {@link BscWallet}.
+     * Updates the supplied {@link Wallet}.
      *
      *
      * @param vaultId
      * @param walletId the Id of the wallet to update.
-     * @param walletUpdateRequest the {@link UpdateBscWalletRequest} with the information to update
-     * @return the {@link BscWallet} as it was changed by the service.
+     * @param walletUpdateRequest the {@link UpdateWalletRequest} with the information to update
+     * @return the {@link Wallet} as it was changed by the service.
      */
     @RemotelyInvokable
     Wallet updateWallet(
@@ -101,8 +98,8 @@ public interface WalletService {
     /**
      * Creates a new Wallet.
      *
-     * @param createWalletRequest the {@link CreateBscWalletRequest} with the information to create
-     * @return the {@link BscWallet} as it was created by the service.
+     * @param createWalletRequest the {@link CreateWalletRequest} with the information to create
+     * @return the {@link Wallet} as it was created by the service.
      */
     @RemotelyInvokable
     Wallet createWallet(
@@ -110,7 +107,7 @@ public interface WalletService {
             @Serialize("createWalletRequest") CreateWalletRequest createWalletRequest);
 
     /**
-     * Deletes the {@link BscWallet} with the supplied wallet ID.
+     * Deletes the {@link Wallet} with the supplied wallet ID.
      *
      * @param walletId the wallet Id.
      */

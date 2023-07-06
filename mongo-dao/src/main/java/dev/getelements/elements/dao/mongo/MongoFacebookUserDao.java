@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.FacebookUserDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.exception.InvalidDataException;
@@ -36,8 +35,6 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     private Datastore datastore;
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -106,7 +103,6 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             throw new UserNotFoundException("No matching user found.");
         }
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -145,7 +141,6 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             throw new UserNotFoundException("No matching user found.");
         }
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -203,15 +198,6 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoDBUtils getMongoDBUtils() {

@@ -1,12 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
 import java.util.List;
@@ -20,13 +14,6 @@ import static java.util.stream.Collectors.toList;
  * Created by davidjbrooks on 12/04/2018.
  */
 
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = MongoProgressIdProcessor.class))
-@SearchableDocument()
 @Entity(value = "progress", useDiscriminator = false)
 public class MongoProgress {
 

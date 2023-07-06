@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.MatchmakingApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.MongoCallbackDefinition;
@@ -12,7 +11,6 @@ import dev.getelements.elements.model.application.MatchmakingApplicationConfigur
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -26,8 +24,6 @@ import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingApplicationConfigurationDao {
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -69,7 +65,6 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
         return getBeanMapper().map(mongoMatchmakingApplicationConfiguration, MatchmakingApplicationConfiguration.class);
 
     }
@@ -146,7 +141,6 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
             throw new NotFoundException("configuration with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
         return getBeanMapper().map(matchmakingApplicationConfiguration, MatchmakingApplicationConfiguration.class);
 
     }
@@ -183,8 +177,6 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
             throw new NotFoundException("configuration with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
-
     }
 
     public void validate(final MatchmakingApplicationConfiguration configuration) {
@@ -195,15 +187,6 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
 
         getValidationHelper().validateModel(configuration);
 
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public Datastore getDatastore() {

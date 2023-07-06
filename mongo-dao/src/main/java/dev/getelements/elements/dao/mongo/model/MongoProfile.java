@@ -1,36 +1,17 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
+import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
-import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
  * Created by patricktwohig on 6/28/17.
  */
-@SearchableIdentity(@SearchableField(
-    name = "id",
-    path = "/objectId",
-    type = ObjectId.class,
-    extractor = ObjectIdExtractor.class,
-    processors = ObjectIdProcessor.class))
-@SearchableDocument(
-    fields = {
-        @SearchableField(name = "userName",    path = "/user/name"),
-        @SearchableField(name = "userEmail",   path = "/user/email"),
-        @SearchableField(name = "displayName", path = "/displayName"),
-        @SearchableField(name = "active", path = "/active"),
-        @SearchableField(name = "lastLogin", path = "/lastLogin"),
-        @SearchableField(name = "metadata", path = "/metadata")
-    })
 @Entity(value = "profile", useDiscriminator = false)
 @Indexes({
     @Index(fields = {

@@ -4,10 +4,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.ShortLinkDao;
 import dev.getelements.elements.dao.mongo.model.MongoShortLink;
-import dev.getelements.elements.exception.BadQueryException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
@@ -17,7 +15,6 @@ import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 
@@ -36,9 +33,6 @@ public class MongoShortLinkDao implements ShortLinkDao {
     private Datastore datastore;
 
     @Inject
-    private ObjectIndex objectIndex;
-
-    @Inject
     private MongoDBUtils mongoDBUtils;
 
     @Inject
@@ -55,20 +49,7 @@ public class MongoShortLinkDao implements ShortLinkDao {
 
     @Override
     public Pagination<ShortLink> getShortLinks(int offset, int count, String queryString) {
-
-        final org.apache.lucene.search.Query searchQuery;
-
-        try {
-            searchQuery = standardQueryParser.parse(queryString, "name");
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
-        }
-
-        return mongoDBUtils.paginationFromSearch(
-                MongoShortLink.class, searchQuery,
-                offset, count,
-                (Function<MongoShortLink, ShortLink>) input -> transform(input));
-
+        return Pagination.empty();
     }
 
     @Override
@@ -123,8 +104,6 @@ public class MongoShortLinkDao implements ShortLinkDao {
         mongoShortLink.setDestinationUrl(link.getDestinationURL());
 
         datastore.save(mongoShortLink);
-        objectIndex.index(mongoShortLink);
-
         return transform(mongoShortLink);
 
     }
@@ -153,8 +132,6 @@ public class MongoShortLinkDao implements ShortLinkDao {
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException();
         }
-
-        objectIndex.delete(MongoShortLink.class, id);
 
     }
 
