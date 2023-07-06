@@ -35,7 +35,8 @@ pipelines:
             - make submodules git
             - make release
             - make commit tag push
-            - make build docker
+            - make build
+            - make docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
