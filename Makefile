@@ -12,7 +12,6 @@ help:
 	@echo "git - Configures git with email and name. Run this before all other git commands."
 	@echo "push - Pushes all changes, including submodules to the remotes."
 	@echo "tag - Tags the current Maven version in git."
-	@echo "submodules - Initializes all submodules by ensuring they are cloned and ready to build."
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 build:
@@ -50,10 +49,6 @@ git:
 	git config --global user.name $(GIT_USER)
 	git config --global user.email $(GIT_EMAIL)
 	git diff --exit-code
-
-submodules:
-	# Gets all submodules
-	git submodule update --init --recursive
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
