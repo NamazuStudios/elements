@@ -66,14 +66,6 @@ push:
 	git push
 	git push --tags
 
-checkout:
-
-ifndef TAG
-	$(error TAG is not set)
-endif
-
-	git checkout $(TAG)
-
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
 	- git submodule foreach git checkout .
