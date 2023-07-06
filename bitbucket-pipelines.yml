@@ -88,7 +88,7 @@ pipelines:
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make git
             - make version VERSION=$Version
-            - make commit tag push
+            - make commit push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
