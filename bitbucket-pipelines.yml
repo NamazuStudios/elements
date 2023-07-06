@@ -52,7 +52,8 @@ pipelines:
             - make submodules git
             - make patch
             - make commit tag push
-            - make build docker
+            - make build
+            - make docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -71,7 +72,8 @@ pipelines:
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make submodules TAG=$Tag
             - make git checkout TAG=$Tag
-            - make build docker
+            - make build
+            - make docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -90,7 +92,8 @@ pipelines:
           - echo "Running Default Build."
           - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
           - make submodules
-          - make build docker
+          - make build
+          - make docker
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0

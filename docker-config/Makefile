@@ -27,6 +27,7 @@ define DOCKER_BUILD_TAG_BASE
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
 		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
+		--tag distribution.getelements.dev/$(1):$(TAG_MAVEN_VERSION) \
 		$(1)
 endef
 
@@ -40,6 +41,7 @@ define DOCKER_BUILD_TAG_DERIVED
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
 		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
+		--tag distribution.getelements.dev/$(1):$(TAG_MAVEN_VERSION) \
 		$(1)
 endef
 
