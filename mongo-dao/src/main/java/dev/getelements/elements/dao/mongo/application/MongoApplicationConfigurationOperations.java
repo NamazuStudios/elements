@@ -1,8 +1,7 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
-import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
+import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplicationConfiguration;
 import dev.getelements.elements.exception.NotFoundException;
@@ -31,8 +30,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
  * reducing the boilerplate code needed to
  */
 public class MongoApplicationConfigurationOperations {
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -85,7 +82,6 @@ public class MongoApplicationConfigurationOperations {
             ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoApplicationConfiguration);
         return getBeanMapper().map(mongoApplicationConfiguration, applicationConfigurationClass);
 
     }
@@ -205,7 +201,6 @@ public class MongoApplicationConfigurationOperations {
                                         " not found for " + applicationNameOrId);
         }
 
-        getObjectIndex().index(mongoApplicationConfiguration);
         return getBeanMapper().map(mongoApplicationConfiguration, applicationConfigurationClass);
 
     }
@@ -245,17 +240,6 @@ public class MongoApplicationConfigurationOperations {
                                         " not found for " + applicationNameOrId);
         }
 
-        getObjectIndex().index(mongoApplicationConfiguration);
-
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public Datastore getDatastore() {

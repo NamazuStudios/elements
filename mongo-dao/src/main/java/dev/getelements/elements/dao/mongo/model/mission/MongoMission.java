@@ -1,10 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
@@ -17,17 +12,7 @@ import java.util.Map;
  * Created by davidjbrooks on 11/27/2018.
  */
 
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
-@SearchableDocument(fields = {
-        @SearchableField(name = "name",         path = "/name"),
-        @SearchableField(name = "displayName",  path = "/displayName"),
-        @SearchableField(name = "description",  path = "/description")
-})
+
 @Entity(value = "mission", useDiscriminator = false)
 public class MongoMission {
 

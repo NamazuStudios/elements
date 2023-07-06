@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.GooglePlayIapReceiptDao;
 import dev.getelements.elements.dao.mongo.model.MongoGooglePlayIapReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -29,8 +28,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoGooglePlayIapReceiptDao.class);
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -97,8 +94,6 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
             throw new DuplicateException(e);
         }
 
-        getObjectIndex().index(mongoGooglePlayIapReceipt);
-
         final Query<MongoGooglePlayIapReceipt> query = getDatastore().find(MongoGooglePlayIapReceipt.class);
         query.filter(Filters.eq("_id", mongoGooglePlayIapReceipt.getOrderId()));
         return getDozerMapper().map(query.first(), GooglePlayIapReceipt.class);
@@ -148,15 +143,6 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoUserDao getMongoUserDao() {

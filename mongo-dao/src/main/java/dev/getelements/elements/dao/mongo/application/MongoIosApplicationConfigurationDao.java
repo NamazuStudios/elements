@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.IosApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -32,8 +31,6 @@ import static java.lang.String.format;
  * Created by patricktwohig on 5/25/17.
  */
 public class MongoIosApplicationConfigurationDao implements IosApplicationConfigurationDao {
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -95,8 +92,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         final var mongoIosApplicationProfile = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
-
-        getObjectIndex().index(mongoIosApplicationProfile);
 
         return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
 
@@ -201,7 +196,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
         }
 
-        getObjectIndex().index(mongoIosApplicationConfiguration);
         return getBeanMapper().map(mongoIosApplicationConfiguration, IosApplicationConfiguration.class);
 
     }
@@ -238,8 +232,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
             throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoIosApplicationConfiguration);
-
     }
 
     public void validate(final IosApplicationConfiguration iosApplicationConfiguration) {
@@ -257,15 +249,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
 
         getValidationHelper().validateModel(iosApplicationConfiguration);
 
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public Datastore getDatastore() {

@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.model.ReturnDocument;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.ItemDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
@@ -43,8 +42,6 @@ public class MongoItemDao implements ItemDao {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoItemDao.class);
 
     private StandardQueryParser standardQueryParser;
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -216,7 +213,6 @@ public class MongoItemDao implements ItemDao {
             throw new ItemNotFoundException("Item with ID not found: " + item.getId());
         }
 
-        getObjectIndex().index(updatedMongoItem);
         return getDozerMapper().map(updatedMongoItem, Item.class);
 
     }
@@ -234,7 +230,6 @@ public class MongoItemDao implements ItemDao {
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }
-        getObjectIndex().index(mongoItem);
 
         final Query<MongoItem> query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", mongoItem.getObjectId()));
@@ -292,15 +287,6 @@ public class MongoItemDao implements ItemDao {
     @Inject
     public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
         this.standardQueryParser = standardQueryParser;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

@@ -1,15 +1,10 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.model.user.User;
-import dev.morphia.utils.IndexType;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Objects;
 
 import static dev.morphia.utils.IndexType.TEXT;
@@ -17,20 +12,6 @@ import static dev.morphia.utils.IndexType.TEXT;
 /**
  * Created by patricktwohig on 3/31/15.
  */
-@SearchableIdentity(@SearchableField(
-    name = "id",
-    path = "/objectId",
-    type = ObjectId.class,
-    extractor = ObjectIdExtractor.class,
-    processors = ObjectIdProcessor.class))
-@SearchableDocument(fields = {
-    @SearchableField(name = "name", path = "/name"),
-    @SearchableField(name = "email", path = "/email"),
-    @SearchableField(name = "active", path = "/active"),
-    @SearchableField(name = "level", path = "/level"),
-    @SearchableField(name = "facebookId", path = "/facebookId"),
-    @SearchableField(name = "appleSignInId", path = "/appleSignInId")
-})
 @Entity(value = "user", useDiscriminator = false)
 @Indexes({
     @Index(

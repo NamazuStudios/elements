@@ -34,11 +34,6 @@
             <artifactId>guice-validator</artifactId>
             <version>${hibernate.validator.guice.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.namazustudios.elements</groupId>
-            <artifactId>lucene-indexer</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 
 </project>

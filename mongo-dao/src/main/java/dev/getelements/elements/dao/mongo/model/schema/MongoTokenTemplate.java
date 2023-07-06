@@ -1,22 +1,13 @@
 package dev.getelements.elements.dao.mongo.model.schema;
 
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.getelements.elements.dao.mongo.model.blockchain.MongoNeoSmartContract;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.Map;
 
-@SearchableIdentity(@SearchableField(
-        name = "objectId",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
+
 @Entity(value = "token_template", useDiscriminator = false)
 public class MongoTokenTemplate {
 

@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.BlockchainConstants;
 import dev.getelements.elements.dao.NeoTokenDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -20,7 +19,6 @@ import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -31,8 +29,6 @@ import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoNeoTokenDao implements NeoTokenDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -120,7 +116,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
             throw new NeoTokenNotFoundException("NeoToken not found or was already minted: " + tokenId);
         }
 
-        getObjectIndex().index(mongoNeoToken);
         return transform(mongoNeoToken);
     }
 
@@ -143,7 +138,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
             throw new NeoTokenNotFoundException("NeoToken not found: " + tokenId);
         }
 
-        getObjectIndex().index(mongoNeoToken);
         return transform(mongoNeoToken);
     }
 
@@ -176,7 +170,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoToken);
         return transform(mongoToken);
     }
 
@@ -212,7 +205,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         setTotalMintedQuantity(neoToken.getId(), totalMintedQuantity);
 
-        getObjectIndex().index(mongoToken);
         return transform(mongoToken);
     }
 
@@ -288,15 +280,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

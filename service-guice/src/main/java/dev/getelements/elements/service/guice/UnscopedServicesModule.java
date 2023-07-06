@@ -34,7 +34,6 @@ import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
 import dev.getelements.elements.service.schema.TokenTemplateService;
 import dev.getelements.elements.service.schema.UserTokenTemplateService;
 import dev.getelements.elements.service.shortlink.SuperuserShortLinkService;
-import dev.getelements.elements.service.social.SuperuserSocialCampaignService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 
 public class UnscopedServicesModule extends AbstractModule {
@@ -45,10 +44,6 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(UsernamePasswordAuthService.class)
                 .annotatedWith(Unscoped.class)
                 .to(AnonUsernamePasswordAuthService.class);
-
-        bind(SocialCampaignService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperuserSocialCampaignService.class);
 
         bind(UserService.class)
                 .annotatedWith(Unscoped.class)

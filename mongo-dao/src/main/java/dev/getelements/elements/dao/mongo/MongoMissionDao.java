@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.MissionDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
@@ -45,8 +44,6 @@ public class MongoMissionDao implements MissionDao {
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoMissionDao.class);
 
     private StandardQueryParser standardQueryParser;
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -177,8 +174,6 @@ public class MongoMissionDao implements MissionDao {
             throw new NotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
         }
 
-        getObjectIndex().index(updatedMongoItem);
-
         return getDozerMapper().map(updatedMongoItem, Mission.class);
 
     }
@@ -201,8 +196,6 @@ public class MongoMissionDao implements MissionDao {
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }
-
-        getObjectIndex().index(mongoMission);
 
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
         query.filter(eq("_id", mongoMission.getObjectId()));
@@ -323,15 +316,6 @@ public class MongoMissionDao implements MissionDao {
     @Inject
     public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
         this.standardQueryParser = standardQueryParser;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoItemDao getMongoItemDao() {

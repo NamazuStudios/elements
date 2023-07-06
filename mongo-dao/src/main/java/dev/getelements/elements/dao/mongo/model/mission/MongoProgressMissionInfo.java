@@ -1,16 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import io.swagger.annotations.ApiModelProperty;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Index;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @Embedded
 public class MongoProgressMissionInfo {

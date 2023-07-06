@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import dev.morphia.annotations.Entity;
 
 import java.util.Map;
@@ -8,7 +7,6 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 5/31/17.
  */
-@SearchableDocument
 @Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoGooglePlayApplicationConfiguration extends MongoApplicationConfiguration {
     // TODO This will likely be populated with more information.

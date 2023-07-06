@@ -44,7 +44,6 @@ import dev.getelements.elements.service.schema.MetadataSpecServiceProvider;
 import dev.getelements.elements.service.schema.TokenTemplateService;
 import dev.getelements.elements.service.schema.TokenTemplateServiceProvider;
 import dev.getelements.elements.service.shortlink.ShortLinkServiceProvider;
-import dev.getelements.elements.service.social.SocialCampaignServiceProvider;
 import dev.getelements.elements.service.user.UserServiceProvider;
 
 public class ScopedServicesModule extends AbstractModule {
@@ -60,10 +59,6 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(UsernamePasswordAuthService.class)
                 .toProvider(UsernamePasswordAuthServiceProvider.class)
-                .in(scope);
-
-        bind(SocialCampaignService.class)
-                .toProvider(SocialCampaignServiceProvider.class)
                 .in(scope);
 
         bind(UserService.class)

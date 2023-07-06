@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.BscSmartContractDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -28,8 +27,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoBscSmartContractDao implements BscSmartContractDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -117,7 +114,6 @@ public class MongoBscSmartContractDao implements BscSmartContractDao {
             throw new BscSmartContractNotFoundException("Unable to find contract with a matching script hash " + scriptHash);
         }
 
-        getObjectIndex().index(mongoContract);
         return transform(mongoContract);
     }
 
@@ -175,12 +171,4 @@ public class MongoBscSmartContractDao implements BscSmartContractDao {
         this.validationHelper = validationHelper;
     }
 
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
-    }
 }

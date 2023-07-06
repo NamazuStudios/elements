@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import dev.getelements.elements.dao.mongo.model.MongoCallbackDefinition;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
 import dev.morphia.annotations.Entity;
@@ -8,7 +7,6 @@ import dev.morphia.annotations.Entity;
 /**
  * Maps to {@link dev.getelements.elements.model.application.MatchmakingApplicationConfiguration}.
  */
-@SearchableDocument
 @Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoMatchmakingApplicationConfiguration extends MongoApplicationConfiguration {
 

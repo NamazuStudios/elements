@@ -3,7 +3,6 @@ package dev.getelements.elements.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.LeaderboardDao;
 import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
 import dev.getelements.elements.exception.*;
@@ -31,8 +30,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 public class MongoLeaderboardDao implements LeaderboardDao {
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private StandardQueryParser standardQueryParser;
 
@@ -88,34 +85,20 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             throw new DuplicateException(ex);
         }
 
-        objectIndex.index(mongoLeaderboard);
         return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
 
     }
 
     @Override
     public Pagination<Leaderboard> getLeaderboards(final int offset, final int count) {
-        final Query<MongoLeaderboard> query = datastore.createQuery(MongoLeaderboard.class);
+        final Query<MongoLeaderboard> query = getDatastore().find(MongoLeaderboard.class);
         return getMongoDBUtils().paginationFromQuery(query, offset, count, l -> getBeanMapper().map(l, Leaderboard.class), new FindOptions());
     }
 
     @Override
     public Pagination<Leaderboard> getLeaderboards(final int offset, final int count, final String search) {
-
-        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-
-        try {
-            booleanQueryBuilder.add(standardQueryParser.parse(search, "name"), BooleanClause.Occur.FILTER);
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
-        }
-
-        return mongoDBUtils.paginationFromSearch(
-            MongoLeaderboard.class,
-            booleanQueryBuilder.build(),
-            offset, count,
-            l -> getBeanMapper().map(l, Leaderboard.class));
-
+        // TODO Fix this Feature
+        return Pagination.empty();
     }
 
     @Override
@@ -176,7 +159,6 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             throw new LeaderboardNotFoundException("Leaderboard not found: " + leaderboardNameOrId);
         }
 
-        objectIndex.index(mongoLeaderboard);
         return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
 
     }
@@ -194,12 +176,10 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             query.filter(Filters.eq("name", leaderboardNameOrId));
         }
 
-        final MongoLeaderboard mongoLeaderboard = query.first();
-
         final DeleteResult deleteResult = query.delete();
 
-        if(deleteResult.getDeletedCount() == 1){
-            getObjectIndex().delete(mongoLeaderboard);
+        if(deleteResult.getDeletedCount() == 0){
+            throw new LeaderboardNotFoundException();
         }
 
     }
@@ -211,15 +191,6 @@ public class MongoLeaderboardDao implements LeaderboardDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public StandardQueryParser getStandardQueryParser() {

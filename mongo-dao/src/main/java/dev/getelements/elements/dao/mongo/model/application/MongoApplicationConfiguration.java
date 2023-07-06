@@ -1,34 +1,16 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.getelements.elements.model.application.ConfigurationCategory;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class)
-)
-@SearchableDocument(
-        fields = {
-                @SearchableField(name = "uniqueIdentifier", path = "/uniqueIdentifier"),
-                @SearchableField(name = "applicationName", path = "/parent/name"),
-                @SearchableField(name = "category", path = "/category"),
-                @SearchableField(name = "active", path = "/active")
-        }
-)
 @Indexes({
         @Index(fields = {@Field("category"), @Field("parent"), @Field("name") }, options = @IndexOptions(unique = true)),
 })

@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.NeoWalletDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
@@ -27,12 +26,11 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.filters.Filters.and;
+import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoNeoWalletDao implements NeoWalletDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -127,7 +125,6 @@ public class MongoNeoWalletDao implements NeoWalletDao {
             throw new NeoWalletNotFoundException("Wallet not found: " + walletId);
         }
 
-        getObjectIndex().index(mongoNeoWallet);
         return transform(mongoNeoWallet);
     }
 
@@ -154,7 +151,6 @@ public class MongoNeoWalletDao implements NeoWalletDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoWallet);
         return transform(mongoWallet);
     }
 
@@ -239,15 +235,6 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     @Inject
     public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
         this.mongoApplicationDao = mongoApplicationDao;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

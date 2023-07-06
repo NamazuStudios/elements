@@ -1,27 +1,17 @@
 package dev.getelements.elements.appserve.testkit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.appserve.guice.AppServeServicesModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
-import dev.getelements.elements.dao.mongo.guice.MongoSearchModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
+import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
 import dev.getelements.elements.rt.lua.guice.LuaModule;
 import dev.getelements.elements.rt.testkit.TestKit;
 import dev.getelements.elements.rt.testkit.UnitTestModule;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
-import dev.getelements.elements.rt.jersey.OctetStreamJsonMessageBodyReader;
-import dev.getelements.elements.rt.util.AppleDateFormat;
 import joptsimple.OptionSpec;
 import ru.vyarus.guice.validator.ValidationModule;
-
-import java.text.DateFormat;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class AppServeTestKitMain {
 
@@ -67,7 +57,6 @@ public class AppServeTestKitMain {
                 testKitMain.addModule(new MongoCoreModule())
                            .addModule(new AppServeServicesModule())
                            .addModule(new MongoDaoModule())
-                           .addModule(new MongoSearchModule())
                            .addModule(new ValidationModule())
                            .addModule(new LuaModule());
 

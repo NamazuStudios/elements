@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.BscWalletDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
@@ -28,8 +27,6 @@ import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoBscWalletDao implements BscWalletDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -129,7 +126,6 @@ public class MongoBscWalletDao implements BscWalletDao {
             throw new BscWalletNotFoundException("Wallet not found: " + objectId);
         }
 
-        getObjectIndex().index(mongoBscWallet);
         return transform(mongoBscWallet);
 
     }
@@ -147,7 +143,6 @@ public class MongoBscWalletDao implements BscWalletDao {
         mongoBscWallet.setWallet(MongoBscWalletConverter.asBytes(wallet.getWallet()));
 
         final var saved = getMongoDBUtils().perform(ds -> ds.save(mongoBscWallet));
-        getObjectIndex().index(saved);
 
         return transform(saved);
 
@@ -231,15 +226,6 @@ public class MongoBscWalletDao implements BscWalletDao {
     @Inject
     public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
         this.mongoApplicationDao = mongoApplicationDao;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

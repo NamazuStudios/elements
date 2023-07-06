@@ -3,7 +3,6 @@ package dev.getelements.elements.dao.mongo.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.dao.*;
 import dev.getelements.elements.dao.mongo.*;
@@ -38,9 +37,6 @@ import java.util.function.Function;
  * This is intentionally separated from the {@link MongoSearchModule} as it may or
  * may not be desirable to use the mongo search, depending on the application.
  *
- * The only dependency this module has but does not not provide is one of
- * an instance of {@link ObjectIndex}.
- *
  * Created by patricktwohig on 4/3/15.
  */
 public class MongoDaoModule extends PrivateModule {
@@ -51,7 +47,6 @@ public class MongoDaoModule extends PrivateModule {
         bind(UserDao.class).to(MongoUserDao.class);
         bind(ProfileDao.class).to(MongoProfileDao.class);
         bind(FacebookUserDao.class).to(MongoFacebookUserDao.class);
-        bind(SocialCampaignDao.class).to(MongoSocialCampaignDao.class);
         bind(ShortLinkDao.class).to(MongoShortLinkDao.class);
         bind(ApplicationDao.class).to(MongoApplicationDao.class);
         bind(ApplicationConfigurationDao.class).to(MongoApplicationConfigurationDao.class);
@@ -116,7 +111,6 @@ public class MongoDaoModule extends PrivateModule {
         expose(UserDao.class);
         expose(ProfileDao.class);
         expose(FacebookUserDao.class);
-        expose(SocialCampaignDao.class);
         expose(ShortLinkDao.class);
         expose(ApplicationDao.class);
         expose(ApplicationConfigurationDao.class);

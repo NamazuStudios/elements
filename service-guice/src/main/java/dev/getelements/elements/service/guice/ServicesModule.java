@@ -68,7 +68,6 @@ public class ServicesModule extends PrivateModule {
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
-        expose(SocialCampaignService.class);
         expose(UserService.class);
         expose(ShortLinkService.class);
         expose(ApplicationService.class);
@@ -132,7 +131,6 @@ public class ServicesModule extends PrivateModule {
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
-        expose(SocialCampaignService.class).annotatedWith(Unscoped.class);
         expose(UserService.class).annotatedWith(Unscoped.class);
         expose(ShortLinkService.class).annotatedWith(Unscoped.class);
         expose(ApplicationService.class).annotatedWith(Unscoped.class);

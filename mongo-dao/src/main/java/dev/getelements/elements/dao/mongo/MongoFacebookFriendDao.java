@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.model.ReturnDocument;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.FacebookFriendDao;
 import dev.getelements.elements.dao.mongo.model.MongoFriendship;
 import dev.getelements.elements.dao.mongo.model.MongoFriendshipId;
@@ -28,8 +27,6 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
     private MongoUserDao mongoUserDao;
 
     private MongoFacebookUserDao mongoFacebookUserDao;
-
-    private ObjectIndex objectIndex;
 
     @Override
     public void associateFriends(final User user, final List<String> facebookIds) {
@@ -66,8 +63,6 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
                         set("greaterAccepted", true))
                 .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
 
-            getObjectIndex().index(mongoFriendship);
-
         }
     }
 
@@ -96,15 +91,6 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
     @Inject
     public void setMongoFacebookUserDao(MongoFacebookUserDao mongoFacebookUserDao) {
         this.mongoFacebookUserDao = mongoFacebookUserDao;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

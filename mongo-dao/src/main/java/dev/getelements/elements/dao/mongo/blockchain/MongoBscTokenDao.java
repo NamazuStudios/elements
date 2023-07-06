@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.BlockchainConstants;
 import dev.getelements.elements.dao.BscTokenDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -9,8 +8,8 @@ import dev.getelements.elements.dao.mongo.model.blockchain.MongoBscToken;
 import dev.getelements.elements.exception.blockchain.BscTokenNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups;
-import dev.getelements.elements.model.blockchain.bsc.CreateBscTokenRequest;
 import dev.getelements.elements.model.blockchain.bsc.BscToken;
+import dev.getelements.elements.model.blockchain.bsc.CreateBscTokenRequest;
 import dev.getelements.elements.model.blockchain.bsc.UpdateBscTokenRequest;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -30,8 +29,6 @@ import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoBscTokenDao implements BscTokenDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -119,7 +116,6 @@ public class MongoBscTokenDao implements BscTokenDao {
             throw new BscTokenNotFoundException("BscToken not found or was already minted: " + tokenId);
         }
 
-        getObjectIndex().index(mongoBscToken);
         return transform(mongoBscToken);
     }
 
@@ -142,7 +138,6 @@ public class MongoBscTokenDao implements BscTokenDao {
             throw new BscTokenNotFoundException("BscToken not found: " + tokenId);
         }
 
-        getObjectIndex().index(mongoBscToken);
         return transform(mongoBscToken);
     }
 
@@ -175,7 +170,6 @@ public class MongoBscTokenDao implements BscTokenDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoToken);
         return transform(mongoToken);
     }
 
@@ -211,7 +205,6 @@ public class MongoBscTokenDao implements BscTokenDao {
 
         setTotalMintedQuantity(bscToken.getId(), totalMintedQuantity);
 
-        getObjectIndex().index(mongoToken);
         return transform(mongoToken);
     }
 
@@ -287,15 +280,6 @@ public class MongoBscTokenDao implements BscTokenDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

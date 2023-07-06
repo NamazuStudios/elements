@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.GooglePlayApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -13,7 +12,6 @@ import dev.getelements.elements.model.application.GooglePlayApplicationConfigura
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -33,8 +31,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
  * Created by patricktwohig on 5/25/17.
  */
 public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApplicationConfigurationDao {
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -117,7 +113,6 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
             builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoGooglePlayApplicationProfile);
         return getBeanMapper().map(mongoGooglePlayApplicationProfile, GooglePlayApplicationConfiguration.class);
 
     }
@@ -237,7 +232,6 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
             throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoGooglePlayApplicationProfile);
         return getBeanMapper().map(mongoGooglePlayApplicationProfile, GooglePlayApplicationConfiguration.class);
 
     }
@@ -273,8 +267,6 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
             throw new NotFoundException("profile with ID not found: " + mongoGooglePlayApplicationProfile.getObjectId());
         }
 
-        getObjectIndex().index(mongoGooglePlayApplicationProfile);
-
     }
 
     public void validate(final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
@@ -292,15 +284,6 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
 
         getValidationHelper().validateModel(googlePlayApplicationConfiguration);
 
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public Datastore getDatastore() {

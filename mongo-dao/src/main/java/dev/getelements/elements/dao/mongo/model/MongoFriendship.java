@@ -1,17 +1,7 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.morphia.annotations.*;
 
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = MongoFriendshipId.class,
-        extractor = MongoFriendIdExtractor.class,
-        processors = MongoFriendIdProcessor.class))
-@SearchableDocument()
 @Indexes({
     @Index(fields = @Field("_id.lesser")),
     @Index(fields = @Field("_id.greater")),

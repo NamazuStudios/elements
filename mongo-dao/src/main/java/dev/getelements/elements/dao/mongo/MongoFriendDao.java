@@ -1,12 +1,10 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.FriendDao;
 import dev.getelements.elements.dao.mongo.model.MongoFriendship;
 import dev.getelements.elements.dao.mongo.model.MongoFriendshipId;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
-import dev.getelements.elements.exception.BadQueryException;
 import dev.getelements.elements.exception.FriendNotFoundException;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.Pagination;
@@ -18,12 +16,7 @@ import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
@@ -38,8 +31,6 @@ public class MongoFriendDao implements FriendDao {
     private Datastore datastore;
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private StandardQueryParser standardQueryParser;
 
@@ -74,20 +65,8 @@ public class MongoFriendDao implements FriendDao {
 
     @Override
     public Pagination<Friend> getFriendsForUser(final User user, final int offset, final int count, final String search) {
-
-        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user.getId());
-
-        try {
-            final Term userTerm = new Term("id", user.getId());
-            booleanQueryBuilder.add(new TermQuery(userTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "id"), BooleanClause.Occur.FILTER);
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
-        }
-
-        return getMongoDBUtils().paginationFromSearch(MongoFriendship.class, booleanQueryBuilder.build(), offset, count, f -> transform(mongoUser, f));
-
+        //TODO Fix This
+        return Pagination.empty();
     }
 
     @Override
@@ -212,15 +191,6 @@ public class MongoFriendDao implements FriendDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public StandardQueryParser getStandardQueryParser() {

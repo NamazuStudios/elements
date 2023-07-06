@@ -1,13 +1,8 @@
 package dev.getelements.elements.dao.mongo.model.match;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.util.Date;
 import java.util.Map;
@@ -16,20 +11,6 @@ import java.util.Objects;
 /**
  * Created by patricktwohig on 7/21/17.
  */
-@SearchableIdentity(@SearchableField(
-    name = "id",
-    path = "/objectId",
-    type = ObjectId.class,
-    extractor = ObjectIdExtractor.class,
-    processors = ObjectIdProcessor.class))
-@SearchableDocument(
-    fields = {
-        @SearchableField(name = "scheme", path = "/scheme"),
-        @SearchableField(name = "lastUpdatedTimestamp", path = "/lastUpdatedTimestamp"),
-        @SearchableField(name = "scope", path = "/scope"),
-        @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
-        @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
-    })
 @Entity(value = "match", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "gameId")),

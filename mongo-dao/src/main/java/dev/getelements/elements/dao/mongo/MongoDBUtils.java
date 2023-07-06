@@ -1,12 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
-import com.google.common.collect.Iterables;
 import com.mongodb.MongoCommandException;
 import com.mongodb.MongoWriteException;
-import com.namazustudios.elements.fts.NoResultException;
-import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.elements.fts.SearchException;
-import com.namazustudios.elements.fts.TopDocsSearchResult;
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InternalException;
@@ -36,8 +31,6 @@ import static java.util.stream.Collectors.toList;
 public class MongoDBUtils {
 
     private Datastore datastore;
-
-    private ObjectIndex objectIndex;
 
     private int queryMaxResults;
 
@@ -229,94 +222,6 @@ public class MongoDBUtils {
 
     }
 
-    /**
-     * Generates a MongoDB query given the lucene query
-     *
-     * @param kind the kind, or mongo Java type to search
-     * @param searchQuery the search query itself.
-     * @param offset the offset
-     * @param count the count
-     * @param <MongoModelT> the Mongo model type (aka Kind)
-     *
-     * @return the Query instance which can be used to fetch the search results
-     */
-    public <MongoModelT> Query<MongoModelT> queryForSearch(
-            final Class<MongoModelT> kind,
-            final org.apache.lucene.search.Query searchQuery,
-            final int offset, final int count) {
-
-        final Query<MongoModelT> mongoQuery = datastore.createQuery(kind);
-
-        try (final TopDocsSearchResult<MongoModelT> results = objectIndex
-                .executeQueryForObjects(kind, searchQuery)
-                .withTopScores(count + offset)
-                .after(offset, count)) {
-
-            final Iterable<ObjectId> identifiers;
-            identifiers = Iterables.transform(results, input -> input.getIdentity(kind).getIdentity(ObjectId.class));
-            mongoQuery.criteria("_id").in(identifiers);
-
-        }
-
-        return mongoQuery;
-
-    }
-
-    /**
-     * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
-     * the functionality of {@link #paginationFromQuery(Query, int, int, Function, FindOptions)} together to simplify
-     * searching for objects.
-     *
-     * @param kind the kind to search
-     * @param searchQuery the search query
-     * @param offset the offset
-     * @param count the count
-     * @param modelTClass the destination Class
-     * @param <ModelT>
-     * @param <MongoModelT>
-     * @return the pagination object
-     */
-    public <ModelT, MongoModelT> Pagination<ModelT> paginationFromSearch(
-            final Class<MongoModelT> kind,
-            final org.apache.lucene.search.Query searchQuery,
-            final int offset, final int count,
-            final Class<ModelT> modelTClass) {
-        return paginationFromSearch(kind, searchQuery, offset, count, o -> getMapper().map(o, modelTClass));
-    }
-
-    /**
-     * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
-     * the functionality of {@link #paginationFromQuery(Query, int, int, Function, FindOptions)} together to simplify
-     * searching for objects.
-     *
-     * @param kind the kind to search
-     * @param searchQuery the search query
-     * @param offset the offset
-     * @param count the count
-     * @param function the function to transform the values {@see {@link #paginationFromQuery(Query, int, int, Function, FindOptions)}}
-     * @param <ModelT>
-     * @param <MongoModelT>
-     * @return the pagination object
-     */
-    public <ModelT, MongoModelT> Pagination<ModelT> paginationFromSearch(
-            final Class<MongoModelT> kind,
-            final org.apache.lucene.search.Query searchQuery,
-            final int offset, final int count,
-            final Function<MongoModelT,  ModelT> function) {
-        try {
-            final Query<MongoModelT> mongoQuery = queryForSearch(kind, searchQuery, offset, count);
-            final Pagination<ModelT> pagination = paginationFromQuery(mongoQuery, offset, count, function, new FindOptions());
-            pagination.setApproximation(true);
-            return pagination;
-        } catch (NoResultException ex) {
-            final Pagination<ModelT> pagination = new Pagination<>();
-            pagination.setApproximation(true);
-            return pagination;
-        } catch (SearchException ex) {
-            throw new InternalException(ex.getMessage(), ex);
-        }
-    }
-
     public Datastore getDatastore() {
         return datastore;
     }
@@ -324,15 +229,6 @@ public class MongoDBUtils {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public int getQueryMaxResults() {

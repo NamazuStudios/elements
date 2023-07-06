@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.NeoSmartContractDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -8,7 +7,8 @@ import dev.getelements.elements.dao.mongo.model.blockchain.MongoNeoSmartContract
 import dev.getelements.elements.exception.blockchain.NeoSmartContractNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups;
-import dev.getelements.elements.model.blockchain.*;
+import dev.getelements.elements.model.blockchain.ElementsSmartContract;
+import dev.getelements.elements.model.blockchain.PatchSmartContractRequest;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -18,7 +18,6 @@ import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -28,8 +27,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoNeoSmartContractDao implements NeoSmartContractDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -117,7 +114,6 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
             throw new NeoSmartContractNotFoundException("Unable to find contract with a matching script hash " + scriptHash);
         }
 
-        getObjectIndex().index(mongoContract);
         return transform(mongoContract);
     }
 
@@ -175,12 +171,4 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         this.validationHelper = validationHelper;
     }
 
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
-    }
 }

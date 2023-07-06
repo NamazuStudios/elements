@@ -1,25 +1,14 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Property;
+import org.bson.types.ObjectId;
 
 /**
  * Created by patricktwohig on 3/26/15.
  */
 @Entity(value = "short_link", useDiscriminator = false)
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class)
-)
-@SearchableDocument(fields = @SearchableField(name = "destinationUrl", path = "/destinationUrl"))
 public class MongoShortLink {
 
     @Id

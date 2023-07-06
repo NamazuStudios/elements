@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.schema;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.TokenTemplateDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
@@ -32,8 +31,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoTokenTemplateDao implements TokenTemplateDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -139,7 +136,6 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
             throw new TokenTemplateNotFoundException("TokenTemplate not found: " + tokenTemplateId);
         }
 
-        getObjectIndex().index(mongoTokenTemplate);
         return transform(mongoTokenTemplate);
     }
 
@@ -183,7 +179,6 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoTokenTemplate);
         return transform(mongoTokenTemplate);
     }
 
@@ -207,7 +202,7 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoTokenTemplate);
+
         return transform(mongoTokenTemplate);
     }
 
@@ -268,15 +263,6 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoMetadataSpecDao getMetadataSpecDao() {
