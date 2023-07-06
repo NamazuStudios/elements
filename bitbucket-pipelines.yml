@@ -60,12 +60,15 @@ pipelines:
             - pipe: atlassian/checkstyle-report:0.3.0
   custom:
     release:
+      - variables:
+          - name: Tag
       - step:
           size: 2x
           name: Build and Test
           script:
             - echo "Executing Tag Build for $Tag"
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make checkout TAG=$Tag
             - make build
             - make docker
           after-script:
@@ -73,7 +76,7 @@ pipelines:
             - pipe: atlassian/checkstyle-report:0.3.0
     version:
       - variables:
-          - name: Set Version
+          - name: Version
       - step:
           size: 4x
           name: Set Branch Version
