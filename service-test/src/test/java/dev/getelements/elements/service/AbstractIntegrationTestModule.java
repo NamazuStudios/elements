@@ -6,10 +6,8 @@ import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
-import dev.getelements.elements.dao.mongo.guice.MongoSearchModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
-import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
 import dev.getelements.elements.rt.id.InstanceId;
 import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
@@ -99,7 +97,6 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         install(new JerseyHttpClientModule());
         install(new MongoTestInstanceModule(mongoPort));
         install(new MongoCoreModule());
-        install(new MongoSearchModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
         install(new IntegrationTestSecurityModule());

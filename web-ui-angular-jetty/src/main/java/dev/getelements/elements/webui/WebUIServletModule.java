@@ -15,15 +15,17 @@ public class WebUIServletModule extends BaseServletModule {
     @Override
     protected void configureServlets() {
 
-        bind(WebUIAngularServlet.class).asEagerSingleton();
+        final var resourceBase = Loader.getResource("dev/getelements/elements/webui/angular");
 
-        final var resourceBase = Loader.getResource("dev/getelements/elements/webui/angular").toString();
-        logger.info("Using Resource Base {}", resourceBase);
-
-        final var params = Map.of("resourceBase", resourceBase);
-        serve("/*").with(WebUIAngularServlet.class, params);
-
-        useGlobalSecretOnly();
+        if (resourceBase == null) {
+            logger.warn("No UI on classpath. Did you forget to build it?");
+        } else {
+            final var params = Map.of("resourceBase", resourceBase.toString());
+            logger.info("Using Resource Base {}", resourceBase);
+            serve("/*").with(WebUIAngularServlet.class, params);
+            bind(WebUIAngularServlet.class).asEagerSingleton();
+            useGlobalSecretOnly();
+        }
 
     }
 

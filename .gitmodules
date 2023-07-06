@@ -1,9 +1,0 @@
-[submodule "socialengine-jnlua"]
-	path = socialengine-jnlua
-	url = git@bitbucket.org:eci-elements/socialengine-jnlua.git
-[submodule "search-tools"]
-	path = search-tools
-	url = git@bitbucket.org:eci-elements/search-tools.git
-[submodule "index-storage"]
-	path = index-storage
-	url = git@bitbucket.org:eci-elements/index-storage.git

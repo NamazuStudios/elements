@@ -1,10 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.auth;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.getelements.elements.model.crypto.PrivateKeyCrytpoAlgorithm;
 import dev.getelements.elements.model.user.User;
 import dev.morphia.annotations.*;
@@ -12,20 +7,10 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
 @Entity(value = "auth_scheme", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field("tags")),
     @Index(fields = @Field("audience"), options = @IndexOptions(unique = true))
-})
-@SearchableDocument(fields = {
-        @SearchableField(name = "audience", path = "/audience"),
-        @SearchableField(name = "userLevel", path = "/userLevel")
 })
 public class MongoAuthScheme {
 

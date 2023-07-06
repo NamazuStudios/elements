@@ -1,26 +1,11 @@
 package dev.getelements.elements.dao.mongo.model.blockchain;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
 
 import java.util.Map;
-
-@SearchableIdentity(@SearchableField(
-        name = "id",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
 @Entity(value = "contract", useDiscriminator = false)
-@SearchableDocument(fields = {
-        @SearchableField(name = "displayName", path = "/displayname")
-})
 @Indexes({
         @Index(fields = @Field(value = "displayName", type = IndexType.TEXT))
 })

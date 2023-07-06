@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.applesignin;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.AppleSignInUserDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -32,8 +31,6 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
     private Datastore datastore;
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -82,7 +79,6 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -114,7 +110,6 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
                  .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -153,15 +148,6 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoDBUtils getMongoDBUtils() {

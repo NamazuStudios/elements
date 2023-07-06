@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.schema;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -19,13 +18,12 @@ import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoMetadataSpecDao implements MetadataSpecDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -90,7 +88,6 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
             throw new MetadataSpecNotFoundException("MetadataSpec not found or was already minted: " + metadataSpecId);
         }
 
-        getObjectIndex().index(mongoMetadataSpec);
         return transform(mongoMetadataSpec);
     }
 
@@ -112,7 +109,6 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoTokenTemplate);
         return transform(mongoTokenTemplate);
     }
 
@@ -134,7 +130,6 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoTokenTemplate);
         return transform(mongoTokenTemplate);
     }
 
@@ -191,15 +186,6 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
 }

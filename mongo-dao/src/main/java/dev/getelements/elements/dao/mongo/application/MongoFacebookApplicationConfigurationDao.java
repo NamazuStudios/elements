@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.FacebookApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
@@ -12,7 +11,6 @@ import dev.getelements.elements.model.application.FacebookApplicationConfigurati
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -29,8 +27,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
  * Created by patricktwohig on 6/15/17.
  */
 public class MongoFacebookApplicationConfigurationDao implements FacebookApplicationConfigurationDao {
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -69,7 +65,6 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim())
         ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER));
 
-        getObjectIndex().index(mongoFacebookApplicationProfile);
         return getBeanMapper().map(mongoFacebookApplicationProfile, FacebookApplicationConfiguration.class);
 
     }
@@ -170,7 +165,6 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoFacebookApplicationConfiguration);
         return getBeanMapper().map(mongoFacebookApplicationConfiguration, FacebookApplicationConfiguration.class);
 
     }
@@ -210,8 +204,6 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             throw new NotFoundException("profile with ID not found: " + mongoFacebookApplicationProfile.getObjectId());
         }
 
-        getObjectIndex().index(mongoFacebookApplicationProfile);
-
     }
 
     public void validate(final FacebookApplicationConfiguration facebookApplicationConfiguration) {
@@ -233,15 +225,6 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
 
         getValidationHelper().validateModel(facebookApplicationConfiguration);
 
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public Datastore getDatastore() {

@@ -31,7 +31,12 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Release Build"
-            - ci/release.sh
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make git
+            - make release
+            - make commit tag push
+            - make build
+            - make docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -44,12 +49,19 @@ pipelines:
             - "self.hosted"
           script:
             - echo "Executing Branch Build"
-            - ci/patch.sh
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make git
+            - make patch
+            - make commit tag push
+            - make build
+            - make docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
-  tags:
-    "*":
+  custom:
+    tag:
+      - variables:
+          - name: Tag
       - step:
           size: 4x
           name: Build and Test
@@ -57,8 +69,11 @@ pipelines:
             - "linux"
             - "self.hosted"
           script:
-            - echo "Executing Tag Build"
-            # - ci/build.sh
+            - echo "Executing Tag Build for $Tag"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make git checkout TAG=$Tag
+            - make build
+            - make docker
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -75,7 +90,9 @@ pipelines:
           - docker
         script:
           - echo "Running Default Build."
-          # - ci/build.sh
+          - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+          - make build
+          - make docker
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0

@@ -382,16 +382,20 @@ registry.
 
 ## Master Branch
 
-There is no master branch. Only development branches for each major/minor 
-version of Elements. This may change if master is to simply serve as the
-latest development branch.
+The master branch is the branch representing the next version of Elements. It
+will always lead the release branches by either a major or minor version. By
+default, the master branch should lead the latest release by one minor version.
+
+However, if in the development of a feature breaks functionality, then the 
+master branch must generate new major release. In such circumstances, it may
+be a good idea to make a release with as much non-breaking functionality as
+possible. Such determinations must be taking on a case-by-case basis.
 
 ## Development Branches (/development/*)
 
 When preparing a release, development branches are for the current release in
 development. As features develop, pull requests for this version land in a
-development branch. Additionally, The latest in-development version of Elements
-will be set to the project's main branch.
+development branch.
 
 When committing to a development branch
 

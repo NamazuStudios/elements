@@ -2,45 +2,48 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.ProgressDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.mission.*;
+import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
+import dev.getelements.elements.dao.mongo.model.mission.MongoProgress;
+import dev.getelements.elements.dao.mongo.model.mission.MongoProgressId;
+import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.Step;
+import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.reward.Reward;
 import dev.getelements.elements.model.reward.RewardIssuance;
-import dev.getelements.elements.model.mission.Step;
-
-import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.getelements.elements.model.mission.Step.buildRewardIssuanceTags;
-import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
+import static dev.getelements.elements.model.mission.Step.buildRewardIssuanceTags;
 import static dev.getelements.elements.model.reward.RewardIssuance.*;
-import static dev.getelements.elements.model.reward.RewardIssuance.Type.*;
+import static dev.getelements.elements.model.reward.RewardIssuance.Type.PERSISTENT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.*;
 import static java.util.Collections.emptyList;
@@ -55,8 +58,6 @@ public class MongoProgressDao implements ProgressDao {
     private static final Logger logger = LoggerFactory.getLogger(MongoProgressDao.class);
 
     private StandardQueryParser standardQueryParser;
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -190,7 +191,6 @@ public class MongoProgressDao implements ProgressDao {
             throw new NotFoundException("Progress with id or name of " + progress.getId() + " does not exist");
         }
 
-        getObjectIndex().index(mongoProgress);
         return getDozerMapper().map(mongoProgress, Progress.class);
 
     }
@@ -462,15 +462,6 @@ public class MongoProgressDao implements ProgressDao {
     @Inject
     public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
         this.standardQueryParser = standardQueryParser;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoConcurrentUtils getMongoConcurrentUtils() {

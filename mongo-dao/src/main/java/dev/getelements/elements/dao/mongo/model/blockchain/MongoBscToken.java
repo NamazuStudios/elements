@@ -1,11 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.blockchain;
 
-import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import com.namazustudios.elements.fts.annotation.SearchableField;
-import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import dev.getelements.elements.BlockchainConstants;
-import dev.getelements.elements.dao.mongo.model.ObjectIdExtractor;
-import dev.getelements.elements.dao.mongo.model.ObjectIdProcessor;
 import dev.getelements.elements.model.blockchain.Token;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
@@ -13,18 +8,7 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 
-@SearchableIdentity(@SearchableField(
-        name = "objectId",
-        path = "/objectId",
-        type = ObjectId.class,
-        extractor = ObjectIdExtractor.class,
-        processors = ObjectIdProcessor.class))
 @Entity(value = "token", useDiscriminator = false)
-@SearchableDocument(fields = {
-        @SearchableField(name = "name", path = "/name"),
-        @SearchableField(name = "tags", path = "/tags"),
-        @SearchableField(name = "tokenUUID", path ="/tokenUUID")
-})
 @Indexes({
     @Index(fields = @Field(value = "mintStatus")),
     @Index(fields = @Field(value = "name", type = IndexType.TEXT))

@@ -13,15 +13,10 @@ import dev.getelements.elements.dao.mongo.model.match.MongoMatchSnapshot;
 import dev.getelements.elements.dao.mongo.model.mission.*;
 import dev.getelements.elements.dao.mongo.model.savedata.MongoSaveDataDocument;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
-import dev.getelements.elements.dao.mongo.model.schema.MongoTokenTemplate;
 import dev.getelements.elements.model.Deployment;
 import dev.getelements.elements.model.application.*;
 import dev.getelements.elements.model.blockchain.ElementsSmartContract;
-import dev.getelements.elements.model.blockchain.bsc.BscToken;
-import dev.getelements.elements.model.blockchain.bsc.BscWallet;
 import dev.getelements.elements.model.blockchain.contract.SmartContract;
-import dev.getelements.elements.model.blockchain.neo.NeoToken;
-import dev.getelements.elements.model.blockchain.neo.NeoWallet;
 import dev.getelements.elements.model.blockchain.wallet.Vault;
 import dev.getelements.elements.model.blockchain.wallet.Wallet;
 import dev.getelements.elements.model.formidium.FormidiumInvestor;
@@ -43,17 +38,15 @@ import dev.getelements.elements.model.reward.RewardIssuance;
 import dev.getelements.elements.model.savedata.SaveDataDocument;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.TemplateTab;
-import dev.getelements.elements.model.schema.template.TokenTemplate;
 import dev.getelements.elements.model.user.User;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
-import org.dozer.classmap.RelationshipType;
 import org.dozer.loader.api.BeanMappingBuilder;
 
 import javax.inject.Provider;
 
-import static org.dozer.classmap.RelationshipType.NON_CUMULATIVE;
-import static org.dozer.loader.api.FieldsMappingOptions.*;
+import static org.dozer.loader.api.FieldsMappingOptions.customConverter;
+import static org.dozer.loader.api.FieldsMappingOptions.useMapId;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -167,34 +160,16 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Deployment.class, MongoDeployment.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
-            mapping(NeoWallet.class, MongoNeoWallet.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                    .fields("wallet", "wallet", customConverter(MongoNeoWalletConverter.class));
-
-            mapping(BscWallet.class, MongoBscWallet.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                    .fields("wallet", "wallet", customConverter(MongoBscWalletConverter.class));
-
-            mapping(NeoToken.class, MongoNeoToken.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
-
             mapping(ElementsSmartContract.class, MongoNeoSmartContract.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(ElementsSmartContract.class, MongoBscSmartContract.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
-            mapping(BscToken.class, MongoBscToken.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
-
             mapping(MetadataSpec.class, MongoMetadataSpec.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("name","name")
                     .fields("tabs","tabs");
-
-            mapping(TokenTemplate.class, MongoTokenTemplate.class)
-                    .fields("id","objectId", customConverter(ObjectIdConverter.class))
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(TemplateTab.class, MongoTemplateTab.class)
                     .fields("fields","fields", customConverter(MongoTemplateTabFieldConverter.class))

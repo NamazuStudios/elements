@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.FirebaseApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
@@ -26,8 +25,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationConfigurationDao
         implements FirebaseApplicationConfigurationDao {
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -68,7 +65,6 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoFirebaseApplicationProfile);
         return getBeanMapper().map(mongoFirebaseApplicationProfile, FirebaseApplicationConfiguration.class);
 
     }
@@ -173,7 +169,6 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
             throw new FirebaseApplicationConfigurationNotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
         }
 
-        getObjectIndex().index(mongoFirebaseApplicationConfiguration);
         return getBeanMapper().map(mongoFirebaseApplicationConfiguration, FirebaseApplicationConfiguration.class);
 
     }
@@ -210,8 +205,6 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
             throw new FirebaseApplicationConfigurationNotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoFirebaseApplicationProfile);
-
     }
 
     public void validate(final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {
@@ -233,15 +226,6 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
 
         getValidationHelper().validateModel(firebaseApplicationConfiguration);
 
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public Datastore getDatastore() {

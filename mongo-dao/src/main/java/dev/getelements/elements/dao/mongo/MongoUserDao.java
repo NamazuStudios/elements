@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -49,8 +48,6 @@ public class MongoUserDao implements UserDao {
     private String passwordEncoding;
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private StandardQueryParser standardQueryParser;
 
@@ -177,7 +174,6 @@ public class MongoUserDao implements UserDao {
 
         try {
             getDatastore().save(mongoUser);
-            getObjectIndex().index(mongoUser);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -216,10 +212,7 @@ public class MongoUserDao implements UserDao {
         mongoUser.setHashAlgorithm(digest.getAlgorithm());
 
         try {
-            getMongoDBUtils().performV(ds -> {
-                getDatastore().save(mongoUser);
-                getObjectIndex().index(mongoUser);
-            });
+            getMongoDBUtils().performV(ds -> getDatastore().save(mongoUser));
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -260,7 +253,6 @@ public class MongoUserDao implements UserDao {
             builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -299,7 +291,6 @@ public class MongoUserDao implements UserDao {
             .returnDocument(AFTER);
 
         final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
-        getObjectIndex().index(mongoUser);
 
         return getDozerMapper().map(mongoUser, User.class);
 
@@ -343,7 +334,6 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -385,8 +375,6 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
-
-        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -436,7 +424,6 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -478,8 +465,6 @@ public class MongoUserDao implements UserDao {
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoUser);
-
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
@@ -505,8 +490,6 @@ public class MongoUserDao implements UserDao {
                 .with(getMongoPasswordUtils()::scramblePassword)
             .execute(query, new ModifyOptions().returnDocument(AFTER))
         );
-
-        getObjectIndex().index(mongoUser);
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
@@ -616,15 +599,6 @@ public class MongoUserDao implements UserDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public StandardQueryParser getStandardQueryParser() {

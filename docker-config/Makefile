@@ -3,7 +3,7 @@
 .PHONY=login,tag,push,clean
 
 REV ?= $(shell git rev-parse --verify HEAD)
-TAG ?= $(shell git describe --tags >2 /dev/null | git rev-parse --verify HEAD)
+TAG ?= $(shell git describe --tags 2> /dev/null | git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
@@ -26,7 +26,8 @@ define DOCKER_BUILD_TAG_BASE
 		--platform $(TARGET_ARCHITECTURES) \
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
-		--tag distribution.getelements.dev/$(1):$(TAG_SHORT)
+		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
+		--tag distribution.getelements.dev/$(1):$(TAG_MAVEN_VERSION) \
 		$(1)
 endef
 
@@ -40,6 +41,7 @@ define DOCKER_BUILD_TAG_DERIVED
 		--tag distribution.getelements.dev/$(1):$(REV) \
 		--tag distribution.getelements.dev/$(1):$(TAG) \
 		--tag distribution.getelements.dev/$(1):$(TAG_SHORT) \
+		--tag distribution.getelements.dev/$(1):$(TAG_MAVEN_VERSION) \
 		$(1)
 endef
 

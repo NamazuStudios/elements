@@ -5,7 +5,6 @@ import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.model.application.*;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
-import dev.getelements.elements.exception.BadQueryException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.ApplicationConfiguration;
@@ -16,12 +15,7 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.TermQuery;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -126,26 +120,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(final String applicationNameOrId,
                                                                                    final int offset, final int count,
                                                                                    final String search) {
-
-        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-
-        try {
-
-            final Term activeTerm = new Term("active", "true");
-            final Term applicationIdTerm = new Term("applicationId");
-            final Term applicationNameTerm = new Term("applicationName");
-
-            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(new TermQuery(applicationIdTerm), BooleanClause.Occur.SHOULD);
-            booleanQueryBuilder.add(new TermQuery(applicationNameTerm), BooleanClause.Occur.SHOULD);
-            booleanQueryBuilder.add(getStandardQueryParser().parse(search, "name"), BooleanClause.Occur.FILTER);
-
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
-        }
-
-        return getMongoDBUtils().paginationFromSearch(MongoApplicationConfiguration.class, booleanQueryBuilder.build(), offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
-
+        return Pagination.empty();
     }
 
     @Override

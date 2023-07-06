@@ -3,7 +3,6 @@ package dev.getelements.elements.dao.mongo.goods;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.InventoryItemDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
@@ -18,22 +17,19 @@ import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.goods.ItemCategory;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.inventory.InventoryItem;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
-
-import java.util.Optional;
 
 import static dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
 import static dev.getelements.elements.model.goods.ItemCategory.FUNGIBLE;
@@ -45,8 +41,6 @@ import static java.util.UUID.randomUUID;
 public class MongoInventoryItemDao implements InventoryItemDao {
 
     private StandardQueryParser standardQueryParser;
-
-    private ObjectIndex objectIndex;
 
     private Datastore datastore;
 
@@ -157,7 +151,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         mongoInventoryItem.setObjectId(new MongoInventoryItemId(mongoUser, mongoItem, inventoryItem.getPriority()));
 
         getMongoDBUtils().performV(ds -> ds.insert(mongoInventoryItem));
-        getObjectIndex().index(mongoInventoryItem);
 
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
         query.filter(eq("_id", mongoInventoryItem.getObjectId()));
@@ -186,7 +179,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             throw new NotFoundException("Inventory item with id of " + inventoryItemId + " does not exist");
         }
 
-        getObjectIndex().index(mongoInventoryItem);
         return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
 
     }
@@ -260,7 +252,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             throw new TooBusyException(ex);
         }
 
-        getObjectIndex().index(mongoInventoryItem);
         return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
 
     }
@@ -381,15 +372,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     @Inject
     public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
         this.standardQueryParser = standardQueryParser;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoItemDao getMongoItemDao() {

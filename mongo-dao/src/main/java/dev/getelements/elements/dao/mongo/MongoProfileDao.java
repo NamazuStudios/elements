@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
@@ -41,8 +40,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
  * Created by patricktwohig on 6/28/17.
  */
 public class MongoProfileDao implements ProfileDao {
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -292,7 +289,6 @@ public class MongoProfileDao implements ProfileDao {
             throw new NotFoundException("application not found: " + profile.getId());
         }
 
-        getObjectIndex().index(mongoProfile);
         return transform(mongoProfile);
 
     }
@@ -334,7 +330,6 @@ public class MongoProfileDao implements ProfileDao {
             throw new NotFoundException("application not found: " + objectId);
         }
 
-        getObjectIndex().index(mongoProfile);
         return transform(mongoProfile);
 
     }
@@ -376,7 +371,6 @@ public class MongoProfileDao implements ProfileDao {
             throw new ProfileNotFoundException("profile not found: " + profile.getId());
         }
 
-        getObjectIndex().index(mongoProfile);
         return transform(mongoProfile);
 
     }
@@ -414,7 +408,6 @@ public class MongoProfileDao implements ProfileDao {
             ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoProfile);
         return transform(mongoProfile);
 
     }
@@ -447,8 +440,6 @@ public class MongoProfileDao implements ProfileDao {
         if (mongoProfile == null) {
             throw new NotFoundException("application not found: " + profileId);
         }
-
-        getObjectIndex().index(mongoProfile);
 
     }
 
@@ -544,15 +535,6 @@ public class MongoProfileDao implements ProfileDao {
     @Inject
     public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
         this.mongoApplicationDao = mongoApplicationDao;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoConcurrentUtils getMongoConcurrentUtils() {
