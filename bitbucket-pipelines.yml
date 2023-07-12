@@ -86,6 +86,9 @@ pipelines:
       - step:
           size: 2x
           name: Build and Test
+          runs-on:
+            - "linux"
+            - "self.hosted"
           script:
             - echo "Executing Tag Build for $Tag"
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
