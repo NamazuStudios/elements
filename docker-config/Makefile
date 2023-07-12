@@ -16,7 +16,7 @@ DOCKER_LOGIN=docker login
 
 MAVEN_COPY_DEPS=mvn -Pdocker $(MAVEN_OPTIONS) package
 
-TARGET_ARCHITECTURES="linux/amd64,linux/arm64"
+TARGET_ARCHITECTURES="linux/amd64,linux/arm64,linux/arm64/v8"
 
 define DOCKER_BUILD_TAG_BASE
 	@echo "Building Base Image for $(1)"
