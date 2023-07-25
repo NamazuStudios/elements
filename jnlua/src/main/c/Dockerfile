@@ -1,4 +1,4 @@
-FROM gcc
+FROM gcc:11.3.0
 
 # Creates the build directories
 ARG LUA_VERSION
@@ -8,7 +8,7 @@ RUN mkdir -p /opt/jnlua/build
 # Installs dependencies
 
 RUN apt-get update
-RUN apt-get install -y openjdk-8-jdk
+RUN apt-get install -y openjdk-11-jdk
 
 # Copies all the dependent sources over to the container
 COPY lua /opt/jnlua/lua
