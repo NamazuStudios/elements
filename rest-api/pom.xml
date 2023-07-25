@@ -8,13 +8,13 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>2.0.19-SNAPSHOT</version>
+        <version>2.0.20-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rest-api</artifactId>
     <name>rest-api</name>
-    <version>2.0.19-SNAPSHOT</version>
+    <version>2.0.20-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
