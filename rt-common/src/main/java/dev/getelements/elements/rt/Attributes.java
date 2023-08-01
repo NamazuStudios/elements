@@ -1,7 +1,5 @@
 package dev.getelements.elements.rt;
 
-import org.w3c.dom.Attr;
-
 import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.List;

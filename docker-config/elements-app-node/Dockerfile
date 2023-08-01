@@ -20,4 +20,4 @@ RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsas
 
 USER elements:elements
 
-ENTRYPOINT ["java", "dev.getelements.elements.appnode.ApplicationNodeMain"]
+ENTRYPOINT ["java", "appnode"]

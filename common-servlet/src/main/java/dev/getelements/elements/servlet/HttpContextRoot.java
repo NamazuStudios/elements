@@ -6,18 +6,19 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import static dev.getelements.elements.Constants.HTTP_PATH_PREFIX;
+import static java.lang.String.format;
 
 public class HttpContextRoot {
 
     private String httpPathPrefix;
 
     public String normalize(final String suffix) {
-        final var full = String.format("%s/%s", getHttpPathPrefix(), suffix);
+        final var full = format("%s/%s", getHttpPathPrefix(), suffix);
         return HttpPathUtils.normalize(full);
     }
 
     public String formatNormalized(final String format, final String ... args) {
-        final var formatted = formatNormalized(format, args);
+        final var formatted = format(format, args);
         return normalize(formatted);
     }
 

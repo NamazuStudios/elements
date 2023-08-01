@@ -1,7 +1,12 @@
-FROM jwilder/dockerize:0.6.1 as dockerize
+FROM ubuntu:22.04 as dockerize
+
+ARG TARGETARCH
+ENV DOCKERIZE_VERSION=v0.7.0
+
+RUN apt-get update && apt-get install -y wget
+RUN wget -O - https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-$TARGETARCH-$DOCKERIZE_VERSION.tar.gz | tar xzf - -C /usr/local/bin
 
 FROM ubuntu:22.04
-ENV DOCKERIZE_VERSION v0.6.1
 
 RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk musl
 

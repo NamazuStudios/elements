@@ -1,5 +1,5 @@
 
-.PHONY=help,patch,release,tag,commit,push,git,rollbackk,checkout,pull
+.PHONY=help,patch,release,tag,commit,push,git,rollback,checkout
 
 GIT_USER?="Continuous Integration"
 GIT_EMAIL?="ci@getelements.dev"
@@ -40,6 +40,14 @@ patch:
 release:
 	mvn versions:set -DprocessAllModules=true -DremoveSnapshot=true
 
+version:
+
+ifndef VERSION
+	$(error VERSION is not set)
+endif
+
+	mvn versions:set -DprocessAllModules=true -DnewVersion=$(VERSION)
+
 tag: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 tag:
 	@echo "Tagging Release"
@@ -58,17 +66,13 @@ push:
 	git push
 	git push --tags
 
-pull:
-	git pull
-	git submodule foreach git pull
-
 checkout:
 
 ifndef TAG
 	$(error TAG is not set)
 endif
 
-	$(call git, checkout $(TAG))
+	git checkout $(TAG)
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;

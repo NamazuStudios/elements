@@ -25,7 +25,7 @@ pipelines:
     "release/*":
       - step:
           size: 4x
-          name: Build and Test
+          name: Build and Test - Release
           runs-on:
             - "linux"
             - "self.hosted"
@@ -43,7 +43,7 @@ pipelines:
     "development/*":
       - step:
           size: 4x
-          name: Build and Test
+          name: Build and Test - Development
           runs-on:
             - "linux"
             - "self.hosted"
@@ -59,11 +59,32 @@ pipelines:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
   custom:
+    master_version:
+      - variables:
+          - name: Version
+          - name: Branch
+            default: master
+      - step:
+          size: 4x
+          name: Set master Branch Version
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - echo "Setting master branch to $Version"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make git
+            - make checkout TAG=$Branch
+            - make version VERSION=$Version
+            - make commit tag push
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
     tag:
       - variables:
           - name: Tag
       - step:
-          size: 4x
+          size: 2x
           name: Build and Test
           runs-on:
             - "linux"
