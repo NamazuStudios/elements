@@ -3,7 +3,7 @@ import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
-import {ApplicationAttributesComponent} from "../application-attributes/application-attributes.component";
+import {ApplicationAttributesComponent} from '../application-attributes/application-attributes.component';
 
 @Component({
   selector: 'app-application-dialog',
@@ -26,7 +26,7 @@ export class ApplicationDialogComponent implements OnInit {
 
   ngOnInit() {
     this.alertService.getMessage().subscribe((message: any) => {
-      if(message) {
+      if (message) {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });

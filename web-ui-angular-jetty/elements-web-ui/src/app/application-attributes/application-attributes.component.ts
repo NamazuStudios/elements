@@ -87,7 +87,7 @@ export class ApplicationAttributesComponent {
       this.application.attributes[key] = value;
     }
 
-    if(!isEdit) {
+    if (!isEdit) {
       this.attributesForm.reset();
       this.newKeyRef.nativeElement.focus();
 

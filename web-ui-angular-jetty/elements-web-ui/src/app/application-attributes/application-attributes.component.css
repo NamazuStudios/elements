@@ -18,7 +18,7 @@ mat-card {
 
 mat-form-field {
   flex-grow: 1;
-  margin-right: 0px;
+  margin-right: 0;
 }
 
 .key-field {
