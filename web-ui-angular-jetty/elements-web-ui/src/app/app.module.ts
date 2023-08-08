@@ -100,6 +100,7 @@ import { OmniChainWalletsDialogComponent } from './omni-chain-wallets-dialog/omn
 import { OmniChainWalletsVaultSearchDialogComponent } from './omni-chain-wallets-vault-search-dialog/omni-chain-wallets-vault-search-dialog.component';
 import { OmniChainUserSearchDialogComponent } from './omni-chain-user-search-dialog/omni-chain-user-search-dialog.component';
 import { OmniChainWalletsAccountsDialogComponent } from './omni-chain-wallets-accounts-dialog/omni-chain-wallets-accounts-dialog.component';
+import {ApplicationAttributesComponent} from "./application-attributes/application-attributes.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -133,6 +134,7 @@ export function initialize(configService: ConfigService) {
     HomeComponent,
     ConfirmationDialogComponent,
     ApplicationDialogComponent,
+    ApplicationAttributesComponent,
     ItemDialogComponent,
     UserDialogComponent,
     ApplicationConfigurationsListComponent,

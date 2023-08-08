@@ -18,17 +18,7 @@
         <p><a href="{{data.application.httpDocumentationUrl}}" target="_blank">API Documentation</a></p>
         <p><a href="{{data.application.httpDocumentationUiUrl}}" target="_blank">OpenAPI Documentation</a></p>
       </div>
-      <h1 class="card-header">
-        Edit Attributes
-        <button type="button" mat-button (click)="toggleAdvancedEditor()" [disabled]="!isJSONValid">
-          <span *ngIf="showAdvanced">Simplified...</span>
-          <span *ngIf="!showAdvanced">Advanced...</span>
-        </button>
-      </h1>
-      <mat-card>
-        <app-simple-json-editor *ngIf="!showAdvanced" ></app-simple-json-editor>
-        <json-editor *ngIf="showAdvanced" ></json-editor>
-      </mat-card>
+      <app-application-attributes></app-application-attributes>
     </div>
   </form>
   <app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>
