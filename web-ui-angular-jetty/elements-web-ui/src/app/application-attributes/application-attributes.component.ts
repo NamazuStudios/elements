@@ -1,44 +1,50 @@
-import {Component, Inject, Input, OnInit} from '@angular/core';
-import {MAT_DIALOG_DATA} from '@angular/material/dialog';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import {FormBuilder} from '@angular/forms';
-import {AlertService} from '../alert.service';
-import {Application} from "../api/models/application";
+import {Component, Input, ViewChild} from '@angular/core';
+import {Application} from '../api/models/application';
+import {JsonEditorComponent, JsonEditorOptions} from 'ang-jsoneditor';
 
 @Component({
   selector: 'app-application-attributes',
   templateUrl: './application-attributes.component.html',
   styleUrls: ['./application-attributes.component.css']
 })
-export class ApplicationAttributesComponent implements OnInit {
-
+export class ApplicationAttributesComponent {
+  @ViewChild(JsonEditorComponent) editor: JsonEditorComponent;
   @Input() application: Application;
 
   showAdvanced = false;
   public isJSONValid = true;
+  public editorOptions: JsonEditorOptions = this.getJsonEditorOptions();
 
   toggleAdvancedEditor() {
     if (this.showAdvanced) {
-      this.validateMetadata(true);
+      this.validateAttributes(true);
     }
     this.showAdvanced = !this.showAdvanced;
   }
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
-
-  ngOnInit() {
+  getJsonEditorOptions(): JsonEditorOptions  {
+    const opts = new JsonEditorOptions();
+    opts.modes = ['code', 'text', 'view'];
+    opts.mode = 'code';
+    opts.schema = {
+      'properties': {
+        'testProp': {
+          'type': 'integer'
+        }
+      },
+      'additionalProperties': {
+        'type': ['string', 'number']
+      }
+    };
+    opts.onChange = () => this.validateAttributes(true);
+    return opts;
   }
 
-  // TODO: try unify with json-editor-card
-  validateMetadata(andUpdate: boolean) {
+  validateAttributes(andUpdate: boolean) {
     try {
-      // editor.get() throws error if JSON invalid
-      // const editorContents = this.editor.get();
-
-      // if (andUpdate) { this.editTarget.metadata = editorContents; }
+      if (andUpdate) { this.application.attributes = this.editor.get(); }
       this.isJSONValid = true;
     } catch (err) {
-      // bad JSON detected...don't let them leave the advanced editor!
       this.isJSONValid = false;
       return;
     }

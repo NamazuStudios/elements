@@ -7,4 +7,5 @@ export interface Application {
   httpDocumentationUrl?: string;
   httpDocumentationUiUrl?: string;
   httpTunnelEndpointUrl?: string;
+  attributes?: {[key: string]: any};
 }

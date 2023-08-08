@@ -1,7 +1,7 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {FormBuilder, Validators} from "@angular/forms";
+import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
 
 @Component({
@@ -24,7 +24,7 @@ export class ApplicationDialogComponent implements OnInit {
   ngOnInit() {
     this.alertService.getMessage().subscribe((message: any) => {
       if(message) {
-        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+        this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
   }

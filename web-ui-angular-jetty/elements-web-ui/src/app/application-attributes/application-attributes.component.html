@@ -7,5 +7,5 @@
 </h1>
 <mat-card>
   <app-simple-json-editor *ngIf="!showAdvanced" [dataHolder]="application"></app-simple-json-editor>
-  <json-editor *ngIf="showAdvanced" ></json-editor>
+  <json-editor *ngIf="showAdvanced" [options]="editorOptions" [data]="application.attributes"></json-editor>
 </mat-card>
