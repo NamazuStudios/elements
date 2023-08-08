@@ -1,8 +1,9 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
+import {ApplicationAttributesComponent} from "../application-attributes/application-attributes.component";
 
 @Component({
   selector: 'app-application-dialog',
@@ -10,6 +11,8 @@ import {AlertService} from '../alert.service';
   styleUrls: ['./application-dialog.component.css']
 })
 export class ApplicationDialogComponent implements OnInit {
+
+  @ViewChild(ApplicationAttributesComponent) attributesCard: ApplicationAttributesComponent;
 
   applicationForm = this.formBuilder.group({
     name: [ this.data.application.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
@@ -35,19 +38,12 @@ export class ApplicationDialogComponent implements OnInit {
   }
 
   save() {
-    if (this.data.application.metadata) {
-      this.setAttributesFromJsonEditor();
-    }
+    this.attributesCard.validateAttributes(true);
     this.data.next(this.data.application).subscribe(r => {
       this.dialogRef.close();
       this.data.refresher.refresh();
     }, err => {
       this.alertService.error(err);
     });
-  }
-
-  private setAttributesFromJsonEditor() {
-    this.data.application.attributes = this.data.application.metadata;
-    delete this.data.application.metadata;
   }
 }
