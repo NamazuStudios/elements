@@ -6,6 +6,6 @@
   </button>
 </h1>
 <mat-card>
-  <app-simple-json-editor *ngIf="!showAdvanced" ></app-simple-json-editor>
+  <app-simple-json-editor *ngIf="!showAdvanced" [dataHolder]="application"></app-simple-json-editor>
   <json-editor *ngIf="showAdvanced" ></json-editor>
 </mat-card>

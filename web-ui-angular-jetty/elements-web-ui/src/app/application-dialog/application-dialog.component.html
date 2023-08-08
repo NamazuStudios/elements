@@ -18,13 +18,13 @@
         <p><a href="{{data.application.httpDocumentationUrl}}" target="_blank">API Documentation</a></p>
         <p><a href="{{data.application.httpDocumentationUiUrl}}" target="_blank">OpenAPI Documentation</a></p>
       </div>
-      <app-application-attributes></app-application-attributes>
+      <app-application-attributes [application]="data.application"></app-application-attributes>
     </div>
   </form>
   <app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(applicationForm.value)" [disabled]="!applicationForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="save()" [disabled]="!applicationForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>

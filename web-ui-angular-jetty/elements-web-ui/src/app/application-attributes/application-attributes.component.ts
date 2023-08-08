@@ -1,8 +1,9 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, Inject, Input, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {FormBuilder} from '@angular/forms';
 import {AlertService} from '../alert.service';
+import {Application} from "../api/models/application";
 
 @Component({
   selector: 'app-application-attributes',
@@ -10,6 +11,8 @@ import {AlertService} from '../alert.service';
   styleUrls: ['./application-attributes.component.css']
 })
 export class ApplicationAttributesComponent implements OnInit {
+
+  @Input() application: Application;
 
   showAdvanced = false;
   public isJSONValid = true;
@@ -21,8 +24,7 @@ export class ApplicationAttributesComponent implements OnInit {
     this.showAdvanced = !this.showAdvanced;
   }
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any,
-              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) { }
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
 
   ngOnInit() {
   }
