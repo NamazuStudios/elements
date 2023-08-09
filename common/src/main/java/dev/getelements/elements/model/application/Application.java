@@ -27,7 +27,7 @@ public class Application implements Serializable {
      * Used as the key for the application attribute where appropriate.  This is equivalent
      * to the FQN of the {@link Application} class.
      */
-    public static final String APPLICATION_ATTRIUTE = Application.class.getName();
+    public static final String APPLICATION_ATTRIBUTE = Application.class.getName();
 
     private String id;
 
