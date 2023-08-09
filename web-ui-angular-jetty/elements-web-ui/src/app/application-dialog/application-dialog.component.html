@@ -25,6 +25,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="save()" [disabled]="!applicationForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="save(applicationForm.value)" [disabled]="!applicationForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
