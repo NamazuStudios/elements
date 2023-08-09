@@ -8,6 +8,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -43,6 +44,8 @@ public class Application implements Serializable {
     private String httpDocumentationUiUrl;
 
     private String httpTunnelEndpointUrl;
+
+    private Map<String, Object> attributes;
 
     @Null(groups = {Create.class})
     private ApplicationConfiguration applicationConfiguration;
@@ -210,5 +213,13 @@ public class Application implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getName(), getDescription(), getScriptRepoUrl(), getHttpDocumentationUrl(), getHttpDocumentationUiUrl(), getHttpTunnelEndpointUrl(), getApplicationConfiguration());
+    }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 }

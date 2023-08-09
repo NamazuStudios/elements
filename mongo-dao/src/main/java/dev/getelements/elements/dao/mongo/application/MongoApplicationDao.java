@@ -61,7 +61,8 @@ public class MongoApplicationDao implements ApplicationDao {
             query.modify(
                 set("name", application.getName().trim()),
                 set("description", nullToEmpty(application.getDescription()).trim()),
-                set("active", true)
+                set("active", true),
+                set("attributes", application.getAttributes())
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
@@ -143,6 +144,7 @@ public class MongoApplicationDao implements ApplicationDao {
             query.modify(
                 set("name", application.getName().trim()),
                 set("description", nullToEmpty(application.getDescription()).trim()),
+                set("attributes", application.getAttributes()),
                 set("active", true)
             ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
@@ -230,6 +232,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
         application.setName(mongoApplication.getName());
         application.setDescription(mongoApplication.getDescription());
+        application.setAttributes(mongoApplication.getAttributes());
 
         return application;
 
