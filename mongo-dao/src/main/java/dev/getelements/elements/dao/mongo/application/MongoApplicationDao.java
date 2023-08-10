@@ -8,6 +8,7 @@ import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -15,6 +16,7 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -42,6 +44,10 @@ public class MongoApplicationDao implements ApplicationDao {
 
     @Inject
     private Datastore datastore;
+
+    private Mapper dozerMapper;
+
+
 
     @Override
     public Application createOrUpdateInactiveApplication(final Application application) {
@@ -223,19 +229,7 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     public Application transform(final MongoApplication mongoApplication) {
-
-        final Application application = new Application();
-
-        if (mongoApplication.getObjectId() != null) {
-            application.setId(mongoApplication.getObjectId().toHexString());
-        }
-
-        application.setName(mongoApplication.getName());
-        application.setDescription(mongoApplication.getDescription());
-        application.setAttributes(mongoApplication.getAttributes());
-
-        return application;
-
+        return getDozerMapper().map(mongoApplication, Application.class);
     }
 
     public void validate(final Application application) {
@@ -248,4 +242,12 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
+    public Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
 }
