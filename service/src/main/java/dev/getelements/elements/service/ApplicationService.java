@@ -2,6 +2,8 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.application.CreateApplicationRequest;
+import dev.getelements.elements.model.application.UpdateApplicationRequest;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
@@ -34,13 +36,13 @@ public interface ApplicationService {
 
     /**
      * Creates a new application and inserts it into the database.  The retruned value
-     * represents the {@link Application} as it was inserted into the database.
+     * represents the {@link CreateApplicationRequest} as it was inserted into the database.
      *
-     * @param application the application
+     * @param applicationRequest the application
      *
      * @return the application
      */
-    Application createApplication(final Application application);
+    Application createApplication(final CreateApplicationRequest applicationRequest);
 
     /**
      * Lists all {@link Application} instances avaiable to the current user.
@@ -79,11 +81,11 @@ public interface ApplicationService {
      * Updates an application with the specific name/identifiers.
      *
      * @param nameOrId the name, or id
-     * @param application the {@link Application} object to write
+     * @param applicationRequest the {@link UpdateApplicationRequest} object to write
      * @return the {@link Application} object as it was persisted to the database.
      *
      */
-    Application updateApplication(final String nameOrId, final Application application);
+    Application updateApplication(final String nameOrId, final UpdateApplicationRequest applicationRequest);
 
     /**
      * Deletes an Application with the specific name or identifier.

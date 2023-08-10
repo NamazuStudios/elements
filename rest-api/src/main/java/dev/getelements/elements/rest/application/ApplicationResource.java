@@ -1,5 +1,7 @@
 package dev.getelements.elements.rest.application;
 
+import dev.getelements.elements.model.application.CreateApplicationRequest;
+import dev.getelements.elements.model.application.UpdateApplicationRequest;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
@@ -78,9 +80,9 @@ public class ApplicationResource {
     @ApiOperation(value = "Creates a New Application",
                   notes = "Gets the metadata for a single application.  This may include more specific " +
                           "details not available in the bulk-get or fetch operation.")
-    public Application createApplication(final Application application) {
-        getValidationHelper().validateModel(application);
-        return getApplicationService().createApplication(application);
+    public Application createApplication(final CreateApplicationRequest applicationRequest) {
+        getValidationHelper().validateModel(applicationRequest);
+        return getApplicationService().createApplication(applicationRequest);
     }
 
     @PUT
@@ -91,9 +93,9 @@ public class ApplicationResource {
                   notes = "Performs an update to an existing application known to the server.")
     public Application updateApplication(
             @PathParam("nameOrId") final String nameOrId,
-            final Application application) {
-        getValidationHelper().validateModel(application);
-        return getApplicationService().updateApplication(nameOrId, application);
+            final UpdateApplicationRequest applicationRequest) {
+        getValidationHelper().validateModel(applicationRequest);
+        return getApplicationService().updateApplication(nameOrId, applicationRequest);
     }
 
     @DELETE

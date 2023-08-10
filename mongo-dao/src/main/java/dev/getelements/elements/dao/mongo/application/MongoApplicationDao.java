@@ -8,7 +8,6 @@ import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -27,6 +26,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static java.util.Collections.emptyMap;
 
 /**
  * Created by patricktwohig on 7/10/15.
@@ -129,6 +129,12 @@ public class MongoApplicationDao implements ApplicationDao {
 
         return transform(mongoApplication);
 
+    }
+
+    public Application getActiveApplicationWithoutAttributes(String nameOrId) {
+        Application application = getActiveApplication(nameOrId);
+        application.setAttributes(emptyMap());
+        return application;
     }
 
     @Override
