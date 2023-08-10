@@ -158,7 +158,7 @@ public class MongoApplicationDao implements ApplicationDao {
                 set("description", nullToEmpty(application.getDescription()).trim()),
                 set("attributes", application.getAttributes()),
                 set("active", true)
-            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoApplication == null) {
@@ -242,6 +242,10 @@ public class MongoApplicationDao implements ApplicationDao {
 
         if (application == null) {
             throw new InvalidDataException("application must not be null.");
+        }
+        // allow saving application without attributes touched
+        if (application.getAttributes() == null) {
+            application.setAttributes(emptyMap());
         }
 
         validationHelper.validateModel(application);
