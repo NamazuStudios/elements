@@ -39,7 +39,7 @@ public class AnonApplicationService implements ApplicationService {
 
     @Override
     public Application getApplication(String nameOrId) {
-        final Application application = getApplicationDao().getActiveApplication(nameOrId);
+        Application application = getApplicationDao().getActiveApplicationWithoutAttributes(nameOrId);
         return getApplicationUrls().addPublicUrls(application);
     }
 
