@@ -39,7 +39,8 @@ export class ApplicationDialogComponent implements OnInit {
 
   save(toSave?: any) {
     this.attributesCard.validateAttributes(true);
-    toSave.attributes = this.data.application.attributes;
+    const attributes = this.data.application.attributes;
+    toSave.attributes = attributes ? attributes : {};
     this.data.next(toSave).subscribe(r => {
       this.dialogRef.close();
       this.data.refresher.refresh();
