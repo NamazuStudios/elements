@@ -234,11 +234,11 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public Application transform(final MongoApplication mongoApplication) {
+    private Application transform(final MongoApplication mongoApplication) {
         return getDozerMapper().map(mongoApplication, Application.class);
     }
 
-    public void validate(final Application application) {
+    private void validate(final Application application) {
 
         if (application == null) {
             throw new InvalidDataException("application must not be null.");
@@ -252,7 +252,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public Mapper getDozerMapper() {
+    private Mapper getDozerMapper() {
         return dozerMapper;
     }
 
