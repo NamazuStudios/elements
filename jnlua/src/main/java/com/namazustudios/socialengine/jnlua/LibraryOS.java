@@ -56,7 +56,9 @@ public enum LibraryOS {
             return "x86-64";
         } else if ("ppc64".equals(arch) && "little".equals(System.getProperty("sun.cpu.endian"))) {
             return "ppc64le";
-        } else {
+        } else if ("aarch64".equals(arch)) {
+            return "aarch64";
+        }else {
             throw new IllegalStateException("Unable to determine architecture.");
         }
 

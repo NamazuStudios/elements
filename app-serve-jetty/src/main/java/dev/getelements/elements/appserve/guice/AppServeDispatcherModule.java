@@ -1,5 +1,6 @@
 package dev.getelements.elements.appserve.guice;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import dev.getelements.elements.appserve.ServiceExceptionMapper;
@@ -11,7 +12,7 @@ import dev.getelements.elements.rt.jackson.guice.MultiContentTypeJacksonPayloadR
 import dev.getelements.elements.rt.jackson.guice.MultiContentTypeJacksonPayloadWriterModule;
 import dev.getelements.elements.rt.servlet.*;
 
-public class AppServeDispatcherModule extends PrivateModule {
+public class AppServeDispatcherModule extends AbstractModule {
 
     @Override
     protected void configure() {
