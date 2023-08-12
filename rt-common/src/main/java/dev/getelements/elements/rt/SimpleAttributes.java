@@ -6,8 +6,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.unmodifiableSet;
+import static java.util.Collections.*;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 
@@ -79,13 +78,16 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
         private final Map<String, Object> attributes = new LinkedHashMap<>();
 
         /**
-         * Bulk-sets attributes using the supplied {@link Map<String , Object>}.
+         * Bulk-sets attributes using the supplied {@link Map<String , Object>}. All supplied attributes will be added
+         * and existing keys overwritten with the values present in the supplied map.
          *
-         * @param attributes the map of attributes
+         * Passing null will have no effect.
+         *
+         * @param attributes the map of attributes, or null.
          * @return this instance
          */
         public Builder setAttributes(final Map<String, Object> attributes) {
-            this.attributes.putAll(attributes);
+            this.attributes.putAll(attributes == null ? emptyMap() : attributes);
             return this;
         }
 
