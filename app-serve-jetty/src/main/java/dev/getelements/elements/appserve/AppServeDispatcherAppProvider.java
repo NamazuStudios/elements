@@ -7,8 +7,12 @@ import com.google.inject.servlet.GuiceFilter;
 import dev.getelements.elements.appserve.guice.*;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.InternalException;
+import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
+import dev.getelements.elements.guice.StandardServletSecurityModule;
+import dev.getelements.elements.guice.StandardServletServicesModule;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.rt.Context;
+import dev.getelements.elements.rt.guice.FilterModule;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQContextModule;
 import dev.getelements.elements.rt.servlet.DispatcherServlet;
@@ -104,9 +108,13 @@ public class AppServeDispatcherAppProvider extends AbstractLifeCycle implements 
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
             final var injector = getInjector().createChildInjector(
+                    new FilterModule(),
                     new GuiceIoCResolverModule(),
                     new AppServeDispatcherModule(),
                     new AppServeDispatcherServletModule(),
+                    new StandardServletServicesModule(),
+                    new StandardServletSecurityModule(),
+                    new StandardServletRedissonServicesModule(),
                     new RemoteInvocationDispatcherModule(),
                     new JeroMQContextModule().withApplicationUniqueName(application.getId())
             );
