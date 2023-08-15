@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonMap;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -50,6 +51,7 @@ public class MongoAppleSignInSessionDaoTest {
         final Application application = new Application();
         application.setName("mock");
         application.setDescription("A mock application.");
+        application.setAttributes(singletonMap("key", "value"));
         return getApplicationDao().createOrUpdateInactiveApplication(application);
     }
 

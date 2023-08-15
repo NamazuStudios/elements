@@ -15,6 +15,7 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -25,6 +26,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static java.util.Collections.emptyMap;
 
 /**
  * Created by patricktwohig on 7/10/15.
@@ -42,6 +44,10 @@ public class MongoApplicationDao implements ApplicationDao {
 
     @Inject
     private Datastore datastore;
+
+    private Mapper dozerMapper;
+
+
 
     @Override
     public Application createOrUpdateInactiveApplication(final Application application) {
@@ -61,7 +67,8 @@ public class MongoApplicationDao implements ApplicationDao {
             query.modify(
                 set("name", application.getName().trim()),
                 set("description", nullToEmpty(application.getDescription()).trim()),
-                set("active", true)
+                set("active", true),
+                set("attributes", application.getAttributes())
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
@@ -124,6 +131,12 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
+    public Application getActiveApplicationWithoutAttributes(String nameOrId) {
+        Application application = getActiveApplication(nameOrId);
+        application.setAttributes(emptyMap());
+        return application;
+    }
+
     @Override
     public Application updateActiveApplication(String nameOrId, Application application) {
 
@@ -143,8 +156,9 @@ public class MongoApplicationDao implements ApplicationDao {
             query.modify(
                 set("name", application.getName().trim()),
                 set("description", nullToEmpty(application.getDescription()).trim()),
+                set("attributes", application.getAttributes()),
                 set("active", true)
-            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoApplication == null) {
@@ -220,29 +234,30 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public Application transform(final MongoApplication mongoApplication) {
-
-        final Application application = new Application();
-
-        if (mongoApplication.getObjectId() != null) {
-            application.setId(mongoApplication.getObjectId().toHexString());
-        }
-
-        application.setName(mongoApplication.getName());
-        application.setDescription(mongoApplication.getDescription());
-
-        return application;
-
+    private Application transform(final MongoApplication mongoApplication) {
+        return getDozerMapper().map(mongoApplication, Application.class);
     }
 
-    public void validate(final Application application) {
+    private void validate(final Application application) {
 
         if (application == null) {
             throw new InvalidDataException("application must not be null.");
+        }
+        // allow saving application without attributes touched
+        if (application.getAttributes() == null) {
+            application.setAttributes(emptyMap());
         }
 
         validationHelper.validateModel(application);
 
     }
 
+    private Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
 }

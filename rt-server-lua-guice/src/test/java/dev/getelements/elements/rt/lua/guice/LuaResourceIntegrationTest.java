@@ -214,15 +214,6 @@ public class LuaResourceIntegrationTest {
 
     }
 
-//    @AfterMethod
-//    public void clearResourceService() {
-//        try{
-//            getContext().getResourceContext().destroyAllResources();
-//        } catch (UnsupportedOperationException ex){
-//
-//        }
-//    }
-
     public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
     }

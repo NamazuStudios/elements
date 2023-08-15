@@ -2,14 +2,14 @@ package dev.getelements.elements.service.application;
 
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.application.CreateApplicationRequest;
+import dev.getelements.elements.model.application.UpdateApplicationRequest;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.ApplicationService;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
-
-import static dev.getelements.elements.util.URIs.appendPath;
-import static java.lang.String.format;
 
 /**
  * {@link ApplicationService} implemented for when the current user has {@link User.Level#SUPERUSER} access.
@@ -22,13 +22,16 @@ public class SuperUserApplicationService implements ApplicationService {
 
     private ApplicationUrls applicationUrls;
 
+    private Mapper dozerMapper;
+
     @Override
     public Pagination<Application> getApplications() {
         return getApplicationDao().getActiveApplications();
     }
 
     @Override
-    public Application createApplication(Application application) {
+    public Application createApplication(CreateApplicationRequest createApplicationRequest) {
+        Application application = getDozerMapper().map(createApplicationRequest, Application.class);
         return getApplicationUrls().addAllUrls(getApplicationDao().createOrUpdateInactiveApplication(application));
     }
 
@@ -48,7 +51,8 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Override
-    public Application updateApplication(String nameOrId, Application application) {
+    public Application updateApplication(String nameOrId, UpdateApplicationRequest updateApplicationRequest) {
+        Application application = getDozerMapper().map(updateApplicationRequest, Application.class);
         return getApplicationUrls().addAllUrls(getApplicationDao().updateActiveApplication(nameOrId, application));
     }
 
@@ -75,4 +79,12 @@ public class SuperUserApplicationService implements ApplicationService {
         this.applicationUrls = applicationUrls;
     }
 
+    public Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
 }

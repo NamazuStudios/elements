@@ -74,6 +74,15 @@ public interface ApplicationDao {
     Application getActiveApplication(final String nameOrId);
 
     /**
+     * Extension of getActiveApplication with no attributes set.
+     * of {@link NotFoundException} if the object cannot be found, or is inactive.
+     *
+     * @return an Application instance, never null
+     * @throws NotFoundException if the application is inactive or non-existent
+     */
+    Application getActiveApplicationWithoutAttributes(final String nameOrId);
+
+    /**
      * Updates an application with the specific name/identifiers.  When changing
      * the application name the ID must be specified.
      *

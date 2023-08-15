@@ -42,6 +42,8 @@ public class LuaResourceLoader implements ResourceLoader {
 
     private Provider<Set<Builtin>> additionalBuiltins;
 
+    private Attributes attributes;
+
     @Override
     public Resource load(final InputStream is, final boolean verbose) throws ResourcePersistenceException {
 
@@ -85,10 +87,16 @@ public class LuaResourceLoader implements ResourceLoader {
                          final Attributes attributes,
                          final Object ... args) throws ModuleNotFoundException {
 
-        final LuaResource luaResource = getLuaResourceProvider().get();
+        final var luaResource = getLuaResourceProvider().get();
+
+        final var mergedAttributes = new SimpleAttributes.Builder()
+                .from(getAttributes())
+                .from(attributes)
+                .build();
 
         try {
-            preload(luaResource, false).setAttributes(attributes);
+            preload(luaResource, false);
+            luaResource.setAttributes(mergedAttributes);
             luaResource.loadModule(getAssetLoader(), moduleName, args);
             return luaResource;
         } catch (Exception ex) {
@@ -216,6 +224,15 @@ public class LuaResourceLoader implements ResourceLoader {
     @Inject
     public void setAdditionalBuiltins(Provider<Set<Builtin>> additionalBuiltins) {
         this.additionalBuiltins = additionalBuiltins;
+    }
+
+    public Attributes getAttributes() {
+        return attributes;
+    }
+
+    @Inject
+    public void setAttributes(Attributes attributes) {
+        this.attributes = attributes;
     }
 
 }

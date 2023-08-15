@@ -5,7 +5,6 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import dev.getelements.elements.dao.ApplicationDao;
-import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.rt.git.GitLoader;
 import dev.getelements.elements.rt.id.ApplicationId;

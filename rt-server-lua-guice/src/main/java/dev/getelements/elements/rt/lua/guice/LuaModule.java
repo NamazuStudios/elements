@@ -5,8 +5,10 @@ import com.google.inject.PrivateModule;
 import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.jnlua.Converter;
 import com.namazustudios.socialengine.jnlua.LuaState;
+import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.ManifestLoader;
 import dev.getelements.elements.rt.ResourceLoader;
+import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposeEnum;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
@@ -32,6 +34,8 @@ import static java.util.stream.Collectors.toMap;
  */
 public class LuaModule extends PrivateModule {
 
+    private Attributes attributes = Attributes.emptyAttributes();
+
     private Multibinder<Builtin> builtinMultibinder;
 
     private BiConsumer<String, Class<?>> legacyVisitors = (s, t) -> {};
@@ -47,10 +51,15 @@ public class LuaModule extends PrivateModule {
         builtinMultibinder = Multibinder.newSetBinder(binder(), Builtin.class);
         configureFeatures();
 
+        bind(Attributes.class).toProvider(() -> new SimpleAttributes.Builder()
+                .from(attributes)
+                .build()
+        );
+
     }
 
     /**
-     * Configures the features used by this {@Link LuaModule}.  By default this invokes {@link #enableStandardFeatures()}.
+     * Configures the features used by this {@link LuaModule}.  By default this invokes {@link #enableStandardFeatures()}.
      * Subclasses may override this method to cherry-pick features they wish to add.
      */
     protected void configureFeatures() {
@@ -112,6 +121,11 @@ public class LuaModule extends PrivateModule {
      */
     public LuaModule enableBuiltinJavaExtensions() {
         return enableJavaExtensions("dev.getelements");
+    }
+
+    public LuaModule withAttributes(final Attributes attributes) {
+        this.attributes = attributes;
+        return this;
     }
 
     /**
