@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.largeobject;
 
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.model.largeobject.LargeObject;

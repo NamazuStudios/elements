@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.emptyList;

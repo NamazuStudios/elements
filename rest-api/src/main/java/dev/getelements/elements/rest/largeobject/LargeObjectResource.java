@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 
 import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
+//TODO: expose
 @Api(value = "LargeObjects",
         description = "Allows for the manipulation of LargeObject types.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
