@@ -3,7 +3,7 @@ package dev.getelements.elements.rest.largeobject;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
-import dev.getelements.elements.service.largeobject.LargeObjectService;
+import dev.getelements.elements.service.LargeObjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

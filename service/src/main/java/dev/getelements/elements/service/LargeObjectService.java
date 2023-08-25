@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.largeobject;
+package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
