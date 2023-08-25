@@ -7,6 +7,10 @@ import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.service.LargeObjectService;
 
 import javax.inject.Inject;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
 public class AnonLargeObjectService implements LargeObjectService {
 
@@ -69,4 +73,25 @@ public class AnonLargeObjectService implements LargeObjectService {
     public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
         this.largeObjectDao = largeObjectDao;
     }
+
+    @Override
+    public OutputStream writeLargeObjectStream(String objectId) {
+        return null;
+    }
+
+    @Override
+    public WritableByteChannel writeLargeObjectChannel(String objectId) {
+        return null;
+    }
+
+    @Override
+    public InputStream readLargeObjectStream(String objectId) {
+        return null;
+    }
+
+    @Override
+    public ReadableByteChannel readLargeObjectChannel(String objectId) {
+        return null;
+    }
+
 }

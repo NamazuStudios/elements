@@ -6,6 +6,7 @@ import dev.getelements.elements.model.ValidationGroups.Update;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 
@@ -17,17 +18,22 @@ public class LargeObject {
     @ApiModelProperty("The unique ID of the LargeObject.")
     private String id;
 
-    @NotNull
-    @ApiModelProperty("Permission associated with LargeObject.")
-    private AccessPermissions accessPermissions;
-
-    @NotNull
-    @ApiModelProperty("LargeObject URL")
+    @Null
+    @ApiModelProperty(
+            "The URL where the binary contents of the LargeObject may be read. This field is always set by the " +
+            "LargeObjectService to indicate where the file resides. A subsequent GET request from the URL will " +
+            "fetch the contents of the LargeObject."
+    )
     private String url;
 
     @NotNull
-    @ApiModelProperty("LargeObject URL")
+    @ApiModelProperty("The MIME type of the LargeObject.")
     private String mimeType;
+
+    @Valid
+    @NotNull
+    @ApiModelProperty("Permission associated with LargeObject.")
+    private AccessPermissions accessPermissions;
 
     public String getId() {
         return id;
@@ -60,4 +66,5 @@ public class LargeObject {
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
     }
+
 }
