@@ -12,7 +12,7 @@ public class AccessPermissions {
     @ApiModelProperty("Subjects allowed to read")
     private Subjects read;
     @NotNull
-    @ApiModelProperty("Subjects allowed to read")
+    @ApiModelProperty("Subjects allowed to write")
     private Subjects write;
 
     public Subjects getRead() {
