@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.security;
 
 import dev.getelements.elements.model.session.FirebaseSessionRequest;
 import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.FirebaseAuthService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -15,13 +16,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 /**
  * Created by patricktwohig on 4/2/15.
  */
 @Api(value = "FirebaseInSession",
-     authorizations = { @Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET) }
+     authorizations = { @Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET) }
  )
 @Path("firebase_session")
 public class FirebaseAuthResource {

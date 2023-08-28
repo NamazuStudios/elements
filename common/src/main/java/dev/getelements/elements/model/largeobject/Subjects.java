@@ -15,11 +15,7 @@ import static java.util.Collections.emptyList;
 public class Subjects {
 
     @ApiModelProperty("Flag to check who may perform the operations. True if all users may access the object.")
-    private boolean allUsers;
-
-
-    @ApiModelProperty("Flag to check who may perform the operations. True if all profiles may access the object.")
-    private boolean allProfiles;
+    private boolean anonymous;
 
     @NotNull
     @ApiModelProperty("Users which may perform the operations.")
@@ -35,27 +31,18 @@ public class Subjects {
      */
     public static Subjects anonymousSubject() {
         Subjects anonymousSubject = new Subjects();
-        anonymousSubject.allUsers = true;
-        anonymousSubject.allProfiles = true;
+        anonymousSubject.anonymous = true;
         anonymousSubject.setUsers(emptyList());
         anonymousSubject.setProfiles(emptyList());
         return anonymousSubject;
     }
 
-    public boolean isAllUsers() {
-        return allUsers;
+    public boolean isAnonymous() {
+        return anonymous;
     }
 
-    public void setAllUsers(boolean allUsers) {
-        this.allUsers = allUsers;
-    }
-
-    public boolean isAllProfiles() {
-        return allProfiles;
-    }
-
-    public void setAllProfiles(boolean allProfiles) {
-        this.allProfiles = allProfiles;
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
     public List<User> getUsers() {
@@ -79,19 +66,18 @@ public class Subjects {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Subjects subjects = (Subjects) o;
-        return isAllUsers() == subjects.isAllUsers() && isAllProfiles() == subjects.isAllProfiles() && Objects.equals(getUsers(), subjects.getUsers()) && Objects.equals(getProfiles(), subjects.getProfiles());
+        return isAnonymous() == subjects.isAnonymous() && Objects.equals(getUsers(), subjects.getUsers()) && Objects.equals(getProfiles(), subjects.getProfiles());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isAllUsers(), isAllProfiles(), getUsers(), getProfiles());
+        return Objects.hash(isAnonymous(), getUsers(), getProfiles());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Subjects{");
-        sb.append("allUsers=").append(allUsers);
-        sb.append(", allProfiles=").append(allProfiles);
+        sb.append("allUsers=").append(anonymous);
         sb.append(", users=").append(users);
         sb.append(", profiles=").append(profiles);
         sb.append('}');

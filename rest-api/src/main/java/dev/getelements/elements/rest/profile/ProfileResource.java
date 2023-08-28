@@ -9,6 +9,7 @@ import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -20,7 +21,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
 
 /**
@@ -30,7 +30,7 @@ import static dev.getelements.elements.service.profile.UserProfileService.PROFIL
      description = "Allows for the manipulation of Profile objects.  Profile objects store the " +
                    "basic information for the users in the system as they are associated with " +
                    "Applications.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("profile")
 public class ProfileResource {
 

@@ -8,22 +8,23 @@ import java.util.Optional;
 public class MongoLargeObjectDao implements LargeObjectDao {
 
     @Override
-    public void createOrUpdateLargeObject(LargeObject largeObject) {
-
-    }
-
-    @Override
-    public LargeObject getLargeObject(String objectId) {
-        return null;
-    }
-
-    @Override
-    public Optional<LargeObject> findLargeObject(String objectId) {
+    public Optional<LargeObject> findLargeObject(final String objectId) {
         return Optional.empty();
     }
 
     @Override
-    public void deleteLargeObject(String objectId) {
-
+    public LargeObject createLargeObject(final LargeObject largeObject) {
+        throw new UnsupportedOperationException();
     }
+
+    @Override
+    public LargeObject updateLargeObject(final LargeObject largeObject) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public LargeObject deleteLargeObject(final String objectId) {
+        throw new UnsupportedOperationException();
+    }
+
 }

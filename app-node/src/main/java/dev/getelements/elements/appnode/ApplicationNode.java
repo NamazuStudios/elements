@@ -8,6 +8,7 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
@@ -79,8 +80,9 @@ public class ApplicationNode {
             new JeroMQInstanceConnectionServiceModule(),
             new JeroMQControlClientModule(),
             new MongoCoreModule(),
-            new SimpleRemoteInvokerRegistryModule(),
             new MongoDaoModule(),
+            new MongoGridFSLargeObjectBucketModule(),
+            new SimpleRemoteInvokerRegistryModule(),
             new ValidationModule(),
             new FilesystemScriptStorageGitLoaderModule(),
             new WorkerInstanceModule(),

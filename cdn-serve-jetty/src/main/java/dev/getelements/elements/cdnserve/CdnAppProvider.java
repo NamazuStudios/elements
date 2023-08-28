@@ -37,7 +37,9 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     public static final String MANAGE_CONTEXT = "/cdn/manage";
 
-    public static final String STATIC_ORIGIN_CONTEXT_FORMAT = "/cdn/content/%s";
+    public static final String STATIC_ORIGIN_CONTEXT_FORMAT = "/cdn/static/app/%s";
+
+    public static final String OBJECTS_ORIGIN_CONTEXT_FORMAT = "/cdn/object/%s";
 
     private String contentDirectory;
 

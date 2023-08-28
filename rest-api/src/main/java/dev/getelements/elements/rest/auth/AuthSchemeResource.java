@@ -5,6 +5,7 @@ import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.auth.*;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.auth.AuthSchemeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,12 +17,10 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.List;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Auth Schemes",
         description = "An Auth Scheme consists of a public key and the metadata associated with it to tell Elements " +
                 "what it needs to verify a JWT key. ",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("auth_scheme")
 public class AuthSchemeResource {
 

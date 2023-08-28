@@ -10,11 +10,8 @@ import java.util.Objects;
 @ApiModel
 public class SubjectRequest {
 
-    @ApiModelProperty("Flag to check who may perform the operations. True if all users may access the object.")
-    private boolean allUsers;
-
-    @ApiModelProperty("Flag to check who may perform the operations. True if all profiles may access the object.")
-    private boolean allProfiles;
+    @ApiModelProperty("Flag to check who may perform the operation. If true, all anonymous users may perform the operation.")
+    private boolean anonymous;
 
     @NotNull
     @ApiModelProperty("A List of all UserIds which can operate against the LargeObject.")
@@ -24,20 +21,24 @@ public class SubjectRequest {
     @ApiModelProperty("A List of all ProfileIds which can operate against the LargeObject.")
     private List<String> profileIds;
 
-    public boolean isAllUsers() {
-        return allUsers;
+    /**
+     * Gets a default valid {@link SubjectRequest}.
+     * @return
+     */
+    public static SubjectRequest newDefaultRequest() {
+        final var request = new SubjectRequest();
+        request.setAnonymous(false);
+        request.setUserIds(List.of());
+        request.setProfileIds(List.of());
+        return request;
     }
 
-    public void setAllUsers(boolean allUsers) {
-        this.allUsers = allUsers;
+    public boolean isAnonymous() {
+        return anonymous;
     }
 
-    public boolean isAllProfiles() {
-        return allProfiles;
-    }
-
-    public void setAllProfiles(boolean allProfiles) {
-        this.allProfiles = allProfiles;
+    public void setAnonymous(boolean anonymous) {
+        this.anonymous = anonymous;
     }
 
     public List<String> getUserIds() {
@@ -56,24 +57,24 @@ public class SubjectRequest {
         this.profileIds = profileIds;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SubjectRequest that = (SubjectRequest) o;
-        return isAllUsers() == that.isAllUsers() && isAllProfiles() == that.isAllProfiles() && Objects.equals(getUserIds(), that.getUserIds()) && Objects.equals(getProfileIds(), that.getProfileIds());
+        return isAnonymous() == that.isAnonymous() && Objects.equals(getUserIds(), that.getUserIds()) && Objects.equals(getProfileIds(), that.getProfileIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isAllUsers(), isAllProfiles(), getUserIds(), getProfileIds());
+        return Objects.hash(isAnonymous(), getUserIds(), getProfileIds());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("SubjectRequest{");
-        sb.append("allUsers=").append(allUsers);
-        sb.append(", allProfiles=").append(allProfiles);
+        sb.append("allUsers=").append(anonymous);
         sb.append(", userIds=").append(userIds);
         sb.append(", profileIds=").append(profileIds);
         sb.append('}');

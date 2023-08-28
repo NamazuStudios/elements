@@ -5,6 +5,7 @@ import com.google.inject.name.Names;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.security.PasswordGenerator;
@@ -66,6 +67,7 @@ public class IntegrationTestModule extends AbstractModule {
 
         install(new MongoTestInstanceModule(port));
         install(new MongoCoreModule());
+        install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
 
     }

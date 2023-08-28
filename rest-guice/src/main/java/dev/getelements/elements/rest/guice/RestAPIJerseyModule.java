@@ -5,7 +5,7 @@ import dev.getelements.elements.rest.MethodOverrideFilter;
 import dev.getelements.elements.rest.ShortLinkForwardingFilter;
 import dev.getelements.elements.rest.VersionResource;
 import dev.getelements.elements.rest.support.DefaultExceptionMapper;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.jersey.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 

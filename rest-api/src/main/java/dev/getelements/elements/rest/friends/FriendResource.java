@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.friends;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.friend.Friend;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.FriendService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -14,13 +15,12 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("friend")
 @Api(value = "Friends",
      description = "Manages friend ships among users.  Friends as associated among users, each with access to the " +
                    "individual profiles therein.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 public class FriendResource {
 
     private ValidationHelper validationHelper;

@@ -1,68 +1,63 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
+import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.service.LargeObjectService;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
+import java.util.Optional;
 
 public class AnonLargeObjectService implements LargeObjectService {
 
-    private LargeObjectAccessUtils accessUtils;
-    private LargeObjectServiceDriver driver;
     private LargeObjectDao largeObjectDao;
 
+    private LargeObjectBucket largeObjectBucket;
+
     @Override
-    public LargeObject createLargeObject(InputStream uploadedInputStream, String fileName) {
-        LargeObject newLargeObject = new LargeObject();
-        String objectUrl = driver.createObject(uploadedInputStream, fileName);
-
-        //TODO: try to make it "transactional", so rollback storage, after crash below
-        newLargeObject.setUrl(objectUrl);
-        newLargeObject.setAccessPermissions(accessUtils.createAnonymousAccess());
-        newLargeObject.setMimeType(newLargeObject.getMimeType());
-
-        largeObjectDao.createOrUpdateLargeObject(newLargeObject);
-        return newLargeObject;
+    public Optional<LargeObject> findLargeObject(final String objectId) {
+        return getLargeObjectDao().findLargeObject(objectId);
     }
 
     @Override
-    public LargeObject updateLargeObject(UpdateLargeObjectRequest objectRequest) {
-        return null;
+    public LargeObject updateLargeObject(
+            final String objectId,
+            final UpdateLargeObjectRequest objectRequest) {
+        throw new ForbiddenException();
     }
 
     @Override
-    public LargeObject getLargeObject(String objectId) {
-        return null;
+    public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
+        throw new ForbiddenException();
     }
 
     @Override
-    public void deleteLargeObject(String objectId) {
+    public void deleteLargeObject(final String objectId) {
+        throw new ForbiddenException();
+    }
+
+    @Override
+    public InputStream readLargeObject(final String objectId) throws IOException {
+
+        final var largeObject = getLargeObject(objectId);
+
+        if (largeObject.getAccessPermissions().getRead().isAnonymous()) {
+            return getLargeObjectBucket().readObject(largeObject.getId());
+        }
+
+        throw new ForbiddenException();
 
     }
 
-    public LargeObjectAccessUtils getAccessUtils() {
-        return accessUtils;
-    }
-
-    @Inject
-    public void setAccessUtils(LargeObjectAccessUtils accessUtils) {
-        this.accessUtils = accessUtils;
-    }
-
-    public LargeObjectServiceDriver getDriver() {
-        return driver;
-    }
-
-    @Inject
-    public void setDriver(LargeObjectServiceDriver driver) {
-        this.driver = driver;
+    @Override
+    public OutputStream writeLargeObject(String objectId) throws IOException {
+        throw new ForbiddenException();
     }
 
     public LargeObjectDao getLargeObjectDao() {
@@ -74,24 +69,13 @@ public class AnonLargeObjectService implements LargeObjectService {
         this.largeObjectDao = largeObjectDao;
     }
 
-    @Override
-    public OutputStream writeLargeObjectStream(String objectId) {
-        return null;
+    public LargeObjectBucket getLargeObjectBucket() {
+        return largeObjectBucket;
     }
 
-    @Override
-    public WritableByteChannel writeLargeObjectChannel(String objectId) {
-        return null;
-    }
-
-    @Override
-    public InputStream readLargeObjectStream(String objectId) {
-        return getDriver().getObject(objectId);
-    }
-
-    @Override
-    public ReadableByteChannel readLargeObjectChannel(String objectId) {
-        return null;
+    @Inject
+    public void setLargeObjectBucket(LargeObjectBucket largeObjectBucket) {
+        this.largeObjectBucket = largeObjectBucket;
     }
 
 }

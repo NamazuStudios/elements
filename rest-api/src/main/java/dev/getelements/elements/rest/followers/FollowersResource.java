@@ -5,6 +5,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.FollowerService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -15,12 +16,10 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Path("follower")
 @Api(value = "Followers",
         description = "Manages follower relationships among profiles.",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 public class FollowersResource {
     private ValidationHelper validationHelper;
 

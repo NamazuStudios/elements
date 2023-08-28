@@ -1,7 +1,7 @@
 package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.model.application.IosApplicationConfiguration;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.IosApplicationConfigurationService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -12,8 +12,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 /**
  * Handles the management of {@link IosApplicationConfiguration} instances.
  *
@@ -22,7 +20,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
 @Api(
     value = "iOS Application Configuration",
     description = "Operations for the management of ApplicationConfigurations for iOS Applications.",
-    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/ios")
 public class IosApplicationConfigurationResource {
 

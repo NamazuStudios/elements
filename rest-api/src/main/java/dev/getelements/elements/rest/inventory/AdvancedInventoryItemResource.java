@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.inventory;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.*;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.AdvancedInventoryItemService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -14,7 +15,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("inventory/advanced")
 @Api(value = "Inventory",
@@ -23,9 +23,9 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
                 "priority slot specified in the request. This is used in scenarios where multiple stacks of the same" +
                 "item are required. It is considered a superset of the simple inventory APIs.",
         authorizations = {
-                @Authorization(AUTH_BEARER),
-                @Authorization(SESSION_SECRET),
-                @Authorization(SOCIALENGINE_SESSION_SECRET)
+                @Authorization(AuthSchemes.AUTH_BEARER),
+                @Authorization(AuthSchemes.SESSION_SECRET),
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
         }
 )
 @Produces(MediaType.APPLICATION_JSON)

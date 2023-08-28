@@ -1,7 +1,7 @@
 package dev.getelements.elements.rest.guice;
 
 import com.google.inject.Injector;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.jersey.swagger.EnhancedApiListingResource;
 import dev.getelements.elements.rt.exception.InternalException;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;

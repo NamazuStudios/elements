@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.Objects;
 
 @ApiModel
 public class LargeObject {
@@ -25,6 +26,10 @@ public class LargeObject {
             "fetch the contents of the LargeObject."
     )
     private String url;
+
+    @NotNull
+    @ApiModelProperty("The path to the file in the underlying bucket.")
+    private String path;
 
     @NotNull
     @ApiModelProperty("The MIME type of the LargeObject.")
@@ -59,12 +64,45 @@ public class LargeObject {
         this.url = url;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
     public String getMimeType() {
         return mimeType;
     }
 
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LargeObject that = (LargeObject) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getUrl(), that.getUrl()) && Objects.equals(getPath(), that.getPath()) && Objects.equals(getMimeType(), that.getMimeType()) && Objects.equals(getAccessPermissions(), that.getAccessPermissions());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getUrl(), getPath(), getMimeType(), getAccessPermissions());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("LargeObject{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", url='").append(url).append('\'');
+        sb.append(", path='").append(path).append('\'');
+        sb.append(", mimeType='").append(mimeType).append('\'');
+        sb.append(", accessPermissions=").append(accessPermissions);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

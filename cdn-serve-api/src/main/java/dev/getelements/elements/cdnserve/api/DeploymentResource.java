@@ -2,6 +2,7 @@ package dev.getelements.elements.cdnserve.api;
 
 import dev.getelements.elements.model.Deployment;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.rest.AuthSchemes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -10,11 +11,9 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Deployment",
         description = "Manages content deployments for an app in the server.",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("deployment/{applicationId}")
 public class DeploymentResource {
 

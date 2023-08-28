@@ -4,6 +4,7 @@ import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.friend.FacebookFriend;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.FacebookFriendService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,13 +15,12 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static dev.getelements.elements.Headers.FACEBOOK_OAUTH_TOKEN;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("friend_uninvited")
 @Api(value = "Friends",
      description = "Provides access to Friends who are available, but not invited to the current application." +
                       "This is useful for sending invites and cross-promotion of applications.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 public class UninvitedFriendResource {
 
     private FacebookFriendService facebookFriendService;

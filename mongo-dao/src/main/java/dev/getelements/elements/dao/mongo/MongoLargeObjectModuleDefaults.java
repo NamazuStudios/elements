@@ -1,19 +1,19 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.config.ModuleDefaults;
-import dev.getelements.elements.dao.mongo.provider.MongoGridFSFileDaoProvider;
+import dev.getelements.elements.dao.mongo.provider.LargeObjectGridFSBucketProvider;
 
 import java.util.Properties;
 
 /**
  * Created by patricktwohig on 6/29/17.
  */
-public class MongoFileModuleDefaults implements ModuleDefaults {
+public class MongoLargeObjectModuleDefaults implements ModuleDefaults {
 
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(MongoGridFSFileDaoProvider.FILE_SERVICE_BUCKET, "socialengine-files");
+        properties.setProperty(LargeObjectGridFSBucketProvider.LARGE_OBJECT_BUCKET, "large-objects");
         return properties;
    }
 

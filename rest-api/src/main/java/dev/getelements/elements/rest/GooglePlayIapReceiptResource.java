@@ -17,8 +17,6 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.List;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Google Play IAPs",
      description = "A REST interface where Google Play IAP receipt tokens are POSTed for the purposes of generating " +
              "RewardIssuances. N.B.: the REST interface does not directly change the consumption state of " +
@@ -27,7 +25,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
              "receives a RewardIssuance, then the mobile app should submit a consumption request " +
              "to Google Play (assuming the product may be purchased more than once). I.e., the product is considered " +
              "consumed as soon as an issuance has been successfully generated on the server.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("google")
 public class GooglePlayIapReceiptResource {
 
