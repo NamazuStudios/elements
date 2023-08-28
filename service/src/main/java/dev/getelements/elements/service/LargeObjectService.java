@@ -35,7 +35,6 @@ public interface LargeObjectService {
 
     LargeObject getLargeObject(String objectId);
 
-
     LargeObject updateLargeObject(UpdateLargeObjectRequest objectRequest);
 
     void deleteLargeObject(String objectId);

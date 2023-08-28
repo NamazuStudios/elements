@@ -15,6 +15,10 @@ class LargeObjectServiceDriver {
         return fileName;
     }
 
+    public InputStream getObject(String fileName) {
+        return bucket.readImage(fileName);
+    }
+
     public LargeObjectBucket getBucket() {
         return bucket;
     }

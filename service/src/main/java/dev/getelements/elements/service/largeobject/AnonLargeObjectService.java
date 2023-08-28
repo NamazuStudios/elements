@@ -86,7 +86,7 @@ public class AnonLargeObjectService implements LargeObjectService {
 
     @Override
     public InputStream readLargeObjectStream(String objectId) {
-        return null;
+        return getDriver().getObject(objectId);
     }
 
     @Override

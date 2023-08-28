@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
@@ -50,6 +51,14 @@ public class LargeObjectResource {
     @ApiOperation(value = "Updates a LargeObject")
     public LargeObject getLargeObject(@PathParam("objectId") final String objectId) {
         return getLargeObjectService().getLargeObject(objectId);
+    }
+
+    @GET
+    @Path("/img/{objectId}")
+    @Produces(MediaType.MULTIPART_FORM_DATA)
+    @ApiOperation(value = "Updates a LargeObject")
+    public byte[] getLargeObjectFile(@PathParam("objectId") final String objectId) throws IOException {
+        return getLargeObjectService().readLargeObjectStream(objectId).readAllBytes();
     }
 
     //TODO: clarify delete logic. Persist delete or flag as removed/deactivated
