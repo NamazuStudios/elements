@@ -1,8 +1,8 @@
 package dev.getelements.elements.dao;
 
-import java.io.File;
+import java.io.InputStream;
 
 public interface LargeObjectBucket {
 
-    String saveImage(File file);
+    void saveImage(InputStream inputStream, String fileName);
 }

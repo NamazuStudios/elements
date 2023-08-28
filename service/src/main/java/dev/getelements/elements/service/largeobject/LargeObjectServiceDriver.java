@@ -4,13 +4,15 @@ import dev.getelements.elements.dao.LargeObjectBucket;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.io.InputStream;
 
 class LargeObjectServiceDriver {
 
     private LargeObjectBucket bucket;
 
-    public String createObject() {
-        return bucket.saveImage(new File("dummy"));
+    public String createObject(InputStream uploadedInputStream, String fileName) {
+        bucket.saveImage(uploadedInputStream, fileName);
+        return fileName;
     }
 
     public LargeObjectBucket getBucket() {

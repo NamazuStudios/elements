@@ -19,6 +19,8 @@ import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
+import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectBucket;
+import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
@@ -83,6 +85,8 @@ public class MongoDaoModule extends PrivateModule {
         bind(WalletDao.class).to(MongoWalletDao.class);
         bind(SmartContractDao.class).to(MongoSmartContractDao.class);
         bind(VaultDao.class).to(MongoVaultDao.class);
+        bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
+        bind(LargeObjectBucket.class).to(MongoLargeObjectBucket.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -140,6 +144,8 @@ public class MongoDaoModule extends PrivateModule {
         expose(WalletDao.class);
         expose(SmartContractDao.class);
         expose(VaultDao.class);
+        expose(LargeObjectDao.class);
+        expose(LargeObjectBucket.class);
 
     }
 

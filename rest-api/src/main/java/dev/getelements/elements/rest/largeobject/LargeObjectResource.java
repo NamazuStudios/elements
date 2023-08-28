@@ -7,10 +7,14 @@ import dev.getelements.elements.service.LargeObjectService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import java.io.InputStream;
 
 import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
@@ -25,13 +29,16 @@ public class LargeObjectResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @ApiOperation(value = "Creates a LargeObject")
-    public LargeObject createLargeObject(final CreateLargeObjectRequest objectRequest) {
-        return getLargeObjectService().createLargeObject(objectRequest);
+    public LargeObject createLargeObject(@FormDataParam("file") InputStream uploadedInputStream,
+                                         @FormDataParam("file") FormDataContentDisposition fileDetails) {
+        return getLargeObjectService().createLargeObject(uploadedInputStream, fileDetails.getName());
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @ApiOperation(value = "Updates a LargeObject")
     public LargeObject updateLargeObject(final UpdateLargeObjectRequest objectRequest) {
         return getLargeObjectService().updateLargeObject(objectRequest);

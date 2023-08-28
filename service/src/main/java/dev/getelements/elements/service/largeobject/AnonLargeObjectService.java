@@ -19,9 +19,9 @@ public class AnonLargeObjectService implements LargeObjectService {
     private LargeObjectDao largeObjectDao;
 
     @Override
-    public LargeObject createLargeObject(CreateLargeObjectRequest objectRequest) {
+    public LargeObject createLargeObject(InputStream uploadedInputStream, String fileName) {
         LargeObject newLargeObject = new LargeObject();
-        String objectUrl = driver.createObject();
+        String objectUrl = driver.createObject(uploadedInputStream, fileName);
 
         //TODO: try to make it "transactional", so rollback storage, after crash below
         newLargeObject.setUrl(objectUrl);

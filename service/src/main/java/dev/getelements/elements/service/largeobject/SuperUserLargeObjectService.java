@@ -13,7 +13,7 @@ import java.nio.channels.WritableByteChannel;
 public class SuperUserLargeObjectService implements LargeObjectService {
 
     @Override
-    public LargeObject createLargeObject(CreateLargeObjectRequest objectRequest) {
+    public LargeObject createLargeObject(InputStream uploadedInputStream, String fileName) {
         return null;
     }
 
