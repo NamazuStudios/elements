@@ -47,6 +47,10 @@ public class BlockchainModuleDefaults implements ModuleDefaults {
         properties.put(FLOW.urlsName(), "grpc://access.devnet.nodes.onflow.org:9000");
         properties.put(FLOW_TEST.urlsName(), "grpc://access.devnet.nodes.onflow.org:9000");
 
+        //https://docs.near.org/api/rpc/setup
+        properties.put(NEAR.urlsName(), "https://rpc.mainnet.near.org");
+        properties.put(NEAR_TEST.urlsName(), "https://rpc.testnet.near.org");
+
         return properties;
 
     }

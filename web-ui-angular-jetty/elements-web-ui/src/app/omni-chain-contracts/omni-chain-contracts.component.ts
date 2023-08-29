@@ -14,6 +14,7 @@ const API_NETWORK_MAP = {
   FLOW: ['FLOW', 'FLOW_TEST'],
   NEO: ['NEO', 'NEO_TEST'],
   SOLANA: ['SOLANA', 'SOLANA_TEST'],
+  NEAR: ['NEAR', 'NEAR_TEST']
 }
 
 @Component({
@@ -41,6 +42,7 @@ export class OmniChainContractsComponent implements OnInit {
     { value: 'FLOW', label: 'FLOW' },
     { value: 'NEO', label: 'NEO' },
     { value: 'SOLANA', label: 'SOLANA' },
+    { value: 'NEAR', label: 'NEAR' },
   ];
   networks = [
     { value: 'any', label: 'Any' },
@@ -56,6 +58,8 @@ export class OmniChainContractsComponent implements OnInit {
     { value: 'POLYGON_TEST', label: 'POLYGON_TEST' },
     { value: 'SOLANA', label: 'SOLANA'  },
     { value: 'SOLANA_TEST', label: 'SOLANA_TEST' },
+    { value: 'NEAR', label: 'NEAR'  },
+    { value: 'NEAR_TEST', label: ' NEAR_TEST' },
   ];
   api = '';
   network: string[] = [];

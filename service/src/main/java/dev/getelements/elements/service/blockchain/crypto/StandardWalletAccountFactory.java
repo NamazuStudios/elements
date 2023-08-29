@@ -19,6 +19,8 @@ public class StandardWalletAccountFactory implements WalletAccountFactory {
 
     private Provider<SolanaAccountGenerator> solanaIdentityGeneratorProvider;
 
+    private Provider<NearAccountGenerator> nearIdentityGeneratorProvider;
+
     @Override
     public AccountGenerator getGenerator(final BlockchainApi api) {
 
@@ -35,6 +37,8 @@ public class StandardWalletAccountFactory implements WalletAccountFactory {
                 return getSolanaIdentityGeneratorProvider().get();
             case FLOW:
                 return getFlowAccountGeneratorProvider().get();
+            case NEAR:
+                return getNearIdentityGeneratorProvider().get();
             default:
                 throw new NotImplementedException("Unsupported API: " + api);
         }
@@ -84,6 +88,15 @@ public class StandardWalletAccountFactory implements WalletAccountFactory {
     @Inject
     public void setSolanaIdentityGeneratorProvider(Provider<SolanaAccountGenerator> solanaIdentityGeneratorProvider) {
         this.solanaIdentityGeneratorProvider = solanaIdentityGeneratorProvider;
+    }
+
+    public Provider<NearAccountGenerator> getNearIdentityGeneratorProvider() {
+        return nearIdentityGeneratorProvider;
+    }
+
+    @Inject
+    public void setNearIdentityGeneratorProvider(Provider<NearAccountGenerator> nearIdentityGeneratorProvider) {
+        this.nearIdentityGeneratorProvider = nearIdentityGeneratorProvider;
     }
 
 }

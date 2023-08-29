@@ -9,6 +9,7 @@ import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
 import dev.getelements.elements.service.blockchain.invoke.evm.EvmSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.invoke.flow.FlowSmartContractInvocationServiceProvider;
+import dev.getelements.elements.service.blockchain.invoke.near.NearSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.omni.SmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.omni.VaultServiceProvider;
 import dev.getelements.elements.service.blockchain.omni.WalletServiceProvider;
@@ -235,6 +236,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(FlowSmartContractInvocationService.class)
                 .toProvider(FlowSmartContractInvocationServiceProvider.class)
+                .in(scope);
+
+        bind(NearSmartContractInvocationService.class)
+                .toProvider(NearSmartContractServiceProvider.class)
                 .in(scope);
 
     }
