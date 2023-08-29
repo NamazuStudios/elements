@@ -19,7 +19,7 @@ class LargeObjectAccessUtils {
 
     Subjects fromRequest(final SubjectRequest subjectRequest) {
         Subjects subjects = new Subjects();
-        subjects.setAnonymous(subjectRequest.isAnonymous());
+        subjects.setWildcard(subjectRequest.isAnonymous());
         subjects.setUsers(subjectRequest.getUserIds().stream().map(userService::getUser).collect(toList()));
         subjects.setProfiles(subjectRequest.getProfileIds().stream().map(userProfileService::getProfile).collect(toList()));
         return subjects;
@@ -30,7 +30,7 @@ class LargeObjectAccessUtils {
     }
 
     boolean hasUserAccess(Subjects subjects, User user) {
-        return subjects.isAnonymous() ||
+        return subjects.isWildcard() ||
                 subjects.getUsers().contains(user) ||
                 subjects.getProfiles().contains(userProfileService.getCurrentProfile());
     }

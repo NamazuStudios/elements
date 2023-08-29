@@ -9,7 +9,6 @@ import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.largeobject.LargeObjectContentNotFoundException;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.OutputStream;
 
 public class GridFSLargeObjectBucket implements LargeObjectBucket {

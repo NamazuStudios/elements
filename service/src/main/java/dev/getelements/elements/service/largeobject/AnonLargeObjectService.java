@@ -47,7 +47,7 @@ public class AnonLargeObjectService implements LargeObjectService {
 
         final var largeObject = getLargeObject(objectId);
 
-        if (largeObject.getAccessPermissions().getRead().isAnonymous()) {
+        if (largeObject.getAccessPermissions().getRead().isWildcard()) {
             return getLargeObjectBucket().readObject(largeObject.getId());
         }
 
