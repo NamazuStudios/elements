@@ -65,7 +65,7 @@ public interface LargeObjectService {
             final String objectId,
             final InputStream inputStream) throws IOException {
 
-        try (var output = writeLargeObject(objectId)) {
+        try (var output = writeLargeObjectContent(objectId)) {
             inputStream.transferTo(output);
         }
 
@@ -89,7 +89,7 @@ public interface LargeObjectService {
 
         final var object = updateLargeObject(objectId, updateLargeObjectRequest);
 
-        try (var output = writeLargeObject(object.getId())) {
+        try (var output = writeLargeObjectContent(object.getId())) {
             inputStream.transferTo(output);
         }
 
@@ -120,7 +120,7 @@ public interface LargeObjectService {
 
         final var object = createLargeObject(createLargeObjectRequest);
 
-        try (var output = writeLargeObject(object.getId())) {
+        try (var output = writeLargeObjectContent(object.getId())) {
             inputStream.transferTo(output);
         }
 
@@ -143,7 +143,7 @@ public interface LargeObjectService {
      * @return an InputStream used to read the object's contents
      * @throws IOException
      */
-    InputStream readLargeObject(String objectId) throws IOException;
+    InputStream readLargeObjectContent(String objectId) throws IOException;
 
     /**
      * Opens the {@link LargeObject} for writing.
@@ -152,6 +152,6 @@ public interface LargeObjectService {
      * @return an OutputStream used to write the object's contents.
      * @throws IOException
      */
-    OutputStream writeLargeObject(String objectId) throws IOException;
+    OutputStream writeLargeObjectContent(String objectId) throws IOException;
 
 }

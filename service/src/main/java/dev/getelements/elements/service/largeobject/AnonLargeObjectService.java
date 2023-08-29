@@ -43,7 +43,7 @@ public class AnonLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public InputStream readLargeObject(final String objectId) throws IOException {
+    public InputStream readLargeObjectContent(final String objectId) throws IOException {
 
         final var largeObject = getLargeObject(objectId);
 
@@ -56,7 +56,7 @@ public class AnonLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public OutputStream writeLargeObject(String objectId) throws IOException {
+    public OutputStream writeLargeObjectContent(String objectId) throws IOException {
         throw new ForbiddenException();
     }
 

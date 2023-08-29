@@ -3,10 +3,7 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.InternalException;
-import dev.getelements.elements.model.largeobject.AccessPermissions;
-import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
-import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
+import dev.getelements.elements.model.largeobject.*;
 import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.util.ValidationHelper;
 
@@ -38,40 +35,27 @@ public class SuperUserLargeObjectService implements LargeObjectService {
 
         getValidationHelper().validateModel(updateLargeObjectRequest);
 
-        final var largeObject = getLargeObjectDao().getLargeObject(objectId);
-
-        final var read = getLargeObjectAccessUtils().fromRequest(updateLargeObjectRequest.getRead());
-        final var write = getLargeObjectAccessUtils().fromRequest(updateLargeObjectRequest.getWrite());
-        final var accessPermissions = new AccessPermissions();
-        accessPermissions.setRead(read);
-        accessPermissions.setWrite(write);
+        final var largeObject = getLargeObject(objectId);
+        AccessPermissions accessPermissions = createAccessPermissions(updateLargeObjectRequest.getRead(), updateLargeObjectRequest.getWrite());
 
         largeObject.setMimeType(updateLargeObjectRequest.getMimeType());
         largeObject.setAccessPermissions(accessPermissions);
 
         return getLargeObjectDao().updateLargeObject(largeObject);
-
     }
 
     @Override
     public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
 
         getValidationHelper().validateModel(createLargeObjectRequest);
-
         final var largeObject = new LargeObject();
-
-        final var read = getLargeObjectAccessUtils().fromRequest(createLargeObjectRequest.getRead());
-        final var write = getLargeObjectAccessUtils().fromRequest(createLargeObjectRequest.getWrite());
-        final var accessPermissions = new AccessPermissions();
-        accessPermissions.setRead(read);
-        accessPermissions.setWrite(write);
+        AccessPermissions accessPermissions = createAccessPermissions(createLargeObjectRequest.getRead(), createLargeObjectRequest.getWrite());
 
         largeObject.setMimeType(createLargeObjectRequest.getMimeType());
         largeObject.setAccessPermissions(accessPermissions);
         largeObject.setPath(getLargeObjectAccessUtils().assignAutomaticPath(createLargeObjectRequest.getMimeType()));
 
         return getLargeObjectDao().updateLargeObject(largeObject);
-
     }
 
     @Override
@@ -83,23 +67,23 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         }
     }
 
-    public ValidationHelper getValidationHelper() {
-        return validationHelper;
-    }
-
-    @Inject
-    public void setValidationHelper(ValidationHelper validationHelper) {
-        this.validationHelper = validationHelper;
-    }
-
     @Override
-    public InputStream readLargeObject(final String objectId) throws IOException {
+    public InputStream readLargeObjectContent(final String objectId) throws IOException {
         return getLargeObjectBucket().readObject(objectId);
     }
 
     @Override
-    public OutputStream writeLargeObject(final String objectId) throws IOException {
+    public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
         return getLargeObjectBucket().writeObject(objectId);
+    }
+
+    private AccessPermissions createAccessPermissions(SubjectRequest readRequest, SubjectRequest writeRequest) {
+        final var read = getLargeObjectAccessUtils().fromRequest(readRequest);
+        final var write = getLargeObjectAccessUtils().fromRequest(writeRequest);
+        final var accessPermissions = new AccessPermissions();
+        accessPermissions.setRead(read);
+        accessPermissions.setWrite(write);
+        return accessPermissions;
     }
 
     public LargeObjectDao getLargeObjectDao() {
@@ -129,18 +113,14 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         this.largeObjectAccessUtils = largeObjectAccessUtils;
     }
 
-//    @Override
-//    public LargeObject createLargeObject(CreateLargeObjectRequest createLargeObjectRequest, InputStream inputStream) {
-//        LargeObject newLargeObject = new LargeObject();
-//        String objectUrl = driver.createObject(inputStream, createLargeObjectRequest);
-//
-//        //TODO: try to make it "transactional", so rollback storage, after crash below
-//        newLargeObject.setUrl(objectUrl);
-//        newLargeObject.setAccessPermissions(accessUtils.createAnonymousAccess());
-//        newLargeObject.setMimeType(newLargeObject.getMimeType());
-//
-//        largeObjectDao.createLargeObject(newLargeObject);
-//        return newLargeObject;
-//    }
+    public ValidationHelper getValidationHelper() {
+    return validationHelper;
+}
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
 
 }

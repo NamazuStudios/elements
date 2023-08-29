@@ -1,32 +1,47 @@
 package dev.getelements.elements.service.largeobject;
 
-import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.Subjects;
+import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.service.UserService;
+import dev.getelements.elements.service.profile.UserProfileService;
 
-import javax.security.auth.Subject;
+import javax.inject.Inject;
 
-import static dev.getelements.elements.model.largeobject.Subjects.anonymousSubject;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 
 class LargeObjectAccessUtils {
 
-    AccessPermissions createAnonymousAccess() {
-        Subjects anonymousSubject = anonymousSubject();
-        AccessPermissions access = new AccessPermissions();
-        access.setRead(anonymousSubject);
-        access.setWrite(anonymousSubject);
-        return access;
-    }
+    private UserProfileService userProfileService;
+    private UserService userService;
 
     Subjects fromRequest(final SubjectRequest subjectRequest) {
-        // TODO: Properly convert from subject. Look up each subject (eg User and Profile) in the database.
-        return new Subjects();
+        Subjects subjects = new Subjects();
+        subjects.setAnonymous(subjectRequest.isAnonymous());
+        subjects.setUsers(subjectRequest.getUserIds().stream().map(userService::getUser).collect(toList()));
+        subjects.setProfiles(subjectRequest.getProfileIds().stream().map(userProfileService::getProfile).collect(toList()));
+        return subjects;
     }
 
     String assignAutomaticPath(final String mimeType) {
         return format("/_auto/%s/%s.bin", mimeType, randomUUID());
     }
 
+    boolean hasUserAccess(Subjects subjects, User user) {
+        return subjects.isAnonymous() ||
+                subjects.getUsers().contains(user) ||
+                subjects.getProfiles().contains(userProfileService.getCurrentProfile());
+    }
+
+    @Inject
+    void setUserProfileService(UserProfileService userProfileService) {
+        this.userProfileService = userProfileService;
+    }
+
+    @Inject
+    void setUserService(UserService userService) {
+        this.userService = userService;
+    }
 }
