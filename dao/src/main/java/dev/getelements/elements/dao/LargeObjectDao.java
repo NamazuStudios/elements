@@ -49,7 +49,7 @@ public interface LargeObjectDao {
      * Deletes an instance of {@link LargeObject} from the database. Returning the object just before deletion.
      *
      * @param objectId the object ID
-     * @return the {@link LargeObject}
+     * @return
      */
     LargeObject deleteLargeObject(String objectId);
 

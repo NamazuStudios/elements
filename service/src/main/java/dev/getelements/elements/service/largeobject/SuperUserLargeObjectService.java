@@ -55,7 +55,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         largeObject.setAccessPermissions(accessPermissions);
         largeObject.setPath(getLargeObjectAccessUtils().assignAutomaticPath(createLargeObjectRequest.getMimeType()));
 
-        return getLargeObjectAccessUtils().setCdnUrlToObject(getLargeObjectDao().updateLargeObject(largeObject));
+        return getLargeObjectAccessUtils().setCdnUrlToObject(getLargeObjectDao().createLargeObject(largeObject));
     }
 
     @Override

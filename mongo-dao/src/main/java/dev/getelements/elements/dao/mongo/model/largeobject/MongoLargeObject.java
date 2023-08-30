@@ -12,8 +12,10 @@ import java.util.Objects;
         @Index(fields = {@Field("url"), @Field("path")})
 })
 public class MongoLargeObject {
+
+    //TODO: clarify id exposing
     @Id
-    private ObjectId objectId;
+    private ObjectId id;
 
     @Property
     private String url;
@@ -27,12 +29,12 @@ public class MongoLargeObject {
     @Property
     private AccessPermissions accessPermissions;
 
-    public ObjectId getObjectId() {
-        return objectId;
+    public ObjectId getId() {
+        return id;
     }
 
-    public void setObjectId(ObjectId objectId) {
-        this.objectId = objectId;
+    public void setId(ObjectId id) {
+        this.id = id;
     }
 
     public String getUrl() {
@@ -72,11 +74,11 @@ public class MongoLargeObject {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoLargeObject that = (MongoLargeObject) o;
-        return Objects.equals(objectId, that.objectId) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && Objects.equals(accessPermissions, that.accessPermissions);
+        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && Objects.equals(accessPermissions, that.accessPermissions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, url, path, mimeType, accessPermissions);
+        return Objects.hash(id, url, path, mimeType, accessPermissions);
     }
 }

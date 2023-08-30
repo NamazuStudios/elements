@@ -134,7 +134,7 @@ public interface LargeObjectService {
      *
      * @param objectId the object id
      */
-    void deleteLargeObject(String objectId);
+    void deleteLargeObject(String objectId) throws IOException;
 
     /**
      * Opens the {@link LargeObject} for reading.

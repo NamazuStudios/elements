@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.Subjects;
@@ -40,6 +41,15 @@ class LargeObjectAccessUtils {
                 subjects.getUsers().contains(user) ||
                 subjects.getProfiles().contains(userProfileService.getCurrentProfile());
     }
+
+    boolean hasWriteAccess(AccessPermissions accessPermissions, User user) {
+        return hasUserAccess(accessPermissions.getWrite(), user);
+    }
+
+    boolean hasReadAccess(AccessPermissions accessPermissions, User user) {
+        return hasUserAccess(accessPermissions.getRead(), user);
+    }
+
 
     LargeObject setCdnUrlToObject(final LargeObject largeObject) {
         final var url = format("%s/%s", cdnUrl, largeObject.getId());

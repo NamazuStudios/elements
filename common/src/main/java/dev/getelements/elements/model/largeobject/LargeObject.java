@@ -19,7 +19,7 @@ public class LargeObject {
     @ApiModelProperty("The unique ID of the LargeObject.")
     private String id;
 
-    @Null
+    @NotNull
     @ApiModelProperty(
             "The URL where the binary contents of the LargeObject may be read. This field is always set by the " +
             "LargeObjectService to indicate where the file resides. A subsequent GET request from the URL will " +

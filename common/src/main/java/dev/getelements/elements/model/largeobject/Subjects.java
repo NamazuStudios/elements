@@ -27,9 +27,8 @@ public class Subjects {
 
     /**
      * Fetches an anonymous subject which permits all access.
-     * @return
      */
-    public static Subjects anonymousSubject() {
+    public static Subjects wildcardSubject() {
         Subjects anonymousSubject = new Subjects();
         anonymousSubject.wildcard = true;
         anonymousSubject.setUsers(emptyList());

@@ -3,12 +3,10 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.ForbiddenException;
-import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
-import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.model.largeobject.Subjects;
-import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
+import dev.getelements.elements.model.largeobject.*;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.LargeObjectService;
+import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -24,21 +22,32 @@ public class UserLargeObjectService implements LargeObjectService {
 
     private LargeObjectAccessUtils largeObjectAccessUtils;
 
+    private ValidationHelper validationHelper;
+
     private User user;
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
         final var largeObject = getLargeObjectDao().findLargeObject(objectId);
-        // TODO: Add permissions boundary check. If the object is not readable by the current user then this must fail
-        // TODO: by returning Optional.empty()
+
+        if (largeObject.isPresent() && !largeObjectAccessUtils.hasReadAccess(largeObject.get().getAccessPermissions(), user)) {
+            throw new ForbiddenException();
+        }
+
         return largeObject.map(getLargeObjectAccessUtils()::setCdnUrlToObject);
     }
 
     @Override
     public LargeObject updateLargeObject(final String objectId, final UpdateLargeObjectRequest objectRequest) {
-        // TODO: Check for the User and Profile write permission in this code. If either User or Profile has permission
-        // TODO: then the write should be allowed. If not, then throw ForbiddenException.
-        throw new ForbiddenException();
+
+        getValidationHelper().validateModel(objectRequest);
+        final var largeObject = getLargeObject(objectId);
+
+        if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
+            throw new ForbiddenException();
+        }
+
+        return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
     }
 
     @Override
@@ -47,28 +56,36 @@ public class UserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public void deleteLargeObject(final String objectId) {
-        // TODO: Check for the User and Profile write permission in this code. If either User or Profile has permission
-        // TODO: then the write should be allowed. If not, then throw ForbiddenException.
-        throw new ForbiddenException();
+    public void deleteLargeObject(final String objectId) throws IOException {
+        final var largeObject = getLargeObject(objectId);
+
+        if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
+            throw new ForbiddenException();
+        }
+
+        getLargeObjectBucket().deleteLargeObject(objectId);
     }
 
     @Override
     public InputStream readLargeObjectContent(final String objectId) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
-        if (largeObjectAccessUtils.hasUserAccess(largeObject.getAccessPermissions().getRead(), user)) {
-            return getLargeObjectBucket().readObject(largeObject.getId());
+        if (!largeObjectAccessUtils.hasReadAccess(largeObject.getAccessPermissions(), user)) {
+            throw new ForbiddenException();
         }
 
-        throw new ForbiddenException();
+        return getLargeObjectBucket().readObject(largeObject.getId());
     }
 
     @Override
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
-        // TODO: Check for the User and Profile write permission in this code. If either User or Profile has permission
-        // TODO: then the write should be allowed. If not, then throw ForbiddenException.
-        throw new ForbiddenException();
+        final var largeObject = getLargeObject(objectId);
+
+        if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
+            throw new ForbiddenException();
+        }
+
+        return getLargeObjectBucket().writeObject(objectId);
     }
 
     public LargeObjectDao getLargeObjectDao() {
@@ -107,4 +124,12 @@ public class UserLargeObjectService implements LargeObjectService {
         this.largeObjectAccessUtils = largeObjectAccessUtils;
     }
 
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
 }

@@ -1,10 +1,12 @@
 package dev.getelements.elements.dao.mongo.largeobject;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
 import dev.getelements.elements.exception.DuplicateException;
+import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.largeobject.LargeObject;
@@ -22,7 +24,6 @@ import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
-//TODO: finish this class
 public class MongoLargeObjectDao implements LargeObjectDao {
 
     private ValidationHelper validationHelper;
@@ -35,15 +36,14 @@ public class MongoLargeObjectDao implements LargeObjectDao {
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
-
         if (!ObjectId.isValid(objectId)) return Optional.empty();
+
         final var query = getDatastore().find(MongoLargeObject.class);
         query.filter(and(
                 eq("_id", new ObjectId(objectId))
         ));
 
         return Optional.ofNullable(query.first()).map(this::transform);
-
     }
 
     @Override
@@ -58,7 +58,7 @@ public class MongoLargeObjectDao implements LargeObjectDao {
             throw new DuplicateException(e);
         }
 
-        return findLargeObject(mongoLargeObject.getObjectId().toHexString()).orElseThrow(NotFoundException::new);
+        return getLargeObject(mongoLargeObject.getId().toHexString());
     }
 
     @Override
@@ -71,18 +71,33 @@ public class MongoLargeObjectDao implements LargeObjectDao {
                 query.modify(
                         set("mimeType", largeObject.getMimeType()),
                         set("url", largeObject.getUrl()),
-                        set("path", largeObject.getPath())
-//                        set("accessPermissions", largeObject.getAccessPermissions())
+                        set("path", largeObject.getPath()),
+                        set("accessPermissions", largeObject.getAccessPermissions())
                 ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
         return transform(mongoLargeObject);
     }
 
+    //TODO: flag it as delete with exp date (in future)
     @Override
     public LargeObject deleteLargeObject(final String objectId) {
-        //TODO: flag it as delete with exp date (in future)
-        throw new UnsupportedOperationException();
+        final var query = getDatastore().find(MongoLargeObject.class);
+        final LargeObject result = getLargeObject(objectId);
+
+        query.filter(and(
+                eq("_id", new ObjectId(objectId))
+        ));
+
+        final DeleteResult deleteResult = query.delete();
+
+        if (deleteResult.getDeletedCount() == 0) {
+            throw new NotFoundException("LargeObject not found: " + objectId);
+        } else if (deleteResult.getDeletedCount() > 1) {
+            throw new InternalException("Deleted more rows than expected.");
+        }
+
+        return result;
     }
 
     private LargeObject transform(final MongoLargeObject mongoLargeObject) {
