@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.Subjects;
 import dev.getelements.elements.model.user.User;
@@ -7,15 +8,20 @@ import dev.getelements.elements.service.UserService;
 import dev.getelements.elements.service.profile.UserProfileService;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import static dev.getelements.elements.Constants.CDN_OUTSIDE_URL;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 
 class LargeObjectAccessUtils {
 
-    private UserProfileService userProfileService;
+    private String cdnUrl;
+
     private UserService userService;
+
+    private UserProfileService userProfileService;
 
     Subjects fromRequest(final SubjectRequest subjectRequest) {
         Subjects subjects = new Subjects();
@@ -35,6 +41,17 @@ class LargeObjectAccessUtils {
                 subjects.getProfiles().contains(userProfileService.getCurrentProfile());
     }
 
+    LargeObject setCdnUrlToObject(final LargeObject largeObject) {
+        final var url = format("%s/%s", cdnUrl, largeObject.getId());
+        largeObject.setUrl(url);
+        return largeObject;
+    }
+
+    @Inject
+    public void setCdnUrl(@Named(CDN_OUTSIDE_URL) String cdnUrl) {
+        this.cdnUrl = cdnUrl;
+    }
+
     @Inject
     void setUserProfileService(UserProfileService userProfileService) {
         this.userProfileService = userProfileService;
@@ -44,4 +61,5 @@ class LargeObjectAccessUtils {
     void setUserService(UserService userService) {
         this.userService = userService;
     }
+
 }

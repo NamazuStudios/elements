@@ -28,11 +28,16 @@ public class UserLargeObjectService implements LargeObjectService {
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
-        return getLargeObjectDao().findLargeObject(objectId);
+        final var largeObject = getLargeObjectDao().findLargeObject(objectId);
+        // TODO: Add permissions boundary check. If the object is not readable by the current user then this must fail
+        // TODO: by returning Optional.empty()
+        return largeObject.map(getLargeObjectAccessUtils()::setCdnUrlToObject);
     }
 
     @Override
     public LargeObject updateLargeObject(final String objectId, final UpdateLargeObjectRequest objectRequest) {
+        // TODO: Check for the User and Profile write permission in this code. If either User or Profile has permission
+        // TODO: then the write should be allowed. If not, then throw ForbiddenException.
         throw new ForbiddenException();
     }
 
@@ -43,6 +48,8 @@ public class UserLargeObjectService implements LargeObjectService {
 
     @Override
     public void deleteLargeObject(final String objectId) {
+        // TODO: Check for the User and Profile write permission in this code. If either User or Profile has permission
+        // TODO: then the write should be allowed. If not, then throw ForbiddenException.
         throw new ForbiddenException();
     }
 
@@ -59,6 +66,8 @@ public class UserLargeObjectService implements LargeObjectService {
 
     @Override
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
+        // TODO: Check for the User and Profile write permission in this code. If either User or Profile has permission
+        // TODO: then the write should be allowed. If not, then throw ForbiddenException.
         throw new ForbiddenException();
     }
 
@@ -97,4 +106,5 @@ public class UserLargeObjectService implements LargeObjectService {
     public void setLargeObjectAccessUtils(LargeObjectAccessUtils largeObjectAccessUtils) {
         this.largeObjectAccessUtils = largeObjectAccessUtils;
     }
+
 }

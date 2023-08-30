@@ -25,7 +25,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
-        return getLargeObjectDao().findLargeObject(objectId);
+        return getLargeObjectDao().findLargeObject(objectId).map(getLargeObjectAccessUtils()::setCdnUrlToObject);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         largeObject.setMimeType(updateLargeObjectRequest.getMimeType());
         largeObject.setAccessPermissions(accessPermissions);
 
-        return getLargeObjectDao().updateLargeObject(largeObject);
+        return getLargeObjectAccessUtils().setCdnUrlToObject(getLargeObjectDao().updateLargeObject(largeObject));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         largeObject.setAccessPermissions(accessPermissions);
         largeObject.setPath(getLargeObjectAccessUtils().assignAutomaticPath(createLargeObjectRequest.getMimeType()));
 
-        return getLargeObjectDao().updateLargeObject(largeObject);
+        return getLargeObjectAccessUtils().setCdnUrlToObject(getLargeObjectDao().updateLargeObject(largeObject));
     }
 
     @Override
@@ -121,6 +121,5 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
     }
-
-
+    
 }
