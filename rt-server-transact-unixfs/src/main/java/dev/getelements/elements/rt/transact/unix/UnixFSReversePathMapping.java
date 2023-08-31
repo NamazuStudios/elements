@@ -31,7 +31,7 @@ public class UnixFSReversePathMapping {
 
         final dev.getelements.elements.rt.Path fqPath = rtPath
                 .getOptionalNodeId()
-                .map(nid -> rtPath)
+                .map(nid -> rtPath.toPathWithContext(nid.asString()))
                 .orElseThrow(FatalException::new);
 
         return new UnixFSReversePathMapping(utils, fqPath.getNodeId());

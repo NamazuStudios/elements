@@ -109,7 +109,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      * @param path
      */
     public Path(final String path) {
-        this(contextFromPath(path), componentsFromPath(path));
+        this(componentsFromPath(path));
     }
 
     /**
@@ -428,10 +428,8 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      * @throws IllegalArgumentException if the context mismatches
      */
     public Path toPathWithContext(final String context) {
-        if (this.context == null) {
+        if (this.context == null || this.context.equals(context)) {
             return new Path(context, components);
-        } else if (this.context.equals(context)) {
-            return this;
         } else {
             throw new IllegalArgumentException("Context mismatch.");
         }
