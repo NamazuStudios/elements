@@ -22,6 +22,10 @@ public class CreateLargeObjectRequest {
     @ApiModelProperty("Specifies the Subjects which can write the LargeObject.")
     private SubjectRequest write;
 
+    @Valid
+    @ApiModelProperty("Specifies the Subjects which can delete the LargeObject.")
+    private SubjectRequest delete;
+
     public String getMimeType() {
         return mimeType;
     }
@@ -46,27 +50,34 @@ public class CreateLargeObjectRequest {
         this.write = write;
     }
 
+    public SubjectRequest getDelete() {
+        return delete;
+    }
+
+    public void setDelete(SubjectRequest delete) {
+        this.delete = delete;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateLargeObjectRequest that = (CreateLargeObjectRequest) o;
-        return Objects.equals(getMimeType(), that.getMimeType()) && Objects.equals(getRead(), that.getRead()) && Objects.equals(getWrite(), that.getWrite());
+        return Objects.equals(mimeType, that.mimeType) && Objects.equals(read, that.read) && Objects.equals(write, that.write) && Objects.equals(delete, that.delete);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMimeType(), getRead(), getWrite());
+        return Objects.hash(mimeType, read, write, delete);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateLargeObjectRequest{");
-        sb.append(", mimeType='").append(mimeType).append('\'');
-        sb.append(", read=").append(read);
-        sb.append(", write=").append(write);
-        sb.append('}');
-        return sb.toString();
+        return "CreateLargeObjectRequest{" +
+                "mimeType='" + mimeType + '\'' +
+                ", read=" + read +
+                ", write=" + write +
+                ", delete=" + delete +
+                '}';
     }
-
 }

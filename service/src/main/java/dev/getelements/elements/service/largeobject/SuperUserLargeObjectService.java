@@ -36,7 +36,10 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         getValidationHelper().validateModel(updateLargeObjectRequest);
 
         final var largeObject = getLargeObject(objectId);
-        AccessPermissions accessPermissions = createAccessPermissions(updateLargeObjectRequest.getRead(), updateLargeObjectRequest.getWrite());
+        AccessPermissions accessPermissions = createAccessPermissions(
+                updateLargeObjectRequest.getRead(),
+                updateLargeObjectRequest.getWrite(),
+                updateLargeObjectRequest.getDelete());
 
         largeObject.setMimeType(updateLargeObjectRequest.getMimeType());
         largeObject.setAccessPermissions(accessPermissions);
@@ -49,7 +52,10 @@ public class SuperUserLargeObjectService implements LargeObjectService {
 
         getValidationHelper().validateModel(createLargeObjectRequest);
         final var largeObject = new LargeObject();
-        AccessPermissions accessPermissions = createAccessPermissions(createLargeObjectRequest.getRead(), createLargeObjectRequest.getWrite());
+        AccessPermissions accessPermissions = createAccessPermissions(
+                createLargeObjectRequest.getRead(),
+                createLargeObjectRequest.getWrite(),
+                createLargeObjectRequest.getDelete());
 
         largeObject.setMimeType(createLargeObjectRequest.getMimeType());
         largeObject.setAccessPermissions(accessPermissions);
@@ -81,12 +87,14 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         return getLargeObjectBucket().writeObject(objectId);
     }
 
-    private AccessPermissions createAccessPermissions(SubjectRequest readRequest, SubjectRequest writeRequest) {
+    private AccessPermissions createAccessPermissions(SubjectRequest readRequest, SubjectRequest writeRequest, SubjectRequest deleteRequest) {
         final var read = getLargeObjectAccessUtils().fromRequest(readRequest);
         final var write = getLargeObjectAccessUtils().fromRequest(writeRequest);
+        final var delete = getLargeObjectAccessUtils().fromRequest(deleteRequest);
         final var accessPermissions = new AccessPermissions();
         accessPermissions.setRead(read);
         accessPermissions.setWrite(write);
+        accessPermissions.setDelete(delete);
         return accessPermissions;
     }
 

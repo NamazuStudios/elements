@@ -22,6 +22,7 @@ public class MongoLargeObjectDaoTest {
 
         LargeObject createdLargeObject = largeObjectDao.createLargeObject(largeObject);
         LargeObject foundLargeObject = largeObjectDao.getLargeObject(createdLargeObject.getId());
+        largeObjectDao.deleteLargeObject(createdLargeObject.getId());
         Optional<LargeObject> foundDeleted = largeObjectDao.findLargeObject(createdLargeObject.getId());
 
         assertNotNull(foundLargeObject);

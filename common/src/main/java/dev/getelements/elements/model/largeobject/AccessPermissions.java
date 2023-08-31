@@ -20,7 +20,10 @@ public class AccessPermissions {
     @ApiModelProperty("Subjects allowed to write")
     private Subjects write;
 
-    // TODO: Add Delete field just like read/write.
+    @Valid
+    @NotNull
+    @ApiModelProperty("Subjects allowed to delete")
+    private Subjects delete;
 
     public Subjects getRead() {
         return read;
@@ -38,17 +41,24 @@ public class AccessPermissions {
         this.write = write;
     }
 
+    public Subjects getDelete() {
+        return delete;
+    }
+
+    public void setDelete(Subjects delete) {
+        this.delete = delete;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AccessPermissions that = (AccessPermissions) o;
-        return Objects.equals(read, that.read) && Objects.equals(write, that.write);
+        return Objects.equals(read, that.read) && Objects.equals(write, that.write) && Objects.equals(delete, that.delete);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(read, write);
+        return Objects.hash(read, write, delete);
     }
-
 }

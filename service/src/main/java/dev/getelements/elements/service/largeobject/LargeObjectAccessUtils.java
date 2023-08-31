@@ -9,14 +9,12 @@ import dev.getelements.elements.service.UserService;
 import dev.getelements.elements.service.profile.UserProfileService;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
-import static dev.getelements.elements.Constants.CDN_OUTSIDE_URL;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 
-class LargeObjectAccessUtils {
+public class LargeObjectAccessUtils {
 
     private String cdnUrl;
 
@@ -26,7 +24,7 @@ class LargeObjectAccessUtils {
 
     Subjects fromRequest(final SubjectRequest subjectRequest) {
         Subjects subjects = new Subjects();
-        subjects.setWildcard(subjectRequest.isAnonymous());
+        subjects.setWildcard(subjectRequest.isWildcard());
         subjects.setUsers(subjectRequest.getUserIds().stream().map(userService::getUser).collect(toList()));
         subjects.setProfiles(subjectRequest.getProfileIds().stream().map(userProfileService::getProfile).collect(toList()));
         return subjects;
@@ -50,6 +48,10 @@ class LargeObjectAccessUtils {
         return hasUserAccess(accessPermissions.getRead(), user);
     }
 
+    boolean hasDeleteAccess(AccessPermissions accessPermissions, User user) {
+        return hasUserAccess(accessPermissions.getDelete(), user);
+    }
+
 
     LargeObject setCdnUrlToObject(final LargeObject largeObject) {
         final var url = format("%s/%s", cdnUrl, largeObject.getId());
@@ -58,7 +60,10 @@ class LargeObjectAccessUtils {
     }
 
     @Inject
-    public void setCdnUrl(@Named(CDN_OUTSIDE_URL) String cdnUrl) {
+//    public void setCdnUrl(@Named(CDN_OUTSIDE_URL) String cdnUrl) {
+//        this.cdnUrl = cdnUrl;
+//    }
+    public void setCdnUrl(String cdnUrl) {
         this.cdnUrl = cdnUrl;
     }
 

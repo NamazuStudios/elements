@@ -11,7 +11,7 @@ import java.util.Objects;
 public class SubjectRequest {
 
     @ApiModelProperty("Flag to check who may perform the operation. If true, all anonymous users may perform the operation.")
-    private boolean anonymous;
+    private boolean wildcard;
 
     @NotNull
     @ApiModelProperty("A List of all UserIds which can operate against the LargeObject.")
@@ -27,18 +27,18 @@ public class SubjectRequest {
      */
     public static SubjectRequest newDefaultRequest() {
         final var request = new SubjectRequest();
-        request.setAnonymous(false);
+        request.setWildcard(false);
         request.setUserIds(List.of());
         request.setProfileIds(List.of());
         return request;
     }
 
-    public boolean isAnonymous() {
-        return anonymous;
+    public boolean isWildcard() {
+        return wildcard;
     }
 
-    public void setAnonymous(boolean anonymous) {
-        this.anonymous = anonymous;
+    public void setWildcard(boolean wildcard) {
+        this.wildcard = wildcard;
     }
 
     public List<String> getUserIds() {
@@ -63,18 +63,18 @@ public class SubjectRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SubjectRequest that = (SubjectRequest) o;
-        return isAnonymous() == that.isAnonymous() && Objects.equals(getUserIds(), that.getUserIds()) && Objects.equals(getProfileIds(), that.getProfileIds());
+        return isWildcard() == that.isWildcard() && Objects.equals(getUserIds(), that.getUserIds()) && Objects.equals(getProfileIds(), that.getProfileIds());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isAnonymous(), getUserIds(), getProfileIds());
+        return Objects.hash(isWildcard(), getUserIds(), getProfileIds());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("SubjectRequest{");
-        sb.append("allUsers=").append(anonymous);
+        sb.append("allUsers=").append(wildcard);
         sb.append(", userIds=").append(userIds);
         sb.append(", profileIds=").append(profileIds);
         sb.append('}');

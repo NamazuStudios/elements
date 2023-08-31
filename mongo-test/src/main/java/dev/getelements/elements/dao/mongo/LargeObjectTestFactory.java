@@ -31,6 +31,7 @@ public class LargeObjectTestFactory {
         AccessPermissions accessPermissions = new AccessPermissions();
         accessPermissions.setWrite(wildcardSubject());
         accessPermissions.setRead(wildcardSubject());
+        accessPermissions.setDelete(wildcardSubject());
 
         return accessPermissions;
     }
@@ -45,6 +46,7 @@ public class LargeObjectTestFactory {
 
         accessPermissions.setRead(readSubjects);
         accessPermissions.setWrite(wildcardSubject());
+        accessPermissions.setDelete(wildcardSubject());
 
         return accessPermissions;
     }

@@ -60,8 +60,7 @@ public class UserLargeObjectService implements LargeObjectService {
 
         final var largeObject = getLargeObject(objectId);
 
-        // TODO: Add delete field to access permissions and update all DTOs
-        if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
+        if (!largeObjectAccessUtils.hasDeleteAccess(largeObject.getAccessPermissions(), user)) {
             throw new ForbiddenException();
         }
 
