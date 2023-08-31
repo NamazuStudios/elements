@@ -61,4 +61,15 @@ public class AccessPermissions {
     public int hashCode() {
         return Objects.hash(read, write, delete);
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("AccessPermissions{");
+        sb.append("read=").append(read);
+        sb.append(", write=").append(write);
+        sb.append(", delete=").append(delete);
+        sb.append('}');
+        return sb.toString();
+    }
+
 }
