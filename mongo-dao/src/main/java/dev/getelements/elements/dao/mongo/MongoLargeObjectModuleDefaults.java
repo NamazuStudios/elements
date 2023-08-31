@@ -13,7 +13,7 @@ public class MongoLargeObjectModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(LargeObjectGridFSBucketProvider.LARGE_OBJECT_BUCKET, "large-objects");
+        properties.setProperty(LargeObjectGridFSBucketProvider.LARGE_OBJECT_BUCKET, "large_object");
         return properties;
    }
 

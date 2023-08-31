@@ -51,6 +51,6 @@ public interface LargeObjectDao {
      * @param objectId the object ID
      * @return
      */
-    LargeObject deleteLargeObject(String objectId);
+    void deleteLargeObject(String objectId);
 
 }

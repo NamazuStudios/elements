@@ -1,12 +1,16 @@
 package dev.getelements.elements.dao.mongo.largeobject;
 
 import com.mongodb.MongoGridFSException;
+import com.mongodb.MongoWriteException;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
-import dev.getelements.elements.exception.NotFoundException;
+import dev.getelements.elements.exception.DuplicateException;
+import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.largeobject.LargeObjectContentNotFoundException;
+import dev.getelements.elements.rt.Path;
+import org.bson.BsonString;
 
 import javax.inject.Inject;
 import java.io.OutputStream;
@@ -18,13 +22,20 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
     private LargeObjectDao largeObjectDao;
 
     @Override
-    public void deleteLargeObject(final String objectId) {
+    public OutputStream writeObject(final String objectId) {
 
-        final var deleted = getLargeObjectDao().deleteLargeObject(objectId);
+        final var largeObject = getLargeObjectDao().getLargeObject(objectId);
+        final var gridFsFileId = new BsonString(objectId);
+        final var normalized = new Path(largeObject.getPath()).toPathWithoutContext();
 
-        try (final var inputStream = getGridFSBucket().openDownloadStream(deleted.getId())) {
-            final var bsonValueObjectId = inputStream.getGridFSFile().getId();
-            getGridFSBucket().delete(bsonValueObjectId);
+        try {
+            return getGridFSBucket().openUploadStream(gridFsFileId, normalized.toNormalizedPathString());
+        } catch (MongoWriteException ex) {
+            if (ex.getCode() == 11000) {
+                throw new DuplicateException("Contents already exists: " + objectId);
+            } else {
+                throw new InternalException(ex);
+            }
         }
 
     }
@@ -33,9 +44,10 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
     public GridFSDownloadStream readObject(final String objectId) {
 
         final var largeObject = getLargeObjectDao().getLargeObject(objectId);
+        final var gridFsFileId = new BsonString(largeObject.getId());
 
         try{
-            return getGridFSBucket().openDownloadStream(largeObject.getPath());
+            return getGridFSBucket().openDownloadStream(gridFsFileId);
         } catch (MongoGridFSException ex) {
             throw new LargeObjectContentNotFoundException(ex);
         }
@@ -43,16 +55,9 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
     }
 
     @Override
-    public OutputStream writeObject(final String objectId) {
-
-        final var largeObject = getLargeObjectDao().getLargeObject(objectId);
-
-        try {
-            return getGridFSBucket().openUploadStream(largeObject.getPath());
-        } catch (MongoGridFSException ex) {
-            throw new NotFoundException(ex);
-        }
-
+    public void deleteLargeObject(final String objectId) {
+        final var gridFsFileId = new BsonString(objectId);
+        getGridFSBucket().delete(gridFsFileId);
     }
 
     public LargeObjectDao getLargeObjectDao() {

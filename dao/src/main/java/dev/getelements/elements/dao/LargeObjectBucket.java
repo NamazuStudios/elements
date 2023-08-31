@@ -13,11 +13,12 @@ import java.io.OutputStream;
 public interface LargeObjectBucket {
 
     /**
-     * Deletes the {@link LargeObject} with the supplied id as well as the associated metadata.
-     *
+     * Writes the {@link LargeObject}'s contents
      * @param objectId the object id
+     * @return the {@link InputStream} which can be used to read the {@link LargeObject} contents
+     * @throws IOException if an error occurs opening the contents
      */
-    void deleteLargeObject(String objectId) throws IOException;
+    OutputStream writeObject(String objectId) throws IOException;
 
     /**
      * Reads the {@link LargeObject}'s contents
@@ -29,11 +30,10 @@ public interface LargeObjectBucket {
     InputStream readObject(String objectId) throws IOException;
 
     /**
-     * Writes the {@link LargeObject}'s contents
+     * Deletes the {@link LargeObject} with the supplied id as well as the associated metadata.
+     *
      * @param objectId the object id
-     * @return the {@link InputStream} which can be used to read the {@link LargeObject} contents
-     * @throws IOException if an error occurs opening the contents
      */
-    OutputStream writeObject(String objectId) throws IOException;
+    void deleteLargeObject(String objectId) throws IOException;
 
 }

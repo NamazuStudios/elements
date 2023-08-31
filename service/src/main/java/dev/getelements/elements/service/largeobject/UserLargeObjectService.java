@@ -57,13 +57,17 @@ public class UserLargeObjectService implements LargeObjectService {
 
     @Override
     public void deleteLargeObject(final String objectId) throws IOException {
+
         final var largeObject = getLargeObject(objectId);
 
+        // TODO: Add delete field to access permissions and update all DTOs
         if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
             throw new ForbiddenException();
         }
 
+        getLargeObjectDao().deleteLargeObject(objectId);
         getLargeObjectBucket().deleteLargeObject(objectId);
+
     }
 
     @Override

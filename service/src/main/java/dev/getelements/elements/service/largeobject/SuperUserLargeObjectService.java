@@ -59,12 +59,16 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public void deleteLargeObject(String objectId) {
+    public void deleteLargeObject(final String objectId) {
+
         try {
             getLargeObjectBucket().deleteLargeObject(objectId);
         } catch (IOException e) {
             throw new InternalException("Caught IO Exception processing request.");
         }
+
+        largeObjectDao.deleteLargeObject(objectId);
+
     }
 
     @Override

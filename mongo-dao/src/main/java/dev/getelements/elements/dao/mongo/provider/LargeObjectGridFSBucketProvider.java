@@ -1,12 +1,17 @@
 package dev.getelements.elements.dao.mongo.provider;
 
+import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import dev.getelements.elements.rt.Path;
+import org.bson.BsonString;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+
+import static java.util.UUID.randomUUID;
 
 /**
  * Created by patricktwohig on 6/29/17.

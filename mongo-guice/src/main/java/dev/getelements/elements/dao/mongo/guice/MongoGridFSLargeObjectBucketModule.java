@@ -14,7 +14,7 @@ public class MongoGridFSLargeObjectBucketModule extends PrivateModule {
     @Override
     protected void configure() {
         bind(LargeObjectBucket.class).to(GridFSLargeObjectBucket.class);
-        bind(GridFSBucket.class).toProvider(LargeObjectGridFSBucketProvider.class);
+        bind(GridFSBucket.class).toProvider(LargeObjectGridFSBucketProvider.class).asEagerSingleton();
         expose(LargeObjectBucket.class);
     }
 

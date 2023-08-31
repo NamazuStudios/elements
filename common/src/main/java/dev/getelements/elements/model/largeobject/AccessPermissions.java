@@ -20,6 +20,8 @@ public class AccessPermissions {
     @ApiModelProperty("Subjects allowed to write")
     private Subjects write;
 
+    // TODO: Add Delete field just like read/write.
+
     public Subjects getRead() {
         return read;
     }
@@ -48,4 +50,5 @@ public class AccessPermissions {
     public int hashCode() {
         return Objects.hash(read, write);
     }
+
 }

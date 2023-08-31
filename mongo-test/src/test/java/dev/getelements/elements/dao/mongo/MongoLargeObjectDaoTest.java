@@ -22,8 +22,7 @@ public class MongoLargeObjectDaoTest {
 
         LargeObject createdLargeObject = largeObjectDao.createLargeObject(largeObject);
         LargeObject foundLargeObject = largeObjectDao.getLargeObject(createdLargeObject.getId());
-        LargeObject deletedLargeObject = largeObjectDao.deleteLargeObject(createdLargeObject.getId());
-        Optional<LargeObject> foundDeleted = largeObjectDao.findLargeObject(deletedLargeObject.getId());
+        Optional<LargeObject> foundDeleted = largeObjectDao.findLargeObject(createdLargeObject.getId());
 
         assertNotNull(foundLargeObject);
         assertEquals(largeObject.getPath(), foundLargeObject.getPath());
@@ -31,6 +30,7 @@ public class MongoLargeObjectDaoTest {
         assertEquals(largeObject.getMimeType(), foundLargeObject.getMimeType());
         assertEquals(largeObject.getAccessPermissions(), foundLargeObject.getAccessPermissions());
         assertTrue(foundDeleted.isEmpty());
+
     }
 
     @Test

@@ -81,12 +81,12 @@ public class MongoLargeObjectDao implements LargeObjectDao {
 
     //TODO: flag it as delete with exp date (in future)
     @Override
-    public LargeObject deleteLargeObject(final String objectId) {
+    public void deleteLargeObject(final String objectId) {
+
         final var query = getDatastore().find(MongoLargeObject.class);
-        final LargeObject result = getLargeObject(objectId);
 
         query.filter(and(
-                eq("_id", new ObjectId(objectId))
+            eq("_id", new ObjectId(objectId))
         ));
 
         final DeleteResult deleteResult = query.delete();
@@ -97,7 +97,6 @@ public class MongoLargeObjectDao implements LargeObjectDao {
             throw new InternalException("Deleted more rows than expected.");
         }
 
-        return result;
     }
 
     private LargeObject transform(final MongoLargeObject mongoLargeObject) {
