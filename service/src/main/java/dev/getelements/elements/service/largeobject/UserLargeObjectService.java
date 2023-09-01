@@ -41,13 +41,22 @@ public class UserLargeObjectService implements LargeObjectService {
     public LargeObject updateLargeObject(final String objectId, final UpdateLargeObjectRequest objectRequest) {
 
         getValidationHelper().validateModel(objectRequest);
-        final var largeObject = getLargeObject(objectId);
+        final LargeObject largeObject = getLargeObject(objectId);
 
         if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
             throw new ForbiddenException();
         }
 
-        return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
+        AccessPermissions accessPermissions = getLargeObjectAccessUtils().createAccessPermissions(
+                objectRequest.getRead(),
+                objectRequest.getWrite(),
+                objectRequest.getDelete());
+
+        largeObject.setMimeType(objectRequest.getMimeType());
+        largeObject.setAccessPermissions(accessPermissions);
+
+        LargeObject updated = getLargeObjectDao().updateLargeObject(largeObject);
+        return getLargeObjectAccessUtils().setCdnUrlToObject(updated);
     }
 
     @Override

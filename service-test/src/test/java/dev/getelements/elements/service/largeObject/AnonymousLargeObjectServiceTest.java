@@ -59,7 +59,7 @@ public class AnonymousLargeObjectServiceTest extends LargeObjectServiceTestBase{
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowReadLargeObject() throws IOException {
-        when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.defaultLargeObjectWithWildcardAccess(false, true, true)));
+        when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.defaultLargeObjectWithAccess(false, true, true)));
         anonLargeObjectService.readLargeObjectContent(TEST_ID);
     }
 

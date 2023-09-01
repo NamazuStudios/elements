@@ -52,6 +52,14 @@ public class LargeObjectAccessUtils {
         return hasUserAccess(accessPermissions.getDelete(), user);
     }
 
+    AccessPermissions createAccessPermissions(SubjectRequest readRequest, SubjectRequest writeRequest, SubjectRequest deleteRequest) {
+        final var accessPermissions = new AccessPermissions();
+        accessPermissions.setRead(fromRequest(readRequest));
+        accessPermissions.setWrite(fromRequest(writeRequest));
+        accessPermissions.setDelete(fromRequest(deleteRequest));
+        return accessPermissions;
+    }
+
 
     LargeObject setCdnUrlToObject(final LargeObject largeObject) {
         final var url = format("%s/%s", cdnUrl, largeObject.getId());

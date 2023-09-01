@@ -36,7 +36,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         getValidationHelper().validateModel(updateLargeObjectRequest);
 
         final var largeObject = getLargeObject(objectId);
-        AccessPermissions accessPermissions = createAccessPermissions(
+        AccessPermissions accessPermissions = getLargeObjectAccessUtils().createAccessPermissions(
                 updateLargeObjectRequest.getRead(),
                 updateLargeObjectRequest.getWrite(),
                 updateLargeObjectRequest.getDelete());
@@ -52,7 +52,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
 
         getValidationHelper().validateModel(createLargeObjectRequest);
         final var largeObject = new LargeObject();
-        AccessPermissions accessPermissions = createAccessPermissions(
+        AccessPermissions accessPermissions = getLargeObjectAccessUtils().createAccessPermissions(
                 createLargeObjectRequest.getRead(),
                 createLargeObjectRequest.getWrite(),
                 createLargeObjectRequest.getDelete());
@@ -87,16 +87,7 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         return getLargeObjectBucket().writeObject(objectId);
     }
 
-    private AccessPermissions createAccessPermissions(SubjectRequest readRequest, SubjectRequest writeRequest, SubjectRequest deleteRequest) {
-        final var read = getLargeObjectAccessUtils().fromRequest(readRequest);
-        final var write = getLargeObjectAccessUtils().fromRequest(writeRequest);
-        final var delete = getLargeObjectAccessUtils().fromRequest(deleteRequest);
-        final var accessPermissions = new AccessPermissions();
-        accessPermissions.setRead(read);
-        accessPermissions.setWrite(write);
-        accessPermissions.setDelete(delete);
-        return accessPermissions;
-    }
+
 
     public LargeObjectDao getLargeObjectDao() {
         return largeObjectDao;
