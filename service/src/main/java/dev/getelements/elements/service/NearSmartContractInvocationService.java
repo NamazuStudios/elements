@@ -32,7 +32,7 @@ import java.util.List;
                 deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.smartcontract.near instead.")
         )
 })
-public interface NearSmartContractInvocationService {
+public interface NearSmartContractInvocationService extends SmartContractInvocationService<NearSmartContractInvocationService.Invoker> {
 
     /**
      * Used to make invocations on the Near blockchain.

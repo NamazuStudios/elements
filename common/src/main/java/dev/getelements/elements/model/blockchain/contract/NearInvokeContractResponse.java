@@ -1,9 +1,11 @@
 package dev.getelements.elements.model.blockchain.contract;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
 
+@ApiModel
 public class NearInvokeContractResponse {
     
     @ApiModelProperty("The Near transaction status (See Near Docs)")

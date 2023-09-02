@@ -30,11 +30,4 @@ public class NearInvocationScope extends InvocationScope {
         return Objects.hash(super.hashCode(), getGasLimit());
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("FlowInvocationScope{");
-        sb.append("gasLimit=").append(gasLimit);
-        sb.append('}');
-        return sb.toString();
-    }
 }

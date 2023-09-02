@@ -30,7 +30,7 @@ public class NearSmartContractServiceProvider implements Provider<NearSmartContr
     }
 
     @Inject
-    public void setUser(User user) {
+    public void setUser(final User user) {
         this.user = user;
     }
 
@@ -39,7 +39,7 @@ public class NearSmartContractServiceProvider implements Provider<NearSmartContr
     }
 
     @Inject
-    public void setSuperUserNearSmartContractInvocationServiceProvider(Provider<SuperUserNearSmartContractInvocationService> superUserNearSmartContractInvocationServiceProvider) {
+    public void setSuperUserNearSmartContractInvocationServiceProvider(final Provider<SuperUserNearSmartContractInvocationService> superUserNearSmartContractInvocationServiceProvider) {
         this.superUserNearSmartContractInvocationServiceProvider = superUserNearSmartContractInvocationServiceProvider;
     }
 }

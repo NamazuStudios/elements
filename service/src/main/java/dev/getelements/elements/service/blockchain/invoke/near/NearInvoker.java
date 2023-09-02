@@ -1,9 +1,8 @@
 package dev.getelements.elements.service.blockchain.invoke.near;
 
-import dev.getelements.elements.exception.InternalException;
+import com.syntifi.near.api.rpc.NearClient;
 import dev.getelements.elements.model.blockchain.contract.NearInvokeContractResponse;
 import dev.getelements.elements.service.NearSmartContractInvocationService;
-import dev.getelements.elements.service.blockchain.invoke.ScopedInvoker;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,15 +11,18 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Function;
 
-public class NearInvoker implements ScopedInvoker<NearInvocationScope>, NearSmartContractInvocationService.Invoker {
+public class NearInvoker implements NearSmartContractInvocationService.Invoker {
 
     private static final Logger logger = LoggerFactory.getLogger(NearInvoker.class);
 
     private NearInvocationScope nearInvocationScope;
 
-    private Mapper mapper;
+    private NearClient nearClient;
 
-    private Function<String, String> contractFormatter;
+    @Override
+    public void initialize(final NearInvocationScope nearInvocationScope) {
+        this.nearInvocationScope = nearInvocationScope;
+    }
 
     @Override
     public NearInvokeContractResponse send(
@@ -32,22 +34,14 @@ public class NearInvoker implements ScopedInvoker<NearInvocationScope>, NearSmar
             throw new IllegalStateException("Wallet must be decrypted.");
         }
 
-
-        throw new InternalException("Not implemented");
+        //TODO: write send logic
+        return new NearInvokeContractResponse();
     }
 
     @Override
     public Object call(final String script, final List<String> argumentTypes, final List<?> arguments) {
-
-        throw new InternalException("Not implemented");
-
-    }
-
-    @Override
-    public void initialize(final NearInvocationScope nearInvocationScope) {
-
-        throw new InternalException("Not implemented");
-
+        //TODO: write call logic
+        return null;
     }
 
     public NearInvocationScope getNearInvocationScope() {
@@ -59,13 +53,13 @@ public class NearInvoker implements ScopedInvoker<NearInvocationScope>, NearSmar
         this.nearInvocationScope = nearInvocationScope;
     }
 
-    public Mapper getMapper() {
-        return mapper;
+    public NearClient getNearClient() {
+        return nearClient;
     }
 
     @Inject
-    public void setMapper(Mapper mapper) {
-        this.mapper = mapper;
+    public void setNearClient(NearClient nearClient) {
+        this.nearClient = nearClient;
     }
 
 }

@@ -4,7 +4,6 @@ import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.blockchain.contract.EVMInvokeContractResponse;
 import dev.getelements.elements.model.blockchain.contract.EVMTransactionLog;
 import dev.getelements.elements.service.EvmSmartContractInvocationService;
-import dev.getelements.elements.service.blockchain.invoke.ScopedInvoker;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.datatypes.Function;
