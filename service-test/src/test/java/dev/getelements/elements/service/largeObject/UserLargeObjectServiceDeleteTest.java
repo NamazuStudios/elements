@@ -2,7 +2,6 @@ package dev.getelements.elements.service.largeObject;
 
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.largeobject.UserLargeObjectService;
@@ -10,9 +9,7 @@ import dev.getelements.elements.service.profile.UserProfileService;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +17,6 @@ import static dev.getelements.elements.service.largeObject.LargeObjectServiceTes
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
 
 public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase{
 

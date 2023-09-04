@@ -14,14 +14,17 @@ public class CreateLargeObjectRequest {
     @ApiModelProperty("The MIME type associated with the object.")
     private String mimeType;
 
+    @NotNull
     @Valid
     @ApiModelProperty("Specifies the Subjects which can read the LargeObject.")
     private SubjectRequest read;
 
+    @NotNull
     @Valid
     @ApiModelProperty("Specifies the Subjects which can write the LargeObject.")
     private SubjectRequest write;
 
+    @NotNull
     @Valid
     @ApiModelProperty("Specifies the Subjects which can delete the LargeObject.")
     private SubjectRequest delete;

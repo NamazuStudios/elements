@@ -73,6 +73,7 @@ public class LargeObjectResource {
 
     @DELETE
     @Path("{largeObjectId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes a LargeObject")
     public void deleteLargeObject(@PathParam("largeObjectId") final String objectId) throws IOException {
         getLargeObjectService().deleteLargeObject(objectId);

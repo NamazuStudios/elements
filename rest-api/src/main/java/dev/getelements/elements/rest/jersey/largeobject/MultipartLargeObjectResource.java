@@ -28,7 +28,7 @@ import java.io.InputStream;
                 @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
         }
 )
-@Path("large_object")
+@Path("large_object_mp")
 public class MultipartLargeObjectResource {
 
     private LargeObjectService largeObjectService;
@@ -51,6 +51,10 @@ public class MultipartLargeObjectResource {
 
         if (createLargeObjectRequest.getWrite() == null) {
             createLargeObjectRequest.setWrite(SubjectRequest.newDefaultRequest());
+        }
+
+        if (createLargeObjectRequest.getDelete() == null) {
+            createLargeObjectRequest.setDelete(SubjectRequest.newDefaultRequest());
         }
 
         try {
@@ -82,6 +86,10 @@ public class MultipartLargeObjectResource {
 
         if (updateLargeObjectRequest.getWrite() == null) {
             updateLargeObjectRequest.setWrite(SubjectRequest.newDefaultRequest());
+        }
+
+        if (updateLargeObjectRequest.getDelete() == null) {
+            updateLargeObjectRequest.setDelete(SubjectRequest.newDefaultRequest());
         }
 
         try {
