@@ -12,6 +12,7 @@ import dev.getelements.elements.service.profile.UserProfileService;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.io.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,8 +20,7 @@ import static dev.getelements.elements.service.largeObject.LargeObjectServiceTes
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
 public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase {
@@ -100,5 +100,34 @@ public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase 
         assertNotNull(result);
         assertEquals(result.getMimeType(), "changedMime");
         assertFalse(result.getAccessPermissions().getDelete().isWildcard());
+    }
+
+    @Test
+    public void shouldDelete() throws IOException {
+        LargeObject object = factory.defaultLargeObject();
+        when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(object));
+
+        superUserLargeObjectService.deleteLargeObject(TEST_ID);
+
+        verify(largeObjectBucket, times(1)).deleteLargeObject(TEST_ID);
+        verify(largeObjectDao, times(1)).deleteLargeObject(TEST_ID);
+    }
+
+    @Test
+    public void shouldReadLargeObjectContent() throws IOException {
+        when(largeObjectBucket.readObject(TEST_ID)).then(a -> mock(FileInputStream.class));
+
+        InputStream result = superUserLargeObjectService.readLargeObjectContent(TEST_ID);
+
+        assertTrue(result instanceof FileInputStream);
+    }
+
+    @Test
+    public void shouldWriteLargeObjectContent() throws IOException {
+        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
+
+        OutputStream result = superUserLargeObjectService.writeLargeObjectContent(TEST_ID);
+
+        assertTrue(result instanceof FileOutputStream);
     }
 }
