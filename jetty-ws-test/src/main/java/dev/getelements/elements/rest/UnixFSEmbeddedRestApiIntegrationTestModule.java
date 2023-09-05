@@ -142,10 +142,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         properties.remove(RESOURCE_ENVIRONMENT_PATH);
         properties.remove(SCHEDULER_ENVIRONMENT_PATH);
-
-        //TODO: find right place to bind
-        bind(LargeObjectService.class).toProvider(LargeObjectServiceProvider.class);
-
+        
         final var facebookPermissionSupplier = new FacebookBuiltinPermissionsSupplier();
 
         return new JeroMQEmbeddedTestService()

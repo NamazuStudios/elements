@@ -1,7 +1,6 @@
 package dev.getelements.elements.service.profile;
 
 
-import com.google.common.base.Strings;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.InvalidDataException;
@@ -16,7 +15,6 @@ import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.EventContext;
 import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
-import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.service.UserService;
 import org.slf4j.Logger;
