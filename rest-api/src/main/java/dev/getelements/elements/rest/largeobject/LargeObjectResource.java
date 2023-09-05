@@ -52,7 +52,7 @@ public class LargeObjectResource {
     @PUT
     @Path("{largeObjectId}/content")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a LargeObject")
+    @ApiOperation(value = "Updates a LargeObject content")
     public LargeObject updateLargeObjectContents(
             @PathParam("largeObjectId") final String largeObjectId,
             final InputStream inputStream) {
