@@ -21,9 +21,11 @@ import dev.getelements.elements.rt.guice.ClasspathAssetLoaderModule;
 import dev.getelements.elements.rt.guice.ResourceScope;
 import dev.getelements.elements.rt.lua.guice.LuaModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
+import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.RedissonServicesModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
+import dev.getelements.elements.service.largeobject.LargeObjectServiceProvider;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.getelements.elements.test.JeroMQEmbeddedTestService;
 import redis.embedded.RedisServer;
@@ -140,6 +142,9 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         properties.remove(RESOURCE_ENVIRONMENT_PATH);
         properties.remove(SCHEDULER_ENVIRONMENT_PATH);
+
+        //TODO: find right place to bind
+        bind(LargeObjectService.class).toProvider(LargeObjectServiceProvider.class);
 
         final var facebookPermissionSupplier = new FacebookBuiltinPermissionsSupplier();
 
