@@ -1,19 +1,23 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.dao.LargeObjectBucket;
+import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.largeobject.UserLargeObjectService;
-import dev.getelements.elements.service.profile.UserProfileService;
+import dev.getelements.elements.service.ProfileService;
+import dev.getelements.elements.service.UserService;
+import org.mockito.Mock;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 
-import static dev.getelements.elements.service.largeObject.LargeObjectServiceTestFactory.TEST_ID;
+import static dev.getelements.elements.service.largeobject.LargeObjectServiceTestFactory.TEST_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,13 +25,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
+@Guice(modules = LargeObjectServiceTestModule.class)
 public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase {
+
+    @Mock
+    @Inject
+    private UserService userService;
+
+    @Mock
+    @Inject
+    private ProfileService profileService;
+
+    @Mock
+    @Inject
+    private LargeObjectDao largeObjectDao;
+
+    @Mock
+    @Inject
+    private LargeObjectBucket largeObjectBucket;
 
     @Inject
     private UserLargeObjectService userLargeObjectService;
-
-    @Inject
-    private UserProfileService userProfileService;
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToCreate() {
@@ -62,7 +80,8 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
     @Test
     public void shouldAllowToUpdatePermittedUser() {
         User permittedUser = mock(User.class);
-        userLargeObjectService.setUser(permittedUser);
+        when(userService.getCurrentUser()).thenReturn(permittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         List<User> permittedWriteAccess = asList(permittedUser);
         LargeObject largeObjectWithUserWriteAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
@@ -77,7 +96,8 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
     public void shouldNotAllowToUpdateNonPermittedUser() {
         User permittedUser = mock(User.class);
         User nonPermittedUser = mock(User.class);
-        userLargeObjectService.setUser(nonPermittedUser);
+        when(userService.getCurrentUser()).thenReturn(nonPermittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         List<User> permittedWriteAccess = asList(permittedUser);
         LargeObject largeObjectWithUserWriteAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
@@ -90,7 +110,8 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
     @Test
     public void shouldAllowToUpdatePermittedProfile() {
         Profile permittedProfile = mock(Profile.class);
-        when(userProfileService.getCurrentProfile()).then(a -> permittedProfile);
+        when(profileService.findCurrentProfile()).thenReturn(Optional.of(permittedProfile));
+
         List<Profile> permittedReadAccess = asList(permittedProfile);
         List<Profile> permittedWriteAccess = asList(permittedProfile);
         LargeObject largeObjectWithProfileWriteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, permittedWriteAccess, emptyList());
@@ -105,7 +126,8 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
     public void shouldNotAllowToUpdateNonPermittedProfile() {
         Profile permittedProfile = mock(Profile.class);
         Profile nonPermittedProfile = mock(Profile.class);
-        when(userProfileService.getCurrentProfile()).then(a -> nonPermittedProfile);
+        when(profileService.findCurrentProfile()).thenReturn(Optional.of(nonPermittedProfile));
+
         List<Profile> permittedReadAccess = asList(permittedProfile);
         List<Profile> permittedWriteAccess = asList(permittedProfile);
         LargeObject largeObjectWithProfileWriteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, permittedWriteAccess, emptyList());

@@ -1,11 +1,13 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.largeobject.UserLargeObjectService;
-import dev.getelements.elements.service.profile.UserProfileService;
+import dev.getelements.elements.service.ProfileService;
+import dev.getelements.elements.service.UserService;
+import org.mockito.Mock;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -15,20 +17,26 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
-import static dev.getelements.elements.service.largeObject.LargeObjectServiceTestFactory.TEST_ID;
+import static dev.getelements.elements.service.largeobject.LargeObjectServiceTestFactory.TEST_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
+@Guice(modules = LargeObjectServiceTestModule.class)
 public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
 
     @Inject
     private UserLargeObjectService userLargeObjectService;
 
+    @Mock
     @Inject
-    private UserProfileService userProfileService;
+    private UserService userService;
+
+    @Mock
+    @Inject
+    private ProfileService profileService;
 
     @Test
     public void shouldFind() {
@@ -43,20 +51,22 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
     public void shouldNotAllowToFind() {
         LargeObject largeObjectWithNoReadAccess = factory.defaultLargeObjectWithAccess(false, true, true);
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithNoReadAccess));
-        when(userProfileService.getCurrentProfile()).then(a -> mock(Profile.class));
+        when(profileService.getCurrentProfile()).then(a -> mock(Profile.class));
 
         userLargeObjectService.findLargeObject(TEST_ID);
     }
 
     @Test
     public void shouldAllowToFindByPermittedUser() {
+
         User permittedUser = mock(User.class);
-        userLargeObjectService.setUser(permittedUser);
+        when(userService.getCurrentUser()).thenReturn(permittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         LargeObject largeObjectWithUserReadAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), emptyList());
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithUserReadAccess));
-        when(userProfileService.getCurrentProfile()).then(a -> mock(Profile.class));
+        when(profileService.getCurrentProfile()).then(a -> mock(Profile.class));
 
         Optional<LargeObject> result = userLargeObjectService.findLargeObject(TEST_ID);
 
@@ -68,7 +78,8 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
         User permittedUser = mock(User.class);
         User nonPermittedUser = mock(User.class);
 
-        userLargeObjectService.setUser(nonPermittedUser);   //logged in user is not permitted
+        when(userService.getCurrentUser()).thenReturn(nonPermittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), emptyList());
 
@@ -80,7 +91,8 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
     @Test
     public void shouldAllowToFindByPermittedProfile() {
         Profile permittedProfile = mock(Profile.class);
-        when(userProfileService.getCurrentProfile()).then(a -> permittedProfile);
+
+        when(profileService.findCurrentProfile()).thenReturn(Optional.of(permittedProfile));
 
         List<Profile> permittedReadAccess = asList(permittedProfile);
         LargeObject largeObject = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), emptyList());
@@ -97,7 +109,7 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
         Profile permittedProfile = mock(Profile.class);
         Profile notPermittedProfile = mock(Profile.class);
 
-        when(userProfileService.getCurrentProfile()).then(a -> notPermittedProfile);
+        when(profileService.getCurrentProfile()).then(a -> notPermittedProfile);
 
         List<Profile> permittedReadAccess = asList(permittedProfile);
         LargeObject largeObject = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), emptyList());
@@ -120,7 +132,7 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToReadContent() throws IOException {
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.defaultLargeObjectWithAccess(false, true, true)));
-        when(userProfileService.getCurrentProfile()).then(a -> mock(Profile.class));
+        when(profileService.getCurrentProfile()).then(a -> mock(Profile.class));
 
         userLargeObjectService.readLargeObjectContent(TEST_ID);
     }
@@ -128,13 +140,14 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
     @Test
     public void shouldAllowToReadContentByPermittedUser() throws IOException {
         User permittedUser = mock(User.class);
-        userLargeObjectService.setUser(permittedUser);
+        when(userService.getCurrentUser()).thenReturn(permittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), emptyList());
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
         when(largeObjectBucket.readObject(TEST_ID)).then(a -> mock(FileInputStream.class));
-        when(userProfileService.getCurrentProfile()).then(a -> mock(Profile.class));
+        when(profileService.getCurrentProfile()).then(a -> mock(Profile.class));
 
         InputStream inputStream = userLargeObjectService.readLargeObjectContent(TEST_ID);
 
@@ -146,7 +159,8 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
         User permittedUser = mock(User.class);
         User nonPermittedUser = mock(User.class);
 
-        userLargeObjectService.setUser(nonPermittedUser);   //logged in user is not permitted
+        when(userService.getCurrentUser()).thenReturn(nonPermittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), emptyList());
 
@@ -158,7 +172,7 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
     @Test
     public void shouldAllowToReadContentByPermittedProfile() throws IOException {
         Profile permittedProfile = mock(Profile.class);
-        when(userProfileService.getCurrentProfile()).then(a -> permittedProfile);
+        when(profileService.getCurrentProfile()).then(a -> permittedProfile);
 
         List<Profile> permittedReadAccess = asList(permittedProfile);
         LargeObject largeObject = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), emptyList());
@@ -176,7 +190,7 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
         Profile permittedProfile = mock(Profile.class);
         Profile notPermittedProfile = mock(Profile.class);
 
-        when(userProfileService.getCurrentProfile()).then(a -> notPermittedProfile);
+        when(profileService.getCurrentProfile()).then(a -> notPermittedProfile);
 
         List<Profile> permittedReadAccess = asList(permittedProfile);
         LargeObject largeObject = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), emptyList());

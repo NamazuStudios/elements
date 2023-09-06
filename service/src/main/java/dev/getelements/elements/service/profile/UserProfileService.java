@@ -24,6 +24,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -46,6 +47,8 @@ public class UserProfileService implements ProfileService {
     private Context.Factory contextFactory;
 
     private Supplier<Profile> currentProfileSupplier;
+
+    private Optional<Profile> currentProfileOptional;
 
     private Provider<Attributes> attributesProvider;
 
@@ -94,6 +97,11 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile getCurrentProfile() {
         return getCurrentProfileSupplier().get();
+    }
+
+    @Override
+    public Optional<Profile> findCurrentProfile() {
+        return getCurrentProfileOptional();
     }
 
     @Override
@@ -204,6 +212,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setContextFactory(Context.Factory contextFactory) {
         this.contextFactory = contextFactory;
+    }
+
+    public Optional<Profile> getCurrentProfileOptional() {
+        return currentProfileOptional;
+    }
+
+    @Inject
+    public void setCurrentProfileOptional(Optional<Profile> currentProfileOptional) {
+        this.currentProfileOptional = currentProfileOptional;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

@@ -1,11 +1,11 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.largeobject.UserLargeObjectService;
 import dev.getelements.elements.service.profile.UserProfileService;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -13,11 +13,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static dev.getelements.elements.service.largeObject.LargeObjectServiceTestFactory.TEST_ID;
+import static dev.getelements.elements.service.largeobject.LargeObjectServiceTestFactory.TEST_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.*;
 
+@Guice(modules = LargeObjectServiceTestModule.class)
 public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase{
 
     @Inject
@@ -45,7 +46,7 @@ public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase
     @Test
     public void shouldAllowToDeleteContentByPermittedUser() throws IOException {
         User permittedUser = mock(User.class);
-        userLargeObjectService.setUser(permittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         List<User> permittedDeleteAccess = asList(permittedUser);
         LargeObject largeObjectWithUSerDeleteAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);
@@ -64,7 +65,7 @@ public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase
         User permittedUser = mock(User.class);
         User notPermittedUser = mock(User.class);
 
-        userLargeObjectService.setUser(notPermittedUser);
+
         List<User> permittedReadAccess = asList(permittedUser);
         List<User> permittedDeleteAccess = asList(permittedUser);
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);

@@ -8,6 +8,7 @@ import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.security.*;
 import dev.getelements.elements.servlet.security.*;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -21,6 +22,7 @@ public class StandardServletSecurityModule extends AbstractModule {
         bind(User.class).toProvider(UserProvider.class);
 
         bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
+        bind(new TypeLiteral<Optional<Profile>>(){}).toProvider(ProfileOptionalSupplier.class);
 
         final Multibinder<UserAuthenticationMethod> userAuthenticationMethodMultibinder;
         userAuthenticationMethodMultibinder = Multibinder.newSetBinder(binder(), UserAuthenticationMethod.class);

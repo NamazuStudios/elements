@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.model.largeobject.*;
 import dev.getelements.elements.model.profile.Profile;
@@ -9,6 +9,7 @@ import java.util.List;
 public class LargeObjectServiceTestFactory {
 
     static final String TEST_ID = "testId";
+
     private static final String DEFAULT_MIME_TYPE = "mime";
 
     UpdateLargeObjectRequest defaultUpdateRequestWithWildcardAccess(boolean read, boolean write, boolean delete) {

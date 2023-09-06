@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
@@ -7,8 +7,8 @@ import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.UserService;
-import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.profile.UserProfileService;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -16,13 +16,14 @@ import java.io.*;
 import java.util.List;
 import java.util.Optional;
 
-import static dev.getelements.elements.service.largeObject.LargeObjectServiceTestFactory.TEST_ID;
+import static dev.getelements.elements.service.largeobject.LargeObjectServiceTestFactory.TEST_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
+@Guice(modules = LargeObjectServiceTestModule.class)
 public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase {
 
     @Inject

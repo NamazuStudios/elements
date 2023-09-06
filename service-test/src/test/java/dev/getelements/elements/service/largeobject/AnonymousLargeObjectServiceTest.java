@@ -1,8 +1,8 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.service.largeobject.AnonLargeObjectService;
+import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-import static dev.getelements.elements.service.largeObject.LargeObjectServiceTestFactory.TEST_ID;
+import static dev.getelements.elements.service.largeobject.LargeObjectServiceTestFactory.TEST_ID;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
+@Guice(modules = LargeObjectServiceTestModule.class)
 public class AnonymousLargeObjectServiceTest extends LargeObjectServiceTestBase{
 
     @Inject

@@ -1,8 +1,7 @@
-package dev.getelements.elements.service.largeObject;
+package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
-import dev.getelements.elements.service.largeobject.LargeObjectAccessUtils;
 import dev.getelements.elements.util.ValidationHelper;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -28,14 +27,9 @@ public class LargeObjectServiceTestBase {
 
     protected LargeObjectServiceTestFactory factory = new LargeObjectServiceTestFactory();
 
-    @BeforeClass
-    public void setup() {
-        final var injector = createInjector(new LargeObjectServiceTestModule());
-        injector.injectMembers(this);
-    }
-
     @BeforeMethod
     public void resetMocks() {
         reset(largeObjectDao, largeObjectBucket);
     }
+
 }

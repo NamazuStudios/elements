@@ -3,8 +3,9 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.ForbiddenException;
-import dev.getelements.elements.model.largeobject.*;
-import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.util.ValidationHelper;
 
@@ -24,17 +25,11 @@ public class UserLargeObjectService implements LargeObjectService {
 
     private ValidationHelper validationHelper;
 
-    private User user;
-
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
-        final var largeObject = getLargeObjectDao().findLargeObject(objectId);
-
-        if (largeObject.isPresent() && !largeObjectAccessUtils.hasReadAccess(largeObject.get().getAccessPermissions(), user)) {
-            throw new ForbiddenException();
-        }
-
-        return largeObject.map(getLargeObjectAccessUtils()::setCdnUrlToObject);
+        return getLargeObjectDao()
+                .findLargeObject(objectId)
+                .map(lo -> getLargeObjectAccessUtils().hasReadAccess(lo) ? lo : null);
     }
 
     @Override
@@ -43,20 +38,11 @@ public class UserLargeObjectService implements LargeObjectService {
         getValidationHelper().validateModel(objectRequest);
         final LargeObject largeObject = getLargeObject(objectId);
 
-        if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
+        if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
             throw new ForbiddenException();
         }
 
-        AccessPermissions accessPermissions = getLargeObjectAccessUtils().createAccessPermissions(
-                objectRequest.getRead(),
-                objectRequest.getWrite(),
-                objectRequest.getDelete());
-
-        largeObject.setMimeType(objectRequest.getMimeType());
-        largeObject.setAccessPermissions(accessPermissions);
-
-        LargeObject updated = getLargeObjectDao().updateLargeObject(largeObject);
-        return getLargeObjectAccessUtils().setCdnUrlToObject(updated);
+        return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
     }
 
     @Override
@@ -69,7 +55,7 @@ public class UserLargeObjectService implements LargeObjectService {
 
         final var largeObject = getLargeObject(objectId);
 
-        if (!largeObjectAccessUtils.hasDeleteAccess(largeObject.getAccessPermissions(), user)) {
+        if (!getLargeObjectAccessUtils().hasDeleteAccess(largeObject)) {
             throw new ForbiddenException();
         }
 
@@ -82,7 +68,7 @@ public class UserLargeObjectService implements LargeObjectService {
     public InputStream readLargeObjectContent(final String objectId) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
-        if (!largeObjectAccessUtils.hasReadAccess(largeObject.getAccessPermissions(), user)) {
+        if (!getLargeObjectAccessUtils().hasReadAccess(largeObject)) {
             throw new ForbiddenException();
         }
 
@@ -93,7 +79,7 @@ public class UserLargeObjectService implements LargeObjectService {
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
-        if (!largeObjectAccessUtils.hasWriteAccess(largeObject.getAccessPermissions(), user)) {
+        if (getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
             throw new ForbiddenException();
         }
 
@@ -116,15 +102,6 @@ public class UserLargeObjectService implements LargeObjectService {
     @Inject
     public void setLargeObjectBucket(LargeObjectBucket largeObjectBucket) {
         this.largeObjectBucket = largeObjectBucket;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    @Inject
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public LargeObjectAccessUtils getLargeObjectAccessUtils() {
