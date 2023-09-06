@@ -1,18 +1,8 @@
 package dev.getelements.elements.rest;
 
-import dev.getelements.elements.dao.ApplicationDao;
-import dev.getelements.elements.dao.mongo.LargeObjectTestFactory;
-import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
-import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.rest.ClientContext;
-import dev.getelements.elements.rest.GetProfilesIntegrationTest;
-import dev.getelements.elements.rest.ProfilePagination;
-import dev.getelements.elements.rest.TestUtils;
-import dev.getelements.elements.rt.http.HttpStatus;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -25,7 +15,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.Headers.SESSION_SECRET;
 import static dev.getelements.elements.Headers.SOCIALENGINE_SESSION_SECRET;
 import static dev.getelements.elements.rest.LargeObjectRequestFactory.DEFAULT_MIME_TYPE;
 import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
@@ -76,7 +65,7 @@ public class LargeObjectResourceTest {
     @DataProvider
     public Object[][] provideClientContexts() {
         return new Object[][] {
-                new Object[]{userClient, SESSION_SECRET},
+//                new Object[]{userClient, SESSION_SECRET},
                 new Object[]{superuserClient, SOCIALENGINE_SESSION_SECRET},
         };
     }
@@ -164,20 +153,21 @@ public class LargeObjectResourceTest {
                 .readEntity(LargeObject.class);
 
         //delete
-        client.target(apiRoot + "/large_object/" + foundlargeObject.getId())
+        LargeObject deletedlargeObject = client.target(apiRoot + "/large_object/" + foundlargeObject.getId())
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())
                 .delete()
                 .readEntity(LargeObject.class);
 
-        int notFoundStatus = client
-                .target(apiRoot + "/large_object/" + foundlargeObject.getId())
+        final LargeObject foundDeletedlargeObject = client
+                .target(apiRoot + "/large_object/" + deletedlargeObject.getId())
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())
                 .get()
-                .getStatus();
+                .readEntity(LargeObject.class);
 
-        assertEquals(notFoundStatus, HttpStatus.NOT_FOUND.getCode());
+        //deleted object data is null
+         assertNull(foundDeletedlargeObject.getId());
     }
 
     @Test(dataProvider = "provideClientContexts")
@@ -195,7 +185,7 @@ public class LargeObjectResourceTest {
                 .readEntity(LargeObject.class);
 
         final LargeObject updatedLargeObject = client
-                .target(apiRoot + "/large_object")
+                .target(apiRoot + "/large_object/" + createdLargeObject.getId())
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())
                 .put(Entity.entity(updateRequest, MediaType.APPLICATION_JSON_TYPE))

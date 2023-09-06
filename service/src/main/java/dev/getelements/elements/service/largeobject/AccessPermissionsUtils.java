@@ -33,12 +33,18 @@ public class AccessPermissionsUtils {
     }
 
     public boolean hasProfileAccess(final Subjects subjects) {
-        return subjects.isWildcard() || getProfileService()
-                .findCurrentProfile()
-                .map(current -> subjects.getProfiles()
-                    .stream()
-                    .anyMatch(profile -> current.getId().equals(profile.getId()))
-                ).orElse(false);
+        final var current = getProfileService().findCurrentProfile();
+        return subjects.isWildcard() ||
+                current.isEmpty() ||
+                subjects.getProfiles()
+                .stream()
+                .anyMatch(profile -> current.get().getId().equals(profile.getId()));
+//        return subjects.isWildcard() || getProfileService()
+//                .findCurrentProfile()
+//                .map(current -> subjects.getProfiles()
+//                    .stream()
+//                    .anyMatch(profile -> current.getId().equals(profile.getId()))
+//                ).orElse(false);
     }
 
     public boolean hasReadAccess(final AccessPermissions accessPermissions) {

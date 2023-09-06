@@ -130,4 +130,28 @@ public class LargeObjectServiceTestFactory {
         subjects.setProfiles(profiles);
         return subjects;
     }
+
+    User permittedUser() {
+        User user = new User();
+        user.setId("permittedUserId");
+        return user;
+    }
+
+    User notPermittedUser() {
+        User user = new User();
+        user.setId("notPermittedUserId");
+        return user;
+    }
+
+    Profile permittedProfile() {
+        Profile profile = new Profile();
+        profile.setId("permittedProfileId");
+        return profile;
+    }
+
+    Profile notPermittedProfile() {
+        Profile profile = new Profile();
+        profile.setId("notPermittedProfileId");
+        return profile;
+    }
 }

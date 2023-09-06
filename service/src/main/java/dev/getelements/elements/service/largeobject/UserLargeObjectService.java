@@ -27,9 +27,12 @@ public class UserLargeObjectService implements LargeObjectService {
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
-        return getLargeObjectDao()
-                .findLargeObject(objectId)
-                .map(lo -> getLargeObjectAccessUtils().hasReadAccess(lo) ? lo : null);
+        Optional<LargeObject> result = getLargeObjectDao()
+                .findLargeObject(objectId);
+        if (result.isPresent() && !getLargeObjectAccessUtils().hasReadAccess(result.get())) {
+            throw new ForbiddenException();
+        }
+        return result;
     }
 
     @Override
@@ -41,6 +44,9 @@ public class UserLargeObjectService implements LargeObjectService {
         if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
             throw new ForbiddenException();
         }
+
+        largeObject.setMimeType(objectRequest.getMimeType());
+        // TODO: verify if update accessPermissions makes any sense
 
         return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
     }
@@ -79,7 +85,7 @@ public class UserLargeObjectService implements LargeObjectService {
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
-        if (getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
+        if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
             throw new ForbiddenException();
         }
 
