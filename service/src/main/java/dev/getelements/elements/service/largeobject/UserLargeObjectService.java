@@ -46,9 +46,12 @@ public class UserLargeObjectService implements LargeObjectService {
         }
 
         largeObject.setMimeType(objectRequest.getMimeType());
+
         // TODO: verify if update accessPermissions makes any sense
+        // TODO: No. Not at this point in time. We can address this later if requirements dictate.
 
         return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
+
     }
 
     @Override

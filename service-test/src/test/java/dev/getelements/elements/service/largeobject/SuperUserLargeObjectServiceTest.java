@@ -58,6 +58,7 @@ public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase 
         CreateLargeObjectRequest request = factory.defaultCreateRequestWithWildcardAccess(false, false, false);
         List<String> readAllowedUserId = asList("u1", "u2");
         List<String> writeAllowedProfileId = asList("p1");
+
         request.setRead(factory.subjectRequestWithUsersAndProfiles(readAllowedUserId, emptyList()));
         request.setWrite(factory.subjectRequestWithUsersAndProfiles(emptyList(), writeAllowedProfileId));
 

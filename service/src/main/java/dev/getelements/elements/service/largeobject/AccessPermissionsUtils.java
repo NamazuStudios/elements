@@ -35,6 +35,8 @@ public class AccessPermissionsUtils {
     public boolean hasProfileAccess(final Subjects subjects) {
         final var current = getProfileService().findCurrentProfile();
         return subjects.isWildcard() ||
+                // TODO: Please check this logic here.
+                // TODO: I don't think this is right. If currently we have no profile then the request should not pass.
                 current.isEmpty() ||
                 subjects.getProfiles()
                 .stream()
@@ -64,16 +66,16 @@ public class AccessPermissionsUtils {
     }
 
     @Inject
-    void setProfileService(ProfileService profileService) {
+    public void setProfileService(ProfileService profileService) {
         this.profileService = profileService;
     }
 
-    UserService getUserService() {
+    public UserService getUserService() {
         return userService;
     }
 
     @Inject
-    void setUserService(UserService userService) {
+    public void setUserService(UserService userService) {
         this.userService = userService;
     }
 
