@@ -122,9 +122,7 @@ public class UserLargeObjectResourceTest {
                 .get()
                 .getStatus();
 
-        // TODO: getCurrentProfile returns notFound -> how to setup profile in clientContext
-//        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
-        assertEquals(status, HttpStatus.NOT_FOUND.getCode());
+        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
     }
 
     // TODO: when persisting accessPermissions, there is an error: failed encoding a User:
@@ -198,8 +196,7 @@ public class UserLargeObjectResourceTest {
                 .put(Entity.entity(loStream, MediaType.APPLICATION_OCTET_STREAM))
                 .getStatus();
 
-        //        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
-        assertEquals(status, HttpStatus.NOT_FOUND.getCode());
+        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
     }
 
     @Test()
@@ -273,7 +270,6 @@ public class UserLargeObjectResourceTest {
                 .get()
                 .getStatus();
 
-        //        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
         assertEquals(status, HttpStatus.NOT_FOUND.getCode());
     }
 }

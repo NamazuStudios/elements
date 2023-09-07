@@ -105,7 +105,7 @@ public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase
         List<Profile> permittedDeleteAccess = asList(permittedProfile);
         LargeObject largeObjectWithProfileDeleteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);
 
-        when(profileService.getCurrentProfile()).then(a -> factory.notPermittedProfile());
+        when(profileService.findCurrentProfile()).thenReturn(Optional.of(factory.notPermittedProfile()));
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithProfileDeleteAccess));
 
         userLargeObjectService.deleteLargeObject(TEST_ID);

@@ -95,7 +95,7 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
         List<Profile> permittedReadAccess = asList(permittedProfile);
         LargeObject largeObject = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), emptyList());
 
-        when(profileService.getCurrentProfile()).thenReturn(permittedProfile);
+        when(profileService.findCurrentProfile()).thenReturn(Optional.of(permittedProfile));
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
 
         Optional<LargeObject> result = userLargeObjectService.findLargeObject(TEST_ID);
@@ -164,7 +164,7 @@ public class UserLargeObjectServiceReadTest extends LargeObjectServiceTestBase{
     @Test
     public void shouldAllowToReadContentByPermittedProfile() throws IOException {
         Profile permittedProfile = factory.permittedProfile();
-        when(profileService.getCurrentProfile()).then(a -> permittedProfile);
+        when(profileService.findCurrentProfile()).thenReturn(Optional.of(permittedProfile));
 
         List<Profile> permittedReadAccess = asList(permittedProfile);
         LargeObject largeObject = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), emptyList());

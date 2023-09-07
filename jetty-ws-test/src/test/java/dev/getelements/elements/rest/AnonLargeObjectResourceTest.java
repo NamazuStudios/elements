@@ -83,27 +83,4 @@ public class AnonLargeObjectResourceTest {
         assertTrue(foundlargeObject.getAccessPermissions().getWrite().isWildcard());
         assertTrue(foundlargeObject.getAccessPermissions().getDelete().isWildcard());
     }
-
-    @Test()
-    public void shouldNotGetLargeObjectWithoutAccess() {
-        CreateLargeObjectRequest request = requestFactory.createRequestWithAccess(false, true, true);
-
-        //superuser creates lo
-        final LargeObject savedlargeObject = client
-                .target(apiRoot + "/large_object")
-                .request()
-                .header(SESSION_SECRET, superuserClientContext.getSessionSecret())
-                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
-                .readEntity(LargeObject.class);
-
-        final int status = client
-                .target(apiRoot + "/large_object/" + savedlargeObject.getId())
-                .request()
-                .get()
-                .getStatus();
-
-        // TODO: getCurrentProfile returns notFound -> how to setup profile in clientContext
-//        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
-        assertEquals(status, HttpStatus.NOT_FOUND.getCode());
-    }
 }

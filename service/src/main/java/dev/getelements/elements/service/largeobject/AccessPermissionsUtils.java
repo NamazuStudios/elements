@@ -31,10 +31,9 @@ public class AccessPermissionsUtils {
     }
 
     public boolean hasProfileAccess(final Subjects subjects) {
-        //profile is required, so getCurrentProfile is right one
-        final var current = getProfileService().getCurrentProfile();
-        return subjects.getProfiles().stream()
-                .anyMatch(profile -> current.getId().equals(profile.getId()));
+        final var current = getProfileService().findCurrentProfile();
+        return current.filter(value -> subjects.getProfiles().stream()
+                .anyMatch(profile -> value.getId().equals(profile.getId()))).isPresent();
     }
 
     public boolean hasReadAccess(final AccessPermissions accessPermissions) {
