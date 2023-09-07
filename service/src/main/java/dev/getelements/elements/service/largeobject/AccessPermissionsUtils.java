@@ -26,39 +26,30 @@ public class AccessPermissionsUtils {
 
     public boolean hasUserAccess(final Subjects subjects) {
         final var current = getUserService().getCurrentUser();
-        return subjects.isWildcard() || subjects
-                .getUsers()
-                .stream()
+        return subjects.getUsers().stream()
                 .anyMatch(user -> current.getId().equals(user.getId()));
     }
 
     public boolean hasProfileAccess(final Subjects subjects) {
-        final var current = getProfileService().findCurrentProfile();
-        return subjects.isWildcard() ||
-                // TODO: Please check this logic here.
-                // TODO: I don't think this is right. If currently we have no profile then the request should not pass.
-                current.isEmpty() ||
-                subjects.getProfiles()
-                .stream()
-                .anyMatch(profile -> current.get().getId().equals(profile.getId()));
-//        return subjects.isWildcard() || getProfileService()
-//                .findCurrentProfile()
-//                .map(current -> subjects.getProfiles()
-//                    .stream()
-//                    .anyMatch(profile -> current.getId().equals(profile.getId()))
-//                ).orElse(false);
+        //profile is required, so getCurrentProfile is right one
+        final var current = getProfileService().getCurrentProfile();
+        return subjects.getProfiles().stream()
+                .anyMatch(profile -> current.getId().equals(profile.getId()));
     }
 
     public boolean hasReadAccess(final AccessPermissions accessPermissions) {
-        return hasUserAccess(accessPermissions.getRead()) || hasProfileAccess(accessPermissions.getRead());
+        Subjects readSubjects = accessPermissions.getRead();
+        return readSubjects.isWildcard() || hasUserAccess(readSubjects) || hasProfileAccess(readSubjects);
     }
 
     public boolean hasWriteAccess(final AccessPermissions accessPermissions) {
-        return hasUserAccess(accessPermissions.getWrite()) || hasProfileAccess(accessPermissions.getWrite());
+        Subjects writeSubjects = accessPermissions.getWrite();
+        return writeSubjects.isWildcard() || hasUserAccess(writeSubjects) || hasProfileAccess(writeSubjects);
     }
 
     public boolean hasDeleteAccess(final AccessPermissions accessPermissions) {
-        return hasUserAccess(accessPermissions.getDelete()) || hasProfileAccess(accessPermissions.getDelete());
+        Subjects deleteSubjects = accessPermissions.getDelete();
+        return deleteSubjects.isWildcard() || hasUserAccess(deleteSubjects) || hasProfileAccess(deleteSubjects);
     }
 
     ProfileService getProfileService() {
