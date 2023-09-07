@@ -4,6 +4,8 @@ import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 
+import java.util.List;
+
 class LargeObjectRequestFactory {
 
     static final String DEFAULT_MIME_TYPE = "mime";
@@ -14,6 +16,15 @@ class LargeObjectRequestFactory {
         result.setRead(requestWithAccess(read));
         result.setWrite(requestWithAccess(write));
         result.setDelete(requestWithAccess(delete));
+
+        return result;
+    }
+
+    CreateLargeObjectRequest createRequestWithUserAccess(List<String> readUserIds, List<String> writeUserIds, List<String> deleteUserIds) {
+        CreateLargeObjectRequest result = createRequestWithAccess(false, false, false);
+        result.setRead(requestWithUserAccess(readUserIds));
+        result.setWrite(requestWithUserAccess(writeUserIds));
+        result.setDelete(requestWithUserAccess(deleteUserIds));
 
         return result;
     }
@@ -39,6 +50,12 @@ class LargeObjectRequestFactory {
     SubjectRequest requestWithAccess(boolean wildcard) {
         SubjectRequest subjectRequest = SubjectRequest.newDefaultRequest();
         subjectRequest.setWildcard(wildcard);
+        return subjectRequest;
+    }
+
+    SubjectRequest requestWithUserAccess(List<String> users) {
+        SubjectRequest subjectRequest = requestWithAccess(false);
+        subjectRequest.setUserIds(users);
         return subjectRequest;
     }
 }

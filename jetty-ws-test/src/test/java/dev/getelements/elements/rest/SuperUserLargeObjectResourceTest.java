@@ -9,7 +9,6 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
@@ -37,30 +36,25 @@ public class SuperUserLargeObjectResourceTest {
     private Client client;
 
     @Inject
-    private Provider<ClientContext> clientContextProvider;
-
-    @Inject
     private LargeObjectRequestFactory requestFactory;
 
-    private ClientContext superuserClient;
+    @Inject
+    private ClientContext clientContext;
 
     @BeforeClass
     private void setUp() {
-
-        superuserClient = clientContextProvider.get()
-                .createSuperuser("uploadingSuperUser")
-                .createSession();
+        clientContext.createSuperuser("uploadingSuperUser").createSession();
     }
 
     @Test()
-    public void shouldCreateFullAccessLargeObject() throws Exception {
+    public void shouldCreateFullAccessLargeObject() {
 
         CreateLargeObjectRequest request = requestFactory.createRequestWithFullAccess();
 
         final LargeObject largeObject = client
                 .target(apiRoot + "/large_object")
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
@@ -73,14 +67,14 @@ public class SuperUserLargeObjectResourceTest {
     }
 
     @Test
-    public void shouldCreateReadOnlyObject() throws Exception {
+    public void shouldCreateReadOnlyObject() {
 
         CreateLargeObjectRequest request = requestFactory.createRequestWithAccess(true, false, false);
 
         final LargeObject largeObject = client
                 .target(apiRoot + "/large_object")
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
@@ -90,21 +84,21 @@ public class SuperUserLargeObjectResourceTest {
     }
 
     @Test()
-    public void shouldGetLargeObject() throws Exception {
+    public void shouldGetLargeObject() {
 
         CreateLargeObjectRequest request = requestFactory.createRequestWithFullAccess();
 
         final LargeObject savedlargeObject = client
                 .target(apiRoot + "/large_object")
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
         final LargeObject foundlargeObject = client
                 .target(apiRoot + "/large_object/" + savedlargeObject.getId())
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .get()
                 .readEntity(LargeObject.class);
 
@@ -116,35 +110,35 @@ public class SuperUserLargeObjectResourceTest {
     }
 
     @Test()
-    public void shouldDeleteLargeObject() throws Exception {
+    public void shouldDeleteLargeObject() {
 
         CreateLargeObjectRequest request = requestFactory.createRequestWithFullAccess();
 
         final LargeObject savedlargeObject = client
                 .target(apiRoot + "/large_object")
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
         final LargeObject foundlargeObject = client
                 .target(apiRoot + "/large_object/" + savedlargeObject.getId())
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .get()
                 .readEntity(LargeObject.class);
 
         //delete
         LargeObject deletedlargeObject = client.target(apiRoot + "/large_object/" + foundlargeObject.getId())
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .delete()
                 .readEntity(LargeObject.class);
 
         final LargeObject foundDeletedlargeObject = client
                 .target(apiRoot + "/large_object/" + deletedlargeObject.getId())
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .get()
                 .readEntity(LargeObject.class);
 
@@ -153,7 +147,7 @@ public class SuperUserLargeObjectResourceTest {
     }
 
     @Test()
-    public void shouldUpdateLargeObject() throws Exception {
+    public void shouldUpdateLargeObject() {
 
         CreateLargeObjectRequest createRequest = requestFactory.createRequestWithAccess(true, true, false);
         UpdateLargeObjectRequest updateRequest = requestFactory.updateLargeObjectRequest(false, false, true);
@@ -162,14 +156,14 @@ public class SuperUserLargeObjectResourceTest {
         final LargeObject createdLargeObject = client
                 .target(apiRoot + "/large_object")
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(Entity.entity(createRequest, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
         final LargeObject updatedLargeObject = client
                 .target(apiRoot + "/large_object/" + createdLargeObject.getId())
                 .request()
-                .header(SESSION_SECRET, superuserClient.getSessionSecret())
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .put(Entity.entity(updateRequest, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 

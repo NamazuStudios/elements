@@ -30,7 +30,7 @@ public class UserLargeObjectService implements LargeObjectService {
         Optional<LargeObject> result = getLargeObjectDao()
                 .findLargeObject(objectId);
         if (result.isPresent() && !getLargeObjectAccessUtils().hasReadAccess(result.get())) {
-            throw new ForbiddenException();
+            throw new ForbiddenException("User not allowed to find");
         }
         return result;
     }
@@ -42,7 +42,7 @@ public class UserLargeObjectService implements LargeObjectService {
         final LargeObject largeObject = getLargeObject(objectId);
 
         if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
-            throw new ForbiddenException();
+            throw new ForbiddenException("User not allowed to update");
         }
 
         largeObject.setMimeType(objectRequest.getMimeType());
@@ -56,7 +56,7 @@ public class UserLargeObjectService implements LargeObjectService {
 
     @Override
     public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
-        throw new ForbiddenException();
+        throw new ForbiddenException("User not allowed to create");
     }
 
     @Override
@@ -65,7 +65,7 @@ public class UserLargeObjectService implements LargeObjectService {
         final var largeObject = getLargeObject(objectId);
 
         if (!getLargeObjectAccessUtils().hasDeleteAccess(largeObject)) {
-            throw new ForbiddenException();
+            throw new ForbiddenException("User not allowed to delete");
         }
 
         getLargeObjectDao().deleteLargeObject(objectId);
@@ -78,7 +78,7 @@ public class UserLargeObjectService implements LargeObjectService {
         final var largeObject = getLargeObject(objectId);
 
         if (!getLargeObjectAccessUtils().hasReadAccess(largeObject)) {
-            throw new ForbiddenException();
+            throw new ForbiddenException("User not allowed to read content");
         }
 
         return getLargeObjectBucket().readObject(largeObject.getId());
@@ -89,7 +89,7 @@ public class UserLargeObjectService implements LargeObjectService {
         final var largeObject = getLargeObject(objectId);
 
         if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
-            throw new ForbiddenException();
+            throw new ForbiddenException("User not allowed to write content");
         }
 
         return getLargeObjectBucket().writeObject(objectId);
