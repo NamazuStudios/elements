@@ -70,7 +70,7 @@ pipelines:
             - make COMMIT_MSG="Snapshot:" detach commit tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch
-            - make COMMIT_MSG="[ci skip] Setting Next Version:" checkout commit
+            - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
             - make push push_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
