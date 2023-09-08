@@ -60,19 +60,21 @@ git:
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
-	git commit -a -m "\"[ci skip] $(MAVEN_VERSION)\""
+
+ifndef COMMIT_MSG
+	$(error COMMIT_MSG is not set)
+endif
+
+	git commit -a -m "\"$(COMMIT_MSG) $(MAVEN_VERSION)\""
 
 push:
 	git push
+
+push_tags:
 	git push --tags
 
-checkout:
-
-ifndef TAG
-	$(error TAG is not set)
-endif
-
-	git checkout $(TAG)
+detach:
+	git checkout --detach
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
