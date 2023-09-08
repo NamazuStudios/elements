@@ -19,8 +19,8 @@ import java.util.Date;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.Sort.descending;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.String.format;
 
 public class MongoDeploymentDao implements DeploymentDao {
