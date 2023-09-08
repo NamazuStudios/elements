@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>2.0.25-SNAPSHOT</version>
+        <version>2.0.25</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-jackson-guice</artifactId>
-    <version>2.0.25-SNAPSHOT</version>
+    <version>2.0.25</version>
     <name>rt-jackson-guice</name>
 
     <dependencies>
