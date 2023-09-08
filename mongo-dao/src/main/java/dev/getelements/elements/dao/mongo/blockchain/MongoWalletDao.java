@@ -30,9 +30,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.filters.Filters.in;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.in;
+import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.util.stream.Collectors.toList;
 
 

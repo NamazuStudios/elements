@@ -10,7 +10,7 @@ import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.match.Match;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
 import dev.getelements.elements.model.profile.Profile;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.bson.types.ObjectId;
 import dev.morphia.Datastore;
 import org.slf4j.Logger;

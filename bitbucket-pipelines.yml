@@ -21,6 +21,23 @@ definitions:
       image: docker:dind
 
 pipelines:
+  tags:
+    "*":
+      - step:
+          size: 4x
+          name: Build Tags
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - echo "Executing Release Build"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make git
+            - make build
+            - make docker
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
   branches:
     "release/*":
       - step:
@@ -34,9 +51,7 @@ pipelines:
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make git
             - make release
-            - make commit tag push
-            - make build
-            - make docker
+            - make COMMIT_MSG="Release:" detach commit tag push_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -52,49 +67,11 @@ pipelines:
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make git
             - make patch
-            - make commit tag push
-            - make build
-            - make docker
-          after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
-  custom:
-    master_version:
-      - variables:
-          - name: Version
-          - name: Branch
-            default: master
-      - step:
-          size: 4x
-          name: Set master Branch Version
-          runs-on:
-            - "linux"
-            - "self.hosted"
-          script:
-            - echo "Setting master branch to $Version"
-            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make git
-            - make checkout TAG=$Branch
-            - make version VERSION=$Version
-            - make commit tag push
-          after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
-    tag:
-      - variables:
-          - name: Tag
-      - step:
-          size: 2x
-          name: Build and Test
-          runs-on:
-            - "linux"
-            - "self.hosted"
-          script:
-            - echo "Executing Tag Build for $Tag"
-            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make git checkout TAG=$Tag
-            - make build
-            - make docker
+            - make COMMIT_MSG="Snapshot:" detach commit tag
+            - make BRANCH=$BITBUCKET_BRANCH checkout
+            - make patch
+            - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
+            - make push push_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -107,8 +84,6 @@ pipelines:
           - "self.hosted"
         caches:
           - maven
-        services:
-          - docker
         script:
           - echo "Running Default Build."
           - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
