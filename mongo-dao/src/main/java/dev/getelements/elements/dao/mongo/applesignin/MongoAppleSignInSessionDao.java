@@ -13,7 +13,7 @@ import dev.getelements.elements.model.session.AppleSignInSession;
 import dev.getelements.elements.model.session.AppleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.util.ValidationHelper;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;

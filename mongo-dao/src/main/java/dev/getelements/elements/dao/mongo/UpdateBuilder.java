@@ -6,7 +6,7 @@ import dev.morphia.UpdateOptions;
 import dev.morphia.query.Modify;
 import dev.morphia.query.Query;
 import dev.morphia.query.Update;
-import dev.morphia.query.experimental.updates.UpdateOperator;
+import dev.morphia.query.updates.UpdateOperator;
 
 import java.util.ArrayList;
 import java.util.List;
