@@ -20,7 +20,7 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
@@ -33,9 +33,9 @@ import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 

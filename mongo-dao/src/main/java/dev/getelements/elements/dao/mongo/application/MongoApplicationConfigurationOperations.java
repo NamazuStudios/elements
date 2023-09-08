@@ -21,9 +21,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.and;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.filters.Filters.and;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.set;
 
 /**
  * This encapsulates the basic operations for handling the types derived from {@link MongoApplicationConfiguration}

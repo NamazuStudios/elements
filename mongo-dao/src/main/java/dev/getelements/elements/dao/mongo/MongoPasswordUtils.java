@@ -15,8 +15,8 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
+import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.setOnInsert;
 
 /**
  * Created by patricktwohig on 6/25/17.

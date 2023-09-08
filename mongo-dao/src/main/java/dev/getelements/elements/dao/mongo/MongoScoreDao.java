@@ -11,7 +11,7 @@ import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -19,7 +19,7 @@ import java.sql.Timestamp;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.model.leaderboard.Leaderboard.TimeStrategyType.EPOCHAL;
-import static dev.morphia.query.experimental.updates.UpdateOperators.*;
+import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoScoreDao implements ScoreDao {

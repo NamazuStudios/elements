@@ -15,7 +15,7 @@ import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
