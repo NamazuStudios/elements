@@ -51,7 +51,7 @@ pipelines:
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make git
             - make release
-            - make COMMIT_MSG="Release" detach commit tag push_tags
+            - make COMMIT_MSG="Release:" detach commit tag push_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -67,8 +67,11 @@ pipelines:
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
             - make git
             - make patch
-            - make COMMIT_MSG="[ci skip] Next Version" commit push
-            - make COMMIT_MSG="Snapshot" detach commit tag push_tags
+            - make COMMIT_MSG="Snapshot:" detach commit tag
+            - make BRANCH=$BITBUCKET_BRANCH checkout
+            - make patch
+            - make COMMIT_MSG="[ci skip] Setting Next Version:" checkout commit
+            - make push push_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0

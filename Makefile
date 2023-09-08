@@ -76,6 +76,14 @@ push_tags:
 detach:
 	git checkout --detach
 
+checkout:
+
+ifndef BRANCH
+	$(error BRANCH is not set)
+endif
+
+	git checkout $(BRANCH)
+
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
 	- git submodule foreach git checkout .
