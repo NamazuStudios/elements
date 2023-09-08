@@ -13,7 +13,7 @@ import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
@@ -21,8 +21,8 @@ import javax.inject.Inject;
 import java.util.stream.Stream;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 

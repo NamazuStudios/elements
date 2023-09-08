@@ -14,7 +14,7 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
@@ -25,7 +25,7 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoLeaderboardDao implements LeaderboardDao {
 

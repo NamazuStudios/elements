@@ -158,7 +158,7 @@ public class MongoApplicationDao implements ApplicationDao {
                 set("description", nullToEmpty(application.getDescription()).trim()),
                 set("attributes", application.getAttributes()),
                 set("active", true)
-                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoApplication == null) {

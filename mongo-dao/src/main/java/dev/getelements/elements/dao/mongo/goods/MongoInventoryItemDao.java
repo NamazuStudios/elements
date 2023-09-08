@@ -33,8 +33,8 @@ import javax.inject.Inject;
 
 import static dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
 import static dev.getelements.elements.model.goods.ItemCategory.FUNGIBLE;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
 

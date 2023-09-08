@@ -15,7 +15,7 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
-import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.eq;
 import static java.lang.String.format;
 
 public class MongoFollowerDao implements FollowerDao {

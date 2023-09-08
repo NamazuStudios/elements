@@ -33,8 +33,8 @@ import java.sql.Timestamp;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.dao.mongo.model.MongoSession.Type.STANDARD_ELEMENTS;
-import static dev.morphia.query.experimental.filters.Filters.*;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoSessionDao implements SessionDao {
