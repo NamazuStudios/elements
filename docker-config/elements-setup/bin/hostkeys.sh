@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-echo 'y' | ssh-keygen -f "$ELEMENTS_CONF/ssh_host_rsa_key" -N '' -t rsa
-echo 'y' | ssh-keygen -f "$ELEMENTS_CONF/ssh_host_dsa_key" -N '' -t dsa
-echo 'y' | ssh-keygen -f "$ELEMENTS_CONF/ssh_host_ecdsa_key" -N '' -t ecdsa -b 521
+sshd_conf_dir="${ELEMENTS_CONF}/sshd"
 
-chmod go-rwx "$ELEMENTS_CONF/ssh_host_rsa_key"
-chmod go-rwx "$ELEMENTS_CONF/ssh_host_dsa_key"
-chmod go-rwx "$ELEMENTS_CONF/ssh_host_ecdsa_key"
+echo 'y' | ssh-keygen -f "${sshd_conf_dir}/ssh_host_rsa_key" -N '' -t rsa
+echo 'y' | ssh-keygen -f "${sshd_conf_dir}/ssh_host_dsa_key" -N '' -t dsa
+echo 'y' | ssh-keygen -f "${sshd_conf_dir}/ssh_host_ecdsa_key" -N '' -t ecdsa -b 521
+
+chmod go-rwx "${sshd_conf_dir}/ssh_host_rsa_key"
+chmod go-rwx "${sshd_conf_dir}/ssh_host_dsa_key"
+chmod go-rwx "${sshd_conf_dir}/ssh_host_ecdsa_key"
