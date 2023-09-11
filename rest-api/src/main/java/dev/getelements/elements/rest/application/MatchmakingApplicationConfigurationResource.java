@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.model.application.MatchmakingApplicationConfiguration;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.MatchmakingApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -10,8 +11,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Matchmaking Application Configuration",
         description = "These operations manage any variety of client side applications which " +
                 "may be communicating with the server.  This stores minimal information " +
@@ -19,7 +18,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
                 "profiles.  Application metadata is typically used for client side apps to determine " +
                 "the latest version or to resolve any compatiblity issues.  This can also be used to " +
                 "perform force upgrades.",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/matchmaking")
 public class MatchmakingApplicationConfigurationResource {
 

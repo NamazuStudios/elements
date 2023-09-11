@@ -7,6 +7,7 @@ import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.user.UserCreateRequest;
 import dev.getelements.elements.model.user.UserCreateResponse;
 import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.UserService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -19,7 +20,6 @@ import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -27,7 +27,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("user")
 public class UserResource {
 

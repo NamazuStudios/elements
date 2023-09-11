@@ -3,7 +3,7 @@ package dev.getelements.elements.rest.security;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.model.session.AppleSignInSessionCreation;
 import dev.getelements.elements.model.session.AppleSignInSessionRequest;
-import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.AppleSignInAuthService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -18,13 +18,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Created by patricktwohig on 4/2/15.
  */
 @Api(value = "AppleSignInSession",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("applesignin_session")
 public class AppleSignInAuthResource {
 

@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.mission;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.Mission;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.mission.MissionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -13,17 +14,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import java.util.List;
-import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 
 @Path("mission")
 @Api(value = "Missions",
         description = "Manages missions and steps",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Produces(MediaType.APPLICATION_JSON)
 public class MissionResource {
 

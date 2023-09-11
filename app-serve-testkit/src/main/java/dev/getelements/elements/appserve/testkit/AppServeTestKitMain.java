@@ -4,6 +4,7 @@ import dev.getelements.elements.appserve.guice.AppServeServicesModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
 import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
@@ -55,6 +56,7 @@ public class AppServeTestKitMain {
             if (optionSet.valueOf(integration)) {
 
                 testKitMain.addModule(new MongoCoreModule())
+                           .addModule(new MongoGridFSLargeObjectBucketModule())
                            .addModule(new AppServeServicesModule())
                            .addModule(new MongoDaoModule())
                            .addModule(new ValidationModule())

@@ -35,7 +35,9 @@ public class AppNodeSecurityModule extends PrivateModule {
 
         bind(Session.class).toProvider(SessionProvider.class);
         bind(User.class).toProvider(UserProvider.class).in(RequestScope.getInstance());
+
         bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
+        bind(new TypeLiteral<Optional<Profile>>(){}).toProvider(ProfileOptionalSupplier.class);
 
 
         var optionalSessionKey = Key.get(new TypeLiteral<Optional<Session>>(){});
@@ -49,6 +51,7 @@ public class AppNodeSecurityModule extends PrivateModule {
         expose(Session.class);
         expose(optionalSessionKey);
         expose(new TypeLiteral<Supplier<Profile>>(){});
+        expose(new TypeLiteral<Optional<Profile>>(){});
 
     }
 

@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.model.application.FirebaseApplicationConfiguration;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.FirebaseApplicationConfigurationService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -13,12 +14,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(
     value = "Firebase Application Configuration",
     description = "Operations for the management of ApplictionConfigurations for Firebase Applications.",
-    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/firebase")
 public class FirebaseApplicationConfigurationResource {
 

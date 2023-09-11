@@ -3,7 +3,7 @@ package dev.getelements.elements.rest.leaderboard;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.LeaderboardService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -15,13 +15,12 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Api(value = "Leaderboards",
      description = "Allows for the manipulation of the leaderboard metadata.  This allows admin users to implement new" +
                    "add/remove or disable leaderboards in the system.   Regular users may have limited access to read " +
                    "leaderboard metadata.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("leaderboard")
 public class LeaderboardResource {
 

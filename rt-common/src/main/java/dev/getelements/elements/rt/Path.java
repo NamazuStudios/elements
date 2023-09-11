@@ -419,11 +419,32 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     }
 
+    /**
+     * Returns a Path which will have the context specified. If this Path does not have any context, then this will
+     * return a new Path with the context.
+     *
+     * @param context the context
+     * @return the Path, or this if the context mathces
+     * @throws IllegalArgumentException if the context mismatches
+     */
     public Path toPathWithContext(final String context) {
         if (this.context == null || this.context.equals(context)) {
             return new Path(context, components);
         } else {
             throw new IllegalArgumentException("Context mismatch.");
+        }
+    }
+
+    /**
+     * Returns a Path without any context.
+     *
+     * @return the Path with no context
+     */
+    public Path toPathWithoutContext() {
+        if (this.context == null) {
+            return this;
+        } else {
+            return new Path(null, components);
         }
     }
 
@@ -510,7 +531,8 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         return Objects.hash(getContext(), getComponents(), maxCompareIndex, isWildcard());
     }
 
-    public static final class ContextAndComponents {
+    private static final class ContextAndComponents {
+
         private final String context;
         private final List<String> components;
 
@@ -617,7 +639,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
         private static Pattern SPLIT_PATTERN = Pattern.compile(PATH_SEPARATOR + "+");
 
-        private static Pattern CONTEXT_SPLIT_PATTERN = Pattern.compile(CONTEXT_SEPARATOR + "+");
+        private static Pattern CONTEXT_SPLIT_PATTERN = Pattern.compile(Pattern.quote(CONTEXT_SEPARATOR));
 
         /**
          * Gets the context from a path string, if it exists. Namely, it will return the string segment from the

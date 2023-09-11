@@ -1,7 +1,8 @@
-package dev.getelements.elements.rest.swagger;
+package dev.getelements.elements.rest.jersey.swagger;
 
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.Headers;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.ApplicationService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.Info;
@@ -43,7 +44,7 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
                               "POST /facebook_session endpoints in the API. " +
                               "Authorization: Bearer {SessionSecret}",
                 in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-                key = EnhancedApiListingResource.AUTH_BEARER
+                key = AuthSchemes.AUTH_BEARER
             ),
             @ApiKeyAuthDefinition(
                 name = SESSION_SECRET,
@@ -53,25 +54,17 @@ import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
                               "session.  The full format is as follows: " +
                               "Elements-SessionSecret: {SessionSecret} [p{ProfileId}]",
                 in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-                key = EnhancedApiListingResource.SESSION_SECRET),
+                key = AuthSchemes.SESSION_SECRET),
             @ApiKeyAuthDefinition(
                 name = SOCIALENGINE_SESSION_SECRET,
                 description = "Functionally Identical to using Elements-SessionSecret.  Provided for backwards " +
                               "compatibility from before Elements had an identity crisis.  Deprecated.",
                 in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-                key = EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET)
+                key = AuthSchemes.SOCIALENGINE_SESSION_SECRET)
         }
     )
 )
 public class EnhancedApiListingResource extends ApiListingResource {
-
-    public static final String PROFILE_ID = "profile_id";
-
-    public static final String AUTH_BEARER = "auth_bearer";
-
-    public static final String SESSION_SECRET = "session_secret";
-
-    public static final String SOCIALENGINE_SESSION_SECRET = "socialengine_session_secret";
 
     private URI apiOutsideUrl;
 
@@ -117,7 +110,7 @@ public class EnhancedApiListingResource extends ApiListingResource {
     private void appendHeaderInformation(final Swagger swagger) {
         final HeaderParameter profileId = new HeaderParameter();
         profileId.setName(Headers.PROFILE_ID);
-        swagger.addParameter(PROFILE_ID, profileId);
+        swagger.addParameter(AuthSchemes.PROFILE_ID, profileId);
     }
 
     public URI getApiOutsideUrl() {

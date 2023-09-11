@@ -5,6 +5,7 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.guice.ClasspathAssetLoaderModule;
@@ -48,6 +49,7 @@ public class XodusIntegrationTestModule extends AbstractIntegrationTestModule {
                     modules.add(new LuaModule());
                     modules.add(new ValidationModule());
                     modules.add(new MongoCoreModule());
+                    modules.add(new MongoGridFSLargeObjectBucketModule());
                     modules.add(new MongoDaoModule());
                     modules.add(new FirebaseAppFactoryModule());
                     modules.add(new ClasspathAssetLoaderModule().withDefaultPackageRoot());

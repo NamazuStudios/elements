@@ -10,6 +10,7 @@ import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.jetty.ElementsCoreModule;
@@ -20,9 +21,11 @@ import dev.getelements.elements.rt.guice.ClasspathAssetLoaderModule;
 import dev.getelements.elements.rt.guice.ResourceScope;
 import dev.getelements.elements.rt.lua.guice.LuaModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
+import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.RedissonServicesModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
+import dev.getelements.elements.service.largeobject.LargeObjectServiceProvider;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.getelements.elements.test.JeroMQEmbeddedTestService;
 import redis.embedded.RedisServer;
@@ -139,7 +142,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         properties.remove(RESOURCE_ENVIRONMENT_PATH);
         properties.remove(SCHEDULER_ENVIRONMENT_PATH);
-
+        
         final var facebookPermissionSupplier = new FacebookBuiltinPermissionsSupplier();
 
         return new JeroMQEmbeddedTestService()
@@ -149,6 +152,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                     modules.add(new ValidationModule());
                     modules.add(new MongoCoreModule());
                     modules.add(new MongoDaoModule());
+                    modules.add(new MongoGridFSLargeObjectBucketModule());
                     modules.add(new FirebaseAppFactoryModule());
                     modules.add(new AppNodeServicesModule());
                     modules.add(new ClasspathAssetLoaderModule().withDefaultPackageRoot());

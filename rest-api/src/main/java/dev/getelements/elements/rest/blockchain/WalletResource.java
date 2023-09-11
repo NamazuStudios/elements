@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.blockchain;
 
 import com.google.common.base.Strings;
 import dev.getelements.elements.model.blockchain.wallet.Wallet;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.WalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,14 +15,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Blockchain Wallets",
         description =
                 "Allows for the storage and retrieval blockchain wallets. This is part of the Omni API, which " +
                 "provides access to all support blockchains.",
         authorizations = {
-            @Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+            @Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("blockchain/omni/wallet")
 public class WalletResource {
 

@@ -1,5 +1,6 @@
 package dev.getelements.elements.service;
 
+import java.util.Optional;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
@@ -94,6 +95,12 @@ public interface ProfileService {
      * @return the {@link Profile}, or null, if no profile is found.
      */
     Profile getCurrentProfile();
+
+    /**
+     * Finds the currently active profile, if any.
+     * @return an {@link Optional<Profile>}
+     */
+    Optional<Profile> findCurrentProfile();
 
     /**
      * Updates the supplied {@link Profile}.  The {@link Profile#getId()} method is

@@ -1,7 +1,7 @@
 package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.model.application.PSNApplicationConfiguration;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.PSNApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -11,8 +11,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 /**
  * Handles the management of {@link PSNApplicationConfiguration} instances.
  *
@@ -20,7 +18,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
  */
 @Api(value = "PSN Application Configurations",
     description = "Operations for the management of ApplictionConfigurations for the Playstation Network.",
-    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/psn")
 public class PSNApplicationConfigurationResource {
 

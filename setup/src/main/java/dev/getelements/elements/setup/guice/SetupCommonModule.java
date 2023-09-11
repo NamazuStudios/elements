@@ -5,6 +5,7 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.service.BuildPropertiesVersionService;
@@ -28,6 +29,7 @@ public class  SetupCommonModule extends AbstractModule {
         install(new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier));
         install(new MongoCoreModule());
         install(new MongoDaoModule());
+        install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
 
         // Build properties.

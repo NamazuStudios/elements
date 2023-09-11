@@ -6,6 +6,7 @@ import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.model.blockchain.wallet.CreateWalletRequest;
 import dev.getelements.elements.model.blockchain.wallet.UpdateWalletRequest;
 import dev.getelements.elements.model.blockchain.wallet.Wallet;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.WalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -18,16 +19,15 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 import static com.google.common.base.Strings.emptyToNull;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Api(value = "Blockchain Vaults",
         description =
                 "Allows for the storage and retrieval blockchain vaults. This is part of the Omni API, which " +
                 "provides access to all supported blockchains.",
         authorizations = {
-                @Authorization(AUTH_BEARER),
-                @Authorization(SESSION_SECRET),
-                @Authorization(SOCIALENGINE_SESSION_SECRET)
+                @Authorization(AuthSchemes.AUTH_BEARER),
+                @Authorization(AuthSchemes.SESSION_SECRET),
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
         })
 @Path("blockchain/omni/vault/{vaultId}/wallet")
 public class VaultWalletResource {

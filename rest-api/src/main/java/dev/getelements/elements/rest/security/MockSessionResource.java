@@ -2,7 +2,7 @@ package dev.getelements.elements.rest.security;
 
 import dev.getelements.elements.model.session.MockSessionCreation;
 import dev.getelements.elements.model.session.MockSessionRequest;
-import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.MockSessionService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -16,13 +16,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Mock Sessions",
      description = "Creates mock sessions for running tests against the server.  This will generate valid sessions, " +
                    "profiles, and users which can be used for testing.  The system may opt to delete or destroy test " +
                    "users automatically after they have been generated.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("mock_session")
 public class MockSessionResource {
 

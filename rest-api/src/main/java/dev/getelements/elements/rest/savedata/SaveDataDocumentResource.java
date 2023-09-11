@@ -5,6 +5,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.savedata.CreateSaveDataDocumentRequest;
 import dev.getelements.elements.model.savedata.SaveDataDocument;
 import dev.getelements.elements.model.savedata.UpdateSaveDataDocumentRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.SaveDataDocumentService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -16,7 +17,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Api(value = "Save Data",
         description = "Save Data Documents allow the client to save private data for the application on a per user " +
@@ -24,7 +24,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
                       "The API will always pass the data through as a string with no validation. The size of the " +
                       "document is limited to around 4MiB as per database limitations. It is not recommended to store " +
                       "large amounts of data in this API.",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("save_data")
 public class SaveDataDocumentResource {
 

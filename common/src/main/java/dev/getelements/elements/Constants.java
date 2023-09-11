@@ -52,7 +52,10 @@ public interface Constants {
      */
     String DEFAULT_PROPERTIES_FILE = "elements.properties";
 
-    String APP_OUTSIDE_URL = "dev.getelements.elements.api.url";
+    /**
+     * The root APP outside URL
+     */
+    String APP_OUTSIDE_URL = "dev.getelements.elements.app.url";
 
     /**
      * The web API root.  This is the full outside URL of the API endpoint.
@@ -63,6 +66,11 @@ public interface Constants {
      * The web API root.  This is the full outside URL of the API endpoint.
      */
     String DOC_OUTSIDE_URL = "dev.getelements.elements.doc.url";
+
+    /**
+     * Gets the outside CDN url
+     */
+    String CDN_OUTSIDE_URL = "dev.getelements.elements.api.url";
 
     /**
      * The allowed CORS origins for the request.

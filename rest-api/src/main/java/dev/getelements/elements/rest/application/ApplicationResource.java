@@ -2,11 +2,11 @@ package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.model.application.CreateApplicationRequest;
 import dev.getelements.elements.model.application.UpdateApplicationRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
 import dev.getelements.elements.service.ApplicationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,7 +17,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Created by patricktwohig on 7/9/15.
@@ -29,7 +28,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
                    "profiles.  Application metadata is typically used for client side apps to determine " +
                    "the latest version or to resolve any compatibility issues.  This can also be used to " +
                    "perform force upgrades.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("application")
 public class ApplicationResource {
 
