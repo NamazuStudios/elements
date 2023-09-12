@@ -28,7 +28,7 @@ public class SslCliMongoTestInstance extends CliMongoTestInstance {
         final var certificates = new MongoTestSslCertificates();
 
         final var directory = certificates.getDirectory();
-        final var permissions = PosixFilePermissions.fromString("rw-r-xr-x");
+        final var permissions = PosixFilePermissions.fromString("rwxr-xr-x");
         setPosixFilePermissions(directory, permissions);
 
         return new ProcessBuilder()
