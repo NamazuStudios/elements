@@ -12,7 +12,6 @@ import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -62,7 +61,7 @@ public class UserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) throws IOException {
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) {
         throw new ForbiddenException("User not allowed to create");
     }
 
