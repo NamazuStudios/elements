@@ -12,6 +12,8 @@ import dev.getelements.elements.service.blockchain.invoke.SuperUserSmartContract
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import static dev.getelements.elements.service.NearSmartContractInvocationService.Invoker.DEFAULT_GAS_LIMIT;
+
 
 public class SuperUserNearSmartContractInvocationService
         extends SuperUserSmartContractInvocationService<NearInvocationScope, NearSmartContractInvocationService.Invoker>
@@ -30,6 +32,7 @@ public class SuperUserNearSmartContractInvocationService
     @Override
     protected NearInvocationScope newInvocationScope() {
         final var scope = new NearInvocationScope();
+        scope.setGasLimit(DEFAULT_GAS_LIMIT);
         return scope;
     }
 

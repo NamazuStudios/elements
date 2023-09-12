@@ -2,17 +2,18 @@ package dev.getelements.elements.service.blockchain.invoke.near;
 
 import dev.getelements.elements.service.blockchain.invoke.InvocationScope;
 
+import java.math.BigInteger;
 import java.util.Objects;
 
 public class NearInvocationScope extends InvocationScope {
 
-    private long gasLimit;
+    private BigInteger gasLimit;
 
-    public long getGasLimit() {
+    public BigInteger getGasLimit() {
         return gasLimit;
     }
 
-    public void setGasLimit(long gasLimit) {
+    public void setGasLimit(BigInteger gasLimit) {
         this.gasLimit = gasLimit;
     }
 
