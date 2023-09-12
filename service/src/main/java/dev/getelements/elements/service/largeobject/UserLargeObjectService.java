@@ -3,6 +3,7 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.ForbiddenException;
+import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
@@ -10,6 +11,8 @@ import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,6 +27,8 @@ public class UserLargeObjectService implements LargeObjectService {
     private LargeObjectAccessUtils largeObjectAccessUtils;
 
     private ValidationHelper validationHelper;
+
+    private Client client;
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
@@ -47,15 +52,17 @@ public class UserLargeObjectService implements LargeObjectService {
 
         largeObject.setMimeType(objectRequest.getMimeType());
 
-        // TODO: verify if update accessPermissions makes any sense
-        // TODO: No. Not at this point in time. We can address this later if requirements dictate.
-
         return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
 
     }
 
     @Override
     public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
+        throw new ForbiddenException("User not allowed to create");
+    }
+
+    @Override
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) throws IOException {
         throw new ForbiddenException("User not allowed to create");
     }
 
@@ -129,6 +136,15 @@ public class UserLargeObjectService implements LargeObjectService {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    @Inject
+    public void setClient(Client client) {
+        this.client = client;
     }
 
 }

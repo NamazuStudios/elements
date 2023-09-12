@@ -8,6 +8,8 @@ import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,6 +24,8 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     private LargeObjectBucket largeObjectBucket;
 
     private LargeObjectAccessUtils largeObjectAccessUtils;
+
+    private Client client;
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
@@ -48,20 +52,29 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
+    public LargeObject createLargeObject(final CreateLargeObjectRequest createRequest) {
 
-        getValidationHelper().validateModel(createLargeObjectRequest);
+        getValidationHelper().validateModel(createRequest);
         final var largeObject = new LargeObject();
         AccessPermissions accessPermissions = getLargeObjectAccessUtils().createAccessPermissions(
-                createLargeObjectRequest.getRead(),
-                createLargeObjectRequest.getWrite(),
-                createLargeObjectRequest.getDelete());
+                createRequest.getRead(),
+                createRequest.getWrite(),
+                createRequest.getDelete());
 
-        largeObject.setMimeType(createLargeObjectRequest.getMimeType());
+        largeObject.setMimeType(createRequest.getMimeType());
         largeObject.setAccessPermissions(accessPermissions);
-        largeObject.setPath(getLargeObjectAccessUtils().assignAutomaticPath(createLargeObjectRequest.getMimeType()));
+        largeObject.setPath(getLargeObjectAccessUtils().assignAutomaticPath(createRequest.getMimeType()));
 
         return getLargeObjectAccessUtils().setCdnUrlToObject(getLargeObjectDao().createLargeObject(largeObject));
+    }
+
+    @Override
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) throws IOException {
+
+        getValidationHelper().validateModel(createRequest);
+        WebTarget target = client.target(createRequest.getFileUrl());
+        InputStream is = target.request().get().readEntity(InputStream.class);
+        return createLargeObject(createRequest, is);
     }
 
     @Override
@@ -74,7 +87,6 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         }
 
         largeObjectDao.deleteLargeObject(objectId);
-
     }
 
     @Override
@@ -86,8 +98,6 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
         return getLargeObjectBucket().writeObject(objectId);
     }
-
-
 
     public LargeObjectDao getLargeObjectDao() {
         return largeObjectDao;
@@ -124,5 +134,13 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
     }
-    
+
+    public Client getClient() {
+        return client;
+    }
+
+    @Inject
+    public void setClient(Client client) {
+        this.client = client;
+    }
 }

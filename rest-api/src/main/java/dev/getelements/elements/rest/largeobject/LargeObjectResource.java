@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest.largeobject;
 
 import dev.getelements.elements.exception.InternalException;
+import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
@@ -36,6 +37,15 @@ public class LargeObjectResource {
     @ApiOperation(value = "Creates a LargeObject")
     public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
         return getLargeObjectService().createLargeObject(createLargeObjectRequest);
+    }
+
+    @POST
+    @Path("from_url")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Creates a LargeObject from provided URL")
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) throws IOException {
+        return getLargeObjectService().createLargeObjectFromUrl(createRequest);
     }
 
     @PUT

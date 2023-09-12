@@ -3,6 +3,7 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.ForbiddenException;
+import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
@@ -34,6 +35,11 @@ public class AnonLargeObjectService implements LargeObjectService {
 
     @Override
     public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
+        throw new ForbiddenException();
+    }
+
+    @Override
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) {
         throw new ForbiddenException();
     }
 
