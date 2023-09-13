@@ -55,6 +55,7 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
         final var sslEnabled = connectString.getSslEnabled();
 
         if (sslEnabled == null || !sslEnabled) {
+            logger.info("TLS/SSL Is not Enabled. Please explicitly enable it in the connect string.");
             return SslSettings.builder().enabled(false).build();
         }
 
@@ -85,6 +86,7 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
                     .context(sslContext)
                     .applyConnectionString(connectString);
 
+            logger.info("Enabled TLS/SSL.");
             return settings.build();
 
         } catch (IOException |
