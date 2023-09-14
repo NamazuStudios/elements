@@ -177,7 +177,7 @@ public class TestNearSmartContractInvocationService {
                 .open()
                 .call(contractAddress, methodName, params);
 
-        logger.info("Result: " + response.getResult().toString() + "\n" +
+        logger.info("Result: " + new String(response.getResult()) + "\n" +
                 "Logs: " + response.getLogs().toString() + "\n" +
                 "Error: " + response.getError());
 
