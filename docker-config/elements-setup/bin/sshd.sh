@@ -10,7 +10,7 @@ then
   exit 1
 fi
 
-sshd_conf_dir="${ELEMENTS_CONF}/sshd"
+sshd_conf_dir="${ELEMENTS_CONF}"
 
 ssh_host_rsa_key="${sshd_conf_dir}/ssh_host_rsa_key"
 ssh_host_dsa_key="${sshd_conf_dir}/ssh_host_dsa_key"
