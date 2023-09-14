@@ -6,6 +6,7 @@ import dev.getelements.elements.model.inventory.CreateSimpleInventoryItemRequest
 import dev.getelements.elements.model.inventory.InventoryItem;
 import dev.getelements.elements.model.inventory.SimpleInventoryItemQuantityAdjustment;
 import dev.getelements.elements.model.inventory.UpdateInventoryItemRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.inventory.SimpleInventoryItemService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -17,7 +18,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("inventory/simple")
 @Api(value = "Inventory",
@@ -25,9 +25,9 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
                   "item stack is placed in the zero priority slot.  This simplifies the manipulation of the " +
                   "inventory greatly as the items can be referenced by the item name or ID.",
     authorizations = {
-        @Authorization(AUTH_BEARER),
-        @Authorization(SESSION_SECRET),
-        @Authorization(SOCIALENGINE_SESSION_SECRET)
+        @Authorization(AuthSchemes.AUTH_BEARER),
+        @Authorization(AuthSchemes.SESSION_SECRET),
+        @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
     }
 )
 @Produces(MediaType.APPLICATION_JSON)

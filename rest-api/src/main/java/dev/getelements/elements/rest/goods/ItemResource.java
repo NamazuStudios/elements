@@ -3,8 +3,8 @@ package dev.getelements.elements.rest.goods;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.goods.CreateItemRequest;
 import dev.getelements.elements.model.goods.Item;
-import dev.getelements.elements.model.goods.ItemCategory;
 import dev.getelements.elements.model.goods.UpdateItemRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.ItemService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -23,15 +23,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import java.util.List;
-import java.util.Set;
-
-import static dev.getelements.elements.model.goods.ItemCategory.FUNGIBLE;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("item")
 @Api(value = "Items",
     description = "Manages items, also known as digital goods",
-    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Produces(MediaType.APPLICATION_JSON)
 public class ItemResource {
 

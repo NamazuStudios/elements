@@ -18,6 +18,7 @@ import dev.getelements.elements.service.formidium.SuperuserFormidiumService;
 import dev.getelements.elements.service.goods.SuperuserItemService;
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
 import dev.getelements.elements.service.inventory.*;
+import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.SuperUserLeaderboardService;
 import dev.getelements.elements.service.mission.MissionService;
 import dev.getelements.elements.service.mission.SuperUserMissionService;
@@ -207,6 +208,11 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(NearSmartContractInvocationService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserNearSmartContractInvocationService.class);
+        
+        bind(LargeObjectService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserLargeObjectService.class);
+
     }
 
 }

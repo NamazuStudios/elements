@@ -1,7 +1,6 @@
 package dev.getelements.elements.service.profile;
 
 
-import com.google.common.base.Strings;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.InvalidDataException;
@@ -16,7 +15,6 @@ import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.EventContext;
 import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
-import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.service.UserService;
 import org.slf4j.Logger;
@@ -26,6 +24,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -48,6 +47,8 @@ public class UserProfileService implements ProfileService {
     private Context.Factory contextFactory;
 
     private Supplier<Profile> currentProfileSupplier;
+
+    private Optional<Profile> currentProfileOptional;
 
     private Provider<Attributes> attributesProvider;
 
@@ -96,6 +97,11 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile getCurrentProfile() {
         return getCurrentProfileSupplier().get();
+    }
+
+    @Override
+    public Optional<Profile> findCurrentProfile() {
+        return getCurrentProfileOptional();
     }
 
     @Override
@@ -206,6 +212,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setContextFactory(Context.Factory contextFactory) {
         this.contextFactory = contextFactory;
+    }
+
+    public Optional<Profile> getCurrentProfileOptional() {
+        return currentProfileOptional;
+    }
+
+    @Inject
+    public void setCurrentProfileOptional(Optional<Profile> currentProfileOptional) {
+        this.currentProfileOptional = currentProfileOptional;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

@@ -17,23 +17,20 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
+import dev.morphia.query.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.and;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
+import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.updates.UpdateOperators.*;
+import static java.util.regex.Pattern.compile;
 
 /**
  *
@@ -130,7 +127,7 @@ public class MongoProfileDao implements ProfileDao {
             }
 
             query.filter(
-                    Filters.gte("lastLogin", lowerBoundDate)
+                    gte("lastLogin", lowerBoundDate)
             );
         }
 
@@ -187,15 +184,15 @@ public class MongoProfileDao implements ProfileDao {
         userQuery.filter(
             eq("active", true),
             Filters.or(
-                Filters.regex("name").pattern(Pattern.compile(trimmedSearch)),
-                Filters.regex("email").pattern(Pattern.compile(trimmedSearch))
+                regex("name", compile(trimmedSearch)),
+                regex("email", compile(trimmedSearch))
             )
         );
 
         profileQuery.filter(
             eq("active", true),
             Filters.or(
-                Filters.regex("displayName").pattern(Pattern.compile(trimmedSearch)),
+                regex("displayName", compile(trimmedSearch)),
                 Filters.in("user", userQuery.iterator().toList())
             )
         );
@@ -394,8 +391,7 @@ public class MongoProfileDao implements ProfileDao {
         // the profile.
         final var insertMap = new HashMap<String, Object>(Collections.emptyMap());
 
-        insertMap.put("user", user);
-        insertMap.put("application", application);
+        insertMap.put("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         insertMap.put("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
         final var builder = new UpdateBuilder();
@@ -403,8 +399,9 @@ public class MongoProfileDao implements ProfileDao {
         final var mongoProfile = getMongoDBUtils().perform(ds ->
             builder.with(
                 set("active", true),
-                UpdateOperators.setOnInsert(insertMap),
-                set("imageUrl", nullToEmpty(profile.getImageUrl()).trim())
+                set("user", user),
+                set("application", application),
+                setOnInsert(insertMap)
             ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 

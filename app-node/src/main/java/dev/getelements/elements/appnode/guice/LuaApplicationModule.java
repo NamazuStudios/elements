@@ -3,6 +3,7 @@ package dev.getelements.elements.appnode.guice;
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.guice.FileAssetLoaderModule;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
 import dev.getelements.elements.rt.guice.SimpleContextModule;
@@ -42,8 +43,14 @@ public class LuaApplicationModule extends PrivateModule {
 
         final var applicationDaoProvider = getProvider(ApplicationDao.class);
 
+        final var attributes = new SimpleAttributes.Builder()
+                .setAttributes(application.getAttributes())
+                .build();
+
         final var applicationId = application.getId();
+
         bind(Application.class).toProvider(() -> applicationDaoProvider.get().getActiveApplication(applicationId));
+
 
         bind(LocalInvocationDispatcher.class)
             .to(ContextLocalInvocationDispatcher.class)
@@ -53,7 +60,7 @@ public class LuaApplicationModule extends PrivateModule {
             .to(SimpleRemoteInvocationDispatcher.class)
             .asEagerSingleton();
 
-        install(new LuaModule());
+        install(new LuaModule().withAttributes(attributes));
         install(new GuiceIoCResolverModule());
         install(new ContextServicesModule());
         install(new TransactionalResourceServiceModule());

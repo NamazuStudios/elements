@@ -23,6 +23,7 @@ import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptServic
 import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
 import dev.getelements.elements.service.inventory.*;
+import dev.getelements.elements.service.largeobject.LargeObjectServiceProvider;
 import dev.getelements.elements.service.leaderboard.LeaderboardServiceProvider;
 import dev.getelements.elements.service.leaderboard.RankServiceProvider;
 import dev.getelements.elements.service.leaderboard.ScoreServiceProvider;
@@ -240,6 +241,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(NearSmartContractInvocationService.class)
                 .toProvider(NearSmartContractServiceProvider.class)
+                .in(scope);
+
+        bind(LargeObjectService.class)
+                .toProvider(LargeObjectServiceProvider.class)
                 .in(scope);
 
     }

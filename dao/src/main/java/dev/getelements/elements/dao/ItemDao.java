@@ -1,3 +1,4 @@
+
 package dev.getelements.elements.dao;
 
 import dev.getelements.elements.exception.DuplicateException;

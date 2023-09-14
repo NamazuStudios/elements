@@ -17,12 +17,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Apple IAPs",
      description = "A REST interface where Apple IAP receipts are POSTed for the purposes of generating " +
              "RewardIssuances.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("ios")
 public class AppleIapReceiptResource {
 

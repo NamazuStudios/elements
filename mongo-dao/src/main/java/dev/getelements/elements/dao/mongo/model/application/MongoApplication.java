@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.model.application;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -22,6 +23,9 @@ public class MongoApplication {
 
     @Property
     private String description;
+
+    @Property
+    private Map<String, Object> attributes;
 
     @Indexed
     @Property
@@ -73,5 +77,13 @@ public class MongoApplication {
     @Override
     public int hashCode() {
         return Objects.hash(getObjectId(), getName(), getDescription(), isActive());
+    }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 }

@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.mission;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.progress.ProgressService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -11,14 +12,11 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.Set;
-
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("progress")
 @Api(value = "Progress",
         description = "Manages progress",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Produces(MediaType.APPLICATION_JSON)
 public class ProgressResource {
 

@@ -6,6 +6,7 @@ import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.model.blockchain.contract.CreateSmartContractRequest;
 import dev.getelements.elements.model.blockchain.contract.SmartContract;
 import dev.getelements.elements.model.blockchain.contract.UpdateSmartContractRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.SmartContractService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,14 +18,12 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.List;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Smart Contracts",
         description = "Allows for the storage and retrieval of compiled Neo smart contracts.",
         authorizations = {
-                @Authorization(AUTH_BEARER),
-                @Authorization(SESSION_SECRET),
-                @Authorization(SOCIALENGINE_SESSION_SECRET)
+                @Authorization(AuthSchemes.AUTH_BEARER),
+                @Authorization(AuthSchemes.SESSION_SECRET),
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
         }
 )
 @Path("blockchain/omni/smart_contract")

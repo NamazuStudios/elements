@@ -1,7 +1,7 @@
 package dev.getelements.elements.rest.leaderboard;
 
 import dev.getelements.elements.model.leaderboard.Score;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.ScoreService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -13,11 +13,9 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 @Api(value = "Scores",
      description = "Allows players to post new scores to a paricular leaderboard.",
-     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("score")
 public class ScoreResource {
 

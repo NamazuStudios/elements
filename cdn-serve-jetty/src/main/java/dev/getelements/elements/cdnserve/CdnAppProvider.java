@@ -37,7 +37,9 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     public static final String MANAGE_CONTEXT = "/cdn/manage";
 
-    public static final String STATIC_ORIGIN_CONTEXT_FORMAT = "/cdn/content/%s";
+    public static final String OBJECTS_ORIGIN_CONTEXT = "/cdn/object";
+
+    public static final String STATIC_ORIGIN_CONTEXT_FORMAT = "/cdn/static/app/%s";
 
     private String contentDirectory;
 
@@ -69,7 +71,8 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     protected void doStart() {
         startGitApp();
         startManageApp();
-        startCdnApps();
+        startObjectsApp();
+        startStaticApps();
     }
 
     private void startGitApp() {
@@ -121,7 +124,28 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     }
 
-    private void startCdnApps() {
+    private void startObjectsApp() {
+
+        final var injector = getInjector().createChildInjector(
+                new CdnObjectOriginModule(),
+                new StandardServletSecurityModule(),
+                new StandardServletServicesModule(),
+                new StandardServletRedissonServicesModule()
+        );
+
+        final var objectsOriginContext = getHttpContextRoot().normalize(OBJECTS_ORIGIN_CONTEXT);
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
+
+        final var servletContextHandler = new ServletContextHandler();
+        servletContextHandler.setContextPath(objectsOriginContext);
+        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
+
+        final App app = new App(getDeploymentManager(), this, objectsOriginContext, servletContextHandler);
+        getDeploymentManager().addApp(app);
+
+    }
+
+    private void startStaticApps() {
 
         final var applications = getApplicationDao().getActiveApplications();
 

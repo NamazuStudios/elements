@@ -1,8 +1,8 @@
 package dev.getelements.elements.rest.formidium;
 
-import dev.getelements.elements.Headers;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.formidium.FormidiumInvestor;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.formidium.FormidiumService;
 import dev.getelements.elements.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static dev.getelements.elements.Headers.USER_AGENT;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
@@ -26,7 +25,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 @Api(
     value = "Followers",
     description = "Manages follower relationships among profiles.",
-    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)}
+    authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)}
 )
 public class FormidiumResource {
 

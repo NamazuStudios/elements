@@ -2,9 +2,10 @@ package dev.getelements.elements.appserve;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
-
 import com.google.inject.servlet.GuiceFilter;
-import dev.getelements.elements.appserve.guice.*;
+import dev.getelements.elements.appserve.guice.AppServeDispatcherModule;
+import dev.getelements.elements.appserve.guice.AppServeDispatcherServletModule;
+import dev.getelements.elements.appserve.guice.RemoteInvocationDispatcherModule;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.guice.StandardServletRedissonServicesModule;
@@ -15,16 +16,13 @@ import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.guice.FilterModule;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQContextModule;
-import dev.getelements.elements.rt.servlet.DispatcherServlet;
 import dev.getelements.elements.servlet.HttpContextRoot;
-import dev.getelements.elements.servlet.security.*;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +35,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.rt.Context.REMOTE;
-import static java.lang.String.format;
 
 public class AppServeDispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 

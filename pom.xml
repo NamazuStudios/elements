@@ -148,11 +148,12 @@
         <neow3j.version>3.14.0</neow3j.version>
         <web3j.version>4.9.4</web3j.version>
         <solanaj.version>0.0.7</solanaj.version>
-        <morphia.version>2.1.4</morphia.version>
-        <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
+        <morphia.version>2.4.3</morphia.version>
+        <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.5.10</kotlin.version>
         <redisson.version>3.14.1</redisson.version>
+        <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
         <near-java-api.version>0.2.0</near-java-api.version>
     </properties>
 
@@ -588,6 +589,17 @@
                 <groupId>javax.validation</groupId>
                 <artifactId>validation-api</artifactId>
                 <version>${javax.validation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.apis</groupId>
+                <artifactId>google-api-services-androidpublisher</artifactId>
+                <version>${google.android.publisher.api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.media</groupId>
+                <artifactId>jersey-media-multipart</artifactId>
+                <version>${jersey.version}</version>
+                <optional>true</optional>
             </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->

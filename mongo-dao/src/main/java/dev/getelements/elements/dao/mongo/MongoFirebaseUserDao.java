@@ -16,9 +16,9 @@ import javax.inject.Inject;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.*;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
+import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.setOnInsert;
 
 public class MongoFirebaseUserDao implements FirebaseUserDao {
 

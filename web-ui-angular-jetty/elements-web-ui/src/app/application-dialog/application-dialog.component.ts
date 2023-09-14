@@ -1,8 +1,9 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {FormBuilder, Validators} from "@angular/forms";
+import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
+import {ApplicationAttributesComponent} from '../application-attributes/application-attributes.component';
 
 @Component({
   selector: 'app-application-dialog',
@@ -10,6 +11,8 @@ import {AlertService} from '../alert.service';
   styleUrls: ['./application-dialog.component.css']
 })
 export class ApplicationDialogComponent implements OnInit {
+
+  @ViewChild(ApplicationAttributesComponent) attributesCard: ApplicationAttributesComponent;
 
   applicationForm = this.formBuilder.group({
     name: [ this.data.application.name, [Validators.required, Validators.pattern('^[a-zA-Z0-9]+$') ]],
@@ -23,19 +26,22 @@ export class ApplicationDialogComponent implements OnInit {
 
   ngOnInit() {
     this.alertService.getMessage().subscribe((message: any) => {
-      if(message) {
-        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      if (message) {
+        this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
   }
 
-  close(res?: any) {
-    if (!res) {
+  close() {
       this.dialogRef.close();
       return;
-    }
+  }
 
-    this.data.next(res).subscribe(r => {
+  save(toSave?: any) {
+    this.attributesCard.validateAttributes(true);
+    const attributes = this.data.application.attributes;
+    toSave.attributes = attributes ? attributes : {};
+    this.data.next(toSave).subscribe(r => {
       this.dialogRef.close();
       this.data.refresher.refresh();
     }, err => {

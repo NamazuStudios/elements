@@ -2,7 +2,6 @@ package dev.getelements.elements.servlet.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.exception.BaseException;
-import dev.getelements.elements.exception.ErrorCode;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.UnauthorizedException;
 import dev.getelements.elements.model.ErrorResponse;
@@ -22,7 +21,7 @@ import java.util.Optional;
 import static dev.getelements.elements.Headers.BEARER;
 import static dev.getelements.elements.Headers.WWW_AUTHENTICATE;
 import static dev.getelements.elements.exception.ErrorCode.UNKNOWN;
-import static dev.getelements.elements.model.application.Application.APPLICATION_ATTRIUTE;
+import static dev.getelements.elements.model.application.Application.APPLICATION_ATTRIBUTE;
 import static dev.getelements.elements.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static dev.getelements.elements.model.session.Session.SESSION_ATTRIBUTE;
 import static dev.getelements.elements.model.user.User.USER_ATTRIBUTE;
@@ -104,7 +103,7 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         request.setAttribute(SESSION_ATTRIBUTE, session);
         if (user != null) request.setAttribute(USER_ATTRIBUTE, user);
         if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
-        if (application != null) request.setAttribute(APPLICATION_ATTRIUTE, application);
+        if (application != null) request.setAttribute(APPLICATION_ATTRIBUTE, application);
 
     }
 

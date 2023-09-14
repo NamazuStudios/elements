@@ -13,7 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static dev.getelements.elements.rest.AuthSchemes.SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 6/14/17.

@@ -4,6 +4,8 @@ import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.application.CreateApplicationRequest;
+import dev.getelements.elements.model.application.UpdateApplicationRequest;
 import dev.getelements.elements.service.ApplicationService;
 
 import javax.inject.Inject;
@@ -18,7 +20,7 @@ public class AnonApplicationService implements ApplicationService {
     private ApplicationUrls applicationUrls;
 
     @Override
-    public Application createApplication(Application application) {
+    public Application createApplication(CreateApplicationRequest applicationRequest) {
         throw new ForbiddenException();
     }
 
@@ -39,12 +41,12 @@ public class AnonApplicationService implements ApplicationService {
 
     @Override
     public Application getApplication(String nameOrId) {
-        final Application application = getApplicationDao().getActiveApplication(nameOrId);
+        Application application = getApplicationDao().getActiveApplicationWithoutAttributes(nameOrId);
         return getApplicationUrls().addPublicUrls(application);
     }
 
     @Override
-    public Application updateApplication(String nameOrId, Application application) {
+    public Application updateApplication(String nameOrId, UpdateApplicationRequest applicationRequest) {
         throw new ForbiddenException();
     }
 

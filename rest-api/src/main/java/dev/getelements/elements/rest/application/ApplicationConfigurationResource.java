@@ -1,25 +1,22 @@
 package dev.getelements.elements.rest.application;
 
-import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.application.ApplicationConfiguration;
 import dev.getelements.elements.model.application.ProductBundle;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.ApplicationConfigurationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Created by patricktwohig on 7/13/15.
@@ -29,7 +26,7 @@ import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*
                    "application metadata for a particular configuration of deployment.  For example, " +
                    "an application may be deployed on both Android and iOS.  One application profile" +
                    "each for Android and iOS would be required.",
-    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration")
 public class ApplicationConfigurationResource {
 

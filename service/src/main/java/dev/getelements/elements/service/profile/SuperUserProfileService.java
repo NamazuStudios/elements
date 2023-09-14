@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
@@ -43,6 +44,8 @@ public class SuperUserProfileService implements ProfileService {
     private Context.Factory contextFactory;
 
     private NameService nameService;
+
+    private Optional<Profile> currentProfileOptional;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -73,6 +76,11 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public Profile getCurrentProfile() {
         return getCurrentProfileSupplier().get();
+    }
+
+    @Override
+    public Optional<Profile> findCurrentProfile() {
+        return getCurrentProfileOptional();
     }
 
     @Override
@@ -163,6 +171,15 @@ public class SuperUserProfileService implements ProfileService {
     @Inject
     public void setContextFactory(Context.Factory contextFactory) {
         this.contextFactory = contextFactory;
+    }
+
+    public Optional<Profile> getCurrentProfileOptional() {
+        return currentProfileOptional;
+    }
+
+    @Inject
+    public void setCurrentProfileOptional(Optional<Profile> currentProfileOptional) {
+        this.currentProfileOptional = currentProfileOptional;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

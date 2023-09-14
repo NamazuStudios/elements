@@ -6,6 +6,7 @@ import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
+import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
@@ -97,6 +98,7 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         install(new JerseyHttpClientModule());
         install(new MongoTestInstanceModule(mongoPort));
         install(new MongoCoreModule());
+        install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
         install(new IntegrationTestSecurityModule());

@@ -6,6 +6,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.schema.MetadataSpecService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,14 +16,12 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
-
 /**
  * Created by tuantran on 04/12/22.
  */
 @Api(value = "Metadata Specs",
         description = "Allows for the storage and retrieval of Metadata Specs.",
-        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
 @Path("/schema/metadata_spec")
 public class MetadataSpecResource {
 

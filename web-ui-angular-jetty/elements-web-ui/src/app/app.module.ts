@@ -5,7 +5,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LayoutModule } from '@angular/cdk/layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {MatDialogModule} from '@angular/material/dialog';
-import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatFormFieldModule} from '@angular/material/form-field';
 
 import { routing } from './app.routing';
 import { AuthenticationGuard } from './authentication.guard';
@@ -18,17 +18,17 @@ import { LoginComponent } from './login/login.component';
 import { HomeComponent } from './home/home.component';
 import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
 
-import { AuthenticationService } from "./authentication.service";
-import { AlertService } from "./alert.service";
-import {ApiErrorInterceptor} from "./api-error.interceptor";
-import {MaterialModule} from "./material/material.module";
-import {ConfirmationDialogService} from "./confirmation-dialog/confirmation-dialog.service";
-import {ApplicationDialogComponent} from "./application-dialog/application-dialog.component";
+import { AuthenticationService } from './authentication.service';
+import { AlertService } from './alert.service';
+import {ApiErrorInterceptor} from './api-error.interceptor';
+import {MaterialModule} from './material/material.module';
+import {ConfirmationDialogService} from './confirmation-dialog/confirmation-dialog.service';
+import {ApplicationDialogComponent} from './application-dialog/application-dialog.component';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
 import { ApplicationConfigurationsListComponent } from './application-configurations-list/application-configurations-list.component';
 import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog/facebook-application-configuration-dialog.component';
 import { FirebaseApplicationConfigurationDialogComponent } from './firebase-application-configuration-dialog/firebase-application-configuration-dialog.component';
-import {ConfigService} from "./config.service";
+import {ConfigService} from './config.service';
 import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog/matchmaking-application-configuration-dialog.component';
 import { ItemsListComponent } from './items-list/items-list.component';
 import { ItemDialogComponent } from './item-dialog/item-dialog.component';
@@ -100,6 +100,7 @@ import { OmniChainWalletsDialogComponent } from './omni-chain-wallets-dialog/omn
 import { OmniChainWalletsVaultSearchDialogComponent } from './omni-chain-wallets-vault-search-dialog/omni-chain-wallets-vault-search-dialog.component';
 import { OmniChainUserSearchDialogComponent } from './omni-chain-user-search-dialog/omni-chain-user-search-dialog.component';
 import { OmniChainWalletsAccountsDialogComponent } from './omni-chain-wallets-accounts-dialog/omni-chain-wallets-accounts-dialog.component';
+import { ApplicationAttributesComponent } from './application-attributes/application-attributes.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -133,6 +134,7 @@ export function initialize(configService: ConfigService) {
     HomeComponent,
     ConfirmationDialogComponent,
     ApplicationDialogComponent,
+    ApplicationAttributesComponent,
     ItemDialogComponent,
     UserDialogComponent,
     ApplicationConfigurationsListComponent,

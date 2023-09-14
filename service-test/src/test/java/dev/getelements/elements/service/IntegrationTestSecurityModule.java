@@ -5,11 +5,9 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.security.ProfileIdentificationMethod;
-import dev.getelements.elements.security.ProfileSupplierProvider;
-import dev.getelements.elements.security.UserAuthenticationMethod;
-import dev.getelements.elements.security.UserProvider;
+import dev.getelements.elements.security.*;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class IntegrationTestSecurityModule extends AbstractModule {
@@ -18,6 +16,7 @@ public class IntegrationTestSecurityModule extends AbstractModule {
 
         bind(User.class).toProvider(UserProvider.class);
         bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
+        bind(new TypeLiteral<Optional<Profile>>(){}).toProvider(ProfileOptionalSupplier.class);
 
         final Multibinder<UserAuthenticationMethod> userAuthenticationMethodMultibinder;
         userAuthenticationMethodMultibinder = Multibinder.newSetBinder(binder(), UserAuthenticationMethod.class);

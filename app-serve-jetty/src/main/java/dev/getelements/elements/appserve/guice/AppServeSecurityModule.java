@@ -37,11 +37,13 @@ public class AppServeSecurityModule extends PrivateModule {
 
         bind(User.class).toProvider(UserProvider.class).in(RequestScope.getInstance());
         bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
+        bind(new TypeLiteral<Optional<Profile>>(){}).toProvider(ProfileOptionalSupplier.class);
 
         expose(User.class);
         expose(SessionSecretHeader.class);
         expose(new TypeLiteral<Optional<Session>>(){});
         expose(new TypeLiteral<Supplier<Profile>>(){});
+        expose(new TypeLiteral<Optional<Profile>>(){});
 
     }
 

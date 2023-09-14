@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import dev.getelements.elements.rest.VersionResource;
 import dev.getelements.elements.rest.support.DefaultExceptionMapper;
 import dev.getelements.elements.rest.support.ISODateParamConverter;
-import dev.getelements.elements.rest.swagger.EnhancedApiListingResource;
+import dev.getelements.elements.rest.jersey.swagger.EnhancedApiListingResource;
 import dev.getelements.elements.rt.exception.InternalException;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;
