@@ -10,12 +10,9 @@ public class NearAccountGenerator implements WalletAccountFactory.AccountGenerat
     public WalletAccount generate() {
         final var privateKey = KeyService.deriveRandomKey();
         final var publicKey = KeyService.derivePublicKey(privateKey);
-
-        //Near addresses are public keys encoded to hex
-        //See https://docs.near.org/concepts/basics/accounts/creating-accounts
-        final var address = Hex.encodeHexString(publicKey.getData());
-
+        final var address = publicKey.getJsonPublicKey();
         final var identity = new WalletAccount();
+
         identity.setEncrypted(false);
         identity.setAddress(address);
         identity.setPrivateKey(privateKey.getJsonPrivateKey());

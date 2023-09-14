@@ -1,14 +1,20 @@
 package dev.getelements.elements.service.blockchain.invoke.near;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntifi.near.api.common.exception.NearException;
+import com.syntifi.near.api.common.model.common.EncodedHash;
 import com.syntifi.near.api.common.model.key.PrivateKey;
 import com.syntifi.near.api.common.model.key.PublicKey;
 import com.syntifi.near.api.rpc.NearClient;
+import com.syntifi.near.api.rpc.model.contract.ContractFunctionCallResult;
+import com.syntifi.near.api.rpc.model.identifier.Finality;
 import com.syntifi.near.api.rpc.model.transaction.*;
 import com.syntifi.near.api.rpc.service.TransactionService;
+import com.syntifi.near.borshj.Borsh;
+import com.syntifi.near.borshj.BorshBuffer;
 import dev.getelements.elements.model.blockchain.contract.near.*;
 import dev.getelements.elements.service.NearSmartContractInvocationService;
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,9 +43,29 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
     }
 
     @Override
-    public NearInvokeContractResponse send(
+    public NearInvokeContractResponse send(final List<Map.Entry<String, Map<String, Object>>> actions) {
+
+        if (getNearInvocationScope().getWalletAccount().isEncrypted()) {
+            throw new IllegalStateException("Wallet must be decrypted.");
+        }
+
+        final var contract = getNearInvocationScope().getSmartContract();
+
+        if (contract == null) {
+            throw new IllegalStateException("No contract was specified in the invocation scope.");
+        }
+
+        final var receiverId = contract.getAddresses()
+                .get(getNearInvocationScope().getBlockchainNetwork())
+                .getAddress();
+
+        return sendDirect(receiverId, actions);
+    }
+
+    @Override
+    public NearInvokeContractResponse sendDirect(
             final String receiverId,
-            final List<Map<String, Map<String, List<?>>>> actions) {
+            final List<Map.Entry<String, Map<String, Object>>> actions) {
 
         if (getNearInvocationScope().getWalletAccount().isEncrypted()) {
             throw new IllegalStateException("Wallet must be decrypted.");
@@ -46,9 +73,13 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
 
         try {
 
-            final var signerId = getNearInvocationScope().getWalletAccount().getAddress();
-            final var signerPublicKey = PublicKey.getPublicKeyFromJson(Hex.decodeHex(signerId).toString());
+            final var signerIdJson = getNearInvocationScope().getWalletAccount().getAddress();
+            final var signerPublicKey = PublicKey.getPublicKeyFromJson(signerIdJson);
             final var signerPrivateKey = PrivateKey.getPrivateKeyFromJson(getNearInvocationScope().getWalletAccount().getPrivateKey());
+
+            //Near addresses/ids are public keys encoded to hex
+            //See https://docs.near.org/concepts/basics/accounts/creating-accounts
+            final var signerId = Hex.encodeHexString(signerPublicKey.getData());
 
             //Transactions require 6 parts:
             //signerId, signerPublicKey, receiverId
@@ -65,25 +96,51 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
 
             return response;
 
-        } catch (DecoderException e) {
+        } catch (JsonProcessingException e) {
             //Failed decoding signer address into public key
-            throw new IllegalStateException("Could not decode signer address.");
+            throw new IllegalStateException("Action is malformed:\n" + e.getMessage());
         } catch (GeneralSecurityException e) {
             //Failed sending transaction
             throw new IllegalStateException("Sending the transaction failed.");
         } catch (NoSuchFieldException e) {
             //Failed converting actions
             throw new IllegalStateException(e.getMessage());
+        } catch (NearException e) {
+            //NEAR network error
+            throw e;
         }
     }
 
     @Override
-    public Object call(final String methodName, final List<?> arguments) {
-        //TODO: write call logic
-        return null;
+    public NearContractFunctionCallResult call(final String accountId, final String methodName, final Map<String, ?> arguments) {
+
+        try {
+
+            final var stringArgs = getObjectMapper().writeValueAsString(arguments);
+            final var encodedArgs = Base64.getEncoder().encodeToString(stringArgs.getBytes());
+            final var response = getNearClient().callContractFunction(Finality.FINAL, accountId, methodName, encodedArgs);
+
+            return convertNearCallContractFunctionResult(response);
+
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("There was an error processing your function call arguments:\n" + e.getMessage());
+        }
     }
 
-    private NearInvokeContractResponse convertTransactionResponse(TransactionAwait transaction) {
+    private NearContractFunctionCallResult convertNearCallContractFunctionResult(ContractFunctionCallResult callContractFunctionResult) {
+        final var nearContractFunctionCallResult = new NearContractFunctionCallResult();
+
+        nearContractFunctionCallResult.setResult(callContractFunctionResult.getResult());
+        nearContractFunctionCallResult.setBlockHeight(callContractFunctionResult.getBlockHeight());
+        nearContractFunctionCallResult.setResult(callContractFunctionResult.getResult());
+        nearContractFunctionCallResult.setLogs(callContractFunctionResult.getLogs());
+        nearContractFunctionCallResult.setBlockHash(convertNearEncodedHash(callContractFunctionResult.getBlockHash()));
+        nearContractFunctionCallResult.setError(callContractFunctionResult.getError());
+
+        return nearContractFunctionCallResult;
+    }
+
+    private NearInvokeContractResponse convertTransactionResponse(final TransactionAwait transaction) {
         final var nearStatus = convertStatus(transaction.getStatus());
         final var nearTransactionOutcome = convertTransactionOutcome(transaction.getTransactionOutcome());
         final var nearReceiptOutcome = transaction.getReceiptsOutcome()
@@ -94,7 +151,7 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
         return new NearInvokeContractResponse(nearStatus, nearTransactionOutcome, nearReceiptOutcome);
     }
 
-    private NearTransactionOutcome convertTransactionOutcome(TransactionOutcome transactionOutcome) {
+    private NearTransactionOutcome convertTransactionOutcome(final TransactionOutcome transactionOutcome) {
         final var nearTransactionOutcome = new NearTransactionOutcome();
 
         final var transactionEncodedHash = new NearEncodedHash();
@@ -111,7 +168,7 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
         return nearTransactionOutcome;
     }
 
-    private NearReceiptOutcome convertReceiptOutcome(ReceiptOutcome receiptOutcome) {
+    private NearReceiptOutcome convertReceiptOutcome(final ReceiptOutcome receiptOutcome) {
         final var nearReceiptOutcome = new NearReceiptOutcome();
 
         final var transactionEncodedHash = new NearEncodedHash();
@@ -128,7 +185,7 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
         return nearReceiptOutcome;
     }
 
-    private NearStatus convertStatus(Status status) {
+    private NearStatus convertStatus(final Status status) {
         final var nearStatus = new NearStatus();
 
         final var successValue = new NearSuccessValueStatus();
@@ -144,19 +201,22 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
         return nearStatus;
     }
 
-    private NearProof convertProof(Proof proof) {
+    private NearProof convertProof(final Proof proof) {
         final var nearProof = new NearProof();
 
-        final var proofEncodedHash = new NearEncodedHash();
-        proofEncodedHash.setEncodedHash(proof.getHash().getEncodedHash());
-
-        nearProof.setHash(proofEncodedHash);
+        nearProof.setHash(convertNearEncodedHash(proof.getHash()));
         nearProof.setDirection(NearProof.Direction.valueOf(proof.getDirection().getName()));
 
         return nearProof;
     }
 
-    private NearOutcome convertOutcome(Outcome outcome) {
+    private NearEncodedHash convertNearEncodedHash(final EncodedHash encodedHash) {
+        final var nearEncodedHash = new NearEncodedHash();
+        nearEncodedHash.setEncodedHash(encodedHash.getEncodedHash());
+        return nearEncodedHash;
+    }
+
+    private NearOutcome convertOutcome(final Outcome outcome) {
         final var nearOutcome = new NearOutcome();
 
         nearOutcome.setExecutorId(outcome.getExecutorId());
@@ -170,7 +230,7 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
         return nearOutcome;
     }
 
-    private NearMetadata convertMetadata(Metadata metadata) {
+    private NearMetadata convertMetadata(final Metadata metadata) {
         final var nearMetadata = new NearMetadata();
         nearMetadata.setVersion(metadata.getVersion());
         nearMetadata.setGasProfile(metadata.getGasProfile()
@@ -181,7 +241,7 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
         return nearMetadata;
     }
 
-    private NearGasProfile convertGasProfile(GasProfile gasProfile) {
+    private NearGasProfile convertGasProfile(final GasProfile gasProfile) {
         final var nearGasProfile = new NearGasProfile();
         nearGasProfile.setGasUsed(gasProfile.getGasUsed());
         nearGasProfile.setCostCategory(gasProfile.getCostCategory());
@@ -191,56 +251,53 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
 
     //Converts actions and checks for valid action names:
     //https://docs.near.org/concepts/basics/transactions/overview#action
-    private List<Action> convertActions(List<Map<String, Map<String, List<?>>>> actions) throws NoSuchFieldException {
+    private List<Action> convertActions(final List<Map.Entry<String, Map<String, Object>>> actions) throws NoSuchFieldException, JsonProcessingException {
 
         final List<Action> convertedActions = new ArrayList<>();
 
-        for (Map<String, Map<String, List<?>>> action : actions) {
-
-            for (Map.Entry<String, Map<String, List<?>>> entry : action.entrySet()) {
-
-                final var actionName = entry.getKey().replace("_", "").toLowerCase().trim();
-
-                switch (actionName) {
-                    case "functioncall":
-                        objectMapper.convertValue(entry.getValue(), FunctionCallAction.class);
-                        break;
-                    case "transfer":
-                        objectMapper.convertValue(entry.getValue(), TransferAction.class);
-                        break;
-                    case "deploycontract":
-                        objectMapper.convertValue(entry.getValue(), DeployContractAction.class);
-                        break;
-                    case "createaccount":
-                        objectMapper.convertValue(entry.getValue(), CreateAccountAction.class);
-                        break;
-                    case "deleteaccount":
-                        objectMapper.convertValue(entry.getValue(), DeleteAccountAction.class);
-                        break;
-                    case "addkey":
-                        objectMapper.convertValue(entry.getValue(), AddKeyAction.class);
-                        break;
-                    case "deletekey":
-                        objectMapper.convertValue(entry.getValue(), DeleteKeyAction.class);
-                        break;
-                    case "stake":
-                        objectMapper.convertValue(entry.getValue(), StakeAction.class);
-                        break;
-                    default:
-                        throw new NoSuchFieldException(String.format("%s is not a valid action. Please use one of: \n" +
-                                "FunctionCall to invoke a method on a contract (and optionally attach a budget for compute and storage)\n" +
-                                "Transfer to move tokens from between accounts\n" +
-                                "DeployContract to deploy a contract\n" +
-                                "CreateAccount to make a new account (for a person, contract, refrigerator, etc.)\n" +
-                                "DeleteAccount to delete an account (and transfer the balance to a beneficiary account)\n" +
-                                "AddKey to add a key to an account (either FullAccess or FunctionCall access)\n" +
-                                "DeleteKey to delete an existing key from an account\n" +
-                                "Stake to express interest in becoming a validator at the next available opportunity", actionName));
-                }
-            }
+        for (Map.Entry<String, Map<String, Object>> entry : actions) {
+            convertedActions.add(convertAction(entry));
         }
 
         return convertedActions;
+    }
+
+    private Action convertAction(final Map.Entry<String, Map<String, Object>> entry) throws NoSuchFieldException, JsonProcessingException {
+
+        final var actionName = entry.getKey().replace("_", "").toLowerCase().trim();
+        final var actionJson = objectMapper.writeValueAsString(entry.getValue());
+        final var actionJsonBytes = Borsh.serialize(entry.getValue());
+
+        switch (actionName) {
+            case "functioncall":
+                Borsh.deserialize(BorshBuffer.wrap(actionJson.getBytes()), FunctionCallAction.class);
+                return objectMapper.readValue(actionJson, FunctionCallAction.class);
+            case "transfer":
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), TransferAction.class);
+//                return objectMapper.readValue(actionJson, TransferAction.class);
+            case "deploycontract":
+                return objectMapper.readValue(actionJson, DeployContractAction.class);
+            case "createaccount":
+                return objectMapper.readValue(actionJson, CreateAccountAction.class);
+            case "deleteaccount":
+                return objectMapper.readValue(actionJson, DeleteAccountAction.class);
+            case "addkey":
+                return objectMapper.readValue(actionJson, AddKeyAction.class);
+            case "deletekey":
+                return objectMapper.readValue(actionJson, DeleteKeyAction.class);
+            case "stake":
+                return objectMapper.readValue(actionJson, StakeAction.class);
+            default:
+                throw new NoSuchFieldException(String.format("%s is not a valid action. Please use one of: \n" +
+                        "FunctionCall to invoke a method on a contract (and optionally attach a budget for compute and storage)\n" +
+                        "Transfer to move tokens from between accounts\n" +
+                        "DeployContract to deploy a contract\n" +
+                        "CreateAccount to make a new account (for a person, contract, refrigerator, etc.)\n" +
+                        "DeleteAccount to delete an account (and transfer the balance to a beneficiary account)\n" +
+                        "AddKey to add a key to an account (either FullAccess or FunctionCall access)\n" +
+                        "DeleteKey to delete an existing key from an account\n" +
+                        "Stake to express interest in becoming a validator at the next available opportunity", actionName));
+        }
     }
 
     public NearInvocationScope getNearInvocationScope() {

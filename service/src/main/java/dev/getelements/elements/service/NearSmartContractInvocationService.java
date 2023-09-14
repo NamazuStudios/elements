@@ -1,5 +1,6 @@
 package dev.getelements.elements.service;
 
+import dev.getelements.elements.model.blockchain.contract.near.NearContractFunctionCallResult;
 import dev.getelements.elements.model.blockchain.contract.near.NearInvokeContractResponse;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
@@ -50,24 +51,41 @@ public interface NearSmartContractInvocationService extends SmartContractInvocat
         BigInteger DEFAULT_GAS_LIMIT = BigInteger.valueOf(6721975);
 
         /**
-         * Sends a transaction to the blockchain.
+         * Sends a transaction to the blockchain with a specified receiver id.
          *
          * @param receiverId the id of the address to send the transactions to
          * @return the return value
          */
-        default NearInvokeContractResponse send(final String receiverId) {
-            return send(receiverId, List.of());
+        default NearInvokeContractResponse sendDirect(final String receiverId) {
+            return sendDirect(receiverId, List.of());
         }
 
         /**
-         * Sends a transaction to the blockchain.
+         * Sends a transaction to the blockchain with a specified receiver id.
          *
          * @param receiverId the id of the address to send the transactions to
          * @param actions the actions to be performed by the transaction (see https://nomicon.io/RuntimeSpec/Actions)
-         *                with their associated arguments
+         *                with their associated arguments. List(ActionName, Map(PropertyName, PropertyValue)).
          * @return the return value
          */
-        NearInvokeContractResponse send(String receiverId, List<Map<String, Map<String, List<?>>>> actions);
+        NearInvokeContractResponse sendDirect(String receiverId, List<Map.Entry<String, Map<String, Object>>> actions);
+
+        /**
+         * Sends a transaction to the blockchain. Receiver id is determined by the invocation scope.
+         * @return the return value
+         */
+        default NearInvokeContractResponse send() {
+            return send(List.of());
+        }
+
+        /**
+         * Sends a transaction to the blockchain. Receiver id is determined by the invocation scope.
+         *
+         * @param actions the actions to be performed by the transaction (see https://nomicon.io/RuntimeSpec/Actions)
+         *                with their associated arguments. List(ActionName, Map(PropertyName, PropertyValue)).
+         * @return the return value
+         */
+        NearInvokeContractResponse send(List<Map.Entry<String, Map<String, Object>>> actions);
 
         /**
          * Calls a script on the blockchain.
@@ -75,18 +93,18 @@ public interface NearSmartContractInvocationService extends SmartContractInvocat
          * @param methodName the Cadence script to execute
          * @return the return value
          */
-        default Object call(final String methodName) {
-            return call(methodName, Collections.emptyList());
+        default NearContractFunctionCallResult call(final String accountId, final String methodName) {
+            return call(accountId, methodName, Map.of());
         }
 
         /**
-         * Exectues a script, but does not write, to the blockchain.
+         * Executes a script, but does not write, to the blockchain.
          *
          * @param methodName the Cadence script to execute
          * @param arguments the arguments passed to the script itself
          * @return the return value
          */
-        Object call(String methodName, List<?> arguments);
+        NearContractFunctionCallResult call(final String accountId, final String methodName, final Map<String, ?> arguments);
 
     }
 }
