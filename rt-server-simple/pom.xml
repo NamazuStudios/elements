@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>2.0.22-SNAPSHOT</version>
+        <version>2.1.0-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-simple</artifactId>
-    <version>2.0.22-SNAPSHOT</version>
+    <version>2.1.0-SNAPSHOT</version>
     <name>rt-server-simple</name>
 
     <dependencies>

@@ -59,28 +59,7 @@ pipelines:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
   custom:
-    master_version:
-      - variables:
-          - name: Version
-          - name: Branch
-            default: master
-      - step:
-          size: 4x
-          name: Set master Branch Version
-          runs-on:
-            - "linux"
-            - "self.hosted"
-          script:
-            - echo "Setting master branch to $Version"
-            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make git
-            - make checkout TAG=$Branch
-            - make version VERSION=$Version
-            - make commit tag push
-          after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
-    tag:
+    release:
       - variables:
           - name: Tag
       - step:
@@ -92,9 +71,27 @@ pipelines:
           script:
             - echo "Executing Tag Build for $Tag"
             - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
-            - make git checkout TAG=$Tag
+            - make checkout TAG=$Tag
             - make build
             - make docker
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
+    version:
+      - variables:
+          - name: Version
+      - step:
+          size: 4x
+          name: Set Branch Version
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - echo "Setting branch to $Version"
+            - echo $REGISTRY_PASS | docker login --username $REGISTRY_USER --password-stdin distribution.getelements.dev
+            - make git
+            - make version VERSION=$Version
+            - make commit push
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
