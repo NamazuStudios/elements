@@ -4,8 +4,6 @@ FROM distribution.getelements.dev/elements-base:$BASE_TAG
 
 USER root:root
 
-RUN mkdir $ELEMENTS_CONF
-
 COPY --chown=elements:elements target/lib/*.jar $ELEMENTS_LIB/
 COPY bin/sshd.sh $ELEMENTS_BIN
 COPY bin/hostkeys.sh $ELEMENTS_BIN
