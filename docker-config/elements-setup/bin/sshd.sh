@@ -44,7 +44,7 @@ chown root:root "${SSHD_CONFIG_DIR}/authorized_keys"
 chmod -f 600 "${ssh_host_rsa_key}"
 chmod -f 600 "${ssh_host_dsa_key}"
 chmod -f 600 "${ssh_host_ecdsa_key}"
-chmod -f 644 "${authorized_keys}"
+chmod -f 600 "${authorized_keys}"
 
 /usr/sbin/sshd -D -e -f "${SSHD_CONFIG}"
 rm -f "$sshd_pid"
