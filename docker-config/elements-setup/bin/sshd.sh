@@ -13,11 +13,6 @@ fi
 SSHD_CONFIG_DIR="${SSHD_CONFIG_DIR:-${ELEMENTS_CONF}}"
 SSHD_CONFIG="${SSHD_CONFIG:-${SSHD_CONFIG_DIR}/sshd_config}"
 
-ssh_host_rsa_key="${SSHD_CONFIG_DIR}/ssh_host_rsa_key"
-ssh_host_dsa_key="${SSHD_CONFIG_DIR}/ssh_host_dsa_key"
-ssh_host_ecdsa_key="${SSHD_CONFIG_DIR}/ssh_host_ecdsa_key"
-authorized_keys="${SSHD_CONFIG_DIR}/authorized_keys"
-
 echo "SSHD_CONFIG_DIR: ${SSHD_CONFIG_DIR}"
 echo "SSHD_CONFIG: ${SSHD_CONFIG}"
 
@@ -38,13 +33,6 @@ env | grep '^dev[\._]getelements[\._].*' >> "$pam_env_conf"
 
 echo "PAM Environment."
 cat "$pam_env_conf"
-
-chown root:root "${SSHD_CONFIG_DIR}/authorized_keys"
-
-chmod -f 600 "${ssh_host_rsa_key}"
-chmod -f 600 "${ssh_host_dsa_key}"
-chmod -f 600 "${ssh_host_ecdsa_key}"
-chmod -f 600 "${authorized_keys}"
 
 /usr/sbin/sshd -D -e -f "${SSHD_CONFIG}"
 rm -f "$sshd_pid"
