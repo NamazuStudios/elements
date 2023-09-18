@@ -80,12 +80,12 @@ public enum BlockchainNetwork {
     FLOW_TEST(BlockchainApi.FLOW),
 
     /**
-     * The Solana Network. Uses the {@link BlockchainApi#SOLANA} API.
+     * The NEAR Network. Uses the {@link BlockchainApi#NEAR} API.
      */
     NEAR(BlockchainApi.NEAR),
 
     /**
-     * The Solana Test Network. Uses the {@link BlockchainApi#SOLANA} API.
+     * The NEAR Test Network. Uses the {@link BlockchainApi#NEAR} API.
      */
     NEAR_TEST(BlockchainApi.NEAR);
 

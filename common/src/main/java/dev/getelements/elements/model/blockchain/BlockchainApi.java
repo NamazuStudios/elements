@@ -48,7 +48,7 @@ public enum BlockchainApi {
     /**
      * The Flow API.
      */
-    NEAR(ELEMENTS_JSON_RPC_PROTOCOL);
+    NEAR;
 
     /**
      * Lists all protocols supported by this {@link BlockchainApi}.
