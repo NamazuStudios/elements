@@ -161,6 +161,7 @@ public class ServicesModule extends PrivateModule {
         expose(VaultService.class).annotatedWith(Unscoped.class);
         expose(EvmSmartContractInvocationService.class).annotatedWith(Unscoped.class);
         expose(FlowSmartContractInvocationService.class).annotatedWith(Unscoped.class);
+        expose(NearSmartContractInvocationService.class).annotatedWith(Unscoped.class);
         expose(LargeObjectService.class).annotatedWith(Unscoped.class);
 
     }
