@@ -21,8 +21,6 @@ import static org.testng.AssertJUnit.assertFalse;
 
 public class MongoSslSettingsProviderTest {
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(MongoSslSettingsProviderTest.class);
-
 
     @Test
     public void testWithSslEnabledSecure() {

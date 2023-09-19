@@ -28,9 +28,9 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
 
     public static final String CA = "dev.getelements.elements.mongo.tls.ca";
 
-    public static final String CLIENT_CERTIFICATE = "dev.getelements.elements.mongo.tls.client.certificate";
-
     public static final String CA_PASSPHRASE = "dev.getelements.elements.mongo.tls.ca.passphrase";
+
+    public static final String CLIENT_CERTIFICATE = "dev.getelements.elements.mongo.tls.client.certificate";
 
     public static final String CLIENT_CERTIFICATE_PASSPHRASE = "dev.getelements.elements.mongo.tls.client.certificate.passphrase";
 
@@ -149,6 +149,7 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
         return caPassphrase;
     }
 
+    @Inject
     public void setCaPassphrase(@Named(CA_PASSPHRASE) String caPassphrase) {
         this.caPassphrase = caPassphrase;
     }
