@@ -2,7 +2,6 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.blockchain.contract.near.NearContractFunctionCallResult;
 import dev.getelements.elements.model.blockchain.contract.near.NearInvokeContractResponse;
-import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -10,7 +9,6 @@ import dev.getelements.elements.service.blockchain.invoke.ScopedInvoker;
 import dev.getelements.elements.service.blockchain.invoke.near.NearInvocationScope;
 
 import java.math.BigInteger;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -24,15 +22,6 @@ import java.util.Map;
         @ModuleDefinition(
                 value = "eci.elements.service.unscoped.smartcontract.near",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
-        ),
-        @ModuleDefinition(
-                value = "namazu.elements.service.smartcontract.near",
-                deprecated = @DeprecationDefinition("Use eci.elements.service.smartcontract.near instead.")
-        ),
-        @ModuleDefinition(
-                value = "namazu.elements.service.unscoped.smartcontract.near",
-                annotation = @ExposedBindingAnnotation(Unscoped.class),
-                deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.smartcontract.near instead.")
         )
 })
 public interface NearSmartContractInvocationService extends SmartContractInvocationService<NearSmartContractInvocationService.Invoker> {

@@ -102,7 +102,7 @@ public class TestNearSmartContractInvocationService {
         account.setPrivateKey(privateKey);
 
         final var request = new CreateWalletRequest();
-        request.setApi(testNet.api());
+        request.setApi(BlockchainNetwork.NEAR_TEST.api());
         request.setNetworks(new ArrayList<>(List.of(testNet)));
         request.setAccounts(new ArrayList<>(List.of(account)));
         request.setDisplayName(name);
@@ -146,15 +146,10 @@ public class TestNearSmartContractInvocationService {
     @Test(dataProvider = "testNetworks", expectedExceptions = NearException.class)
     public void testSend(final BlockchainNetwork blockchainNetwork) {
 
-        final var name = "Test";
-        final var desc = "This is a test";
-        final var amount = new BigInteger("1", 10);
         final var recipientId = WALLET_ADDRESSES.get("bob");
 
-        logger.info("DEPOSIT AMOUNT: " + amount);
-
         final List<Map.Entry<String, Map<String, Object>>> actions = List.of(
-                Map.entry("transfer", Map.of( "deposit", amount))
+                Map.entry("transfer", Map.of( "deposit", "1"))
         );
 
         final var response = getUnderTest()

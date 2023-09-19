@@ -270,23 +270,21 @@ public class NearInvoker implements NearSmartContractInvocationService.Invoker {
 
         switch (actionName) {
             case "functioncall":
-                Borsh.deserialize(BorshBuffer.wrap(actionJson.getBytes()), FunctionCallAction.class);
-                return objectMapper.readValue(actionJson, FunctionCallAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJson.getBytes()), FunctionCallAction.class);
             case "transfer":
                 return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), TransferAction.class);
-//                return objectMapper.readValue(actionJson, TransferAction.class);
             case "deploycontract":
-                return objectMapper.readValue(actionJson, DeployContractAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), DeployContractAction.class);
             case "createaccount":
-                return objectMapper.readValue(actionJson, CreateAccountAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), CreateAccountAction.class);
             case "deleteaccount":
-                return objectMapper.readValue(actionJson, DeleteAccountAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), DeleteAccountAction.class);
             case "addkey":
-                return objectMapper.readValue(actionJson, AddKeyAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), AddKeyAction.class);
             case "deletekey":
-                return objectMapper.readValue(actionJson, DeleteKeyAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), DeleteKeyAction.class);
             case "stake":
-                return objectMapper.readValue(actionJson, StakeAction.class);
+                return Borsh.deserialize(BorshBuffer.wrap(actionJsonBytes), StakeAction.class);
             default:
                 throw new NoSuchFieldException(String.format("%s is not a valid action. Please use one of: \n" +
                         "FunctionCall to invoke a method on a contract (and optionally attach a budget for compute and storage)\n" +
