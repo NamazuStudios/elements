@@ -86,7 +86,7 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
             tmf.init(ca);
 
             final var kmf = KeyManagerFactory.getInstance(getKeyAlgorithm());
-            kmf.init(certificate, null);
+            kmf.init(certificate, getClientCertificatePassphrase().toCharArray());
 
             final var sslContext = SSLContext.getInstance(getSslProtocol());
             sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
