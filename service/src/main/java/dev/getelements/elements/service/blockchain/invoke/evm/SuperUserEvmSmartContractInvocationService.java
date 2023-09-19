@@ -1,7 +1,6 @@
 package dev.getelements.elements.service.blockchain.invoke.evm;
 
 import dev.getelements.elements.dao.SmartContractDao;
-import dev.getelements.elements.dao.VaultDao;
 import dev.getelements.elements.service.EvmSmartContractInvocationService;
 import dev.getelements.elements.service.SmartContractInvocationResolution;
 import dev.getelements.elements.service.blockchain.invoke.StandardSmartContractInvocationResolution;
@@ -13,7 +12,6 @@ import dev.getelements.elements.service.blockchain.invoke.ScopedInvoker;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import static java.lang.String.format;
 
 public class SuperUserEvmSmartContractInvocationService
         extends SuperUserSmartContractInvocationService<EvmInvocationScope, EvmSmartContractInvocationService.Invoker>

@@ -43,7 +43,12 @@ public enum BlockchainApi {
     /**
      * The Flow API.
      */
-    FLOW;
+    FLOW,
+
+    /**
+     * The Flow API.
+     */
+    NEAR;
 
     /**
      * Lists all protocols supported by this {@link BlockchainApi}.

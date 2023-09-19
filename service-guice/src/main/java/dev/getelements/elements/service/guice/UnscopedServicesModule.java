@@ -8,6 +8,7 @@ import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
 import dev.getelements.elements.service.blockchain.invoke.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.invoke.flow.SuperUserFlowSmartContractInvocationService;
+import dev.getelements.elements.service.blockchain.invoke.near.SuperUserNearSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserSmartContractService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserVaultService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserWalletService;
@@ -204,6 +205,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserFlowSmartContractInvocationService.class);
 
+        bind(NearSmartContractInvocationService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserNearSmartContractInvocationService.class);
+        
         bind(LargeObjectService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserLargeObjectService.class);

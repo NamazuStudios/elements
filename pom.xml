@@ -154,6 +154,7 @@
         <kotlin.version>1.5.10</kotlin.version>
         <redisson.version>3.14.1</redisson.version>
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
+        <near-java-api.version>0.2.0</near-java-api.version>
     </properties>
 
     <dependencies>
@@ -358,11 +359,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>common-rt</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -659,7 +655,56 @@
                 </exclusions>
             </dependency>
 
+            <dependency>
+                <groupId>com.syntifi.near</groupId>
+                <artifactId>near-java-api-common</artifactId>
+                <version>${near-java-api.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-slf4j-impl</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.dataformat</groupId>
+                        <artifactId>jackson-dataformat-yaml</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.syntifi.near</groupId>
+                <artifactId>near-java-api-rpc</artifactId>
+                <version>${near-java-api.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-slf4j-impl</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.dataformat</groupId>
+                        <artifactId>jackson-dataformat-yaml</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
         </dependencies>
+
     </dependencyManagement>
 
     <build>
@@ -729,11 +774,6 @@
                             --illegal-access=permit
                         </argLine>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.16.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>

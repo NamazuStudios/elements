@@ -11,6 +11,7 @@ const NETWORKS = [
   'FLOW', 'FLOW_TEST',
   'NEO', 'NEO_TEST',
   'SOLANA', 'SOLANA_TEST',
+  'NEAR', 'NEAR_TEST'
 ];
 
 interface NetworkAddresses {

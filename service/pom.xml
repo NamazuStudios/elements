@@ -89,7 +89,7 @@
             <artifactId>firebase-admin</artifactId>
             <version>${firebase.admin.version}</version>
             <exclusions>
-                <!-- We dont' use this and the gRPC dependencies clash with the Flow SDK. -->
+                <!-- We don't use this and the gRPC dependencies clash with the Flow SDK. -->
                 <exclusion>
                     <groupId>com.google.cloud</groupId>
                     <artifactId>google-cloud-firestore</artifactId>
@@ -156,6 +156,14 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.syntifi.near</groupId>
+            <artifactId>near-java-api-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.syntifi.near</groupId>
+            <artifactId>near-java-api-rpc</artifactId>
+        </dependency>
 
         <!-- Manual Kotlin Dependencies -->
         <dependency>
@@ -174,6 +182,7 @@
             <version>${kotlin.version}</version>
         </dependency>
     </dependencies>
+
 
     <profiles>
         <profile>

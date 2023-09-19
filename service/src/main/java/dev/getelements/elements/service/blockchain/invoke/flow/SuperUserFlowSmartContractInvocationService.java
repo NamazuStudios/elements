@@ -1,6 +1,5 @@
 package dev.getelements.elements.service.blockchain.invoke.flow;
 
-import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.service.FlowSmartContractInvocationService;
 import dev.getelements.elements.service.SmartContractInvocationResolution;
 import dev.getelements.elements.service.blockchain.invoke.ScopedInvoker;

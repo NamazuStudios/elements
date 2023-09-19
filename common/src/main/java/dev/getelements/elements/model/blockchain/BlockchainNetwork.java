@@ -30,12 +30,12 @@ public enum BlockchainNetwork {
     NEO_TEST(BlockchainApi.NEO),
 
     /**
-     * The Ethereum Main Net. Uses the  Uses the {@link BlockchainApi#ETHEREUM} API.
+     * The Ethereum Main Net. Uses the {@link BlockchainApi#ETHEREUM} API.
      */
     ETHEREUM(BlockchainApi.ETHEREUM),
 
     /**
-     * The Ethereum Test Net. Uses the  Uses the {@link BlockchainApi#ETHEREUM} API.
+     * The Ethereum Test Net. Uses the {@link BlockchainApi#ETHEREUM} API.
      */
     ETHEREUM_TEST(BlockchainApi.ETHEREUM),
 
@@ -77,7 +77,17 @@ public enum BlockchainNetwork {
     /**
      * The Flow blockchain test network.
      */
-    FLOW_TEST(BlockchainApi.FLOW);
+    FLOW_TEST(BlockchainApi.FLOW),
+
+    /**
+     * The NEAR Network. Uses the {@link BlockchainApi#NEAR} API.
+     */
+    NEAR(BlockchainApi.NEAR),
+
+    /**
+     * The NEAR Test Network. Uses the {@link BlockchainApi#NEAR} API.
+     */
+    NEAR_TEST(BlockchainApi.NEAR);
 
     private final BlockchainApi api;
 

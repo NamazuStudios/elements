@@ -1,6 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="TestLuadoclet.testGenerateFirst" type="TestNG" nameIsGenerated="true">
     <module name="doclet" />
+    <shortenClasspath name="NONE" />
     <useClassPathOnly />
     <extension name="coverage">
       <pattern>
