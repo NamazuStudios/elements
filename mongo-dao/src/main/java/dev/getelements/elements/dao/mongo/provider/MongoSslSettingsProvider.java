@@ -30,6 +30,10 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
 
     public static final String CLIENT_CERTIFICATE = "dev.getelements.elements.mongo.tls.client.certificate";
 
+    public static final String CA_PASSPHRASE = "dev.getelements.elements.mongo.tls.ca.passphrase";
+
+    public static final String CLIENT_CERTIFICATE_PASSPHRASE = "dev.getelements.elements.mongo.tls.client.certificate.passphrase";
+
     public static final String SSL_PROTOCOL = "dev.getelements.elements.mongo.tls.protocol";
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSslSettingsProvider.class);
@@ -44,7 +48,11 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
 
     private String caPath;
 
+    private String caPassphrase;
+
     private String clientCertificatePath;
+
+    private String clientCertificatePassphrase;
 
     private String clientUri;
 
@@ -65,11 +73,11 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
             final var certificate = KeyStore.getInstance(getKeyFormat());
 
             try (var fis = new FileInputStream(getCaPath())) {
-                ca.load(fis, null);
+                ca.load(fis, getCaPassphrase().toCharArray());
             }
 
             try (var fis = new FileInputStream(getClientCertificatePath())) {
-                certificate.load(fis, null);
+                certificate.load(fis, getClientCertificatePassphrase().toCharArray());
             }
 
             final var tmf = TrustManagerFactory.getInstance(getTrustAlgorithm());
@@ -137,6 +145,14 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
         this.caPath = caPath;
     }
 
+    public String getCaPassphrase() {
+        return caPassphrase;
+    }
+
+    public void setCaPassphrase(@Named(CA_PASSPHRASE) String caPassphrase) {
+        this.caPassphrase = caPassphrase;
+    }
+
     public String getClientCertificatePath() {
         return clientCertificatePath;
     }
@@ -144,6 +160,15 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
     @Inject
     public void setClientCertificatePath(@Named(CLIENT_CERTIFICATE) String clientCertificatePath) {
         this.clientCertificatePath = clientCertificatePath;
+    }
+
+    public String getClientCertificatePassphrase() {
+        return clientCertificatePassphrase;
+    }
+
+    @Inject
+    public void setClientCertificatePassphrase(@Named(CLIENT_CERTIFICATE_PASSPHRASE) String clientCertificatePassphrase) {
+        this.clientCertificatePassphrase = clientCertificatePassphrase;
     }
 
     public String getTrustAlgorithm() {

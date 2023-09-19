@@ -35,7 +35,9 @@ public class MongoDaoModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(KEY_ALGORITHM, KeyManagerFactory.getDefaultAlgorithm());
         defaultProperties.setProperty(TRUST_ALGORITHM, TrustManagerFactory.getDefaultAlgorithm());
         defaultProperties.setProperty(CA, "");
+        defaultProperties.setProperty(CA_PASSPHRASE, "");
         defaultProperties.setProperty(CLIENT_CERTIFICATE, "");
+        defaultProperties.setProperty(CLIENT_CERTIFICATE_PASSPHRASE, "");
         defaultProperties.setProperty(FALLOFF_TIME_MIN_MS, Integer.toString(DEFAULT_FALLOFF_TIME_MIN_MS));
         defaultProperties.setProperty(FALLOFF_TIME_MAX_MS, Integer.toString(DEFAULT_FALLOFF_TIME_MAX_MS));
         defaultProperties.setProperty(OPTIMISTIC_RETRY_COUNT, Integer.toString(OPTISMITIC_RETRY_COUNT));
