@@ -73,11 +73,13 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
             final var certificate = KeyStore.getInstance(getKeyFormat());
 
             try (var fis = new FileInputStream(getCaPath())) {
-                ca.load(fis, getCaPassphrase().toCharArray());
+                final var passphrase = getCaPassphrase();
+                ca.load(fis, passphrase.isEmpty() ? null : passphrase.toCharArray());
             }
 
             try (var fis = new FileInputStream(getClientCertificatePath())) {
-                certificate.load(fis, getClientCertificatePassphrase().toCharArray());
+                final var passphrase = getClientCertificatePassphrase();
+                certificate.load(fis, passphrase.isEmpty() ? null : passphrase.toCharArray());
             }
 
             final var tmf = TrustManagerFactory.getInstance(getTrustAlgorithm());
