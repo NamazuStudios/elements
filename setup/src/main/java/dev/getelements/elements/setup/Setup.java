@@ -5,11 +5,6 @@ import dev.getelements.elements.setup.commands.Root;
 import dev.getelements.elements.setup.guice.SetupCommandModule;
 import dev.getelements.elements.setup.guice.SetupCommonModule;
 
-import java.util.Properties;
-
-import static dev.getelements.elements.setup.SetupCommands.streamShellCommands;
-import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
-
 /**
  * A Setup utility that can be run from the command-line.  This operates git-style where
  * there are several sub-commands to do things to get the application up and running.
