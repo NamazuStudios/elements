@@ -29,12 +29,6 @@ public class Setup {
      */
     public void run(final String[] args) throws Exception {
 
-        final Properties systemProperties = System.getProperties();
-
-        if (!systemProperties.containsKey(DEFAULT_LOG_LEVEL_KEY)) {
-            systemProperties.setProperty(DEFAULT_LOG_LEVEL_KEY, "warn");
-        }
-
         final var injector = Guice.createInjector(
             new SetupCommonModule(),
             new SetupCommandModule());
