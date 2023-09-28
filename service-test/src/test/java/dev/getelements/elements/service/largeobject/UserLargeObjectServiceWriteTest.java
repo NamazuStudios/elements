@@ -25,16 +25,8 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Guice(modules = LargeObjectServiceTestModule.class)
+@Guice(modules = {LargeObjectServiceTestModule.class, UserProfileModule.class})
 public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase {
-
-    @Mock
-    @Inject
-    private UserService userService;
-
-    @Mock
-    @Inject
-    private ProfileService profileService;
 
     @Mock
     @Inject
@@ -46,6 +38,12 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
 
     @Inject
     private UserLargeObjectService userLargeObjectService;
+
+    @Inject
+    private User user;
+
+    @Inject
+    private Optional<Profile> profileOptional;
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToCreate() {
@@ -78,11 +76,9 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
 
     @Test
     public void shouldAllowToUpdatePermittedUser() {
-        User permittedUser = factory.permittedUser();
-        when(userService.getCurrentUser()).thenReturn(permittedUser);
 
-        List<User> permittedReadAccess = asList(permittedUser);
-        List<User> permittedWriteAccess = asList(permittedUser);
+        List<User> permittedReadAccess = asList(user);
+        List<User> permittedWriteAccess = asList(user);
         LargeObject largeObjectWithUserWriteAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithUserWriteAccess));
@@ -93,13 +89,11 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToUpdateNonPermittedUser() {
-        User permittedUser = factory.permittedUser();
 
-        List<User> permittedReadAccess = asList(permittedUser);
-        List<User> permittedWriteAccess = asList(permittedUser);
+        List<User> permittedReadAccess = asList(factory.notPermittedUser());
+        List<User> permittedWriteAccess = asList(factory.notPermittedUser());
         LargeObject largeObjectWithUserWriteAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
-        when(userService.getCurrentUser()).thenReturn(factory.notPermittedUser());
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithUserWriteAccess));
 
         userLargeObjectService.updateLargeObject(TEST_ID, factory.updateRequestWithFullAccess());
@@ -107,12 +101,11 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
 
     @Test
     public void shouldAllowToUpdatePermittedProfile() {
-        Profile permittedProfile = factory.permittedProfile();
-        List<Profile> permittedReadAccess = asList(permittedProfile);
-        List<Profile> permittedWriteAccess = asList(permittedProfile);
+
+        List<Profile> permittedReadAccess = asList(profileOptional.get());
+        List<Profile> permittedWriteAccess = asList(profileOptional.get());
         LargeObject largeObjectWithProfileWriteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
-        when(profileService.findCurrentProfile()).thenReturn(Optional.of(permittedProfile));
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithProfileWriteAccess));
         when(largeObjectDao.updateLargeObject(any())).then(a -> a.getArgument(0));
 
@@ -121,13 +114,11 @@ public class UserLargeObjectServiceWriteTest extends LargeObjectServiceTestBase 
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToUpdateNonPermittedProfile() {
-        Profile permittedProfile = factory.permittedProfile();
 
-        List<Profile> permittedReadAccess = asList(permittedProfile);
-        List<Profile> permittedWriteAccess = asList(permittedProfile);
+        List<Profile> permittedReadAccess = asList(factory.notPermittedProfile());
+        List<Profile> permittedWriteAccess = asList(factory.notPermittedProfile());
         LargeObject largeObjectWithProfileWriteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
-        when(profileService.findCurrentProfile()).thenReturn(Optional.of(factory.notPermittedProfile()));
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithProfileWriteAccess));
 
         userLargeObjectService.updateLargeObject(TEST_ID, factory.updateRequestWithFullAccess());

@@ -20,19 +20,17 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.*;
 
-@Guice(modules = LargeObjectServiceTestModule.class)
+@Guice(modules = {LargeObjectServiceTestModule.class, UserProfileModule.class})
 public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase{
 
     @Inject
     private UserLargeObjectService userLargeObjectService;
 
-    @Mock
     @Inject
-    private ProfileService profileService;
+    private User user;
 
-    @Mock
     @Inject
-    private UserService userService;
+    private Optional<Profile> profileOptional;
 
     @Test
     public void shouldDelete() throws IOException {
@@ -52,15 +50,12 @@ public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase
 
     @Test
     public void shouldAllowToDeleteContentByPermittedUser() throws IOException {
-        User permittedUser = factory.permittedUser();
 
-        List<User> permittedReadAccess = asList(permittedUser);
-        List<User> permittedDeleteAccess = asList(permittedUser);
+        List<User> permittedReadAccess = asList(user);
+        List<User> permittedDeleteAccess = asList(user);
         LargeObject largeObjectWithUSerDeleteAccess = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithUSerDeleteAccess));
-        when(userService.getCurrentUser()).thenReturn(permittedUser);
-        when(profileService.findCurrentProfile()).then(a -> Optional.of(factory.permittedProfile()));
 
         userLargeObjectService.deleteLargeObject(TEST_ID);
 
@@ -70,26 +65,23 @@ public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToDeleteContentByNotPermittedUser() throws IOException {
-        User permittedUser = factory.permittedUser();
 
-        List<User> permittedReadAccess = asList(permittedUser);
-        List<User> permittedDeleteAccess = asList(permittedUser);
+        List<User> permittedReadAccess = asList(factory.notPermittedUser());
+        List<User> permittedDeleteAccess = asList(factory.notPermittedUser());
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
-        when(userService.getCurrentUser()).thenReturn(factory.notPermittedUser());
 
         userLargeObjectService.deleteLargeObject(TEST_ID);
     }
 
     @Test
     public void shouldAllowToDeletePermittedProfile() throws IOException {
-        Profile permittedProfile = factory.permittedProfile();
-        List<Profile> permittedReadAccess = asList(permittedProfile);
-        List<Profile> permittedDeleteAccess = asList(permittedProfile);
+
+        List<Profile> permittedReadAccess = asList(profileOptional.get());
+        List<Profile> permittedDeleteAccess = asList(profileOptional.get());
         LargeObject largeObjectWithProfileDeleteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);
 
-        when(profileService.getCurrentProfile()).then(a -> permittedProfile);
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithProfileDeleteAccess));
 
         userLargeObjectService.deleteLargeObject(TEST_ID);
@@ -100,12 +92,11 @@ public class UserLargeObjectServiceDeleteTest extends LargeObjectServiceTestBase
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToDeleteNotPermittedProfile() throws IOException {
-        Profile permittedProfile = factory.permittedProfile();
-        List<Profile> permittedReadAccess = asList(permittedProfile);
-        List<Profile> permittedDeleteAccess = asList(permittedProfile);
+
+        List<Profile> permittedReadAccess = asList(factory.notPermittedProfile());
+        List<Profile> permittedDeleteAccess = asList(factory.notPermittedProfile());
         LargeObject largeObjectWithProfileDeleteAccess = factory.largeObjectWithProfilesAccess(permittedReadAccess, emptyList(), permittedDeleteAccess);
 
-        when(profileService.findCurrentProfile()).thenReturn(Optional.of(factory.notPermittedProfile()));
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObjectWithProfileDeleteAccess));
 
         userLargeObjectService.deleteLargeObject(TEST_ID);

@@ -3,7 +3,6 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.util.ValidationHelper;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 
 import javax.inject.Inject;
@@ -23,7 +22,7 @@ public class LargeObjectServiceTestBase {
     protected LargeObjectBucket largeObjectBucket;
 
     @Inject
-    protected LargeObjectAccessUtils largeObjectAccessUtils;
+    protected AccessRequestUtils accessRequestUtils;
 
     protected LargeObjectServiceTestFactory factory = new LargeObjectServiceTestFactory();
 

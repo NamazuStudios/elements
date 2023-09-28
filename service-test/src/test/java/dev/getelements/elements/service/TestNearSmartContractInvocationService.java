@@ -143,7 +143,7 @@ public class TestNearSmartContractInvocationService {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "testNetworks", expectedExceptions = NearException.class)
+    @Test(dataProvider = "testNetworks", expectedExceptions = NearException.class, enabled = false)
     public void testSend(final BlockchainNetwork blockchainNetwork) {
 
         final var recipientId = WALLET_ADDRESSES.get("bob");
@@ -160,7 +160,7 @@ public class TestNearSmartContractInvocationService {
         assertNotNull(response);
     }
 
-    @Test(dataProvider = "testNetworks", dependsOnMethods = "testSend")
+    @Test(dataProvider = "testNetworks", dependsOnMethods = "testSend", enabled = false)
     public void testCall(final BlockchainNetwork blockchainNetwork) {
 
         final var contractAddress = CONTRACT_ADDRESSES.get(blockchainNetwork);

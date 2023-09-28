@@ -21,17 +21,20 @@ public class UserLargeObjectService implements LargeObjectService {
 
     private LargeObjectBucket largeObjectBucket;
 
-    private LargeObjectAccessUtils largeObjectAccessUtils;
+    private AccessPermissionsUtils accessPermissionsUtils;
 
     private ValidationHelper validationHelper;
 
+    private LargeObjectCdnUtils largeObjectCdnUtils;
+
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
-        Optional<LargeObject> result = getLargeObjectDao()
-                .findLargeObject(objectId);
-        if (result.isPresent() && !getLargeObjectAccessUtils().hasReadAccess(result.get())) {
+        final Optional<LargeObject> result = getLargeObjectDao().findLargeObject(objectId);
+
+        if (result.isPresent() && !getAccessPermissionsUtils().hasReadAccess(result.get().getAccessPermissions())) {
             throw new ForbiddenException("User not allowed to find");
         }
+
         return result;
     }
 
@@ -41,7 +44,7 @@ public class UserLargeObjectService implements LargeObjectService {
         getValidationHelper().validateModel(objectRequest);
         final LargeObject largeObject = getLargeObject(objectId);
 
-        if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
+        if (!getAccessPermissionsUtils().hasWriteAccess(largeObject.getAccessPermissions())) {
             throw new ForbiddenException("User not allowed to update");
         }
 
@@ -50,7 +53,7 @@ public class UserLargeObjectService implements LargeObjectService {
         // TODO: verify if update accessPermissions makes any sense
         // TODO: No. Not at this point in time. We can address this later if requirements dictate.
 
-        return getLargeObjectAccessUtils().setCdnUrlToObject(largeObject);
+        return getLargeObjectCdnUtils().setCdnUrlToObject(largeObject);
 
     }
 
@@ -64,7 +67,7 @@ public class UserLargeObjectService implements LargeObjectService {
 
         final var largeObject = getLargeObject(objectId);
 
-        if (!getLargeObjectAccessUtils().hasDeleteAccess(largeObject)) {
+        if (!getAccessPermissionsUtils().hasDeleteAccess(largeObject.getAccessPermissions())) {
             throw new ForbiddenException("User not allowed to delete");
         }
 
@@ -77,7 +80,7 @@ public class UserLargeObjectService implements LargeObjectService {
     public InputStream readLargeObjectContent(final String objectId) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
-        if (!getLargeObjectAccessUtils().hasReadAccess(largeObject)) {
+        if (!getAccessPermissionsUtils().hasReadAccess(largeObject.getAccessPermissions())) {
             throw new ForbiddenException("User not allowed to read content");
         }
 
@@ -88,7 +91,7 @@ public class UserLargeObjectService implements LargeObjectService {
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
-        if (!getLargeObjectAccessUtils().hasWriteAccess(largeObject)) {
+        if (!getAccessPermissionsUtils().hasWriteAccess(largeObject.getAccessPermissions())) {
             throw new ForbiddenException("User not allowed to write content");
         }
 
@@ -113,15 +116,6 @@ public class UserLargeObjectService implements LargeObjectService {
         this.largeObjectBucket = largeObjectBucket;
     }
 
-    public LargeObjectAccessUtils getLargeObjectAccessUtils() {
-        return largeObjectAccessUtils;
-    }
-
-    @Inject
-    public void setLargeObjectAccessUtils(LargeObjectAccessUtils largeObjectAccessUtils) {
-        this.largeObjectAccessUtils = largeObjectAccessUtils;
-    }
-
     public ValidationHelper getValidationHelper() {
         return validationHelper;
     }
@@ -129,6 +123,24 @@ public class UserLargeObjectService implements LargeObjectService {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public AccessPermissionsUtils getAccessPermissionsUtils() {
+        return accessPermissionsUtils;
+    }
+
+    @Inject
+    public void setAccessPermissionsUtils(AccessPermissionsUtils accessPermissionsUtils) {
+        this.accessPermissionsUtils = accessPermissionsUtils;
+    }
+
+    public LargeObjectCdnUtils getLargeObjectCdnUtils() {
+        return largeObjectCdnUtils;
+    }
+
+    @Inject
+    public void setLargeObjectCdnUtils(LargeObjectCdnUtils largeObjectCdnUtils) {
+        this.largeObjectCdnUtils = largeObjectCdnUtils;
     }
 
 }
