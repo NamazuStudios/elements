@@ -1,39 +1,43 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.dao.ProfileDao;
+import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.Subjects;
-import dev.getelements.elements.service.ProfileService;
-import dev.getelements.elements.service.Unscoped;
-import dev.getelements.elements.service.UserService;
+import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.user.User;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
 public class AccessPermissionsUtils {
 
-    private UserService userService;
+    private User uesr;
 
-    private ProfileService profileService;
+    private UserDao userDao;
+
+    private ProfileDao profileDao;
+
+    private Optional<Profile> profileOptional;
 
     public Subjects fromRequest(final SubjectRequest subjectRequest) {
         Subjects subjects = new Subjects();
         subjects.setWildcard(subjectRequest.isWildcard());
-        subjects.setUsers(subjectRequest.getUserIds().stream().map(userService::getUser).collect(toList()));
-        subjects.setProfiles(subjectRequest.getProfileIds().stream().map(profileService::getProfile).collect(toList()));
+        subjects.setUsers(subjectRequest.getUserIds().stream().map(getUserDao()::getActiveUser).collect(toList()));
+        subjects.setProfiles(subjectRequest.getProfileIds().stream().map(getProfileDao()::getActiveProfile).collect(toList()));
         return subjects;
     }
 
     public boolean hasUserAccess(final Subjects subjects) {
-        final var current = getUserService().getCurrentUser();
         return subjects.getUsers().stream()
-                .anyMatch(user -> current.getId().equals(user.getId()));
+                .anyMatch(user -> getUesr().getId().equals(user.getId()));
     }
 
     public boolean hasProfileAccess(final Subjects subjects) {
-        final var current = getProfileService().findCurrentProfile();
-        return current.filter(value -> subjects.getProfiles().stream()
+        return getProfileOptional().filter(value -> subjects.getProfiles().stream()
                 .anyMatch(profile -> value.getId().equals(profile.getId()))).isPresent();
     }
 
@@ -52,22 +56,40 @@ public class AccessPermissionsUtils {
         return deleteSubjects.isWildcard() || hasUserAccess(deleteSubjects) || hasProfileAccess(deleteSubjects);
     }
 
-    ProfileService getProfileService() {
-        return profileService;
+    public User getUesr() {
+        return uesr;
     }
 
     @Inject
-    public void setProfileService(@Unscoped ProfileService profileService) {
-        this.profileService = profileService;
+    public void setUesr(User uesr) {
+        this.uesr = uesr;
     }
 
-    public UserService getUserService() {
-        return userService;
+    public UserDao getUserDao() {
+        return userDao;
     }
 
     @Inject
-    public void setUserService(@Unscoped UserService userService) {
-        this.userService = userService;
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public ProfileDao getProfileDao() {
+        return profileDao;
+    }
+
+    @Inject
+    public void setProfileDao(ProfileDao profileDao) {
+        this.profileDao = profileDao;
+    }
+
+    public Optional<Profile> getProfileOptional() {
+        return profileOptional;
+    }
+
+    @Inject
+    public void setProfileOptional(Optional<Profile> profileOptional) {
+        this.profileOptional = profileOptional;
     }
 
 }
