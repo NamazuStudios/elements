@@ -4,6 +4,7 @@ import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.Subjects;
 import dev.getelements.elements.service.ProfileService;
+import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.service.UserService;
 
 import javax.inject.Inject;
@@ -56,7 +57,7 @@ public class AccessPermissionsUtils {
     }
 
     @Inject
-    public void setProfileService(ProfileService profileService) {
+    public void setProfileService(@Unscoped ProfileService profileService) {
         this.profileService = profileService;
     }
 
@@ -65,7 +66,7 @@ public class AccessPermissionsUtils {
     }
 
     @Inject
-    public void setUserService(UserService userService) {
+    public void setUserService(@Unscoped UserService userService) {
         this.userService = userService;
     }
 

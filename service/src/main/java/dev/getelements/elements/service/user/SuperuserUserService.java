@@ -8,6 +8,7 @@ import dev.getelements.elements.model.user.UserCreateResponse;
 import dev.getelements.elements.model.user.UserUpdateRequest;
 import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.NameService;
+import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.service.UserService;
 import org.dozer.Mapper;
 
@@ -128,7 +129,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Inject
-    public void setNameService(NameService nameService) {
+    public void setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 

@@ -36,12 +36,11 @@ public class DefaultBindingAnnotationFactory implements ExposedBindingAnnotation
     }
 
     @Override
-    public Annotation construct(final Class<?> cls, final ExposedBindingAnnotation definition) {
+    public Annotation construct(final Class<?> clsa, final Class<? extends Annotation> annotationClass) {
 
         try {
 
-            final var type = definition.value();
-            final var methods = new HashSet<>(asList(type.getMethods()));
+            final var methods = new HashSet<>(asList(annotationClass.getMethods()));
             if (!METHODS.equals(methods)) throw new IllegalArgumentException("Valid for basic annotations only.");
 
             final var toString = Object.class.getMethod("toString");
@@ -51,11 +50,11 @@ public class DefaultBindingAnnotationFactory implements ExposedBindingAnnotation
 
             final InvocationHandler ih = (proxy, method, args) -> {
                 if (method.equals(toString)) {
-                    return "@" + type.getName() + "()";
+                    return "@" + annotationClass.getName() + "()";
                 } else if (method.equals(annotationType)) {
-                    return type;
+                    return annotationClass;
                 } else if (method.equals(equals)) {
-                    return type.isInstance(args[0]);
+                    return annotationClass.isInstance(args[0]);
                 } else if (method.equals(hashCode)) {
                     return 0;
                 } else {
@@ -63,7 +62,7 @@ public class DefaultBindingAnnotationFactory implements ExposedBindingAnnotation
                 }
             };
 
-            final var interfaces = new Class<?>[]{type};
+            final var interfaces = new Class<?>[]{annotationClass};
             final var cl = DefaultBindingAnnotationFactory.class.getClassLoader();
 
             return (Annotation) Proxy.newProxyInstance(cl, interfaces, ih);

@@ -24,6 +24,7 @@ import dev.getelements.elements.model.session.AppleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.NameService;
+import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.util.PemDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -317,7 +318,7 @@ public class AppleSignInAuthServiceOperations {
     }
 
     @Inject
-    public void setNameService(NameService nameService) {
+    public void setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 
