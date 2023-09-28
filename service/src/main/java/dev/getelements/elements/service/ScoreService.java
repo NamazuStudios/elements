@@ -16,17 +16,8 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
                 value = "eci.elements.service.score"
         ),
         @ModuleDefinition(
-                value = "eci.elements.service.unscoped.score",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        ),
-        @ModuleDefinition(
                 value = "namazu.elements.service.score",
                 deprecated = @DeprecationDefinition("Use eci.elements.service.score instead.")
-        ),
-        @ModuleDefinition(
-                value = "namazu.elements.service.unscoped.score",
-                annotation = @ExposedBindingAnnotation(Unscoped.class),
-                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.score instead.")
         )
 })
 public interface ScoreService {
