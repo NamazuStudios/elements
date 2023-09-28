@@ -125,31 +125,29 @@ public class UserLargeObjectResourceTest {
         assertEquals(status, HttpStatus.FORBIDDEN.getCode());
     }
 
-    // TODO: when persisting accessPermissions, there is an error: failed encoding a User:
-    // 'User{id='64f9d4a34f881b3a9e2136a6', name='uploadingUser.00000', email='uploadingUser.00000@example.com', level=USER, active=true, facebookId='null', firebaseId='null', appleSignInId='null', externalUserId='null'}'
-//    @Test()
-//    public void shouldGetLargeObjectForSpecificUserAccess() {
-//        CreateLargeObjectRequest request = requestFactory
-//                .createRequestWithUserAccess(asList(clientContext.getUser().getId()), emptyList(), emptyList());
-//
-//        final LargeObject savedlargeObject = client
-//                .target(apiRoot + "/large_object")
-//                .request()
-//                .header(SESSION_SECRET, superuserClientContext.getSessionSecret())
-//                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
-//                .readEntity(LargeObject.class);
-//
-//        final LargeObject foundlargeObject = client
-//                .target(apiRoot + "/large_object/" + savedlargeObject.getId())
-//                .request()
-//                .header(SESSION_SECRET, clientContext.getSessionSecret())
-//                .get()
-//                .readEntity(LargeObject.class);
-//
-//        assertNotNull(foundlargeObject);
-//        assertEquals(foundlargeObject.getMimeType(), DEFAULT_MIME_TYPE);
-//        assertFalse(foundlargeObject.getAccessPermissions().getRead().isWildcard());
-//    }
+    @Test()
+    public void shouldGetLargeObjectForSpecificUserAccess() {
+        CreateLargeObjectRequest request = requestFactory
+                .createRequestWithUserAccess(asList(clientContext.getUser().getId()), emptyList(), emptyList());
+
+        final LargeObject savedlargeObject = client
+                .target(apiRoot + "/large_object")
+                .request()
+                .header(SESSION_SECRET, superuserClientContext.getSessionSecret())
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(LargeObject.class);
+
+        final LargeObject foundlargeObject = client
+                .target(apiRoot + "/large_object/" + savedlargeObject.getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObject.class);
+
+        assertNotNull(foundlargeObject);
+        assertEquals(foundlargeObject.getMimeType(), DEFAULT_MIME_TYPE);
+        assertFalse(foundlargeObject.getAccessPermissions().getRead().isWildcard());
+    }
 
     @Test()
     public void shouldAllowToWriteLargeObjectConent() {

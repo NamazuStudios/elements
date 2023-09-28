@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest;
 
+import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.SubjectRequest;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
@@ -9,6 +10,7 @@ import java.util.List;
 class LargeObjectRequestFactory {
 
     static final String DEFAULT_MIME_TYPE = "mime";
+    static final String RANDOM_PUBLIC_URL = "https://cdn.wheel-size.com/automobile/body/chevrolet-astro-1985-1994-1625648125.492117.jpg";
 
     CreateLargeObjectRequest createRequestWithAccess(boolean read, boolean write, boolean delete) {
         CreateLargeObjectRequest result = new CreateLargeObjectRequest();
@@ -25,6 +27,17 @@ class LargeObjectRequestFactory {
         result.setRead(requestWithUserAccess(readUserIds));
         result.setWrite(requestWithUserAccess(writeUserIds));
         result.setDelete(requestWithUserAccess(deleteUserIds));
+
+        return result;
+    }
+
+    CreateLargeObjectRequest createRequestFromUrlWithAccess(boolean read, boolean write, boolean delete) {
+        CreateLargeObjectFromUrlRequest result = new CreateLargeObjectFromUrlRequest();
+        result.setMimeType(DEFAULT_MIME_TYPE);
+        result.setRead(requestWithAccess(read));
+        result.setWrite(requestWithAccess(write));
+        result.setDelete(requestWithAccess(delete));
+        result.setFileUrl(RANDOM_PUBLIC_URL);
 
         return result;
     }

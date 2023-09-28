@@ -9,6 +9,7 @@ import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.service.NameService;
+import dev.getelements.elements.service.Unscoped;
 
 import javax.inject.Inject;
 
@@ -78,7 +79,7 @@ public class ProfileServiceUtils {
     }
 
     @Inject
-    public void setNameService(NameService nameService) {
+    public void setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 

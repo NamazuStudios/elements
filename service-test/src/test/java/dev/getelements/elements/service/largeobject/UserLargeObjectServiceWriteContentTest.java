@@ -4,8 +4,6 @@ import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.ProfileService;
-import dev.getelements.elements.service.UserService;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -23,14 +21,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
-@Guice(modules = LargeObjectServiceTestModule.class)
+@Guice(modules = {LargeObjectServiceTestModule.class, UserProfileModule.class})
 public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTestBase {
 
     @Inject
-    private UserService userService;
+    private User user;
 
     @Inject
-    private ProfileService profileService;
+    private Optional<Profile> profileOptional;
 
     @Inject
     private UserLargeObjectService userLargeObjectService;
@@ -57,15 +55,13 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
 
     @Test
     public void shouldAllowToWriteContentByPermittedUser() throws IOException {
-        User permittedUser = factory.permittedUser();
-        when(userService.getCurrentUser()).thenReturn(permittedUser);
-        List<User> permittedReadAccess = asList(permittedUser);
-        List<User> permittedWriteAccess = asList(permittedUser);
+
+        List<User> permittedReadAccess = asList(user);
+        List<User> permittedWriteAccess = asList(user);
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
         when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
-        when(profileService.getCurrentProfile()).then(a -> mock(Profile.class));
 
         OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
@@ -75,13 +71,11 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToWriteContentByNonPermittedUser() throws IOException {
 
-        User permittedUser = factory.permittedUser();
 
-        List<User> permittedReadAccess = asList(permittedUser);
-        List<User> permittedWriteAccess = asList(permittedUser);
+        List<User> permittedReadAccess = asList(factory.notPermittedUser());
+        List<User> permittedWriteAccess = asList(factory.notPermittedUser());
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
-        when(userService.getCurrentUser()).thenReturn(factory.notPermittedUser());
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
 
         userLargeObjectService.readLargeObjectContent(TEST_ID);

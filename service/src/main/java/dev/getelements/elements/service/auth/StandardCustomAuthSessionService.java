@@ -15,6 +15,7 @@ import dev.getelements.elements.security.CustomJWTCredentials;
 import dev.getelements.elements.security.JWTCredentials;
 import dev.getelements.elements.service.CustomAuthSessionService;
 import dev.getelements.elements.service.NameService;
+import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.service.util.CryptoKeyPairUtility;
 import dev.getelements.elements.util.ValidationHelper;
 
@@ -151,7 +152,7 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
     }
 
     @Inject
-    public void setNameService(NameService nameService) {
+    public void setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 

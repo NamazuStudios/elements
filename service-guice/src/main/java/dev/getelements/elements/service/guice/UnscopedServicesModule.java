@@ -95,10 +95,6 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserFCMRegistrationService.class);
 
-        bind(ScoreService.class)
-                .annotatedWith(Unscoped.class)
-                .to(ScoreService.class);
-
         bind(LeaderboardService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserLeaderboardService.class);

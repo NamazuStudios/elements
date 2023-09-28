@@ -37,7 +37,15 @@ public @interface ExposedBindingAnnotation {
      * Resolves an instance of {@link Annotation} given the supplied {@link ModuleDefinition}
      */
     @FunctionalInterface
-    interface BindingAnnotationFactory {  Annotation construct(Class<?> cls, ExposedBindingAnnotation annotation); }
+    interface BindingAnnotationFactory {
+
+        default Annotation construct(Class<?> cls, ExposedBindingAnnotation annotation) {
+            return construct(cls, annotation.value());
+        }
+
+        Annotation construct(Class<?> cls, Class<? extends Annotation> annotationClass);
+
+    }
 
     /**
      * Utility class for resolving the binding annotation.

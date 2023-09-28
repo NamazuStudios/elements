@@ -1,13 +1,13 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.dao.ProfileDao;
+import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.UserService;
-import dev.getelements.elements.service.profile.UserProfileService;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -30,9 +30,10 @@ public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase 
     private SuperUserLargeObjectService superUserLargeObjectService;
 
     @Inject
-    private UserService userService;
+    private UserDao userDao;
+
     @Inject
-    private UserProfileService userProfileService;
+    private ProfileDao profileDao;
 
     @Test
     public void shouldCreate() {
@@ -62,9 +63,9 @@ public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase 
         request.setRead(factory.subjectRequestWithUsersAndProfiles(readAllowedUserId, emptyList()));
         request.setWrite(factory.subjectRequestWithUsersAndProfiles(emptyList(), writeAllowedProfileId));
 
-        when(userService.getUser("u1")).then(a -> mock(User.class));
-        when(userService.getUser("u2")).then(a -> mock(User.class));
-        when(userProfileService.getProfile("p1")).then(a -> mock(Profile.class));
+        when(userDao.getActiveUser("u1")).then(a -> mock(User.class));
+        when(userDao.getActiveUser("u2")).then(a -> mock(User.class));
+        when(profileDao.getActiveProfile("p1")).then(a -> mock(Profile.class));
 
         when(largeObjectDao.createLargeObject(any())).then(a -> {
             LargeObject objectToSave = a.getArgument(0);

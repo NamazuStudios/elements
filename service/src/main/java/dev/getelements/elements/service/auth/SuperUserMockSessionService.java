@@ -13,6 +13,7 @@ import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.MockSessionService;
 import dev.getelements.elements.service.NameService;
+import dev.getelements.elements.service.Unscoped;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -144,7 +145,7 @@ public class SuperUserMockSessionService implements MockSessionService {
     }
 
     @Inject
-    public void setNameService(NameService nameService) {
+    public void setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 

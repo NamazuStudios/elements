@@ -13,6 +13,7 @@ import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.ProfileService;
+import dev.getelements.elements.service.Unscoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,7 +160,7 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Inject
-    public void setNameService(NameService nameService) {
+    public void setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 
