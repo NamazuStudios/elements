@@ -10,6 +10,7 @@ import dev.getelements.elements.service.UserService;
 import dev.getelements.elements.util.ValidationHelper;
 
 import javax.validation.Validator;
+import javax.ws.rs.client.Client;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.Constants.CDN_OUTSIDE_URL;
@@ -36,6 +37,7 @@ public class LargeObjectServiceTestModule extends AbstractModule {
         bind(Validator.class).toInstance(mock(Validator.class));
         bind(Context.Factory.class).toInstance(mock(Context.Factory.class));
         bind(Attributes.class).toInstance(mock(Attributes.class));
+        bind(Client.class).toInstance(mock(Client.class));
 
         bind(String.class).annotatedWith(named(CDN_OUTSIDE_URL)).toInstance("https://cdn.example.com");
 
