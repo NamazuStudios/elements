@@ -3,6 +3,7 @@ package dev.getelements.elements.rest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
+import dev.getelements.elements.rt.http.HttpStatus;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -16,6 +17,8 @@ import javax.ws.rs.core.MediaType;
 import static dev.getelements.elements.Headers.SESSION_SECRET;
 import static dev.getelements.elements.rest.LargeObjectRequestFactory.DEFAULT_MIME_TYPE;
 import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.testng.Assert.*;
 
 public class SuperUserLargeObjectResourceTest {
@@ -41,9 +44,13 @@ public class SuperUserLargeObjectResourceTest {
     @Inject
     private ClientContext clientContext;
 
+    @Inject
+    private ClientContext notSUContext;
+
     @BeforeClass
     private void setUp() {
         clientContext.createSuperuser("uploadingSuperUser").createSession();
+        notSUContext.createUser("otherUser").createSession();
     }
 
     @Test()
@@ -200,5 +207,72 @@ public class SuperUserLargeObjectResourceTest {
         assertTrue(foundlargeObject.getAccessPermissions().getRead().isWildcard());
         assertTrue(foundlargeObject.getAccessPermissions().getWrite().isWildcard());
         assertTrue(foundlargeObject.getAccessPermissions().getDelete().isWildcard());
+    }
+
+    @Test()
+    public void shouldGetLargeObjectForSpecificUserAccess() {
+        CreateLargeObjectRequest request = requestFactory
+                .createRequestWithUserAccess(asList(clientContext.getUser().getId()), emptyList(), emptyList());
+
+        final LargeObject savedlargeObject = client
+                .target(apiRoot + "/large_object")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(LargeObject.class);
+
+        final LargeObject foundlargeObject = client
+                .target(apiRoot + "/large_object/" + savedlargeObject.getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObject.class);
+
+        assertNotNull(foundlargeObject);
+        assertEquals(foundlargeObject.getMimeType(), DEFAULT_MIME_TYPE);
+        assertFalse(foundlargeObject.getAccessPermissions().getRead().isWildcard());
+    }
+
+    @Test()
+    public void shouldNotCreateWithoutProperUserPrivileges() {
+        CreateLargeObjectRequest request = requestFactory
+                .createRequestWithUserAccess(asList("randomOtherID"), emptyList(), emptyList());
+
+        final LargeObject savedlargeObject = client
+                .target(apiRoot + "/large_object")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(LargeObject.class);
+
+        final int status = client
+                .target(apiRoot + "/large_object/" + savedlargeObject.getId())
+                .request()
+                .header(SESSION_SECRET, notSUContext.getSessionSecret())
+                .get().getStatus();
+
+        assertNull(savedlargeObject.getId());   //object was not created
+        assertEquals(status, HttpStatus.NOT_FOUND.getCode());
+    }
+
+    @Test()
+    public void shouldNotGetLargeObjectForWrongLoggedUser() {
+        CreateLargeObjectRequest request = requestFactory
+                .createRequestWithUserAccess(asList(clientContext.getUser().getId()), emptyList(), emptyList());
+
+        final LargeObject savedlargeObject = client
+                .target(apiRoot + "/large_object")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(LargeObject.class);
+
+        final int status = client
+                .target(apiRoot + "/large_object/" + savedlargeObject.getId())
+                .request()
+                .header(SESSION_SECRET, notSUContext.getSessionSecret())
+                .get().getStatus();
+
+        assertEquals(status, HttpStatus.FORBIDDEN.getCode());
     }
 }
