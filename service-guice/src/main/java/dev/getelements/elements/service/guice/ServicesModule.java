@@ -134,7 +134,6 @@ public class ServicesModule extends PrivateModule {
         expose(FollowerService.class).annotatedWith(Unscoped.class);
         expose(ProfileOverrideService.class).annotatedWith(Unscoped.class);
         expose(FCMRegistrationService.class).annotatedWith(Unscoped.class);
-        expose(ScoreService.class).annotatedWith(Unscoped.class);
         expose(LeaderboardService.class).annotatedWith(Unscoped.class);
         expose(MockSessionService.class).annotatedWith(Unscoped.class);
         expose(ItemService.class).annotatedWith(Unscoped.class);
