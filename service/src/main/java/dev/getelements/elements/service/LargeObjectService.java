@@ -1,6 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.exception.largeobject.LargeObjectNotFoundException;
+import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
@@ -107,6 +108,15 @@ public interface LargeObjectService {
     LargeObject createLargeObject(CreateLargeObjectRequest createLargeObjectRequest);
 
     /**
+     * Creates a new instance of {@link LargeObject} from the supplied {@link CreateLargeObjectFromUrlRequest}.
+     *
+     * @param CreateLargeObjectFromUrlRequest the large object request
+     * @return the {@link LargeObject} as it was created
+     * @throws IOException if there was an error writing the large object
+     */
+    LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) throws IOException;
+
+    /**
      * Creates a new instance of {@link LargeObject} from the supplied {@link CreateLargeObjectRequest} and file
      * contents read from the {@link InputStream}
      *
@@ -153,5 +163,6 @@ public interface LargeObjectService {
      * @throws IOException
      */
     OutputStream writeLargeObjectContent(String objectId) throws IOException;
+
 
 }

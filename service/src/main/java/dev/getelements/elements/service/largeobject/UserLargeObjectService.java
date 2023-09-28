@@ -3,6 +3,7 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.ForbiddenException;
+import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
@@ -50,15 +51,17 @@ public class UserLargeObjectService implements LargeObjectService {
 
         largeObject.setMimeType(objectRequest.getMimeType());
 
-        // TODO: verify if update accessPermissions makes any sense
-        // TODO: No. Not at this point in time. We can address this later if requirements dictate.
-
         return getLargeObjectCdnUtils().setCdnUrlToObject(largeObject);
 
     }
 
     @Override
     public LargeObject createLargeObject(final CreateLargeObjectRequest createLargeObjectRequest) {
+        throw new ForbiddenException("User not allowed to create");
+    }
+
+    @Override
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) {
         throw new ForbiddenException("User not allowed to create");
     }
 

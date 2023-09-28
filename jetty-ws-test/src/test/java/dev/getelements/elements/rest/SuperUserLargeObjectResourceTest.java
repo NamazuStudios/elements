@@ -175,4 +175,30 @@ public class SuperUserLargeObjectResourceTest {
 
     }
 
+    @Test()
+    public void shouldCreateLargeObjectFromUrl() {
+
+        CreateLargeObjectRequest createRequest = requestFactory.createRequestFromUrlWithAccess(true, true, true);
+
+        final LargeObject largeObject = client
+                .target(apiRoot + "/large_object/from_url")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(Entity.entity(createRequest, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(LargeObject.class);
+
+        final LargeObject foundlargeObject = client
+                .target(apiRoot + "/large_object/" + largeObject.getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObject.class);
+
+        assertNotNull(foundlargeObject);
+        assertEquals(foundlargeObject.getMimeType(), createRequest.getMimeType());
+        assertNotNull(foundlargeObject.getPath());
+        assertTrue(foundlargeObject.getAccessPermissions().getRead().isWildcard());
+        assertTrue(foundlargeObject.getAccessPermissions().getWrite().isWildcard());
+        assertTrue(foundlargeObject.getAccessPermissions().getDelete().isWildcard());
+    }
 }

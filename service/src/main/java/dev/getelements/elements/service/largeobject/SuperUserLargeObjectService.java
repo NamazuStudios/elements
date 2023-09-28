@@ -3,14 +3,13 @@ package dev.getelements.elements.service.largeobject;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.InternalException;
-import dev.getelements.elements.model.largeobject.AccessPermissions;
-import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
-import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
+import dev.getelements.elements.model.largeobject.*;
 import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,6 +26,8 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     private AccessRequestUtils accessRequestUtils;
 
     private LargeObjectCdnUtils largeObjectCdnUtils;
+
+    private Client client;
 
     @Override
     public Optional<LargeObject> findLargeObject(final String objectId) {
@@ -70,6 +71,15 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         largeObject.setPath(getLargeObjectCdnUtils().assignAutomaticPath(createLargeObjectRequest.getMimeType()));
 
         return getLargeObjectCdnUtils().setCdnUrlToObject(getLargeObjectDao().createLargeObject(largeObject));
+    }
+
+    @Override
+    public LargeObject createLargeObjectFromUrl(final CreateLargeObjectFromUrlRequest createRequest) throws IOException {
+
+        getValidationHelper().validateModel(createRequest);
+        WebTarget target = client.target(createRequest.getFileUrl());
+        InputStream is = target.request().get().readEntity(InputStream.class);
+        return createLargeObject(createRequest, is);
     }
 
     @Override
@@ -140,5 +150,12 @@ public class SuperUserLargeObjectService implements LargeObjectService {
         this.validationHelper = validationHelper;
     }
 
+    public Client getClient() {
+        return client;
+    }
 
+    @Inject
+    public void setClient(Client client) {
+        this.client = client;
+    }
 }
