@@ -23,6 +23,8 @@ public class UserCreateResponse {
 
     private String appleSignInId;
 
+    private String phoneNb;
+
     private List<Profile> profiles;
 
     private String password;
@@ -107,34 +109,41 @@ public class UserCreateResponse {
         this.password = password;
     }
 
+    public String getPhoneNb() {
+        return phoneNb;
+    }
+
+    public void setPhoneNb(String phoneNb) {
+        this.phoneNb = phoneNb;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserCreateResponse that = (UserCreateResponse) o;
-        return isActive() == that.isActive() && Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getEmail(), that.getEmail()) && getLevel() == that.getLevel() && Objects.equals(getFacebookId(), that.getFacebookId()) && Objects.equals(getFirebaseId(), that.getFirebaseId()) && Objects.equals(getAppleSignInId(), that.getAppleSignInId()) && Objects.equals(getProfiles(), that.getProfiles()) && Objects.equals(getPassword(), that.getPassword());
+        return active == that.active && Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(email, that.email) && level == that.level && Objects.equals(facebookId, that.facebookId) && Objects.equals(firebaseId, that.firebaseId) && Objects.equals(appleSignInId, that.appleSignInId) && Objects.equals(phoneNb, that.phoneNb) && Objects.equals(profiles, that.profiles) && Objects.equals(password, that.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getFirebaseId(), getAppleSignInId(), getProfiles(), getPassword());
+        return Objects.hash(id, name, email, level, active, facebookId, firebaseId, appleSignInId, phoneNb, profiles, password);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("UserCreateResponse{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", email='").append(email).append('\'');
-        sb.append(", level=").append(level);
-        sb.append(", active=").append(active);
-        sb.append(", facebookId='").append(facebookId).append('\'');
-        sb.append(", firebaseId='").append(firebaseId).append('\'');
-        sb.append(", appleSignInId='").append(appleSignInId).append('\'');
-        sb.append(", profiles=").append(profiles);
-        sb.append(", password='").append(password).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "UserCreateResponse{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", level=" + level +
+                ", active=" + active +
+                ", facebookId='" + facebookId + '\'' +
+                ", firebaseId='" + firebaseId + '\'' +
+                ", appleSignInId='" + appleSignInId + '\'' +
+                ", phoneNb='" + phoneNb + '\'' +
+                ", profiles=" + profiles +
+                ", password='" + password + '\'' +
+                '}';
     }
-
 }

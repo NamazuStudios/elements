@@ -19,6 +19,9 @@ public class UserCreateRequest implements Serializable {
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     private String email;
 
+    @Pattern(regexp = Constants.Regexp.PHONE_NB)
+    private String phone;
+
     @ApiModelProperty("The user's plaintext password, only to be provided in POST/PUT requests in the User Resource " +
             "REST API interface. In the future, a dedicated REST API model may be constructed instead of using a " +
             "direct User model.")
@@ -98,4 +101,11 @@ public class UserCreateRequest implements Serializable {
         return sb.toString();
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 }

@@ -40,6 +40,10 @@ public class User implements Serializable {
     @ApiModelProperty("The user's email.")
     private String email;
 
+    @Pattern(regexp = Constants.Regexp.PHONE_NB)
+    @ApiModelProperty("The user's phone number.")
+    private String phoneNb;
+
     @NotNull
     @ApiModelProperty("The user's access level.")
     private Level level;
@@ -68,6 +72,11 @@ public class User implements Serializable {
 
         @Override
         public String getName() {
+            return "";
+        }
+
+        @Override
+        public String getPhoneNb() {
             return "";
         }
 
@@ -306,6 +315,14 @@ public class User implements Serializable {
      * to the FQN of the {@link User} class.
      */
     public static final String USER_ATTRIBUTE = User.class.getName();
+
+    public String getPhoneNb() {
+        return phoneNb;
+    }
+
+    public void setPhoneNb(String phoneNb) {
+        this.phoneNb = phoneNb;
+    }
 
     public enum Level {
 

@@ -19,6 +19,9 @@ public class UserUpdateRequest {
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     private String email;
 
+    @Pattern(regexp = Constants.Regexp.PHONE_NB)
+    private String phone;
+
     @ApiModelProperty("The user's plaintext password, only to be provided in POST/PUT requests in the User Resource " +
             "REST API interface. In the future, a dedicated REST API model may be constructed instead of using a " +
             "direct User model.")
@@ -60,20 +63,25 @@ public class UserUpdateRequest {
         this.level = level;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserUpdateRequest that = (UserUpdateRequest) o;
-        return Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getEmail(), that.getEmail()) &&
-                Objects.equals(getPassword(), that.getPassword()) &&
-                getLevel() == that.getLevel();
+        return Objects.equals(name, that.name) && Objects.equals(email, that.email) && Objects.equals(phone, that.phone) && Objects.equals(password, that.password) && level == that.level;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getEmail(), getPassword(), getLevel());
+        return Objects.hash(name, email, phone, password, level);
     }
 
     @Override
@@ -81,8 +89,9 @@ public class UserUpdateRequest {
         return "UserUpdateRequest{" +
                 "name='" + name + '\'' +
                 ", email='" + email + '\'' +
+                ", phone='" + phone + '\'' +
+                ", password='" + password + '\'' +
                 ", level=" + level +
                 '}';
     }
-
 }

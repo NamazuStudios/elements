@@ -182,6 +182,10 @@ public interface Constants {
          */
         String BASE_64 = "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$";
 
+        /**
+         * Checks for valid phone.
+         */
+        String PHONE_NB = "([\\.\\+\\-\\s\\/()]*[0-9][\\.\\+\\-\\s\\/()]*){8,15}";
     }
 
 }
