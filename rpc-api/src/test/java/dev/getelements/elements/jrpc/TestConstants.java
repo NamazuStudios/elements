@@ -52,6 +52,38 @@ public class TestConstants {
         });
     }
 
+    @Test
+    public void testFirstNameRegex() {
+        final List<String> validNames = asList("John", "Wieslaw", "Jo", "Sir John", "John2");
+
+        final List<String> invalidNames = asList("F", "T#$TEW#@$", "JohnJohnJohnJohnJohnJohnJohnJohnJohn");
+
+        validNames.forEach(validName -> {
+            assertTrue(validName.matches(Constants.Regexp.FIRST_NAME));
+        });
+
+
+        invalidNames.forEach(invalidName -> {
+            assertFalse(invalidName.matches(Constants.Regexp.FIRST_NAME));
+        });
+    }
+
+    @Test
+    public void testLastNameRegex() {
+        final List<String> validNames = asList("Dear", "Ping Pong", "Dwarfs12", "VerylongLastnameeeeeeee");
+
+        final List<String> invalidNames = asList("F", "T#$TEW#@$", "DearDearDearDearDearDearDearDearDearDearDear");
+
+        validNames.forEach(validName -> {
+            assertTrue(validName.matches(Constants.Regexp.LAST_NAME));
+        });
+
+
+        invalidNames.forEach(invalidName -> {
+            assertFalse(invalidName.matches(Constants.Regexp.LAST_NAME));
+        });
+    }
+
     public void check(final int value) {
         switch (value) {
             case PARSE_ERROR:

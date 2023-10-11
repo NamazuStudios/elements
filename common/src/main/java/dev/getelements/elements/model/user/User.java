@@ -1,9 +1,6 @@
 package dev.getelements.elements.model.user;
 
 import dev.getelements.elements.Constants;
-import dev.getelements.elements.model.ValidationGroups;
-import dev.getelements.elements.model.profile.Profile;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -11,7 +8,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 
 import static dev.getelements.elements.model.ValidationGroups.*;
@@ -35,6 +31,14 @@ public class User implements Serializable {
     @ApiModelProperty("A unique name for the user.")
     private String name;
 
+    @Pattern(regexp = Constants.Regexp.FIRST_NAME)
+    @ApiModelProperty("The user's first name")
+    private String firstName;
+
+    @Pattern(regexp = Constants.Regexp.LAST_NAME)
+    @ApiModelProperty("The user's last name")
+    private String lastName;
+
     @NotNull
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     @ApiModelProperty("The user's email.")
@@ -42,7 +46,7 @@ public class User implements Serializable {
 
     @Pattern(regexp = Constants.Regexp.PHONE_NB)
     @ApiModelProperty("The user's phone number.")
-    private String phoneNb;
+    private String primaryPhoneNb;
 
     @NotNull
     @ApiModelProperty("The user's access level.")
@@ -76,7 +80,7 @@ public class User implements Serializable {
         }
 
         @Override
-        public String getPhoneNb() {
+        public String getPrimaryPhoneNb() {
             return "";
         }
 
@@ -269,35 +273,6 @@ public class User implements Serializable {
         this.externalUserId = externalUserId;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return isActive() == user.isActive() && Objects.equals(getId(), user.getId()) && Objects.equals(getName(), user.getName()) && Objects.equals(getEmail(), user.getEmail()) && getLevel() == user.getLevel() && Objects.equals(getFacebookId(), user.getFacebookId()) && Objects.equals(getFirebaseId(), user.getFirebaseId()) && Objects.equals(getAppleSignInId(), user.getAppleSignInId()) && Objects.equals(getExternalUserId(), user.getExternalUserId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getFirebaseId(), getAppleSignInId(), getExternalUserId());
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("User{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", email='").append(email).append('\'');
-        sb.append(", level=").append(level);
-        sb.append(", active=").append(active);
-        sb.append(", facebookId='").append(facebookId).append('\'');
-        sb.append(", firebaseId='").append(firebaseId).append('\'');
-        sb.append(", appleSignInId='").append(appleSignInId).append('\'');
-        sb.append(", externalUserId='").append(externalUserId).append('\'');
-        sb.append('}');
-        return sb.toString();
-    }
-
     /**
      * Gets a special User object which is set to unprivileged.  This is used
      * as a palceholder when a user is not logged in.
@@ -316,12 +291,12 @@ public class User implements Serializable {
      */
     public static final String USER_ATTRIBUTE = User.class.getName();
 
-    public String getPhoneNb() {
-        return phoneNb;
+    public String getPrimaryPhoneNb() {
+        return primaryPhoneNb;
     }
 
-    public void setPhoneNb(String phoneNb) {
-        this.phoneNb = phoneNb;
+    public void setPrimaryPhoneNb(String primaryPhoneNb) {
+        this.primaryPhoneNb = primaryPhoneNb;
     }
 
     public enum Level {
@@ -344,4 +319,42 @@ public class User implements Serializable {
 
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return active == user.active && Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(facebookId, user.facebookId) && Objects.equals(firebaseId, user.firebaseId) && Objects.equals(appleSignInId, user.appleSignInId) && Objects.equals(externalUserId, user.externalUserId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, active, facebookId, firebaseId, appleSignInId, externalUserId);
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
+                ", level=" + level +
+                ", active=" + active +
+                ", facebookId='" + facebookId + '\'' +
+                ", firebaseId='" + firebaseId + '\'' +
+                ", appleSignInId='" + appleSignInId + '\'' +
+                ", externalUserId='" + externalUserId + '\'' +
+                '}';
+    }
 }

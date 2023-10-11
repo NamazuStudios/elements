@@ -20,7 +20,13 @@ public class UserCreateRequest implements Serializable {
     private String email;
 
     @Pattern(regexp = Constants.Regexp.PHONE_NB)
-    private String phone;
+    private String primaryPhoneNb;
+
+    @Pattern(regexp = Constants.Regexp.FIRST_NAME)
+    private String firstName;
+
+    @Pattern(regexp = Constants.Regexp.LAST_NAME)
+    private String lastName;
 
     @ApiModelProperty("The user's plaintext password, only to be provided in POST/PUT requests in the User Resource " +
             "REST API interface. In the future, a dedicated REST API model may be constructed instead of using a " +
@@ -76,36 +82,54 @@ public class UserCreateRequest implements Serializable {
         this.profiles = profiles;
     }
 
+    public String getPrimaryPhoneNb() {
+        return primaryPhoneNb;
+    }
+
+    public void setPrimaryPhoneNb(String primaryPhoneNb) {
+        this.primaryPhoneNb = primaryPhoneNb;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserCreateRequest that = (UserCreateRequest) o;
-        return Objects.equals(getName(), that.getName()) && Objects.equals(getEmail(), that.getEmail()) && Objects.equals(getPassword(), that.getPassword()) && getLevel() == that.getLevel() && Objects.equals(getProfiles(), that.getProfiles());
+        return Objects.equals(name, that.name) && Objects.equals(email, that.email) && Objects.equals(primaryPhoneNb, that.primaryPhoneNb) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(password, that.password) && level == that.level && Objects.equals(profiles, that.profiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getEmail(), getPassword(), getLevel(), getProfiles());
+        return Objects.hash(name, email, primaryPhoneNb, firstName, lastName, password, level, profiles);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("UserCreateRequest{");
-        sb.append("name='").append(name).append('\'');
-        sb.append(", email='").append(email).append('\'');
-        sb.append(", password='").append(password).append('\'');
-        sb.append(", level=").append(level);
-        sb.append(", profiles=").append(profiles);
-        sb.append('}');
-        return sb.toString();
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
+        return "UserCreateRequest{" +
+                "name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", password='" + password + '\'' +
+                ", level=" + level +
+                ", profiles=" + profiles +
+                '}';
     }
 }

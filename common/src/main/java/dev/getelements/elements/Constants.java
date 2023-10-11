@@ -186,6 +186,16 @@ public interface Constants {
          * Checks for valid phone.
          */
         String PHONE_NB = "([\\.\\+\\-\\s\\/()]*[0-9][\\.\\+\\-\\s\\/()]*){8,15}";
+
+        /**
+         * Checks for valid first name. Rules: only alphanumeric, length 2-20
+         */
+        String FIRST_NAME = "^[A-Za-z0-9 ]{2,20}";
+
+        /**
+         * Checks for valid last name. Rules: only alphanumeric, length 3-30, white spaces available
+         */
+        String LAST_NAME = "^[A-Za-z0-9 ]{3,30}";
     }
 
 }

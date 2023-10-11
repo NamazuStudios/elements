@@ -13,6 +13,10 @@ public class UserCreateResponse {
 
     private String email;
 
+    private String firstName;
+
+    private String lastName;
+
     private User.Level level;
 
     private boolean active;
@@ -23,7 +27,7 @@ public class UserCreateResponse {
 
     private String appleSignInId;
 
-    private String phoneNb;
+    private String primaryPhoneNb;
 
     private List<Profile> profiles;
 
@@ -109,12 +113,28 @@ public class UserCreateResponse {
         this.password = password;
     }
 
-    public String getPhoneNb() {
-        return phoneNb;
+    public String getPrimaryPhoneNb() {
+        return primaryPhoneNb;
     }
 
-    public void setPhoneNb(String phoneNb) {
-        this.phoneNb = phoneNb;
+    public void setPrimaryPhoneNb(String primaryPhoneNb) {
+        this.primaryPhoneNb = primaryPhoneNb;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     @Override
@@ -122,12 +142,12 @@ public class UserCreateResponse {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserCreateResponse that = (UserCreateResponse) o;
-        return active == that.active && Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(email, that.email) && level == that.level && Objects.equals(facebookId, that.facebookId) && Objects.equals(firebaseId, that.firebaseId) && Objects.equals(appleSignInId, that.appleSignInId) && Objects.equals(phoneNb, that.phoneNb) && Objects.equals(profiles, that.profiles) && Objects.equals(password, that.password);
+        return active == that.active && Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(email, that.email) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && level == that.level && Objects.equals(facebookId, that.facebookId) && Objects.equals(firebaseId, that.firebaseId) && Objects.equals(appleSignInId, that.appleSignInId) && Objects.equals(primaryPhoneNb, that.primaryPhoneNb) && Objects.equals(profiles, that.profiles) && Objects.equals(password, that.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, email, level, active, facebookId, firebaseId, appleSignInId, phoneNb, profiles, password);
+        return Objects.hash(id, name, email, firstName, lastName, level, active, facebookId, firebaseId, appleSignInId, primaryPhoneNb, profiles, password);
     }
 
     @Override
@@ -136,12 +156,14 @@ public class UserCreateResponse {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
                 ", level=" + level +
                 ", active=" + active +
                 ", facebookId='" + facebookId + '\'' +
                 ", firebaseId='" + firebaseId + '\'' +
                 ", appleSignInId='" + appleSignInId + '\'' +
-                ", phoneNb='" + phoneNb + '\'' +
+                ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
                 ", profiles=" + profiles +
                 ", password='" + password + '\'' +
                 '}';
