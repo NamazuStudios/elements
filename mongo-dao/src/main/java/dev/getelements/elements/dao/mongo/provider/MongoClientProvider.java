@@ -5,6 +5,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.connection.SslSettings;
 import dev.getelements.elements.dao.mongo.codec.TimestampCodec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+
+import java.util.Optional;
 
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
 import static org.bson.codecs.configuration.CodecRegistries.*;
@@ -30,6 +33,8 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     private String mongoDbUri;
 
+    private SslSettings sslSettings;
+
     @Override
     public MongoClient get() {
         return getWithClientUri();
@@ -44,12 +49,14 @@ public class MongoClientProvider implements Provider<MongoClient> {
             fromRegistries(getDefaultCodecRegistry(), fromProviders(PojoCodecProvider.builder().automatic(true).build()))
         );
 
-        final var settings = MongoClientSettings.builder()
-                .codecRegistry(registry)
-                .applyConnectionString(new ConnectionString(getMongoDbUri()))
-            .build();
+        final var connectionString = new ConnectionString(getMongoDbUri());
 
-        return MongoClients.create(settings);
+        final var settingsBuilder = MongoClientSettings.builder()
+                .codecRegistry(registry)
+                .applyConnectionString(connectionString)
+                .applyToSslSettings(builder -> builder.applySettings(getSslSettings()));
+
+        return MongoClients.create(settingsBuilder.build());
 
     }
 
@@ -60,6 +67,15 @@ public class MongoClientProvider implements Provider<MongoClient> {
     @Inject
     public void setMongoDbUri(@Named(MONGO_CLIENT_URI) String mongoDbUri) {
         this.mongoDbUri = mongoDbUri;
+    }
+
+    public SslSettings getSslSettings() {
+        return sslSettings;
+    }
+
+    @Inject
+    public void setSslSettings(SslSettings sslSettings) {
+        this.sslSettings = sslSettings;
     }
 
 }

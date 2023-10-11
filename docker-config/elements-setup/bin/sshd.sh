@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-run_sshd=/run/sshd
-sshd_pid=/run/sshd.pid
+run_sshd=/var/run/sshd
+sshd_pid=/var/run/sshd.pid
 pam_env_conf=/etc/security/pam_env.conf
 
 if [[ -z "${ELEMENTS_CONF}" ]];
@@ -10,12 +10,11 @@ then
   exit 1
 fi
 
-sshd_conf_dir="${ELEMENTS_CONF}/sshd"
+SSHD_CONFIG_DIR="${SSHD_CONFIG_DIR:-${ELEMENTS_CONF}}"
+SSHD_CONFIG="${SSHD_CONFIG:-${SSHD_CONFIG_DIR}/sshd_config}"
 
-ssh_host_rsa_key="${sshd_conf_dir}/ssh_host_rsa_key"
-ssh_host_dsa_key="${sshd_conf_dir}/ssh_host_dsa_key"
-ssh_host_ecdsa_key="${sshd_conf_dir}/ssh_host_ecdsa_key"
-authorized_keys="${sshd_conf_dir}/authorized_keys"
+echo "SSHD_CONFIG_DIR: ${SSHD_CONFIG_DIR}"
+echo "SSHD_CONFIG: ${SSHD_CONFIG}"
 
 if [ -f "$sshd_pid" ]
 then
@@ -35,12 +34,5 @@ env | grep '^dev[\._]getelements[\._].*' >> "$pam_env_conf"
 echo "PAM Environment."
 cat "$pam_env_conf"
 
-chown root:root "${sshd_conf_dir}/authorized_keys"
-
-chmod -f 600 "${ssh_host_rsa_key}"
-chmod -f 600 "${ssh_host_dsa_key}"
-chmod -f 600 "${ssh_host_ecdsa_key}"
-chmod -f 644 "${authorized_keys}"
-
-/usr/sbin/sshd -D -e -f "${sshd_conf_dir}/sshd_config"
+/usr/sbin/sshd -D -e -f "${SSHD_CONFIG}"
 rm -f "$sshd_pid"
