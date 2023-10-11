@@ -164,10 +164,6 @@
             <groupId>com.syntifi.near</groupId>
             <artifactId>near-java-api-rpc</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.getstream.client</groupId>
-            <artifactId>stream-java</artifactId>
-        </dependency>
 
         <!-- Manual Kotlin Dependencies -->
         <dependency>
