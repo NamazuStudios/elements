@@ -6,12 +6,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>2.0.26-SNAPSHOT</version>
+        <version>2.0.27-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-cluster-node-guice</artifactId>
-    <version>2.0.26-SNAPSHOT</version>
+    <version>2.0.27-SNAPSHOT</version>
     <name>rt-server-cluster-node-guice</name>
 
     <dependencies>

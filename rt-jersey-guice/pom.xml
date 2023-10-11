@@ -8,11 +8,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>2.0.26-SNAPSHOT</version>
+        <version>2.0.27-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-jersey-guice</artifactId>
-    <version>2.0.26-SNAPSHOT</version>
+    <version>2.0.27-SNAPSHOT</version>
     <name>rt-jersey-guice</name>
 
     <dependencies>
