@@ -21,6 +21,8 @@ public class CreateProfileRequest {
     @ApiModelProperty("The application id this profile belongs to.")
     private String applicationId;
 
+    /** @deprecated use imageObject */
+    @Deprecated
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
 

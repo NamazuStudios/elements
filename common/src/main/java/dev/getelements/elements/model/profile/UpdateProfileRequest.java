@@ -13,6 +13,8 @@ import java.util.Objects;
 @ApiModel(description = "Represents a request to update a profile.")
 public class UpdateProfileRequest {
 
+    /** @deprecated use imageObject */
+    @Deprecated
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
 
