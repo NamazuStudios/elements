@@ -2,6 +2,7 @@ package dev.getelements.elements.model.profile;
 
 import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -14,6 +15,9 @@ public class UpdateProfileRequest {
 
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
+
+    @ApiModelProperty("Image object stored in EL large objects storage.")
+    private LargeObjectReference imageObject;
 
     @ApiModelProperty("A non-unique display name for this profile.")
     private String displayName;
@@ -109,27 +113,38 @@ public class UpdateProfileRequest {
         this.application = application;
     }
 
+    public LargeObjectReference getImageObject() {
+        return imageObject;
+    }
+
+    public void setImageObject(LargeObjectReference imageObject) {
+        this.imageObject = imageObject;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateProfileRequest that = (UpdateProfileRequest) o;
-        return Objects.equals(getImageUrl(), that.getImageUrl()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(imageUrl, that.imageUrl) && Objects.equals(imageObject, that.imageObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(id, that.id) && Objects.equals(lastLogin, that.lastLogin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getImageUrl(), getDisplayName(), getMetadata());
+        return Objects.hash(imageUrl, imageObject, displayName, metadata, user, application, id, lastLogin);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("UpdateProfileRequest{");
-        sb.append("imageUrl='").append(imageUrl).append('\'');
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "UpdateProfileRequest{" +
+                "imageUrl='" + imageUrl + '\'' +
+                ", imageObject=" + imageObject +
+                ", displayName='" + displayName + '\'' +
+                ", metadata=" + metadata +
+                ", user=" + user +
+                ", application=" + application +
+                ", id='" + id + '\'' +
+                ", lastLogin='" + lastLogin + '\'' +
+                '}';
     }
-
 }

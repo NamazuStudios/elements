@@ -4,6 +4,7 @@ import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -51,6 +52,9 @@ public class Profile implements Serializable {
 
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
+
+    @ApiModelProperty("Image object stored in EL large objects storage.")
+    private LargeObjectReference imageObject;
 
     @NotNull
     @Pattern(regexp = PROFILE_DISPLAY_NAME_REGEX)
@@ -119,24 +123,25 @@ public class Profile implements Serializable {
         this.lastLogin = lastLogin;
     }
 
+    public LargeObjectReference getImageObject() {
+        return imageObject;
+    }
+
+    public void setImageObject(LargeObjectReference imageObject) {
+        this.imageObject = imageObject;
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof Profile)) return false;
-        Profile profile = (Profile) object;
-        return  getLastLogin() == profile.getLastLogin() &&
-                Objects.equals(getId(), profile.getId()) &&
-                Objects.equals(getUser(), profile.getUser()) &&
-                Objects.equals(getApplication(), profile.getApplication()) &&
-                Objects.equals(getImageUrl(), profile.getImageUrl()) &&
-                Objects.equals(getDisplayName(), profile.getDisplayName()) &&
-                Objects.equals(metadata, profile.metadata);
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Profile profile = (Profile) o;
+        return lastLogin == profile.lastLogin && Objects.equals(id, profile.id) && Objects.equals(user, profile.user) && Objects.equals(application, profile.application) && Objects.equals(imageUrl, profile.imageUrl) && Objects.equals(imageObject, profile.imageObject) && Objects.equals(displayName, profile.displayName) && Objects.equals(metadata, profile.metadata);
     }
 
     @Override
     public int hashCode() {
-        Long lastLogin = getLastLogin();    // cast to object for the hash
-        return Objects.hash(getId(), getUser(), getApplication(), getImageUrl(), getDisplayName(), lastLogin, metadata);
+        return Objects.hash(id, user, application, imageUrl, imageObject, displayName, metadata, lastLogin);
     }
 
     @Override
@@ -146,10 +151,10 @@ public class Profile implements Serializable {
                 ", user=" + user +
                 ", application=" + application +
                 ", imageUrl='" + imageUrl + '\'' +
+                ", imageObject=" + imageObject +
                 ", displayName='" + displayName + '\'' +
                 ", metadata=" + metadata +
                 ", lastLogin=" + lastLogin +
                 '}';
     }
-
 }
