@@ -246,6 +246,7 @@ public class MongoUserDao implements UserDao {
         if (user.getFacebookId() != null) builder.with(set("facebookId", user.getFacebookId()));
         if (user.getFirebaseId() != null) builder.with(set("firebaseId", user.getFacebookId()));
         if (user.getAppleSignInId() != null) builder.with(set("appleSignInId", user.getFacebookId()));
+        updateBuilderWithOptionalData(user, builder);
 
         getMongoPasswordUtils().addPasswordToBuilder(builder, password);
 
@@ -286,6 +287,8 @@ public class MongoUserDao implements UserDao {
             builder.with(set("facebookId", user.getFacebookId()));
         }
 
+        updateBuilderWithOptionalData(user, builder);
+
         final var opts = new ModifyOptions()
             .upsert(true)
             .returnDocument(AFTER);
@@ -325,6 +328,8 @@ public class MongoUserDao implements UserDao {
                     set("level", user.getLevel())
             );
         }
+
+        updateBuilderWithOptionalData(user, builder);
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
@@ -369,6 +374,8 @@ public class MongoUserDao implements UserDao {
                 set("level", user.getLevel())
             );
         }
+
+        updateBuilderWithOptionalData(user, builder);
 
         getMongoPasswordUtils().addPasswordToBuilder(builder, password);
 
@@ -416,6 +423,8 @@ public class MongoUserDao implements UserDao {
             );
         }
 
+        updateBuilderWithOptionalData(user, builder);
+
         final var mongoUser = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
@@ -459,6 +468,8 @@ public class MongoUserDao implements UserDao {
             );
         }
 
+        updateBuilderWithOptionalData(user, builder);
+
         getMongoPasswordUtils().addPasswordToBuilder(builder, password);
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
@@ -496,6 +507,12 @@ public class MongoUserDao implements UserDao {
         }
 
         getMongoProfileDao().softDeleteProfilesForUser(mongoUser);
+    }
+
+    private void updateBuilderWithOptionalData(User user, UpdateBuilder builder) {
+        if (user.getPrimaryPhoneNb() != null) builder.with(set("primaryPhoneNb", user.getPrimaryPhoneNb()));
+        if (user.getFirstName() != null) builder.with(set("firstName", user.getFirstName()));
+        if (user.getLastName() != null) builder.with(set("lastName", user.getLastName()));
     }
 
     public void validate(final User user) {

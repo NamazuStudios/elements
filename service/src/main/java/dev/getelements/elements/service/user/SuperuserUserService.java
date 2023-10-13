@@ -53,9 +53,14 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
         final var user = new User();
         user.setActive(true);
+
+        //TODO: check is mapper or dozzer mapper would solve setting values issue
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
         user.setLevel(userCreateRequest.getLevel());
+        user.setPrimaryPhoneNb(userCreateRequest.getPrimaryPhoneNb());
+        user.setFirstName(userCreateRequest.getFirstName());
+        user.setLastName(userCreateRequest.getLastName());
 
         getNameService().assignNameAndEmailIfNecessary(user);
 
@@ -92,6 +97,9 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         user.setEmail(userUpdateRequest.getEmail());
         user.setName(userUpdateRequest.getName());
         user.setLevel(userUpdateRequest.getLevel());
+        user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
+        user.setFirstName(userUpdateRequest.getFirstName());
+        user.setLastName(userUpdateRequest.getLastName());
 
         final String password = nullToEmpty(userUpdateRequest.getPassword()).trim();
 
