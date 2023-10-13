@@ -33,6 +33,12 @@ public class SubjectRequest {
         return request;
     }
 
+    public static SubjectRequest newWildcardRequest() {
+        final var request = newDefaultRequest();
+        request.setWildcard(true);
+        return request;
+    }
+
     public boolean isWildcard() {
         return wildcard;
     }

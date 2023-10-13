@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
+
 public class UserLargeObjectService implements LargeObjectService {
 
     private LargeObjectDao largeObjectDao;
@@ -99,6 +101,13 @@ public class UserLargeObjectService implements LargeObjectService {
         }
 
         return getLargeObjectBucket().writeObject(objectId);
+    }
+
+    @Override
+    public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
+        getValidationHelper().validateModel(largeObject);
+        return getLargeObjectCdnUtils().setCdnUrlToObject( isNull(largeObject.getId()) ?
+                getLargeObjectDao().createLargeObject(largeObject) : getLargeObjectDao().updateLargeObject(largeObject));
     }
 
     public LargeObjectDao getLargeObjectDao() {

@@ -54,6 +54,8 @@ public class SuperUserProfileService implements ProfileService {
 
     private ProfileServiceUtils profileServiceUtils;
 
+    private ProfileImageObjectUtils profileImageObjectUtils;
+
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
@@ -102,6 +104,9 @@ public class SuperUserProfileService implements ProfileService {
         final var attributes = new SimpleAttributes.Builder()
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
+
+        //TODO: should we handle/catch exceptions, and allow to create profile without image object (in error case) ?
+        profileImageObjectUtils.createProfileImageObject(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -210,4 +215,12 @@ public class SuperUserProfileService implements ProfileService {
         this.profileServiceUtils = profileServiceUtils;
     }
 
+    public ProfileImageObjectUtils getProfileImageObjectUtils() {
+        return profileImageObjectUtils;
+    }
+
+    @Inject
+    public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
+        this.profileImageObjectUtils = profileImageObjectUtils;
+    }
 }

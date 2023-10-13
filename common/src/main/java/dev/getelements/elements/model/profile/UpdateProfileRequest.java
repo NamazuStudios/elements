@@ -1,6 +1,5 @@
 package dev.getelements.elements.model.profile;
 
-import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.user.User;
