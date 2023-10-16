@@ -50,6 +50,8 @@ public class Profile implements Serializable {
     @ApiModelProperty("The Application associated with this Profile.")
     private Application application;
 
+    /** @deprecated use reference to LargeObject with url */
+    @Deprecated
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
 

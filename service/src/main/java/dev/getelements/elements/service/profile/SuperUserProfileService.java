@@ -4,8 +4,10 @@ import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.Context;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -121,7 +124,6 @@ public class SuperUserProfileService implements ProfileService {
         }
 
         return createdProfile;
-
     }
 
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
@@ -132,6 +134,17 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public void deleteProfile(String profileId) {
         getProfileDao().softDeleteProfile(profileId);
+    }
+
+    @Override
+    public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
+
+        final var profile = getProfileDao().getActiveProfile(profileId);
+        LargeObject newImageObject = profileImageObjectUtils.updateProfileImageObject(profile,updateProfileImageRequest);
+
+//        TODO: dao -> update mongoProfile
+
+        return profile;
     }
 
     public ProfileDao getProfileDao() {

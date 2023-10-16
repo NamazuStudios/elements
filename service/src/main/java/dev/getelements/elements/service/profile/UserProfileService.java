@@ -3,11 +3,13 @@ package dev.getelements.elements.service.profile;
 
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
+import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.rt.Attributes;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
@@ -167,6 +170,11 @@ public class UserProfileService implements ProfileService {
 
         getProfileDao().softDeleteProfile(profileId);
 
+    }
+
+    @Override
+    public Profile updateProfileImage(String profileId, UpdateProfileImageRequest updateProfileImageRequest) {
+        throw new ForbiddenException();
     }
 
     public User getUser() {

@@ -1,10 +1,12 @@
 package dev.getelements.elements.service;
 
+import java.io.IOException;
 import java.util.Optional;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
@@ -127,5 +129,12 @@ public interface ProfileService {
      * @param profileId the profile ID.
      */
     void deleteProfile(String profileId);
+
+    /**
+     * Update profile image related fields
+     *
+     * @param updateProfileImageRequest request with image object values
+     */
+    Profile updateProfileImage(String profileId, UpdateProfileImageRequest updateProfileImageRequest) throws IOException;
 
 }
