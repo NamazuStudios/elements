@@ -47,6 +47,8 @@ public class UserProfileService implements ProfileService {
 
     private ProfileServiceUtils profileServiceUtils;
 
+    private ProfileImageObjectUtils profileImageObjectUtils;
+
     private Context.Factory contextFactory;
 
     private Supplier<Profile> currentProfileSupplier;
@@ -133,6 +135,9 @@ public class UserProfileService implements ProfileService {
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
 
+        //user id and profile id are already checked
+        profileImageObjectUtils.createProfileImageObject(createdProfile, profileRequest.getImageObjectReference());
+
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
         } catch (NodeNotFoundException ex) {
@@ -173,8 +178,11 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfileImage(String profileId, UpdateProfileImageRequest updateProfileImageRequest) {
-        throw new ForbiddenException();
+    public Profile updateProfileImage(String profileId, UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
+        final var profile = getProfileDao().getActiveProfile(profileId);
+        profileImageObjectUtils.updateProfileImageObject(profile, updateProfileImageRequest.getImageObjectReference());
+
+        return getProfileDao().updateActiveProfile(profile);
     }
 
     public User getUser() {
@@ -258,4 +266,12 @@ public class UserProfileService implements ProfileService {
         this.profileServiceUtils = profileServiceUtils;
     }
 
+    public ProfileImageObjectUtils getProfileImageObjectUtils() {
+        return profileImageObjectUtils;
+    }
+
+    @Inject
+    public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
+        this.profileImageObjectUtils = profileImageObjectUtils;
+    }
 }

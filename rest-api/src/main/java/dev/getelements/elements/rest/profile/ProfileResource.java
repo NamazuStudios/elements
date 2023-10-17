@@ -145,6 +145,7 @@ public class ProfileResource {
     @Path("{profileId}/image")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a Profile image")
+//    TODO: describe final logic
     public Profile updateProfileImage(
             @PathParam("profileId") String profileId,
             final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {

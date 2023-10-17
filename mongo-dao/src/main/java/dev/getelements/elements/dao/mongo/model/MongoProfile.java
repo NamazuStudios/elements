@@ -1,7 +1,7 @@
 package dev.getelements.elements.dao.mongo.model;
 
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
-import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
@@ -37,8 +37,8 @@ public class MongoProfile {
     @Reference
     private MongoApplication application;
 
-    @Reference
-    private LargeObject largeObject;
+    @Reference(ignoreMissing = true)
+    private MongoLargeObject largeObject;
 
     @Property
     private String displayName;
@@ -106,11 +106,11 @@ public class MongoProfile {
         this.lastLogin = lastLogin;
     }
 
-    public LargeObject getLargeObject() {
+    public MongoLargeObject getLargeObject() {
         return largeObject;
     }
 
-    public void setLargeObject(LargeObject largeObject) {
+    public void setLargeObject(MongoLargeObject largeObject) {
         this.largeObject = largeObject;
     }
 

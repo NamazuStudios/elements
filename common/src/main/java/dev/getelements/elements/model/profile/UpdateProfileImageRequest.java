@@ -10,18 +10,18 @@ import java.util.Objects;
 public class UpdateProfileImageRequest {
 
     @ApiModelProperty("Image object stored in EL large objects storage.")
-    private LargeObjectReference imageObject;
+    private LargeObjectReference imageObjectReference;
 
     //TODO: synchronize with accepted mimetypes
     @ApiModelProperty("MimeType of image")
     private String mimeType;
 
-    public LargeObjectReference getImageObject() {
-        return imageObject;
+    public LargeObjectReference getImageObjectReference() {
+        return imageObjectReference;
     }
 
-    public void setImageObject(LargeObjectReference imageObject) {
-        this.imageObject = imageObject;
+    public void setImageObjectReference(LargeObjectReference imageObjectReference) {
+        this.imageObjectReference = imageObjectReference;
     }
 
     public String getMimeType() {
@@ -37,18 +37,18 @@ public class UpdateProfileImageRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateProfileImageRequest that = (UpdateProfileImageRequest) o;
-        return Objects.equals(imageObject, that.imageObject) && Objects.equals(mimeType, that.mimeType);
+        return Objects.equals(imageObjectReference, that.imageObjectReference) && Objects.equals(mimeType, that.mimeType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(imageObject, mimeType);
+        return Objects.hash(imageObjectReference, mimeType);
     }
 
     @Override
     public String toString() {
         return "UpdateProfileImageRequest{" +
-                "imageObject=" + imageObject +
+                "imageObject=" + imageObjectReference +
                 ", mimeType='" + mimeType + '\'' +
                 '}';
     }

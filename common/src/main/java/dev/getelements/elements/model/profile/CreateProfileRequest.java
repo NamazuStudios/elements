@@ -27,7 +27,7 @@ public class CreateProfileRequest {
     private String imageUrl;
 
     @ApiModelProperty("Image object stored in EL large objects storage.")
-    private LargeObjectReference imageObject;
+    private LargeObjectReference imageObjectReference;
 
     @ApiModelProperty("A non-unique display name for this profile.")
     private String displayName;
@@ -143,12 +143,12 @@ public class CreateProfileRequest {
         this.lastLogin = lastLogin;
     }
 
-    public LargeObjectReference getImageObject() {
-        return imageObject;
+    public LargeObjectReference getImageObjectReference() {
+        return imageObjectReference;
     }
 
-    public void setImageObject(LargeObjectReference imageObject) {
-        this.imageObject = imageObject;
+    public void setImageObjectReference(LargeObjectReference imageObjectReference) {
+        this.imageObjectReference = imageObjectReference;
     }
 
     @Override
@@ -156,12 +156,12 @@ public class CreateProfileRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateProfileRequest that = (CreateProfileRequest) o;
-        return Objects.equals(userId, that.userId) && Objects.equals(applicationId, that.applicationId) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(imageObject, that.imageObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(id, that.id) && Objects.equals(lastLogin, that.lastLogin);
+        return Objects.equals(userId, that.userId) && Objects.equals(applicationId, that.applicationId) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(imageObjectReference, that.imageObjectReference) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(id, that.id) && Objects.equals(lastLogin, that.lastLogin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, applicationId, imageUrl, imageObject, displayName, metadata, user, application, id, lastLogin);
+        return Objects.hash(userId, applicationId, imageUrl, imageObjectReference, displayName, metadata, user, application, id, lastLogin);
     }
 
     @Override
@@ -170,7 +170,7 @@ public class CreateProfileRequest {
                 "userId='" + userId + '\'' +
                 ", applicationId='" + applicationId + '\'' +
                 ", imageUrl='" + imageUrl + '\'' +
-                ", imageObject=" + imageObject +
+                ", imageObject=" + imageObjectReference +
                 ", displayName='" + displayName + '\'' +
                 ", metadata=" + metadata +
                 ", user=" + user +

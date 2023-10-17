@@ -4,7 +4,6 @@ import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
@@ -109,7 +108,7 @@ public class SuperUserProfileService implements ProfileService {
             .build();
 
         //TODO: should we handle/catch exceptions, and allow to create profile without image object (in error case) ?
-        profileImageObjectUtils.createProfileImageObject(createdProfile);
+        profileImageObjectUtils.createProfileImageObject(createdProfile, createProfileRequest.getImageObjectReference());
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -138,13 +137,10 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
-
         final var profile = getProfileDao().getActiveProfile(profileId);
-        LargeObject newImageObject = profileImageObjectUtils.updateProfileImageObject(profile,updateProfileImageRequest);
+        profileImageObjectUtils.updateProfileImageObject(profile, updateProfileImageRequest.getImageObjectReference());
 
-//        TODO: dao -> update mongoProfile
-
-        return profile;
+        return getProfileDao().updateActiveProfile(profile);
     }
 
     public ProfileDao getProfileDao() {

@@ -1,14 +1,15 @@
 package dev.getelements.elements.service.profile;
 
+import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.largeobject.Subjects;
 import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.LargeObjectService;
 
 import javax.inject.Inject;
-
 import java.io.IOException;
 import java.util.UUID;
 
@@ -20,32 +21,39 @@ public class ProfileImageObjectUtils {
 
     private LargeObjectService largeObjectService;
     
-    LargeObject createProfileImageObject(Profile profile) {
-        LargeObject largeObject = new LargeObject();
+    void createProfileImageObject(Profile profile, LargeObjectReference imageObjectReference) {
+        LargeObject imageObject = createImageObjectFromReference(profile, imageObjectReference);
+        LargeObject persistedImageObject = largeObjectService.saveOrUpdateLargeObject(imageObject);
+        imageObjectReference.setId(persistedImageObject.getId());
 
-        largeObject.setAccessPermissions(setupDefaultPermissions(profile));
-
-        //TODO: should profile request provide this info?
-        largeObject.setMimeType("image/png");
-        largeObject.setPath(String.format(DEFAULT_IMAGE_PATH, profile.getUser().getId(), profile.getId(), UUID.randomUUID()));
-
-        return largeObjectService.saveOrUpdateLargeObject(largeObject);
+        profile.setImageUrl(imageObjectReference.getUrl());
+        profile.setImageObject(imageObjectReference);
     }
 
     //TODO: update does not work currently due to mongo object ID implementation. Need to create new & delete old object
-    LargeObject updateProfileImageObject(Profile profile, UpdateProfileImageRequest request) throws IOException {
+    void updateProfileImageObject(Profile profile, LargeObjectReference imageObjectReference) throws IOException {
+        String currentImageId = profile.getImageObject().getId();
+        LargeObject newImageObject = createImageObjectFromReference(profile, imageObjectReference);
+
+        //TODO: check if this two lines are in one transaction
+        LargeObject persistedObject = largeObjectService.saveOrUpdateLargeObject(newImageObject);
+        largeObjectService.deleteLargeObject(currentImageId);
+
+        imageObjectReference.setId(persistedObject.getId());
+
+        profile.setImageUrl(imageObjectReference.getUrl());
+        profile.setImageObject(imageObjectReference);
+    }
+
+    private LargeObject createImageObjectFromReference(Profile profile, LargeObjectReference imageObjectReference) {
         LargeObject largeObject = new LargeObject();
 
         largeObject.setAccessPermissions(setupDefaultPermissions(profile));
-        largeObject.setMimeType(request.getMimeType());
+        largeObject.setMimeType(imageObjectReference.getMimeType());
+        largeObject.setUrl(imageObjectReference.getUrl());
         largeObject.setPath(String.format(DEFAULT_IMAGE_PATH, profile.getUser().getId(), profile.getId(), UUID.randomUUID()));
-        largeObject.setUrl(request.getImageObject().getUrl());
 
-        //TODO: check if this two lines are in one transaction
-        LargeObject persistedObject = largeObjectService.saveOrUpdateLargeObject(largeObject);
-        largeObjectService.deleteLargeObject(request.getImageObject().getId());
-
-        return persistedObject;
+        return largeObject;
     }
 
     private AccessPermissions setupDefaultPermissions(Profile profile) {
