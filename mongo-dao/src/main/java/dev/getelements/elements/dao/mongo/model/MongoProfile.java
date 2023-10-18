@@ -37,6 +37,9 @@ public class MongoProfile {
     @Reference
     private MongoApplication application;
 
+    @Property
+    private String imageUrl;
+
     @Reference(ignoreMissing = true)
     private MongoLargeObject largeObject;
 
@@ -114,17 +117,25 @@ public class MongoProfile {
         this.largeObject = largeObject;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoProfile that = (MongoProfile) o;
-        return active == that.active && Objects.equals(objectId, that.objectId) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(largeObject, that.largeObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(lastLogin, that.lastLogin);
+        return active == that.active && Objects.equals(objectId, that.objectId) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(largeObject, that.largeObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(lastLogin, that.lastLogin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, active, user, application, largeObject, displayName, metadata, lastLogin);
+        return Objects.hash(objectId, active, user, application, imageUrl, largeObject, displayName, metadata, lastLogin);
     }
 
     @Override
@@ -134,6 +145,7 @@ public class MongoProfile {
                 ", active=" + active +
                 ", user=" + user +
                 ", application=" + application +
+                ", imageUrl='" + imageUrl + '\'' +
                 ", largeObject=" + largeObject +
                 ", displayName='" + displayName + '\'' +
                 ", metadata=" + metadata +
