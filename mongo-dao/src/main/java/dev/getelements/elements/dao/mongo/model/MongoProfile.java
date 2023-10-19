@@ -41,7 +41,7 @@ public class MongoProfile {
     private String imageUrl;
 
     @Reference(ignoreMissing = true)
-    private MongoLargeObject largeObject;
+    private MongoLargeObject imageObject;
 
     @Property
     private String displayName;
@@ -109,14 +109,6 @@ public class MongoProfile {
         this.lastLogin = lastLogin;
     }
 
-    public MongoLargeObject getLargeObject() {
-        return largeObject;
-    }
-
-    public void setLargeObject(MongoLargeObject largeObject) {
-        this.largeObject = largeObject;
-    }
-
     public String getImageUrl() {
         return imageUrl;
     }
@@ -125,17 +117,25 @@ public class MongoProfile {
         this.imageUrl = imageUrl;
     }
 
+    public MongoLargeObject getImageObject() {
+        return imageObject;
+    }
+
+    public void setImageObject(MongoLargeObject imageObject) {
+        this.imageObject = imageObject;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoProfile that = (MongoProfile) o;
-        return active == that.active && Objects.equals(objectId, that.objectId) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(largeObject, that.largeObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(lastLogin, that.lastLogin);
+        return active == that.active && Objects.equals(objectId, that.objectId) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(imageObject, that.imageObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(lastLogin, that.lastLogin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, active, user, application, imageUrl, largeObject, displayName, metadata, lastLogin);
+        return Objects.hash(objectId, active, user, application, imageUrl, imageObject, displayName, metadata, lastLogin);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class MongoProfile {
                 ", user=" + user +
                 ", application=" + application +
                 ", imageUrl='" + imageUrl + '\'' +
-                ", largeObject=" + largeObject +
+                ", imageObject=" + imageObject +
                 ", displayName='" + displayName + '\'' +
                 ", metadata=" + metadata +
                 ", lastLogin=" + lastLogin +

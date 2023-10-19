@@ -279,7 +279,7 @@ public class MongoProfileDao implements ProfileDao {
         );
 
         if (imageObject != null) {
-            builder.with(set("largeObject", imageObject));
+            builder.with(set("imageObject", imageObject));
         }
 
         if (metadata == null) {
@@ -366,7 +366,7 @@ public class MongoProfileDao implements ProfileDao {
         );
 
         if (imageObject != null) {
-            builder.with(set("largeObject", imageObject));
+            builder.with(set("imageObject", imageObject));
         }
 
         if (metadata == null) {
