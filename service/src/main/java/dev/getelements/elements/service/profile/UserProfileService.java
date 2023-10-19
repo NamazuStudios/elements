@@ -3,7 +3,6 @@ package dev.getelements.elements.service.profile;
 
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
-import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
@@ -29,6 +28,8 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import static java.util.Objects.isNull;
 
 /**
  * Created by patricktwohig on 6/29/17.
@@ -137,6 +138,9 @@ public class UserProfileService implements ProfileService {
 
         //user id and profile id are already checked
         profileImageObjectUtils.createProfileImageObject(createdProfile, profileRequest.getImageObjectReference());
+        if (!isNull(createdProfile.getImageObject())) {
+            getProfileDao().updateActiveProfile(createdProfile);
+        }
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);

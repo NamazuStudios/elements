@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT_LEGACY;
+import static java.util.Objects.isNull;
 
 /**
  * Provides full access to the {@link Profile} and related types.  Should be
@@ -107,8 +108,10 @@ public class SuperUserProfileService implements ProfileService {
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
 
-        //TODO: should we handle/catch exceptions, and allow to create profile without image object (in error case) ?
         profileImageObjectUtils.createProfileImageObject(createdProfile, createProfileRequest.getImageObjectReference());
+        if (!isNull(createdProfile.getImageObject())) {
+            getProfileDao().updateActiveProfile(createdProfile);
+        }
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);

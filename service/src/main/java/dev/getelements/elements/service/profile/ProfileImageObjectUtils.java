@@ -1,12 +1,10 @@
 package dev.getelements.elements.service.profile;
 
-import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.largeobject.AccessPermissions;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.largeobject.Subjects;
 import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.LargeObjectService;
 
 import javax.inject.Inject;
@@ -14,14 +12,19 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static java.util.Arrays.asList;
+import static java.util.Objects.isNull;
 
 public class ProfileImageObjectUtils {
 
     private static final String DEFAULT_IMAGE_PATH = "/user/%s/profile/%s/%s.bin";
+    private static final String DEFAULT_MIME_TYPE = "image/png";
 
     private LargeObjectService largeObjectService;
     
     void createProfileImageObject(Profile profile, LargeObjectReference imageObjectReference) {
+        if (isNull(imageObjectReference)) {
+            imageObjectReference = new LargeObjectReference();
+        }
         LargeObject imageObject = createImageObjectFromReference(profile, imageObjectReference);
         LargeObject persistedImageObject = largeObjectService.saveOrUpdateLargeObject(imageObject);
         imageObjectReference.setId(persistedImageObject.getId());
@@ -45,12 +48,12 @@ public class ProfileImageObjectUtils {
         profile.setImageObject(imageObjectReference);
     }
 
-    private LargeObject createImageObjectFromReference(Profile profile, LargeObjectReference imageObjectReference) {
+    private LargeObject createImageObjectFromReference(Profile profile, LargeObjectReference reference) {
         LargeObject largeObject = new LargeObject();
-
+        
         largeObject.setAccessPermissions(setupDefaultPermissions(profile));
-        largeObject.setMimeType(imageObjectReference.getMimeType());
-        largeObject.setUrl(imageObjectReference.getUrl());
+        largeObject.setMimeType(isNull(reference.getMimeType()) ? DEFAULT_MIME_TYPE : reference.getMimeType());
+        largeObject.setUrl(reference.getUrl());
         largeObject.setPath(String.format(DEFAULT_IMAGE_PATH, profile.getUser().getId(), profile.getId(), UUID.randomUUID()));
 
         return largeObject;

@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.filters.Filters.and;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.util.regex.Pattern.compile;
@@ -274,9 +275,12 @@ public class MongoProfileDao implements ProfileDao {
 
         builder.with(
             set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-            set("largeObject", imageObject),
             set("displayName", nullToEmpty(profile.getDisplayName()).trim())
         );
+
+        if (imageObject != null) {
+            builder.with(set("largeObject", imageObject));
+        }
 
         if (metadata == null) {
             builder.with(unset("metadata"));
@@ -358,9 +362,12 @@ public class MongoProfileDao implements ProfileDao {
             set("active", true),
             set("application", application),
             set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-            set("largeObject", imageObject),
             set("displayName", nullToEmpty(profile.getDisplayName()).trim())
         );
+
+        if (imageObject != null) {
+            builder.with(set("largeObject", imageObject));
+        }
 
         if (metadata == null) {
             builder.with(unset("metadata"));
@@ -426,7 +433,8 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     private MongoLargeObject getMongoLargeObjectFromProfile(final Profile profile) {
-        return getMongoLargeObjectDao().getMongoLargeObject(profile.getImageObject().getId());
+        return  profile.getImageObject() == null ? null :
+                getMongoLargeObjectDao().getMongoLargeObject(profile.getImageObject().getId());
     }
 
     @Override
