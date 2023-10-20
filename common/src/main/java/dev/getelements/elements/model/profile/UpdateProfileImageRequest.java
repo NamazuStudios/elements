@@ -1,6 +1,5 @@
 package dev.getelements.elements.model.profile;
 
-import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

@@ -3,7 +3,6 @@ package dev.getelements.elements.model.largeobject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel

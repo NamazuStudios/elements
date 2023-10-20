@@ -63,7 +63,7 @@ public class SuperUserProfileService implements ProfileService {
 
     private ProfileImageObjectUtils profileImageObjectUtils;
 
-    private LargeObjectService largeObjectService;
+    private Provider<LargeObjectService> largeObjectServiceProvider;
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -114,7 +114,7 @@ public class SuperUserProfileService implements ProfileService {
             .build();
 
         LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
-        LargeObject persistedObject = largeObjectService.saveOrUpdateLargeObject(imageObject);
+        LargeObject persistedObject = largeObjectServiceProvider.get().saveOrUpdateLargeObject(imageObject);
 
         LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
         createdProfile.setImageObject(referenceForPersistedObject);
@@ -152,9 +152,9 @@ public class SuperUserProfileService implements ProfileService {
             throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
         }
 
-        LargeObject objectToUpdate = largeObjectService.getLargeObject(profile.getImageObject().getId());
+        LargeObject objectToUpdate = largeObjectServiceProvider.get().getLargeObject(profile.getImageObject().getId());
         LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
-        largeObjectService.saveOrUpdateLargeObject(updatedObject);
+        largeObjectServiceProvider.get().saveOrUpdateLargeObject(updatedObject);
 
         profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
 
@@ -252,11 +252,15 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     public LargeObjectService getLargeObjectService() {
-        return largeObjectService;
+        return this.largeObjectServiceProvider.get();
+    }
+
+    public Provider<LargeObjectService> getLargeObjectServiceProvider() {
+        return largeObjectServiceProvider;
     }
 
     @Inject
-    public void setLargeObjectService(LargeObjectService largeObjectService) {
-        this.largeObjectService = largeObjectService;
+    public void setLargeObjectServiceProvider(Provider<LargeObjectService> largeObjectServiceProvider) {
+        this.largeObjectServiceProvider = largeObjectServiceProvider;
     }
 }
