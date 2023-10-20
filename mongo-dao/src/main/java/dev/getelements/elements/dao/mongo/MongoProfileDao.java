@@ -2,9 +2,11 @@ package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
+import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
+import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.profile.ProfileNotFoundException;
@@ -28,6 +30,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.filters.Filters.and;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.util.regex.Pattern.compile;
@@ -51,6 +54,8 @@ public class MongoProfileDao implements ProfileDao {
     private MongoUserDao mongoUserDao;
 
     private MongoApplicationDao mongoApplicationDao;
+
+    private MongoLargeObjectDao mongoLargeObjectDao;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
@@ -259,6 +264,7 @@ public class MongoProfileDao implements ProfileDao {
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
         final var query = getDatastore().find(MongoProfile.class);
+        final var imageObject = getMongoLargeObjectFromProfile(profile);
 
         final var builder = new UpdateBuilder();
 
@@ -271,6 +277,10 @@ public class MongoProfileDao implements ProfileDao {
             set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
             set("displayName", nullToEmpty(profile.getDisplayName()).trim())
         );
+
+        if (imageObject != null) {
+            builder.with(set("imageObject", imageObject));
+        }
 
         if (metadata == null) {
             builder.with(unset("metadata"));
@@ -339,6 +349,7 @@ public class MongoProfileDao implements ProfileDao {
         final var query = getDatastore().find(MongoProfile.class);
         final var user = getMongoUserFromProfile(profile);
         final var application = getMongoApplicationFromProfile(profile);
+        final var imageObject = getMongoLargeObjectFromProfile(profile);
 
         query.filter(and(
             eq("user", user),
@@ -353,6 +364,10 @@ public class MongoProfileDao implements ProfileDao {
             set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
             set("displayName", nullToEmpty(profile.getDisplayName()).trim())
         );
+
+        if (imageObject != null) {
+            builder.with(set("imageObject", imageObject));
+        }
 
         if (metadata == null) {
             builder.with(unset("metadata"));
@@ -415,6 +430,11 @@ public class MongoProfileDao implements ProfileDao {
 
     private MongoApplication getMongoApplicationFromProfile(final Profile profile) {
         return getMongoApplicationDao().getActiveMongoApplication(profile.getApplication().getId());
+    }
+
+    private MongoLargeObject getMongoLargeObjectFromProfile(final Profile profile) {
+        return  profile.getImageObject() == null ? null :
+                getMongoLargeObjectDao().getMongoLargeObject(profile.getImageObject().getId());
     }
 
     @Override
@@ -543,4 +563,12 @@ public class MongoProfileDao implements ProfileDao {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
+    public MongoLargeObjectDao getMongoLargeObjectDao() {
+        return mongoLargeObjectDao;
+    }
+
+    @Inject
+    public void setMongoLargeObjectDao(MongoLargeObjectDao mongoLargeObjectDao) {
+        this.mongoLargeObjectDao = mongoLargeObjectDao;
+    }
 }

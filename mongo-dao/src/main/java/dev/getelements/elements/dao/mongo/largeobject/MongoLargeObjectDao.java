@@ -99,6 +99,15 @@ public class MongoLargeObjectDao implements LargeObjectDao {
 
     }
 
+    public MongoLargeObject getMongoLargeObject(String objectId) {
+        final var query = getDatastore().find(MongoLargeObject.class);
+        query.filter(and(
+                eq("_id", new ObjectId(objectId))
+        ));
+
+        return query.first();
+    }
+
     private LargeObject transform(final MongoLargeObject mongoLargeObject) {
         return getDozerMapper().map(mongoLargeObject, LargeObject.class);
     }

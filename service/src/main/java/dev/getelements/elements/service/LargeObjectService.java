@@ -1,10 +1,7 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.exception.largeobject.LargeObjectNotFoundException;
-import dev.getelements.elements.model.largeobject.CreateLargeObjectFromUrlRequest;
-import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
-import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
+import dev.getelements.elements.model.largeobject.*;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -164,5 +161,6 @@ public interface LargeObjectService {
      */
     OutputStream writeLargeObjectContent(String objectId) throws IOException;
 
+    LargeObject saveOrUpdateLargeObject(LargeObject largeObject);
 
 }

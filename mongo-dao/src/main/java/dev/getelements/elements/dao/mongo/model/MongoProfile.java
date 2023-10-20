@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.model;
 
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
+import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
@@ -38,6 +39,9 @@ public class MongoProfile {
 
     @Property
     private String imageUrl;
+
+    @Reference(ignoreMissing = true)
+    private MongoLargeObject imageObject;
 
     @Property
     private String displayName;
@@ -81,14 +85,6 @@ public class MongoProfile {
         this.application = application;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
     public String getDisplayName() {
         return displayName;
     }
@@ -113,25 +109,47 @@ public class MongoProfile {
         this.lastLogin = lastLogin;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public MongoLargeObject getImageObject() {
+        return imageObject;
+    }
+
+    public void setImageObject(MongoLargeObject imageObject) {
+        this.imageObject = imageObject;
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof MongoProfile)) return false;
-        MongoProfile that = (MongoProfile) object;
-        return isActive() == that.isActive() &&
-                Objects.equals(getLastLogin(), that.getLastLogin()) &&
-                Objects.equals(getObjectId(), that.getObjectId()) &&
-                Objects.equals(getUser(), that.getUser()) &&
-                Objects.equals(getApplication(), that.getApplication()) &&
-                Objects.equals(getImageUrl(), that.getImageUrl()) &&
-                Objects.equals(getDisplayName(), that.getDisplayName()) &&
-                Objects.equals(getMetadata(), that.getMetadata());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoProfile that = (MongoProfile) o;
+        return active == that.active && Objects.equals(objectId, that.objectId) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(imageObject, that.imageObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(lastLogin, that.lastLogin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), isActive(), getUser(), getApplication(), getImageUrl(),
-                getDisplayName(), getMetadata(), getLastLogin());
+        return Objects.hash(objectId, active, user, application, imageUrl, imageObject, displayName, metadata, lastLogin);
     }
 
+    @Override
+    public String toString() {
+        return "MongoProfile{" +
+                "objectId=" + objectId +
+                ", active=" + active +
+                ", user=" + user +
+                ", application=" + application +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", imageObject=" + imageObject +
+                ", displayName='" + displayName + '\'' +
+                ", metadata=" + metadata +
+                ", lastLogin=" + lastLogin +
+                '}';
+    }
 }

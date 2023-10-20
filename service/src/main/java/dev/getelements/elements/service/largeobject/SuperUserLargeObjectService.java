@@ -15,6 +15,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
+
 public class SuperUserLargeObjectService implements LargeObjectService {
 
     private ValidationHelper validationHelper;
@@ -103,6 +105,13 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     @Override
     public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
         return getLargeObjectBucket().writeObject(objectId);
+    }
+
+    @Override
+    public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
+        getValidationHelper().validateModel(largeObject);
+        return isNull(largeObject.getId()) ?
+                getLargeObjectDao().createLargeObject(largeObject) : getLargeObjectDao().updateLargeObject(largeObject);
     }
 
     public LargeObjectCdnUtils getLargeObjectCdnUtils() {
