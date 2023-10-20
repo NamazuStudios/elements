@@ -6,6 +6,8 @@ import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
@@ -16,6 +18,7 @@ import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.EventContext;
 import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
+import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.service.UserService;
 import org.slf4j.Logger;
@@ -57,6 +60,8 @@ public class UserProfileService implements ProfileService {
     private Optional<Profile> currentProfileOptional;
 
     private Provider<Attributes> attributesProvider;
+
+    private LargeObjectService largeObjectService;
 
     public static final String PROFILE_CREATED_EVENT = "dev.getelements.elements.service.profile.created";
 
@@ -136,11 +141,12 @@ public class UserProfileService implements ProfileService {
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
 
-        //user id and profile id are already checked
-        profileImageObjectUtils.createProfileImageObject(createdProfile, profileRequest.getImageObjectReference());
-        if (!isNull(createdProfile.getImageObject())) {
-            getProfileDao().updateActiveProfile(createdProfile);
-        }
+        LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
+        LargeObject persistedObject = largeObjectService.saveOrUpdateLargeObject(imageObject);
+
+        LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+        createdProfile.setImageObject(referenceForPersistedObject);
+        getProfileDao().updateActiveProfile(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -182,9 +188,17 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfileImage(String profileId, UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
-        final var profile = getProfileDao().getActiveProfile(profileId);
-        profileImageObjectUtils.updateProfileImageObject(profile, updateProfileImageRequest.getImageObjectReference());
+    public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
+        final var profile = getCurrentProfile();
+        if (isNull(profile.getImageObject())) {
+            throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
+        }
+
+        LargeObject objectToUpdate = largeObjectService.getLargeObject(profile.getImageObject().getId());
+        LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
+        largeObjectService.saveOrUpdateLargeObject(updatedObject);
+
+        profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
 
         return getProfileDao().updateActiveProfile(profile);
     }
@@ -277,5 +291,14 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
         this.profileImageObjectUtils = profileImageObjectUtils;
+    }
+
+    public LargeObjectService getLargeObjectService() {
+        return largeObjectService;
+    }
+
+    @Inject
+    public void setLargeObjectService(LargeObjectService largeObjectService) {
+        this.largeObjectService = largeObjectService;
     }
 }

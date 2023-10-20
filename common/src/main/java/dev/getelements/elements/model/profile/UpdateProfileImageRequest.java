@@ -9,20 +9,9 @@ import java.util.Objects;
 @ApiModel(description = "Represents a request to update an image profile.")
 public class UpdateProfileImageRequest {
 
-    @ApiModelProperty("Image object stored in EL large objects storage.")
-    private LargeObjectReference imageObjectReference;
-
     //TODO: synchronize with accepted mimetypes
     @ApiModelProperty("MimeType of image")
     private String mimeType;
-
-    public LargeObjectReference getImageObjectReference() {
-        return imageObjectReference;
-    }
-
-    public void setImageObjectReference(LargeObjectReference imageObjectReference) {
-        this.imageObjectReference = imageObjectReference;
-    }
 
     public String getMimeType() {
         return mimeType;
@@ -37,19 +26,18 @@ public class UpdateProfileImageRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateProfileImageRequest that = (UpdateProfileImageRequest) o;
-        return Objects.equals(imageObjectReference, that.imageObjectReference) && Objects.equals(mimeType, that.mimeType);
+        return Objects.equals(mimeType, that.mimeType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(imageObjectReference, mimeType);
+        return Objects.hash(mimeType);
     }
 
     @Override
     public String toString() {
         return "UpdateProfileImageRequest{" +
-                "imageObject=" + imageObjectReference +
-                ", mimeType='" + mimeType + '\'' +
+                "mimeType='" + mimeType + '\'' +
                 '}';
     }
 }

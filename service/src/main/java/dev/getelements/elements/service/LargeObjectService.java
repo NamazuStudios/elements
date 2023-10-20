@@ -161,14 +161,6 @@ public interface LargeObjectService {
      */
     OutputStream writeLargeObjectContent(String objectId) throws IOException;
 
-    default LargeObject getLargeObjectFromReference(LargeObjectReference reference) {
-        LargeObject result = new LargeObject();
-        result.setId(reference.getId());
-        result.setUrl(reference.getUrl());
-        result.setMimeType(reference.getMimeType());
-        return result;
-    }
-
     LargeObject saveOrUpdateLargeObject(LargeObject largeObject);
 
 }

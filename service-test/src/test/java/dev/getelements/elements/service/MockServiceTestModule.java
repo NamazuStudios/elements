@@ -21,6 +21,7 @@ import dev.getelements.elements.service.blockchain.crypto.WalletCryptoUtilities;
 import dev.getelements.elements.service.blockchain.invoke.ScopedInvoker;
 import dev.getelements.elements.service.firebase.FirebaseAppFactory;
 import dev.getelements.elements.service.guice.*;
+import dev.getelements.elements.service.profile.ProfileImageObjectUtils;
 import dev.getelements.elements.service.util.CryptoKeyPairUtility;
 import org.dozer.Mapper;
 import org.slf4j.Logger;

@@ -1,26 +1,20 @@
 package dev.getelements.elements.model.largeobject;
 
-import dev.getelements.elements.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.util.Objects;
 
 @ApiModel
 public class LargeObjectReference {
 
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @ApiModelProperty("The unique ID of the LargeObject.")
     private String id;
 
-//TODO: null / notnull rules.
     @ApiModelProperty("The URL where the binary contents of the LargeObject may be read.")
     private String url;
 
-    @NotNull
     @ApiModelProperty("The MIME type of the LargeObject.")
     private String mimeType;
 

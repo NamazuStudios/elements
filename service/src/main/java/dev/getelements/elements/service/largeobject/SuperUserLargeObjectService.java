@@ -110,8 +110,8 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     @Override
     public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
         getValidationHelper().validateModel(largeObject);
-        return getLargeObjectCdnUtils().setCdnUrlToObject( isNull(largeObject.getId()) ?
-                getLargeObjectDao().createLargeObject(largeObject) : getLargeObjectDao().updateLargeObject(largeObject));
+        return isNull(largeObject.getId()) ?
+                getLargeObjectDao().createLargeObject(largeObject) : getLargeObjectDao().updateLargeObject(largeObject);
     }
 
     public LargeObjectCdnUtils getLargeObjectCdnUtils() {

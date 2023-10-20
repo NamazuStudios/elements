@@ -3,7 +3,10 @@ package dev.getelements.elements.service.profile;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
+import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
@@ -12,6 +15,7 @@ import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
+import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.service.Unscoped;
@@ -59,6 +63,8 @@ public class SuperUserProfileService implements ProfileService {
 
     private ProfileImageObjectUtils profileImageObjectUtils;
 
+    private LargeObjectService largeObjectService;
+
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
@@ -97,7 +103,6 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile createProfile(final CreateProfileRequest createProfileRequest) {
-
         final var createdProfile = createNewProfile(createProfileRequest);
 
         final var eventContext = getContextFactory()
@@ -108,10 +113,12 @@ public class SuperUserProfileService implements ProfileService {
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
 
-        profileImageObjectUtils.createProfileImageObject(createdProfile, createProfileRequest.getImageObjectReference());
-        if (!isNull(createdProfile.getImageObject())) {
-            getProfileDao().updateActiveProfile(createdProfile);
-        }
+        LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
+        LargeObject persistedObject = largeObjectService.saveOrUpdateLargeObject(imageObject);
+
+        LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+        createdProfile.setImageObject(referenceForPersistedObject);
+        getProfileDao().updateActiveProfile(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -141,7 +148,15 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
         final var profile = getProfileDao().getActiveProfile(profileId);
-        profileImageObjectUtils.updateProfileImageObject(profile, updateProfileImageRequest.getImageObjectReference());
+        if (isNull(profile.getImageObject())) {
+            throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
+        }
+
+        LargeObject objectToUpdate = largeObjectService.getLargeObject(profile.getImageObject().getId());
+        LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
+        largeObjectService.saveOrUpdateLargeObject(updatedObject);
+
+        profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
 
         return getProfileDao().updateActiveProfile(profile);
     }
@@ -234,5 +249,14 @@ public class SuperUserProfileService implements ProfileService {
     @Inject
     public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
         this.profileImageObjectUtils = profileImageObjectUtils;
+    }
+
+    public LargeObjectService getLargeObjectService() {
+        return largeObjectService;
+    }
+
+    @Inject
+    public void setLargeObjectService(LargeObjectService largeObjectService) {
+        this.largeObjectService = largeObjectService;
     }
 }
