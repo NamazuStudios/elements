@@ -3,10 +3,11 @@ package dev.getelements.elements.model.largeobject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @ApiModel
-public class LargeObjectReference {
+public class LargeObjectReference implements Serializable {
 
     @ApiModelProperty("The unique ID of the LargeObject.")
     private String id;
