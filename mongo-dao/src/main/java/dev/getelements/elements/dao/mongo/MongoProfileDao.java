@@ -487,6 +487,13 @@ public class MongoProfileDao implements ProfileDao {
             input.setApplication(null);
         }
 
+        //TODO: remove asap!
+
+//        if (input.getImageObject() != null) {
+//            MongoLargeObject unwanted = getMongoLargeObjectDao().getMongoLargeObject(input.getImageObject().getId().toHexString());
+//            input.setImageObject(unwanted);
+//        }
+
         return getBeanMapper().map(input, Profile.class);
 
     }

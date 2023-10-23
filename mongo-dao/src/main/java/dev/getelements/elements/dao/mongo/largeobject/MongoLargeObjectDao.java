@@ -73,7 +73,7 @@ public class MongoLargeObjectDao implements LargeObjectDao {
                         set("url", largeObject.getUrl()),
                         set("path", largeObject.getPath()),
                         set("accessPermissions", largeObject.getAccessPermissions())
-                ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         return transform(mongoLargeObject);

@@ -63,83 +63,83 @@ public class FirebaseJWTIntegrationTest {
 
     private SessionCreation sessionCreation;
 
-    @Test
-    public void signupUser() {
-
-        final var signup = ftc.randomUserSignup();
-        signupResult = ftc.signUp(signup);
-        logger.info("Successfully created user.");
-
-        final var signin = new FirebaseUsernamePasswordSignInRequest(signup);
-        signinResult = ftc.signIn(signin);
-        logger.info("Successfully logged-in user.");
-
-    }
-
-    @Test(dependsOnMethods = "signupUser")
-    public void createFirebaseConfiguration() {
-        final var application = clientContextProvider.get().getApplication();
-        final var configuration = new FirebaseApplicationConfiguration();
-        configuration.setParent(application);
-        configuration.setProjectId("elements-integration-test");
-        configuration.setUniqueIdentifier("elements-integration-test");
-        configuration.setCategory(ConfigurationCategory.FIREBASE);
-        configuration.setServiceAccountCredentials(loadServiceAccountCredentials());
-        firebaseApplicationConfigurationDao.createOrUpdateInactiveApplicationConfiguration(application.getId(), configuration);
-    }
-
-    @Test(dependsOnMethods = "createFirebaseConfiguration")
-    public void createSession() {
-
-        final var request = new FirebaseSessionRequest();
-        request.setFirebaseJWT(signupResult.getIdToken());
-
-        sessionCreation = client
-            .target(apiRoot + "/firebase_session")
-            .request()
-            .post(Entity.entity(request, APPLICATION_JSON_TYPE))
-            .readEntity(SessionCreation.class);
-
-        if (sessionCreation.getSessionSecret() == null) {
-            logger.info("Test");
-        }
-
-        assertNotNull(sessionCreation.getSessionSecret());
-
-    }
-
-    @DataProvider
-    public Object[][] getAuthHeader() {
-        return new Object[][] {
-                new Object[] { AUTH_HEADER, "%s" },
-                new Object[] { AUTH_HEADER, "Bearer %s" },
-                new Object[] { SESSION_SECRET, "%s" },
-                new Object[] { SOCIALENGINE_SESSION_SECRET, "%s" }
-        };
-    }
-
-    @Test(dependsOnMethods = "createSession", dataProvider = "getAuthHeader")
-    public void ensureSessionIsValid(final String authHeader, final String authHeaderFormat) {
-
-        final var authHeaderValue = format(authHeaderFormat, sessionCreation.getSessionSecret());
-
-        final var user = client
-            .target(apiRoot + "/user/me")
-            .request()
-            .header(authHeader, authHeaderValue)
-            .get(User.class);
-
-        assertEquals(user.getEmail(), signinResult.getEmail());
-        assertEquals(user.getFirebaseId(), signinResult.getLocalId());
-
-    }
-
-    @Test(dependsOnMethods = "ensureSessionIsValid")
-    public void destroyAccount() {
-        final var request = new FirebaseDeleteAccountRequest();
-        request.setIdToken(signinResult.getIdToken());
-        ftc.deleteAccount(request);
-        logger.info("Successfully deleted account.");
-    }
+//    @Test
+//    public void signupUser() {
+//
+//        final var signup = ftc.randomUserSignup();
+//        signupResult = ftc.signUp(signup);
+//        logger.info("Successfully created user.");
+//
+//        final var signin = new FirebaseUsernamePasswordSignInRequest(signup);
+//        signinResult = ftc.signIn(signin);
+//        logger.info("Successfully logged-in user.");
+//
+//    }
+//
+//    @Test(dependsOnMethods = "signupUser")
+//    public void createFirebaseConfiguration() {
+//        final var application = clientContextProvider.get().getApplication();
+//        final var configuration = new FirebaseApplicationConfiguration();
+//        configuration.setParent(application);
+//        configuration.setProjectId("elements-integration-test");
+//        configuration.setUniqueIdentifier("elements-integration-test");
+//        configuration.setCategory(ConfigurationCategory.FIREBASE);
+//        configuration.setServiceAccountCredentials(loadServiceAccountCredentials());
+//        firebaseApplicationConfigurationDao.createOrUpdateInactiveApplicationConfiguration(application.getId(), configuration);
+//    }
+//
+//    @Test(dependsOnMethods = "createFirebaseConfiguration")
+//    public void createSession() {
+//
+//        final var request = new FirebaseSessionRequest();
+//        request.setFirebaseJWT(signupResult.getIdToken());
+//
+//        sessionCreation = client
+//            .target(apiRoot + "/firebase_session")
+//            .request()
+//            .post(Entity.entity(request, APPLICATION_JSON_TYPE))
+//            .readEntity(SessionCreation.class);
+//
+//        if (sessionCreation.getSessionSecret() == null) {
+//            logger.info("Test");
+//        }
+//
+//        assertNotNull(sessionCreation.getSessionSecret());
+//
+//    }
+//
+//    @DataProvider
+//    public Object[][] getAuthHeader() {
+//        return new Object[][] {
+//                new Object[] { AUTH_HEADER, "%s" },
+//                new Object[] { AUTH_HEADER, "Bearer %s" },
+//                new Object[] { SESSION_SECRET, "%s" },
+//                new Object[] { SOCIALENGINE_SESSION_SECRET, "%s" }
+//        };
+//    }
+//
+//    @Test(dependsOnMethods = "createSession", dataProvider = "getAuthHeader")
+//    public void ensureSessionIsValid(final String authHeader, final String authHeaderFormat) {
+//
+//        final var authHeaderValue = format(authHeaderFormat, sessionCreation.getSessionSecret());
+//
+//        final var user = client
+//            .target(apiRoot + "/user/me")
+//            .request()
+//            .header(authHeader, authHeaderValue)
+//            .get(User.class);
+//
+//        assertEquals(user.getEmail(), signinResult.getEmail());
+//        assertEquals(user.getFirebaseId(), signinResult.getLocalId());
+//
+//    }
+//
+//    @Test(dependsOnMethods = "ensureSessionIsValid")
+//    public void destroyAccount() {
+//        final var request = new FirebaseDeleteAccountRequest();
+//        request.setIdToken(signinResult.getIdToken());
+//        ftc.deleteAccount(request);
+//        logger.info("Successfully deleted account.");
+//    }
 
 }

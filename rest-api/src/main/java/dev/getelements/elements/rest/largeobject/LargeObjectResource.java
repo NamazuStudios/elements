@@ -76,7 +76,7 @@ public class LargeObjectResource {
     @GET
     @Path("{largeObjectId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a LargeObject")
+    @ApiOperation(value = "Get a LargeObject")
     public LargeObject getLargeObject(@PathParam("largeObjectId") final String largeObjectId) {
         return getLargeObjectService().getLargeObject(largeObjectId);
     }
