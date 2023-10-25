@@ -71,23 +71,23 @@ public class UserProfileService implements ProfileService {
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
+        Pagination<Profile> profiles = new Pagination<>();
         if (getUserService().isCurrentUserAlias(userId)) {
-            return getProfileDao()
+            profiles = getProfileDao()
                 .getActiveProfiles(
                         offset, count,
                         applicationNameOrId, getUserService().getCurrentUser().getId(),
                         lowerBoundTimestamp, upperBoundTimestamp)
                 .transform(this::redactPrivateInformation);
         } else if (userId == null || getUserService().isCurrentUser(userId)) {
-            return getProfileDao()
+            profiles = getProfileDao()
                 .getActiveProfiles(
                     offset, count,
                     applicationNameOrId, userId,
                     lowerBoundTimestamp, upperBoundTimestamp)
                 .transform(this::redactPrivateInformation);
-        } else {
-            return new Pagination<>();
         }
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
@@ -95,24 +95,26 @@ public class UserProfileService implements ProfileService {
             int offset,
             int count,
             String search) {
-        return getProfileDao()
-            .getActiveProfiles(offset, count, search)
-            .transform(this::redactPrivateInformation);
+        Pagination<Profile> profiles = getProfileDao()
+                .getActiveProfiles(offset, count, search)
+                .transform(this::redactPrivateInformation);
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
     public Profile getProfile(String profileId) {
-        return getProfileDao().getActiveProfile(profileId);
+        Profile profile = getProfileDao().getActiveProfile(profileId);
+        return profileServiceUtils.profileCdnSetup(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return getCurrentProfileSupplier().get();
+        return profileServiceUtils.profileCdnSetup(getCurrentProfileSupplier().get());
     }
 
     @Override
     public Optional<Profile> findCurrentProfile() {
-        return getCurrentProfileOptional();
+        return getCurrentProfileOptional().map(profileServiceUtils::profileCdnSetup);
     }
 
     @Override

@@ -18,9 +18,12 @@ public class LargeObjectCdnUtils {
     }
 
     public LargeObject setCdnUrlToObject(final LargeObject largeObject) {
-        final var url = format("%s/object/%s", getCdnUrl(), largeObject.getId());
-        largeObject.setUrl(url);
+        largeObject.setUrl(assembleCdnUrl(largeObject.getId()));
         return largeObject;
+    }
+
+    public String assembleCdnUrl(String id) {
+        return format("%s/object/%s", getCdnUrl(), id);
     }
 
     public String getCdnUrl() {

@@ -26,18 +26,13 @@ public class ProfileImageObjectUtils {
 
     LargeObject updateProfileImageObject(Profile profile, LargeObject objectToUpdate, UpdateProfileImageRequest updateProfileImageRequest) {
         objectToUpdate.setMimeType(updateProfileImageRequest.getMimeType());
-        //TODO: in case permission was changed, we reset it to default - correct ?
         objectToUpdate.setAccessPermissions(setupDefaultPermissions(profile));
-
-        //reset url / content
-        objectToUpdate.setUrl(null);
         return objectToUpdate;
     }
 
     LargeObjectReference createReference(LargeObject persistedObject) {
         LargeObjectReference reference = new LargeObjectReference();
         reference.setId(persistedObject.getId());
-        reference.setUrl(persistedObject.getUrl()); //by design null, but lets be consistent
         reference.setMimeType(persistedObject.getMimeType());
         return reference;
     }
@@ -61,7 +56,6 @@ public class ProfileImageObjectUtils {
 
     public void updateProfileReference(LargeObjectReference reference, LargeObject updatedObject) {
         reference.setMimeType(updatedObject.getMimeType());
-        reference.setUrl(updatedObject.getUrl());
         reference.setId(updatedObject.getId());
     }
 }

@@ -69,30 +69,33 @@ public class SuperUserProfileService implements ProfileService {
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
-        return getProfileDao().getActiveProfiles(
+        Pagination<Profile> profiles = getProfileDao().getActiveProfiles(
                 offset, count,
                 applicationNameOrId, userId,
                 lowerBoundTimestamp, upperBoundTimestamp);
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
     public Pagination<Profile> getProfiles(int offset, int count, String search) {
-        return getProfileDao().getActiveProfiles(offset, count, search);
+        Pagination<Profile> profiles = getProfileDao().getActiveProfiles(offset, count, search);
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
     public Profile getProfile(String profileId) {
-        return getProfileDao().getActiveProfile(profileId);
+        Profile profile = getProfileDao().getActiveProfile(profileId);
+        return profileServiceUtils.profileCdnSetup(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return getCurrentProfileSupplier().get();
+        return profileServiceUtils.profileCdnSetup(getCurrentProfileSupplier().get());
     }
 
     @Override
     public Optional<Profile> findCurrentProfile() {
-        return getCurrentProfileOptional();
+        return getCurrentProfileOptional().map(profileServiceUtils::profileCdnSetup);
     }
 
     @Override
