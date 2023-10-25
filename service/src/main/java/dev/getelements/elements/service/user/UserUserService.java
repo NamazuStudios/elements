@@ -66,6 +66,9 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
         user.setEmail(getCurrentUser().getEmail());
+        user.setPrimaryPhoneNb(getCurrentUser().getPrimaryPhoneNb());
+        user.setFirstName(getCurrentUser().getFirstName());
+        user.setLastName(getCurrentUser().getLastName());
 
         // Regular users can't use this call to deactivate their user as well.  This must be done through
         // a delete operation.

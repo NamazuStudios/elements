@@ -55,6 +55,15 @@ public class MongoUser {
     private String name;
 
     @Property
+    private String primaryPhoneNb;
+
+    @Property
+    private String firstName;
+
+    @Property
+    private String lastName;
+
+    @Property
     private String email;
 
     @Property
@@ -181,39 +190,64 @@ public class MongoUser {
         this.externalUserId = externalUserId;
     }
 
+    public String getPrimaryPhoneNb() {
+        return primaryPhoneNb;
+    }
+
+    public void setPrimaryPhoneNb(String primaryPhoneNb) {
+        this.primaryPhoneNb = primaryPhoneNb;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-        return isActive() == mongoUser.isActive() && Objects.equals(getObjectId(), mongoUser.getObjectId()) && Objects.equals(getName(), mongoUser.getName()) && Objects.equals(getEmail(), mongoUser.getEmail()) && Objects.equals(getHashAlgorithm(), mongoUser.getHashAlgorithm()) && Arrays.equals(getSalt(), mongoUser.getSalt()) && Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash()) && getLevel() == mongoUser.getLevel() && Objects.equals(getFirebaseId(), mongoUser.getFirebaseId()) && Objects.equals(getFacebookId(), mongoUser.getFacebookId()) && Objects.equals(getAppleSignInId(), mongoUser.getAppleSignInId()) && Objects.equals(getExternalUserId(), mongoUser.getExternalUserId());
+        return active == mongoUser.active && Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(firebaseId, mongoUser.firebaseId) && Objects.equals(facebookId, mongoUser.facebookId) && Objects.equals(appleSignInId, mongoUser.appleSignInId) && Objects.equals(externalUserId, mongoUser.externalUserId);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(getObjectId(), getName(), getEmail(), getHashAlgorithm(), getLevel(), isActive(), getFirebaseId(), getFacebookId(), getAppleSignInId(), getExternalUserId());
-        result = 31 * result + Arrays.hashCode(getSalt());
-        result = 31 * result + Arrays.hashCode(getPasswordHash());
+        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, active, firebaseId, facebookId, appleSignInId, externalUserId);
+        result = 31 * result + Arrays.hashCode(salt);
+        result = 31 * result + Arrays.hashCode(passwordHash);
         return result;
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MongoUser{");
-        sb.append("objectId=").append(objectId);
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", email='").append(email).append('\'');
-        sb.append(", hashAlgorithm='").append(hashAlgorithm).append('\'');
-        sb.append(", salt=").append(Arrays.toString(salt));
-        sb.append(", passwordHash=").append(Arrays.toString(passwordHash));
-        sb.append(", level=").append(level);
-        sb.append(", active=").append(active);
-        sb.append(", firebaseId='").append(firebaseId).append('\'');
-        sb.append(", facebookId='").append(facebookId).append('\'');
-        sb.append(", appleSignInId='").append(appleSignInId).append('\'');
-        sb.append(", externalUserId='").append(externalUserId).append('\'');
-        sb.append('}');
-        return sb.toString();
+        return "MongoUser{" +
+                "objectId=" + objectId +
+                ", name='" + name + '\'' +
+                ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", hashAlgorithm='" + hashAlgorithm + '\'' +
+                ", salt=" + Arrays.toString(salt) +
+                ", passwordHash=" + Arrays.toString(passwordHash) +
+                ", level=" + level +
+                ", active=" + active +
+                ", firebaseId='" + firebaseId + '\'' +
+                ", facebookId='" + facebookId + '\'' +
+                ", appleSignInId='" + appleSignInId + '\'' +
+                ", externalUserId='" + externalUserId + '\'' +
+                '}';
     }
-
 }
