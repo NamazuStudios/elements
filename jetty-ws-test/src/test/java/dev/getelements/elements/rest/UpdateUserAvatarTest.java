@@ -1,11 +1,8 @@
 package dev.getelements.elements.rest;
 
-import dev.getelements.elements.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.model.largeobject.LargeObject;
-import dev.getelements.elements.model.largeobject.UpdateLargeObjectRequest;
-import dev.getelements.elements.model.profile.CreateProfileSignupRequest;
-import dev.getelements.elements.model.user.UserCreateRequest;
-import dev.getelements.elements.model.user.UserCreateResponse;
+import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -15,12 +12,12 @@ import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
 
 import static dev.getelements.elements.Headers.SESSION_SECRET;
 import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
-import static java.util.Collections.singletonList;
-import static java.util.UUID.randomUUID;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class UpdateUserAvatarTest {
 
@@ -31,16 +28,9 @@ public class UpdateUserAvatarTest {
     private Client client;
 
     @Inject
-    private LargeObjectRequestFactory requestFactory;
-
-    @Inject
     @Named(TEST_API_ROOT)
     private String apiRoot;
-    private final String name = "testuser-" + randomUUID().toString();
 
-    private final String email = "testuser-" + randomUUID().toString() + "@example.com";
-
-    private final String password = randomUUID().toString();
     @Factory
     public Object[] getTests() {
         return new Object[] {
@@ -51,57 +41,43 @@ public class UpdateUserAvatarTest {
 
     @BeforeClass
     private void setUp() {
-        clientContext.createUser("vaultboy").createSession();
-
-//        vault = createVault(userClientContext);
-//        emptyVault = createVault(userClientContext);
+        clientContext.createUser("user");
+        clientContext.createProfile("Test Display");
     }
 
     @Test
     public void shouldUpdateUserAvatar() {
-        String profileId = createUserWithProfile();
-        updateLargeObjectContent();
 
+        clientContext.createSession(clientContext.getDefaultProfile());
 
-    }
+        String profileId = clientContext.getDefaultProfile().getId();
 
-    private void updateLargeObjectContent() {
-        CreateLargeObjectRequest createRequest = requestFactory.createRequestWithAccess(true, true, false);
-        UpdateLargeObjectRequest updateRequest = requestFactory.updateLargeObjectRequest(false, false, true);
-        updateRequest.setMimeType("changedMime");
+        updateLargeObjectContent(clientContext.getDefaultProfile().getImageObject().getId());
 
-        final LargeObject createdLargeObject = client
-                .target(apiRoot + "/large_object")
+        UpdateProfileImageRequest updateProfileImageRequest = new UpdateProfileImageRequest();
+        updateProfileImageRequest.setMimeType("image/jpeg");
+
+        Profile updatedProfile = client
+                .target(apiRoot + "/profile/" + profileId + "/image")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
-                .post(Entity.entity(createRequest, MediaType.APPLICATION_JSON_TYPE))
-                .readEntity(LargeObject.class);
+                .put(Entity.entity(updateProfileImageRequest, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(Profile.class);
+
+        assertNotNull(updatedProfile.getImageObject().getId());
+        assertNotNull(updatedProfile.getImageObject().getUrl());
+        assertEquals(updatedProfile.getImageObject().getMimeType(), "image/jpeg");
+    }
+
+    private void updateLargeObjectContent(String largeObjectId) {
+        final InputStream loStream = UserLargeObjectResourceTest.class.getResourceAsStream("/testLO.txt");
 
         final LargeObject updatedLargeObject = client
-                .target(apiRoot + "/large_object/" + createdLargeObject.getId())
+                .target(apiRoot + "/large_object/" + largeObjectId + "/content")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
-                .put(Entity.entity(updateRequest, MediaType.APPLICATION_JSON_TYPE))
+                .put(Entity.entity(loStream, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
     }
 
-    private String createUserWithProfile() {
-        final var toCreate = new UserCreateRequest();
-        toCreate.setName(name);
-        toCreate.setEmail(email);
-        toCreate.setPassword(password);
-
-        final var createProfileSignupRequest = new CreateProfileSignupRequest();
-        createProfileSignupRequest.setDisplayName("Paddy O' Furniture");
-        createProfileSignupRequest.setApplicationId(clientContext.getApplication().getId());
-        toCreate.setProfiles(singletonList(createProfileSignupRequest));
-
-        final var response = client
-                .target(apiRoot + "/signup")
-                .request()
-                .post(Entity.entity(toCreate, APPLICATION_JSON))
-                .readEntity(UserCreateResponse.class);
-
-        return "profileId";
-    }
 }

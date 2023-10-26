@@ -16,7 +16,7 @@ public class ProfileImageObjectUtils {
     private static final String DEFAULT_IMAGE_PATH = "/user/%s/profile/%s/%s.bin";
     private static final String DEFAULT_MIME_TYPE = "image/png";
 
-    LargeObject createImageObject(Profile profile) {
+    public LargeObject createImageObject(Profile profile) {
         LargeObject largeObject = new LargeObject();
         largeObject.setAccessPermissions(setupDefaultPermissions(profile));
         largeObject.setMimeType(DEFAULT_MIME_TYPE);
@@ -34,7 +34,7 @@ public class ProfileImageObjectUtils {
         return objectToUpdate;
     }
 
-    LargeObjectReference createReference(LargeObject persistedObject) {
+    public LargeObjectReference createReference(LargeObject persistedObject) {
         LargeObjectReference reference = new LargeObjectReference();
         reference.setId(persistedObject.getId());
         reference.setUrl(persistedObject.getUrl()); //by design null, but lets be consistent
