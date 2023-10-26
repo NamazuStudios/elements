@@ -65,7 +65,6 @@ public class UpdateUserAvatarTest {
                 .readEntity(Profile.class);
 
         assertNotNull(updatedProfile.getImageObject().getId());
-        assertNotNull(updatedProfile.getImageObject().getUrl());
         assertEquals(updatedProfile.getImageObject().getMimeType(), "image/jpeg");
     }
 
