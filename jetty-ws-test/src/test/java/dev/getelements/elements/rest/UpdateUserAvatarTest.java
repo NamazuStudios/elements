@@ -72,7 +72,7 @@ public class UpdateUserAvatarTest {
     private void updateLargeObjectContent(String largeObjectId) {
         final InputStream loStream = UserLargeObjectResourceTest.class.getResourceAsStream("/testLO.txt");
 
-        final LargeObject updatedLargeObject = client
+        client
                 .target(apiRoot + "/large_object/" + largeObjectId + "/content")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
