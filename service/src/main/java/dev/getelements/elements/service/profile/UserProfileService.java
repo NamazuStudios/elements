@@ -2,6 +2,7 @@ package dev.getelements.elements.service.profile;
 
 
 import dev.getelements.elements.dao.ApplicationDao;
+import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
@@ -61,7 +62,7 @@ public class UserProfileService implements ProfileService {
 
     private Provider<Attributes> attributesProvider;
 
-    private LargeObjectService largeObjectService;
+    private LargeObjectDao largeObjectDao;
 
     public static final String PROFILE_CREATED_EVENT = "dev.getelements.elements.service.profile.created";
 
@@ -144,7 +145,7 @@ public class UserProfileService implements ProfileService {
             .build();
 
         LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
-        LargeObject persistedObject = largeObjectService.saveOrUpdateLargeObject(imageObject);
+        LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
 
         LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
         createdProfile.setImageObject(referenceForPersistedObject);
@@ -196,9 +197,9 @@ public class UserProfileService implements ProfileService {
             throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
         }
 
-        LargeObject objectToUpdate = largeObjectService.getLargeObject(profile.getImageObject().getId());
+        LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
         LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
-        largeObjectService.saveOrUpdateLargeObject(updatedObject);
+        largeObjectDao.updateLargeObject(updatedObject);
 
         profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
 
@@ -295,12 +296,12 @@ public class UserProfileService implements ProfileService {
         this.profileImageObjectUtils = profileImageObjectUtils;
     }
 
-    public LargeObjectService getLargeObjectService() {
-        return largeObjectService;
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
     }
 
     @Inject
-    public void setLargeObjectService(LargeObjectService largeObjectService) {
-        this.largeObjectService = largeObjectService;
+    public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
+        this.largeObjectDao = largeObjectDao;
     }
 }

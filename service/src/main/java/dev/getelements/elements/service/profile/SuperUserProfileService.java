@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.profile;
 
 import dev.getelements.elements.dao.ApplicationDao;
+import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.NotFoundException;
@@ -15,7 +16,6 @@ import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
-import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.service.Unscoped;
@@ -63,7 +63,7 @@ public class SuperUserProfileService implements ProfileService {
 
     private ProfileImageObjectUtils profileImageObjectUtils;
 
-    private Provider<LargeObjectService> largeObjectServiceProvider;
+    private LargeObjectDao largeObjectDao;
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -117,8 +117,8 @@ public class SuperUserProfileService implements ProfileService {
             .build();
 
         LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
-        LargeObject persistedObject = largeObjectServiceProvider.get().saveOrUpdateLargeObject(imageObject);
 
+        LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
         LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
         createdProfile.setImageObject(referenceForPersistedObject);
         getProfileDao().updateActiveProfile(createdProfile);
@@ -155,9 +155,9 @@ public class SuperUserProfileService implements ProfileService {
             throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
         }
 
-        LargeObject objectToUpdate = largeObjectServiceProvider.get().getLargeObject(profile.getImageObject().getId());
+        LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
         LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
-        largeObjectServiceProvider.get().saveOrUpdateLargeObject(updatedObject);
+        largeObjectDao.updateLargeObject(updatedObject);
 
         profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
 
@@ -254,16 +254,12 @@ public class SuperUserProfileService implements ProfileService {
         this.profileImageObjectUtils = profileImageObjectUtils;
     }
 
-    public LargeObjectService getLargeObjectService() {
-        return this.largeObjectServiceProvider.get();
-    }
-
-    public Provider<LargeObjectService> getLargeObjectServiceProvider() {
-        return largeObjectServiceProvider;
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
     }
 
     @Inject
-    public void setLargeObjectServiceProvider(Provider<LargeObjectService> largeObjectServiceProvider) {
-        this.largeObjectServiceProvider = largeObjectServiceProvider;
+    public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
+        this.largeObjectDao = largeObjectDao;
     }
 }
