@@ -155,6 +155,7 @@
         <redisson.version>3.14.1</redisson.version>
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
         <near-java-api.version>0.2.0</near-java-api.version>
+        <getstream.version>3.7.0</getstream.version>
     </properties>
 
     <dependencies>
@@ -674,6 +675,26 @@
                     <exclusion>
                         <groupId>org.jetbrains.kotlin</groupId>
                         <artifactId>kotlin-stdlib</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getstream.client</groupId>
+                <artifactId>stream-java</artifactId>
+                <version>${getstream.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
