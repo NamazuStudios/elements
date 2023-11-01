@@ -1,21 +1,32 @@
 package dev.getelements.elements.service.user;
 
 import com.google.common.collect.Lists;
+import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.model.user.UserCreateRequest;
-import dev.getelements.elements.model.user.UserCreateResponse;
-import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.model.session.Session;
+import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.service.UserService;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Created by patricktwohig on 3/26/15.
  */
 public class UserUserService extends AnonUserService implements UserService {
+
+    private SessionDao sessionDao;
+
+    private long sessionTimeoutSeconds;
 
     @Override
     public User getUser(String userId) {
@@ -59,10 +70,8 @@ public class UserUserService extends AnonUserService implements UserService {
 
         final User user = new User();
 
-        // Regular users cannot change their own level or change their name.  The underlying DAO
-        // may support name changes, but this cannot be done here.
-
         user.setId(userId);
+        user.setActive(true);
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
         user.setEmail(getCurrentUser().getEmail());
@@ -70,16 +79,31 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setFirstName(getCurrentUser().getFirstName());
         user.setLastName(getCurrentUser().getLastName());
 
-        // Regular users can't use this call to deactivate their user as well.  This must be done through
-        // a delete operation.
+        return getUserDao().updateActiveUser(user);
 
-        user.setActive(true);
+    }
 
-        final var password = nullToEmpty(userUpdateRequest.getPassword()).trim();
+    @Override
+    public SessionCreation updateUserPassword(final String userId,
+                                              final UserUpdatePasswordRequest userUpdatePasswordRequest) {
 
-        return isNullOrEmpty(password) ?
-            getUserDao().updateActiveUser(user) :
-            getUserDao().updateActiveUser(user, password);
+        checkForCurrentUser(userId);
+
+        final var user = getUserDao().getActiveUser(userId);
+        final var oldPassword = nullToEmpty(userUpdatePasswordRequest.getOldPassword()).trim();
+        final var newPassword = nullToEmpty(userUpdatePasswordRequest.getNewPassword()).trim();
+
+        final var profile = getProfileDao().getActiveProfile(userUpdatePasswordRequest.getProfileId());
+        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+
+        final var session = new Session();
+        session.setExpiry(expiry);
+        session.setUser(user);
+        session.setProfile(profile);
+        session.setApplication(profile.getApplication());
+
+        getUserDao().updateActiveUser(user, newPassword, oldPassword);
+        return getSessionDao().create(session);
 
     }
 
@@ -88,6 +112,24 @@ public class UserUserService extends AnonUserService implements UserService {
         // The user can only delete his or her own account.
         checkForCurrentUser(userId);
         getUserDao().softDeleteUser(userId);
+    }
+
+    public SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
+    }
+
+    public long getSessionTimeoutSeconds() {
+        return sessionTimeoutSeconds;
+    }
+
+    @Inject
+    public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
+        this.sessionTimeoutSeconds = sessionTimeoutSeconds;
     }
 
 }

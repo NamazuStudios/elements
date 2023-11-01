@@ -60,4 +60,5 @@ public interface FollowerService {
         profile.setUser(null);
         return profile;
     }
+
 }

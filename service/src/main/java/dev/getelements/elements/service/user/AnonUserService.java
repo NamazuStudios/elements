@@ -3,10 +3,8 @@ package dev.getelements.elements.service.user;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.model.user.UserCreateRequest;
-import dev.getelements.elements.model.user.UserCreateResponse;
-import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.UserService;
 import org.dozer.Mapper;
@@ -83,6 +81,11 @@ public class AnonUserService extends AbstractUserService implements UserService 
 
     @Override
     public User updateUser(String userId, UserUpdateRequest userUpdateRequest) {
+        throw new ForbiddenException();
+    }
+
+    @Override
+    public SessionCreation updateUserPassword(String userId, UserUpdatePasswordRequest userUpdatePasswordRequest) {
         throw new ForbiddenException();
     }
 

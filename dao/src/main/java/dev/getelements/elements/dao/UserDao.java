@@ -210,6 +210,21 @@ public interface UserDao {
     User updateActiveUser(User user, String password);
 
     /**
+     * Updates the given active user.  If the user has been deleted or has been
+     * flagged as inactive, then this method will fail.
+     *
+     * The given {@link User#isActive()} is ignored for this,
+     * if wishing to set a user as inactive, please use the {@link #softDeleteUser(String)} instead.
+     *
+     * @param user the user to update
+     * @param newPassword the user's new password
+     * @param oldPassword the user's old password
+     *
+     * @return the User, as written to the database
+     */
+    User updateActiveUser(User user, String newPassword, String oldPassword);
+
+    /**
      * Deletes a user from the database.  In actuality, this isn't a true delete, but
      * rather just flags the user as inactive.  LazyValue flagged inactive, a user will
      * not show up in any results for active users.
