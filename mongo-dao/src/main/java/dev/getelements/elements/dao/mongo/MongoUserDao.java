@@ -527,7 +527,7 @@ public class MongoUserDao implements UserDao {
 
         digest.update(mongoUser.getSalt());
         digest.update(oldPasswordBytes);
-        query.filter(eq("passwordHash", oldPasswordBytes));
+        query.filter(eq("passwordHash", digest.digest()));
 
         final var builder = new UpdateBuilder();
         updateBuilderWithOptionalData(user, builder);
