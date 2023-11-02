@@ -1,6 +1,14 @@
 package dev.getelements.elements.dao.mongo.model;
 
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.annotations.*;
+
+import java.util.Objects;
+
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
+import static dev.morphia.query.updates.UpdateOperators.set;
 
 @Indexes({
     @Index(fields = @Field("_id.profileId")),
@@ -13,6 +21,9 @@ public class MongoFollower {
     private MongoFollowerId objectId;
 
     @Reference
+    private MongoProfile profile;
+
+    @Reference
     private MongoProfile followedProfile;
 
     public MongoFollowerId getObjectId() {
@@ -23,29 +34,57 @@ public class MongoFollower {
         this.objectId = objectId;
     }
 
+    public MongoProfile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(MongoProfile profile) {
+        this.profile = profile;
+    }
+
     public MongoProfile getFollowedProfile() {return followedProfile; }
 
     public void setFollowedProfile(MongoProfile followedProfile) {this.followedProfile = followedProfile; }
 
+    @PostLoad
+    public void postLoad(final Datastore datastore) {
+        if (getProfile() == null) {
+
+            // This is here to ensure old data sets will properly fetch the profile.
+
+            profile = datastore.find(MongoProfile.class).filter(
+                    eq("_id", getObjectId().getProfileId())
+            ).first();
+
+            datastore
+                    .find(MongoFollower.class)
+                    .filter(eq("_id", getObjectId()), exists("profile").not())
+                    .modify(new ModifyOptions(), set("profile", profile));
+
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoFollower)) return false;
-
-        MongoFollower mongoFollower = (MongoFollower) o;
-
-        if (getObjectId() != null ? !getObjectId().getProfileId().equals(mongoFollower.getObjectId().getProfileId()) : mongoFollower.getObjectId().getProfileId() != null) return false;
-        if (getObjectId() != null ? !getObjectId().getFollowedId().equals(mongoFollower.getObjectId().getFollowedId()) : mongoFollower.getObjectId().getFollowedId() != null) return false;
-        return getFollowedProfile() != null ? getFollowedProfile().equals(mongoFollower.getFollowedProfile()) : mongoFollower.getFollowedProfile() == null;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoFollower that = (MongoFollower) o;
+        return Objects.equals(getObjectId(), that.getObjectId()) && Objects.equals(getProfile(), that.getProfile()) && Objects.equals(getFollowedProfile(), that.getFollowedProfile());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getObjectId().getProfileId() != null ? getObjectId().getProfileId().hashCode() : 0);
-        result = 31 * result + (getObjectId().getFollowedId() != null ? getObjectId().getFollowedId().hashCode() : 0);
-        result = 31 * result + (getFollowedProfile() != null ? getFollowedProfile().hashCode() : 0);
-        return result;
+        return Objects.hash(getObjectId(), getProfile(), getFollowedProfile());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("MongoFollower{");
+        sb.append("objectId=").append(objectId);
+        sb.append(", profile=").append(profile);
+        sb.append(", followedProfile=").append(followedProfile);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

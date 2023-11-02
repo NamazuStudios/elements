@@ -64,16 +64,20 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     public Optional<MongoProfile> findActiveMongoProfile(final String profileId) {
+        if (profileId == null || !ObjectId.isValid(profileId)) return Optional.empty();
+        final var objectId = new ObjectId(profileId);
+        return findActiveMongoProfile(objectId);
+    }
 
-        if (!ObjectId.isValid(profileId)) return Optional.empty();
+    public Optional<MongoProfile> findActiveMongoProfile(final ObjectId profileId) {
 
         final var query = getDatastore().find(MongoProfile.class);
 
         query.filter(
-            and(
-                eq("_id", new ObjectId(profileId)),
-                eq("active", true)
-            )
+                and(
+                        eq("_id", profileId),
+                        eq("active", true)
+                )
         );
 
         final var mongoProfile = query.first();
@@ -215,22 +219,14 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     public MongoProfile getActiveMongoProfile(final String profileId) {
-
-        final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
+        return getActiveMongoProfile(objectId);
+    }
 
-        query.filter(and(
-                eq("active", true),
-                eq("_id", objectId)
-        ));
-
-        final MongoProfile mongoProfile = query.first();
-
-        if (mongoProfile == null) {
-            throw new ProfileNotFoundException("No profile exists with id " + profileId);
-        }
-
-        return mongoProfile;
+    public MongoProfile getActiveMongoProfile(final ObjectId objectId) {
+        return findActiveMongoProfile(objectId).orElseThrow(() -> {
+            return new ProfileNotFoundException("No profile exists with id " + objectId);
+        });
     }
 
     public Stream<MongoProfile> getActiveMongoProfilesForUser(final MongoUser user) {

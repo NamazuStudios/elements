@@ -29,7 +29,9 @@ public class MongoFollowerDao implements FollowerDao {
     private MongoProfileDao mongoProfileDao;
 
     @Override
-    public Pagination<Profile> getFollowersForProfile(String profileId, int offset, int count) {
+    public Pagination<Profile> getFollowersForProfile(final String profileId,
+                                                      final int offset,
+                                                      final int count) {
 
         final var query = getDatastore().find(MongoFollower.class);
         final var profileObjectId = getMongoDBUtils().parseOrThrow(profileId, ProfileNotFoundException::new);
@@ -37,15 +39,34 @@ public class MongoFollowerDao implements FollowerDao {
         query.filter(eq("_id.profileId", profileObjectId));
 
         return getMongoDBUtils()
-            .paginationFromQuery(
-                query, offset, count,
-                f -> getDozerMapper().map(f.getFollowedProfile(), Profile.class)
-            );
+                .paginationFromQuery(
+                    query, offset, count,
+                    f -> getDozerMapper().map(f.getFollowedProfile(), Profile.class)
+                );
 
     }
 
     @Override
-    public Profile getFollowerForProfile(String profileId, String followedId) {
+    public Pagination<Profile> getFolloweesForProfile(final String profileId,
+                                                      final int offset,
+                                                      final int count) {
+
+        final var query = getDatastore().find(MongoFollower.class);
+        final var profileObjectId = getMongoDBUtils().parseOrThrow(profileId, ProfileNotFoundException::new);
+
+        query.filter(eq("_id.followedId", profileObjectId));
+
+        return getMongoDBUtils()
+                .paginationFromQuery(
+                        query, offset, count,
+                        f -> getDozerMapper().map(f.getProfile(), Profile.class)
+                );
+
+    }
+
+    @Override
+    public Profile getFollowerForProfile(final String profileId,
+                                         final String followedId) {
 
         final var followerQuery = getDatastore().find(MongoFollower.class);
         final var mongoFollowerId = new MongoFollowerId(profileId, followedId);
@@ -69,7 +90,8 @@ public class MongoFollowerDao implements FollowerDao {
     }
 
     @Override
-    public void createFollowerForProfile(final String profileId, final CreateFollowerRequest createFollowerRequest) {
+    public void createFollowerForProfile(final String profileId,
+                                         final CreateFollowerRequest createFollowerRequest) {
 
         final var follower = getMongoProfileDao().getActiveMongoProfile(profileId);
         final var followed = getMongoProfileDao().getActiveMongoProfile(createFollowerRequest.getFollowedId());
@@ -85,7 +107,8 @@ public class MongoFollowerDao implements FollowerDao {
     }
 
     @Override
-    public void deleteFollowerForProfile(final String profileId, final String profileToUnfollowId) {
+    public void deleteFollowerForProfile(final String profileId,
+                                         final String profileToUnfollowId) {
 
         final var query = getDatastore().find(MongoFollower.class);
         final var mongoFollowerId = new MongoFollowerId(profileId, profileToUnfollowId);
@@ -137,4 +160,5 @@ public class MongoFollowerDao implements FollowerDao {
     public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
         this.mongoProfileDao = mongoProfileDao;
     }
+
 }

@@ -12,7 +12,7 @@ import dev.getelements.elements.model.profile.Profile;
 public interface FollowerService {
 
     /**
-     * Gets the listing of {@link Profile} with the supplied offset and count.
+     * Gets the listing of {@link Profile}'s followers with the supplied offset and count.
      *
      * @param profileId the profile id to fetch followers for
      * @param offset the offset
@@ -20,6 +20,16 @@ public interface FollowerService {
      * @return the list of {@link Profile} instances
      */
     Pagination<Profile> getFollowers(String profileId, int offset, int count);
+
+    /**
+     * Gets the listing of {@link Profile}'s followees with the supplied offset and count.
+     *
+     * @param profileId the profile id to fetch followers for
+     * @param offset the offset
+     * @param count the count
+     * @return the list of {@link Profile} instances
+     */
+    Pagination<Profile> getFollowees(String profileId, int offset, int count);
 
     /**
      * Gets the listing of {@link Profile} with the supplied offset, count, and search query.
@@ -60,4 +70,5 @@ public interface FollowerService {
         profile.setUser(null);
         return profile;
     }
+
 }

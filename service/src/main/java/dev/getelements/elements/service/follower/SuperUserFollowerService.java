@@ -13,8 +13,17 @@ public class SuperUserFollowerService implements FollowerService {
     private FollowerDao followerDao;
 
     @Override
-    public Pagination<Profile> getFollowers(final String profileId, final int offset, final int count) {
-        return getFollowerDao().getFollowersForProfile(profileId, offset, count).transform(this::redactPrivateInformation);
+    public Pagination<Profile> getFollowers(final String profileId,
+                                            final int offset,
+                                            final int count) {
+        return getFollowerDao().getFollowersForProfile(profileId, offset, count);
+    }
+
+    @Override
+    public Pagination<Profile> getFollowees(final String profileId,
+                                            final int offset,
+                                            final int count) {
+        return getFollowerDao().getFolloweesForProfile(profileId, offset, count);
     }
 
     @Override

@@ -79,6 +79,12 @@ public class MongoFollowerDaoTest {
     }
 
     @Test(dependsOnMethods = "createFollowerForProfile")
+    public void testGetFollowees() {
+        Pagination<Profile> followedProfiles = getFollowerDao().getFolloweesForProfile(testProfileB.getId(), 0, 20);
+        assertEquals(followedProfiles.iterator().next(), testProfileA);
+    }
+
+    @Test(dependsOnMethods = "createFollowerForProfile")
     public void testGetFollower() {
         Profile followedProfile = getFollowerDao().getFollowerForProfile(testProfileA.getId(), testProfileB.getId());
         assertEquals(followedProfile, testProfileB);
