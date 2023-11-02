@@ -3,14 +3,17 @@ package dev.getelements.elements.model.user;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel
 public class UserUpdatePasswordRequest {
 
+    @NotNull
     @ApiModelProperty("The user's current password.")
     private String oldPassword;
 
+    @NotNull
     @ApiModelProperty("The user's updated password.")
     private String newPassword;
 

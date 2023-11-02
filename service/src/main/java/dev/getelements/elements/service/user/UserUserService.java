@@ -90,17 +90,18 @@ public class UserUserService extends AnonUserService implements UserService {
         checkForCurrentUser(userId);
 
         final var user = getUserDao().getActiveUser(userId);
+        final var profileId = userUpdatePasswordRequest.getProfileId();
         final var oldPassword = nullToEmpty(userUpdatePasswordRequest.getOldPassword()).trim();
         final var newPassword = nullToEmpty(userUpdatePasswordRequest.getNewPassword()).trim();
+        final var profile = getProfileDao().findActiveProfileForUser(profileId, userId);
 
-        final var profile = getProfileDao().getActiveProfile(userUpdatePasswordRequest.getProfileId());
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
 
         final var session = new Session();
         session.setExpiry(expiry);
         session.setUser(user);
-        session.setProfile(profile);
-        session.setApplication(profile.getApplication());
+        session.setProfile(profile.orElse(null));
+        session.setApplication(profile.map(p -> p.getApplication()).orElse(null));
 
         getUserDao().updateActiveUser(user, newPassword, oldPassword);
         return getSessionDao().create(session);

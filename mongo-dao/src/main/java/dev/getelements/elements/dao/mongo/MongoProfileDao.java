@@ -84,7 +84,7 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Optional<Profile> findActiveProfileForUser(final String profileId, final String userId) {
 
-        if (!ObjectId.isValid(profileId)) return Optional.empty();
+        if (profileId == null || !ObjectId.isValid(profileId)) return Optional.empty();
 
         final var objectId = getMongoDBUtils().parseOrReturnNull(profileId);
         final var mongoUser = getMongoUserDao().getActiveMongoUser(userId);

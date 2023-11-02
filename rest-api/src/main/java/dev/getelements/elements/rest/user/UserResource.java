@@ -100,12 +100,11 @@ public class UserResource {
     }
 
     @PUT
-    @Path("{userId}")
+    @Path("{userId}/password")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a User",
-            notes = "Supplying the user object, this will update the user with the new information supplied " +
-                    "in the body of the request.  Optionally, the user's password may be provided in the User " +
-                    "object.")
+    @ApiOperation(value = "Updates a User's Password",
+            notes = "Supplying the UserUpdatePasswordRequest, this will attempt to update the user's password only " +
+                    "if they supply the correct existing password.")
     public SessionCreation updateUserPassword(final UserUpdatePasswordRequest userUpdatePasswordRequest,
                                               final @PathParam("userId") String userId) {
 

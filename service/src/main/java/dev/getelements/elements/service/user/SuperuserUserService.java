@@ -7,6 +7,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.model.user.*;
+import dev.getelements.elements.rt.exception.BadRequestException;
 import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.Unscoped;
@@ -123,23 +124,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     public SessionCreation updateUserPassword(
             final String userId,
             final UserUpdatePasswordRequest userUpdatePasswordRequest) {
-
-        final var user = getUserDao().getActiveUser(userId);
-        final var oldPassword = nullToEmpty(userUpdatePasswordRequest.getOldPassword()).trim();
-        final var newPassword = nullToEmpty(userUpdatePasswordRequest.getNewPassword()).trim();
-
-        final var profile = getProfileDao().getActiveProfile(userUpdatePasswordRequest.getProfileId());
-        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
-
-        final var session = new Session();
-        session.setExpiry(expiry);
-        session.setUser(user);
-        session.setProfile(profile);
-        session.setApplication(profile.getApplication());
-
-        getUserDao().updateActiveUser(user, newPassword, oldPassword);
-        return getSessionDao().create(session);
-
+        throw new BadRequestException("Not implemented.");
     }
 
     @Override
