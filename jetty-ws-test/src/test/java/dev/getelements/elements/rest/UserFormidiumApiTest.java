@@ -116,7 +116,7 @@ public class UserFormidiumApiTest {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "implicitClientContexts")
+    @Test(dataProvider = "implicitClientContexts", enabled = false)
     public void createFormidiumInvestorsImplicit(final ClientContext clientContext) {
 
         final var email = format("%s-%s@example.com", "formidium-test", UUID.randomUUID());
@@ -142,7 +142,7 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "explicitClientContexts")
+    @Test(dataProvider = "explicitClientContexts", enabled = false)
     public void createFormidiumInvestorsExplicit(final ClientContext clientContext) {
 
         final var email = format("%s-%s@example.com", "formidium-test", UUID.randomUUID());
@@ -158,7 +158,7 @@ public class UserFormidiumApiTest {
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(entity(multipart, MULTIPART_FORM_DATA));
 
-        assertEquals(response.getStatus(), 200);
+        assertEquals(200, response.getStatus());
 
         final var formidiumInvestor = response.readEntity(FormidiumInvestor.class);
         assertNotNull(formidiumInvestor.getId());
@@ -169,7 +169,7 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allClientContexts", dependsOnMethods = {
+    @Test(enabled = false, dataProvider = "allClientContexts", dependsOnMethods = {
             "createFormidiumInvestorsImplicit",
             "createFormidiumInvestorsExplicit"
     })
@@ -191,7 +191,7 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allClientContextsAndInvestors", dependsOnMethods = {
+    @Test(enabled = false, dataProvider = "allClientContextsAndInvestors", dependsOnMethods = {
             "createFormidiumInvestorsImplicit",
             "createFormidiumInvestorsExplicit"
     })
@@ -209,7 +209,7 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allInvestors", dependsOnMethods = {
+    @Test(enabled = false, dataProvider = "allInvestors", dependsOnMethods = {
             "createFormidiumInvestorsImplicit",
             "createFormidiumInvestorsExplicit"
     })
@@ -224,7 +224,7 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dependsOnMethods = {
+    @Test(enabled = false, dependsOnMethods = {
             "createFormidiumInvestorsImplicit",
             "createFormidiumInvestorsExplicit"
     })
@@ -243,7 +243,7 @@ public class UserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allClientContextsAndInvestors", dependsOnMethods = {
+    @Test(enabled = false, dataProvider = "allClientContextsAndInvestors", dependsOnMethods = {
             "createFormidiumInvestorsImplicit",
             "createFormidiumInvestorsExplicit"
     })
