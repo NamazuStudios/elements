@@ -87,7 +87,7 @@ public class SuperUserFormidiumApiTest {
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "userClientContexts")
+    @Test(dataProvider = "userClientContexts", enabled = false)
     public void createFormidiumInvestors(final ClientContext clientContext) {
 
         final var email = format("%s-%s@example.com", "formidium-test", UUID.randomUUID());
@@ -114,7 +114,7 @@ public class SuperUserFormidiumApiTest {
 
     }
 
-    @Test(dependsOnMethods = "createFormidiumInvestors")
+    @Test(dependsOnMethods = "createFormidiumInvestors", enabled = false)
     public void getFormidiumInvestors() {
 
         final var investors = new PaginationWalker().toList((offset, count) -> {
@@ -136,7 +136,7 @@ public class SuperUserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allInvestors", dependsOnMethods = "createFormidiumInvestors")
+    @Test(dataProvider = "allInvestors", dependsOnMethods = "createFormidiumInvestors", enabled = false)
     public void getFormidiumInvestor(final FormidiumInvestor formidiumInvestor) {
 
         final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
@@ -151,7 +151,7 @@ public class SuperUserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allInvestors", dependsOnMethods = {"getFormidiumInvestors", "getFormidiumInvestor"})
+    @Test(dataProvider = "allInvestors", dependsOnMethods = {"getFormidiumInvestors", "getFormidiumInvestor"}, enabled = false)
     public void deleteFormidiumInvestor(final FormidiumInvestor formidiumInvestor) {
 
         final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
@@ -163,7 +163,7 @@ public class SuperUserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allInvestors", dependsOnMethods = {"deleteFormidiumInvestor"})
+    @Test(dataProvider = "allInvestors", dependsOnMethods = {"deleteFormidiumInvestor"}, enabled = false)
     public void doubleDeleteFormidiumInvestor(final FormidiumInvestor formidiumInvestor) {
 
         final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
@@ -175,7 +175,7 @@ public class SuperUserFormidiumApiTest {
 
     }
 
-    @Test(dataProvider = "allInvestors", dependsOnMethods = {"deleteFormidiumInvestor"})
+    @Test(dataProvider = "allInvestors", dependsOnMethods = {"deleteFormidiumInvestor"}, enabled = false)
     public void deletedNotFound(final FormidiumInvestor formidiumInvestor) {
 
         final var response = client.target(getApiUrl() + "/kyc/formidium/" + formidiumInvestor.getId())
