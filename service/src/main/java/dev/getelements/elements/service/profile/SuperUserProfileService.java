@@ -85,17 +85,17 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public Profile getProfile(String profileId) {
         Profile profile = getProfileDao().getActiveProfile(profileId);
-        return profileServiceUtils.profileCdnSetup(profile);
+        return profileServiceUtils.assignCdnUrl(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return profileServiceUtils.profileCdnSetup(getCurrentProfileSupplier().get());
+        return profileServiceUtils.assignCdnUrl(getCurrentProfileSupplier().get());
     }
 
     @Override
     public Optional<Profile> findCurrentProfile() {
-        return getCurrentProfileOptional().map(profileServiceUtils::profileCdnSetup);
+        return getCurrentProfileOptional().map(profileServiceUtils::assignCdnUrl);
     }
 
     @Override

@@ -45,28 +45,28 @@ public class UpdateUserAvatarTest {
         clientContext.createProfile("Test Display");
     }
 
-//    @Test
-//    public void shouldUpdateUserAvatar() {
-//
-//        clientContext.createSession(clientContext.getDefaultProfile());
-//
-//        String profileId = clientContext.getDefaultProfile().getId();
-//
-//        updateLargeObjectContent(clientContext.getDefaultProfile().getImageObject().getId());
-//
-//        UpdateProfileImageRequest updateProfileImageRequest = new UpdateProfileImageRequest();
-//        updateProfileImageRequest.setMimeType("image/jpeg");
-//
-//        Profile updatedProfile = client
-//                .target(apiRoot + "/profile/" + profileId + "/image")
-//                .request()
-//                .header(SESSION_SECRET, clientContext.getSessionSecret())
-//                .put(Entity.entity(updateProfileImageRequest, MediaType.APPLICATION_JSON_TYPE))
-//                .readEntity(Profile.class);
-//
-//        assertNotNull(updatedProfile.getImageObject().getId());
-//        assertEquals(updatedProfile.getImageObject().getMimeType(), "image/jpeg");
-//    }
+    @Test
+    public void shouldUpdateUserAvatar() {
+
+        clientContext.createSession(clientContext.getDefaultProfile());
+
+        String profileId = clientContext.getDefaultProfile().getId();
+
+        updateLargeObjectContent(clientContext.getDefaultProfile().getImageObject().getId());
+
+        UpdateProfileImageRequest updateProfileImageRequest = new UpdateProfileImageRequest();
+        updateProfileImageRequest.setMimeType("image/jpeg");
+
+        Profile updatedProfile = client
+                .target(apiRoot + "/profile/" + profileId + "/image")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .put(Entity.entity(updateProfileImageRequest, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(Profile.class);
+
+        assertNotNull(updatedProfile.getImageObject().getId());
+        assertEquals(updatedProfile.getImageObject().getMimeType(), "image/jpeg");
+    }
 
     private void updateLargeObjectContent(String largeObjectId) {
         final InputStream loStream = UserLargeObjectResourceTest.class.getResourceAsStream("/testLO.txt");

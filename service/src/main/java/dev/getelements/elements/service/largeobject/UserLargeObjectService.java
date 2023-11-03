@@ -106,6 +106,11 @@ public class UserLargeObjectService implements LargeObjectService {
     @Override
     public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
         getValidationHelper().validateModel(largeObject);
+
+        if (!getAccessPermissionsUtils().hasWriteAccess(largeObject.getAccessPermissions())) {
+            throw new ForbiddenException("User not allowed to save or update large object");
+        }
+
         return getLargeObjectCdnUtils().setCdnUrlToObject( isNull(largeObject.getId()) ?
                 getLargeObjectDao().createLargeObject(largeObject) : getLargeObjectDao().updateLargeObject(largeObject));
     }

@@ -71,7 +71,7 @@ public class ProfileServiceUtils {
 
     }
 
-    Profile profileCdnSetup(Profile profile) {
+    Profile assignCdnUrl(Profile profile) {
         LargeObjectReference imageObject = profile.getImageObject();
         if (nonNull(imageObject)) {
             String imageUrl = largeObjectCdnUtils.assembleCdnUrl(imageObject.getId());
@@ -81,7 +81,7 @@ public class ProfileServiceUtils {
     }
 
     Pagination<Profile> profilesPageCdnSetup(Pagination<Profile> profiles) {
-        profiles.getObjects().forEach(this::profileCdnSetup);
+        profiles.getObjects().forEach(this::assignCdnUrl);
         return profiles;
     }
 
@@ -99,7 +99,8 @@ public class ProfileServiceUtils {
     }
 
     @Inject
-    public void setNameService(@Unscoped NameService nameService) {
+    public void
+    setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 

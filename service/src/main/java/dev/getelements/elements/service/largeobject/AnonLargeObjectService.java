@@ -68,7 +68,6 @@ public class AnonLargeObjectService implements LargeObjectService {
         throw new ForbiddenException();
     }
 
-    //TODO: is forbidden correct?
     @Override
     public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
         throw new ForbiddenException();

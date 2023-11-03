@@ -19,7 +19,6 @@ import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.EventContext;
 import dev.getelements.elements.rt.SimpleAttributes;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
-import dev.getelements.elements.service.LargeObjectService;
 import dev.getelements.elements.service.ProfileService;
 import dev.getelements.elements.service.UserService;
 import org.slf4j.Logger;
@@ -105,17 +104,17 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile getProfile(String profileId) {
         Profile profile = getProfileDao().getActiveProfile(profileId);
-        return profileServiceUtils.profileCdnSetup(profile);
+        return profileServiceUtils.assignCdnUrl(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return profileServiceUtils.profileCdnSetup(getCurrentProfileSupplier().get());
+        return profileServiceUtils.assignCdnUrl(getCurrentProfileSupplier().get());
     }
 
     @Override
     public Optional<Profile> findCurrentProfile() {
-        return getCurrentProfileOptional().map(profileServiceUtils::profileCdnSetup);
+        return getCurrentProfileOptional().map(profileServiceUtils::assignCdnUrl);
     }
 
     @Override
@@ -193,8 +192,17 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
         final var profile = getCurrentProfile();
+        checkUserAndProfile(profile.getId());
+
         if (isNull(profile.getImageObject())) {
-            throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
+            logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
+            LargeObject imageObject = profileImageObjectUtils.createImageObject(profile);
+            LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+
+            LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+            profile.setImageObject(referenceForPersistedObject);
+            getProfileDao().updateActiveProfile(profile);
+            return profile;
         }
 
         LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());

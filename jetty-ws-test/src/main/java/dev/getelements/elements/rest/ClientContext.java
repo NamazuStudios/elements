@@ -189,10 +189,18 @@ class ClientContext {
         this.profileImageObjectUtils = profileImageObjectUtils;
     }
 
-    private LargeObjectReference createImageObjectForProfile(Profile profile) {
-        LargeObject imageObject = profileImageObjectUtils.createImageObject(profile);
-        LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+    public ProfileImageObjectUtils getProfileImageObjectUtils() {
+        return profileImageObjectUtils;
+    }
 
-        return profileImageObjectUtils.createReference(persistedObject);
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
+    }
+
+    private LargeObjectReference createImageObjectForProfile(Profile profile) {
+        LargeObject imageObject = getProfileImageObjectUtils().createImageObject(profile);
+        LargeObject persistedObject = getLargeObjectDao().createLargeObject(imageObject);
+
+        return getProfileImageObjectUtils().createReference(persistedObject);
     }
 }

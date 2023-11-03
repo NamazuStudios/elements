@@ -3,12 +3,13 @@ package dev.getelements.elements.model.profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel(description = "Represents a request to update an image profile.")
 public class UpdateProfileImageRequest {
 
-    //TODO: synchronize with accepted mimetypes
+    @NotNull
     @ApiModelProperty("MimeType of image")
     private String mimeType;
 

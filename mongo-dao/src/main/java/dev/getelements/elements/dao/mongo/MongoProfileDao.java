@@ -33,6 +33,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.and;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.*;
+import static java.lang.String.format;
 import static java.util.regex.Pattern.compile;
 
 /**
@@ -434,7 +435,9 @@ public class MongoProfileDao implements ProfileDao {
 
     private MongoLargeObject getMongoLargeObjectFromProfile(final Profile profile) {
         return  profile.getImageObject() == null ? null :
-                getMongoLargeObjectDao().getMongoLargeObject(profile.getImageObject().getId());
+                getMongoLargeObjectDao().findMongoLargeObject(profile.getImageObject().getId())
+                        .orElseThrow(()-> new NotFoundException(format("Not found Large object %s asociated with profile %s",
+                                profile.getImageObject().getId(), profile.getId())));
     }
 
     @Override
@@ -486,13 +489,6 @@ public class MongoProfileDao implements ProfileDao {
         if (!input.getApplication().isActive()) {
             input.setApplication(null);
         }
-
-        //TODO: remove asap!
-
-//        if (input.getImageObject() != null) {
-//            MongoLargeObject unwanted = getMongoLargeObjectDao().getMongoLargeObject(input.getImageObject().getId().toHexString());
-//            input.setImageObject(unwanted);
-//        }
 
         return getBeanMapper().map(input, Profile.class);
 

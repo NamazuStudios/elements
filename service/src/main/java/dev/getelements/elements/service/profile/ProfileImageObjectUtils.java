@@ -14,12 +14,10 @@ import static java.util.Arrays.asList;
 public class ProfileImageObjectUtils {
 
     private static final String DEFAULT_IMAGE_PATH = "/user/%s/profile/%s/%s.bin";
-    private static final String DEFAULT_MIME_TYPE = "image/png";
 
     public LargeObject createImageObject(Profile profile) {
         LargeObject largeObject = new LargeObject();
         largeObject.setAccessPermissions(setupDefaultPermissions(profile));
-        largeObject.setMimeType(DEFAULT_MIME_TYPE);
         largeObject.setPath(String.format(DEFAULT_IMAGE_PATH, profile.getUser().getId(), profile.getId(), UUID.randomUUID()));
         return largeObject;
     }

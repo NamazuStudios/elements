@@ -99,6 +99,10 @@ public class MongoLargeObjectDao implements LargeObjectDao {
 
     }
 
+    public Optional<MongoLargeObject> findMongoLargeObject(String objectId) {
+        return Optional.ofNullable(getMongoLargeObject(objectId));
+    }
+
     public MongoLargeObject getMongoLargeObject(String objectId) {
         final var query = getDatastore().find(MongoLargeObject.class);
         query.filter(and(
