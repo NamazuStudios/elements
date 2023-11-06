@@ -148,7 +148,7 @@ public class UserProfileService implements ProfileService {
 
         LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
         createdProfile.setImageObject(referenceForPersistedObject);
-        getProfileDao().updateActiveProfile(createdProfile);
+        Profile finalCreatedProfile = getProfileDao().updateActiveProfile(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -162,7 +162,7 @@ public class UserProfileService implements ProfileService {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }
 
-        return createdProfile;
+        return finalCreatedProfile;
     }
 
     private void checkUserAndProfile(final String id) {
