@@ -51,9 +51,4 @@ public class ProfileImageObjectUtils {
         subjects.setProfiles(asList(profile));
         return subjects;
     }
-
-    public void updateProfileReference(LargeObjectReference reference, LargeObject updatedObject) {
-        reference.setMimeType(updatedObject.getMimeType());
-        reference.setId(updatedObject.getId());
-    }
 }

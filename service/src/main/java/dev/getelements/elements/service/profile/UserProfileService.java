@@ -104,12 +104,12 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile getProfile(String profileId) {
         Profile profile = getProfileDao().getActiveProfile(profileId);
-        return profileServiceUtils.assignCdnUrl(profile);
+        return profileWithImageUrl(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return profileServiceUtils.assignCdnUrl(getCurrentProfileSupplier().get());
+        return profileWithImageUrl(getCurrentProfileSupplier().get());
     }
 
     @Override
@@ -124,7 +124,7 @@ public class UserProfileService implements ProfileService {
         profileRequest.setMetadata(null);
 
         final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
-        return getProfileDao().updateActiveProfile(profile);
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
 
     }
 
@@ -148,7 +148,7 @@ public class UserProfileService implements ProfileService {
 
         LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
         createdProfile.setImageObject(referenceForPersistedObject);
-        Profile finalCreatedProfile = getProfileDao().updateActiveProfile(createdProfile);
+        final Profile createdAndImageUpdatedProfile = getProfileDao().updateActiveProfile(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -162,7 +162,7 @@ public class UserProfileService implements ProfileService {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }
 
-        return finalCreatedProfile;
+        return profileWithImageUrl(createdAndImageUpdatedProfile);
     }
 
     private void checkUserAndProfile(final String id) {
@@ -186,7 +186,6 @@ public class UserProfileService implements ProfileService {
         }
 
         getProfileDao().softDeleteProfile(profileId);
-
     }
 
     @Override
@@ -201,17 +200,17 @@ public class UserProfileService implements ProfileService {
 
             LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
             profile.setImageObject(referenceForPersistedObject);
-            getProfileDao().updateActiveProfile(profile);
-            return profile;
+        } else {
+            LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
+            LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
+            largeObjectDao.updateLargeObject(updatedObject);
         }
 
-        LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
-        LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
-        largeObjectDao.updateLargeObject(updatedObject);
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
+    }
 
-        profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
-
-        return getProfileDao().updateActiveProfile(profile);
+    private Profile profileWithImageUrl(Profile profile) {
+        return profileServiceUtils.assignCdnUrl(profile);
     }
 
     public User getUser() {

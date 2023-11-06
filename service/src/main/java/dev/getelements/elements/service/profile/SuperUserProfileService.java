@@ -85,12 +85,12 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public Profile getProfile(String profileId) {
         Profile profile = getProfileDao().getActiveProfile(profileId);
-        return profileServiceUtils.assignCdnUrl(profile);
+        return profileWithImageUrl(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return profileServiceUtils.assignCdnUrl(getCurrentProfileSupplier().get());
+        return profileWithImageUrl(getCurrentProfileSupplier().get());
     }
 
     @Override
@@ -101,7 +101,7 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
         final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
-        return getProfileDao().updateActiveProfile(profile);
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
     }
 
     @Override
@@ -121,7 +121,7 @@ public class SuperUserProfileService implements ProfileService {
         LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
         LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
         createdProfile.setImageObject(referenceForPersistedObject);
-        getProfileDao().updateActiveProfile(createdProfile);
+        final Profile createdAndImageUpdatedProfile = getProfileDao().updateActiveProfile(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -135,7 +135,7 @@ public class SuperUserProfileService implements ProfileService {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }
 
-        return createdProfile;
+        return profileWithImageUrl(createdAndImageUpdatedProfile);
     }
 
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
@@ -151,17 +151,28 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
         final var profile = getProfileDao().getActiveProfile(profileId);
+
         if (isNull(profile.getImageObject())) {
-            throw new NotFoundException("LargeObject for image was not yet assigned to this profile.");
+            logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
+            LargeObject imageObject = profileImageObjectUtils.createImageObject(profile);
+            LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+
+            LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+            profile.setImageObject(referenceForPersistedObject);
+        } else {
+            LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
+            LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
+            LargeObject persistedObject = largeObjectDao.updateLargeObject(updatedObject);
+
+            LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+            profile.setImageObject(referenceForPersistedObject);
         }
 
-        LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
-        LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
-        largeObjectDao.updateLargeObject(updatedObject);
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
+    }
 
-        profileImageObjectUtils.updateProfileReference(profile.getImageObject(), updatedObject);
-
-        return getProfileDao().updateActiveProfile(profile);
+    private Profile profileWithImageUrl(Profile profile) {
+        return profileServiceUtils.assignCdnUrl(profile);
     }
 
     public ProfileDao getProfileDao() {
