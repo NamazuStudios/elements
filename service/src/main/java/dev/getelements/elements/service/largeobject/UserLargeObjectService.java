@@ -38,7 +38,7 @@ public class UserLargeObjectService implements LargeObjectService {
             throw new ForbiddenException("User not allowed to find");
         }
 
-        return result;
+        return result.map(getLargeObjectCdnUtils()::setCdnUrlToObject);
     }
 
     @Override
