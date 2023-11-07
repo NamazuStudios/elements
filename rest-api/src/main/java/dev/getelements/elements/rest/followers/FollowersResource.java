@@ -19,8 +19,14 @@ import javax.ws.rs.core.MediaType;
 @Path("follower")
 @Api(value = "Followers",
         description = "Manages follower relationships among profiles.",
-        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {
+                @Authorization(AuthSchemes.AUTH_BEARER),
+                @Authorization(AuthSchemes.SESSION_SECRET),
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
+    }
+)
 public class FollowersResource {
+
     private ValidationHelper validationHelper;
 
     private FollowerService followerService;
@@ -63,21 +69,18 @@ public class FollowersResource {
             notes = "Supplying the follower object, this will store the information supplied " +
                     "in the body of the request.")
     public void createFollower(@PathParam("profileId") final String profileId, final CreateFollowerRequest createFollowerRequest) {
-
         getValidationHelper().validateModel(createFollowerRequest, ValidationGroups.Create.class);
-
         getFollowerService().createFollower(profileId, createFollowerRequest);
-
     }
 
     @DELETE
     @Path("{profileId}/{profileToUnfollowId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Deletes a Follower relationship")
     public void deleteFollower(
             @PathParam("profileId") final String profileId,
             @PathParam("profileToUnfollowId") final String profileToUnfollowId) {
-
         getFollowerService().deleteFollower(profileId, profileToUnfollowId);
     }
 
