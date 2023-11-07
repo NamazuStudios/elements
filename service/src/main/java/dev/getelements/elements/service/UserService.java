@@ -2,10 +2,8 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.model.user.UserCreateRequest;
-import dev.getelements.elements.model.user.UserCreateResponse;
-import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
@@ -127,6 +125,14 @@ public interface UserService {
      * @return the User, as it was updated
      */
     User updateUser(String userId, UserUpdateRequest userUpdateRequest);
+
+    /**
+     * Updates the User's password given the {@link UserUpdatePasswordRequest} and the user ID.
+     * @param userId the user ID to update
+     * @param userUpdatePasswordRequest the {@link UserUpdatePasswordRequest} instance
+     * @return a {@link SessionCreation} indicating new session key
+     */
+    SessionCreation updateUserPassword(String userId, UserUpdatePasswordRequest userUpdatePasswordRequest);
 
     /**
      * Removes a user from the system, effectively deleting his/her account.

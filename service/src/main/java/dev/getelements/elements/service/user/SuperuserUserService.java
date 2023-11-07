@@ -1,11 +1,13 @@
 package dev.getelements.elements.service.user;
 
+import dev.getelements.elements.dao.ProfileDao;
+import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.model.user.UserCreateRequest;
-import dev.getelements.elements.model.user.UserCreateResponse;
-import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.model.session.Session;
+import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.user.*;
+import dev.getelements.elements.rt.exception.BadRequestException;
 import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.Unscoped;
@@ -13,10 +15,15 @@ import dev.getelements.elements.service.UserService;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  *
@@ -29,9 +36,13 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     private UserDao userDao;
 
+    private SessionDao sessionDao;
+
     private NameService nameService;
 
     private PasswordGenerator passwordGenerator;
+
+    private long sessionTimeoutSeconds;
 
     @Override
     public User getUser(String userId) {
@@ -110,6 +121,13 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Override
+    public SessionCreation updateUserPassword(
+            final String userId,
+            final UserUpdatePasswordRequest userUpdatePasswordRequest) {
+        throw new BadRequestException("Not implemented.");
+    }
+
+    @Override
     public void deleteUser(String userId) {
         getUserDao().softDeleteUser(userId);
     }
@@ -132,6 +150,15 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         this.userDao = userDao;
     }
 
+    public SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
+    }
+
     public NameService getNameService() {
         return nameService;
     }
@@ -148,6 +175,15 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     @Inject
     public void setPasswordGenerator(PasswordGenerator passwordGenerator) {
         this.passwordGenerator = passwordGenerator;
+    }
+
+    public long getSessionTimeoutSeconds() {
+        return sessionTimeoutSeconds;
+    }
+
+    @Inject
+    public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
+        this.sessionTimeoutSeconds = sessionTimeoutSeconds;
     }
 
 }
