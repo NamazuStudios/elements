@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 
 @ApiModel
-public class FirebaseApplicationConfiguration extends ApplicationConfiguration {
+    public class FirebaseApplicationConfiguration extends ApplicationConfiguration {
 
     @NotNull
     @ApiModelProperty("The contents of the serviceAccountCredentials.json file.")

@@ -485,6 +485,67 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
+    public User updateActiveUser(final User user, final String newPassword, final String oldPassword) {
+
+        validate(user);
+
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+
+        final var query = getDatastore().find(MongoUser.class).filter(
+                eq("_id", objectId),
+                eq("active", true)
+        );
+
+        var mongoUser = query.first();
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User does not exist.");
+        }
+
+        final MessageDigest digest;
+
+        try {
+
+            if (mongoUser.getHashAlgorithm() == null) {
+                throw new ForbiddenException();
+            }
+
+            final var algo = nullToEmpty(mongoUser.getHashAlgorithm());
+            digest = MessageDigest.getInstance(algo);
+
+        } catch (NoSuchAlgorithmException ex) {
+            throw new ForbiddenException(ex);
+        }
+
+        final byte[] oldPasswordBytes;
+
+        try {
+            oldPasswordBytes = oldPassword.getBytes(getPasswordEncoding());
+        } catch (UnsupportedEncodingException ex) {
+            throw new InternalException(ex);
+        }
+
+        digest.update(mongoUser.getSalt());
+        digest.update(oldPasswordBytes);
+        query.filter(eq("passwordHash", digest.digest()));
+
+        final var builder = new UpdateBuilder();
+        updateBuilderWithOptionalData(user, builder);
+        getMongoPasswordUtils().addPasswordToBuilder(builder, newPassword);
+
+        mongoUser = getMongoDBUtils().perform(ds ->
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoUser == null) {
+            throw new NotFoundException("User does not exist.");
+        }
+
+        return getDozerMapper().map(mongoUser, User.class);
+
+    }
+
+    @Override
     public void softDeleteUser(final String userId) {
 
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
@@ -529,7 +590,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public Optional<User> findActiveUserWithLoginAndPassword(String userNameOrEmail, String password) {
+    public Optional<User> findActiveUserWithLoginAndPassword(final String userNameOrEmail, final String password) {
 
         final var query = getDatastore().find(MongoUser.class);
 

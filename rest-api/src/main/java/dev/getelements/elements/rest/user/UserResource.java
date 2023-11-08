@@ -3,10 +3,8 @@ package dev.getelements.elements.rest.user;
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.model.user.UserCreateRequest;
-import dev.getelements.elements.model.user.UserCreateResponse;
-import dev.getelements.elements.model.user.UserUpdateRequest;
+import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.UserService;
 import dev.getelements.elements.util.ValidationHelper;
@@ -98,6 +96,25 @@ public class UserResource {
         }
 
         return getUserService().updateUser(userId, userUpdateRequest);
+
+    }
+
+    @PUT
+    @Path("{userId}/password")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Updates a User's Password",
+            notes = "Supplying the UserUpdatePasswordRequest, this will attempt to update the user's password only " +
+                    "if they supply the correct existing password.")
+    public SessionCreation updateUserPassword(final UserUpdatePasswordRequest userUpdatePasswordRequest,
+                                              final @PathParam("userId") String userId) {
+
+        getValidationHelper().validateModel(userUpdatePasswordRequest);
+
+        if (isNullOrEmpty(userId)) {
+            throw new NotFoundException("User not found.");
+        }
+
+        return getUserService().updateUserPassword(userId, userUpdatePasswordRequest);
 
     }
 

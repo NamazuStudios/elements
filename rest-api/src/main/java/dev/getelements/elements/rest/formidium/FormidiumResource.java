@@ -23,7 +23,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 @Path("kyc/formidium")
 @Api(
-    value = "Followers",
+    value = "Formidium",
     description = "Manages follower relationships among profiles.",
     authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)}
 )

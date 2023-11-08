@@ -44,7 +44,6 @@ import static dev.morphia.utils.IndexType.TEXT;
         fields = @Field(value = "externalUserId"),
         options = @IndexOptions(unique = true, sparse = true)
     )
-
 })
 public class MongoUser {
 

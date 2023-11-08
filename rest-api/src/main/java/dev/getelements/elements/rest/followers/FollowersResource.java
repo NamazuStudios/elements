@@ -53,7 +53,6 @@ public class FollowersResource {
         return getFollowerService().getFollowers(profileId, offset, count);
 
     }
-
     @GET
     @Path("{profileId}/{followedId}")
     @Produces(MediaType.APPLICATION_JSON)

@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.UserDao;
+import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.security.PasswordGenerator;
 import org.testng.annotations.DataProvider;
@@ -14,6 +15,7 @@ import java.util.stream.Stream;
 
 import static org.testng.Assert.assertNull;
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoUserDaoPasswordTest {
@@ -31,8 +33,8 @@ public class MongoUserDaoPasswordTest {
     @DataProvider
     private Object[][] getLevels() {
         return Stream.of(User.Level.values())
-            .map(l -> new Object[]{l})
-            .toArray(Object[][]::new);
+                .map(l -> new Object[]{l})
+                .toArray(Object[][]::new);
     }
 
     @Test(invocationCount = 20, dataProvider = "getLevels")
@@ -53,16 +55,62 @@ public class MongoUserDaoPasswordTest {
     @DataProvider
     public Object[][] getLoginCredentials() {
         return intermediateLoginCredentials
-            .entrySet()
-            .stream()
-            .map(e -> new Object[]{ e.getKey(), e.getValue()})
-            .toArray(Object[][]::new);
+                .entrySet()
+                .stream()
+                .map(e -> new Object[]{ e.getKey(), e.getValue()})
+                .toArray(Object[][]::new);
     }
 
     @Test(dependsOnMethods = "testCreateUser", dataProvider = "getLoginCredentials")
     public void testValidatePassword(final String login, final String password) {
         final var user = getUserDao().validateActiveUserPassword(login, password);
         assertEquals(user, intermediateUsers.get(user.getId()));
+    }
+
+    @DataProvider
+    public Object[][] getUserAndPassword() {
+        return intermediateUsers
+                .values()
+                .stream()
+                .map(user -> new Object[]{user, intermediateLoginCredentials.get(user.getId())})
+                .toArray(Object[][]::new);
+    }
+
+    @Test(dependsOnMethods = "testValidatePassword", dataProvider = "getUserAndPassword")
+    public void testUpdatePassword(final User user, final String oldPassword) {
+
+        final var newPassword = getPasswordGenerator().generate();
+        final var updatedUser = getUserDao().updateActiveUser(user, newPassword, oldPassword);
+
+        assertEquals(user.getId(), updatedUser.getId());
+
+        intermediateUsers.put(updatedUser.getId(), updatedUser);
+        assertNotNull(intermediateLoginCredentials.put(updatedUser.getId(), newPassword));
+        assertNotNull(intermediateLoginCredentials.put(updatedUser.getName(), newPassword));
+        assertNotNull(intermediateLoginCredentials.put(updatedUser.getEmail(), newPassword));
+
+        Stream.of(
+            getUserDao().validateActiveUserPassword(user.getId(), newPassword),
+            getUserDao().validateActiveUserPassword(user.getName(), newPassword),
+            getUserDao().validateActiveUserPassword(user.getEmail(), newPassword)
+        ).forEach(u -> assertEquals(user.getId(), u.getId()));
+
+    }
+
+    @Test(dependsOnMethods = "testCreateUser", dataProvider = "getUserAndPassword", expectedExceptions = NotFoundException.class)
+    public void testUpdatePasswordFails(final User user, final String oldPassword) {
+
+        String badPassword;
+
+        do {
+            // The likelihood that the generator will ever generate the same password twice is
+            // extremely small, but we may as well not have the potentiality of a randomly failing
+            // test.
+            badPassword = getPasswordGenerator().generate();
+        } while(badPassword.equals(oldPassword));
+
+        getUserDao().updateActiveUser(user, getPasswordGenerator().generate(), badPassword);
+
     }
 
     public UserDao getUserDao() {
