@@ -70,14 +70,16 @@ public class UserUserService extends AnonUserService implements UserService {
 
         final User user = new User();
 
+        //TODO: problem found here. Data were never update for user, changed phone, firstName and lastName to be updateable.
+        // What about rest?
         user.setId(userId);
         user.setActive(true);
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
         user.setEmail(getCurrentUser().getEmail());
-        user.setPrimaryPhoneNb(getCurrentUser().getPrimaryPhoneNb());
-        user.setFirstName(getCurrentUser().getFirstName());
-        user.setLastName(getCurrentUser().getLastName());
+        user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
+        user.setFirstName(userUpdateRequest.getFirstName());
+        user.setLastName(userUpdateRequest.getLastName());
 
         return getUserDao().updateActiveUser(user);
 
