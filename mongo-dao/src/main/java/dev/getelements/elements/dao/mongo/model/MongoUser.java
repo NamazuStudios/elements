@@ -46,7 +46,7 @@ import static dev.morphia.utils.IndexType.TEXT;
     ),
     @Index(
         fields = @Field(value = "passwordHash"),
-        options = @IndexOptions(unique = true, sparse = true)
+        options = @IndexOptions
     )
 })
 public class MongoUser {
