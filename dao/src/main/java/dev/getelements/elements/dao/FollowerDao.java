@@ -8,7 +8,7 @@ import dev.getelements.elements.model.profile.Profile;
 public interface FollowerDao {
 
     /**
-     * Fetches all {@link Profile} instances for the supplied profile id.
+     * Fetches all followers for the supplied profile.
      *
      * @param profileId the id of the logged in profile
      * @param offset the offset
@@ -16,6 +16,16 @@ public interface FollowerDao {
      * @return a {@link Pagination <Follower>}
      */
     Pagination<Profile> getFollowersForProfile(String profileId, int offset, int count);
+
+    /**
+     * Fetches all followees for the supplied profile.
+     *
+     * @param profileId the id of the logged in profile
+     * @param offset the offset
+     * @param count the number of results to return
+     * @return a {@link Pagination <Follower>}
+     */
+    Pagination<Profile> getFolloweesForProfile(String profileId, int offset, int count);
 
     /**
      * Fetches {@link Profile} instance for the supplied profile id and followed id. Throwing a {@link NotFoundException}

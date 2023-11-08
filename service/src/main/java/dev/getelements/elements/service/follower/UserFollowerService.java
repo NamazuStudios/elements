@@ -22,7 +22,16 @@ public class UserFollowerService implements FollowerService {
 
     @Override
     public Pagination<Profile> getFollowers(final String profileId, final int offset, final int count) {
-        return getFollowerDao().getFollowersForProfile(profileId, offset, count).transform(this::redactPrivateInformation);
+        return getFollowerDao()
+                .getFollowersForProfile(profileId, offset, count)
+                .transform(this::redactPrivateInformation);
+    }
+
+    @Override
+    public Pagination<Profile> getFollowees(final String profileId, final int offset, final int count) {
+        return getFollowerDao()
+                .getFolloweesForProfile(profileId, offset, count)
+                .transform(this::redactPrivateInformation);
     }
 
     @Override
