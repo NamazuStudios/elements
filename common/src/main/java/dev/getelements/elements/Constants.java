@@ -70,7 +70,7 @@ public interface Constants {
     /**
      * Gets the outside CDN url
      */
-    String CDN_OUTSIDE_URL = "dev.getelements.elements.api.url";
+    String CDN_OUTSIDE_URL = "dev.getelements.elements.cdn.url";
 
     /**
      * The allowed CORS origins for the request.
