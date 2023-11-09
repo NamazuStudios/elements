@@ -221,7 +221,7 @@ public class UserUpdatePasswordTest {
         };
     }
 
-    @Test(dataProvider = "getCrossUserContexts", dependsOnMethods = "testNewPasswordWorks")
+    @Test(dataProvider = "getCrossUserContexts", dependsOnMethods = {"testNewPasswordWorksUserName", "testNewPasswordWorksUserEmail"})
     public void testUpdateCrossUserFails(final ClientContext authorized, final ClientContext unauthorized) {
 
         final var request = new UserUpdatePasswordRequest();
