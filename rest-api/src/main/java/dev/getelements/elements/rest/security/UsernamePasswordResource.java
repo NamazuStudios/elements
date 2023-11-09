@@ -19,7 +19,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 /**
  * Created by patricktwohig on 4/2/15.
  */
-@Api(value = "Username and Password Sessions",
+@Api(value = "UsernamePasswordSession",
      description = "Creates a Session instance from a username and password.")
 @Path("session")
 public class UsernamePasswordResource {
