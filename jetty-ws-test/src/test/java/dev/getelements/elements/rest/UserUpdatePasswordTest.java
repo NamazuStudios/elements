@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest;
 
 import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.user.UserUpdatePasswordRequest;
 import org.testng.annotations.BeforeClass;
@@ -142,6 +143,75 @@ public class UserUpdatePasswordTest {
 
     }
 
+    @Test(dataProvider = "getContexts", dependsOnMethods = "testUpdatePasswordWithProfile")
+    public void testNewPasswordWorksUserName(final ClientContext context) {
+
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(context.getUser().getName());
+        request.setProfileId(context.getDefaultProfile().getId());
+        request.setPassword(SECOND_UPDATE);
+
+        var response = client
+                .target(format("%s/session", apiRoot))
+                .request()
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertEquals(200, response.getStatus());
+
+        final var sessionCreation = response.readEntity(SessionCreation.class);
+        assertNotNull(sessionCreation.getSession());
+        assertNotNull(sessionCreation.getSessionSecret());
+
+        final var session = sessionCreation.getSession();
+        assertNotNull(session.getUser());
+        assertNotNull(session.getProfile());
+        assertNotNull(session.getApplication());
+
+        response = client
+                .target(format("%s/user/me", apiRoot))
+                .request()
+                .header("Authorization", format("Bearer %s", sessionCreation.getSessionSecret()))
+                .get();
+
+        final var user = response.readEntity(User.class);
+        assertEquals(context.getUser().getId(), user.getId());
+
+    }
+
+    @Test(dataProvider = "getContexts", dependsOnMethods = "testUpdatePasswordWithProfile")
+    public void testNewPasswordWorksUserEmail(final ClientContext context) {
+
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(context.getUser().getEmail());
+        request.setProfileId(context.getDefaultProfile().getId());
+        request.setPassword(SECOND_UPDATE);
+
+        var response = client
+                .target(format("%s/session", apiRoot))
+                .request()
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertEquals(200, response.getStatus());
+
+        final var sessionCreation = response.readEntity(SessionCreation.class);
+        assertNotNull(sessionCreation.getSession());
+        assertNotNull(sessionCreation.getSessionSecret());
+
+        final var session = sessionCreation.getSession();
+        assertNotNull(session.getUser());
+        assertNotNull(session.getProfile());
+        assertNotNull(session.getApplication());
+
+        response = client
+                .target(format("%s/user/me", apiRoot))
+                .request()
+                .header("Authorization", format("Bearer %s", sessionCreation.getSessionSecret()))
+                .get();
+
+        final var user = response.readEntity(User.class);
+        assertEquals(context.getUser().getId(), user.getId());
+
+    }
 
     @DataProvider
     public Object[][] getCrossUserContexts() {
@@ -151,7 +221,7 @@ public class UserUpdatePasswordTest {
         };
     }
 
-    @Test(dataProvider = "getCrossUserContexts", dependsOnMethods = "testUpdatePasswordWithProfile")
+    @Test(dataProvider = "getCrossUserContexts", dependsOnMethods = "testNewPasswordWorks")
     public void testUpdateCrossUserFails(final ClientContext authorized, final ClientContext unauthorized) {
 
         final var request = new UserUpdatePasswordRequest();
