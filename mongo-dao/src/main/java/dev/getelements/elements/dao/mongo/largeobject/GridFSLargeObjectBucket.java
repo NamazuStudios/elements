@@ -15,6 +15,9 @@ import org.bson.BsonString;
 import javax.inject.Inject;
 import java.io.OutputStream;
 
+import static com.mongodb.client.model.Filters.eq;
+import static java.util.Objects.isNull;
+
 public class GridFSLargeObjectBucket implements LargeObjectBucket {
 
     private GridFSBucket gridFSBucket;
@@ -25,6 +28,10 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
     public OutputStream writeObject(final String objectId) {
 
         final var largeObject = getLargeObjectDao().getLargeObject(objectId);
+        if (exist(objectId)) {
+            deleteLargeObject(objectId);
+        }
+
         final var gridFsFileId = new BsonString(objectId);
         final var normalized = new Path(largeObject.getPath()).toPathWithoutContext();
 
@@ -37,7 +44,6 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
                 throw new InternalException(ex);
             }
         }
-
     }
 
     @Override
@@ -51,13 +57,16 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
         } catch (MongoGridFSException ex) {
             throw new LargeObjectContentNotFoundException(ex);
         }
-
     }
 
     @Override
     public void deleteLargeObject(final String objectId) {
         final var gridFsFileId = new BsonString(objectId);
         getGridFSBucket().delete(gridFsFileId);
+    }
+
+    public boolean exist(final String objectId) {
+        return !isNull(getGridFSBucket().find(eq("_id", objectId)).first());
     }
 
     public LargeObjectDao getLargeObjectDao() {
