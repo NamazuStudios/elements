@@ -10,6 +10,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.Sort;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static dev.morphia.query.Sort.ascending;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 
@@ -206,6 +208,7 @@ public class MongoDBUtils {
 
         options.skip(offset);
         options.limit(limit);
+        options.sort(ascending("_id"));
 
         final List<ModelT> modelTList;
 
