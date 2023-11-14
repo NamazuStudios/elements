@@ -16,11 +16,11 @@ public class MongoTemplateTab {
 
     @Property
     private Integer tabOrder;
+
     @Property
     private Map<String, MongoTemplateTabField> fields;
 
-    public MongoTemplateTab() {
-    }
+    public MongoTemplateTab() {}
 
     public MongoTemplateTab(String name, Map<String, MongoTemplateTabField> fields) {
         this.name = name;

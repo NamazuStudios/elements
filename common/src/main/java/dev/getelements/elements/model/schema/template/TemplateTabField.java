@@ -24,7 +24,6 @@ public class TemplateTabField {
     @ApiModelProperty("defaultValue")
     private String defaultValue;
 
-
     public TemplateTabField() {
     }
 

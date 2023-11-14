@@ -5,6 +5,7 @@ import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.List;
 import java.util.Objects;
 
 @Embedded
@@ -28,9 +29,10 @@ public class MongoTemplateTabField {
     @Property
     private TemplateFieldType fieldType = TemplateFieldType.Enum;
 
+    @Property
+    private List<MongoTemplateTab> tabs;
 
-    public MongoTemplateTabField() {
-    }
+    public MongoTemplateTabField() {}
 
     public String getName() {
         return name;
@@ -88,32 +90,39 @@ public class MongoTemplateTabField {
         return fieldType;
     }
 
+    public List<MongoTemplateTab> getTabs() {
+        return tabs;
+    }
+
+    public void setTabs(List<MongoTemplateTab> tabs) {
+        this.tabs = tabs;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoTemplateTabField)) return false;
-        MongoTemplateTabField contract = (MongoTemplateTabField) o;
-        return Objects.equals(getName(), contract.getName()) &&
-                Objects.equals(getFieldType(), contract.getFieldType()) &&
-                Objects.equals(getDisplayName(), contract.getDisplayName()) &&
-                Objects.equals(getRequired(), contract.getRequired()) &&
-                Objects.equals(getDefaultValue(), contract.getDefaultValue()) &&
-                Objects.equals(getPlaceHolder(), contract.getPlaceHolder());
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoTemplateTabField that = (MongoTemplateTabField) o;
+        return Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getIsRequired(), that.getIsRequired()) && Objects.equals(getPlaceHolder(), that.getPlaceHolder()) && Objects.equals(getDefaultValue(), that.getDefaultValue()) && getFieldType() == that.getFieldType() && Objects.equals(tabs, that.tabs);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getFieldType(), getDisplayName(), getRequired(), getDefaultValue(), getPlaceHolder());
+        return Objects.hash(getName(), getDisplayName(), getIsRequired(), getPlaceHolder(), getDefaultValue(), getFieldType(), tabs);
     }
 
     @Override
     public String toString() {
-        return "TemplateTabField{" +
-                "name='" + name + '\'' +
-                "displayName='" + displayName + '\'' +
-                ", isRequired=" + isRequired +
-                ", defaultValue=" + defaultValue +
-                ", placeHolder=" + placeHolder +
-                '}';
+        final StringBuilder sb = new StringBuilder("MongoTemplateTabField{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", isRequired=").append(isRequired);
+        sb.append(", placeHolder='").append(placeHolder).append('\'');
+        sb.append(", defaultValue='").append(defaultValue).append('\'');
+        sb.append(", fieldType=").append(fieldType);
+        sb.append(", tabs=").append(tabs);
+        sb.append('}');
+        return sb.toString();
     }
+
 }
