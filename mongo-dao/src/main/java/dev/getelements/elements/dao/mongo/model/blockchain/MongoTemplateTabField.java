@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.blockchain;
 
-import dev.getelements.elements.BlockchainConstants;
+import dev.getelements.elements.model.schema.template.TemplateFieldType;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 import io.swagger.annotations.ApiModelProperty;
@@ -26,7 +26,7 @@ public class MongoTemplateTabField {
     private String defaultValue;
 
     @Property
-    private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
+    private TemplateFieldType fieldType = TemplateFieldType.Enum;
 
 
     public MongoTemplateTabField() {
@@ -80,11 +80,11 @@ public class MongoTemplateTabField {
         this.defaultValue = defaultValue;
     }
 
-    public void setFieldType(BlockchainConstants.TemplateFieldType fieldType) {
+    public void setFieldType(TemplateFieldType fieldType) {
         this.fieldType = fieldType;
     }
 
-    public BlockchainConstants.TemplateFieldType getFieldType() {
+    public TemplateFieldType getFieldType() {
         return fieldType;
     }
 

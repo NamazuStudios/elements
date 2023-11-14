@@ -45,7 +45,7 @@ public class MetadataSpec {
     }
 
     public void setTabs(List<TemplateTab> tabs) {
-
         this.tabs = tabs;
     }
+
 }

@@ -17,19 +17,6 @@ public interface BlockchainConstants {
     }
 
     /**
-     * The field type of the field inside MetadataSpec
-     */
-    enum TemplateFieldType {
-        String,
-        Number,
-        Boolean,
-        Array,
-        Enum,
-        Object,
-        Tags
-    }
-
-    /**
      * Names of the supported blockchains.
      *
      * @deprecated use {@link BlockchainNetwork} instead

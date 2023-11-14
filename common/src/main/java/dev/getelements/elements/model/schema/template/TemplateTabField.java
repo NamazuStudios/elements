@@ -1,6 +1,5 @@
 package dev.getelements.elements.model.schema.template;
 
-import dev.getelements.elements.BlockchainConstants;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
@@ -14,7 +13,7 @@ public class TemplateTabField {
     private String displayName;
 
     @ApiModelProperty("fieldType")
-    private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
+    private TemplateFieldType fieldType = TemplateFieldType.Enum;
 
     @ApiModelProperty("isRequired")
     private Boolean isRequired;
@@ -37,11 +36,11 @@ public class TemplateTabField {
         this.name = name;
     }
 
-    public BlockchainConstants.TemplateFieldType getFieldType() {
+    public TemplateFieldType getFieldType() {
         return fieldType;
     }
 
-    public void setFieldType(BlockchainConstants.TemplateFieldType fieldType) {
+    public void setFieldType(TemplateFieldType fieldType) {
         this.fieldType = fieldType;
     }
 
