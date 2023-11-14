@@ -5,8 +5,10 @@ import dev.getelements.elements.model.Taggable;
 import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
+import dev.getelements.elements.model.schema.template.MetadataSpec;
 import io.swagger.annotations.ApiModel;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
@@ -36,6 +38,9 @@ public class Item implements Serializable, Taggable {
 
     @NotNull
     private ItemCategory category;
+
+    @Valid
+    private MetadataSpec metadataSpec;
 
     private Map<String, Object> metadata;
 
@@ -138,6 +143,14 @@ public class Item implements Serializable, Taggable {
         this.description = description;
     }
 
+    public MetadataSpec getMetadataSpec() {
+        return metadataSpec;
+    }
+
+    public void setMetadataSpec(MetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
+    }
+
     /**
      * Gets a copy of metadata of string key-value pairs for this Item.  Changes to the returned Map are not reflected
      * on this Item.
@@ -187,33 +200,31 @@ public class Item implements Serializable, Taggable {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof Item)) return false;
-        Item item = (Item) object;
-        return Objects.equals(getId(), item.getId()) &&
-                Objects.equals(getName(), item.getName()) &&
-                Objects.equals(getTags(), item.getTags()) &&
-                Objects.equals(getDisplayName(), item.getDisplayName()) &&
-                Objects.equals(getDescription(), item.getDescription()) &&
-                Objects.equals(getMetadata(), item.getMetadata());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return Objects.equals(getId(), item.getId()) && Objects.equals(getName(), item.getName()) && Objects.equals(getTags(), item.getTags()) && Objects.equals(getDisplayName(), item.getDisplayName()) && Objects.equals(getDescription(), item.getDescription()) && getCategory() == item.getCategory() && Objects.equals(getMetadataSpec(), item.getMetadataSpec()) && Objects.equals(getMetadata(), item.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getTags(), getDisplayName(), getDescription(), getMetadata());
+        return Objects.hash(getId(), getName(), getTags(), getDisplayName(), getDescription(), getCategory(), getMetadataSpec(), getMetadata());
     }
 
     @Override
     public String toString() {
-        return "Item{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", tags=" + tags +
-                ", displayName='" + displayName + '\'' +
-                ", description='" + description + '\'' +
-                ", metadata=" + metadata +
-                '}';
+        final StringBuilder sb = new StringBuilder("Item{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", tags=").append(tags);
+        sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", category=").append(category);
+        sb.append(", metadataSpec=").append(metadataSpec);
+        sb.append(", metadata=").append(metadata);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

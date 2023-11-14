@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.goods;
 
+import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.model.goods.ItemCategory;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
@@ -22,6 +23,9 @@ public class MongoItem {
 
     @Property
     private String description;
+
+    @Reference
+    private MongoMetadataSpec metadataSpec;
 
     @Property
     private Map<String, Object> metadata = new HashMap<>();
@@ -65,6 +69,14 @@ public class MongoItem {
         this.description = description;
     }
 
+    public MongoMetadataSpec getMetadataSpec() {
+        return metadataSpec;
+    }
+
+    public void setMetadataSpec(MongoMetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
+    }
+
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -94,12 +106,12 @@ public class MongoItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoItem mongoItem = (MongoItem) o;
-        return Objects.equals(getObjectId(), mongoItem.getObjectId()) && Objects.equals(getName(), mongoItem.getName()) && Objects.equals(getDisplayName(), mongoItem.getDisplayName()) && Objects.equals(getDescription(), mongoItem.getDescription()) && Objects.equals(getMetadata(), mongoItem.getMetadata()) && Objects.equals(getTags(), mongoItem.getTags()) && getCategory() == mongoItem.getCategory();
+        return Objects.equals(getObjectId(), mongoItem.getObjectId()) && Objects.equals(getName(), mongoItem.getName()) && Objects.equals(getDisplayName(), mongoItem.getDisplayName()) && Objects.equals(getDescription(), mongoItem.getDescription()) && Objects.equals(getMetadataSpec(), mongoItem.getMetadataSpec()) && Objects.equals(getMetadata(), mongoItem.getMetadata()) && Objects.equals(getTags(), mongoItem.getTags()) && getCategory() == mongoItem.getCategory();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getName(), getDisplayName(), getDescription(), getMetadata(), getTags(), getCategory());
+        return Objects.hash(getObjectId(), getName(), getDisplayName(), getDescription(), getMetadataSpec(), getMetadata(), getTags(), getCategory());
     }
 
 }
