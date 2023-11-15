@@ -22,7 +22,7 @@ public class MetadataSpec {
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @ApiModelProperty("The tabs of the metadata spec.")
-    private List<TemplateTab> tabs ;
+    private List<TemplateTab> tabs;
 
     public String getId() {
         return id;

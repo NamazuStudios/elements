@@ -50,6 +50,7 @@ public class IntegrationTestModule extends AbstractModule {
             protected void configure() {
                 super.configure();
                 expose(Datastore.class);
+                expose(BooleanQueryParser.class);
             }
         });
 

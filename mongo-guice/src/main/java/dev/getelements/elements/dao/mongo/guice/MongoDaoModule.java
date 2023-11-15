@@ -87,19 +87,22 @@ public class MongoDaoModule extends PrivateModule {
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
 
         bind(Datastore.class)
-            .toProvider(MongoDatastoreProvider.class)
-            .asEagerSingleton();
+                .toProvider(MongoDatastoreProvider.class)
+                .asEagerSingleton();
 
         bind(MessageDigest.class)
-            .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
-            .toProvider(PasswordDigestProvider.class);
+                .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
+                .toProvider(PasswordDigestProvider.class);
 
         bind(Mapper.class)
-            .toProvider(MongoDozerMapperProvider.class)
-            .asEagerSingleton();
+                .toProvider(MongoDozerMapperProvider.class)
+                .asEagerSingleton();
 
         bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
-            .toProvider(MongoMatchmakerFunctionProvider.class);
+                .toProvider(MongoMatchmakerFunctionProvider.class);
+
+        bind(BooleanQueryParser.class)
+                .to(SidhantAggarwalBooleanQueryParser.class);
 
         expose(UserDao.class);
         expose(ProfileDao.class);

@@ -43,4 +43,5 @@ public class MongoMetadataSpec {
     public void setTabs(List<MongoTemplateTab> tabs) {
         this.tabs = tabs;
     }
+
 }

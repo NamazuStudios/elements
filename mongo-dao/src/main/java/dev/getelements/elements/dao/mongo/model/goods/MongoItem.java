@@ -8,7 +8,7 @@ import org.bson.types.ObjectId;
 import java.util.*;
 
 
-@Entity(value = "items", useDiscriminator = false)
+@Entity(value = "items")
 public class MongoItem {
 
     @Id
