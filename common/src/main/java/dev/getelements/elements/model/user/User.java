@@ -1,6 +1,9 @@
 package dev.getelements.elements.model.user;
 
 import dev.getelements.elements.Constants;
+import dev.getelements.elements.model.ValidationGroups;
+import dev.getelements.elements.model.profile.Profile;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -8,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 import static dev.getelements.elements.model.ValidationGroups.*;
@@ -63,6 +67,9 @@ public class User implements Serializable {
 
     @ApiModelProperty("The user's Apple Sign-In ID.")
     private String appleSignInId;
+
+    @ApiModelProperty("The user's Google Sign-In ID.")
+    private String googleSignInId;
 
     @ApiModelProperty("The user's external user ID. Used for custom authorization.")
     private String externalUserId;
@@ -256,6 +263,23 @@ public class User implements Serializable {
     }
 
     /**
+     * Gets the Google sign-in ID.
+     *
+     * @return the apple sign-in id
+     */
+    public String getGoogleSignInId() {
+        return googleSignInId;
+    }
+
+    /**
+     *
+     * @param googleSignInId
+     */
+    public void setGoogleSignInId(String googleSignInId) {
+        this.googleSignInId = googleSignInId;
+    }
+
+    /**
      * Gets the user's external user ID.
      *
      * @return the user's external user ID.
@@ -362,6 +386,7 @@ public class User implements Serializable {
                 ", facebookId='" + facebookId + '\'' +
                 ", firebaseId='" + firebaseId + '\'' +
                 ", appleSignInId='" + appleSignInId + '\'' +
+                ", googleSignInId='" + googleSignInId + '\'' +
                 ", externalUserId='" + externalUserId + '\'' +
                 '}';
     }
