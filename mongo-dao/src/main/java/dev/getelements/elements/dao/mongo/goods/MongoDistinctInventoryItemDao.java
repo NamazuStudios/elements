@@ -81,6 +81,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     public DistinctInventoryItem getDistinctInventoryItem(final String id) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(id, DistinctInventoryItemNotFoundException::new);
+
         final var result = getDatastore()
             .find(MongoDistinctInventoryItem.class)
             .filter(eq("_id", objectId))
@@ -127,6 +128,14 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
 
+    }
+
+    @Override
+    public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
+            final int offset, final int count,
+            final String userId, final String profileId,
+            final String query) {
+        return null;
     }
 
     @Override

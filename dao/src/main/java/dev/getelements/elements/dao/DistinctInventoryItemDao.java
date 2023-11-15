@@ -59,11 +59,9 @@ public interface DistinctInventoryItemDao {
      * @param profileId the profile id, if specified. Otherwise null.
      * @return a {@link Pagination<InventoryItem>}
      */
-    default Pagination<DistinctInventoryItem> getDistinctInventoryItems(
+    Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
-            String userId, String profileId, String query) {
-        return getDistinctInventoryItems(offset, count, userId, profileId);
-    }
+            String userId, String profileId, String query);
 
     /**
      * Updates a distinct inventory item.
