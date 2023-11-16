@@ -162,9 +162,10 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         }
 
-        getBooleanQueryParser().parse(query, queryString);
-        
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
+        return getBooleanQueryParser()
+                .parse(query, queryString)
+                .map(q -> getMongoDBUtils().paginationFromQuery(q, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class)))
+                .orElseGet(Pagination::empty);
 
     }
 
