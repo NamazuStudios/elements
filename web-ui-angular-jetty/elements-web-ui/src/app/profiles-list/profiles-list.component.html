@@ -55,12 +55,18 @@
 
     <ng-container matColumnDef="userName">
       <mat-header-cell *matHeaderCellDef>User Name</mat-header-cell>
-      <mat-cell *matCellDef="let profile">{{profile.user.name}}</mat-cell>
+      <mat-cell *matCellDef="let profile">
+        <span *ngIf="profile.user">{{profile.user.name}}</span>
+        <span *ngIf="!profile.user" class="deactivated">Deactivated</span>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="userEmail">
       <mat-header-cell *matHeaderCellDef>User Email</mat-header-cell>
-      <mat-cell *matCellDef="let profile"><span class="truncate-text-right">{{profile.user.email}}</span></mat-cell>
+      <mat-cell *matCellDef="let profile">
+        <span class="truncate-text-right" *ngIf="profile.user">{{profile.user.email}}</span>
+        <span *ngIf="!profile.user" class="deactivated">Deactivated</span>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="applicationName">
