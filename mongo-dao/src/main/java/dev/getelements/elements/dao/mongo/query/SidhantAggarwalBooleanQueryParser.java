@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.query;
 
 import com.github.sidhant92.boolparser.domain.*;
 import com.github.sidhant92.boolparser.parser.canopy.PEGBoolExpressionParser;
@@ -10,9 +10,12 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.dao.mongo.query.BooleanQueryOperator.DEFAULT;
 import static dev.morphia.query.filters.Filters.*;
+import static java.lang.Double.NaN;
 
 /**
  * A {@link BooleanQueryParser} based on Sidhant Aggarwal's boolean query parser.
@@ -21,6 +24,8 @@ import static dev.morphia.query.filters.Filters.*;
 public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
 
     private Datastore datastore;
+
+    private Set<BooleanQueryOperator> operators;
 
     @Override
     public <QueryT> Optional<Query<QueryT>> parse(final Class<QueryT> cls, final String query) {
@@ -56,8 +61,24 @@ public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
             final Query<QueryT> base,
             final FilterConsumer consumer,
             final StringToken node) {
-        consumer.filter(eq(node.getField(), node.getValue()));
+
+        final var operator = operators
+                .stream()
+                .filter(o -> o.matches(base, node.getField()))
+                .findFirst().orElse(DEFAULT);
+
+        final var evaluation = operator.evaluate(base, node.getField());
+        final var field = evaluation.getField();
+        final var value = evaluation.getValue(node.getValue());
+
+        if (value.isPresent()) {
+            consumer.filter(eq(field, value.get()));
+        } else {
+            consumer.filter(eq("_id", null));
+        }
+
         return base;
+
     }
 
     private <QueryT> Query<QueryT> translate(
@@ -137,9 +158,13 @@ public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
         this.datastore = datastore;
     }
 
-    @FunctionalInterface
-    private interface FilterConsumer {
-        void filter(Filter ... filters);
+    public Set<BooleanQueryOperator> getOperators() {
+        return operators;
+    }
+
+    @Inject
+    public void setOperators(Set<BooleanQueryOperator> operators) {
+        this.operators = operators;
     }
 
 }

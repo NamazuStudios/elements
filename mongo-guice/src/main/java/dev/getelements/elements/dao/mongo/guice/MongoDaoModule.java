@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.dao.*;
@@ -24,6 +25,7 @@ import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
+import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
@@ -103,6 +105,10 @@ public class MongoDaoModule extends PrivateModule {
 
         bind(BooleanQueryParser.class)
                 .to(SidhantAggarwalBooleanQueryParser.class);
+
+        final var setBinder = Multibinder.newSetBinder(binder(), BooleanQueryOperator.class);
+        setBinder.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
+        setBinder.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
 
         expose(UserDao.class);
         expose(ProfileDao.class);

@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.query;
 
 import dev.morphia.query.Query;
 

@@ -7,6 +7,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
+import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.security.SecureRandomPasswordGenerator;
