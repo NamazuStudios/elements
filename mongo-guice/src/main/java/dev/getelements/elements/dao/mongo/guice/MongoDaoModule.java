@@ -17,6 +17,7 @@ import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
 import dev.getelements.elements.dao.mongo.formidium.MongoFormidiumInvestorDao;
 import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemDao;
+import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemIndex;
 import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
@@ -106,9 +107,15 @@ public class MongoDaoModule extends PrivateModule {
         bind(BooleanQueryParser.class)
                 .to(SidhantAggarwalBooleanQueryParser.class);
 
-        final var setBinder = Multibinder.newSetBinder(binder(), BooleanQueryOperator.class);
-        setBinder.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
-        setBinder.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
+        bind(IndexDao.class)
+                .to(StandardIndexDao.class);
+
+        final var booleanQueryOperatorSet = Multibinder.newSetBinder(binder(), BooleanQueryOperator.class);
+        booleanQueryOperatorSet.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
+        booleanQueryOperatorSet.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
+
+        final var hasIndexableMetadataSet = Multibinder.newSetBinder(binder(), HasIndexableMetadata.class);
+        hasIndexableMetadataSet.addBinding().to(MongoDistinctInventoryItemIndex.class);
 
         expose(UserDao.class);
         expose(ProfileDao.class);

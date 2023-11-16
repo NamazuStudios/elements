@@ -2,17 +2,23 @@ package dev.getelements.elements.model.schema.template;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Objects;
 
 public class TemplateTab {
 
+    @NotNull
     @ApiModelProperty("name")
     private String name;
 
+    @NotNull
     @ApiModelProperty("tabOrder")
     private Integer tabOrder;
 
+    @Valid
+    @NotNull
     @ApiModelProperty("fields")
     private Map<String, TemplateTabField> fields;
 

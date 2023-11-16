@@ -1,0 +1,12 @@
+package dev.getelements.elements.dao;
+
+import dev.getelements.elements.model.schema.template.MetadataSpec;
+
+/**
+ * For types which have a {@link MetadataSpec}
+ */
+public interface HasIndexableMetadata {
+
+    void buildIndexes();
+
+}

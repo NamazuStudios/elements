@@ -42,7 +42,7 @@ public class MetadataSpecResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Metadata Spec",
             notes = "Gets a specific MetadataSpec by name or Id.")
-    public MetadataSpec getToken(@PathParam("metadataSpecNameOrId") String metadataSpecNameOrId) {
+    public MetadataSpec getMetadataSpec(@PathParam("metadataSpecNameOrId") String metadataSpecNameOrId) {
         return getMetadataSpecService().getMetadataSpec(metadataSpecNameOrId);
     }
 
@@ -50,7 +50,7 @@ public class MetadataSpecResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new Metadata Spec definition",
             notes = "Creates a new Metadata Spec definition.")
-    public MetadataSpec createToken(final CreateMetadataSpecRequest tokenRequest) {
+    public MetadataSpec createMetadataSpec(final CreateMetadataSpecRequest tokenRequest) {
         return getMetadataSpecService().createMetadataSpec(tokenRequest);
     }
 

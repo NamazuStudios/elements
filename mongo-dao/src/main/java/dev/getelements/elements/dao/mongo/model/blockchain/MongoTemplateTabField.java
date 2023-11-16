@@ -6,6 +6,7 @@ import dev.morphia.annotations.Property;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Embedded
@@ -27,10 +28,10 @@ public class MongoTemplateTabField {
     private String defaultValue;
 
     @Property
-    private TemplateFieldType fieldType = TemplateFieldType.Enum;
+    private TemplateFieldType fieldType = TemplateFieldType.ENUM;
 
     @Property
-    private List<MongoTemplateTab> tabs;
+    private Map<String, MongoTemplateTab> tabs;
 
     public MongoTemplateTabField() {}
 
@@ -90,11 +91,11 @@ public class MongoTemplateTabField {
         return fieldType;
     }
 
-    public List<MongoTemplateTab> getTabs() {
+    public Map<String, MongoTemplateTab> getTabs() {
         return tabs;
     }
 
-    public void setTabs(List<MongoTemplateTab> tabs) {
+    public void setTabs(Map<String, MongoTemplateTab> tabs) {
         this.tabs = tabs;
     }
 

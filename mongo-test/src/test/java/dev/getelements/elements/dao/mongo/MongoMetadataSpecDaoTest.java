@@ -91,7 +91,7 @@ public class MongoMetadataSpecDaoTest {
         tabs = new ArrayList<>() ;
         TemplateTabField field = new TemplateTabField();
         field.setName("Field2");
-        field.setFieldType(TemplateFieldType.Enum);
+        field.setFieldType(TemplateFieldType.ENUM);
         fields.put("field2", field);
         TemplateTab tab = new TemplateTab("Tab2",fields);
         tab.setTabOrder(2);
@@ -107,7 +107,7 @@ public class MongoMetadataSpecDaoTest {
         assertEquals(updatedTemplate.getName(), updateRequest.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
-        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), TemplateFieldType.Enum);
+        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), TemplateFieldType.ENUM);
 
         tabs = new ArrayList<>() ;
         tab = new TemplateTab("Tab3",fields);

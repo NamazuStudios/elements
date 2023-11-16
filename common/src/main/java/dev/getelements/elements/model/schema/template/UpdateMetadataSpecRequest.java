@@ -9,7 +9,8 @@ import java.util.List;
 
 @ApiModel(description = "Represents a request to update a MetadataSpec.")
 public class UpdateMetadataSpecRequest {
-    @NotNull(groups = ValidationGroups.Update.class)
+
+    @NotNull
     @ApiModelProperty("The updated token template tabs.")
     List<TemplateTab> tabs;
 

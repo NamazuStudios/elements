@@ -4,6 +4,7 @@ import dev.getelements.elements.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.List;
@@ -16,11 +17,13 @@ public class MetadataSpec {
     @ApiModelProperty("The unique ID of the schema itself.")
     private String id;
 
+    @NotNull
     @ApiModelProperty("The Name of the schema.")
     private String name;
 
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
+
+    @Valid
+    @NotNull
     @ApiModelProperty("The tabs of the metadata spec.")
     private List<TemplateTab> tabs;
 

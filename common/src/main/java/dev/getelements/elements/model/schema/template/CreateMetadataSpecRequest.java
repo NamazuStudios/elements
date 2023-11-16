@@ -11,8 +11,7 @@ import java.util.List;
 @ApiModel(description = "Represents a request to create a MetadataSpec definition.")
 public class CreateMetadataSpecRequest {
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
+    @NotNull
     @ApiModelProperty("The token template tabs to create.")
     List<TemplateTab> tabs;
 
