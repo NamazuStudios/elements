@@ -113,7 +113,7 @@ public class MongoFollowerDao implements FollowerDao {
         final var query = getDatastore().find(MongoFollower.class);
         final var mongoFollowerId = new MongoFollowerId(profileId, profileToUnfollowId);
 
-        query.filter(eq("_id", mongoFollowerId));
+        query.filter(eq("_id", profileToUnfollowId));
 
         final var result = query.delete(new DeleteOptions());
 
