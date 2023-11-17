@@ -3,10 +3,8 @@ package dev.getelements.elements.dao.mongo.model;
 import dev.morphia.annotations.Embedded;
 import org.bson.types.ObjectId;
 
-import java.io.Serializable;
-
 @Embedded
-public class MongoFollowerId implements Serializable {
+public class MongoFollowerId {
 
     private ObjectId profileId;
 
