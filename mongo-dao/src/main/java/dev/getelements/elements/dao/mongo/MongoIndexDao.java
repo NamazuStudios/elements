@@ -1,10 +1,13 @@
-package dev.getelements.elements.dao;
+package dev.getelements.elements.dao.mongo;
+
+import dev.getelements.elements.dao.IndexDao;
+import dev.getelements.elements.dao.Indexable;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Set;
 
-public class StandardIndexDao implements IndexDao {
+public class MongoIndexDao implements IndexDao {
 
     private Set<Indexable> indexableSet;
 

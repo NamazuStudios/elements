@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.index;
 
+import dev.getelements.elements.model.index.IndexMetadata;
+import dev.getelements.elements.model.index.IndexPlanStep;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.TemplateFieldType;
 import dev.getelements.elements.model.schema.template.TemplateTab;
@@ -8,23 +10,21 @@ import dev.getelements.elements.rt.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.Identity;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.dao.index.IndexOperation.*;
+import static dev.getelements.elements.model.index.IndexOperation.*;
 import static java.lang.String.format;
 
 /**
  * Plans index updates in a database-agnostic way.
  */
-public class IndexPlan<IdentifierT> {
+public class IndexPlanner<IdentifierT> {
 
-    private Logger logger = LoggerFactory.getLogger(IndexPlan.class);
+    private Logger logger = LoggerFactory.getLogger(IndexPlanner.class);
 
     private final IndexMetadataGenerator<IdentifierT> generator;
 
@@ -34,7 +34,7 @@ public class IndexPlan<IdentifierT> {
 
     private Function<byte[], String> encoder;
 
-    private IndexPlan(
+    private IndexPlanner(
             final List<IndexMetadata<IdentifierT>> existing,
             final IndexMetadataGenerator<IdentifierT> generator) {
 
@@ -53,7 +53,7 @@ public class IndexPlan<IdentifierT> {
      * @param spec
      * @return
      */
-    public IndexPlan update(final String context, final MetadataSpec spec) {
+    public IndexPlanner update(final String context, final MetadataSpec spec) {
 
         logger.info("Updating plan with spec: {}", spec);
 
@@ -164,7 +164,6 @@ public class IndexPlan<IdentifierT> {
             final var step = new IndexPlanStep<IdentifierT>();
             step.setIndexMetadata(metadata);
             step.setDescription(description);
-            step.setTemplateTabField(field);
 
             steps.put(metadata.getIdentifier(), step);
             logger.info("Index from Metadata Field {} : {}", field, step);
@@ -196,8 +195,8 @@ public class IndexPlan<IdentifierT> {
             }
         };
 
-        public IndexPlan<IdentifierT> build(final IndexMetadataGenerator<IdentifierT> generator) {
-            return new IndexPlan<>(existing, generator);
+        public IndexPlanner<IdentifierT> build(final IndexMetadataGenerator<IdentifierT> generator) {
+            return new IndexPlanner<>(existing, generator);
         }
 
     }

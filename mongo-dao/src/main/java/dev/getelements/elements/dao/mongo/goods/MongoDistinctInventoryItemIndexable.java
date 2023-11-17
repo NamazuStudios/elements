@@ -2,8 +2,8 @@ package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.client.MongoCollection;
 import dev.getelements.elements.dao.Indexable;
-import dev.getelements.elements.dao.index.IndexMetadata;
-import dev.getelements.elements.dao.index.IndexPlan;
+import dev.getelements.elements.model.index.IndexMetadata;
+import dev.getelements.elements.dao.index.IndexPlanner;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexMetadata;
@@ -54,11 +54,11 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
                     .findFirst();
 
             final var plan = existing
-                    .map(p -> new IndexPlan.Builder<Document>()
+                    .map(p -> new IndexPlanner.Builder<Document>()
                             .withExisting(p.getExisting())
                             .build(this::generate)
                     )
-                    .orElseGet(() -> new IndexPlan.Builder<Document>()
+                    .orElseGet(() -> new IndexPlanner.Builder<Document>()
                             .build(this::generate)
                     );
 

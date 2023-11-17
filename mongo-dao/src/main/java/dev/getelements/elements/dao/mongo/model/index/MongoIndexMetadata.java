@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.index;
 
-import dev.getelements.elements.dao.index.IndexMetadata;
+import dev.getelements.elements.model.index.IndexMetadata;
 import dev.morphia.annotations.Property;
 import org.bson.Document;
 

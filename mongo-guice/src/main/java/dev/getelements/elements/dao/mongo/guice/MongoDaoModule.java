@@ -108,7 +108,7 @@ public class MongoDaoModule extends PrivateModule {
                 .to(SidhantAggarwalBooleanQueryParser.class);
 
         bind(IndexDao.class)
-                .to(StandardIndexDao.class);
+                .to(MongoIndexDao.class);
 
         bind(IndexDao.Indexer.class)
                 .to(MongoIndexer.class);

@@ -1,6 +1,4 @@
-package dev.getelements.elements.dao.index;
-
-import dev.getelements.elements.model.schema.template.TemplateTabField;
+package dev.getelements.elements.model.index;
 
 public class IndexPlanStep<IdentifierT> {
 

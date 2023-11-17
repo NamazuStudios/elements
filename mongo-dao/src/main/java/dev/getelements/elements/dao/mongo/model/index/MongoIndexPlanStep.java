@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.index;
 
-import dev.getelements.elements.dao.index.IndexOperation;
+import dev.getelements.elements.model.index.IndexOperation;
 import dev.morphia.annotations.Property;
 
 public class MongoIndexPlanStep {

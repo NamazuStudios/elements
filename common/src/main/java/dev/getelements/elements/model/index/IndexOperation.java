@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.index;
+package dev.getelements.elements.model.index;
 
 /**
  * Indicates the operation to be performed against the index.
