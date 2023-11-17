@@ -43,7 +43,9 @@ public class MongoTestInstanceModule extends AbstractModule {
                 return instance;
             }).asEagerSingleton();
         } else {
-            bind(MongoTestInstance.class).to(DockerMongoTestInstance.class).asEagerSingleton();
+            bind(MongoTestInstance.class)
+                    .toProvider(() -> new DockerMongoTestInstance(port, TEST_MONGO_VERSION))
+                    .asEagerSingleton();
         }
     }
 

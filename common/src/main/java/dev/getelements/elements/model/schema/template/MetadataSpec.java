@@ -21,7 +21,6 @@ public class MetadataSpec {
     @ApiModelProperty("The Name of the schema.")
     private String name;
 
-
     @Valid
     @NotNull
     @ApiModelProperty("The tabs of the metadata spec.")

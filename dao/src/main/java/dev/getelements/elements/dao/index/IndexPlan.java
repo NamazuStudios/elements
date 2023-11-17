@@ -1,68 +1,114 @@
 package dev.getelements.elements.dao.index;
 
 import dev.getelements.elements.model.schema.template.MetadataSpec;
+import dev.getelements.elements.model.schema.template.TemplateFieldType;
 import dev.getelements.elements.model.schema.template.TemplateTab;
 import dev.getelements.elements.model.schema.template.TemplateTabField;
-import dev.getelements.elements.rt.exception.InternalException;
-import org.bouncycastle.util.encoders.Hex;
+import dev.getelements.elements.rt.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.security.Identity;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.dao.index.IndexOperation.CREATE;
+import static dev.getelements.elements.dao.index.IndexOperation.*;
 import static java.lang.String.format;
-import static java.lang.String.join;
 
-public class IndexPlan {
+/**
+ * Plans index updates in a database-agnostic way.
+ */
+public class IndexPlan<IdentifierT> {
 
-    private final int nameLimit;
+    private Logger logger = LoggerFactory.getLogger(IndexPlan.class);
 
-    private final String separator;
+    private final IndexMetadataGenerator<IdentifierT> generator;
 
-    private final Supplier<MessageDigest> messageDigestSupplier;
+    private final Map<IdentifierT, IndexPlanStep<IdentifierT>> plan = new LinkedHashMap<>();
 
-    private final Map<String, IndexStep> plan = new LinkedHashMap<>();
-
-    private final Charset charset;
+    private final Map<IdentifierT, IndexMetadata<IdentifierT>> existing = new LinkedHashMap<>();
 
     private Function<byte[], String> encoder;
 
-    private IndexPlan(final int nameLimit,
-                      final String separator,
-                      final Supplier<MessageDigest> messageDigestSupplier,
-                      final Charset charset,
-                      final Function<byte[], String> encoder) {
-        this.charset = charset;
-        this.nameLimit = nameLimit;
-        this.separator = separator;
-        this.messageDigestSupplier = messageDigestSupplier;
-        this.encoder = encoder;
-    }
+    private IndexPlan(
+            final List<IndexMetadata<IdentifierT>> existing,
+            final IndexMetadataGenerator<IdentifierT> generator) {
 
-    public IndexPlan add(final String context, final MetadataSpec spec) {
+        this.generator = generator;
 
-        final var names = new TreeSet<>(plan.keySet());
-        final var steps = new MetadataSpecPlanner(context, spec).build();
-
-        names.retainAll(steps.keySet());
-
-        if (!names.isEmpty()) {
-            final var joined = join(",", names);
-            throw new InternalException("Collision on index names [" + joined + "]");
+        for (var metadata: existing) {
+            this.existing.put(metadata.getIdentifier(), metadata);
         }
 
-        plan.putAll(steps);
+    }
+
+    /**
+     * Updates the indexing plan with the given metadata specification.
+     *
+     * @param context
+     * @param spec
+     * @return
+     */
+    public IndexPlan update(final String context, final MetadataSpec spec) {
+
+        logger.info("Updating plan with spec: {}", spec);
+
+        final var updates = new MetadataSpecPlanner(context, spec).build();
+
+        for (var entry : updates.entrySet()) {
+
+            final var update = entry.getValue();
+            final var existing = this.existing.get(entry.getKey());
+
+            if (existing == null) {
+                logger.info("Adding New Index: {}", update);
+                update.setOperation(CREATE);
+            } else if (Objects.equals(existing, update.getIndexMetadata())){
+                logger.info("Leaving Index As-Is: {}", update);
+                update.setOperation(LEAVE_AS_IS);
+            } else {
+                logger.info("Replacing Index: {}", update);
+                update.setOperation(REPLACE);
+            }
+
+            final var evicted = plan.put(update.getIndexMetadata().getIdentifier(), update);
+
+            if (evicted != null) {
+                logger.info("Evicted previous plan step {}", evicted);
+            }
+
+        }
+
         return this;
 
     }
 
-    public Map<String, IndexStep> getPlan() {
-        return Collections.unmodifiableMap(plan);
+    /**
+     * Calculates the final plan based on the updates applied to the plan so far.
+     *
+     * @return the final plan
+     */
+    public List<IndexPlanStep<IdentifierT>> getFinalPlan() {
+
+        final var finalPlan = new LinkedHashMap<>(plan);
+
+        final var toRemove = new LinkedHashMap<>(existing);
+
+        toRemove.keySet().removeAll(plan.keySet());
+        toRemove.forEach((name, metadata) -> {
+            final var step = new IndexPlanStep();
+            step.setOperation(DELETE);
+            step.setIndexMetadata(metadata);
+            step.setDescription(format("Unused Index %s", metadata.getIdentifier()));
+            finalPlan.put(name, step);
+        });
+
+        return new ArrayList<>(finalPlan.values());
+
     }
 
     private class MetadataSpecPlanner {
@@ -73,14 +119,15 @@ public class IndexPlan {
 
         private final Deque<TemplateTab> tabs = new LinkedList<>();
 
-        private final SortedMap<String, IndexStep> steps = new TreeMap<>();
+        private final Map<IdentifierT, IndexPlanStep<IdentifierT>> steps = new LinkedHashMap<>();
 
         public MetadataSpecPlanner(final String context, final MetadataSpec spec) {
             this.spec = spec;
             this.context = context;
         }
 
-        public SortedMap<String, IndexStep> build() {
+
+        public Map<IdentifierT, IndexPlanStep<IdentifierT>> build() {
 
             for (var tab : spec.getTabs()) {
                 tab.getFields().values().forEach(field -> build(tab, field));
@@ -94,41 +141,33 @@ public class IndexPlan {
 
             tabs.push(tab);
 
-            switch (field.getFieldType()) {
-                case OBJECT:
-                    buildObjectIndex(tab, field);
-                    break;
-                default:
-                    buildTabIndex(tab, field);
-                    break;
+            if (Objects.requireNonNull(field.getFieldType()) == TemplateFieldType.OBJECT) {
+                buildObjectIndex(tab, field);
+            } else {
+                buildTabIndex(tab, field);
             }
 
         }
 
         private void buildTabIndex(final TemplateTab tab, final TemplateTabField field) {
 
-            final var digest = messageDigestSupplier.get();
             final var components = new ArrayList<String>();
 
             // Creates the full path
-            components.add(context);
             tabs.forEach(t -> components.add(t.getName()));
             components.add(field.getName());
 
-            // Creates the digest of the full path
-            components.forEach(c -> digest.update(c.getBytes(charset)));
+            final var path = new Path(context, components);
+            final var description = format("Index for path %s", path);
+            final var metadata = generator.generate(path, tab, field);
 
-            final var suffix = join(separator, components);
-            final var prefix = encoder.apply(digest.digest());
-            final var path = format("%s%s%s", prefix, separator, suffix);
-            final var truncated = path.length() <= nameLimit ? path : path.substring(0, nameLimit);
-            final var description = format("%s %s", CREATE, join( ".", components));
-
-            final var step = new SimpleIndexStep();
-            step.setIndexName(truncated);
+            final var step = new IndexPlanStep<IdentifierT>();
+            step.setIndexMetadata(metadata);
             step.setDescription(description);
             step.setTemplateTabField(field);
-            steps.put(truncated, step);
+
+            steps.put(metadata.getIdentifier(), step);
+            logger.info("Index from Metadata Field {} : {}", field, step);
 
         }
 
@@ -140,15 +179,14 @@ public class IndexPlan {
 
     }
 
-    public static class Builder {
+    public static class Builder<IdentifierT> {
 
-        private int nameLimit = 127;
+        private List<IndexMetadata<IdentifierT>> existing = new ArrayList<>();
 
-        private String separator = "_";
-
-        private Charset charset = StandardCharsets.UTF_8;
-
-        private Function<byte[], String> encoder = b -> Hex.toHexString(b);
+        public Builder<IdentifierT> withExisting(final List<? extends IndexMetadata<IdentifierT>> existing) {
+            this.existing.addAll(existing);
+            return this;
+        }
 
         private Supplier<MessageDigest> messageDigestSupplier = () -> {
             try {
@@ -158,15 +196,16 @@ public class IndexPlan {
             }
         };
 
-        public IndexPlan build() {
-            return new IndexPlan(
-                    nameLimit,
-                    separator,
-                    messageDigestSupplier,
-                    charset,
-                    encoder
-            );
+        public IndexPlan<IdentifierT> build(final IndexMetadataGenerator<IdentifierT> generator) {
+            return new IndexPlan<>(existing, generator);
         }
+
+    }
+
+    @FunctionalInterface
+    public interface IndexMetadataGenerator<IdentifierT> {
+
+        IndexMetadata<IdentifierT> generate(Path path, TemplateTab tab, TemplateTabField field);
 
     }
 

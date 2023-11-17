@@ -1,24 +1,41 @@
 package dev.getelements.elements.dao;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.Set;
 
 public class StandardIndexDao implements IndexDao {
 
-    private Set<HasIndexableMetadata> indexableMetadataSet;
+    private Set<Indexable> indexableSet;
+
+    private Provider<Indexer> indexerProvider;
 
     @Override
-    public void buildAllIndexes() {
-        getIndexableMetadataSet().forEach(HasIndexableMetadata::buildIndexes);
+    public void plan() {
+        getIndexableSet().forEach(Indexable::plan);
     }
 
-    public Set<HasIndexableMetadata> getIndexableMetadataSet() {
-        return indexableMetadataSet;
+    @Override
+    public Indexer beginIndexing() {
+        return getIndexerProvider().get();
+    }
+
+    public Set<Indexable> getIndexableSet() {
+        return indexableSet;
     }
 
     @Inject
-    public void setIndexableMetadataSet(Set<HasIndexableMetadata> indexableMetadataSet) {
-        this.indexableMetadataSet = indexableMetadataSet;
+    public void setIndexableSet(Set<Indexable> indexableSet) {
+        this.indexableSet = indexableSet;
+    }
+
+    public Provider<Indexer> getIndexerProvider() {
+        return indexerProvider;
+    }
+
+    @Inject
+    public void setIndexerProvider(Provider<Indexer> indexerProvider) {
+        this.indexerProvider = indexerProvider;
     }
 
 }

@@ -5,7 +5,9 @@ import dev.getelements.elements.model.schema.template.MetadataSpec;
 /**
  * For types which have a {@link MetadataSpec}
  */
-public interface HasIndexableMetadata {
+public interface Indexable {
+
+    void plan();
 
     void buildIndexes();
 

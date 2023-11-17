@@ -11,12 +11,17 @@ public enum IndexOperation {
     CREATE,
 
     /**
-     *
+     * Leave the index as-is.
      */
     LEAVE_AS_IS,
 
     /**
-     *
+     * Replace the index.
+     */
+    REPLACE,
+
+    /**
+     * Delete the index.
      */
     DELETE
 
