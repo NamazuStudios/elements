@@ -11,6 +11,8 @@ import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
+import org.apache.commons.lang3.SerializationUtils;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -113,9 +115,12 @@ public class MongoFollowerDao implements FollowerDao {
         final var query = getDatastore().find(MongoFollower.class);
         final var mongoFollowerId = new MongoFollowerId(profileId, profileToUnfollowId);
 
-        query.filter(eq("_id", profileToUnfollowId));
+        var q = query.filter(eq("_id", mongoFollowerId));
 
-        final var result = query.delete(new DeleteOptions());
+//        final var follower = query.first();
+
+
+        final var result = q.delete();
 
         if (result.getDeletedCount() == 0) {
             throw new NotFoundException("Follower not found: " + profileToUnfollowId);
