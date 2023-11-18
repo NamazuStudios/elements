@@ -13,6 +13,7 @@ import dev.getelements.elements.dao.mongo.model.match.MongoMatchSnapshot;
 import dev.getelements.elements.dao.mongo.model.mission.*;
 import dev.getelements.elements.dao.mongo.model.savedata.MongoSaveDataDocument;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
+import dev.getelements.elements.dao.mongo.model.schema.MongoTemplateTab;
 import dev.getelements.elements.model.Deployment;
 import dev.getelements.elements.model.application.*;
 import dev.getelements.elements.model.blockchain.ElementsSmartContract;
@@ -38,6 +39,7 @@ import dev.getelements.elements.model.reward.RewardIssuance;
 import dev.getelements.elements.model.savedata.SaveDataDocument;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.TemplateTab;
+import dev.getelements.elements.model.schema.template.TemplateTabField;
 import dev.getelements.elements.model.user.User;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
@@ -45,8 +47,7 @@ import org.dozer.loader.api.BeanMappingBuilder;
 
 import javax.inject.Provider;
 
-import static org.dozer.loader.api.FieldsMappingOptions.customConverter;
-import static org.dozer.loader.api.FieldsMappingOptions.useMapId;
+import static org.dozer.loader.api.FieldsMappingOptions.*;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -169,11 +170,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(MetadataSpec.class, MongoMetadataSpec.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("name","name")
-                    .fields("tabs","tabs");
+                    .fields("tabs","tabs", hintA(TemplateTab.class), hintB(MongoTemplateTab.class));
 
             mapping(TemplateTab.class, MongoTemplateTab.class)
-                    .fields("fields","fields", customConverter(MongoTemplateTabFieldConverter.class))
-                    .fields("tabOrder","tabOrder");
+                    .fields("fields", "fields", hintA(TemplateTabField.class), hintB(TemplateTabField.class));
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
                     .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))

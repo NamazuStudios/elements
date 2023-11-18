@@ -44,7 +44,9 @@ public interface MetadataSpecDao {
      * @param metadataSpecId the id of the token to update
      * @param updateMetadataSpecRequest the update request for the metaDataSpec.
      * @return the {@link MetadataSpec} as it was changed by the service.
+     * @deprecated DAOs should not accept request types and this will be removed in the future
      */
+    @Deprecated
     MetadataSpec updateMetadataSpec(String metadataSpecId, UpdateMetadataSpecRequest updateMetadataSpecRequest);
 
     /**
@@ -52,8 +54,18 @@ public interface MetadataSpecDao {
      *
      * @param createMetadataSpecRequest the {@link CreateMetadataSpecRequest} with the information to create
      * @return the {@link MetadataSpec} as it was created by the service.
+     * @deprecated DAOs should not accept request types and this will be removed in the future
      */
+    @Deprecated
     MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest);
+
+    /**
+     * Creates a new metadata spec.
+     *
+     * @param metadataSpec
+     * @return
+     */
+    MetadataSpec createMetadataSpec(MetadataSpec metadataSpec);
 
     /**
      * Creates a new template by cloning an existing {@link MetadataSpec} definition.

@@ -29,7 +29,7 @@ public class SuperUserIndexService implements IndexService {
 
     @Override
     public Pagination<IndexPlan<?>> getPlans(int offset, int count) {
-        return null;
+        return getIndexDao().getPlans(offset, count);
     }
 
     public IndexDao getIndexDao() {

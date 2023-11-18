@@ -39,7 +39,6 @@ public class Item implements Serializable, Taggable {
     @NotNull
     private ItemCategory category;
 
-    @Valid
     private MetadataSpec metadataSpec;
 
     private Map<String, Object> metadata;

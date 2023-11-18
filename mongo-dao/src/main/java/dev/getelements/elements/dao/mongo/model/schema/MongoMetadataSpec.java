@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.schema;
 
-import dev.getelements.elements.dao.mongo.model.blockchain.MongoTemplateTab;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 

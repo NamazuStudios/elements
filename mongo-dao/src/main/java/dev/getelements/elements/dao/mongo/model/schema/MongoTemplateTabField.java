@@ -1,12 +1,12 @@
-package dev.getelements.elements.dao.mongo.model.blockchain;
+package dev.getelements.elements.dao.mongo.model.schema;
 
 import dev.getelements.elements.model.schema.template.TemplateFieldType;
+import dev.getelements.elements.model.schema.template.TemplateTab;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Embedded
@@ -31,7 +31,7 @@ public class MongoTemplateTabField {
     private TemplateFieldType fieldType = TemplateFieldType.ENUM;
 
     @Property
-    private Map<String, MongoTemplateTab> tabs;
+    private List<TemplateTab> tabs;
 
     public MongoTemplateTabField() {}
 
@@ -91,11 +91,11 @@ public class MongoTemplateTabField {
         return fieldType;
     }
 
-    public Map<String, MongoTemplateTab> getTabs() {
+    public List<TemplateTab> getTabs() {
         return tabs;
     }
 
-    public void setTabs(Map<String, MongoTemplateTab> tabs) {
+    public void setTabs(List<TemplateTab> tabs) {
         this.tabs = tabs;
     }
 

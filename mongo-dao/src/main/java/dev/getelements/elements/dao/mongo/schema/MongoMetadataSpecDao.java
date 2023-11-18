@@ -93,6 +93,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
 
     @Override
     public MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest) {
+
         getValidationHelper().validateModel(createMetadataSpecRequest, ValidationGroups.Insert.class);
         getValidationHelper().validateModel(createMetadataSpecRequest.getTabs(), ValidationGroups.Insert.class);
 
@@ -101,7 +102,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         query.filter(exists("name").not());
 
         final var builder = new UpdateBuilder().with(
-            set("tabs", createMetadataSpecRequest.getTabs()),
+                set("tabs", createMetadataSpecRequest.getTabs()),
                 set("name", createMetadataSpecRequest.getName())
         );
 
@@ -110,6 +111,17 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         );
 
         return transform(mongoTokenTemplate);
+    }
+
+    @Override
+    public MetadataSpec createMetadataSpec(final MetadataSpec metadataSpec) {
+
+        getValidationHelper().validateModel(metadataSpec, ValidationGroups.Insert.class);
+
+        final var toInsert = getBeanMapper().map(metadataSpec, MongoMetadataSpec.class);
+        final var inserted = getMongoDBUtils().perform(ds -> ds.save(toInsert));
+        return getBeanMapper().map(inserted, MetadataSpec.class);
+
     }
 
     @Override

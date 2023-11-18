@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.client.MongoCollection;
 import dev.getelements.elements.dao.Indexable;
-import dev.getelements.elements.model.index.IndexMetadata;
 import dev.getelements.elements.dao.index.IndexPlanner;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
@@ -10,10 +9,12 @@ import dev.getelements.elements.dao.mongo.model.index.MongoIndexMetadata;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlan;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlanStep;
 import dev.getelements.elements.exception.NotFoundException;
+import dev.getelements.elements.model.index.IndexMetadata;
 import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.TemplateTab;
 import dev.getelements.elements.model.schema.template.TemplateTabField;
 import dev.getelements.elements.rt.Path;
+import dev.getelements.elements.rt.exception.InternalException;
 import dev.morphia.Datastore;
 import dev.morphia.UpdateOptions;
 import org.bson.Document;
@@ -24,10 +25,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
+import static dev.getelements.elements.model.index.IndexPlanState.APPLIED;
+import static dev.getelements.elements.model.index.IndexPlanState.READY;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
-import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 
@@ -53,6 +55,22 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
                     .stream()
                     .findFirst();
 
+            if (existing.isPresent()) {
+                switch (existing.get().getState()) {
+                    case READY:
+                        logger.info("Plan in ready state. No processing needed.");
+                        return;
+                    case APPLIED:
+                        logger.info("Previous plan applied. Refreshing with new plan.");
+                        break;
+                    case PROCESSING:
+                        logger.warn("Plan currently processing.");
+                        return;
+                    default:
+                        throw new InternalException("Unexpected plan state: " + existing.get().getState());
+                }
+            }
+
             final var plan = existing
                     .map(p -> new IndexPlanner.Builder<Document>()
                             .withExisting(p.getExisting())
@@ -70,7 +88,7 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
                         plan.update(item.getName(), spec);
                     });
 
-            final var steps = plan.getFinalPlan()
+            final var steps = plan.getFinalExecutionSteps()
                             .stream()
                             .map(step -> getMapper().map(step, MongoIndexPlanStep.class))
                             .collect(toList());
@@ -79,7 +97,7 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
 
             session.find(MongoIndexPlan.class)
                     .filter(eq("_id", collection))
-                    .update(options, set("steps", steps));
+                    .update(options, set("steps", steps), set("state", READY));
 
         }
     }
@@ -129,7 +147,7 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
 
         getDatastore().find(MongoIndexPlan.class)
                 .filter(eq("_id", collection))
-                .update(options, unset("steps"), set("existing", existing));
+                .update(options, set("existing", existing), set("state", APPLIED));
 
     }
 

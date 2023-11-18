@@ -1,10 +1,8 @@
-package dev.getelements.elements.dao.mongo.model.blockchain;
+package dev.getelements.elements.dao.mongo.model.schema;
 
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
-import io.swagger.annotations.ApiModelProperty;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -31,6 +29,10 @@ public class MongoTemplateTab {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Integer getTabOrder() {
         return tabOrder;
     }
@@ -41,6 +43,10 @@ public class MongoTemplateTab {
 
     public Map<String, MongoTemplateTabField>  getFields() {
         return fields;
+    }
+
+    public void setFields(Map<String, MongoTemplateTabField> fields) {
+        this.fields = fields;
     }
 
     @Override

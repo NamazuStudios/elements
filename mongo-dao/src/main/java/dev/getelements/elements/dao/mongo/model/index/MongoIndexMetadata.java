@@ -11,15 +11,9 @@ public class MongoIndexMetadata implements IndexMetadata<Document> {
     @Property
     private Document keys;
 
-    @Property
-    private Document options;
-
-    @Property
-    private Document commitQuorum;
-
     @Override
     public Document getIdentifier() {
-        return null;
+        return getKeys();
     }
 
     public Document getKeys() {
@@ -35,20 +29,18 @@ public class MongoIndexMetadata implements IndexMetadata<Document> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoIndexMetadata that = (MongoIndexMetadata) o;
-        return Objects.equals(getKeys(), that.getKeys()) && Objects.equals(options, that.options) && Objects.equals(commitQuorum, that.commitQuorum);
+        return Objects.equals(getKeys(), that.getKeys());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getKeys(), options, commitQuorum);
+        return Objects.hash(getKeys());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MongoIndexMetadata{");
         sb.append("keys=").append(keys);
-        sb.append(", options=").append(options);
-        sb.append(", commitQuorum=").append(commitQuorum);
         sb.append('}');
         return sb.toString();
     }

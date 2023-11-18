@@ -53,7 +53,7 @@ public class IndexPlanner<IdentifierT> {
      * @param spec
      * @return
      */
-    public IndexPlanner update(final String context, final MetadataSpec spec) {
+    public IndexPlanner<IdentifierT> update(final String context, final MetadataSpec spec) {
 
         logger.info("Updating plan with spec: {}", spec);
 
@@ -92,7 +92,7 @@ public class IndexPlanner<IdentifierT> {
      *
      * @return the final plan
      */
-    public List<IndexPlanStep<IdentifierT>> getFinalPlan() {
+    public List<IndexPlanStep<IdentifierT>> getFinalExecutionSteps() {
 
         final var finalPlan = new LinkedHashMap<>(plan);
 
@@ -100,7 +100,7 @@ public class IndexPlanner<IdentifierT> {
 
         toRemove.keySet().removeAll(plan.keySet());
         toRemove.forEach((name, metadata) -> {
-            final var step = new IndexPlanStep();
+            final var step = new IndexPlanStep<IdentifierT>();
             step.setOperation(DELETE);
             step.setIndexMetadata(metadata);
             step.setDescription(format("Unused Index %s", metadata.getIdentifier()));
@@ -117,7 +117,7 @@ public class IndexPlanner<IdentifierT> {
 
         private final MetadataSpec spec;
 
-        private final Deque<TemplateTab> tabs = new LinkedList<>();
+        private final Deque<TemplateTabField> fields = new LinkedList<>();
 
         private final Map<IdentifierT, IndexPlanStep<IdentifierT>> steps = new LinkedHashMap<>();
 
@@ -139,13 +139,15 @@ public class IndexPlanner<IdentifierT> {
 
         private void build(final TemplateTab tab, final TemplateTabField field) {
 
-            tabs.push(tab);
+            fields.push(field);
 
             if (Objects.requireNonNull(field.getFieldType()) == TemplateFieldType.OBJECT) {
                 buildObjectIndex(tab, field);
             } else {
                 buildTabIndex(tab, field);
             }
+
+            fields.pop();
 
         }
 
@@ -154,7 +156,7 @@ public class IndexPlanner<IdentifierT> {
             final var components = new ArrayList<String>();
 
             // Creates the full path
-            tabs.forEach(t -> components.add(t.getName()));
+            fields.forEach(t -> components.add(t.getName()));
             components.add(field.getName());
 
             final var path = new Path(context, components);
@@ -171,9 +173,15 @@ public class IndexPlanner<IdentifierT> {
         }
 
         private void buildObjectIndex(final TemplateTab tab, final TemplateTabField field) {
-            for (var child : field.getTabs()) {
-                tab.getFields().values().forEach(f -> build(child, f));
+
+            final var fields = field.getTabs();
+
+            if (fields != null) {
+                for (var child : field.getTabs()) {
+                    tab.getFields().values().forEach(f -> build(child, f));
+                }
             }
+
         }
 
     }

@@ -4,26 +4,25 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
-public class TemplateTab {
+public class TemplateTab implements Serializable {
 
     @NotNull
-    @ApiModelProperty("name")
     private String name;
 
     @NotNull
-    @ApiModelProperty("tabOrder")
+    @ApiModelProperty("The order of the tab.")
     private Integer tabOrder;
 
     @Valid
     @NotNull
-    @ApiModelProperty("fields")
+    @ApiModelProperty("The fields of the tab.")
     private Map<String, TemplateTabField> fields;
 
-    public TemplateTab() {
-    }
+    public TemplateTab() {}
 
     public TemplateTab(String name, Map<String, TemplateTabField> fields) {
         this.name = name;

@@ -2,39 +2,43 @@ package dev.getelements.elements.model.schema.template;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class TemplateTabField {
+import static dev.getelements.elements.Constants.Regexp.WHOLE_WORD_ONLY;
+
+public class TemplateTabField implements Serializable {
 
     @NotNull
-    @ApiModelProperty("name")
+    @ApiModelProperty("The unique name of the field")
+    @Pattern(regexp = WHOLE_WORD_ONLY)
     private String name;
 
     @NotNull
-    @ApiModelProperty("displayName")
+    @ApiModelProperty("The display name of the field")
     private String displayName;
 
     @NotNull
-    @ApiModelProperty("fieldType")
+    @ApiModelProperty("The field type")
     private TemplateFieldType fieldType;
 
     @NotNull
-    @ApiModelProperty("isRequired")
+    @ApiModelProperty("True if the field is required.")
     private Boolean isRequired;
 
-    @NotNull
-    @ApiModelProperty("placeHolder")
+    @ApiModelProperty("The placeholder value when displaying in the editor.")
     private String placeHolder;
 
-    @NotNull
-    @ApiModelProperty("defaultValue")
+    @ApiModelProperty("The default value, if left unspecified.")
     private String defaultValue;
 
-    @NotNull
-    @ApiModelProperty("tabs")
+    @Valid
+    @ApiModelProperty("The list of tabs (only applicable if this is of OBJECT type).")
     private List<TemplateTab> tabs;
 
     public TemplateTabField() {}

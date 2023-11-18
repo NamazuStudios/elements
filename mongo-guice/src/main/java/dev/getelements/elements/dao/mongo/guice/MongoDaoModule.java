@@ -120,6 +120,7 @@ public class MongoDaoModule extends PrivateModule {
         final var hasIndexableMetadataSet = Multibinder.newSetBinder(binder(), Indexable.class);
         hasIndexableMetadataSet.addBinding().to(MongoDistinctInventoryItemIndexable.class);
 
+        expose(IndexDao.class);
         expose(UserDao.class);
         expose(ProfileDao.class);
         expose(FacebookUserDao.class);

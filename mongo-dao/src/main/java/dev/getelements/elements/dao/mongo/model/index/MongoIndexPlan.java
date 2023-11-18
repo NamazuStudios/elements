@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.index;
 
+import dev.getelements.elements.model.index.IndexPlanState;
 import dev.morphia.annotations.*;
 
 import java.util.List;
@@ -9,6 +10,9 @@ public class MongoIndexPlan {
 
     @Id
     private String id;
+
+    @Property
+    private IndexPlanState state;
 
     @Property
     private List<MongoIndexPlanStep> steps;
@@ -22,6 +26,14 @@ public class MongoIndexPlan {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public IndexPlanState getState() {
+        return state;
+    }
+
+    public void setState(IndexPlanState state) {
+        this.state = state;
     }
 
     public List<MongoIndexPlanStep> getSteps() {

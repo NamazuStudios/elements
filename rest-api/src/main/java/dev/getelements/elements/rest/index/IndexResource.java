@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest.index;
 
+import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.index.BuildIndexRequest;
 import dev.getelements.elements.model.index.IndexPlan;
@@ -28,11 +29,21 @@ public class IndexResource {
     @GET
     @Path("plan")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Builds all indexes.")
+    @ApiOperation(value = "Gets all index plans.")
     public Pagination<IndexPlan<?>> getPlans(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count) {
+
+        if (offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value.");
+        }
+
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
+
         return getIndexService().getPlans(offset, count);
+
     }
 
     @POST
