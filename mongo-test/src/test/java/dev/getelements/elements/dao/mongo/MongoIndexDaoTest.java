@@ -14,10 +14,12 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
+import static dev.getelements.elements.model.schema.template.TemplateFieldType.ARRAY;
 import static dev.getelements.elements.model.schema.template.TemplateFieldType.OBJECT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -104,15 +106,19 @@ public class MongoIndexDaoTest {
             field.setName(format("f%s", type));
             field.setDisplayName(format("Test Field for %s", type));
 
-            if (depth.size() < 2 && OBJECT.equals(type)) {
+            if (OBJECT.equals(type)) {
 
-                final var tabs = IntStream
-                        .range(0, 5)
-                        .mapToObj(this::tabSupplier)
-                        .collect(toList());
+                final List<TemplateTab> tabs = depth.size() < 2
+                    ? IntStream.range(0, 5).mapToObj(this::tabSupplier).collect(toList())
+                    : List.of();
 
                 field.setTabs(tabs);
 
+            }
+
+            if (ARRAY.equals(type)) {
+                final var tabs = List.of(tabSupplier(0));
+                field.setTabs(tabs);
             }
 
             return field;
@@ -127,6 +133,7 @@ public class MongoIndexDaoTest {
             tab.setName(format("f%s", index));
 
             final var fields = Stream.of(TemplateFieldType.values())
+                    .filter(t -> !ARRAY.equals(t) || depth.size() < 2)
                     .map(this::fieldsSupplier)
                     .collect(toMap(TemplateTabField::getName, f -> f));
 

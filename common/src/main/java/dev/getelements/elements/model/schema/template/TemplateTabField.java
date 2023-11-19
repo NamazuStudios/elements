@@ -2,16 +2,25 @@ package dev.getelements.elements.model.schema.template;
 
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.Valid;
+import javax.validation.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import static dev.getelements.elements.Constants.Regexp.WHOLE_WORD_ONLY;
+import static dev.getelements.elements.model.schema.template.TemplateFieldType.ARRAY;
+import static dev.getelements.elements.model.schema.template.TemplateFieldType.OBJECT;
+import static java.lang.String.format;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+@TemplateTabField.ValidTabs
 public class TemplateTabField implements Serializable {
 
     @NotNull
@@ -132,6 +141,76 @@ public class TemplateTabField implements Serializable {
         sb.append(", tabs=").append(tabs);
         sb.append('}');
         return sb.toString();
+    }
+
+    @Target(TYPE)
+    @Retention(RUNTIME)
+    @Constraint(validatedBy = ValidTabs.Validator.class)
+    public @interface ValidTabs {
+
+        String message() default "Invalid tabs field.";
+
+        Class<?>[] groups() default {};
+
+        Class<? extends Payload>[] payload() default {};
+
+        class Validator implements ConstraintValidator<ValidTabs, TemplateTabField> {
+            @Override
+            public boolean isValid(final TemplateTabField value, final ConstraintValidatorContext context) {
+
+                final var tabs = value.getTabs();
+                final var type = value.getFieldType();
+
+                if (ARRAY.equals(type)) {
+                    return checkArrayTabs(value, context);
+                } else if (OBJECT.equals(type)) {
+                    return checkObjectTabs(value, context);
+                } else if (tabs != null && !tabs.isEmpty()) {
+                    final var msg = format("'tabs' must not be null for %s type fields.", type);
+                    context.buildConstraintViolationWithTemplate(msg)
+                            .addPropertyNode("tabs")
+                            .addConstraintViolation();
+                    return false;
+                }
+
+                return true;
+
+            }
+
+            private boolean checkObjectTabs(final TemplateTabField value, final ConstraintValidatorContext context) {
+
+                final var tabs = value.getTabs();
+
+                if (tabs == null) {
+                    final var msg = "'tabs' must not be null for OBJECT type fields.";
+                    context.buildConstraintViolationWithTemplate(msg)
+                            .addPropertyNode("tabs")
+                            .addConstraintViolation();
+                    return false;
+                }
+
+                return true;
+
+            }
+
+            private boolean checkArrayTabs(final TemplateTabField value, final ConstraintValidatorContext context) {
+
+                final var tabs = value.getTabs();
+
+                if (tabs == null || tabs.size() != 1) {
+                    final var msg = "'tabs' must specify exactly one tab for ARRAY type fields.";
+                    context.buildConstraintViolationWithTemplate(msg)
+                            .addPropertyNode("tabs")
+                            .addConstraintViolation();
+                    return false;
+                }
+
+                return true;
+
+            }
+
+        }
+
     }
 
 }
