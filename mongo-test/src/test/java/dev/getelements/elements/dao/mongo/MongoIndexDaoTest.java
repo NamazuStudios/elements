@@ -6,6 +6,9 @@ import dev.getelements.elements.model.schema.template.MetadataSpec;
 import dev.getelements.elements.model.schema.template.TemplateFieldType;
 import dev.getelements.elements.model.schema.template.TemplateTab;
 import dev.getelements.elements.model.schema.template.TemplateTabField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -27,6 +30,8 @@ import static java.util.stream.Collectors.toMap;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoIndexDaoTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(MongoIndexDaoTest.class);
 
     private IndexDao indexDao;
 
@@ -67,6 +72,11 @@ public class MongoIndexDaoTest {
         }
     }
 
+    @AfterClass
+    public void logResult() {
+        logger.info("Done indexing!");
+    }
+
     public IndexDao getIndexDao() {
         return indexDao;
     }
@@ -94,7 +104,7 @@ public class MongoIndexDaoTest {
         this.metadataSpecTestFactory = metadataSpecTestFactory;
     }
 
-    private class MockSpecGenerator {
+    private static class MockSpecGenerator {
 
         final Deque<TemplateTab> depth = new LinkedList<>();
 
@@ -103,7 +113,7 @@ public class MongoIndexDaoTest {
             final var field = new TemplateTabField();
             field.setFieldType(type);
             field.setRequired(true);
-            field.setName(format("f%s", type));
+            field.setName(format("f_%s", type).toLowerCase());
             field.setDisplayName(format("Test Field for %s", type));
 
             if (OBJECT.equals(type)) {

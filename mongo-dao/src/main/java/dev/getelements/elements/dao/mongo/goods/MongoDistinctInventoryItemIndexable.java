@@ -43,63 +43,62 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
 
     @Override
     public void plan() {
-        try (var session = getDatastore().startSession()) {
 
-            final var collection = session
-                    .getMapper()
-                    .getEntityModel(MongoDistinctInventoryItem.class)
-                    .getCollectionName();
+        final var collection = getDatastore()
+                .getMapper()
+                .getEntityModel(MongoDistinctInventoryItem.class)
+                .getCollectionName();
 
-            final var existing = session.find(MongoIndexPlan.class)
-                    .filter(eq("_id", collection))
-                    .stream()
-                    .findFirst();
+        final var existing = getDatastore().find(MongoIndexPlan.class)
+                .filter(eq("_id", collection))
+                .stream()
+                .findFirst();
 
-            if (existing.isPresent()) {
-                switch (existing.get().getState()) {
-                    case READY:
-                        logger.info("Plan in ready state. No processing needed.");
-                        return;
-                    case APPLIED:
-                        logger.info("Previous plan applied. Refreshing with new plan.");
-                        break;
-                    case PROCESSING:
-                        logger.warn("Plan currently processing.");
-                        return;
-                    default:
-                        throw new InternalException("Unexpected plan state: " + existing.get().getState());
-                }
+        if (existing.isPresent()) {
+            switch (existing.get().getState()) {
+                case READY:
+                    logger.info("Plan in ready state. No processing needed.");
+                    return;
+                case APPLIED:
+                    logger.info("Previous plan applied. Refreshing with new plan.");
+                    break;
+                case PROCESSING:
+                    logger.warn("Plan currently processing.");
+                    return;
+                default:
+                    throw new InternalException("Unexpected plan state: " + existing.get().getState());
             }
-
-            final var plan = existing
-                    .map(p -> new IndexPlanner.Builder<Document>()
-                            .withExisting(p.getExisting())
-                            .build(this::generate)
-                    )
-                    .orElseGet(() -> new IndexPlanner.Builder<Document>()
-                            .build(this::generate)
-                    );
-
-            session.find(MongoItem.class)
-                    .filter(eq("category", DISTINCT), exists("metadataSpec"))
-                    .stream()
-                    .forEach(item -> {
-                        final var spec = getMapper().map(item.getMetadataSpec(), MetadataSpec.class);
-                        plan.update(item.getName(), spec);
-                    });
-
-            final var steps = plan.getFinalExecutionSteps()
-                            .stream()
-                            .map(step -> getMapper().map(step, MongoIndexPlanStep.class))
-                            .collect(toList());
-
-            final var options = new UpdateOptions();
-
-            session.find(MongoIndexPlan.class)
-                    .filter(eq("_id", collection))
-                    .update(options, set("steps", steps), set("state", READY));
-
         }
+
+        final var plan = existing
+                .map(p -> new IndexPlanner.Builder<Document>()
+                        .withExisting(p.getExisting())
+                        .build(this::generate)
+                )
+                .orElseGet(() -> new IndexPlanner.Builder<Document>()
+                        .build(this::generate)
+                );
+
+        getDatastore().find(MongoItem.class)
+                .filter(eq("category", DISTINCT), exists("metadataSpec"))
+                .stream()
+                .forEach(item -> {
+                    final var spec = getMapper().map(item.getMetadataSpec(), MetadataSpec.class);
+                    plan.update(item.getName(), spec);
+                });
+
+        final var steps = plan.getFinalExecutionSteps()
+                        .stream()
+                        .map(step -> getMapper().map(step, MongoIndexPlanStep.class))
+                        .collect(toList());
+
+        final var options = new UpdateOptions().upsert(existing.isEmpty());
+
+        existing
+                .map(p -> getDatastore().queryByExample(p))
+                .orElseGet(() -> getDatastore().find(MongoIndexPlan.class).filter(eq("_id", collection)))
+                .update(options, set("steps", steps), set("state", READY));
+
     }
 
     @Override
@@ -146,7 +145,7 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
         final var options = new UpdateOptions();
 
         getDatastore().find(MongoIndexPlan.class)
-                .filter(eq("_id", collection))
+                .filter(eq("_id", collectionName))
                 .update(options, set("existing", existing), set("state", APPLIED));
 
     }

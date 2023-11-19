@@ -19,7 +19,7 @@ import static java.util.UUID.randomUUID;
 
 public class MongoTestInstanceModule extends AbstractModule {
 
-    private static final String TEST_MONGO_VERSION = "3.6.23";
+    private static final String TEST_MONGO_VERSION = "6.0.9";
 
     private final int port;
 
