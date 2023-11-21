@@ -60,3 +60,7 @@ input[type="button"] {
   max-width: 49px;
   min-width: 49px;
 }
+
+.deactivated {
+  color: #929292;
+}

@@ -66,6 +66,7 @@ public class MongoLargeObjectDao implements LargeObjectDao {
         getValidationHelper().validateModel(largeObject, ValidationGroups.Update.class);
 
         final var query = getDatastore().find(MongoLargeObject.class);
+        query.filter(eq("_id", new ObjectId(largeObject.getId())));
 
         final var mongoLargeObject = mongoDBUtils.perform(ds ->
                 query.modify(

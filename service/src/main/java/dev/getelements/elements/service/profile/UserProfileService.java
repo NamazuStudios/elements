@@ -191,11 +191,13 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
         final var profile = getCurrentProfile();
-        checkUserAndProfile(profile.getId());
+
+        checkUserAndProfile(getProfileDao().getActiveProfile(profile.getId()).getUser().getId());
 
         if (isNull(profile.getImageObject())) {
             logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
             LargeObject imageObject = profileImageObjectUtils.createImageObject(profile);
+            imageObject.setMimeType(updateProfileImageRequest.getMimeType());
             LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
 
             LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
