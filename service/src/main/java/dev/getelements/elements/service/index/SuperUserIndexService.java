@@ -16,7 +16,7 @@ public class SuperUserIndexService implements IndexService {
     public void build(final BuildIndexRequest buildIndexRequest) {
 
         if (buildIndexRequest.isPlan()) {
-            getIndexDao().plan();
+            getIndexDao().planAll();
         }
 
         if (buildIndexRequest.isBuildCustom()) {

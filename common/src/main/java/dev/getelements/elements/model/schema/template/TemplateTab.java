@@ -1,16 +1,21 @@
 package dev.getelements.elements.model.schema.template;
 
+import dev.getelements.elements.Constants;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+import static dev.getelements.elements.Constants.Regexp.WHOLE_WORD_ONLY;
+
 public class TemplateTab implements Serializable {
 
     @NotNull
+    @Pattern(regexp = WHOLE_WORD_ONLY)
     private String name;
 
     @NotNull

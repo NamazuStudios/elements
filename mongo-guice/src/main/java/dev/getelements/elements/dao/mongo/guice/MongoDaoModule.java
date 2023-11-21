@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.Constants;
@@ -35,6 +36,9 @@ import org.dozer.Mapper;
 
 import java.security.MessageDigest;
 import java.util.function.Function;
+
+import static com.google.inject.multibindings.MapBinder.newMapBinder;
+import static dev.getelements.elements.dao.IndexDao.IndexableType.DISTINCT_INVENTORY_ITEM;
 
 /**
  * Configures any Mongo-specific system properties.
@@ -117,8 +121,8 @@ public class MongoDaoModule extends PrivateModule {
         booleanQueryOperatorSet.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
         booleanQueryOperatorSet.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
 
-        final var hasIndexableMetadataSet = Multibinder.newSetBinder(binder(), Indexable.class);
-        hasIndexableMetadataSet.addBinding().to(MongoDistinctInventoryItemIndexable.class);
+        final var indexableByType = newMapBinder(binder(), IndexDao.IndexableType.class, Indexable.class);
+        indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoDistinctInventoryItemIndexable.class);
 
         expose(IndexDao.class);
         expose(UserDao.class);

@@ -156,8 +156,7 @@ public class IndexPlanner<IdentifierT> {
             final var components = new ArrayList<String>();
 
             // Creates the full path
-            fields.forEach(t -> components.add(t.getName()));
-            components.add(field.getName());
+            fields.forEach(f -> components.add(f.getName()));
 
             final var path = new Path(context, components);
             final var description = format("Index for path %s", path);

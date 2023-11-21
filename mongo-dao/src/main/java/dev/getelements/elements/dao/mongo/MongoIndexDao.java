@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo;
 import dev.getelements.elements.dao.IndexDao;
 import dev.getelements.elements.dao.Indexable;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlan;
+import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.index.IndexPlan;
 import dev.morphia.Datastore;
@@ -10,6 +11,7 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.Map;
 import java.util.Set;
 
 public class MongoIndexDao implements IndexDao {
@@ -18,7 +20,7 @@ public class MongoIndexDao implements IndexDao {
 
     private MongoDBUtils mongoDBUtils;
 
-    private Set<Indexable> indexableSet;
+    private Map<IndexableType, Indexable> indexableByType;
 
     private Provider<Indexer> indexerProvider;
 
@@ -49,8 +51,21 @@ public class MongoIndexDao implements IndexDao {
     }
 
     @Override
-    public void plan() {
-        getIndexableSet().forEach(Indexable::plan);
+    public void planAll() {
+        getIndexableByType().values().forEach(Indexable::plan);
+    }
+
+    @Override
+    public void planType(final IndexableType indexableType) {
+
+        final var indexable = getIndexableByType().get(indexableType);
+
+        if (indexable == null) {
+            throw new InternalException("No indexer for type:" + indexableType);
+        }
+
+        indexable.plan();
+
     }
 
     @Override
@@ -58,13 +73,13 @@ public class MongoIndexDao implements IndexDao {
         return getIndexerProvider().get();
     }
 
-    public Set<Indexable> getIndexableSet() {
-        return indexableSet;
+    public Map<IndexableType, Indexable> getIndexableByType() {
+        return indexableByType;
     }
 
     @Inject
-    public void setIndexableSet(Set<Indexable> indexableSet) {
-        this.indexableSet = indexableSet;
+    public void setIndexableByType(Map<IndexableType, Indexable> indexableByType) {
+        this.indexableByType = indexableByType;
     }
 
     public Provider<Indexer> getIndexerProvider() {

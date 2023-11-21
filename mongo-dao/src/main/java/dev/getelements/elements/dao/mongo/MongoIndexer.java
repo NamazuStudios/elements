@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
@@ -19,6 +20,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
+import static java.lang.System.in;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -36,7 +38,7 @@ public class MongoIndexer implements IndexDao.Indexer {
     private final Datastore datastore;
 
     private final MongoDBUtils mongoDBUtils;
-    private final Set<Indexable> indexableSet;
+    private final Map<IndexDao.IndexableType, Indexable> indexablesByType;
 
     private final ScheduledFuture<?> heartbeatTask;
 
@@ -48,11 +50,11 @@ public class MongoIndexer implements IndexDao.Indexer {
     public MongoIndexer(
             final Datastore datastore,
             final MongoDBUtils mongoDBUtils,
-            final Set<Indexable> indexableSet) {
+            final Map<IndexDao.IndexableType, Indexable> indexablesByType) {
 
         this.datastore = datastore;
         this.mongoDBUtils = mongoDBUtils;
-        this.indexableSet = indexableSet;
+        this.indexablesByType = indexablesByType;
 
         final var now = new Timestamp(currentTimeMillis());
         final var uuid = randomUUID().toString();
@@ -119,7 +121,20 @@ public class MongoIndexer implements IndexDao.Indexer {
 
     @Override
     public void buildAllCustom() {
-        indexableSet.forEach(Indexable::buildIndexes);
+        indexablesByType.values().forEach(Indexable::buildIndexes);
+    }
+
+    @Override
+    public void buildCustomIndexesFor(final IndexDao.IndexableType indexableType) {
+
+        final var indexable = indexablesByType.get(indexableType);
+
+        if (indexable == null) {
+            throw new InternalException("No indexer for type:" + indexableType);
+        }
+
+        indexable.buildIndexes();
+
     }
 
     @Override

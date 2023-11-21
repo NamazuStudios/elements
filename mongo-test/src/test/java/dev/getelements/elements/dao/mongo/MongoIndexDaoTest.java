@@ -45,12 +45,12 @@ public class MongoIndexDaoTest {
 
     @BeforeClass
     public void setupMetadataSpec() {
-        final var generator = new MockSpecGenerator();
+        final var generator = new MockMetadataSpecGenerator();
         testMetadataSpec = getMetadataSpecTestFactory().createTestSpec("test_index", generator::generate);
     }
 
     @BeforeClass(dependsOnMethods = "setupMetadataSpec")
-    public void setupDistinctInventoryItem() {
+    public void setupDistinctItem() {
         testItem = getItemTestFactory().createTestItem("index_test", item -> {
             item.setDescription("Indexable Item Test.");
             item.setTags(new ArrayList<>());
@@ -62,7 +62,7 @@ public class MongoIndexDaoTest {
 
     @Test
     public void testPlan() {
-        getIndexDao().plan();
+        getIndexDao().planAll();
     }
 
     @Test(dependsOnMethods = "testPlan")
@@ -104,7 +104,7 @@ public class MongoIndexDaoTest {
         this.metadataSpecTestFactory = metadataSpecTestFactory;
     }
 
-    private static class MockSpecGenerator {
+    private static class MockMetadataSpecGenerator {
 
         final Deque<TemplateTab> depth = new LinkedList<>();
 
