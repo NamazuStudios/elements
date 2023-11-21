@@ -117,9 +117,6 @@ public class MongoFollowerDao implements FollowerDao {
 
         query.filter(eq("_id", mongoFollowerId));
 
-        final var follower = query.first();
-
-
         final var result = query.delete();
 
         if (result.getDeletedCount() == 0) {
