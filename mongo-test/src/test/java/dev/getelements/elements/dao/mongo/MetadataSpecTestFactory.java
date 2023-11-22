@@ -1,7 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.MetadataSpecDao;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpec;
 
 import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicInteger;

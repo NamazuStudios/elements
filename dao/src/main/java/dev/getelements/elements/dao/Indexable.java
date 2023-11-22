@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao;
 
-import dev.getelements.elements.model.schema.template.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpec;
 
 /**
  * For types which have a {@link MetadataSpec}

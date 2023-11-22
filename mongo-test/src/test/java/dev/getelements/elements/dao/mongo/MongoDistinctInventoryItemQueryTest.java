@@ -6,7 +6,7 @@ import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpec;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.MetadataSpecBuilder;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ import java.util.List;
 
 import static dev.getelements.elements.dao.IndexDao.IndexableType.DISTINCT_INVENTORY_ITEM;
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
-import static dev.getelements.elements.model.schema.template.TemplateFieldType.*;
+import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.*;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -84,28 +84,37 @@ public class MongoDistinctInventoryItemQueryTest {
     public void setupMetadataSpec() {
         testMetadataSpec = getMetadataSpecTestFactory().createTestSpec("test_spec", spec ->
             MetadataSpecBuilder.with(spec)
-                .tab()
-                    .name("top_level").tabOrder(0)
-                    .field()
-                        .name("test_string").displayName("String Field.").isRequired(true).fieldType(STRING)
-                    .buildField()
-                    .field()
-                        .name("test_number").displayName("Numeric Field.").isRequired(true).fieldType(NUMBER)
-                    .buildField()
-                    .field()
-                        .name("test_object").displayName("Object Field.").isRequired(true).fieldType(OBJECT)
-                        .tab()
-                            .name("nested").tabOrder(0)
-                            .field()
-                                .name("test_string").displayName("Nested String Field.").isRequired(true).fieldType(STRING)
-                            .buildField()
-                            .field()
-                                .name("test_number").displayName("Nested Numeric Field.").isRequired(true).fieldType(NUMBER)
-                            .buildField()
-                        .buildTab()
-                    .buildField()
-                .buildTab()
-            .buildSpec()
+                .properties()
+                    .property()
+                        .name("test_string").type(STRING).displayName("String Field.").required(true)
+                    .endProperty()
+                    .property()
+                        .name("test_number").type(NUMBER).displayName("Numeric Field.").required(true)
+                    .endProperty()
+                    .property()
+                        .name("test_object").type(OBJECT).displayName("Nested Object Field.").required(true)
+                        .properties()
+                            .property()
+                                .name("test_string").type(STRING).displayName("String Field.").required(true)
+                            .endProperty()
+                            .property()
+                                .name("test_number").type(NUMBER).displayName("Numeric Field.").required(true)
+                            .endProperty()
+                        .endProperties()
+                    .endProperty()
+                    .property()
+                        .name("test_array").type(ARRAY).displayName("Nested Object Field.").required(true)
+                            .properties()
+                                .property()
+                                    .name("test_string").type(STRING).displayName("String Field.").required(true)
+                                .endProperty()
+                                .property()
+                                    .name("test_number").type(NUMBER).displayName("Numeric Field.").required(true)
+                                .endProperty()
+                            .endProperties()
+                        .endProperty()
+                    .endProperties()
+            .endMetadataSpec()
         );
     }
 

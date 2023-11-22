@@ -2,10 +2,10 @@ package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.IndexDao;
 import dev.getelements.elements.model.goods.Item;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.TemplateFieldType;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
 import dev.getelements.elements.model.schema.template.TemplateTab;
-import dev.getelements.elements.model.schema.template.TemplateTabField;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -22,8 +22,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
-import static dev.getelements.elements.model.schema.template.TemplateFieldType.ARRAY;
-import static dev.getelements.elements.model.schema.template.TemplateFieldType.OBJECT;
+import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.ARRAY;
+import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.OBJECT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -108,10 +108,10 @@ public class MongoIndexDaoTest {
 
         final Deque<TemplateTab> depth = new LinkedList<>();
 
-        private TemplateTabField fieldsSupplier(final TemplateFieldType type) {
+        private MetadataSpecProperty fieldsSupplier(final MetadataSpecPropertyType type) {
 
-            final var field = new TemplateTabField();
-            field.setFieldType(type);
+            final var field = new MetadataSpecProperty();
+            field.setType(type);
             field.setRequired(true);
             field.setName(format("f_%s", type).toLowerCase());
             field.setDisplayName(format("Test Field for %s", type));
@@ -142,10 +142,10 @@ public class MongoIndexDaoTest {
             tab.setTabOrder(index);
             tab.setName(format("f%s", index));
 
-            final var fields = Stream.of(TemplateFieldType.values())
+            final var fields = Stream.of(MetadataSpecPropertyType.values())
                     .filter(t -> !ARRAY.equals(t) || depth.size() < 2)
                     .map(this::fieldsSupplier)
-                    .collect(toMap(TemplateTabField::getName, f -> f));
+                    .collect(toMap(MetadataSpecProperty::getName, f -> f));
 
             tab.setFields(fields);
             return depth.pop();

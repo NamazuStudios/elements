@@ -4,11 +4,9 @@ import dev.getelements.elements.Constants;
 import dev.getelements.elements.model.Taggable;
 import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
-import dev.getelements.elements.model.ValidationGroups.Update;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpec;
 import io.swagger.annotations.ApiModel;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;

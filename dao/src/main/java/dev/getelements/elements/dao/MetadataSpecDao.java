@@ -1,9 +1,9 @@
 package dev.getelements.elements.dao;
 
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -66,14 +66,6 @@ public interface MetadataSpecDao {
      * @return
      */
     MetadataSpec createMetadataSpec(MetadataSpec metadataSpec);
-
-    /**
-     * Creates a new template by cloning an existing {@link MetadataSpec} definition.
-     *
-     * @param metadataSpec the {@link MetadataSpec} with the information to clone
-     * @return the {@link MetadataSpec} as it was created by the service.
-     */
-    MetadataSpec cloneMetadataSpec(MetadataSpec metadataSpec);
 
     /**
      * Deletes the {@link MetadataSpec} with the supplied metadataSpec ID.

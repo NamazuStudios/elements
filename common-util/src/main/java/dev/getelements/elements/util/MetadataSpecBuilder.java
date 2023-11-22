@@ -1,20 +1,18 @@
 package dev.getelements.elements.util;
 
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.TemplateFieldType;
-import dev.getelements.elements.model.schema.template.TemplateTab;
-import dev.getelements.elements.model.schema.template.TemplateTabField;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
+import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Consumer;
 
 public class MetadataSpecBuilder {
 
     private final MetadataSpec spec;
 
-    private final List<TemplateTab> tabs = new ArrayList<>();
+    private final List<MetadataSpecProperty> properties = new ArrayList<>();
 
     public static MetadataSpecBuilder with(final MetadataSpec spec) {
         return new MetadataSpecBuilder(spec);
@@ -28,123 +26,100 @@ public class MetadataSpecBuilder {
         this.spec = spec;
     }
 
-    public MetadataSpecBuilder name(String name) {
+    public MetadataSpecBuilder name(final String name) {
         spec.setName(name);
         return this;
     }
 
-    public MetadataSpec buildSpec() {
-        spec.setTabs(tabs);
+    public MetadataSpecBuilder type(final MetadataSpecPropertyType type) {
+        spec.setType(type);
+        return this;
+    }
+
+    public MetadataSpec endMetadataSpec() {
+        spec.setProperties(properties);
         return spec;
     }
 
-    public TabBuilder<MetadataSpecBuilder> tab() {
-        return new TabBuilder<>(this, tabs);
+    public PropertiesBuilder<MetadataSpecBuilder> properties() {
+        return new PropertiesBuilder<>(this, spec::setProperties);
     }
 
-    public static class TabBuilder<ParentT> {
+    public static class PropertiesBuilder<ParentT> {
 
         private final ParentT parent;
 
-        private final List<TemplateTab> tabs;
+        private final List<MetadataSpecProperty> properties = new ArrayList<>();
 
-        private final TemplateTab templateTab = new TemplateTab();
+        private final Consumer<List<MetadataSpecProperty>> propertiesConsumer;
 
-        private final Map<String, TemplateTabField> fields = new LinkedHashMap<>();
-
-        private TabBuilder(final ParentT parent, final List<TemplateTab> tabs) {
-            this.tabs = tabs;
+        private PropertiesBuilder(
+                final ParentT parent,
+                final Consumer<List<MetadataSpecProperty>> propertiesConsumer) {
             this.parent = parent;
+            this.propertiesConsumer = propertiesConsumer;
         }
 
-        public TabBuilder<ParentT> name(final String name) {
-            templateTab.setName(name);
-            return this;
+        public PropertyBuilder<ParentT> property() {
+            return new PropertyBuilder<>(this);
         }
 
-        public TabBuilder<ParentT> tabOrder(final int tabOrder) {
-            templateTab.setTabOrder(tabOrder);
-            return this;
-        }
-
-        public FieldBuilder<ParentT> field() {
-            return new FieldBuilder<>(this, fields);
-        }
-
-        public ParentT buildTab() {
-            templateTab.setFields(fields);
-            tabs.add(templateTab);
+        public ParentT endProperties() {
+            propertiesConsumer.accept(properties);
             return parent;
         }
 
     }
 
-    public static class FieldBuilder<ParentT> {
+    public static class PropertyBuilder<ParentT> {
 
-        private final  TabBuilder<ParentT> parent;
+        private final PropertiesBuilder<ParentT> parent;
 
-        private final Map<String, TemplateTabField> fields;
+        private final MetadataSpecProperty property = new MetadataSpecProperty();
 
-        private final List<TemplateTab> tabs = new ArrayList<>();
+        private final List<MetadataSpecProperty> properties = new ArrayList<>();
 
-        private final TemplateTabField field = new TemplateTabField();
-
-        private FieldBuilder(final TabBuilder<ParentT> parent, final Map<String, TemplateTabField> fields) {
-            this.fields = fields;
+        private PropertyBuilder(final PropertiesBuilder<ParentT> parent) {
             this.parent = parent;
         }
 
-        public FieldBuilder<ParentT> name(final String name) {
-            field.setName(name);
+        public PropertyBuilder<ParentT> name(final String name) {
+            property.setName(name);
             return this;
         }
 
-        public FieldBuilder<ParentT> displayName(final String displayName) {
-            field.setDisplayName(displayName);
+        public PropertyBuilder<ParentT> type(final MetadataSpecPropertyType metadataSpecPropertyType) {
+            property.setType(metadataSpecPropertyType);
             return this;
         }
 
-        public FieldBuilder<ParentT> fieldType(final TemplateFieldType templateFieldType) {
-            field.setFieldType(templateFieldType);
+        public PropertyBuilder<ParentT> displayName(final String displayName) {
+            property.setDisplayName(displayName);
             return this;
         }
 
-        public FieldBuilder<ParentT> isRequired(final Boolean isRequired) {
-            field.setIsRequired(isRequired);
+        public PropertyBuilder<ParentT> required(final Boolean isRequired) {
+            property.setRequired(isRequired);
             return this;
         }
 
-        public FieldBuilder<ParentT> placeholder(final String placeholder) {
-            field.setPlaceHolder(placeholder);
+        public PropertyBuilder<ParentT> placeholder(final String placeholder) {
+            property.setPlaceholder(placeholder);
             return this;
         }
 
-        public FieldBuilder<ParentT> defaultValue(final String defaultValue) {
-            field.setDefaultValue(defaultValue);
+        public PropertyBuilder<ParentT> defaultValue(final String defaultValue) {
+            property.setDefaultValue(defaultValue);
             return this;
         }
 
-        public TabBuilder<FieldBuilder<ParentT>> tab() {
-            return new TabBuilder<>(this, tabs);
+        public PropertiesBuilder<PropertyBuilder<ParentT>> properties() {
+            return new PropertiesBuilder<>(this, property::setProperties);
         }
 
-        public TabBuilder<ParentT> buildField() {
-
-            final var name = field.getName();
-
-            if (name == null) {
-                throw new IllegalStateException("Field name not specified.");
-            }
-
-            field.setTabs(tabs);
-
-            if (fields.containsKey(name)) {
-                throw new IllegalStateException("Field with name already exists: " + name);
-            }
-
-            fields.put(name, field);
+        public PropertiesBuilder<ParentT> endProperty() {
+            parent.properties.add(property);
             return parent;
-
         }
 
     }

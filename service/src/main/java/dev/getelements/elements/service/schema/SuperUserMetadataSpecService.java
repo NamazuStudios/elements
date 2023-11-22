@@ -2,11 +2,10 @@ package dev.getelements.elements.service.schema;
 
 import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.schema.MetadataSpecService;
 
 import javax.inject.Inject;
 

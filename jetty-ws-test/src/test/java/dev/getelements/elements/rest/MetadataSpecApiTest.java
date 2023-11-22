@@ -2,7 +2,10 @@ package dev.getelements.elements.rest;
 
 import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.model.ErrorResponse;
-import dev.getelements.elements.model.schema.template.*;
+import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
+import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.rest.model.MetadataSpecPagination;
 import dev.getelements.elements.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
@@ -79,8 +82,8 @@ public class MetadataSpecApiTest {
         final var request = new CreateMetadataSpecRequest();
         request.setName("New Token"+ (new Date()).getTime());
         List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        TemplateTabField field = new TemplateTabField();
+        Map<String, MetadataSpecProperty> fields = new HashMap<>();
+        MetadataSpecProperty field = new MetadataSpecProperty();
         field.setName("field1");
         fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
@@ -89,7 +92,7 @@ public class MetadataSpecApiTest {
         TemplateTab tab2 = new TemplateTab("tab2",fields);
         tab.setTabOrder(2);
         tabs.add(tab2);
-        request.setTabs(tabs);
+        request.setProperties(tabs);
 
         MetadataSpec metadataSpec = client
             .target(apiRoot + "/schema/metadata_spec")
@@ -121,14 +124,14 @@ public class MetadataSpecApiTest {
         String specName = "New Metadata Spec" + (new Date()).getTime();
         request.setName(specName);
         List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        TemplateTabField field = new TemplateTabField();
+        Map<String, MetadataSpecProperty> fields = new HashMap<>();
+        MetadataSpecProperty field = new MetadataSpecProperty();
         field.setName("field1");
         fields.put("field", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
-        request.setTabs(tabs);
+        request.setProperties(tabs);
 
         Response response = client
             .target(apiRoot + "/schema/metadata_spec")
@@ -186,14 +189,14 @@ public class MetadataSpecApiTest {
         String specName = "New Metadata Spec" + (new Date()).getTime();
         request.setName(specName);
         List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        TemplateTabField field = new TemplateTabField();
+        Map<String, MetadataSpecProperty> fields = new HashMap<>();
+        MetadataSpecProperty field = new MetadataSpecProperty();
         field.setName("field1");
         fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
-        request.setTabs(tabs);
+        request.setProperties(tabs);
 
         MetadataSpec metadataSpec = client
             .target(apiRoot + "/schema/metadata_spec")
@@ -212,13 +215,13 @@ public class MetadataSpecApiTest {
         updateRequest.setName("Updated Token");
         tabs = new ArrayList<>() ;
         fields = new HashMap<>();
-        field = new TemplateTabField();
+        field = new MetadataSpecProperty();
         field.setName("field2");
         fields.put("field1", field);
         tab = new TemplateTab("tab2",fields);
         tab.setTabOrder(2);
         tabs.add(tab);
-        updateRequest.setTabs(tabs);
+        updateRequest.setProperties(tabs);
 
         var updatedMetadataSpec = client
             .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
@@ -273,14 +276,14 @@ public class MetadataSpecApiTest {
         String specName = "New Metadata Spec" + (new Date()).getTime();
         request.setName(specName);
         List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
+        Map<String, MetadataSpecProperty> fields = new HashMap<>();
 
-        TemplateTabField field = new TemplateTabField();
+        MetadataSpecProperty field = new MetadataSpecProperty();
         field.setName("field1");
         fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tabs.add(tab);
-        request.setTabs(tabs);
+        request.setProperties(tabs);
 
         final var response = client
                 .target(apiRoot + "/schema/metadata_spec")

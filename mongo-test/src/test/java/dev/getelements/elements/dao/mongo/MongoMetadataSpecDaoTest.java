@@ -3,7 +3,7 @@ package dev.getelements.elements.dao.mongo;
 import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.schema.template.*;
+import dev.getelements.elements.model.schema.*;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.ENUM;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
@@ -39,41 +40,36 @@ public class MongoMetadataSpecDaoTest {
     @DataProvider
     public static Object[][] getFieldType() {
         return Stream
-                .of(TemplateFieldType.values())
+                .of(MetadataSpecPropertyType.values())
                 .map(s -> new Object[] {s})
                 .toArray(Object[][]::new);
     }
 
     @Test(dataProvider = "getFieldType")
-    public void testCreateMetadataSpec(final TemplateFieldType fieldType) {
+    public void testCreateMetadataSpec(final MetadataSpecPropertyType fieldType) {
         this.name = "New MetadataSpec " + (new Date()).getTime() + randomUUID().toString();
         testCreateMetadataSpec(name, tabOrder, tabName, fieldName, fieldType);
     }
 
-    private void testCreateMetadataSpec(final String name, final Integer tabOrder, final String tabName, final String fieldName, final TemplateFieldType fieldType) {
+    private void testCreateMetadataSpec(final String name, final Integer tabOrder, final String tabName, final String fieldName, final MetadataSpecPropertyType fieldType) {
         final var request = new CreateMetadataSpecRequest();
-        List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        TemplateTabField field = new TemplateTabField();
-        field.setName(fieldName);
-        fields.put("field1", field);
-        field.setFieldType(fieldType);
-        TemplateTab tab = new TemplateTab(tabName,fields);
-        tab.setTabOrder(tabOrder);
-        tabs.add(tab);
-        request.setTabs(tabs);
+        List<MetadataSpecProperty> properties = new ArrayList<>();
+        MetadataSpecProperty property = new MetadataSpecProperty();
+        property.setType(fieldType);
+        property.setName(fieldName);
+        properties.add(property);
+        request.setProperties(properties);
         request.setName(name);
 
         MetadataSpec inserted = getMetadataSpecDao().createMetadataSpec(request);
 
         MetadataSpec fetched = getMetadataSpecDao().getMetadataSpec(inserted.getId());
         assertEquals(name, fetched.getName());
-        assertEquals(tabName, fetched.getTabs().get(0).getName());
-        assertEquals(tabOrder, fetched.getTabs().get(0).getTabOrder());
-        TemplateTabField fetchedField = fetched.getTabs().get(0).getFields().get("field1");
+        MetadataSpecProperty fetchedField = fetched.getProperties().get(0);
         String fetchedFieldName = fetchedField.getName();
         assertEquals(fieldName, fetchedFieldName);
-        assertEquals(fieldType, fetchedField.getFieldType());
+        assertEquals(fieldType, fetchedField.getType());
+
     }
 
     @Test(dependsOnMethods = "testCreateMetadataSpec")
@@ -86,20 +82,19 @@ public class MongoMetadataSpecDaoTest {
         assertEquals(metadataSpec.getId(), idMetadataSpec.getId());
 
         UpdateMetadataSpecRequest updateRequest = new UpdateMetadataSpecRequest();
-        List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        tabs = new ArrayList<>() ;
-        TemplateTabField field = new TemplateTabField();
-        field.setName("Field2");
-        field.setFieldType(TemplateFieldType.ENUM);
-        fields.put("field2", field);
+        List<MetadataSpecProperty> properties = new ArrayList<>();
+
+        MetadataSpecProperty property = new MetadataSpecProperty();
+        property.setName("Field2");
+        property.setType(ENUM);
+        properties.add(property);
         TemplateTab tab = new TemplateTab("Tab2",fields);
         tab.setTabOrder(2);
         tabs.add(tab);
 
         this.name = "New MetadataSpec " + (new Date()).getTime();;
         updateRequest.setName(name);
-        updateRequest.setTabs(tabs);
+        updateRequest.setProperties(tabs);
 
         final MetadataSpec updatedTemplate = getMetadataSpecDao().updateMetadataSpec(metadataSpec.getId(), updateRequest);
 
@@ -107,12 +102,12 @@ public class MongoMetadataSpecDaoTest {
         assertEquals(updatedTemplate.getName(), updateRequest.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
-        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), TemplateFieldType.ENUM);
+        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), ENUM);
 
         tabs = new ArrayList<>() ;
         tab = new TemplateTab("Tab3",fields);
         tabs.add(tab);
-        updateRequest.setTabs(tabs);
+        updateRequest.setProperties(tabs);
         final MetadataSpec updatedTemplate2 = getMetadataSpecDao().updateMetadataSpec(metadataSpec.getId(), updateRequest);
 
         assertEquals(updatedTemplate2.getId(), metadataSpec.getId());

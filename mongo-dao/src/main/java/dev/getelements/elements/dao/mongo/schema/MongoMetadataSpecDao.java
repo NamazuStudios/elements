@@ -7,9 +7,9 @@ import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups;
-import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -76,7 +76,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         );
 
         final var builder = new UpdateBuilder().with(
-            set("tabs", updateMetadataSpecRequest.getTabs()),
+            set("tabs", updateMetadataSpecRequest.getProperties()),
                 set("name", updateMetadataSpecRequest.getName())
         );
 
@@ -95,14 +95,14 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     public MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest) {
 
         getValidationHelper().validateModel(createMetadataSpecRequest, ValidationGroups.Insert.class);
-        getValidationHelper().validateModel(createMetadataSpecRequest.getTabs(), ValidationGroups.Insert.class);
+        getValidationHelper().validateModel(createMetadataSpecRequest.getProperties(), ValidationGroups.Insert.class);
 
         final var query = getDatastore().find(MongoMetadataSpec.class);
 
         query.filter(exists("name").not());
 
         final var builder = new UpdateBuilder().with(
-                set("tabs", createMetadataSpecRequest.getTabs()),
+                set("tabs", createMetadataSpecRequest.getProperties()),
                 set("name", createMetadataSpecRequest.getName())
         );
 
@@ -125,28 +125,8 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     }
 
     @Override
-    public MetadataSpec cloneMetadataSpec(MetadataSpec metadataSpec) {
-        getValidationHelper().validateModel(metadataSpec.getTabs(), ValidationGroups.Insert.class);
+    public void deleteMetadataSpec(final String metadataSpecId) {
 
-        final var query = getDatastore().find(MongoMetadataSpec.class);
-        final var tabs = metadataSpec.getTabs();
-
-        query.filter(exists("name").not());
-
-        final var builder = new UpdateBuilder().with(
-                set("tab", tabs),
-                set("name", metadataSpec.getName())
-        );
-
-        final var mongoTokenTemplate = getMongoDBUtils().perform(
-                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
-        );
-
-        return transform(mongoTokenTemplate);
-    }
-
-    @Override
-    public void deleteMetadataSpec(String metadataSpecId) {
         final var objectId = getMongoDBUtils().parseOrThrow(metadataSpecId, MetadataSpecNotFoundException::new);
 
         final var result = getDatastore()
@@ -157,6 +137,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         if(result.getDeletedCount() == 0){
             throw new MetadataSpecNotFoundException("MetadataSpec not deleted: " + metadataSpecId);
         }
+
     }
 
     private MetadataSpec transform(MongoMetadataSpec token)

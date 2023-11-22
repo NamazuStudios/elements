@@ -2,19 +2,13 @@ package dev.getelements.elements.dao.index;
 
 import dev.getelements.elements.model.index.IndexMetadata;
 import dev.getelements.elements.model.index.IndexPlanStep;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.TemplateFieldType;
-import dev.getelements.elements.model.schema.template.TemplateTab;
-import dev.getelements.elements.model.schema.template.TemplateTabField;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
 import dev.getelements.elements.rt.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static dev.getelements.elements.model.index.IndexOperation.*;
 import static java.lang.String.format;
@@ -31,8 +25,6 @@ public class IndexPlanner<IdentifierT> {
     private final Map<IdentifierT, IndexPlanStep<IdentifierT>> plan = new LinkedHashMap<>();
 
     private final Map<IdentifierT, IndexMetadata<IdentifierT>> existing = new LinkedHashMap<>();
-
-    private Function<byte[], String> encoder;
 
     private IndexPlanner(
             final List<IndexMetadata<IdentifierT>> existing,
@@ -78,7 +70,7 @@ public class IndexPlanner<IdentifierT> {
             final var evicted = plan.put(update.getIndexMetadata().getIdentifier(), update);
 
             if (evicted != null) {
-                logger.info("Evicted previous plan step {}", evicted);
+                logger.info("Evicted previous plan step {} (duplicate index).", evicted);
             }
 
         }
@@ -117,7 +109,7 @@ public class IndexPlanner<IdentifierT> {
 
         private final MetadataSpec spec;
 
-        private final Deque<TemplateTabField> fields = new LinkedList<>();
+        private final Deque<MetadataSpecProperty> properties = new LinkedList<>();
 
         private final Map<IdentifierT, IndexPlanStep<IdentifierT>> steps = new LinkedHashMap<>();
 
@@ -128,58 +120,33 @@ public class IndexPlanner<IdentifierT> {
 
 
         public Map<IdentifierT, IndexPlanStep<IdentifierT>> build() {
-
-            for (var tab : spec.getTabs()) {
-                tab.getFields().values().forEach(field -> build(tab, field));
-            }
-
+            final var properties = spec.getProperties();
+            if (properties != null) properties.forEach(this::build);
             return steps;
-
         }
 
-        private void build(final TemplateTab tab, final TemplateTabField field) {
+        private void build(final MetadataSpecProperty property) {
 
-            fields.push(field);
-
-            if (Objects.requireNonNull(field.getFieldType()) == TemplateFieldType.OBJECT) {
-                buildObjectIndex(tab, field);
-            } else {
-                buildTabIndex(tab, field);
-            }
-
-            fields.pop();
-
-        }
-
-        private void buildTabIndex(final TemplateTab tab, final TemplateTabField field) {
+            properties.addLast(property);
 
             final var components = new ArrayList<String>();
-
-            // Creates the full path
-            fields.forEach(f -> components.add(f.getName()));
+            properties.forEach(p -> components.add(p.getName()));
 
             final var path = new Path(context, components);
             final var description = format("Index for path %s", path);
-            final var metadata = generator.generate(path, tab, field);
+            final var metadata = generator.generate(path, property);
 
             final var step = new IndexPlanStep<IdentifierT>();
             step.setIndexMetadata(metadata);
             step.setDescription(description);
 
             steps.put(metadata.getIdentifier(), step);
-            logger.info("Index from Metadata Field {} : {}", field, step);
+            logger.info("Index from Metadata Field {} : {}", property, step);
 
-        }
+            final var subProperties = property.getProperties();
+            if (subProperties != null) subProperties.forEach(this::build);
 
-        private void buildObjectIndex(final TemplateTab tab, final TemplateTabField field) {
-
-            final var fields = field.getTabs();
-
-            if (fields != null) {
-                for (var child : field.getTabs()) {
-                    tab.getFields().values().forEach(f -> build(child, f));
-                }
-            }
+            properties.removeLast();
 
         }
 
@@ -194,14 +161,6 @@ public class IndexPlanner<IdentifierT> {
             return this;
         }
 
-        private Supplier<MessageDigest> messageDigestSupplier = () -> {
-            try {
-                return MessageDigest.getInstance("SHA_1");
-            } catch (NoSuchAlgorithmException e) {
-                throw new UnsupportedOperationException(e);
-            }
-        };
-
         public IndexPlanner<IdentifierT> build(final IndexMetadataGenerator<IdentifierT> generator) {
             return new IndexPlanner<>(existing, generator);
         }
@@ -211,7 +170,7 @@ public class IndexPlanner<IdentifierT> {
     @FunctionalInterface
     public interface IndexMetadataGenerator<IdentifierT> {
 
-        IndexMetadata<IdentifierT> generate(Path path, TemplateTab tab, TemplateTabField field);
+        IndexMetadata<IdentifierT> generate(Path path, MetadataSpecProperty field);
 
     }
 

@@ -10,9 +10,8 @@ import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlan;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlanStep;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.index.IndexMetadata;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.TemplateTab;
-import dev.getelements.elements.model.schema.template.TemplateTabField;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
 import dev.getelements.elements.rt.Path;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.morphia.Datastore;
@@ -166,8 +165,7 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
 
     private IndexMetadata<Document> generate(
             final Path path,
-            final TemplateTab templateTab,
-            final TemplateTabField templateTabField) {
+            final MetadataSpecProperty metadataSpecProperty) {
 
         final var keys = new Document();
         keys.put("metadata." + join(".", path.getComponents()), 1);
