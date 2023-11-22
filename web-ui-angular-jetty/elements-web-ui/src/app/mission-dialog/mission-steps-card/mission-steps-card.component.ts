@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {Mission} from '../../api/models/mission';
 import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import {AbstractControl, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
@@ -14,6 +14,8 @@ import {MissionViewModel} from '../../models/mission-view-model';
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
+  @Output() validationEvent = new EventEmitter<boolean>();
+
   @ViewChildren('.existing-step-reward-editor') rewardEditors: QueryList<MissionRewardsEditorComponent>;
 
   public stepForm = this.formBuilder.group({});
@@ -25,6 +27,7 @@ export class MissionStepsCardComponent implements OnInit {
   public stepsValid() {
     // invalid if neither steps nor final step exist
     if (this.mission.steps.length === 0 && !this.mission.finalRepeatStep) {
+      this.validationEvent.emit(false);
       return false;
     }
 
@@ -36,11 +39,13 @@ export class MissionStepsCardComponent implements OnInit {
 
     // all existing steps must be valid
     if (!this.stepForm.valid) {
+      this.validationEvent.emit(false);
       return false;
     }
 
     // all existing rewards must be valid
     if (!this.rewardEditors) {
+      this.validationEvent.emit(true);
       return true;
     }
     const rewardEditors = this.rewardEditors.toArray();
@@ -48,10 +53,12 @@ export class MissionStepsCardComponent implements OnInit {
       const rewardEditor = rewardEditors[i];
 
       if (!rewardEditor.existingRewardForm.valid) {
+        this.validationEvent.emit(false);
         return false;
       }
     }
     // all validity tests passed
+    this.validationEvent.emit(true);
     return true;
   }
 

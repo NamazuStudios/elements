@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {JsonEditorComponent, JsonEditorOptions} from 'ang-jsoneditor';
 
 @Component({
@@ -11,6 +11,7 @@ export class JsonEditorCardComponent implements OnInit {
 
   @Input() editTarget: any;
   @Input() topic: string;
+  @Output() validationEvent = new EventEmitter<boolean>();
 
   showAdvanced = false;
   public isJSONValid = true;
@@ -52,9 +53,11 @@ export class JsonEditorCardComponent implements OnInit {
 
       if (andUpdate) { this.editTarget.metadata = editorContents; }
       this.isJSONValid = true;
+      this.validationEvent.emit(true);
     } catch (err) {
       // bad JSON detected...don't let them leave the advanced editor!
       this.isJSONValid = false;
+      this.validationEvent.emit(false);
       return;
     }
   }

@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
@@ -13,7 +13,7 @@ import {AlertService} from '../alert.service';
   templateUrl: './mission-dialog.component.html',
   styleUrls: ['./mission-dialog.component.css']
 })
-export class MissionDialogComponent implements OnInit {
+export class MissionDialogComponent implements OnInit, AfterViewInit {
 
   constructor(public dialogRef: MatDialogRef<MissionDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -26,6 +26,7 @@ export class MissionDialogComponent implements OnInit {
   originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps || []));
   originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep || null));
 
+  okButtonEnabled = true;
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -58,6 +59,11 @@ export class MissionDialogComponent implements OnInit {
     if (index >= 0) {
       this.data.mission.tags.splice(index, 1);
     }
+  }
+
+  temp() {
+    console.log('editor: ' + this.editorCard.isJSONValid);
+    console.log('card: ' + this.stepsCard.stepsValid());
   }
 
   /*
@@ -119,4 +125,12 @@ export class MissionDialogComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.okButtonEnabled = this.editorCard.isJSONValid && this.stepsCard.stepsValid()
+  }
+
+  handleValidationEvent(event: boolean) {
+    console.log('event received: ' + event)
+    this.okButtonEnabled = event;
+  }
 }

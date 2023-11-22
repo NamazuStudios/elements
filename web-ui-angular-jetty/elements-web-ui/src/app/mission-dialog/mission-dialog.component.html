@@ -29,13 +29,14 @@
                  [matChipInputSeparatorKeyCodes]="separatorKeyCodes" (matChipInputTokenEnd)="addTag($event)" [matChipInputAddOnBlur]="addOnBlur">
         </mat-chip-list>
       </mat-form-field>
-      <app-json-editor-card topic="Mission" [editTarget]="data.mission"></app-json-editor-card>
-      <app-mission-steps-card [mission]="data.mission"></app-mission-steps-card>
+      <app-json-editor-card topic="Mission" [editTarget]="data.mission" (validationEvent)="handleValidationEvent($event)"></app-json-editor-card>
+      <app-mission-steps-card [mission]="data.mission" (validationEvent)="handleValidationEvent($event)"></app-mission-steps-card>
     </div>
   </form>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!missionForm.valid || !editorCard.isJSONValid || !stepsCard.stepsValid()">OK</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!missionForm.valid || !okButtonEnabled">OK</button>
+  <button type="button" mat-raised-button (click)="temp()">TEMP</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
