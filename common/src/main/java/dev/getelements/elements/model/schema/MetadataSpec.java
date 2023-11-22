@@ -7,11 +7,13 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-@ApiModel
-public class MetadataSpec {
+@ValidProperties
+@ApiModel(description = "Represents a spec for metadata.")
+public class MetadataSpec implements Serializable, MetadataSpecPropertiesContainer {
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = ValidationGroups.Update.class)
@@ -55,6 +57,7 @@ public class MetadataSpec {
         this.type = type;
     }
 
+    @Override
     public List<MetadataSpecProperty> getProperties() {
         return properties;
     }

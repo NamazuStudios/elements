@@ -5,14 +5,19 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+@ValidProperties
 @ApiModel(description = "Represents a request to create a MetadataSpec definition.")
-public class CreateMetadataSpecRequest {
+public class CreateMetadataSpecRequest implements Serializable, MetadataSpecPropertiesContainer {
 
-    @ApiModelProperty("The name of the schema.")
+    @ApiModelProperty("The name of the metadata spec.")
     private String name;
+
+    @ApiModelProperty("The type of the metadata spec.")
+    private MetadataSpecPropertyType type;
 
     @Valid
     @NotNull
@@ -27,6 +32,16 @@ public class CreateMetadataSpecRequest {
         this.name = name;
     }
 
+    @Override
+    public MetadataSpecPropertyType getType() {
+        return type;
+    }
+
+    public void setType(MetadataSpecPropertyType type) {
+        this.type = type;
+    }
+
+    @Override
     public List<MetadataSpecProperty> getProperties() {
         return properties;
     }

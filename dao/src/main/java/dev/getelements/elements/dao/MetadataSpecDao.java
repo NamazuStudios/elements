@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao;
 
+import dev.getelements.elements.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
 import dev.getelements.elements.model.schema.MetadataSpec;
@@ -7,6 +8,8 @@ import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
+
+import java.util.Optional;
 
 /**
  * Created by garrettmcspadden on 11/23/21.
@@ -27,7 +30,10 @@ public interface MetadataSpecDao {
      * @param count
      * @return a {@link Pagination} of {@link MetadataSpec} instances
      */
-    Pagination<MetadataSpec> getMetadataSpecs(int offset, int count);
+    Pagination<MetadataSpec> getActiveMetadataSpecs(int offset, int count);
+
+
+    Optional<MetadataSpec> findActiveMetadataSpec(String metadataSpecId);
 
     /**
      * Fetches a specific {@link MetadataSpec} instance based on ID.  If not found, an
@@ -36,28 +42,9 @@ public interface MetadataSpecDao {
      * @param metadataSpecId the template ID
      * @return the {@link MetadataSpec}, never null
      */
-    MetadataSpec getMetadataSpec(String metadataSpecId);
-
-    /**
-     * Updates the supplied {@link MetadataSpec}.
-     *
-     * @param metadataSpecId the id of the token to update
-     * @param updateMetadataSpecRequest the update request for the metaDataSpec.
-     * @return the {@link MetadataSpec} as it was changed by the service.
-     * @deprecated DAOs should not accept request types and this will be removed in the future
-     */
-    @Deprecated
-    MetadataSpec updateMetadataSpec(String metadataSpecId, UpdateMetadataSpecRequest updateMetadataSpecRequest);
-
-    /**
-     * Creates a new metadata spec.
-     *
-     * @param createMetadataSpecRequest the {@link CreateMetadataSpecRequest} with the information to create
-     * @return the {@link MetadataSpec} as it was created by the service.
-     * @deprecated DAOs should not accept request types and this will be removed in the future
-     */
-    @Deprecated
-    MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest);
+    default MetadataSpec getActiveMetadataSpec(String metadataSpecId) {
+        return findActiveMetadataSpec(metadataSpecId).orElseThrow(MetadataSpecNotFoundException::new);
+    }
 
     /**
      * Creates a new metadata spec.
@@ -66,6 +53,14 @@ public interface MetadataSpecDao {
      * @return
      */
     MetadataSpec createMetadataSpec(MetadataSpec metadataSpec);
+
+    /**
+     * Creates a new metadata spec.
+     *
+     * @param metadataSpec
+     * @return
+     */
+    MetadataSpec updateActiveMetadataSpec(MetadataSpec metadataSpec);
 
     /**
      * Deletes the {@link MetadataSpec} with the supplied metadataSpec ID.

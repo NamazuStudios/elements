@@ -18,14 +18,16 @@ public class MetadataSpecTestFactory {
     public MetadataSpec createTestSpec(
             final String name,
             final Function<MetadataSpec, MetadataSpec> metadataSpecTransformer) {
+        return createTestSpecNoInset(name, metadataSpecTransformer.andThen(getMetadataSpecDao()::createMetadataSpec));
+    }
 
+    public MetadataSpec createTestSpecNoInset(
+            final String name,
+            final Function<MetadataSpec, MetadataSpec> metadataSpecTransformer) {
         final var metadataSpec = new MetadataSpec();
         final var fullyQualifiedName = format("%s%d", name, suffix.getAndIncrement());
         metadataSpec.setName(fullyQualifiedName);
-
-        final var transformed = metadataSpecTransformer.apply(metadataSpec);
-        return getMetadataSpecDao().createMetadataSpec(transformed);
-
+        return metadataSpecTransformer.apply(metadataSpec);
     }
 
     public MetadataSpecDao getMetadataSpecDao() {

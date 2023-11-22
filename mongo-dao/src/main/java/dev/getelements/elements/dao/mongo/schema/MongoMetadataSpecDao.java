@@ -2,26 +2,25 @@ package dev.getelements.elements.dao.mongo.schema;
 
 import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
-import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups;
-import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
 import dev.getelements.elements.model.schema.MetadataSpec;
-import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.query.FindOptions;
-import dev.morphia.query.filters.Filters;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.updates.UpdateOperators;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 
 public class MongoMetadataSpecDao implements MetadataSpecDao {
 
@@ -34,83 +33,29 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<MetadataSpec> getMetadataSpecs(final int offset,
-                                                     final int count) {
+    public Pagination<MetadataSpec> getActiveMetadataSpecs(final int offset, final int count) {
 
-        final var mongoQuery = getDatastore().find(MongoMetadataSpec.class);
+        final var mongoQuery = getDatastore()
+                .find(MongoMetadataSpec.class)
+                .filter(eq("active", true));
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform, new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform);
 
     }
 
     @Override
-    public MetadataSpec getMetadataSpec(String metadataSpecIdOrName) {
-
-        final var objectId = getMongoDBUtils().parseOrReturnNull(metadataSpecIdOrName);
-
-        var mongoTokenTemplate = getDatastore()
-            .find(MongoMetadataSpec.class)
-                .filter(Filters.or(
-                                Filters.eq("_id", objectId),
-                                Filters.eq("name", metadataSpecIdOrName)
-                        )
-                )
-            .first();
-
-        if(mongoTokenTemplate == null) {
-            throw new MetadataSpecNotFoundException("Unable to find metadataSpec with an id of " + metadataSpecIdOrName);
-        }
-
-        return transform(mongoTokenTemplate);
+    public Optional<MetadataSpec> findActiveMetadataSpec(final String metadataSpecId) {
+        return findActiveMongoMetadataSpec(metadataSpecId).map(this::transform);
     }
 
-    @Override
-    public MetadataSpec updateMetadataSpec(String metadataSpecId, UpdateMetadataSpecRequest updateMetadataSpecRequest) {
-        getValidationHelper().validateModel(updateMetadataSpecRequest, ValidationGroups.Update.class);
-
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(metadataSpecId);
-        final var query = getDatastore().find(MongoMetadataSpec.class);
-
-        query.filter(and(
-            eq("_id", objectId))
-        );
-
-        final var builder = new UpdateBuilder().with(
-            set("tabs", updateMetadataSpecRequest.getProperties()),
-                set("name", updateMetadataSpecRequest.getName())
-        );
-
-        final MongoMetadataSpec mongoMetadataSpec = getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
-        );
-
-        if (mongoMetadataSpec == null) {
-            throw new MetadataSpecNotFoundException("MetadataSpec not found or was already minted: " + metadataSpecId);
-        }
-
-        return transform(mongoMetadataSpec);
-    }
-
-    @Override
-    public MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest) {
-
-        getValidationHelper().validateModel(createMetadataSpecRequest, ValidationGroups.Insert.class);
-        getValidationHelper().validateModel(createMetadataSpecRequest.getProperties(), ValidationGroups.Insert.class);
-
-        final var query = getDatastore().find(MongoMetadataSpec.class);
-
-        query.filter(exists("name").not());
-
-        final var builder = new UpdateBuilder().with(
-                set("tabs", createMetadataSpecRequest.getProperties()),
-                set("name", createMetadataSpecRequest.getName())
-        );
-
-        final var mongoTokenTemplate = getMongoDBUtils().perform(
-                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
-        );
-
-        return transform(mongoTokenTemplate);
+    public Optional<MongoMetadataSpec> findActiveMongoMetadataSpec(final String metadataSpecId) {
+        return getMongoDBUtils()
+                .parse(metadataSpecId)
+                .map(objectId ->  getDatastore()
+                        .find(MongoMetadataSpec.class)
+                        .filter(eq("_id", objectId), eq("active", true))
+                        .first()
+                );
     }
 
     @Override
@@ -119,8 +64,44 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         getValidationHelper().validateModel(metadataSpec, ValidationGroups.Insert.class);
 
         final var toInsert = getBeanMapper().map(metadataSpec, MongoMetadataSpec.class);
+        toInsert.setActive(true);
+
         final var inserted = getMongoDBUtils().perform(ds -> ds.save(toInsert));
         return getBeanMapper().map(inserted, MetadataSpec.class);
+
+    }
+
+    @Override
+    public MetadataSpec updateActiveMetadataSpec(final MetadataSpec metadataSpec) {
+
+        getValidationHelper().validateModel(metadataSpec, ValidationGroups.Update.class);
+
+        final var objectId = getMongoDBUtils().parse(metadataSpec.getId());
+
+        if (objectId.isEmpty()) {
+            throw new MetadataSpecNotFoundException("Spec with id not found.");
+        }
+
+        final var mongoMetadataSpec = getBeanMapper().map(metadataSpec, MongoMetadataSpec.class);
+
+        final var options = new ModifyOptions()
+                .upsert(false)
+                .returnDocument(AFTER);
+
+        final var updated = getDatastore().find(MongoMetadataSpec.class)
+                .filter(eq("_id", objectId.get()), eq("active", true))
+                .modify(options,
+                        set("name", metadataSpec.getName()),
+                        set("properties", mongoMetadataSpec.getProperties()),
+                        set("type", mongoMetadataSpec.getType())
+                );
+
+        if (updated == null) {
+            throw new MetadataSpecNotFoundException("Spec with id not found.");
+        }
+
+        return transform(mongoMetadataSpec);
+
 
     }
 
@@ -129,20 +110,21 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
 
         final var objectId = getMongoDBUtils().parseOrThrow(metadataSpecId, MetadataSpecNotFoundException::new);
 
+        final var options = new UpdateOptions().upsert(false);
+
         final var result = getDatastore()
                 .find(MongoMetadataSpec.class)
                 .filter(eq("_id", objectId))
-                .delete();
+                .update(options, set("active", false), unset("name"));
 
-        if(result.getDeletedCount() == 0){
-            throw new MetadataSpecNotFoundException("MetadataSpec not deleted: " + metadataSpecId);
+        if(result.getModifiedCount() == 0) {
+            throw new MetadataSpecNotFoundException("No such metadata spec: " + metadataSpecId);
         }
 
     }
 
-    private MetadataSpec transform(MongoMetadataSpec token)
-    {
-        return getBeanMapper().map(token, MetadataSpec.class);
+    public MetadataSpec transform(final MongoMetadataSpec mongoMetadataSpec) {
+        return getBeanMapper().map(mongoMetadataSpec, MetadataSpec.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {

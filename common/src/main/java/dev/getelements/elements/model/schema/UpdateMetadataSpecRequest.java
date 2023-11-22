@@ -3,19 +3,22 @@ package dev.getelements.elements.model.schema;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+@ValidProperties
 @ApiModel(description = "Represents a request to update a MetadataSpec.")
-public class UpdateMetadataSpecRequest {
+public class UpdateMetadataSpecRequest implements Serializable, MetadataSpecPropertiesContainer {
 
-    @ApiModelProperty("The name of the schema.")
+    @ApiModelProperty("The name of the metadata spec.")
     private String name;
 
-    @NotNull
-    @ApiModelProperty("The updated token template tabs.")
-    List<MetadataSpecProperty> properties;
+    @ApiModelProperty("The type of the metadata spec.")
+    private MetadataSpecPropertyType type;
+
+    @ApiModelProperty("The updated list of properties.")
+    private List<MetadataSpecProperty> properties;
 
     public String getName() {
         return name;
@@ -25,6 +28,16 @@ public class UpdateMetadataSpecRequest {
         this.name = name;
     }
 
+    @Override
+    public MetadataSpecPropertyType getType() {
+        return type;
+    }
+
+    public void setType(MetadataSpecPropertyType type) {
+        this.type = type;
+    }
+
+    @Override
     public List<MetadataSpecProperty> getProperties() {
         return properties;
     }

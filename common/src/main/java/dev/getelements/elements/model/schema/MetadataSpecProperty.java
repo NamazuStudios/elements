@@ -2,27 +2,17 @@ package dev.getelements.elements.model.schema;
 
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Objects;
 
 import static dev.getelements.elements.Constants.Regexp.WHOLE_WORD_ONLY;
-import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.ARRAY;
-import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.OBJECT;
 import static java.lang.String.format;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@MetadataSpecProperty.ValidTabs
-public class MetadataSpecProperty implements Serializable {
+@ValidProperties
+public class MetadataSpecProperty implements Serializable, MetadataSpecPropertiesContainer {
 
     @NotNull
     @ApiModelProperty("The unique name of the field")
@@ -99,6 +89,7 @@ public class MetadataSpecProperty implements Serializable {
         this.defaultValue = defaultValue;
     }
 
+    @Override
     public List<MetadataSpecProperty> getProperties() {
         return properties;
     }
@@ -132,61 +123,6 @@ public class MetadataSpecProperty implements Serializable {
         sb.append(", properties=").append(properties);
         sb.append('}');
         return sb.toString();
-    }
-
-    @Target(TYPE)
-    @Retention(RUNTIME)
-    @Constraint(validatedBy = ValidTabs.Validator.class)
-    public @interface ValidTabs {
-
-        String message() default "Invalid tabs field.";
-
-        Class<?>[] groups() default {};
-
-        Class<? extends Payload>[] payload() default {};
-
-        class Validator implements ConstraintValidator<ValidTabs, MetadataSpecProperty> {
-
-            @Override
-            public boolean isValid(final MetadataSpecProperty value, final ConstraintValidatorContext context) {
-
-                final var type = value.getType();
-                final var properties = value.getProperties();
-
-                if (ARRAY.equals(type) || OBJECT.equals(type)) {
-                    return checkComplexProperties(value, context);
-                } else if (properties != null && !properties.isEmpty()) {
-                    final var msg = format("'properties' must not be null for %s type fields.", type);
-                    context.buildConstraintViolationWithTemplate(msg)
-                            .addPropertyNode("tabs")
-                            .addConstraintViolation();
-                    return false;
-                }
-
-                return true;
-
-            }
-
-            private boolean checkComplexProperties(
-                    final MetadataSpecProperty value,
-                    final ConstraintValidatorContext context) {
-
-                final var properties = value.getProperties();
-
-                if (properties == null) {
-                    final var msg = "'tabs' must not be null for OBJECT type fields.";
-                    context.buildConstraintViolationWithTemplate(msg)
-                            .addPropertyNode("tabs")
-                            .addConstraintViolation();
-                    return false;
-                }
-
-                return true;
-
-            }
-
-        }
-
     }
 
 }

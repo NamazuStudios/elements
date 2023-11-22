@@ -3,9 +3,8 @@ package dev.getelements.elements.dao.mongo;
 import dev.getelements.elements.dao.IndexDao;
 import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.schema.MetadataSpec;
-import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
-import dev.getelements.elements.model.schema.template.TemplateTab;
 import dev.getelements.elements.model.schema.MetadataSpecProperty;
+import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -15,18 +14,13 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
-import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.ARRAY;
-import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.OBJECT;
+import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.*;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoIndexDaoTest {
@@ -106,59 +100,48 @@ public class MongoIndexDaoTest {
 
     private static class MockMetadataSpecGenerator {
 
-        final Deque<TemplateTab> depth = new LinkedList<>();
+        private int depth = 0;
 
-        private MetadataSpecProperty fieldsSupplier(final MetadataSpecPropertyType type) {
+        private MetadataSpecProperty property(final MetadataSpecPropertyType type) {
 
-            final var field = new MetadataSpecProperty();
-            field.setType(type);
-            field.setRequired(true);
-            field.setName(format("f_%s", type).toLowerCase());
-            field.setDisplayName(format("Test Field for %s", type));
+            depth ++;
+
+            final var property = new MetadataSpecProperty();
+            property.setType(type);
+            property.setRequired(true);
+            property.setName(format("f_%s", type).toLowerCase());
+            property.setDisplayName(format("Test Field for %s", type));
 
             if (OBJECT.equals(type)) {
 
-                final List<TemplateTab> tabs = depth.size() < 2
-                    ? IntStream.range(0, 5).mapToObj(this::tabSupplier).collect(toList())
+                final List<MetadataSpecProperty> properties = depth < 2
+                    ? Stream.of(MetadataSpecPropertyType.values()).map(this::property).collect(toList())
                     : List.of();
 
-                field.setTabs(tabs);
+                property.setProperties(properties);
 
             }
 
             if (ARRAY.equals(type)) {
-                final var tabs = List.of(tabSupplier(0));
-                field.setTabs(tabs);
+                final var properties = List.of(property(STRING));
+                property.setProperties(properties);
             }
 
-            return field;
+            depth--;
+
+            return property;
 
         };
 
-        private TemplateTab tabSupplier(final int index) {
-
-            final var tab = new TemplateTab();
-            depth.push(tab);
-            tab.setTabOrder(index);
-            tab.setName(format("f%s", index));
-
-            final var fields = Stream.of(MetadataSpecPropertyType.values())
-                    .filter(t -> !ARRAY.equals(t) || depth.size() < 2)
-                    .map(this::fieldsSupplier)
-                    .collect(toMap(MetadataSpecProperty::getName, f -> f));
-
-            tab.setFields(fields);
-            return depth.pop();
-
-        }
-
         public MetadataSpec generate(final MetadataSpec spec) {
 
-            final var tabs = IntStream.range(0, 5)
-                    .mapToObj(this::tabSupplier)
+            final List<MetadataSpecProperty> properties = Stream
+                    .of(MetadataSpecPropertyType.values())
+                    .map(this::property)
                     .collect(toList());
 
-            spec.setTabs(tabs);
+            spec.setType(OBJECT);
+            spec.setProperties(properties);
             return spec;
 
         }
