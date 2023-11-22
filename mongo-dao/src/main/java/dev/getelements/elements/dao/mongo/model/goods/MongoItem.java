@@ -33,6 +33,9 @@ public class MongoItem {
     @Property
     private ItemCategory category;
 
+    @Property
+    private boolean isPublic;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -89,17 +92,24 @@ public class MongoItem {
         this.category = category;
     }
 
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean aPublic) {
+        isPublic = aPublic;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoItem mongoItem = (MongoItem) o;
-        return Objects.equals(getObjectId(), mongoItem.getObjectId()) && Objects.equals(getName(), mongoItem.getName()) && Objects.equals(getDisplayName(), mongoItem.getDisplayName()) && Objects.equals(getDescription(), mongoItem.getDescription()) && Objects.equals(getMetadata(), mongoItem.getMetadata()) && Objects.equals(getTags(), mongoItem.getTags()) && getCategory() == mongoItem.getCategory();
+        return isPublic == mongoItem.isPublic && Objects.equals(objectId, mongoItem.objectId) && Objects.equals(name, mongoItem.name) && Objects.equals(displayName, mongoItem.displayName) && Objects.equals(description, mongoItem.description) && Objects.equals(metadata, mongoItem.metadata) && Objects.equals(tags, mongoItem.tags) && category == mongoItem.category;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getName(), getDisplayName(), getDescription(), getMetadata(), getTags(), getCategory());
+        return Objects.hash(objectId, name, displayName, description, metadata, tags, category, isPublic);
     }
-
 }

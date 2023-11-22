@@ -4,7 +4,6 @@ import dev.getelements.elements.Constants;
 import dev.getelements.elements.model.Taggable;
 import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
-import dev.getelements.elements.model.ValidationGroups.Update;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
@@ -38,6 +37,9 @@ public class Item implements Serializable, Taggable {
     private ItemCategory category;
 
     private Map<String, Object> metadata;
+
+    //simple "public" word is java keyword
+    private boolean isPublic;
 
     /**
      * Get the unique ID of the Item.
@@ -186,22 +188,25 @@ public class Item implements Serializable, Taggable {
 
     }
 
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean aPublic) {
+        isPublic = aPublic;
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof Item)) return false;
-        Item item = (Item) object;
-        return Objects.equals(getId(), item.getId()) &&
-                Objects.equals(getName(), item.getName()) &&
-                Objects.equals(getTags(), item.getTags()) &&
-                Objects.equals(getDisplayName(), item.getDisplayName()) &&
-                Objects.equals(getDescription(), item.getDescription()) &&
-                Objects.equals(getMetadata(), item.getMetadata());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return isPublic == item.isPublic && Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(tags, item.tags) && Objects.equals(displayName, item.displayName) && Objects.equals(description, item.description) && category == item.category && Objects.equals(metadata, item.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getTags(), getDisplayName(), getDescription(), getMetadata());
+        return Objects.hash(id, name, tags, displayName, description, category, metadata, isPublic);
     }
 
     @Override
@@ -212,8 +217,9 @@ public class Item implements Serializable, Taggable {
                 ", tags=" + tags +
                 ", displayName='" + displayName + '\'' +
                 ", description='" + description + '\'' +
+                ", category=" + category +
                 ", metadata=" + metadata +
+                ", isPublic=" + isPublic +
                 '}';
     }
-
 }
