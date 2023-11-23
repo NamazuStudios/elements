@@ -168,10 +168,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(MetadataSpec.class, MongoMetadataSpec.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                    .fields("fields","fields", hintA(MetadataSpecProperty.class), hintB(MongoMetadataSpecProperty.class));
+                    .fields("properties","properties", hintA(MetadataSpecProperty.class), hintB(MongoMetadataSpecProperty.class));
 
             mapping(MetadataSpecProperty.class, MongoMetadataSpecProperty.class)
-                    .fields("fields", "fields", hintA(MetadataSpecProperty.class), hintB(MongoMetadataSpecProperty.class));
+                    .fields("properties", "properties", hintA(MetadataSpecProperty.class), hintB(MongoMetadataSpecProperty.class));
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
                     .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))

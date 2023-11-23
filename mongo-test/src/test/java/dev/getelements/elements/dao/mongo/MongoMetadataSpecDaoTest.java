@@ -29,14 +29,6 @@ public class MongoMetadataSpecDaoTest {
 
     private MetadataSpecTestFactory metadataSpecTestFactory;
 
-    @DataProvider
-    public static Object[][] getFieldType() {
-        return Stream
-                .of(MetadataSpecPropertyType.values())
-                .map(s -> new Object[] {s})
-                .toArray(Object[][]::new);
-    }
-
     @Test(groups = "create")
     public void testCreateMetadataSpec() {
 
@@ -122,7 +114,7 @@ public class MongoMetadataSpecDaoTest {
         assertTrue(specs.contains(working));
     }
 
-    @Test(groups = "delete", dependsOnGroups = "update")
+    @Test(groups = "delete", dependsOnGroups = "fetch")
     public void testDelete() {
         getMetadataSpecDao().deleteMetadataSpec(working.getId());
     }
@@ -156,6 +148,7 @@ public class MongoMetadataSpecDaoTest {
         return metadataSpecTestFactory;
     }
 
+    @Inject
     public void setMetadataSpecTestFactory(MetadataSpecTestFactory metadataSpecTestFactory) {
         this.metadataSpecTestFactory = metadataSpecTestFactory;
     }
