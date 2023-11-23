@@ -11,7 +11,6 @@ import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
-import dev.morphia.query.updates.UpdateOperators;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -19,6 +18,7 @@ import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
 
@@ -37,7 +37,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
 
         final var mongoQuery = getDatastore()
                 .find(MongoMetadataSpec.class)
-                .filter(eq("active", true));
+                .filter(eq("active", true), exists("name"));
 
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform);
 
