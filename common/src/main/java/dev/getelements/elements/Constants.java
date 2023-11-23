@@ -164,9 +164,14 @@ public interface Constants {
          */
         String NO_WHITE_SPACE = "^\\S+$";
 
+        /**
+         * Alphanumeric only. Allows underscore and dash.
+         */
+        String WORD_ONLY = "\\w+";
+
         //language=JSRegexp
         /**
-         * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
+         * Alphanumeric only.  Allows underscore, but does not allow the word to start with an underscore.
          */
         String WHOLE_WORD_ONLY = "[^_]\\w+";
 

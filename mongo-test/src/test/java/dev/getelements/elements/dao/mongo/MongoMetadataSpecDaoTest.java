@@ -7,7 +7,6 @@ import dev.getelements.elements.model.schema.MetadataSpecProperty;
 import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
 import dev.getelements.elements.util.PaginationWalker;
 import org.bson.types.ObjectId;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -32,7 +31,7 @@ public class MongoMetadataSpecDaoTest {
     @Test(groups = "create")
     public void testCreateMetadataSpec() {
 
-        final var spec = getMetadataSpecTestFactory().createTestSpecNoInset("test", s -> {
+        final var spec = getMetadataSpecTestFactory().createTestSpecNoInsert("test", s -> {
 
             final var properties = Stream.of(MetadataSpecPropertyType.values())
                     .map(type -> {

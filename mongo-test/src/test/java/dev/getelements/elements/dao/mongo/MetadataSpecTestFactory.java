@@ -18,10 +18,10 @@ public class MetadataSpecTestFactory {
     public MetadataSpec createTestSpec(
             final String name,
             final Function<MetadataSpec, MetadataSpec> metadataSpecTransformer) {
-        return createTestSpecNoInset(name, metadataSpecTransformer.andThen(getMetadataSpecDao()::createMetadataSpec));
+        return createTestSpecNoInsert(name, metadataSpecTransformer.andThen(getMetadataSpecDao()::createMetadataSpec));
     }
 
-    public MetadataSpec createTestSpecNoInset(
+    public MetadataSpec createTestSpecNoInsert(
             final String name,
             final Function<MetadataSpec, MetadataSpec> metadataSpecTransformer) {
         final var metadataSpec = new MetadataSpec();

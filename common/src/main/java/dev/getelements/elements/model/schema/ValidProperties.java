@@ -9,8 +9,6 @@ import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.util.Collections;
-import java.util.stream.Collectors;
 
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.ARRAY;
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.OBJECT;
@@ -18,7 +16,6 @@ import static java.lang.String.format;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.Collections.frequency;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 @Target(TYPE)
@@ -26,7 +23,7 @@ import static java.util.stream.Collectors.toSet;
 @Constraint(validatedBy = ValidProperties.Validator.class)
 public @interface ValidProperties {
 
-    String message() default "Invalid tabs field.";
+    String message() default "Invalid properties field.";
 
     Class<?>[] groups() default {};
 

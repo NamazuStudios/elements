@@ -2,19 +2,20 @@ package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.IndexDao;
+import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.MetadataSpecBuilder;
+import dev.morphia.Datastore;
+import dev.morphia.UpdateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -24,11 +25,11 @@ import java.util.List;
 import static dev.getelements.elements.dao.IndexDao.IndexableType.DISTINCT_INVENTORY_ITEM;
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.*;
+import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoDistinctInventoryItemQueryTest {
@@ -61,6 +62,8 @@ public class MongoDistinctInventoryItemQueryTest {
 
     private List<DistinctInventoryItem> distinctInventoryItems;
 
+    private Datastore datastore;
+
     @BeforeClass
     public void setupTestUsers() {
         users = range(0, 5)
@@ -84,6 +87,7 @@ public class MongoDistinctInventoryItemQueryTest {
     public void setupMetadataSpec() {
         testMetadataSpec = getMetadataSpecTestFactory().createTestSpec("test_spec", spec ->
             MetadataSpecBuilder.with(spec)
+                .type(OBJECT)
                 .properties()
                     .property()
                         .name("test_string").type(STRING).displayName("String Field.").required(true)
@@ -106,10 +110,7 @@ public class MongoDistinctInventoryItemQueryTest {
                         .name("test_array").type(ARRAY).displayName("Nested Object Field.").required(true)
                             .properties()
                                 .property()
-                                    .name("test_string").type(STRING).displayName("String Field.").required(true)
-                                .endProperty()
-                                .property()
-                                    .name("test_number").type(NUMBER).displayName("Numeric Field.").required(true)
+                                    .name("_arr").type(STRING).displayName("String Field.").required(true)
                                 .endProperty()
                             .endProperties()
                         .endProperty()
@@ -162,24 +163,40 @@ public class MongoDistinctInventoryItemQueryTest {
                 .toArray(Object[][]::new);
     }
 
-//    @Test
-//    public void testSearchUnindexedReturnsNoResults() {
-//
-//        logger.info("Searching items.");
-//
-//        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
-//                0, 100,
-//                null, null,
-//                "metadata.test_string:0"
-//        );
-//
-//        assertEquals(result.getTotal(), 0);
-//        assertEquals(result.getObjects().size(), 0);
-//
-//    }
+    @AfterMethod
+    public void testBogusIndex() {
 
-    @Test// (dependsOnMethods = "testSearchUnindexedReturnsNoResults")
-    public void generateIndexes() {
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_bogus:0"
+        );
+
+        assertEquals(result.getTotal(), 0);
+        assertEquals(result.getObjects().size(), 0);
+
+    }
+
+    @Test(groups = "noIndexes")
+    public void testSearchUnindexedReturnsNoResults() {
+
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_string:0"
+        );
+
+        assertEquals(result.getTotal(), 0);
+        assertEquals(result.getObjects().size(), 0);
+
+    }
+
+    @Test(groups = "firstIndex", dependsOnGroups = "noIndexes")
+    public void firstIndex() {
 
         indexDao.planType(DISTINCT_INVENTORY_ITEM);
 
@@ -189,23 +206,23 @@ public class MongoDistinctInventoryItemQueryTest {
 
     }
 
-//    @Test(dependsOnMethods = "generateIndexes")
-//    public void testSearchIndexedReturnsResults() {
-//
-//        logger.info("Searching items.");
-//
-//        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
-//                0, 100,
-//                null, null,
-//                "metadata.test_string:0"
-//        );
-//
-//        assertTrue(result.getTotal() > 0);
-//        assertTrue(!result.getObjects().isEmpty());
-//
-//    }
+    @Test(groups = "firstIndexQuery", dependsOnGroups = "firstIndex")
+    public void testSearchIndexedReturnsResults() {
 
-    @Test(dependsOnMethods = "generateIndexes")
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_string:0"
+        );
+
+        assertTrue(result.getTotal() > 0);
+        assertFalse(result.getObjects().isEmpty());
+
+    }
+
+    @Test(groups = "firstIndexQuery", dependsOnGroups = "firstIndex")
     public void testSearchIndexedReturnsResultsNested() {
 
         logger.info("Searching items.");
@@ -217,7 +234,137 @@ public class MongoDistinctInventoryItemQueryTest {
         );
 
         assertTrue(result.getTotal() > 0);
-        assertTrue(!result.getObjects().isEmpty());
+        assertFalse(result.getObjects().isEmpty());
+
+    }
+
+    @Test(groups = "firstIndexQuery", dependsOnGroups = "firstIndex")
+    public void testNumericQuery() {
+
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_object.test_number = 0"
+        );
+
+        assertTrue(result.getTotal() > 0);
+        assertFalse(result.getObjects().isEmpty());
+
+    }
+
+    @Test(groups = "firstIndexQuery", dependsOnGroups = "firstIndex")
+    public void testComplexQuery() {
+
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_number > 1 AND metadata.test_number < 15"
+        );
+
+        assertTrue(result.getTotal() > 0);
+        assertFalse(result.getObjects().isEmpty());
+
+        result.getObjects().forEach(i -> {
+            final var number = (Integer) i.getMetadata().get("test_number");
+            assertTrue(number > 1);
+            assertTrue(number < 15);
+        });
+
+    }
+
+    @Test(groups = "updateMetadataSpec", dependsOnGroups = "firstIndexQuery")
+    public void updateMetadataSpec() {
+
+        final var property = new MetadataSpecProperty();
+        property.setType(STRING);
+        property.setName("test_new_string_property");
+        property.setDisplayName("Test New Property");
+
+        final var properties = new ArrayList<>(testMetadataSpec.getProperties());
+        properties.add(property);
+        properties.removeIf(p -> ARRAY.equals(p.getType()));
+        properties.removeIf(p -> OBJECT.equals(p.getType()));
+
+        testMetadataSpec.setProperties(properties);
+
+        testMetadataSpec = getMetadataSpecTestFactory()
+                .getMetadataSpecDao()
+                .updateActiveMetadataSpec(testMetadataSpec);
+
+    }
+
+    @Test(groups = "secondIndex", dependsOnGroups = "updateMetadataSpec")
+    public void secondIndex() {
+
+        indexDao.planType(DISTINCT_INVENTORY_ITEM);
+
+        try (var indexer = indexDao.beginIndexing()) {
+            indexer.buildCustomIndexesFor(DISTINCT_INVENTORY_ITEM);
+        }
+
+    }
+
+    @Test(groups = "secondIndexQuery", dependsOnGroups = "secondIndex")
+    public void testOldNestedQueryFails() {
+
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_object.test_string:0"
+        );
+
+        assertEquals(result.getTotal(), 0);
+        assertTrue(result.getObjects().isEmpty());
+
+    }
+
+    @Test(groups = "secondIndexQuery", dependsOnGroups = "secondIndex")
+    public void testSecondNumericQuery() {
+
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_number = 0"
+        );
+
+        assertTrue(result.getTotal() > 0);
+        assertFalse(result.getObjects().isEmpty());
+
+    }
+
+    @Test(groups = "secondIndexQuery", dependsOnGroups = "secondIndex")
+    public void testUpdateMetadata() {
+
+        final var options = new UpdateOptions()
+                .upsert(false);
+
+        getDatastore()
+                .find(MongoDistinctInventoryItem.class)
+                .update(options, set("metadata.test_new_string_property", "Hello"));
+
+    }
+
+    @Test(groups = "secondIndexQuery", dependsOnGroups = "secondIndex", dependsOnMethods = "testUpdateMetadata")
+    public void testNewPropertyIndexesProperly() {
+
+        logger.info("Searching items.");
+
+        final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
+                0, 100,
+                null, null,
+                "metadata.test_new_string_property:Hello"
+        );
+
+        assertTrue(result.getTotal() > 0);
+        assertFalse(result.getObjects().isEmpty());
 
     }
 
@@ -300,6 +447,15 @@ public class MongoDistinctInventoryItemQueryTest {
     @Inject
     public void setApplicationTestFactory(ApplicationTestFactory applicationTestFactory) {
         this.applicationTestFactory = applicationTestFactory;
+    }
+
+    public Datastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(Datastore datastore) {
+        this.datastore = datastore;
     }
 
 }

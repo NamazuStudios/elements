@@ -9,15 +9,14 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-import static dev.getelements.elements.Constants.Regexp.WHOLE_WORD_ONLY;
-import static java.lang.String.format;
+import static dev.getelements.elements.Constants.Regexp.WORD_ONLY;
 
 @ValidProperties
 public class MetadataSpecProperty implements Serializable, MetadataSpecPropertiesContainer {
 
     @NotNull
     @ApiModelProperty("The unique name of the field")
-    @Pattern(regexp = WHOLE_WORD_ONLY)
+    @Pattern(regexp = WORD_ONLY)
     private String name;
 
     @NotNull
@@ -28,7 +27,6 @@ public class MetadataSpecProperty implements Serializable, MetadataSpecPropertie
     @ApiModelProperty("The field type")
     private MetadataSpecPropertyType type;
 
-    @NotNull
     @ApiModelProperty("True if the field is required.")
     private boolean required;
 

@@ -12,8 +12,6 @@ public class MetadataSpecBuilder {
 
     private final MetadataSpec spec;
 
-    private final List<MetadataSpecProperty> properties = new ArrayList<>();
-
     public static PropertiesBuilder<List<MetadataSpecProperty>> propertiesBuilder() {
         final var properties = new ArrayList<MetadataSpecProperty>();
         return new PropertiesBuilder<>(properties, properties::addAll);
@@ -42,7 +40,6 @@ public class MetadataSpecBuilder {
     }
 
     public MetadataSpec endMetadataSpec() {
-        spec.setProperties(properties);
         return spec;
     }
 
