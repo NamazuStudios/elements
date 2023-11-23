@@ -14,6 +14,11 @@ public class MetadataSpecBuilder {
 
     private final List<MetadataSpecProperty> properties = new ArrayList<>();
 
+    public static PropertiesBuilder<List<MetadataSpecProperty>> propertiesBuilder() {
+        final var properties = new ArrayList<MetadataSpecProperty>();
+        return new PropertiesBuilder<>(properties, properties::addAll);
+    }
+
     public static MetadataSpecBuilder with(final MetadataSpec spec) {
         return new MetadataSpecBuilder(spec);
     }
@@ -98,7 +103,7 @@ public class MetadataSpecBuilder {
             return this;
         }
 
-        public PropertyBuilder<ParentT> required(final Boolean isRequired) {
+        public PropertyBuilder<ParentT> required(final boolean isRequired) {
             property.setRequired(isRequired);
             return this;
         }

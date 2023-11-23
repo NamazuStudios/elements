@@ -1,17 +1,25 @@
 package dev.getelements.elements.model.schema;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.ARRAY;
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.OBJECT;
 import static java.lang.String.format;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.util.Collections.frequency;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 @Target(TYPE)
 @Retention(RUNTIME)
@@ -25,6 +33,8 @@ public @interface ValidProperties {
     Class<? extends Payload>[] payload() default {};
 
     class Validator implements ConstraintValidator<ValidProperties, MetadataSpecPropertiesContainer> {
+
+        private static final Logger logger = LoggerFactory.getLogger(ValidProperties.class);
 
         @Override
         public boolean isValid(final MetadataSpecPropertiesContainer value, final ConstraintValidatorContext context) {
@@ -80,7 +90,22 @@ public @interface ValidProperties {
                 return false;
             }
 
-            return true;
+            final var names = properties.stream()
+                    .map(MetadataSpecProperty::getName)
+                    .collect(toSet());
+
+            final var duplicates = names.stream()
+                    .filter(name -> frequency(names, name) > 1)
+                    .collect(toSet());
+
+            duplicates.forEach(duplicate -> {
+                final var msg = format("'properties' contains duplicate property '%s.'", duplicate);
+                context.buildConstraintViolationWithTemplate(msg)
+                        .addPropertyNode("tabs")
+                        .addConstraintViolation();
+            });
+
+            return duplicates.isEmpty();
 
         }
 

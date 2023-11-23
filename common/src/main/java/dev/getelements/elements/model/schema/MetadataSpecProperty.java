@@ -2,6 +2,7 @@ package dev.getelements.elements.model.schema;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
@@ -37,6 +38,7 @@ public class MetadataSpecProperty implements Serializable, MetadataSpecPropertie
     @ApiModelProperty("The default value, if left unspecified.")
     private String defaultValue;
 
+    @Valid
     private List<MetadataSpecProperty> properties;
 
     public MetadataSpecProperty() {}
