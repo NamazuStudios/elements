@@ -2,12 +2,16 @@ package dev.getelements.elements.service.profile;
 
 
 import dev.getelements.elements.dao.ApplicationDao;
+import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.rt.Attributes;
@@ -22,10 +26,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import static java.util.Objects.isNull;
 
 /**
  * Created by patricktwohig on 6/29/17.
@@ -44,6 +51,8 @@ public class UserProfileService implements ProfileService {
 
     private ProfileServiceUtils profileServiceUtils;
 
+    private ProfileImageObjectUtils profileImageObjectUtils;
+
     private Context.Factory contextFactory;
 
     private Supplier<Profile> currentProfileSupplier;
@@ -51,6 +60,8 @@ public class UserProfileService implements ProfileService {
     private Optional<Profile> currentProfileOptional;
 
     private Provider<Attributes> attributesProvider;
+
+    private LargeObjectDao largeObjectDao;
 
     public static final String PROFILE_CREATED_EVENT = "dev.getelements.elements.service.profile.created";
 
@@ -60,23 +71,23 @@ public class UserProfileService implements ProfileService {
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
+        Pagination<Profile> profiles = new Pagination<>();
         if (getUserService().isCurrentUserAlias(userId)) {
-            return getProfileDao()
+            profiles = getProfileDao()
                 .getActiveProfiles(
                         offset, count,
                         applicationNameOrId, getUserService().getCurrentUser().getId(),
                         lowerBoundTimestamp, upperBoundTimestamp)
                 .transform(this::redactPrivateInformation);
         } else if (userId == null || getUserService().isCurrentUser(userId)) {
-            return getProfileDao()
+            profiles = getProfileDao()
                 .getActiveProfiles(
                     offset, count,
                     applicationNameOrId, userId,
                     lowerBoundTimestamp, upperBoundTimestamp)
                 .transform(this::redactPrivateInformation);
-        } else {
-            return new Pagination<>();
         }
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
@@ -84,24 +95,26 @@ public class UserProfileService implements ProfileService {
             int offset,
             int count,
             String search) {
-        return getProfileDao()
-            .getActiveProfiles(offset, count, search)
-            .transform(this::redactPrivateInformation);
+        Pagination<Profile> profiles = getProfileDao()
+                .getActiveProfiles(offset, count, search)
+                .transform(this::redactPrivateInformation);
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
     public Profile getProfile(String profileId) {
-        return getProfileDao().getActiveProfile(profileId);
+        Profile profile = getProfileDao().getActiveProfile(profileId);
+        return profileWithImageUrl(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return getCurrentProfileSupplier().get();
+        return profileWithImageUrl(getCurrentProfileSupplier().get());
     }
 
     @Override
     public Optional<Profile> findCurrentProfile() {
-        return getCurrentProfileOptional();
+        return getCurrentProfileOptional().map(profileServiceUtils::assignCdnUrl);
     }
 
     @Override
@@ -111,7 +124,7 @@ public class UserProfileService implements ProfileService {
         profileRequest.setMetadata(null);
 
         final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
-        return getProfileDao().updateActiveProfile(profile);
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
 
     }
 
@@ -130,6 +143,13 @@ public class UserProfileService implements ProfileService {
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
 
+        LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
+        LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+
+        LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+        createdProfile.setImageObject(referenceForPersistedObject);
+        final Profile createdAndImageUpdatedProfile = getProfileDao().updateActiveProfile(createdProfile);
+
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
         } catch (NodeNotFoundException ex) {
@@ -142,7 +162,7 @@ public class UserProfileService implements ProfileService {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }
 
-        return createdProfile;
+        return profileWithImageUrl(createdAndImageUpdatedProfile);
     }
 
     private void checkUserAndProfile(final String id) {
@@ -166,7 +186,33 @@ public class UserProfileService implements ProfileService {
         }
 
         getProfileDao().softDeleteProfile(profileId);
+    }
 
+    @Override
+    public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
+        final var profile = getCurrentProfile();
+
+        checkUserAndProfile(getProfileDao().getActiveProfile(profile.getId()).getUser().getId());
+
+        if (isNull(profile.getImageObject())) {
+            logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
+            LargeObject imageObject = profileImageObjectUtils.createImageObject(profile);
+            imageObject.setMimeType(updateProfileImageRequest.getMimeType());
+            LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+
+            LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+            profile.setImageObject(referenceForPersistedObject);
+        } else {
+            LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
+            LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
+            largeObjectDao.updateLargeObject(updatedObject);
+        }
+
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
+    }
+
+    private Profile profileWithImageUrl(Profile profile) {
+        return profileServiceUtils.assignCdnUrl(profile);
     }
 
     public User getUser() {
@@ -250,4 +296,21 @@ public class UserProfileService implements ProfileService {
         this.profileServiceUtils = profileServiceUtils;
     }
 
+    public ProfileImageObjectUtils getProfileImageObjectUtils() {
+        return profileImageObjectUtils;
+    }
+
+    @Inject
+    public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
+        this.profileImageObjectUtils = profileImageObjectUtils;
+    }
+
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
+    }
+
+    @Inject
+    public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
+        this.largeObjectDao = largeObjectDao;
+    }
 }

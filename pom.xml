@@ -156,6 +156,7 @@
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
         <near-java-api.version>0.2.0</near-java-api.version>
         <boolparser.version>1.0.3</boolparser.version>
+        <getstream.version>3.7.0</getstream.version>
     </properties>
 
     <dependencies>
@@ -631,16 +632,6 @@
                 <groupId>com.github.kstyrc</groupId>
                 <artifactId>embedded-redis</artifactId>
                 <version>${embedded.redis.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.sidhant92</groupId>
-                <artifactId>boolparser</artifactId>
-                <version>${boolparser.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.dozermapper</groupId>
-                <artifactId>dozer-core</artifactId>
-                <version>${dozer.version}</version>
             </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->

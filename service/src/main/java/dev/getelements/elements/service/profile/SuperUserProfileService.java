@@ -1,11 +1,16 @@
 package dev.getelements.elements.service.profile;
 
 import dev.getelements.elements.dao.ApplicationDao;
+import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
+import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.Context;
@@ -19,12 +24,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT_LEGACY;
+import static java.util.Objects.isNull;
 
 /**
  * Provides full access to the {@link Profile} and related types.  Should be
@@ -54,45 +61,51 @@ public class SuperUserProfileService implements ProfileService {
 
     private ProfileServiceUtils profileServiceUtils;
 
+    private ProfileImageObjectUtils profileImageObjectUtils;
+
+    private LargeObjectDao largeObjectDao;
+
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
-        return getProfileDao().getActiveProfiles(
+        Pagination<Profile> profiles = getProfileDao().getActiveProfiles(
                 offset, count,
                 applicationNameOrId, userId,
                 lowerBoundTimestamp, upperBoundTimestamp);
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
     public Pagination<Profile> getProfiles(int offset, int count, String search) {
-        return getProfileDao().getActiveProfiles(offset, count, search);
+        Pagination<Profile> profiles = getProfileDao().getActiveProfiles(offset, count, search);
+        return profileServiceUtils.profilesPageCdnSetup(profiles);
     }
 
     @Override
     public Profile getProfile(String profileId) {
-        return getProfileDao().getActiveProfile(profileId);
+        Profile profile = getProfileDao().getActiveProfile(profileId);
+        return profileWithImageUrl(profile);
     }
 
     @Override
     public Profile getCurrentProfile() {
-        return getCurrentProfileSupplier().get();
+        return profileWithImageUrl(getCurrentProfileSupplier().get());
     }
 
     @Override
     public Optional<Profile> findCurrentProfile() {
-        return getCurrentProfileOptional();
+        return getCurrentProfileOptional().map(profileServiceUtils::assignCdnUrl);
     }
 
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
         final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
-        return getProfileDao().updateActiveProfile(profile);
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
     }
 
     @Override
     public Profile createProfile(final CreateProfileRequest createProfileRequest) {
-
         final var createdProfile = createNewProfile(createProfileRequest);
 
         final var eventContext = getContextFactory()
@@ -102,6 +115,13 @@ public class SuperUserProfileService implements ProfileService {
         final var attributes = new SimpleAttributes.Builder()
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
             .build();
+
+        LargeObject imageObject = profileImageObjectUtils.createImageObject(createdProfile);
+
+        LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+        LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+        createdProfile.setImageObject(referenceForPersistedObject);
+        final Profile createdAndImageUpdatedProfile = getProfileDao().updateActiveProfile(createdProfile);
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -115,8 +135,7 @@ public class SuperUserProfileService implements ProfileService {
             logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
         }
 
-        return createdProfile;
-
+        return profileWithImageUrl(createdAndImageUpdatedProfile);
     }
 
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
@@ -127,6 +146,33 @@ public class SuperUserProfileService implements ProfileService {
     @Override
     public void deleteProfile(String profileId) {
         getProfileDao().softDeleteProfile(profileId);
+    }
+
+    @Override
+    public Profile updateProfileImage(final String profileId, final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
+        final var profile = getProfileDao().getActiveProfile(profileId);
+
+        if (isNull(profile.getImageObject())) {
+            logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
+            LargeObject imageObject = profileImageObjectUtils.createImageObject(profile);
+            LargeObject persistedObject = largeObjectDao.createLargeObject(imageObject);
+
+            LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+            profile.setImageObject(referenceForPersistedObject);
+        } else {
+            LargeObject objectToUpdate = largeObjectDao.getLargeObject(profile.getImageObject().getId());
+            LargeObject updatedObject = profileImageObjectUtils.updateProfileImageObject(profile, objectToUpdate, updateProfileImageRequest);
+            LargeObject persistedObject = largeObjectDao.updateLargeObject(updatedObject);
+
+            LargeObjectReference referenceForPersistedObject = profileImageObjectUtils.createReference(persistedObject);
+            profile.setImageObject(referenceForPersistedObject);
+        }
+
+        return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
+    }
+
+    private Profile profileWithImageUrl(Profile profile) {
+        return profileServiceUtils.assignCdnUrl(profile);
     }
 
     public ProfileDao getProfileDao() {
@@ -210,4 +256,21 @@ public class SuperUserProfileService implements ProfileService {
         this.profileServiceUtils = profileServiceUtils;
     }
 
+    public ProfileImageObjectUtils getProfileImageObjectUtils() {
+        return profileImageObjectUtils;
+    }
+
+    @Inject
+    public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
+        this.profileImageObjectUtils = profileImageObjectUtils;
+    }
+
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
+    }
+
+    @Inject
+    public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
+        this.largeObjectDao = largeObjectDao;
+    }
 }

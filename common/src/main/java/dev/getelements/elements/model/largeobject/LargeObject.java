@@ -29,7 +29,6 @@ public class LargeObject {
     @ApiModelProperty("The path to the file in the underlying bucket.")
     private String path;
 
-    @NotNull
     @ApiModelProperty("The MIME type of the LargeObject.")
     private String mimeType;
 

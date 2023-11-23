@@ -20,6 +20,8 @@ public class CreateProfileRequest {
     @ApiModelProperty("The application id this profile belongs to.")
     private String applicationId;
 
+    /** @deprecated use separate call to create image largeObject*/
+    @Deprecated
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
 
@@ -142,26 +144,26 @@ public class CreateProfileRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateProfileRequest that = (CreateProfileRequest) o;
-        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getApplicationId(), that.getApplicationId()) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(getImageUrl(), that.getImageUrl()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(userId, that.userId) && Objects.equals(applicationId, that.applicationId) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(id, that.id) && Objects.equals(lastLogin, that.lastLogin);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUserId(), getApplicationId(), user, application, getImageUrl(), getDisplayName(), getMetadata());
+        return Objects.hash(userId, applicationId, imageUrl, displayName, metadata, user, application, id, lastLogin);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateProfileRequest{");
-        sb.append("userId='").append(userId).append('\'');
-        sb.append(", applicationId='").append(applicationId).append('\'');
-        sb.append(", user=").append(user);
-        sb.append(", application=").append(application);
-        sb.append(", imageUrl='").append(imageUrl).append('\'');
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "CreateProfileRequest{" +
+                "userId='" + userId + '\'' +
+                ", applicationId='" + applicationId + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", metadata=" + metadata +
+                ", user=" + user +
+                ", application=" + application +
+                ", id='" + id + '\'' +
+                ", lastLogin='" + lastLogin + '\'' +
+                '}';
     }
-
 }

@@ -5,15 +5,19 @@ import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.exception.user.UserNotFoundException;
+import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.Unscoped;
+import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Objects.nonNull;
 
 public class ProfileServiceUtils {
 
@@ -22,6 +26,8 @@ public class ProfileServiceUtils {
     private NameService nameService;
 
     private ApplicationDao applicationDao;
+
+    private LargeObjectCdnUtils largeObjectCdnUtils;
 
     public Profile getProfileForCreate(final CreateProfileRequest profileRequest) {
 
@@ -65,6 +71,20 @@ public class ProfileServiceUtils {
 
     }
 
+    Profile assignCdnUrl(Profile profile) {
+        LargeObjectReference imageObject = profile.getImageObject();
+        if (nonNull(imageObject)) {
+            String imageUrl = largeObjectCdnUtils.assembleCdnUrl(imageObject.getId());
+            imageObject.setUrl(imageUrl);
+        }
+        return profile;
+    }
+
+    Pagination<Profile> profilesPageCdnSetup(Pagination<Profile> profiles) {
+        profiles.getObjects().forEach(this::assignCdnUrl);
+        return profiles;
+    }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -79,7 +99,8 @@ public class ProfileServiceUtils {
     }
 
     @Inject
-    public void setNameService(@Unscoped NameService nameService) {
+    public void
+    setNameService(@Unscoped NameService nameService) {
         this.nameService = nameService;
     }
 
@@ -92,4 +113,12 @@ public class ProfileServiceUtils {
         this.applicationDao = applicationDao;
     }
 
+    public LargeObjectCdnUtils getLargeObjectCdnUtils() {
+        return largeObjectCdnUtils;
+    }
+
+    @Inject
+    public void setLargeObjectCdnUtils(LargeObjectCdnUtils largeObjectCdnUtils) {
+        this.largeObjectCdnUtils = largeObjectCdnUtils;
+    }
 }

@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
+
 public class UserLargeObjectService implements LargeObjectService {
 
     private LargeObjectDao largeObjectDao;
@@ -36,7 +38,7 @@ public class UserLargeObjectService implements LargeObjectService {
             throw new ForbiddenException("User not allowed to find");
         }
 
-        return result;
+        return result.map(getLargeObjectCdnUtils()::setCdnUrlToObject);
     }
 
     @Override
@@ -99,6 +101,18 @@ public class UserLargeObjectService implements LargeObjectService {
         }
 
         return getLargeObjectBucket().writeObject(objectId);
+    }
+
+    @Override
+    public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
+        getValidationHelper().validateModel(largeObject);
+
+        if (!getAccessPermissionsUtils().hasWriteAccess(largeObject.getAccessPermissions())) {
+            throw new ForbiddenException("User not allowed to save or update large object");
+        }
+
+        return getLargeObjectCdnUtils().setCdnUrlToObject( isNull(largeObject.getId()) ?
+                getLargeObjectDao().createLargeObject(largeObject) : getLargeObjectDao().updateLargeObject(largeObject));
     }
 
     public LargeObjectDao getLargeObjectDao() {

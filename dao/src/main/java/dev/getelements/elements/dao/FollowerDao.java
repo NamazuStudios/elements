@@ -4,7 +4,13 @@ import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.rt.annotation.DeprecationDefinition;
+import dev.getelements.elements.rt.annotation.Expose;
+import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
+@Expose({
+        @ModuleDefinition("eci.elements.dao.follower")
+})
 public interface FollowerDao {
 
     /**

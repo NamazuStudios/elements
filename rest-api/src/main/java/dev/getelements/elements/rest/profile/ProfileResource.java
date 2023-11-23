@@ -8,6 +8,7 @@ import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.profile.CreateProfileRequest;
 import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.profile.UpdateProfileImageRequest;
 import dev.getelements.elements.model.profile.UpdateProfileRequest;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.ProfileService;
@@ -19,6 +20,8 @@ import io.swagger.annotations.Authorization;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import java.io.IOException;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
@@ -135,6 +138,25 @@ public class ProfileResource {
         }
 
         return getProfileService().updateProfile(profileId, profileRequest);
+
+    }
+
+    @PUT
+    @Path("{profileId}/image")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Updates a Profile image object")
+    public Profile updateProfileImage(
+            @PathParam("profileId") String profileId,
+            final UpdateProfileImageRequest updateProfileImageRequest) throws IOException {
+
+        getValidationHelper().validateModel(updateProfileImageRequest, Update.class);
+        profileId = Strings.nullToEmpty(profileId).trim();
+
+        if (Strings.isNullOrEmpty(profileId)) {
+            throw new NotFoundException("Profile not found.");
+        }
+
+        return getProfileService().updateProfileImage(profileId, updateProfileImageRequest);
 
     }
 

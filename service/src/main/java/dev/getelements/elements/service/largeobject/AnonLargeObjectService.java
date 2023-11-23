@@ -15,6 +15,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
+
 public class AnonLargeObjectService implements LargeObjectService {
 
     private LargeObjectDao largeObjectDao;
@@ -63,6 +65,11 @@ public class AnonLargeObjectService implements LargeObjectService {
 
     @Override
     public OutputStream writeLargeObjectContent(String objectId) throws IOException {
+        throw new ForbiddenException();
+    }
+
+    @Override
+    public LargeObject saveOrUpdateLargeObject(LargeObject largeObject) {
         throw new ForbiddenException();
     }
 

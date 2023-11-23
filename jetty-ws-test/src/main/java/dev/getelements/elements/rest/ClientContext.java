@@ -1,13 +1,17 @@
 package dev.getelements.elements.rest;
 
+import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.service.profile.ProfileImageObjectUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -43,6 +47,10 @@ class ClientContext {
     private Application application;
 
     private SessionCreation sessionCreation;
+
+    private ProfileImageObjectUtils profileImageObjectUtils;
+
+    private LargeObjectDao largeObjectDao;
 
     public User getUser() {
         return user;
@@ -100,7 +108,15 @@ class ClientContext {
         profile.setUser(user);
         profile.setDisplayName(display);
         profile.setApplication(application);
+
         profiles.add(profileDao.createOrReactivateProfile(profile));
+
+        Profile createdProfile = getDefaultProfile();
+        LargeObjectReference imageObjectReference = createImageObjectForProfile(createdProfile);
+        createdProfile.setImageObject(imageObjectReference);
+
+        profiles.set(0, profileDao.updateActiveProfile(createdProfile));
+
         return this;
     }
 
@@ -163,4 +179,28 @@ class ClientContext {
         return sessionCreation;
     }
 
+    @Inject
+    public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
+        this.largeObjectDao = largeObjectDao;
+    }
+
+    @Inject
+    public void setProfileImageObjectUtils(ProfileImageObjectUtils profileImageObjectUtils) {
+        this.profileImageObjectUtils = profileImageObjectUtils;
+    }
+
+    public ProfileImageObjectUtils getProfileImageObjectUtils() {
+        return profileImageObjectUtils;
+    }
+
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
+    }
+
+    private LargeObjectReference createImageObjectForProfile(Profile profile) {
+        LargeObject imageObject = getProfileImageObjectUtils().createImageObject(profile);
+        LargeObject persistedObject = getLargeObjectDao().createLargeObject(imageObject);
+
+        return getProfileImageObjectUtils().createReference(persistedObject);
+    }
 }

@@ -66,6 +66,7 @@ public class MongoLargeObjectDao implements LargeObjectDao {
         getValidationHelper().validateModel(largeObject, ValidationGroups.Update.class);
 
         final var query = getDatastore().find(MongoLargeObject.class);
+        query.filter(eq("_id", new ObjectId(largeObject.getId())));
 
         final var mongoLargeObject = mongoDBUtils.perform(ds ->
                 query.modify(
@@ -73,7 +74,7 @@ public class MongoLargeObjectDao implements LargeObjectDao {
                         set("url", largeObject.getUrl()),
                         set("path", largeObject.getPath()),
                         set("accessPermissions", largeObject.getAccessPermissions())
-                ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         return transform(mongoLargeObject);
@@ -97,6 +98,19 @@ public class MongoLargeObjectDao implements LargeObjectDao {
             throw new InternalException("Deleted more rows than expected.");
         }
 
+    }
+
+    public Optional<MongoLargeObject> findMongoLargeObject(String objectId) {
+        return Optional.ofNullable(getMongoLargeObject(objectId));
+    }
+
+    public MongoLargeObject getMongoLargeObject(String objectId) {
+        final var query = getDatastore().find(MongoLargeObject.class);
+        query.filter(and(
+                eq("_id", new ObjectId(objectId))
+        ));
+
+        return query.first();
     }
 
     private LargeObject transform(final MongoLargeObject mongoLargeObject) {
