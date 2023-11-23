@@ -633,6 +633,21 @@
                 <artifactId>embedded-redis</artifactId>
                 <version>${embedded.redis.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.getstream.client</groupId>
+                <artifactId>stream-java</artifactId>
+                <version>${getstream.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.sidhant92</groupId>
+                <artifactId>boolparser</artifactId>
+                <version>${boolparser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.dozermapper</groupId>
+                <artifactId>dozer-core</artifactId>
+                <version>${dozer.version}</version>
+            </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->
 

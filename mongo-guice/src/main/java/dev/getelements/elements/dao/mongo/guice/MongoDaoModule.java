@@ -30,6 +30,7 @@ import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvid
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.model.index.IndexableType;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
 import dev.morphia.Datastore;
 import org.dozer.Mapper;
@@ -38,7 +39,7 @@ import java.security.MessageDigest;
 import java.util.function.Function;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
-import static dev.getelements.elements.dao.IndexDao.IndexableType.DISTINCT_INVENTORY_ITEM;
+import static dev.getelements.elements.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
 
 /**
  * Configures any Mongo-specific system properties.
@@ -121,7 +122,7 @@ public class MongoDaoModule extends PrivateModule {
         booleanQueryOperatorSet.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
         booleanQueryOperatorSet.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
 
-        final var indexableByType = newMapBinder(binder(), IndexDao.IndexableType.class, Indexable.class);
+        final var indexableByType = newMapBinder(binder(), IndexableType.class, Indexable.class);
         indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoDistinctInventoryItemIndexable.class);
 
         expose(IndexDao.class);
