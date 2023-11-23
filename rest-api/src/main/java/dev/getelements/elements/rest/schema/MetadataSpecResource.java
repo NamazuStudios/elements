@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType;
 @Api(value = "Metadata Specs",
         description = "Allows for the storage and retrieval of Metadata Specs.",
         authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
-@Path("/schema/metadata_spec")
+@Path("/metadata_spec")
 public class MetadataSpecResource {
 
     private MetadataSpecService metadataSpecService;

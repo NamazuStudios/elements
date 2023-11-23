@@ -71,7 +71,7 @@ public class MetadataSpecApiTest {
         request.setProperties(properties);
 
         final var response = client
-            .target(apiRoot + "/schema/metadata_spec")
+            .target(apiRoot + "/metadata_spec")
             .request()
             .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
             .post(entity(request, APPLICATION_JSON));
@@ -108,7 +108,7 @@ public class MetadataSpecApiTest {
         request.setProperties(properties);
 
         final var response = client
-                .target(format("%s/schema/metadata_spec/%s", apiRoot, working.getId()))
+                .target(format("%s/metadata_spec/%s", apiRoot, working.getId()))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .put(entity(request, APPLICATION_JSON));
@@ -131,7 +131,7 @@ public class MetadataSpecApiTest {
     public void testGetBogusSpec() {
 
         final var response = client
-                .target(format("%s/schema/metadata_spec/asdf", apiRoot))
+                .target(format("%s/metadata_spec/asdf", apiRoot))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .get();
@@ -144,7 +144,7 @@ public class MetadataSpecApiTest {
     public void testGetMetadataSpec() {
 
         final var response = client
-                .target(format("%s/schema/metadata_spec/%s", apiRoot, working.getId()))
+                .target(format("%s/metadata_spec/%s", apiRoot, working.getId()))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .get();
@@ -162,8 +162,8 @@ public class MetadataSpecApiTest {
         final PaginationWalker.WalkFunction<MetadataSpec> walkFunction = (offset, count) -> {
 
             final var response = client
-                    .target(format("%s/schema/metadata_spec/%s?offset=%d&count=%d",
-                            apiRoot, working.getId(),
+                    .target(format("%s/metadata_spec?offset=%d&count=%d",
+                            apiRoot,
                             offset, count)
                     )
                     .request()
@@ -184,7 +184,7 @@ public class MetadataSpecApiTest {
     public void testDeleteMetadataSpec() {
 
         final var response = client
-                .target(format("%s/schema/metadata_spec/%s", apiRoot, working.getId()))
+                .target(format("%s/metadata_spec/%s", apiRoot, working.getId()))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .delete();
@@ -197,7 +197,7 @@ public class MetadataSpecApiTest {
     public void testDoubleDelete() {
 
         final var response = client
-                .target(format("%s/schema/metadata_spec/%s", apiRoot, working.getId()))
+                .target(format("%s/metadata_spec/%s", apiRoot, working.getId()))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .delete();
