@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import static dev.getelements.elements.dao.IndexDao.IndexableType.DISTINCT_INVENTORY_ITEM;
+import static dev.getelements.elements.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.*;
 import static dev.morphia.query.updates.UpdateOperators.set;

@@ -6,13 +6,13 @@ import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlan;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.index.IndexPlan;
+import dev.getelements.elements.model.index.IndexableType;
 import dev.morphia.Datastore;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Map;
-import java.util.Set;
 
 public class MongoIndexDao implements IndexDao {
 

@@ -5,6 +5,7 @@ import dev.getelements.elements.dao.Indexable;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexOperation;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InternalException;
+import dev.getelements.elements.model.index.IndexableType;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import org.slf4j.Logger;
@@ -13,14 +14,12 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.sql.Timestamp;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.*;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.in;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -38,7 +37,7 @@ public class MongoIndexer implements IndexDao.Indexer {
     private final Datastore datastore;
 
     private final MongoDBUtils mongoDBUtils;
-    private final Map<IndexDao.IndexableType, Indexable> indexablesByType;
+    private final Map<IndexableType, Indexable> indexablesByType;
 
     private final ScheduledFuture<?> heartbeatTask;
 
@@ -50,7 +49,7 @@ public class MongoIndexer implements IndexDao.Indexer {
     public MongoIndexer(
             final Datastore datastore,
             final MongoDBUtils mongoDBUtils,
-            final Map<IndexDao.IndexableType, Indexable> indexablesByType) {
+            final Map<IndexableType, Indexable> indexablesByType) {
 
         this.datastore = datastore;
         this.mongoDBUtils = mongoDBUtils;
@@ -125,7 +124,7 @@ public class MongoIndexer implements IndexDao.Indexer {
     }
 
     @Override
-    public void buildCustomIndexesFor(final IndexDao.IndexableType indexableType) {
+    public void buildCustomIndexesFor(final IndexableType indexableType) {
 
         final var indexable = indexablesByType.get(indexableType);
 

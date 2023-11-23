@@ -19,9 +19,11 @@ public class SuperUserIndexService implements IndexService {
             getIndexDao().planAll();
         }
 
-        if (buildIndexRequest.isBuildCustom()) {
+        final var toBuild = buildIndexRequest.getToIndex();
+
+        if (toBuild != null && !toBuild.isEmpty()) {
             try (var indexer = getIndexDao().beginIndexing()) {
-                indexer.buildAllCustom();
+                toBuild.forEach(indexer::buildCustomIndexesFor);
             }
         }
 

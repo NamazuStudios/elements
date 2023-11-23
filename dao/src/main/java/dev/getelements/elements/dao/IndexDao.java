@@ -2,7 +2,7 @@ package dev.getelements.elements.dao;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.index.IndexPlan;
-import dev.getelements.elements.model.inventory.DistinctInventoryItem;
+import dev.getelements.elements.model.index.IndexableType;
 
 /**
  * Provides an abstract way to apply indexes to the database.
@@ -58,18 +58,6 @@ public interface IndexDao {
          */
         @Override
         void close();
-
-    }
-
-    /**
-     * Indicates a specific type of indexable type.
-     */
-    enum IndexableType {
-
-        /**
-         * Indexes for {@link DistinctInventoryItem}
-         */
-        DISTINCT_INVENTORY_ITEM
 
     }
 
