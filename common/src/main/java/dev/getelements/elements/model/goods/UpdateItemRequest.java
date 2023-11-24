@@ -24,7 +24,7 @@ public class UpdateItemRequest {
 
     private Map<String, Object> metadata;
 
-    private boolean isPublic;
+    private Boolean publicVisible;
 
     /**
      * Get the unique name of the Item
@@ -136,18 +136,18 @@ public class UpdateItemRequest {
 
     }
 
-    public boolean isPublic() {
-        return isPublic;
+    public Boolean isPublicVisible() {
+        return publicVisible;
     }
 
     /**
      * Sets the visibility of this Item
      *
-     * @param aPublic
+     * @param publicVisible
      *     The boolean flag for the Item
      */
-    public void setPublic(boolean aPublic) {
-        isPublic = aPublic;
+    public void setPublicVisible(Boolean publicVisible) {
+        this.publicVisible = publicVisible;
     }
 
     @Override
@@ -155,12 +155,12 @@ public class UpdateItemRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateItemRequest that = (UpdateItemRequest) o;
-        return isPublic == that.isPublic && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
+        return publicVisible == that.publicVisible && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, displayName, description, tags, metadata, isPublic);
+        return Objects.hash(name, displayName, description, tags, metadata, publicVisible);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class UpdateItemRequest {
                 ", description='" + description + '\'' +
                 ", tags=" + tags +
                 ", metadata=" + metadata +
-                ", isPublic=" + isPublic +
+                ", publicVisible=" + publicVisible +
                 '}';
     }
 }

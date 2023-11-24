@@ -27,7 +27,7 @@ public class CreateItemRequest {
 
     private Map<String, Object> metadata;
 
-    private boolean isPublic;
+    private Boolean publicVisible;
 
     /**
      * Get the unique name of the Item
@@ -157,18 +157,21 @@ public class CreateItemRequest {
 
     }
 
-    public boolean isPublic() {
-        return isPublic;
+    /**
+     * Returns the visibility of this Item
+     */
+    public Boolean isPublicVisible() {
+        return publicVisible;
     }
 
     /**
      * Sets the visibility of this Item
      *
-     * @param aPublic
+     * @param publicVisible
      *     The boolean flag for the Item
      */
-    public void setPublic(boolean aPublic) {
-        isPublic = aPublic;
+    public void setPublicVisible(Boolean publicVisible) {
+        this.publicVisible = publicVisible;
     }
 
     @Override
@@ -176,12 +179,12 @@ public class CreateItemRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateItemRequest that = (CreateItemRequest) o;
-        return isPublic == that.isPublic && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && category == that.category && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
+        return publicVisible == that.publicVisible && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && category == that.category && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, displayName, description, category, tags, metadata, isPublic);
+        return Objects.hash(name, displayName, description, category, tags, metadata, publicVisible);
     }
 
     @Override
@@ -193,7 +196,7 @@ public class CreateItemRequest {
                 ", category=" + category +
                 ", tags=" + tags +
                 ", metadata=" + metadata +
-                ", isPublic=" + isPublic +
+                ", publicVisible=" + publicVisible +
                 '}';
     }
 }

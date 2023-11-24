@@ -44,16 +44,7 @@ public class ItemResource {
     public Item createItem(final CreateItemRequest itemToBeCreated) {
 
         getValidationHelper().validateModel(itemToBeCreated);
-
-        final Item item = new Item();
-        item.setName(itemToBeCreated.getName());
-        item.setTags(itemToBeCreated.getTags());
-        item.setCategory(itemToBeCreated.getCategory());
-        item.setMetadata(itemToBeCreated.getMetadata());
-        item.setDescription(itemToBeCreated.getDescription());
-        item.setDisplayName(itemToBeCreated.getDisplayName());
-
-        return getItemService().createItem(item);
+        return getItemService().createItem(itemToBeCreated);
     }
 
     @GET
@@ -91,16 +82,7 @@ public class ItemResource {
             final UpdateItemRequest updateItemRequest) {
 
         getValidationHelper().validateModel(updateItemRequest);
-
-        final Item item = new Item();
-        item.setId(identifier);
-        item.setName(updateItemRequest.getName());
-        item.setTags(updateItemRequest.getTags());
-        item.setMetadata(updateItemRequest.getMetadata());
-        item.setDescription(updateItemRequest.getDescription());
-        item.setDisplayName(updateItemRequest.getDisplayName());
-
-        return getItemService().updateItem(item);
+        return getItemService().updateItem(identifier, updateItemRequest);
 
     }
 

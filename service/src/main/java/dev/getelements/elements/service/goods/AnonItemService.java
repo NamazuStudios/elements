@@ -3,7 +3,9 @@ package dev.getelements.elements.service.goods;
 import dev.getelements.elements.dao.ItemDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.goods.CreateItemRequest;
 import dev.getelements.elements.model.goods.Item;
+import dev.getelements.elements.model.goods.UpdateItemRequest;
 import dev.getelements.elements.service.ItemService;
 
 import javax.inject.Inject;
@@ -24,12 +26,12 @@ public class AnonItemService implements ItemService {
     }
 
     @Override
-    public Item updateItem(Item item) {
+    public Item updateItem(String id, UpdateItemRequest item) {
         throw new ForbiddenException("Unprivileged requests are unable to update items.");
     }
 
     @Override
-    public Item createItem(Item item) {
+    public Item createItem(CreateItemRequest item) {
         throw new ForbiddenException("Unprivileged requests are unable to create new items.");
     }
 

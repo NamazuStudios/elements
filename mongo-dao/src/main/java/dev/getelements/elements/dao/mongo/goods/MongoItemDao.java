@@ -183,21 +183,6 @@ public class MongoItemDao implements ItemDao {
         final var query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", objectId));
 
-        switch (item.getCategory()) {
-            case FUNGIBLE:
-                query.filter(or(
-                        eq("category", null),
-                        eq("category", item.getCategory())
-                    )
-                );
-                break;
-            case DISTINCT:
-                query.filter(eq("category", DISTINCT));
-                break;
-            default:
-                throw new InvalidDataException("Unsupported item category: " + item.getCategory());
-        }
-
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
             query.modify(
                 set("name", item.getName()),
@@ -205,6 +190,7 @@ public class MongoItemDao implements ItemDao {
                 set("metadata", item.getMetadata()),
                 set("tags", item.getTags()),
                 set("description", item.getDescription()),
+                set("publicVisible", item.getPublicVisible()),
                 set("category", item.getCategory())
             ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );

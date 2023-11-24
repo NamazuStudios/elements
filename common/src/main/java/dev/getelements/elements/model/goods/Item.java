@@ -38,8 +38,7 @@ public class Item implements Serializable, Taggable {
 
     private Map<String, Object> metadata;
 
-    //simple "public" word is java keyword
-    private boolean isPublic;
+    private Boolean publicVisible;
 
     /**
      * Get the unique ID of the Item.
@@ -178,6 +177,22 @@ public class Item implements Serializable, Taggable {
         this.category = category;
     }
 
+    /**
+     * Gets the visibility of this item.
+     *
+    * @return visibility
+     */
+    public Boolean getPublicVisible() {
+        return publicVisible;
+    }
+
+    /**
+     * Sets the visibility of this item.
+     */
+    public void setPublicVisible(Boolean publicVisible) {
+        this.publicVisible = publicVisible;
+    }
+
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {
@@ -188,25 +203,17 @@ public class Item implements Serializable, Taggable {
 
     }
 
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    public void setPublic(boolean aPublic) {
-        isPublic = aPublic;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Item item = (Item) o;
-        return isPublic == item.isPublic && Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(tags, item.tags) && Objects.equals(displayName, item.displayName) && Objects.equals(description, item.description) && category == item.category && Objects.equals(metadata, item.metadata);
+        return publicVisible == item.publicVisible && Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(tags, item.tags) && Objects.equals(displayName, item.displayName) && Objects.equals(description, item.description) && category == item.category && Objects.equals(metadata, item.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, tags, displayName, description, category, metadata, isPublic);
+        return Objects.hash(id, name, tags, displayName, description, category, metadata, publicVisible);
     }
 
     @Override
@@ -219,7 +226,7 @@ public class Item implements Serializable, Taggable {
                 ", description='" + description + '\'' +
                 ", category=" + category +
                 ", metadata=" + metadata +
-                ", isPublic=" + isPublic +
+                ", publicVisible=" + publicVisible +
                 '}';
     }
 }
