@@ -1,12 +1,15 @@
 package dev.getelements.elements.dao;
 
+import dev.getelements.elements.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
+
+import java.util.Optional;
 
 /**
  * Created by garrettmcspadden on 11/23/21.
@@ -27,7 +30,10 @@ public interface MetadataSpecDao {
      * @param count
      * @return a {@link Pagination} of {@link MetadataSpec} instances
      */
-    Pagination<MetadataSpec> getMetadataSpecs(int offset, int count);
+    Pagination<MetadataSpec> getActiveMetadataSpecs(int offset, int count);
+
+
+    Optional<MetadataSpec> findActiveMetadataSpec(String metadataSpecId);
 
     /**
      * Fetches a specific {@link MetadataSpec} instance based on ID.  If not found, an
@@ -36,32 +42,25 @@ public interface MetadataSpecDao {
      * @param metadataSpecId the template ID
      * @return the {@link MetadataSpec}, never null
      */
-    MetadataSpec getMetadataSpec(String metadataSpecId);
-
-    /**
-     * Updates the supplied {@link MetadataSpec}.
-     *
-     * @param metadataSpecId the id of the token to update
-     * @param updateMetadataSpecRequest the update request for the metaDataSpec.
-     * @return the {@link MetadataSpec} as it was changed by the service.
-     */
-    MetadataSpec updateMetadataSpec(String metadataSpecId, UpdateMetadataSpecRequest updateMetadataSpecRequest);
+    default MetadataSpec getActiveMetadataSpec(String metadataSpecId) {
+        return findActiveMetadataSpec(metadataSpecId).orElseThrow(MetadataSpecNotFoundException::new);
+    }
 
     /**
      * Creates a new metadata spec.
      *
-     * @param createMetadataSpecRequest the {@link CreateMetadataSpecRequest} with the information to create
-     * @return the {@link MetadataSpec} as it was created by the service.
+     * @param metadataSpec
+     * @return
      */
-    MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest);
+    MetadataSpec createMetadataSpec(MetadataSpec metadataSpec);
 
     /**
-     * Creates a new template by cloning an existing {@link MetadataSpec} definition.
+     * Creates a new metadata spec.
      *
-     * @param metadataSpec the {@link MetadataSpec} with the information to clone
-     * @return the {@link MetadataSpec} as it was created by the service.
+     * @param metadataSpec
+     * @return
      */
-    MetadataSpec cloneMetadataSpec(MetadataSpec metadataSpec);
+    MetadataSpec updateActiveMetadataSpec(MetadataSpec metadataSpec);
 
     /**
      * Deletes the {@link MetadataSpec} with the supplied metadataSpec ID.

@@ -22,6 +22,7 @@ import dev.getelements.elements.service.goods.ItemServiceProvider;
 import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptService;
 import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
+import dev.getelements.elements.service.index.IndexServiceProvider;
 import dev.getelements.elements.service.inventory.*;
 import dev.getelements.elements.service.largeobject.LargeObjectServiceProvider;
 import dev.getelements.elements.service.leaderboard.LeaderboardServiceProvider;
@@ -245,6 +246,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(LargeObjectService.class)
                 .toProvider(LargeObjectServiceProvider.class)
+                .in(scope);
+
+        bind(IndexService.class)
+                .toProvider(IndexServiceProvider.class)
                 .in(scope);
 
     }

@@ -3,9 +3,9 @@ package dev.getelements.elements.rest.schema;
 import com.google.common.base.Strings;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.schema.template.CreateMetadataSpecRequest;
-import dev.getelements.elements.model.schema.template.MetadataSpec;
-import dev.getelements.elements.model.schema.template.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.schema.MetadataSpecService;
 import io.swagger.annotations.Api;
@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType;
 @Api(value = "Metadata Specs",
         description = "Allows for the storage and retrieval of Metadata Specs.",
         authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
-@Path("/schema/metadata_spec")
+@Path("/metadata_spec")
 public class MetadataSpecResource {
 
     private MetadataSpecService metadataSpecService;
@@ -42,7 +42,7 @@ public class MetadataSpecResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Metadata Spec",
             notes = "Gets a specific MetadataSpec by name or Id.")
-    public MetadataSpec getToken(@PathParam("metadataSpecNameOrId") String metadataSpecNameOrId) {
+    public MetadataSpec getMetadataSpec(@PathParam("metadataSpecNameOrId") String metadataSpecNameOrId) {
         return getMetadataSpecService().getMetadataSpec(metadataSpecNameOrId);
     }
 
@@ -50,7 +50,7 @@ public class MetadataSpecResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new Metadata Spec definition",
             notes = "Creates a new Metadata Spec definition.")
-    public MetadataSpec createToken(final CreateMetadataSpecRequest tokenRequest) {
+    public MetadataSpec createMetadataSpec(final CreateMetadataSpecRequest tokenRequest) {
         return getMetadataSpecService().createMetadataSpec(tokenRequest);
     }
 

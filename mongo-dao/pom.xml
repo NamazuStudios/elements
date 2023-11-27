@@ -84,6 +84,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.github.sidhant92</groupId>
+            <artifactId>boolparser</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
             <version>${jeromq.version}</version>
@@ -109,11 +113,6 @@
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.neow3j</groupId>
-            <artifactId>contract</artifactId>
-            <version>${neow3j.version}</version>
         </dependency>
     </dependencies>
     <build>

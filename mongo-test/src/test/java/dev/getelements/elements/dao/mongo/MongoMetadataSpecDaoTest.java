@@ -1,129 +1,137 @@
 package dev.getelements.elements.dao.mongo;
 
-import dev.getelements.elements.BlockchainConstants;
 import dev.getelements.elements.dao.MetadataSpecDao;
-import dev.getelements.elements.exception.NotFoundException;
-import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.schema.template.*;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
+import dev.getelements.elements.exception.schema.MetadataSpecNotFoundException;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.model.schema.MetadataSpecProperty;
+import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
+import dev.getelements.elements.util.PaginationWalker;
+import org.bson.types.ObjectId;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.UUID.randomUUID;
+import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.*;
+import static java.lang.String.format;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoMetadataSpecDaoTest {
 
+    private MetadataSpec working;
+
     private MetadataSpecDao metadataSpecDao;
 
-    private String name;
+    private MetadataSpecTestFactory metadataSpecTestFactory;
 
-    private String tabName;
+    @Test(groups = "create")
+    public void testCreateMetadataSpec() {
 
-    private Integer tabOrder;
+        final var spec = getMetadataSpecTestFactory().createTestSpecNoInsert("test", s -> {
 
-    private String fieldName;
+            final var properties = Stream.of(MetadataSpecPropertyType.values())
+                    .map(type -> {
 
-    @BeforeClass
-    public void setupTestItems() {
-        this.tabName = "Tab1";
-        this.fieldName="Field1";
-        this.tabOrder = 1;
+                        final var property = new MetadataSpecProperty();
+                        property.setType(type);
+                        property.setName(format("%s_field", type.name().toLowerCase()));
+                        property.setDisplayName(format("Test field for %s", type.name().toLowerCase()));
+
+                        if (OBJECT.equals(type) || ARRAY.equals(type)) {
+                            final var subProperty = new MetadataSpecProperty();
+                            subProperty.setType(STRING);
+                            subProperty.setName("sub_string_field");
+                            subProperty.setDisplayName("Sub-field.");
+                            property.setProperties(List.of(subProperty));
+                        }
+
+                        return property;
+
+                    })
+                    .collect(Collectors.toList());
+
+            s.setType(OBJECT);
+            s.setProperties(properties);
+
+            return s;
+        });
+
+        working = getMetadataSpecDao().createMetadataSpec(spec);
+
+        assertNotNull(working.getId());
+        assertEquals(working.getName(), spec.getName());
+        assertEquals(working.getType(), spec.getType());
+        assertEquals(working.getProperties(), spec.getProperties());
+
     }
 
-    @DataProvider
-    public static Object[][] getFieldType() {
-        return Stream
-                .of(BlockchainConstants.TemplateFieldType.values())
-                .map(s -> new Object[] {s})
-                .toArray(Object[][]::new);
-    }
-
-    @Test(dataProvider = "getFieldType")
-    public void testCreateMetadataSpec(final BlockchainConstants.TemplateFieldType fieldType) {
-        this.name = "New MetadataSpec " + (new Date()).getTime() + randomUUID().toString();
-        testCreateMetadataSpec(name, tabOrder, tabName, fieldName, fieldType);
-    }
-
-    private void testCreateMetadataSpec(final String name, final Integer tabOrder, final String tabName, final String fieldName, final BlockchainConstants.TemplateFieldType fieldType) {
-        final var request = new CreateMetadataSpecRequest();
-        List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        TemplateTabField field = new TemplateTabField();
-        field.setName(fieldName);
-        fields.put("field1", field);
-        field.setFieldType(fieldType);
-        TemplateTab tab = new TemplateTab(tabName,fields);
-        tab.setTabOrder(tabOrder);
-        tabs.add(tab);
-        request.setTabs(tabs);
-        request.setName(name);
-
-        MetadataSpec inserted = getMetadataSpecDao().createMetadataSpec(request);
-
-        MetadataSpec fetched = getMetadataSpecDao().getMetadataSpec(inserted.getId());
-        assertEquals(name, fetched.getName());
-        assertEquals(tabName, fetched.getTabs().get(0).getName());
-        assertEquals(tabOrder, fetched.getTabs().get(0).getTabOrder());
-        TemplateTabField fetchedField = fetched.getTabs().get(0).getFields().get("field1");
-        String fetchedFieldName = fetchedField.getName();
-        assertEquals(fieldName, fetchedFieldName);
-        assertEquals(fieldType, fetchedField.getFieldType());
-    }
-
-    @Test(dependsOnMethods = "testCreateMetadataSpec")
+    @Test(groups = "update", dependsOnGroups = "create")
     public void testUpdateMetadataSpec() {
 
-        final Pagination<MetadataSpec> items = getMetadataSpecDao().getMetadataSpecs(0, 1);
+        final var properties = Stream.of(MetadataSpecPropertyType.values())
+                .map(type -> {
 
-        final var metadataSpec = items.iterator().next();
-        final var idMetadataSpec = getMetadataSpecDao().getMetadataSpec(metadataSpec.getId());
-        assertEquals(metadataSpec.getId(), idMetadataSpec.getId());
+                    final var property = new MetadataSpecProperty();
+                    property.setType(type);
+                    property.setName(format("%s_field_update", type.name().toLowerCase()));
+                    property.setDisplayName(format("Test updated field for %s", type.name().toLowerCase()));
 
-        UpdateMetadataSpecRequest updateRequest = new UpdateMetadataSpecRequest();
-        List<TemplateTab> tabs = new ArrayList<>() ;
-        Map<String, TemplateTabField> fields = new HashMap<>();
-        tabs = new ArrayList<>() ;
-        TemplateTabField field = new TemplateTabField();
-        field.setName("Field2");
-        field.setFieldType(BlockchainConstants.TemplateFieldType.Enum);
-        fields.put("field2", field);
-        TemplateTab tab = new TemplateTab("Tab2",fields);
-        tab.setTabOrder(2);
-        tabs.add(tab);
+                    if (OBJECT.equals(type) || ARRAY.equals(type)) {
+                        final var subProperty = new MetadataSpecProperty();
+                        subProperty.setType(STRING);
+                        subProperty.setName("sub_string_field_update");
+                        subProperty.setDisplayName("Sub-field.");
+                        property.setProperties(List.of(subProperty));
+                    }
 
-        this.name = "New MetadataSpec " + (new Date()).getTime();;
-        updateRequest.setName(name);
-        updateRequest.setTabs(tabs);
+                    return property;
 
-        final MetadataSpec updatedTemplate = getMetadataSpecDao().updateMetadataSpec(metadataSpec.getId(), updateRequest);
+                })
+                .collect(Collectors.toList());
 
-        assertEquals(updatedTemplate.getId(), metadataSpec.getId());
-        assertEquals(updatedTemplate.getName(), updateRequest.getName());
-        assertEquals(updatedTemplate.getTabs().get(0).getName(), tab.getName());
-        assertEquals(updatedTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
-        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), BlockchainConstants.TemplateFieldType.Enum);
+        working.setProperties(properties);
 
-        tabs = new ArrayList<>() ;
-        tab = new TemplateTab("Tab3",fields);
-        tabs.add(tab);
-        updateRequest.setTabs(tabs);
-        final MetadataSpec updatedTemplate2 = getMetadataSpecDao().updateMetadataSpec(metadataSpec.getId(), updateRequest);
-
-        assertEquals(updatedTemplate2.getId(), metadataSpec.getId());
-        assertEquals(updatedTemplate2.getTabs().get(0).getName(), "Tab3");
+        final var updated = getMetadataSpecDao().updateActiveMetadataSpec(working);
+        assertEquals(working, updated);
+        working = updated;
 
     }
 
-    @Test(expectedExceptions = NotFoundException.class)
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetSingle() {
+        final var fetched = getMetadataSpecDao().getActiveMetadataSpec(working.getId());
+        assertEquals(fetched, working);
+    }
+
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetMultiple() {
+        final var specs = new PaginationWalker().toList(getMetadataSpecDao()::getActiveMetadataSpecs);
+        assertTrue(specs.contains(working));
+    }
+
+    @Test(groups = "delete", dependsOnGroups = "fetch")
+    public void testDelete() {
+        getMetadataSpecDao().deleteMetadataSpec(working.getId());
+    }
+
+    @Test(groups = "postDelete", dependsOnGroups = "delete", expectedExceptions = MetadataSpecNotFoundException.class)
+    public void testDoubleDelete() {
+        getMetadataSpecDao().deleteMetadataSpec(working.getId());
+    }
+
+    @Test(groups = "postDelete", dependsOnGroups = "delete", expectedExceptions = MetadataSpecNotFoundException.class)
+    public void testSpecIsDeleted() {
+        getMetadataSpecDao().getActiveMetadataSpec(working.getId());
+    }
+
+    @Test(expectedExceptions = MetadataSpecNotFoundException.class)
     public void testMetadataSpecNotFoundById() {
-        getMetadataSpecDao().getMetadataSpec("0");
+        final var objectId = new ObjectId();
+        getMetadataSpecDao().getActiveMetadataSpec(objectId.toString());
     }
 
     public MetadataSpecDao getMetadataSpecDao() {
@@ -134,4 +142,14 @@ public class MongoMetadataSpecDaoTest {
     public void setMetadataSpecDao(MetadataSpecDao metadataSpecDao) {
         this.metadataSpecDao = metadataSpecDao;
     }
+
+    public MetadataSpecTestFactory getMetadataSpecTestFactory() {
+        return metadataSpecTestFactory;
+    }
+
+    @Inject
+    public void setMetadataSpecTestFactory(MetadataSpecTestFactory metadataSpecTestFactory) {
+        this.metadataSpecTestFactory = metadataSpecTestFactory;
+    }
+
 }

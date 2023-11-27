@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 
 import static org.testng.AssertJUnit.assertEquals;
 
-public class TestMongoInventoryItemId {
+public class TestMongoInventoryItemMongoIndexPlannerId {
 
 
     @DataProvider
