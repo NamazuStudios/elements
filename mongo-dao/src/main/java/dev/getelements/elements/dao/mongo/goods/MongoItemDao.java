@@ -31,9 +31,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.or;
+import static dev.morphia.query.filters.Filters.ne;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -136,12 +135,21 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query) {
+    public Pagination<Item> getAllItems(final int offset, final int count, List<String> tags, String category, final String query) {
+        return getItems(offset, count, tags, category, query, false);
+    }
+
+    @Override
+    public Pagination<Item> getPublicOnlyItems(final int offset, final int count, final List<String> tags, final String category, final String query) {
+        return getItems(offset, count, tags, category, query, true);
+    }
+
+    private Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query, final boolean publicOnly) {
 
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
-                        "string parameter.  This field is presently ignored and will return all values after filtering " +
-                        "by tags");
+                    "string parameter.  This field is presently ignored and will return all values after filtering " +
+                    "by tags");
         }
 
         final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class);
@@ -161,14 +169,17 @@ public class MongoItemDao implements ItemDao {
             }
 
             mongoQuery.filter(eq("category", categoryEnum));
+        }
 
+        if (publicOnly) {
+            mongoQuery.filter(eq("publicVisible", true));
         }
 
         return getMongoDBUtils().paginationFromQuery(
-            mongoQuery,
-            offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Item.class),
-            new FindOptions()
+                mongoQuery,
+                offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Item.class),
+                new FindOptions()
         );
 
     }

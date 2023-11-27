@@ -62,6 +62,18 @@ public class ItemResource {
     }
 
     @GET
+    @Path("public")
+    @ApiOperation(value = "Retrieves all Items, marked as public visible.")
+    public Pagination<Item> getUserItems(
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count") @DefaultValue("20") final int count,
+            @QueryParam("tags") final List<String> tags,
+            @QueryParam("category") final String category,
+            @QueryParam("search") final String search) {
+        return getItemService().getPublicItems(offset, count, tags, category, search);
+    }
+
+    @GET
     @Path("{identifier}")
     @ApiOperation(value = "Retrieves a single Item by id or by name",
         notes = "Looks up an item by the passed in identifier")

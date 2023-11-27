@@ -52,7 +52,24 @@ public interface ItemDao {
      * @return A {@link Pagination} of all {@link Item} records within the range specified by the offset and count
      * parameters.
      */
-    Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query);
+    Pagination<Item> getAllItems(int offset, int count, List<String> tags, String category, String query);
+
+    /**
+     * Symilar to getItems, with additional marker for flag publicVisible set on true
+     *
+     * @param offset
+     *     the offset, which should be a positive integer
+     * @param count
+     *     a maximum amount of items to be returned, which should be a positive integer greater than 0
+     * @param tags
+     *     A set of tags to filter items by
+     * @param category
+     * @param query
+     *     A search query to filter items by
+     * @return A {@link Pagination} of all {@link Item} records within the range specified by the offset and count
+     * parameters.
+     */
+    Pagination<Item> getPublicOnlyItems(int offset, int count, List<String> tags, String category, String query);
 
     /**
      * Updates a given Item.

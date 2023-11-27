@@ -22,7 +22,12 @@ public class AnonItemService implements ItemService {
 
     @Override
     public Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query) {
-        return itemDao.getItems(offset, count, tags, category, query);
+        return itemDao.getAllItems(offset, count, tags, category, query);
+    }
+
+    @Override
+    public Pagination<Item> getPublicItems(int offset, int count, List<String> tags, String category, String query) {
+        return itemDao.getPublicOnlyItems(offset, count, tags, category, query);
     }
 
     @Override

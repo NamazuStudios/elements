@@ -50,6 +50,13 @@ public interface ItemService {
     Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query);
 
     /**
+     * Gets zero or more {@link Item}s from the database.
+     *
+     * @return the {@link Item}
+     */
+    Pagination<Item> getPublicItems(int offset, int count, List<String> tags, String category, String search);
+
+    /**
      * Updates the specific {@link Item}.
      *
      * @param item the item to update
@@ -64,5 +71,4 @@ public interface ItemService {
      * @return the item, as it was written
      */
     Item createItem(CreateItemRequest item);
-
 }
