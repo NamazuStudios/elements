@@ -71,7 +71,7 @@
           </mat-form-field>
         </div>
 
-        <app-mission-rewards-editor class="final-step-reward-editor" [rewards]="mission.finalRepeatStep.rewards" (validationEvent)="handleValidationEvent($event)"></app-mission-rewards-editor>
+        <app-mission-rewards-editor class="final-step-reward-editor" [rewards]="mission.finalRepeatStep.rewards" ></app-mission-rewards-editor>
 
         <app-json-editor-card topic="Step" [editTarget]="mission.finalRepeatStep || {}"></app-json-editor-card>
 

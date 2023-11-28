@@ -150,10 +150,6 @@ export class MissionStepsCardComponent implements OnInit {
     }
   }
 
-  handleValidationEvent(event) {
-    this.updateValidity();
-  }
-
   ngOnInit() {
     if (!this.mission) { this.mission = new MissionViewModel(); }
 
@@ -169,10 +165,5 @@ export class MissionStepsCardComponent implements OnInit {
       this.addFinalStepControl(this.mission.finalRepeatStep);
     }
 
-    this.stepForm.valueChanges.subscribe( _ => {
-      console.log('steps form value changed')
-
-      this.updateValidity();
-    })
   }
 }
