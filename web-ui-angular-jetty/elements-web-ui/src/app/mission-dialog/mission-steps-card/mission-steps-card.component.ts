@@ -14,11 +14,12 @@ import {MissionViewModel} from '../../models/mission-view-model';
 })
 export class MissionStepsCardComponent implements OnInit {
   @Input() mission: Mission;
-  @Output() validationEvent = new EventEmitter<boolean>();
 
   @ViewChildren('.existing-step-reward-editor') rewardEditors: QueryList<MissionRewardsEditorComponent>;
 
   public stepForm = this.formBuilder.group({});
+
+  public isValid = false;
 
   constructor(private formBuilder: FormBuilder) { }
 
@@ -27,25 +28,32 @@ export class MissionStepsCardComponent implements OnInit {
   public stepsValid() {
     // invalid if neither steps nor final step exist
     if (this.mission.steps.length === 0 && !this.mission.finalRepeatStep) {
-      this.validationEvent.emit(false);
       return false;
     }
 
     // invalid if final step or prelim step doesn't have rewards
     for (let i = 0; i < this.mission.steps.length; i++) {
-      if (this.mission.steps[i].rewards.length === 0) { return false; }
+      if (this.mission.steps[i].rewards.length === 0) {
+        this.stepForm.updateValueAndValidity();
+        return false;
+      }
     }
-    if (this.mission.finalRepeatStep && this.mission.finalRepeatStep.rewards.length === 0) { return false; }
+    if (this.mission.finalRepeatStep && this.mission.finalRepeatStep.rewards.length === 0) {
+      this.stepForm.updateValueAndValidity();
+
+      return false;
+    }
 
     // all existing steps must be valid
     if (!this.stepForm.valid) {
-      this.validationEvent.emit(false);
+      this.stepForm.updateValueAndValidity();
+
       return false;
     }
 
     // all existing rewards must be valid
     if (!this.rewardEditors) {
-      this.validationEvent.emit(true);
+
       return true;
     }
     const rewardEditors = this.rewardEditors.toArray();
@@ -53,12 +61,13 @@ export class MissionStepsCardComponent implements OnInit {
       const rewardEditor = rewardEditors[i];
 
       if (!rewardEditor.existingRewardForm.valid) {
-        this.validationEvent.emit(false);
+        this.stepForm.updateValueAndValidity();
+
         return false;
       }
     }
     // all validity tests passed
-    this.validationEvent.emit(true);
+
     return true;
   }
 
@@ -76,39 +85,46 @@ export class MissionStepsCardComponent implements OnInit {
   deleteStep(index: number) {
     this.mission.steps.splice(index, 1);
     this.removeStepControl(index);
+
   }
 
   deleteFinalStep() {
     delete this.mission.finalRepeatStep;
     this.removeFinalStepControl();
+
   }
 
   addStepControl(index: number, step: MissionStep) {
     this.stepForm.addControl('displayName' + index, new FormControl(step.displayName, Validators.required));
     this.stepForm.addControl('description' + index, new FormControl(step.description, Validators.required));
     this.stepForm.addControl('count' + index, new FormControl(step.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
+
   }
 
   removeStepControl(i: number) {
     this.stepForm.removeControl('displayName' + i);
     this.stepForm.removeControl('description' + i);
     this.stepForm.removeControl('count' + i);
+
   }
 
   addFinalStepControl(finalStep: MissionStep) {
     this.stepForm.addControl('finalDisplayName', new FormControl(finalStep.displayName, Validators.required));
     this.stepForm.addControl('finalDescription', new FormControl(finalStep.description, Validators.required));
     this.stepForm.addControl('finalCount', new FormControl(finalStep.count, [Validators.required, Validators.pattern('^[0-9]*$')]));
+
   }
 
   removeFinalStepControl() {
     this.stepForm.removeControl('finalDisplayName');
     this.stepForm.removeControl('finalDescription');
     this.stepForm.removeControl('finalCount');
+
   }
 
   drop(event: CdkDragDrop<string[]>) {
     moveItemInArray(this.mission.steps, event.previousIndex, event.currentIndex);
+
   }
 
   toggleFinalStep(event: any, stepIndex: number) {
@@ -134,6 +150,10 @@ export class MissionStepsCardComponent implements OnInit {
     }
   }
 
+  handleValidationEvent(event) {
+    this.updateValidity();
+  }
+
   ngOnInit() {
     if (!this.mission) { this.mission = new MissionViewModel(); }
 
@@ -148,5 +168,28 @@ export class MissionStepsCardComponent implements OnInit {
     if (this.mission.finalRepeatStep) {
       this.addFinalStepControl(this.mission.finalRepeatStep);
     }
+
+    this.stepForm.valueChanges.subscribe( _ => {
+      console.log('steps form value changed')
+
+      this.updateValidity();
+    })
+  }
+
+  updateValidity() {
+    console.log('updating validity')
+
+    var rewardEditorsValid = true;
+
+    console.log('query list length: ' + this.rewardEditors.length)
+
+    this.rewardEditors.forEach(rewardEditor => {
+      console.log('iterating, is reward valid: ' + rewardEditor.isValid())
+      if (!rewardEditor.isValid()) {
+        rewardEditorsValid = false;
+      }
+    })
+
+    this.isValid = this.stepForm.valid && rewardEditorsValid;
   }
 }

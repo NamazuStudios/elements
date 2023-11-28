@@ -20,7 +20,7 @@
         <div class="form-row">
           <mat-form-field>
             <input matInput placeholder="Display name" name="displayName" formControlName="displayName{{i}}" value="{{step.displayName}}" (change)="updateStep(step, 'displayName', $event)">
-            <mat-error *ngIf="stepForm.controls['displayName' + i].hasError('required')">Display name is required</mat-error>
+            <mat-error *ngIf="stepForm.controls['displayName' + i].hasError('required') && stepForm.controls['displayName' + i].invalid">Display name is required</mat-error>
           </mat-form-field>
           <mat-form-field>
             <input matInput placeholder="Count" name="count" formControlName="count{{i}}" value="{{step.count}}" (change)="updateStep(step, 'count', $event)">
@@ -71,7 +71,7 @@
           </mat-form-field>
         </div>
 
-        <app-mission-rewards-editor class="final-step-reward-editor" [rewards]="mission.finalRepeatStep.rewards"></app-mission-rewards-editor>
+        <app-mission-rewards-editor class="final-step-reward-editor" [rewards]="mission.finalRepeatStep.rewards" (validationEvent)="handleValidationEvent($event)"></app-mission-rewards-editor>
 
         <app-json-editor-card topic="Step" [editTarget]="mission.finalRepeatStep || {}"></app-json-editor-card>
 

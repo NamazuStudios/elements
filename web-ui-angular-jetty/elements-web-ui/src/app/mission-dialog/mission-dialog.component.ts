@@ -1,9 +1,9 @@
-import {AfterViewInit, Component, Inject, OnInit, ViewChild} from '@angular/core';
+import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar'
-import {ENTER, COMMA} from '@angular/cdk/keycodes';
+import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {MissionStepsCardComponent} from './mission-steps-card/mission-steps-card.component';
 import {AlertService} from '../alert.service';
@@ -13,7 +13,7 @@ import {AlertService} from '../alert.service';
   templateUrl: './mission-dialog.component.html',
   styleUrls: ['./mission-dialog.component.css']
 })
-export class MissionDialogComponent implements OnInit, AfterViewInit {
+export class MissionDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<MissionDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -26,7 +26,7 @@ export class MissionDialogComponent implements OnInit, AfterViewInit {
   originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps || []));
   originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep || null));
 
-  okButtonEnabled = true;
+  okButtonEnabled = false;
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -61,11 +61,6 @@ export class MissionDialogComponent implements OnInit, AfterViewInit {
     }
   }
 
-  temp() {
-    console.log('editor: ' + this.editorCard.isJSONValid);
-    console.log('card: ' + this.stepsCard.stepsValid());
-  }
-
   /*
   * Can't just call dialogRef.close(missionForm.value) since it doesn't accurately
   * capture changes to item tags so we need to explicitly attach the entire tag
@@ -78,6 +73,11 @@ export class MissionDialogComponent implements OnInit, AfterViewInit {
       this.data.mission.metadata = this.originalMetadata;
       this.data.mission.steps = this.originalSteps;
       this.data.mission.finalRepeatStep = this.originalFinalStep;
+      return;
+    }
+
+    if (!this.stepsCard.stepsValid()) {
+      // this.stepsCard.stepForm.get("displayName0").setErrors({ 'required': true })
       return;
     }
 
@@ -125,12 +125,4 @@ export class MissionDialogComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngAfterViewInit(): void {
-    this.okButtonEnabled = this.editorCard.isJSONValid && this.stepsCard.stepsValid()
-  }
-
-  handleValidationEvent(event: boolean) {
-    console.log('event received: ' + event)
-    this.okButtonEnabled = event;
-  }
 }
