@@ -32,7 +32,6 @@ import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.ne;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -53,8 +52,8 @@ public class MongoItemDao implements ItemDao {
     @Override
     public Item getItemByIdOrName(final String identifier) {
         return findMongoItemByNameOrId(identifier)
-            .map(mi -> getDozerMapper().map(mi, Item.class))
-            .orElseThrow(() -> new ItemNotFoundException("Unable to find item with an id or name of " + identifier));
+                .map(mi -> getDozerMapper().map(mi, Item.class))
+                .orElseThrow(() -> new ItemNotFoundException("Unable to find item with an id or name of " + identifier));
     }
 
     public Optional<MongoItem> findMongoItem(final Item item) {
@@ -63,14 +62,14 @@ public class MongoItemDao implements ItemDao {
 
     public Optional<MongoItem> findMongoItem(final String id) {
         return Optional.ofNullable(id)
-            .flatMap(i -> getMongoDBUtils().parse(i))
-            .flatMap(this::findMongoItem);
+                .flatMap(i -> getMongoDBUtils().parse(i))
+                .flatMap(this::findMongoItem);
     }
 
     public Optional<MongoItem> findMongoItem(final ObjectId objectId) {
         final var item = getDatastore()
-            .find(MongoItem.class)
-            .filter(eq("_id", objectId)).first();
+                .find(MongoItem.class)
+                .filter(eq("_id", objectId)).first();
         return Optional.ofNullable(item);
     }
 
@@ -82,7 +81,14 @@ public class MongoItemDao implements ItemDao {
 
     public MongoItem getMongoItem(final ObjectId objectId) {
         return findMongoItem(objectId)
-            .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
+                .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
+    }
+
+    public List<MongoItem> getPublicItems() {
+        final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class);
+        mongoQuery.filter(eq("publicVisible", true));
+
+        return mongoQuery.iterator().toList();
     }
 
     public Optional<MongoItem> findMongoItemByNameOrId(final String itemNameOrId) {
@@ -135,16 +141,7 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getAllItems(final int offset, final int count, List<String> tags, String category, final String query) {
-        return getItems(offset, count, tags, category, query, false);
-    }
-
-    @Override
-    public Pagination<Item> getPublicOnlyItems(final int offset, final int count, final List<String> tags, final String category, final String query) {
-        return getItems(offset, count, tags, category, query, true);
-    }
-
-    private Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query, final boolean publicOnly) {
+    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query) {
 
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
@@ -169,10 +166,7 @@ public class MongoItemDao implements ItemDao {
             }
 
             mongoQuery.filter(eq("category", categoryEnum));
-        }
 
-        if (publicOnly) {
-            mongoQuery.filter(eq("publicVisible", true));
         }
 
         return getMongoDBUtils().paginationFromQuery(
@@ -195,15 +189,15 @@ public class MongoItemDao implements ItemDao {
         query.filter(eq("_id", objectId));
 
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
-            query.modify(
-                set("name", item.getName()),
-                set("displayName", item.getDisplayName()),
-                set("metadata", item.getMetadata()),
-                set("tags", item.getTags()),
-                set("description", item.getDescription()),
-                set("publicVisible", item.getPublicVisible()),
-                set("category", item.getCategory())
-            ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+                query.modify(
+                        set("name", item.getName()),
+                        set("displayName", item.getDisplayName()),
+                        set("metadata", item.getMetadata()),
+                        set("tags", item.getTags()),
+                        set("description", item.getDescription()),
+                        set("publicVisible", item.getPublicVisible()),
+                        set("category", item.getCategory())
+                ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );
 
         if (updatedMongoItem == null) {

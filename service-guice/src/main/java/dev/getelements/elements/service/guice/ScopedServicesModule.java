@@ -155,6 +155,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(SimpleInventoryItemServiceProvider.class)
                 .in(scope);
 
+        bind(PublicInventoryItemService.class)
+                .toProvider(PublicInventoryItemServiceProvider.class)
+                .in(scope);
+
         bind(AdvancedInventoryItemService.class)
                 .toProvider(AdvancedInventoryItemServiceProvider.class)
                 .in(scope);

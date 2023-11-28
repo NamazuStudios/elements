@@ -111,6 +111,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserSimpleInventoryItemService.class);
 
+        bind(PublicInventoryItemService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserPublicInventoryItemService.class);
+
         bind(AdvancedInventoryItemService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserAdvancedInventoryItemService.class);

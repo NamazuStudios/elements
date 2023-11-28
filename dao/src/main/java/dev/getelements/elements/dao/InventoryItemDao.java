@@ -60,6 +60,16 @@ public interface InventoryItemDao {
     Pagination<InventoryItem> getInventoryItems(int offset, int count, User user);
 
     /**
+     * Gets inventory items for specified user, and all public items that are visible (for him)
+     *
+     * @param offset the offset
+     * @param count the count
+     * @return a {@link Pagination} of {@link InventoryItem} objects.
+     */
+    Pagination<InventoryItem> getPublicInventoryItems(int offset, int count);
+
+
+    /**
      * Gets inventory items specifying the offset and the count, specifying a search filter.
      *
      * @param offset the offset
