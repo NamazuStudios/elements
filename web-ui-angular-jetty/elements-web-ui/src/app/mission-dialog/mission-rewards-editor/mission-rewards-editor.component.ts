@@ -1,4 +1,4 @@
-import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
+import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
 import {Reward} from '../../api/models/reward';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {ItemsService} from '../../api/services/items.service';
@@ -39,7 +39,7 @@ export class MissionRewardsEditorComponent implements OnInit {
 
       // add formControl
       this.existingRewardForm.addControl('reward' + (this.rewards.length - 1) + 'Item',
-        new FormControl(this.rewards[this.rewards.length - 1].item.name, [], [this.itemExistsValidator.validate]));
+        new FormControl(this.rewards[this.rewards.length - 1].item.name, [Validators.required], [this.itemExistsValidator.validate]));
       this.existingRewardForm.addControl('reward' + (this.rewards.length - 1) + 'Ct',
         new FormControl(this.rewards[this.rewards.length - 1].quantity, [Validators.required, Validators.pattern('^[0-9]+$')]));
 
