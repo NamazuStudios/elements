@@ -29,9 +29,8 @@ public class PublicInventoryItemResource {
     private PublicInventoryItemService publicInventoryItemService;
 
     @GET
-    @ApiOperation(value = "Search public inventory items",
-            notes = "Searches all inventory items in the system and returns the metadata for all matches against " +
-                    "the given search filter.")
+    @ApiOperation(value = "Gets public inventory items",
+            notes = "Searches for all inventory items, which reffers to items flagged as publicVisible")
     public Pagination<InventoryItem> getPublicInventoryItems(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count) {
