@@ -36,4 +36,11 @@ public interface LargeObjectBucket {
      */
     void deleteLargeObject(String objectId) throws IOException;
 
+    /**
+     * Forces buckets to mark referenced LO to set state UPLOADED
+     *
+     * @param largeObject the large object
+     */
+    void setUploaded(LargeObject largeObject);
+
 }

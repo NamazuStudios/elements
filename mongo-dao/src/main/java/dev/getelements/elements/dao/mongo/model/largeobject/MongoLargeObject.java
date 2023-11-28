@@ -1,9 +1,11 @@
 package dev.getelements.elements.dao.mongo.model.largeobject;
 
 import dev.getelements.elements.model.largeobject.AccessPermissions;
+import dev.getelements.elements.model.largeobject.LargeObjectState;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
+import java.util.Date;
 import java.util.Objects;
 
 @Entity(value = "large_object", useDiscriminator = false)
@@ -13,7 +15,6 @@ import java.util.Objects;
 })
 public class MongoLargeObject {
 
-    //TODO: clarify id exposing
     @Id
     private ObjectId id;
 
@@ -25,6 +26,12 @@ public class MongoLargeObject {
 
     @Property
     private String mimeType;
+
+    @Property
+    private LargeObjectState state;
+
+    @Property
+    private Date lastModified;
 
     @Property
     private AccessPermissions accessPermissions;
@@ -69,16 +76,45 @@ public class MongoLargeObject {
         this.accessPermissions = accessPermissions;
     }
 
+    public LargeObjectState getState() {
+        return state;
+    }
+
+    public void setState(LargeObjectState state) {
+        this.state = state;
+    }
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Date lastModified) {
+        this.lastModified = lastModified;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoLargeObject that = (MongoLargeObject) o;
-        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && Objects.equals(accessPermissions, that.accessPermissions);
+        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && state == that.state && Objects.equals(lastModified, that.lastModified) && Objects.equals(accessPermissions, that.accessPermissions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, url, path, mimeType, accessPermissions);
+        return Objects.hash(id, url, path, mimeType, state, lastModified, accessPermissions);
+    }
+
+    @Override
+    public String toString() {
+        return "MongoLargeObject{" +
+                "id=" + id +
+                ", url='" + url + '\'' +
+                ", path='" + path + '\'' +
+                ", mimeType='" + mimeType + '\'' +
+                ", state=" + state +
+                ", lastModified=" + lastModified +
+                ", accessPermissions=" + accessPermissions +
+                '}';
     }
 }

@@ -32,6 +32,8 @@ public class ProfileImageObjectUtils {
         LargeObjectReference reference = new LargeObjectReference();
         reference.setId(persistedObject.getId());
         reference.setMimeType(persistedObject.getMimeType());
+        reference.setState(persistedObject.getState());
+        reference.setLastModified(persistedObject.getLastModified());
         return reference;
     }
 
