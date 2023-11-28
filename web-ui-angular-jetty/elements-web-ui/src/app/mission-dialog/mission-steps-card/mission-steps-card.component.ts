@@ -175,21 +175,4 @@ export class MissionStepsCardComponent implements OnInit {
       this.updateValidity();
     })
   }
-
-  updateValidity() {
-    console.log('updating validity')
-
-    var rewardEditorsValid = true;
-
-    console.log('query list length: ' + this.rewardEditors.length)
-
-    this.rewardEditors.forEach(rewardEditor => {
-      console.log('iterating, is reward valid: ' + rewardEditor.isValid())
-      if (!rewardEditor.isValid()) {
-        rewardEditorsValid = false;
-      }
-    })
-
-    this.isValid = this.stepForm.valid && rewardEditorsValid;
-  }
 }
