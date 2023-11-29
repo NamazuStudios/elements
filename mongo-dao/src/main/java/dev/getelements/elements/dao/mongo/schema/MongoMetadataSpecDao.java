@@ -59,6 +59,23 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     }
 
     @Override
+    public Optional<MetadataSpec> findActiveMetadataSpecByName(final String metadataSpecName) {
+        return findActiveMongoMetadataSpecByName(metadataSpecName).map(this::transform);
+    }
+
+    public Optional<MongoMetadataSpec> findActiveMongoMetadataSpecByName(final String metadataSpecName) {
+
+        final var spec = getDatastore()
+                .find(MongoMetadataSpec.class)
+                .filter(eq("name", metadataSpecName), eq("active", true))
+                .first();
+
+        return Optional.ofNullable(spec);
+
+    }
+
+
+    @Override
     public MetadataSpec createMetadataSpec(final MetadataSpec metadataSpec) {
 
         getValidationHelper().validateModel(metadataSpec, ValidationGroups.Insert.class);

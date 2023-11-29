@@ -4,8 +4,10 @@ import com.google.common.base.Strings;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.EditorSchema;
 import dev.getelements.elements.model.schema.MetadataSpec;
 import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.json.JsonSchema;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.schema.MetadataSpecService;
 import io.swagger.annotations.Api;
@@ -44,6 +46,28 @@ public class MetadataSpecResource {
             notes = "Gets a specific MetadataSpec by name or Id.")
     public MetadataSpec getMetadataSpec(@PathParam("metadataSpecNameOrId") String metadataSpecNameOrId) {
         return getMetadataSpecService().getMetadataSpec(metadataSpecNameOrId);
+    }
+
+    @GET
+    @Path("{metadataSpecName}/schema.json")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Gets a specific JSON Schema",
+            notes = "Gets a specific JSON Schema backed by the supplied MetadataSpec by name."
+    )
+    public JsonSchema getJsonSchema(@PathParam("metadataSpecName") String metadataSpecName) {
+        return getMetadataSpecService().getJsonSchema(metadataSpecName);
+    }
+
+    @GET
+    @Path("{metadataSpecName}/editor.json")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Gets a specific Metadata Editor Schema",
+            notes = "Gets a specific Metadata Editor Schema backed by the supplied MetadataSpec by name."
+    )
+    public EditorSchema getEditorSchema(@PathParam("metadataSpecName") String metadataSpecName) {
+        return getMetadataSpecService().getEditorSchema(metadataSpecName);
     }
 
     @POST

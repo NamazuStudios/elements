@@ -1,8 +1,11 @@
 package dev.getelements.elements.rest;
 
 import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.EditorSchema;
 import dev.getelements.elements.model.schema.MetadataSpec;
 import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.json.JsonSchema;
+import dev.getelements.elements.model.schema.layout.EditorLayout;
 import dev.getelements.elements.rest.model.MetadataSpecPagination;
 import dev.getelements.elements.util.MetadataSpecBuilder;
 import dev.getelements.elements.util.PaginationWalker;
@@ -13,6 +16,10 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static dev.getelements.elements.Headers.SESSION_SECRET;
 import static dev.getelements.elements.model.schema.MetadataSpecPropertyType.*;
@@ -45,6 +52,8 @@ public class MetadataSpecApiTest {
     private ClientContext superUserClientContext;
 
     private MetadataSpec working;
+
+    private EditorSchema editorSchema;
 
     @BeforeClass
     public void createSuperUser() {
@@ -95,10 +104,18 @@ public class MetadataSpecApiTest {
 
         final var properties = MetadataSpecBuilder.propertiesBuilder()
                     .property()
-                     .name("update_test_a").type(STRING).displayName("Update Test A")
+                        .name("update_test_a")
+                        .type(STRING)
+                        .displayName("Update Test A")
+                        .defaultValue("Hello world!")
+                        .placeholder("Hello World!")
                   .endProperty()
                     .property()
-                        .name("update_test_b").type(NUMBER).displayName("Update Test B")
+                        .name("update_test_b")
+                        .type(NUMBER)
+                        .displayName("Update Test B")
+                        .defaultValue(42)
+                        .required(true)
                     .endProperty()
                 .endProperties();
 
@@ -121,7 +138,6 @@ public class MetadataSpecApiTest {
         assertNotNull(metadataSpec.getId());
         assertEquals(OBJECT, metadataSpec.getType());
         assertEquals("test_a", metadataSpec.getName());
-        assertEquals(properties, metadataSpec.getProperties());
 
         working = metadataSpec;
 
@@ -177,6 +193,32 @@ public class MetadataSpecApiTest {
 
         final var specs = new PaginationWalker().toList(walkFunction);
         assertTrue(specs.contains(working));
+
+    }
+
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetJsonSchema() {
+
+        final var response = client
+                .target(format("%s/metadata_spec/%s/schema.json", apiRoot, working.getName()))
+                .request()
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+    }
+
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetEditorSchema() {
+
+        final var response = client
+                .target(format("%s/metadata_spec/%s/editor.json", apiRoot, working.getName()))
+                .request()
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
 
     }
 

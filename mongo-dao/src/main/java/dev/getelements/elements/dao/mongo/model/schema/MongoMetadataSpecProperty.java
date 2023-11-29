@@ -23,7 +23,7 @@ public class MongoMetadataSpecProperty {
     private String placeholder;
 
     @Property
-    private String defaultValue;
+    private Object defaultValue;
 
     @Property
     private MetadataSpecPropertyType type;
@@ -63,11 +63,11 @@ public class MongoMetadataSpecProperty {
         this.placeholder = placeholder;
     }
 
-    public String getDefaultValue() {
+    public Object getDefaultValue() {
         return defaultValue;
     }
 
-    public void setDefaultValue(String defaultValue) {
+    public void setDefaultValue(Object defaultValue) {
         this.defaultValue = defaultValue;
     }
 
