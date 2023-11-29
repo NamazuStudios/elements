@@ -110,7 +110,7 @@ public class MetadataSpecBuilder {
             return this;
         }
 
-        public PropertyBuilder<ParentT> defaultValue(final String defaultValue) {
+        public PropertyBuilder<ParentT> defaultValue(final Object defaultValue) {
             property.setDefaultValue(defaultValue);
             return this;
         }

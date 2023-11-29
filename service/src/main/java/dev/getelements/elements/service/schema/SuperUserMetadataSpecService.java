@@ -3,17 +3,20 @@ package dev.getelements.elements.service.schema;
 import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.schema.CreateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.EditorSchema;
 import dev.getelements.elements.model.schema.MetadataSpec;
 import dev.getelements.elements.model.schema.UpdateMetadataSpecRequest;
+import dev.getelements.elements.model.schema.json.JsonSchema;
 import dev.getelements.elements.model.user.User;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
 public class SuperUserMetadataSpecService implements MetadataSpecService {
 
-    private MetadataSpecDao metadataSpecDao;
+    private Mapper mapper;
 
-    private User user;
+    private MetadataSpecDao metadataSpecDao;
 
     @Override
     public Pagination<MetadataSpec> getMetadataSpecs(
@@ -25,6 +28,18 @@ public class SuperUserMetadataSpecService implements MetadataSpecService {
     @Override
     public MetadataSpec getMetadataSpec(final String metadataSpecIdOrName) {
         return getMetadataSpecDao().getActiveMetadataSpec(metadataSpecIdOrName);
+    }
+
+    @Override
+    public JsonSchema getJsonSchema(final String metadataSpecName) {
+        final var spec = getMetadataSpecDao().getActiveMetadataSpecByName(metadataSpecName);
+        return getMapper().map(spec, JsonSchema.class);
+    }
+
+    @Override
+    public EditorSchema getEditorSchema(final String metadataSpecName) {
+        final var spec = getMetadataSpecDao().getActiveMetadataSpecByName(metadataSpecName);
+        return getMapper().map(spec, EditorSchema.class);
     }
 
     @Override
@@ -51,13 +66,13 @@ public class SuperUserMetadataSpecService implements MetadataSpecService {
         getMetadataSpecDao().deleteMetadataSpec(metadataSpecId);
     }
 
-    public User getUser() {
-        return user;
+    public Mapper getMapper() {
+        return mapper;
     }
 
     @Inject
-    public void setUser(User user) {
-        this.user = user;
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
     }
 
     public MetadataSpecDao getMetadataSpecDao() {

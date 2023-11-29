@@ -33,8 +33,8 @@ public class MetadataSpecProperty implements Serializable, MetadataSpecPropertie
     @ApiModelProperty("The placeholder value when displaying in the editor.")
     private String placeholder;
 
-    @ApiModelProperty("The default value, if left unspecified.")
-    private String defaultValue;
+    @ApiModelProperty("The default value, null if left unspecified.")
+    private Object defaultValue;
 
     @Valid
     private List<MetadataSpecProperty> properties;
@@ -81,11 +81,11 @@ public class MetadataSpecProperty implements Serializable, MetadataSpecPropertie
         this.placeholder = placeholder;
     }
 
-    public String getDefaultValue() {
+    public Object getDefaultValue() {
         return defaultValue;
     }
 
-    public void setDefaultValue(String defaultValue) {
+    public void setDefaultValue(Object defaultValue) {
         this.defaultValue = defaultValue;
     }
 
