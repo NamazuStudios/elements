@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.Date;
 import java.util.Objects;
 
 @ApiModel
@@ -36,6 +37,16 @@ public class LargeObject {
     @NotNull
     @ApiModelProperty("Permission associated with LargeObject.")
     private AccessPermissions accessPermissions;
+
+    @ApiModelProperty("Current state of large object")
+    private LargeObjectState state;
+
+    @ApiModelProperty("Date of last modification")
+    private Date lastModified;
+
+    public LargeObject() {
+        this.state = LargeObjectState.EMPTY;
+    }
 
     public String getId() {
         return id;
@@ -77,29 +88,45 @@ public class LargeObject {
         this.mimeType = mimeType;
     }
 
+    public LargeObjectState getState() {
+        return state;
+    }
+
+    public void setState(LargeObjectState state) {
+        this.state = state;
+    }
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Date lastModified) {
+        this.lastModified = lastModified;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LargeObject that = (LargeObject) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getUrl(), that.getUrl()) && Objects.equals(getPath(), that.getPath()) && Objects.equals(getMimeType(), that.getMimeType()) && Objects.equals(getAccessPermissions(), that.getAccessPermissions());
+        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && Objects.equals(accessPermissions, that.accessPermissions) && state == that.state && Objects.equals(lastModified, that.lastModified);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getUrl(), getPath(), getMimeType(), getAccessPermissions());
+        return Objects.hash(id, url, path, mimeType, accessPermissions, state, lastModified);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("LargeObject{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", url='").append(url).append('\'');
-        sb.append(", path='").append(path).append('\'');
-        sb.append(", mimeType='").append(mimeType).append('\'');
-        sb.append(", accessPermissions=").append(accessPermissions);
-        sb.append('}');
-        return sb.toString();
+        return "LargeObject{" +
+                "id='" + id + '\'' +
+                ", url='" + url + '\'' +
+                ", path='" + path + '\'' +
+                ", mimeType='" + mimeType + '\'' +
+                ", accessPermissions=" + accessPermissions +
+                ", state=" + state +
+                ", lastModified=" + lastModified +
+                '}';
     }
-
 }

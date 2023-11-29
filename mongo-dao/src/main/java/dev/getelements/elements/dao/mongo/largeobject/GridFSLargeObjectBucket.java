@@ -4,11 +4,14 @@ import com.mongodb.MongoGridFSException;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
+import com.mongodb.client.gridfs.GridFSUploadStream;
 import dev.getelements.elements.dao.LargeObjectBucket;
 import dev.getelements.elements.dao.LargeObjectDao;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.largeobject.LargeObjectContentNotFoundException;
+import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectState;
 import dev.getelements.elements.rt.Path;
 import org.bson.BsonString;
 
@@ -36,7 +39,9 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
         final var normalized = new Path(largeObject.getPath()).toPathWithoutContext();
 
         try {
-            return getGridFSBucket().openUploadStream(gridFsFileId, normalized.toNormalizedPathString());
+            GridFSUploadStream stream = getGridFSBucket().openUploadStream(gridFsFileId, normalized.toNormalizedPathString());
+            setUploaded(largeObject);
+            return stream;
         } catch (MongoWriteException ex) {
             if (ex.getCode() == 11000) {
                 throw new DuplicateException("Contents already exists: " + objectId);
@@ -63,6 +68,12 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
     public void deleteLargeObject(final String objectId) {
         final var gridFsFileId = new BsonString(objectId);
         getGridFSBucket().delete(gridFsFileId);
+    }
+
+    @Override
+    public void setUploaded(LargeObject largeObject) {
+        largeObject.setState(LargeObjectState.UPLOADED);
+        largeObjectDao.updateLargeObject(largeObject);
     }
 
     public boolean exist(final String objectId) {

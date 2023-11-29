@@ -19,6 +19,7 @@ import static dev.morphia.query.filters.Filters.and;
 import static dev.morphia.query.filters.Filters.eq;
 
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -73,6 +74,8 @@ public class MongoLargeObjectDao implements LargeObjectDao {
                         set("mimeType", largeObject.getMimeType()),
                         set("url", largeObject.getUrl()),
                         set("path", largeObject.getPath()),
+                        set("state", largeObject.getState()),
+                        set("lastModified", new Date()),
                         set("accessPermissions", largeObject.getAccessPermissions())
                 ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
