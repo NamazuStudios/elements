@@ -698,6 +698,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>com.mailjet</groupId>
+                <artifactId>mailjet-client</artifactId>
+                <version>5.2.5</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.redisson</groupId>

@@ -168,6 +168,11 @@
             <groupId>io.getstream.client</groupId>
             <artifactId>stream-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mailjet</groupId>
+            <artifactId>mailjet-client</artifactId>
+            <version>5.2.5</version>
+        </dependency>
 
         <!-- Manual Kotlin Dependencies -->
         <dependency>
