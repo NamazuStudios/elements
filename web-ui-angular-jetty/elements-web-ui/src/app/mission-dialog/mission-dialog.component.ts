@@ -3,7 +3,7 @@ import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar'
-import {ENTER, COMMA} from '@angular/cdk/keycodes';
+import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {MissionStepsCardComponent} from './mission-steps-card/mission-steps-card.component';
 import {AlertService} from '../alert.service';
@@ -26,6 +26,7 @@ export class MissionDialogComponent implements OnInit {
   originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps || []));
   originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep || null));
 
+  okButtonEnabled = false;
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -72,6 +73,11 @@ export class MissionDialogComponent implements OnInit {
       this.data.mission.metadata = this.originalMetadata;
       this.data.mission.steps = this.originalSteps;
       this.data.mission.finalRepeatStep = this.originalFinalStep;
+      return;
+    }
+
+    if (!this.stepsCard.stepsValid()) {
+      // this.stepsCard.stepForm.get("displayName0").setErrors({ 'required': true })
       return;
     }
 
