@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.googlesignin;
 
-import com.namazustudios.elements.fts.ObjectIndex;
 import dev.getelements.elements.dao.GoogleSignInUserDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -23,17 +22,15 @@ import java.util.HashMap;
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.*;
-import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
+import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.setOnInsert;
 
 public class MongoGoogleSignInUserDao implements GoogleSignInUserDao {
 
     private Datastore datastore;
 
     private ValidationHelper validationHelper;
-
-    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -61,11 +58,11 @@ public class MongoGoogleSignInUserDao implements GoogleSignInUserDao {
         }
 
         query.filter(or(
-            eq("googleSignInId", user.getGoogleSignInId()),
-            and(
-                exists("googleSignInId").not(),
-                eq("email", user.getEmail())
-            )
+                eq("googleSignInId", user.getGoogleSignInId()),
+                and(
+                        exists("googleSignInId").not(),
+                        eq("email", user.getEmail())
+                )
         ));
 
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
@@ -76,13 +73,12 @@ public class MongoGoogleSignInUserDao implements GoogleSignInUserDao {
         getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
-            query.modify(
-                set("active", true),
-                setOnInsert(insertMap)
-            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+                query.modify(
+                        set("active", true),
+                        setOnInsert(insertMap)
+                ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -104,17 +100,16 @@ public class MongoGoogleSignInUserDao implements GoogleSignInUserDao {
         query.filter(eq("active", true));
 
         query.filter(or(
-                exists("googleSignInId").not(),
-                eq("googleSignInId", user.getGoogleSignInId())
-            )
+                        exists("googleSignInId").not(),
+                        eq("googleSignInId", user.getGoogleSignInId())
+                )
         );
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
-            query.modify(set("googleSignInId", user.getGoogleSignInId()))
-                 .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+                query.modify(set("googleSignInId", user.getGoogleSignInId()))
+                        .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
@@ -153,15 +148,6 @@ public class MongoGoogleSignInUserDao implements GoogleSignInUserDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public ObjectIndex getObjectIndex() {
-        return objectIndex;
-    }
-
-    @Inject
-    public void setObjectIndex(ObjectIndex objectIndex) {
-        this.objectIndex = objectIndex;
     }
 
     public MongoDBUtils getMongoDBUtils() {
