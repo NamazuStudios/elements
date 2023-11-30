@@ -101,18 +101,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final User user) {
-        return getInventoryItems(offset, count, user, null);
-    }
-
-    @Override
-    public Pagination<InventoryItem> getPublicInventoryItems(final int offset, final int count) {
+    public Pagination<InventoryItem> getUserPublicInventoryItems(final int offset, final int count, User user) {
 
         List<MongoItem> publicItems = mongoItemDao.getPublicItems();
 
         final var query = getDatastore()
                 .find(MongoInventoryItem.class)
-                .filter(in("item", publicItems));
+                .filter(in("item", publicItems))
+                .filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,

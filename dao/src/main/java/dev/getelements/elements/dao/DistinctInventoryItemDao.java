@@ -3,6 +3,8 @@ package dev.getelements.elements.dao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.inventory.InventoryItem;
+import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
@@ -42,27 +44,40 @@ public interface DistinctInventoryItemDao {
      *
      * @param offset the offset from the beginning of the dataset
      * @param count the number of items to return
-     * @param userId the user id, if specified. Otherwise null.
-     * @param profileId the profile id, if specified. Otherwise null.
+     * @param user checked user
+     * @param profile checked profile.
      * @return a {@link Pagination<InventoryItem>}
      */
     Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
-            String userId, String profileId);
+            Profile profile, User user);
+
+    /**
+     * Gets a listing distinct inventory items for user, flagged as publicVisible
+     *
+     * @param offset the offset from the beginning of the dataset
+     * @param count the number of items to return
+     * @param user checked user
+     * @param profile checked profile.
+     * @return a {@link Pagination<InventoryItem>}
+     */
+    Pagination<DistinctInventoryItem> getDistinctInventoryPublicItems(
+            int offset, int count,
+            Profile profile, User user);
 
     /**
      * Gets a listing distinct inventory items filtering by query string.
      *
      * @param offset the offset from the beginning of the dataset
      * @param count the number of items to return
-     * @param userId the user id, if specified. Otherwise null.
-     * @param profileId the profile id, if specified. Otherwise null.
+     * @param user checked user
+     * @param profile checked profile.
      * @return a {@link Pagination<InventoryItem>}
      */
     default Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
-            String userId, String profileId, String query) {
-        return getDistinctInventoryItems(offset, count, userId, profileId);
+            Profile profile, User user, String query) {
+        return getDistinctInventoryItems(offset, count, profile, user);
     }
 
     /**

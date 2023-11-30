@@ -12,7 +12,6 @@ import dev.getelements.elements.service.auth.AuthSchemeService;
 import dev.getelements.elements.service.formidium.FormidiumService;
 import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptService;
 import dev.getelements.elements.service.inventory.DistinctInventoryItemService;
-import dev.getelements.elements.service.inventory.PublicInventoryItemService;
 import dev.getelements.elements.service.inventory.SimpleInventoryItemService;
 import dev.getelements.elements.service.mission.MissionService;
 import dev.getelements.elements.service.progress.ProgressService;
@@ -92,7 +91,6 @@ public class ServicesModule extends PrivateModule {
         expose(MockSessionService.class);
         expose(ItemService.class);
         expose(SimpleInventoryItemService.class);
-        expose(PublicInventoryItemService.class);
         expose(AdvancedInventoryItemService.class);
         expose(MissionService.class);
         expose(ProgressService.class);

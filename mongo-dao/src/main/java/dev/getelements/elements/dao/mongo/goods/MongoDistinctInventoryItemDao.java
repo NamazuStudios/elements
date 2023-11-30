@@ -7,6 +7,7 @@ import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
+import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.inventory.DistinctInventoryItemNotFoundException;
 import dev.getelements.elements.model.Pagination;
@@ -14,17 +15,21 @@ import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.goods.ItemCategory;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
+import dev.getelements.elements.model.profile.Profile;
+import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.in;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
@@ -97,36 +102,30 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     @Override
     public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset, final int count,
-            final String userId, final String profileId) {
+            final Profile profile, final User user) {
 
-        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
-
-        if (userId != null && !userId.isBlank()) {
-
-            var user = getMongoUserDao().findActiveMongoUser(userId);
-
-            if (user.isEmpty()) {
-                return Pagination.empty();
-            }
-
-            user.ifPresent(u -> query.filter(eq("user", u)));
-
-        }
-
-        if (profileId != null && !profileId.isBlank()) {
-
-            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
-
-            if (profile.isEmpty()) {
-                return Pagination.empty();
-            }
-
-            profile.ifPresent(p -> query.filter(eq("profile", p)));
-
-        }
+        final var query = getDatastore()
+                .find(MongoDistinctInventoryItem.class)
+                .filter(eq("user", user))
+                .filter(eq("profile", profile));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
+    }
 
+    @Override
+    public Pagination<DistinctInventoryItem> getDistinctInventoryPublicItems(
+            int offset, int count,
+            Profile profile, User user) {
+
+        List<MongoItem> publicItems = mongoItemDao.getPublicItems();
+
+        final var query = getDatastore()
+                .find(MongoDistinctInventoryItem.class)
+                .filter(eq("user", user))
+                .filter(in("item", publicItems))
+                .filter(eq("profile", profile));
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
     }
 
     @Override
