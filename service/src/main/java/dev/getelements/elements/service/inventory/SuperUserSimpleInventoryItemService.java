@@ -6,8 +6,6 @@ import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.InventoryItem;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.service.UserService;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 
