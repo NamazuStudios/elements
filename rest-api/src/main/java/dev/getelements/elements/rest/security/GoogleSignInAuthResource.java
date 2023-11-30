@@ -17,7 +17,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static dev.getelements.elements.rest.swagger.EnhancedApiListingResource.*;
+import static dev.getelements.elements.rest.AuthSchemes.*;
 
 /**
  * Created by patricktwohig on 4/2/15.
@@ -68,11 +68,10 @@ public class GoogleSignInAuthResource {
             throw new InvalidDataException("Identity token not specified.");
         }
 
-        return getGoogleSignInAuthService().createOrUpdateUserWithIdentityTokenAndAuthCode(
+        return getGoogleSignInAuthService().createOrUpdateUserWithIdentityToken(
                 applicationNameOrId,
                 applicationConfigurationNameOrId,
-                identityToken,
-                authCode);
+                identityToken);
 
     }
 

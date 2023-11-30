@@ -13,20 +13,11 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
  */
 @Expose({
         @ModuleDefinition(
-                value = "eci.elements.service.applesignin"
+                value = "eci.elements.service.googlesignin"
         ),
         @ModuleDefinition(
-                value = "eci.elements.service.unscoped.applesignin",
+                value = "eci.elements.service.unscoped.googlesignin",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
-        ),
-        @ModuleDefinition(
-                value = "namazu.elements.service.applesignin",
-                deprecated = @DeprecationDefinition("Use eci.elements.service.applesignin instead.")
-        ),
-        @ModuleDefinition(
-                value = "namazu.elements.service.unscoped.applesignin",
-                annotation = @ExposedBindingAnnotation(Unscoped.class),
-                deprecated = @DeprecationDefinition("Use eci.elements.service.unscoped.applesignin instead.")
         )
 })
 public interface GoogleSignInAuthService {
@@ -40,13 +31,11 @@ public interface GoogleSignInAuthService {
      * @param applicationNameOrId the application name or id
      * @param applicationConfigurationNameOrId the application configuration name or id
      * @param identityToken the identity token issued by Google's services
-     * @param authorizationCode the authorization code issued by Google's services
      *
      * @return
      */
-    GoogleSignInSessionCreation createOrUpdateUserWithIdentityTokenAndAuthCode(String applicationNameOrId,
-                                                                              String applicationConfigurationNameOrId,
-                                                                              String identityToken,
-                                                                              String authorizationCode);
+    GoogleSignInSessionCreation createOrUpdateUserWithIdentityToken(String applicationNameOrId,
+                                                                    String applicationConfigurationNameOrId,
+                                                                    String identityToken);
 
 }

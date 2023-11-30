@@ -75,6 +75,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>${google-api-client.version}</version>
+        </dependency>
+        <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-simple-guice</artifactId>
             <version>${project.version}</version>

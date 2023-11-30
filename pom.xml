@@ -154,6 +154,7 @@
         <kotlin.version>1.5.10</kotlin.version>
         <redisson.version>3.14.1</redisson.version>
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
+        <google-api-client.version>2.0.0</google-api-client.version>
         <near-java-api.version>0.2.0</near-java-api.version>
         <getstream.version>3.7.0</getstream.version>
     </properties>

@@ -265,13 +265,14 @@ public class User implements Serializable {
     /**
      * Gets the Google sign-in ID.
      *
-     * @return the apple sign-in id
+     * @return the google sign-in id
      */
     public String getGoogleSignInId() {
         return googleSignInId;
     }
 
     /**
+     * Sets the user's Google sign-in ID.
      *
      * @param googleSignInId
      */

@@ -15,7 +15,7 @@ import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.filters.Filters;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
@@ -27,7 +27,6 @@ import java.sql.Timestamp;
 import java.util.Optional;
 
 import static dev.getelements.elements.dao.mongo.model.MongoSession.Type.GOOGLE_SIGN_IN;
-import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
 
 public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
@@ -47,15 +46,10 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
 
         requireNonNull(tokenResponse, "tokenResponse");
         requireNonNull(tokenResponse.getAccessToken(), "tokenResponse.accessToken");
-        requireNonNull(tokenResponse.getRefreshToken(), "tokenResponse.refreshToken");
 
         final MongoGoogleSignInSession mongoGoogleSignInSession = getMapper().map(session, MongoGoogleSignInSession.class);
 
-        // Google Sign-In created sessions do not expire automatically, they are expired by Google when a refresh token
-        // fails to refresh with Google's REST APIs. This way we can always recall the session if we need to.
-
-        mongoGoogleSignInSession.setExpiry(null);
-        mongoGoogleSignInSession.setGoogleSignInRefreshTime(new Timestamp(currentTimeMillis()));
+        mongoGoogleSignInSession.setExpiry(new Timestamp(tokenResponse.getExpiresAt()));
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(session.getUser());
         final MongoSessionSecret mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());

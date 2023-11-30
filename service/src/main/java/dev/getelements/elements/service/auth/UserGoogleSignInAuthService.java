@@ -8,9 +8,9 @@ import dev.getelements.elements.service.GoogleSignInAuthService;
 
 import javax.inject.Inject;
 
-import static dev.getelements.elements.model.user.User.Level.USER;
+public class UserGoogleSignInAuthService implements GoogleSignInAuthService {
 
-public class AnonGoogleSignInAuthService implements GoogleSignInAuthService {
+    private User user;
 
     private GoogleSignInUserDao googleSignInUserDao;
 
@@ -21,50 +21,40 @@ public class AnonGoogleSignInAuthService implements GoogleSignInAuthService {
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId,
             final String identityToken) {
-
         return getGoogleSignInAuthServiceOperations().createOrUpdateUserWithGoogleSignInToken(
                 applicationNameOrId,
                 applicationConfigurationNameOrId,
                 identityToken,
                 googleIdentityToken ->  {
                     final var user = mapTokenToUser(googleIdentityToken);
-                    return getGoogleSignInUserDao().createReactivateOrUpdateUser(user);
+                    return getGoogleSignInUserDao().connectActiveUserIfNecessary(user);
                 }
         );
     }
 
-    // Per https://developers.google.com/identity/sign-in/web/backend-auth:
-    // These six fields are included in all Google ID Tokens.
-    // "iss": "https://accounts.google.com",
-    // "sub": "110169484474386276334",
-    // "azp": "1008719970978-hb24n2dstb40o45d4feuo2ukqmcc6381.apps.googleusercontent.com",
-    // "aud": "1008719970978-hb24n2dstb40o45d4feuo2ukqmcc6381.apps.googleusercontent.com",
-    // "iat": "1433978353",
-    // "exp": "1433981953",
-    //
-    // These seven fields are only included when the user has granted the "profile" and "email" OAuth scopes to the application.
-    // "email": "testuser@gmail.com",
-    // "email_verified": "true",
-    // "name" : "Test User",
-    // "picture": "https://lh4.googleusercontent.com/-kYgzyAWpZzJ/ABCDEFGHI/AAAJKLMNOP/tIXL9Ir44LE/s99-c/photo.jpg",
-    // "given_name": "Test",
-    // "family_name": "User",
-    // "locale": "en"
     private User mapTokenToUser(final GoogleIdToken googleIdentityToken) {
 
         final var payload = googleIdentityToken.getPayload();
         final var userId = payload.getSubject();
-        final var email = payload.getEmail();
-        final var name = (String) payload.get("name");
 
         final User user = new User();
-        user.setActive(true);
-        user.setLevel(USER);
-        user.setName(name);
-        user.setEmail(email);
+        user.setId(getUser().getId());
+        user.setLevel(getUser().getLevel());
+        user.setActive(getUser().isActive());
+        user.setEmail(getUser().getEmail());
+        user.setName(getUser().getName());
         user.setGoogleSignInId(userId);
 
         return user;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public GoogleSignInUserDao getGoogleSignInUserDao() {
@@ -84,5 +74,4 @@ public class AnonGoogleSignInAuthService implements GoogleSignInAuthService {
     public void setGoogleSignInAuthServiceOperations(GoogleSignInAuthServiceOperations googleSignInAuthServiceOperations) {
         this.googleSignInAuthServiceOperations = googleSignInAuthServiceOperations;
     }
-
 }
