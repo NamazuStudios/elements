@@ -180,10 +180,11 @@ public class MongoDistinctInventorItemDaoTest {
         saveIntermediate(created);
     }
 
+    //TODO: check this, and add getting for public inventory tests
     @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
     public void testGetAllItems() {
         final var all = new PaginationWalker().toList((offset, count) ->
-            underTest.getDistinctInventoryItems(offset, count, null, null)
+            underTest.getDistinctInventoryItems(offset, count, profileList.get(0), userList.get(0))
         );
         intermediates.values().containsAll(all);
     }
