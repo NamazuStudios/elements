@@ -53,9 +53,10 @@ public class MongoFIFOMatchmaker implements Matchmaker {
 
         applyScope.accept(query);
 
-        final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
-        final List<MongoMatch> mongoMatchList = query.iterator(new FindOptions().sort(Sort.ascending("lastUpdatedTimestamp"))).toList();
-        return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList, finalizer);
+        try (var iterator = query.iterator(new FindOptions().sort(Sort.ascending("lastUpdatedTimestamp")))) {
+            final List<MongoMatch> mongoMatchList = iterator.toList();
+            return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList, finalizer);
+        }
 
     }
 

@@ -121,10 +121,9 @@ public class RankResource {
             throw new InvalidParameterException("Offset must have non-negative value when using non-relative offset.");
         }
 
-        return !relative ?
-            getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch) :
-            getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, count,
-                    leaderboardEpoch);
+        return !relative
+            ? getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
+            : getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, offset, count, leaderboardEpoch);
 
     }
 

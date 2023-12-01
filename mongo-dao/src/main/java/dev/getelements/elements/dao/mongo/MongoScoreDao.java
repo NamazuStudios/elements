@@ -43,7 +43,7 @@ public class MongoScoreDao implements ScoreDao {
 
         final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
         final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final var leaderboardEpoch = mongoLeaderboard.getCurrentEpoch();
+        final var leaderboardEpoch = mongoLeaderboard.calculateCurrentEpoch();
 
         // If the leaderboard is epochal, but the current time is less than the first epoch time...
         if (mongoLeaderboard.getTimeStrategyType() == EPOCHAL && !mongoLeaderboard.hasStarted()) {
