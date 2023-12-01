@@ -97,7 +97,7 @@ public interface RankDao {
      * @param leaderboardEpoch the epoch timestamp
      * @return a {@link Pagination<Rank>} containing all ranks
      */
-    Pagination<Rank> getRanksForFollowers(
+    Pagination<Rank> getRanksForMutualFollowers(
             String leaderboardNameOrId,
             String profileId,
             int offset, int count,
@@ -116,7 +116,7 @@ public interface RankDao {
      * @param count the number of results to return   @return a {@link Pagination<Rank>} containing all ranks
      * @param leaderboardEpoch the epoch timestamp
      */
-    Pagination<Rank> getRanksForFollowersRelative(
+    Pagination<Rank> getRanksForMutualFollowersRelative(
             String leaderboardNameOrId,
             String profileId,
             int offset, int count,

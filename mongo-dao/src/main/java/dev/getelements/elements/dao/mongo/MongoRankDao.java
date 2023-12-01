@@ -1,14 +1,15 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.RankDao;
-import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
-import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.MongoScore;
-import dev.getelements.elements.dao.mongo.model.MongoScoreId;
+import dev.getelements.elements.dao.mongo.model.*;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.morphia.Datastore;
+import dev.morphia.aggregation.Aggregation;
+import dev.morphia.aggregation.expressions.impls.Expression;
+import dev.morphia.aggregation.stages.Group;
+import dev.morphia.aggregation.stages.Lookup;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
@@ -18,6 +19,9 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Function;
 
+import static dev.morphia.aggregation.stages.Group.group;
+import static dev.morphia.aggregation.stages.Group.of;
+import static dev.morphia.aggregation.stages.Lookup.lookup;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.*;
 import static java.lang.Math.max;
@@ -117,18 +121,37 @@ public class MongoRankDao implements RankDao {
     }
 
     @Override
-    public Pagination<Rank> getRanksForFollowers(final String leaderboardNameOrId,
-                                                 final String  profileId,
-                                                 final int offset, final int count,
-                                                 final long leaderboardEpoch) {
+    public Pagination<Rank> getRanksForMutualFollowers(final String leaderboardNameOrId,
+                                                       final String  profileId,
+                                                       final int offset, final int count,
+                                                       final long leaderboardEpoch) {
+        final var profileObjectId = getMongoDBUtils().parse(profileId);
+
+        if (profileObjectId.isEmpty()) {
+            return Pagination.empty();
+        }
+
+        getDatastore().aggregate(MongoFollower.class)
+                .match(eq("_id.profileId", profileObjectId.get()))
+                .lookup(lookup(MongoFollower.class)
+                        .localField("_id.profileId")
+                        .foreignField("_id.followedId")
+                )
+                .lookup(lookup(MongoScore.class)
+                        .localField("profile")
+                        .foreignField("profile")
+                )
+                .match(eq("leaderboard", "theLeaderboard"))
+                .execute(MongoScore.class);
+
         return null;
     }
 
     @Override
-    public Pagination<Rank> getRanksForFollowersRelative(final String leaderboardNameOrId,
-                                                         final String profileId,
-                                                         final int offset, final int count,
-                                                         final long leaderboardEpoch) {
+    public Pagination<Rank> getRanksForMutualFollowersRelative(final String leaderboardNameOrId,
+                                                               final String profileId,
+                                                               final int offset, final int count,
+                                                               final long leaderboardEpoch) {
         return null;
     }
 

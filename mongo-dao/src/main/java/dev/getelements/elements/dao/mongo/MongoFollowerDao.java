@@ -65,20 +65,6 @@ public class MongoFollowerDao implements FollowerDao {
 
     }
 
-    public List<MongoFollower> getAllMutualMongoFollowersForProfile(final String profileId) {
-
-        final var query = getDatastore().find(MongoFollower.class);
-        final var profileObjectId = getMongoDBUtils().parseOrThrow(profileId, ProfileNotFoundException::new);
-        query.filter(eq("_id.profileId", profileObjectId));
-        
-
-        try (var iterator = query.iterator()) {
-            return iterator.toList();
-        }
-
-    }
-
-
     @Override
     public Profile getFollowerForProfile(final String profileId,
                                          final String followedId) {
