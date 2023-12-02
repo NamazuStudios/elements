@@ -108,11 +108,10 @@ public class MongoFollowerDao implements FollowerDao {
     }
 
     @Override
-    public void createFollowerForProfile(final String profileId,
-                                         final CreateFollowerRequest createFollowerRequest) {
+    public void createFollowerForProfile(final String profileId, final String followedProfileId) {
 
         final var follower = getMongoProfileDao().getActiveMongoProfile(profileId);
-        final var followed = getMongoProfileDao().getActiveMongoProfile(createFollowerRequest.getFollowedId());
+        final var followed = getMongoProfileDao().getActiveMongoProfile(followedProfileId);
 
         final var mongoFollower = new MongoFollower();
         final var mongoFollowerId = new MongoFollowerId(follower.getObjectId(), followed.getObjectId());

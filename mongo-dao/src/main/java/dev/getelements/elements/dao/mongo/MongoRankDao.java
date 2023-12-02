@@ -156,7 +156,6 @@ public class MongoRankDao implements RankDao {
                 .map(getMongoProfileDao()::getActiveMongoProfile)
                 .collect(toList());
 
-
         profiles.add(mongoProfile);
 
         return getRanks(
@@ -188,7 +187,6 @@ public class MongoRankDao implements RankDao {
                 .map(follower -> follower.getObjectId().getFollowedId())
                 .map(getMongoProfileDao()::getActiveMongoProfile)
                 .collect(toList());
-
 
         profiles.add(mongoProfile);
 
