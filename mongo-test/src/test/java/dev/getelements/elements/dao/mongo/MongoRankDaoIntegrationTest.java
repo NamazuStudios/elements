@@ -2,6 +2,8 @@ package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.*;
 import dev.getelements.elements.model.application.Application;
+import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
 import org.testng.annotations.BeforeClass;
@@ -9,9 +11,10 @@ import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static dev.getelements.elements.model.leaderboard.Leaderboard.ScoreStrategyType.OVERWRITE_IF_GREATER;
+import static dev.getelements.elements.model.leaderboard.Leaderboard.TimeStrategyType.ALL_TIME;
 import static java.util.Collections.shuffle;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
@@ -31,6 +34,8 @@ public class MongoRankDaoIntegrationTest {
 
     private ApplicationDao applicationDao;
 
+    private LeaderboardDao leaderboardDao;
+
     private UserTestFactory userTestFactory;
 
     private ProfileTestFactory profileTestFactory;
@@ -41,7 +46,7 @@ public class MongoRankDaoIntegrationTest {
 
     private Map<String, Profile> allProfiles;
 
-    private Map<Profile, List<Profile>> followers;
+    private Map<String, List<Profile>> followers;
 
     @BeforeClass
     public void setupUsers() {
@@ -72,6 +77,7 @@ public class MongoRankDaoIntegrationTest {
         final var random = new Random();
 
         final var followers = new HashMap<String , List<Profile>>();
+        final var mutualFollowers = new HashMap<String, List<Profile>>();
         final var allProfiles = new ArrayList<>(this.allProfiles.values());
 
         for (final var profile : this.allProfiles.values()) {
@@ -94,15 +100,35 @@ public class MongoRankDaoIntegrationTest {
 
         }
 
-    }
-
-    @BeforeClass(dependsOnMethods = "setupAllProfiles")
-    public void setupMutualFollowers() {
+        this.followers = followers;
 
     }
 
+    @BeforeClass
+    public void createLeaderboard() {
+        final var leaderboard = new Leaderboard();
+        leaderboard.setName("follower_integration_test");
+        leaderboard.setTitle("Test Followers");
+        leaderboard.setScoreUnits("Points");
+        leaderboard.setScoreStrategyType(OVERWRITE_IF_GREATER);
+        leaderboard.setTimeStrategyType(ALL_TIME);
+        getLeaderboardDao().createLeaderboard(leaderboard);
+    }
+
+    @BeforeClass(dependsOnMethods = {"setupAllProfiles", "createLeaderboard"})
     public void createScores() {
 
+        double value = 0;
+
+        for (var profile : allProfiles.values()) {
+            var score = new Score();
+            score.setProfile(profile);
+            score.setScoreUnits("Points");
+            score.setProfile(profile);
+            score.setPointValue(value + 10);
+            getScoreDao().createOrUpdateScore("follower_integration_test", score);
+        }
+        
     }
 
     public RankDao getRankDao() {
@@ -148,6 +174,15 @@ public class MongoRankDaoIntegrationTest {
     @Inject
     public void setApplicationDao(ApplicationDao applicationDao) {
         this.applicationDao = applicationDao;
+    }
+
+    public LeaderboardDao getLeaderboardDao() {
+        return leaderboardDao;
+    }
+
+    @Inject
+    public void setLeaderboardDao(LeaderboardDao leaderboardDao) {
+        this.leaderboardDao = leaderboardDao;
     }
 
     public UserTestFactory getUserTestFactory() {
