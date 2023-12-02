@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo;
 import dev.getelements.elements.dao.FollowerDao;
 import dev.getelements.elements.dao.mongo.model.MongoFollower;
 import dev.getelements.elements.dao.mongo.model.MongoFollowerId;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.profile.ProfileNotFoundException;
@@ -13,11 +14,12 @@ import dev.morphia.Datastore;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-
 import java.util.List;
 
+import static dev.morphia.aggregation.stages.Lookup.lookup;
 import static dev.morphia.query.filters.Filters.eq;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 public class MongoFollowerDao implements FollowerDao {
 
@@ -87,6 +89,21 @@ public class MongoFollowerDao implements FollowerDao {
         }
 
         return getDozerMapper().map(follower.getFollowedProfile(), Profile.class);
+
+    }
+
+    public List<MongoFollower> getMutualMongoFollowers(final MongoProfile mongoProfile) {
+
+        final var aggregation = getDatastore().aggregate(MongoFollower.class)
+                .match(eq("_id.profileId", mongoProfile.getObjectId()))
+                .lookup(lookup(MongoFollower.class)
+                        .localField("_id.profileId")
+                        .foreignField("_id.followedId")
+                );
+
+        try (var cursor = aggregation.execute(MongoFollower.class)) {
+            return cursor.toList();
+        }
 
     }
 

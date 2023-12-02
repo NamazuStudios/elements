@@ -1,27 +1,22 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.RankDao;
-import dev.getelements.elements.dao.mongo.model.*;
+import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
+import dev.getelements.elements.dao.mongo.model.MongoScore;
+import dev.getelements.elements.dao.mongo.model.MongoScoreId;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.morphia.Datastore;
-import dev.morphia.aggregation.Aggregation;
-import dev.morphia.aggregation.expressions.impls.Expression;
-import dev.morphia.aggregation.stages.Group;
-import dev.morphia.aggregation.stages.Lookup;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.Sort;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Function;
 
-import static dev.morphia.aggregation.stages.Group.group;
-import static dev.morphia.aggregation.stages.Group.of;
-import static dev.morphia.aggregation.stages.Lookup.lookup;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.*;
 import static java.lang.Math.max;
@@ -56,9 +51,17 @@ public class MongoRankDao implements RankDao {
                                                       final String profileId,
                                                       final int offset, final int count,
                                                       final long leaderboardEpoch) {
+        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+        if (optionalMongoProfile.isEmpty()) {
+            return Pagination.empty();
+        }
+
+        final MongoProfile mongoProfile = optionalMongoProfile.get();
+
         return getRanksRelative(
                 leaderboardNameOrId,
-                profileId,
+                mongoProfile,
                 offset, count,
                 leaderboardEpoch,
                 identity(),
@@ -72,7 +75,13 @@ public class MongoRankDao implements RankDao {
                                                final int offset, final int count,
                                                final long leaderboardEpoch) {
 
-        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
+        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+        if (optionalMongoProfile.isEmpty()) {
+            return Pagination.empty();
+        }
+
+        final MongoProfile mongoProfile = optionalMongoProfile.get();
 
         final List<MongoProfile> profiles = getMongoFriendDao()
             .getAllMongoFriendshipsForUser(mongoProfile.getUser())
@@ -98,7 +107,13 @@ public class MongoRankDao implements RankDao {
                                                        final int offset, final int count,
                                                        final long leaderboardEpoch) {
 
-        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
+        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+        if (optionalMongoProfile.isEmpty()) {
+            return Pagination.empty();
+        }
+
+        final MongoProfile mongoProfile = optionalMongoProfile.get();
 
         final List<MongoProfile> profiles = getMongoFriendDao()
             .getAllMongoFriendshipsForUser(mongoProfile.getUser())
@@ -111,7 +126,7 @@ public class MongoRankDao implements RankDao {
 
         return getRanksRelative(
                 leaderboardNameOrId,
-                profileId,
+                mongoProfile,
                 offset, count,
                 leaderboardEpoch,
                 q -> q.filter(in("profile", profiles)),
@@ -125,26 +140,32 @@ public class MongoRankDao implements RankDao {
                                                        final String  profileId,
                                                        final int offset, final int count,
                                                        final long leaderboardEpoch) {
-        final var profileObjectId = getMongoDBUtils().parse(profileId);
 
-        if (profileObjectId.isEmpty()) {
+        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+        if (optionalMongoProfile.isEmpty()) {
             return Pagination.empty();
         }
 
-        getDatastore().aggregate(MongoFollower.class)
-                .match(eq("_id.profileId", profileObjectId.get()))
-                .lookup(lookup(MongoFollower.class)
-                        .localField("_id.profileId")
-                        .foreignField("_id.followedId")
-                )
-                .lookup(lookup(MongoScore.class)
-                        .localField("profile")
-                        .foreignField("profile")
-                )
-                .match(eq("leaderboard", "theLeaderboard"))
-                .execute(MongoScore.class);
+        final MongoProfile mongoProfile = optionalMongoProfile.get();
 
-        return null;
+        final List<MongoProfile> profiles = getMongoFollowerDao()
+                .getMutualMongoFollowers(mongoProfile)
+                .stream()
+                .map(follower -> follower.getObjectId().getFollowedId())
+                .map(getMongoProfileDao()::getActiveMongoProfile)
+                .collect(toList());
+
+
+        profiles.add(mongoProfile);
+
+        return getRanks(
+                leaderboardNameOrId,
+                offset, count,
+                leaderboardEpoch,
+                q -> q.filter(in("profile", profiles))
+        );
+
     }
 
     @Override
@@ -152,7 +173,34 @@ public class MongoRankDao implements RankDao {
                                                                final String profileId,
                                                                final int offset, final int count,
                                                                final long leaderboardEpoch) {
-        return null;
+
+        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+        if (optionalMongoProfile.isEmpty()) {
+            return Pagination.empty();
+        }
+
+        final MongoProfile mongoProfile = optionalMongoProfile.get();
+
+        final List<MongoProfile> profiles = getMongoFollowerDao()
+                .getMutualMongoFollowers(mongoProfile)
+                .stream()
+                .map(follower -> follower.getObjectId().getFollowedId())
+                .map(getMongoProfileDao()::getActiveMongoProfile)
+                .collect(toList());
+
+
+        profiles.add(mongoProfile);
+
+        return getRanksRelative(
+                leaderboardNameOrId,
+                mongoProfile,
+                offset, count,
+                leaderboardEpoch,
+                q -> q.filter(in("profile", profiles)),
+                q -> q.filter(ne("profile", mongoProfile))
+        );
+
     }
 
     public Pagination<Rank> getRanks(
@@ -184,13 +232,12 @@ public class MongoRankDao implements RankDao {
 
     public Pagination<Rank> getRanksRelative(
             final String leaderboardNameOrId,
-            final String profileId,
+            final MongoProfile mongoProfile,
             final int offset, final int count,
             final long leaderboardEpoch,
             final Function<Query<MongoScore>, Query<MongoScore>> queryTransformer,
             final Function<Query<MongoScore>, Query<MongoScore>> countQueryTransformer) {
 
-        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
         final var leaderboardEpochLookupValue = calculateEpochLookupValue(mongoLeaderboard, leaderboardEpoch);
         final var mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpochLookupValue);
