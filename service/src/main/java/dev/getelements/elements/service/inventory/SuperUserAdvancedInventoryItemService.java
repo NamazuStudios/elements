@@ -6,7 +6,6 @@ import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.InventoryItem;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.rt.exception.BadParameterException;
 import dev.getelements.elements.service.AdvancedInventoryItemService;
 
 import javax.inject.Inject;

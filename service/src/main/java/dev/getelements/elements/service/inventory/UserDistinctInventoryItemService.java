@@ -13,7 +13,6 @@ import dev.getelements.elements.model.user.User;
 import javax.inject.Inject;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;

@@ -16,12 +16,9 @@ import dev.getelements.elements.service.util.UserProfileUtility;
 
 import javax.inject.Inject;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class SuperUserDistinctInventoryItemService implements DistinctInventoryItemService {
 
