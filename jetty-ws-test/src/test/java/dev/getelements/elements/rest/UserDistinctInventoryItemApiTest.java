@@ -21,6 +21,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -96,7 +97,7 @@ public class UserDistinctInventoryItemApiTest {
         this.item = itemDao.createItem(item);
 
         final var publicItem = new Item();
-        publicItem.setName("publicDistinct");
+        publicItem.setName("publicDistinct" + UUID.randomUUID());
         publicItem.setCategory(DISTINCT);
         publicItem.setDescription("Public test item");
         publicItem.setDisplayName("Public test item");
