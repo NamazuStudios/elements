@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class UserDistinctInventoryItemService implements DistinctInventoryItemService {
@@ -66,13 +67,13 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             final String query) {
 
         final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
-        final Optional<Profile> profile = getProfileDao().findActiveProfile(profileId);
-        if (profile.isPresent() && !user.getId().equals(profile.get().getUser().getId())) {
+        final Profile profile = getProfileDao().findActiveProfile(profileId).orElse(null);
+        if (!isNull(profile) && !user.getId().equals(profile.getUser().getId())) {
             return new Pagination<>();
         }
         return isCurrentUser(userId) ?
-                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile.orElse(null), user, query) :
-                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile.orElse(null), user);
+                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile, user, query) :
+                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile, user);
     }
 
     @Override

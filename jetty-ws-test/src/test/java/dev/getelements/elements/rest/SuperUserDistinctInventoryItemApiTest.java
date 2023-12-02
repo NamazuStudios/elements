@@ -56,9 +56,14 @@ public class SuperUserDistinctInventoryItemApiTest {
     private ClientContext superUserClientContext;
 
     @Inject
+    private ClientContext userWithPublicItems;
+
+    @Inject
     private ItemDao itemDao;
 
     private Item item;
+
+    private Item publicItem;
 
     private final Map<String, Set<DistinctInventoryItem>> intermediatesByUser = new ConcurrentHashMap<>();
 
@@ -82,12 +87,25 @@ public class SuperUserDistinctInventoryItemApiTest {
                 .createProfile("DistinctB")
                 .createSession();
 
+        userWithPublicItems
+                .createUser("distinctPublic")
+                .createProfile("DistinctPublic")
+                .createSession();
+
         final var item = new Item();
         item.setName("distinct1");
         item.setCategory(DISTINCT);
         item.setDescription("Test Item");
         item.setDisplayName("Test Item");
         this.item = itemDao.createItem(item);
+
+        final var publicItem = new Item();
+        publicItem.setName("publicDistinct");
+        publicItem.setCategory(DISTINCT);
+        publicItem.setDescription("Public test item");
+        publicItem.setDisplayName("Public test item");
+        publicItem.setPublicVisible(true);
+        this.publicItem = itemDao.createItem(publicItem);
 
     }
 
@@ -210,6 +228,29 @@ public class SuperUserDistinctInventoryItemApiTest {
     }
 
     @Test(threadPoolSize = 5, dataProvider = "getUserClientContexts")
+    public void testCreatePublicItemUser(final ClientContext userClientContext) {
+
+        var request = new CreateDistinctInventoryItemRequest();
+        request.setItemId(publicItem.getId());
+        request.setUserId(userWithPublicItems.getUser().getId());
+
+        final var response = client
+                .target(format("%s/inventory/distinct", apiRoot))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertEquals(200, response.getStatus());
+
+        final var created = response.readEntity(DistinctInventoryItem.class);
+        assertNotNull(created.getId());
+        assertNull(created.getProfile());
+        assertEquals(userWithPublicItems.getUser(), created.getUser());
+        updateIntermediate(created);
+
+    }
+
+    @Test(threadPoolSize = 5, dataProvider = "getUserClientContexts")
     public void testCreateItemProfile(final ClientContext userClientContext) {
 
         var request = new CreateDistinctInventoryItemRequest();
@@ -305,6 +346,30 @@ public class SuperUserDistinctInventoryItemApiTest {
                 userClientContext.getUser().getId(),
                 i.getUser().getId()
             )
+        );
+
+    }
+
+    @Test(dataProvider = "getUserClientContexts", dependsOnMethods = {
+            "testCreateItemUser", "testCreatePublicItemUser",
+            "testCreateItemProfile"
+    })
+    public void testGetAllSpecifyingOtherUsersPublicInventory(final ClientContext userClientContext) {
+        final PaginationWalker.WalkFunction<DistinctInventoryItem> walkFunction = (offset, count) -> client
+                .target(format("%s/inventory/distinct?offset=%d&count=%d&userId=%s",
+                        apiRoot,
+                        offset,
+                        count,
+                        userWithPublicItems.getUser().getId())
+                )
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .get(DistinctInventoryItemPagination.class);
+
+        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
+                        userClientContext.getUser().getId(),
+                        i.getUser().getId()
+                )
         );
 
     }
