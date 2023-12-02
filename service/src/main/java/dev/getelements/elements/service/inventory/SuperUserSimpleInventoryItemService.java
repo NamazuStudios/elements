@@ -37,10 +37,7 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
                                                        final int count,
                                                        final String userId,
                                                        final String query) {
-        if (isBlank(userId)) {
-            return getInventoryItemDao().getInventoryItems(offset, count);
-        }
-        User user = getUserDao().getActiveUser(userId);
+        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
         return isCurrentUser(userId) ?
                 getInventoryItemDao().getInventoryItems(offset, count, user, query) :
                 getInventoryItemDao().getUserPublicInventoryItems(offset, count, user);
@@ -83,7 +80,7 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
     }
 
     private boolean isCurrentUser(String userId) {
-        return getUser().getId().equals(userId);
+        return isBlank(userId) || getUser().getId().equals(userId);
     }
 
     public ItemDao getItemDao() {

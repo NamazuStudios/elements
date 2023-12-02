@@ -4,7 +4,6 @@ import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.ItemDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
-import dev.getelements.elements.exception.BadParameterCombinationException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.item.ItemNotFoundException;
 import dev.getelements.elements.exception.profile.ProfileNotFoundException;
@@ -13,7 +12,6 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.rt.exception.BadParameterException;
 import dev.getelements.elements.service.util.UserProfileUtility;
 
 import javax.inject.Inject;
@@ -21,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public class SuperUserDistinctInventoryItemService implements DistinctInventoryItemService {
 
@@ -87,21 +86,15 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             final String userId,
             final String profileId,
             final String query) {
-        if (isBlank(userId)) {
-            throw new BadParameterException("UserId must be provided.");
-        }
-        final User user = getUserDao().getActiveUser(userId);
+        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
         final Optional<Profile> profile = getProfileDao().findActiveProfile(profileId);
-        if (profile.isEmpty()) {
-            throw new BadParameterException("Not found profile with id " + profileId);
-        }
-        if (!user.getId().equals(profile.get().getUser().getId())) {
-            throw new BadParameterCombinationException("Not valid profile for user");
+        if (profile.isPresent() && !user.getId().equals(profile.get().getUser().getId())) {
+            return new Pagination<>();
         }
 
         return isCurrentUser(userId) ?
-                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile.get(), user, query) :
-                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile.get(), user);
+                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile.orElse(null), user, query) :
+                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile.orElse(null), user);
     }
 
     @Override
@@ -133,7 +126,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
     }
 
     private boolean isCurrentUser(String userId) {
-        return getUser().getId().equals(userId);
+        return isBlank(userId) || getUser().getId().equals(userId);
     }
 
     public ItemDao getItemDao() {

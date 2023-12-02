@@ -3,14 +3,12 @@ package dev.getelements.elements.service.inventory;
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
-import dev.getelements.elements.exception.BadParameterCombinationException;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.inventory.DistinctInventoryItemNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.rt.exception.BadParameterException;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -67,21 +65,14 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             final String profileId,
             final String query) {
 
-        if (isBlank(userId)) {
-            throw new BadParameterException("UserId must be provided.");
-        }
-        final User user = getUserDao().getActiveUser(userId);
+        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
         final Optional<Profile> profile = getProfileDao().findActiveProfile(profileId);
-        if (profile.isEmpty()) {
-            throw new BadParameterException("Not found profile with id " + profileId);
+        if (profile.isPresent() && !user.getId().equals(profile.get().getUser().getId())) {
+            return new Pagination<>();
         }
-        if (!user.getId().equals(profile.get().getUser().getId())) {
-            throw new BadParameterCombinationException("Not valid profile for user");
-        }
-
         return isCurrentUser(userId) ?
-                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile.get(), user, query) :
-                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile.get(), user);
+                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile.orElse(null), user, query) :
+                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile.orElse(null), user);
     }
 
     @Override
@@ -99,7 +90,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
     }
 
     private boolean isCurrentUser(String userId) {
-        return getUser().getId().equals(userId);
+        return isBlank(userId) || getUser().getId().equals(userId);
     }
 
     public UserDao getUserDao() {

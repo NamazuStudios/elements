@@ -34,10 +34,7 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
                                                        final int count,
                                                        final String userId,
                                                        final String query) {
-        if (isBlank(userId)) {
-            throw new ForbiddenException("UserId must be provided.");
-        }
-        User user = getUserDao().getActiveUser(userId);
+        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
         return isCurrentUser(userId) ?
                 getInventoryItemDao().getInventoryItems(offset, count, user, query) :
                 getInventoryItemDao().getUserPublicInventoryItems(offset, count, user);
@@ -64,7 +61,7 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     }
 
     private boolean isCurrentUser(String userId) {
-        return getUser().getId().equals(userId);
+        return isBlank(userId) || getUser().getId().equals(userId);
     }
 
     public InventoryItemDao getInventoryItemDao() {
