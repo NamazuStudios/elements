@@ -97,7 +97,7 @@ public class UserDistinctInventoryItemApiTest {
         this.item = itemDao.createItem(item);
 
         final var publicItem = new Item();
-        publicItem.setName("publicDistinct" + UUID.randomUUID());
+        publicItem.setName("publicDistinct" + UUID.randomUUID().toString().replaceAll("-", ""));
         publicItem.setCategory(DISTINCT);
         publicItem.setDescription("Public test item");
         publicItem.setDisplayName("Public test item");
