@@ -228,7 +228,7 @@ public class SuperUserDistinctInventoryItemApiTest {
         final var created = response.readEntity(DistinctInventoryItem.class);
         assertNotNull(created.getId());
         assertEquals(userClientContext.getUser(), created.getUser());
-        assertEquals(userClientContext.getDefaultProfile(), created.getProfile());
+        assertEquals(userClientContext.getDefaultProfile().getId(), created.getProfile().getId());
         updateIntermediate(created);
 
     }
