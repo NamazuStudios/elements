@@ -30,13 +30,17 @@ public class LargeObjectCdnUtils {
     }
 
     public Profile setProfileCdnUrl(Profile profile) {
-        LargeObjectReference reference = profile.getImageObject();
-        reference.setUrl(assembleCdnUrl(reference.getId()));
+        if (profile != null && profile.getImageObject() != null) {
+            LargeObjectReference reference = profile.getImageObject();
+            reference.setUrl(assembleCdnUrl(reference.getId()));
+        }
         return profile;
     }
 
     public DistinctInventoryItem setDistinctItemProfileCdnUrl(DistinctInventoryItem item) {
-        setProfileCdnUrl(item.getProfile());
+        if (item != null) {
+            setProfileCdnUrl(item.getProfile());
+        }
         return item;
     }
 

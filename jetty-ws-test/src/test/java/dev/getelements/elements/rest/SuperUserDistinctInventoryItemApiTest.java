@@ -326,10 +326,10 @@ public class SuperUserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
                 .get(DistinctInventoryItemPagination.class);
 
-        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
-                userClientContext.getUser().getId(),
-                i.getUser().getId()
-            )
+        new PaginationWalker().forEach(walkFunction, i -> {
+            assertEquals(userClientContext.getUser().getId(), i.getUser().getId());
+            assertNotNull(i.getProfile().getImageObject().getUrl());
+            }
         );
 
     }
@@ -365,7 +365,7 @@ public class SuperUserDistinctInventoryItemApiTest {
                 .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getDefaultProfile().getId(), item.getProfile().getId());
-
+        assertNotNull(item.getProfile().getImageObject().getUrl());
     }
 
     @Test(dataProvider = "getAllIntermediates", dependsOnMethods = {
