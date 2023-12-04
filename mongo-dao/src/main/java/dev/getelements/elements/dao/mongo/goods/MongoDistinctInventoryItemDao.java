@@ -5,7 +5,6 @@ import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
-import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.inventory.DistinctInventoryItemNotFoundException;
 import dev.getelements.elements.model.Pagination;
@@ -13,21 +12,17 @@ import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.goods.ItemCategory;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
-import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.in;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
@@ -56,8 +51,8 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         final var mongoDistinctInventoryItem = new MongoDistinctInventoryItem();
 
         final var mongoItem = getMongoItemDao()
-            .findMongoItem(distinctInventoryItem.getItem())
-            .orElseThrow(() -> new InvalidDataException("No such item."));
+                .findMongoItem(distinctInventoryItem.getItem())
+                .orElseThrow(() -> new InvalidDataException("No such item."));
 
         if (!DISTINCT.equals(mongoItem.getCategory())) {
             var category = ItemCategory.getOrDefault(mongoItem.getCategory());
@@ -65,15 +60,15 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         }
 
         final var mongoUser = getMongoUserDao()
-            .findActiveMongoUser(distinctInventoryItem.getUser())
-            .orElseThrow(() -> new InvalidDataException("No such user."));
+                .findActiveMongoUser(distinctInventoryItem.getUser())
+                .orElseThrow(() -> new InvalidDataException("No such user."));
 
         mongoDistinctInventoryItem.setItem(mongoItem);
         mongoDistinctInventoryItem.setUser(mongoUser);
 
         Optional.ofNullable(distinctInventoryItem.getProfile())
-            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p))
-            .ifPresent(mongoDistinctInventoryItem::setProfile);
+                .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p))
+                .ifPresent(mongoDistinctInventoryItem::setProfile);
 
         mongoDistinctInventoryItem.setMetadata(distinctInventoryItem.getMetadata());
 
@@ -86,10 +81,11 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     public DistinctInventoryItem getDistinctInventoryItem(final String id) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(id, DistinctInventoryItemNotFoundException::new);
+
         final var result = getDatastore()
-            .find(MongoDistinctInventoryItem.class)
-            .filter(eq("_id", objectId))
-            .first();
+                .find(MongoDistinctInventoryItem.class)
+                .filter(eq("_id", objectId))
+                .first();
 
         if (result == null) {
             throw new DistinctInventoryItemNotFoundException("No such inventory item.");
@@ -102,30 +98,68 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     @Override
     public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset, final int count,
-            final Profile profile, final User user) {
+            final String userId, final String profileId) {
 
-        final var query = getDatastore()
-                .find(MongoDistinctInventoryItem.class)
-                .filter(eq("user", user));
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        if (profile != null) {
-            query.filter(eq("profile", profile));
+        if (userId != null && !userId.isBlank()) {
+
+            var user = getMongoUserDao().findActiveMongoUser(userId);
+
+            if (user.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            user.ifPresent(u -> query.filter(eq("user", u)));
+
+        }
+
+        if (profileId != null && !profileId.isBlank()) {
+
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+            if (profile.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
+
     }
 
     @Override
     public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset, final int count,
-            final Profile profile, final User user, final String queryString) {
+            final String userId, final String profileId,
+            final String queryString) {
 
-        final var query = getDatastore()
-                .find(MongoDistinctInventoryItem.class)
-                .filter(eq("user", user));
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        if (profile != null) {
-            query.filter(eq("profile", profile));
+        if (userId != null && !userId.isBlank()) {
+
+            var user = getMongoUserDao().findActiveMongoUser(userId);
+
+            if (user.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            user.ifPresent(u -> query.filter(eq("user", u)));
+
+        }
+
+        if (profileId != null && !profileId.isBlank()) {
+
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+            if (profile.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+
         }
 
         return getBooleanQueryParser()
@@ -133,25 +167,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
                 .filter(getMongoDBUtils()::isIndexedQuery)
                 .map(q -> getMongoDBUtils().paginationFromQuery(q, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class)))
                 .orElseGet(Pagination::empty);
-    }
 
-    @Override
-    public Pagination<DistinctInventoryItem> getDistinctInventoryPublicItems(
-            int offset, int count,
-            Profile profile, User user) {
-
-        List<MongoItem> publicItems = mongoItemDao.getPublicItems();
-
-        final var query = getDatastore()
-                .find(MongoDistinctInventoryItem.class)
-                .filter(eq("user", user))
-                .filter(in("item", publicItems));
-
-        if (profile != null) {
-                query.filter(eq("profile", profile));
-        }
-
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
     }
 
     @Override
@@ -164,12 +180,12 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
                 DistinctInventoryItemNotFoundException::new);
 
         final var query = getDatastore()
-            .find(MongoDistinctInventoryItem.class)
-            .filter(eq("_id", objectId));
+                .find(MongoDistinctInventoryItem.class)
+                .filter(eq("_id", objectId));
 
         final var mongoItem = getMongoItemDao()
-            .findMongoItem(distinctInventoryItem.getItem())
-            .orElseThrow(() -> new InvalidDataException("No such item."));
+                .findMongoItem(distinctInventoryItem.getItem())
+                .orElseThrow(() -> new InvalidDataException("No such item."));
 
         if (!DISTINCT.equals(mongoItem.getCategory())) {
             var category = ItemCategory.getOrDefault(mongoItem.getCategory());
@@ -194,10 +210,10 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         // https://github.com/MorphiaOrg/morphia/issues/1614 - Issue in 2.2.0
 
         builder.with(
-            set("item", mongoItem),
-            distinctInventoryItem.getMetadata() == null
-                ? set("metadata", Map.of())
-                : set("metadata", distinctInventoryItem.getMetadata())
+                set("item", mongoItem),
+                distinctInventoryItem.getMetadata() == null
+                        ? set("metadata", Map.of())
+                        : set("metadata", distinctInventoryItem.getMetadata())
 //                ,
 //                set("user", mongoUser),
 //                optionalMongoProfile
@@ -206,8 +222,8 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         );
 
         final var options = new ModifyOptions()
-            .upsert(false)
-            .returnDocument(ReturnDocument.AFTER);
+                .upsert(false)
+                .returnDocument(ReturnDocument.AFTER);
 
         final var result = getMongoDBUtils().perform(ds -> builder.execute(query, options));
 
@@ -258,12 +274,12 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         } else if (profile.isPresent()) {
             query.filter(eq("profile", profile.get()));
         } else {
-             return Optional.empty();
+            return Optional.empty();
         }
 
         return Optional
-            .ofNullable(query.first())
-            .map(u -> getMapper().map(u, DistinctInventoryItem.class));
+                .ofNullable(query.first())
+                .map(u -> getMapper().map(u, DistinctInventoryItem.class));
 
     }
 

@@ -2,31 +2,18 @@ package dev.getelements.elements.service.inventory;
 
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.ItemDao;
-import dev.getelements.elements.dao.ProfileDao;
-import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.item.ItemNotFoundException;
 import dev.getelements.elements.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.exception.user.UserNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
-import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.util.UserProfileUtility;
 
 import javax.inject.Inject;
 import java.util.Map;
 
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 public class SuperUserDistinctInventoryItemService implements DistinctInventoryItemService {
-
-    private UserDao userDao;
-
-    private User user;
-
-    private ProfileDao profileDao;
 
     private ItemDao itemDao;
 
@@ -75,7 +62,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             final int count,
             final String userId,
             final String profileId) {
-        return getDistinctInventoryItems(offset, count, userId, profileId, null);
+        return getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId);
     }
 
     @Override
@@ -85,15 +72,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             final String userId,
             final String profileId,
             final String query) {
-        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
-        final Profile profile = getProfileDao().findActiveProfile(profileId).orElse(null);
-        if (!isNull(profile) && !user.getId().equals(profile.getUser().getId())) {
-            return new Pagination<>();
-        }
-
-        return isCurrentUser(userId) ?
-                getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profile, user, query) :
-                getDistinctInventoryItemDao().getDistinctInventoryPublicItems(offset, count, profile, user);
+        return getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId, query);
     }
 
     @Override
@@ -124,10 +103,6 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
         getDistinctInventoryItemDao().deleteDistinctInventoryItem(inventoryItemId);
     }
 
-    private boolean isCurrentUser(String userId) {
-        return isBlank(userId) || getUser().getId().equals(userId);
-    }
-
     public ItemDao getItemDao() {
         return itemDao;
     }
@@ -155,30 +130,4 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
         this.distinctInventoryItemDao = distinctInventoryItemDao;
     }
 
-    public UserDao getUserDao() {
-        return userDao;
-    }
-
-    @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    @Inject
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public ProfileDao getProfileDao() {
-        return profileDao;
-    }
-
-    @Inject
-    public void setProfileDao(ProfileDao profileDao) {
-        this.profileDao = profileDao;
-    }
 }

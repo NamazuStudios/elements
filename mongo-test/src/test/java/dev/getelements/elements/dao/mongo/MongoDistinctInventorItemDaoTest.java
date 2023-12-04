@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
-import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.inventory.DistinctInventoryItemNotFoundException;
 import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
@@ -30,8 +29,6 @@ public class MongoDistinctInventorItemDaoTest {
 
     private static final int ITEM_COUNT = 5;
 
-    private static final int PUBLIC_ITEM_COUNT = 2;
-
     private static final int USER_COUNT = 5;
 
     private static final int PROFILE_COUNT = 5;
@@ -53,11 +50,7 @@ public class MongoDistinctInventorItemDaoTest {
 
     private List<Item> itemList;
 
-    private List<Item> publicItemList;
-
     private List<User> userList;
-
-    private User userWithPublicItems;
 
     private List<Profile> profileList;
 
@@ -67,19 +60,14 @@ public class MongoDistinctInventorItemDaoTest {
     public void setup() {
 
         var itemList = new ArrayList<Item>();
-        var publicItemList = new ArrayList<Item>();
         var userList = new ArrayList<User>();
         var profileList = new ArrayList<Profile>();
 
         final var application = applicationTestFactory.createMockApplication("Distinct Items");
 
         for (int i = 0; i < ITEM_COUNT; ++i) {
-            final var item = itemTestFactory.createTestItem(DISTINCT, false);
+            final var item = itemTestFactory.createTestItem(DISTINCT);
             itemList.add(item);
-        }
-        for (int i = 0; i < PUBLIC_ITEM_COUNT; ++i) {
-            final var publicItem = itemTestFactory.createTestItem(DISTINCT, true);
-            publicItemList.add(publicItem);
         }
 
         for (int i = 0; i < USER_COUNT; ++i) {
@@ -91,15 +79,13 @@ public class MongoDistinctInventorItemDaoTest {
                 final var profile = profileTestFactory.makeMockProfile(user, application);
                 profileList.add(profile);
             }
-        }
 
-        userWithPublicItems = userTestFactory.createTestUser();
+        }
 
         // Immutable for thread safety
         this.itemList = unmodifiableList(itemList);
         this.userList = unmodifiableList(userList);
         this.profileList = unmodifiableList(profileList);
-        this.publicItemList = unmodifiableList(publicItemList);
 
     }
 
@@ -157,23 +143,6 @@ public class MongoDistinctInventorItemDaoTest {
 
         }
 
-        for (var publicItem : publicItemList) {
-
-            final var toCreate = new DistinctInventoryItem();
-            toCreate.setUser(userWithPublicItems);
-            toCreate.setItem(publicItem);
-            output.add(new Object[]{toCreate});
-
-            for (var profile : profileList) {
-                final var distinctToCreate = new DistinctInventoryItem();
-                distinctToCreate.setProfile(profile);
-                distinctToCreate.setUser(profile.getUser());
-                distinctToCreate.setItem(publicItem);
-                output.add(new Object[]{distinctToCreate});
-            }
-
-        }
-
         return output.toArray(Object[][]::new);
 
     }
@@ -212,32 +181,11 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
-    public void testGetAllItemsForUserOnly() {
-        final var all = new PaginationWalker().toList((offset, count) ->
-            underTest.getDistinctInventoryItems(offset, count, null,
-                    userList.stream().findFirst().orElseThrow(NotFoundException::new))
-        );
-        assertTrue(intermediates.values().containsAll(all));
-    }
-
-    @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
     public void testGetAllItems() {
         final var all = new PaginationWalker().toList((offset, count) ->
-                underTest.getDistinctInventoryItems(offset, count,
-                        profileList.stream().findFirst().orElseThrow(NotFoundException::new),
-                        userList.stream().findFirst().orElseThrow(NotFoundException::new))
+                underTest.getDistinctInventoryItems(offset, count, null, null)
         );
-        assertTrue(intermediates.values().containsAll(all));
-    }
-
-    @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
-    public void testGetPublicItems() {
-        final var all = new PaginationWalker().toList((offset, count) ->
-                underTest.getDistinctInventoryItems(offset, count,
-                        profileList.stream().findFirst().orElseThrow(NotFoundException::new),
-                        userWithPublicItems)
-        );
-        assertTrue(intermediates.values().containsAll(all));
+        intermediates.values().containsAll(all);
     }
 
     @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
@@ -253,8 +201,8 @@ public class MongoDistinctInventorItemDaoTest {
 
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         final var fetched = underTest
-            .findDistinctInventoryItemForOwner(id, owner)
-            .get();
+                .findDistinctInventoryItemForOwner(id, owner)
+                .get();
 
         assertEquals(fetched, item);
 
@@ -265,8 +213,8 @@ public class MongoDistinctInventorItemDaoTest {
 
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         final var fetched = underTest.findDistinctInventoryItemForOwner(
-            new ObjectId().toHexString(),
-            new ObjectId().toHexString()
+                new ObjectId().toHexString(),
+                new ObjectId().toHexString()
         );
 
         assertNotNull(fetched);
@@ -321,15 +269,15 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test(dataProvider = "getIntermediates",
-          dependsOnMethods = {"testDelete"},
-          expectedExceptions = DistinctInventoryItemNotFoundException.class)
+            dependsOnMethods = {"testDelete"},
+            expectedExceptions = DistinctInventoryItemNotFoundException.class)
     public void testDoubleDelete(final String owner, final DistinctInventoryItem item) {
         underTest.deleteDistinctInventoryItem(item.getId());
     }
 
     @Test(dataProvider = "getIntermediates",
-          dependsOnMethods = {"testDelete"},
-          expectedExceptions = DistinctInventoryItemNotFoundException.class)
+            dependsOnMethods = {"testDelete"},
+            expectedExceptions = DistinctInventoryItemNotFoundException.class)
     public void testFetchPostDelete(final String owner, final DistinctInventoryItem item) {
         underTest.getDistinctInventoryItem(item.getId());
     }
