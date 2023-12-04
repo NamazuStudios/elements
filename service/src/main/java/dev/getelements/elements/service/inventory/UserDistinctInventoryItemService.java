@@ -40,8 +40,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             throw new DistinctInventoryItemNotFoundException("Distinct inventory item not found: " + item.getId());
         }
 
-        largeObjectCdnUtils.setProfileCdnUrl(item.getProfile());
-        return item;
+        return largeObjectCdnUtils.setDistinctItemProfileCdnUrl(item);
     }
 
     @Override
@@ -75,7 +74,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
         }
 
         Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId);
-        items.getObjects().forEach(item -> largeObjectCdnUtils.setProfileCdnUrl(item.getProfile()));
+        items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }
 
@@ -111,7 +110,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
         }
 
         Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId, query);
-        items.getObjects().forEach(item -> largeObjectCdnUtils.setProfileCdnUrl(item.getProfile()));
+        items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }
 

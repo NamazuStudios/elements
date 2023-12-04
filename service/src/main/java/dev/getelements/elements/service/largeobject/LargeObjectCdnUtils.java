@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.largeobject.LargeObject;
 import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.Profile;
@@ -32,6 +33,11 @@ public class LargeObjectCdnUtils {
         LargeObjectReference reference = profile.getImageObject();
         reference.setUrl(assembleCdnUrl(reference.getId()));
         return profile;
+    }
+
+    public DistinctInventoryItem setDistinctItemProfileCdnUrl(DistinctInventoryItem item) {
+        setProfileCdnUrl(item.getProfile());
+        return item;
     }
 
     public String getCdnUrl() {
