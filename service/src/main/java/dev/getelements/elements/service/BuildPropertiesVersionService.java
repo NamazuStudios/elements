@@ -43,7 +43,7 @@ public class BuildPropertiesVersionService implements VersionService {
         REVISION = properties.getProperty("revision", UNKNOWN_PROPERTY);
         TIMESTAMP =  properties.getProperty("timestamp", UNKNOWN_PROPERTY);
 
-        logger.info("Namazu Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
+        logger.info("ECI Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
 
     }
 

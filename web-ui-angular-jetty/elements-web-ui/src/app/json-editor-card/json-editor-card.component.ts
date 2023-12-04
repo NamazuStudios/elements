@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {JsonEditorComponent, JsonEditorOptions} from 'ang-jsoneditor';
 
 @Component({

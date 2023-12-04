@@ -25,6 +25,8 @@ public class CreateItemRequest {
 
     private List<String> tags;
 
+    private String metadataSpecId;
+
     private Map<String, Object> metadata;
 
     private Boolean publicVisible;
@@ -125,6 +127,24 @@ public class CreateItemRequest {
      */
     public void setCategory(ItemCategory category) {
         this.category = category;
+    }
+
+    /**
+     * Gets the metadata spec ID.
+     *
+     * @return the metadata spec id
+     */
+    public String getMetadataSpecId() {
+        return metadataSpecId;
+    }
+
+    /**
+     * Sets the metadata spec ID.
+     *
+     * @param metadataSpecId the metadata spec id
+     */
+    public void setMetadataSpecId(String metadataSpecId) {
+        this.metadataSpecId = metadataSpecId;
     }
 
     /**

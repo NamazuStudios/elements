@@ -96,7 +96,7 @@ public class SetupShell implements SetupCommand {
 
         final var version = versionService.getVersion();
 
-        terminal.writer().println("Namazu Elements™ ©(2015 - 2021)");
+        terminal.writer().println("ECI Elements™ ©(2015 - 2023)");
         terminal.writer().println("Setup and Administration Terminal");
         terminal.writer().printf("Version: %s\n", version.getVersion());
         terminal.writer().printf("Revision: %s\n", version.getRevision());

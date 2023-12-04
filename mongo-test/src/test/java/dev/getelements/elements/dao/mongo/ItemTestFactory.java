@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import static java.lang.String.format;
 
@@ -54,6 +55,20 @@ public class ItemTestFactory {
         item.setCategory(category);
         item.setPublicVisible(isPublic);
         return getItemDao().createItem(item);
+    }
+
+    public Item createTestItem(
+            final String name,
+            final Function<Item, Item> itemTransformer) {
+
+        final var item = new Item();
+        final var fullyQualifiedName = format("%s%d", name, suffix.getAndIncrement());
+        item.setName(fullyQualifiedName);
+        item.setDisplayName(fullyQualifiedName);
+
+        final var transformed = itemTransformer.apply(item);
+        return getItemDao().createItem(transformed);
+
     }
 
     public ItemDao getItemDao() {

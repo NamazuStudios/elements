@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.goods;
 
+import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.model.goods.ItemCategory;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
@@ -7,7 +8,7 @@ import org.bson.types.ObjectId;
 import java.util.*;
 
 
-@Entity(value = "items", useDiscriminator = false)
+@Entity(value = "items")
 public class MongoItem {
 
     @Id
@@ -22,6 +23,9 @@ public class MongoItem {
 
     @Property
     private String description;
+
+    @Reference
+    private MongoMetadataSpec metadataSpec;
 
     @Property
     private Map<String, Object> metadata = new HashMap<>();
@@ -68,6 +72,14 @@ public class MongoItem {
         this.description = description;
     }
 
+    public MongoMetadataSpec getMetadataSpec() {
+        return metadataSpec;
+    }
+
+    public void setMetadataSpec(MongoMetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
+    }
+
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -105,11 +117,26 @@ public class MongoItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoItem mongoItem = (MongoItem) o;
-        return publicVisible == mongoItem.publicVisible && Objects.equals(objectId, mongoItem.objectId) && Objects.equals(name, mongoItem.name) && Objects.equals(displayName, mongoItem.displayName) && Objects.equals(description, mongoItem.description) && Objects.equals(metadata, mongoItem.metadata) && Objects.equals(tags, mongoItem.tags) && category == mongoItem.category;
+        return Objects.equals(objectId, mongoItem.objectId) && Objects.equals(name, mongoItem.name) && Objects.equals(displayName, mongoItem.displayName) && Objects.equals(description, mongoItem.description) && Objects.equals(metadataSpec, mongoItem.metadataSpec) && Objects.equals(metadata, mongoItem.metadata) && Objects.equals(tags, mongoItem.tags) && category == mongoItem.category && Objects.equals(publicVisible, mongoItem.publicVisible);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, name, displayName, description, metadata, tags, category, publicVisible);
+        return Objects.hash(objectId, name, displayName, description, metadataSpec, metadata, tags, category, publicVisible);
+    }
+
+    @Override
+    public String toString() {
+        return "MongoItem{" +
+                "objectId=" + objectId +
+                ", name='" + name + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", metadataSpec=" + metadataSpec +
+                ", metadata=" + metadata +
+                ", tags=" + tags +
+                ", category=" + category +
+                ", publicVisible=" + publicVisible +
+                '}';
     }
 }

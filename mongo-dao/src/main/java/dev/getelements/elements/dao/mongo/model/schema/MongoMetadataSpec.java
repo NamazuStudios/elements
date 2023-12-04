@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.schema;
 
-import dev.getelements.elements.dao.mongo.model.blockchain.MongoTemplateTab;
+import dev.getelements.elements.model.schema.MetadataSpecPropertyType;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
@@ -14,11 +14,18 @@ public class MongoMetadataSpec {
     private ObjectId objectId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
+    @Indexed
+    private boolean active;
+
+    @Property
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String name;
 
     @Property
-    private List<MongoTemplateTab> tabs;
+    private MetadataSpecPropertyType type;
+
+    @Property
+    private List<MongoMetadataSpecProperty> properties;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -26,6 +33,14 @@ public class MongoMetadataSpec {
 
     public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public String getName() {
@@ -36,11 +51,20 @@ public class MongoMetadataSpec {
         this.name = name;
     }
 
-    public List<MongoTemplateTab>  getTabs() {
-        return tabs;
+    public MetadataSpecPropertyType getType() {
+        return type;
     }
 
-    public void setTabs(List<MongoTemplateTab> tabs) {
-        this.tabs = tabs;
+    public void setType(MetadataSpecPropertyType type) {
+        this.type = type;
     }
+
+    public List<MongoMetadataSpecProperty> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(List<MongoMetadataSpecProperty> properties) {
+        this.properties = properties;
+    }
+
 }

@@ -40,7 +40,7 @@ public interface DistinctInventoryItemDao {
     DistinctInventoryItem getDistinctInventoryItem(String id);
 
     /**
-     * Gets a listing distinct inventory tiems.
+     * Gets a listing distinct inventory items.
      *
      * @param offset the offset from the beginning of the dataset
      * @param count the number of items to return
@@ -51,6 +51,19 @@ public interface DistinctInventoryItemDao {
     Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
             Profile profile, User user);
+
+    /**
+     * Gets a listing distinct inventory items filtering by query string.
+     *
+     * @param offset the offset from the beginning of the dataset
+     * @param count the number of items to return
+     * @param user checked user
+     * @param profile checked profile.
+     * @return a {@link Pagination<InventoryItem>}
+     */
+    Pagination<DistinctInventoryItem> getDistinctInventoryItems(
+            int offset, int count,
+            Profile profile, User user, String query);
 
     /**
      * Gets a listing distinct inventory items for user, flagged as publicVisible
@@ -65,20 +78,6 @@ public interface DistinctInventoryItemDao {
             int offset, int count,
             Profile profile, User user);
 
-    /**
-     * Gets a listing distinct inventory items filtering by query string.
-     *
-     * @param offset the offset from the beginning of the dataset
-     * @param count the number of items to return
-     * @param user checked user
-     * @param profile checked profile.
-     * @return a {@link Pagination<InventoryItem>}
-     */
-    default Pagination<DistinctInventoryItem> getDistinctInventoryItems(
-            int offset, int count,
-            Profile profile, User user, String query) {
-        return getDistinctInventoryItems(offset, count, profile, user);
-    }
 
     /**
      * Updates a distinct inventory item.

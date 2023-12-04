@@ -4,6 +4,7 @@ import dev.getelements.elements.Constants;
 import dev.getelements.elements.model.Taggable;
 import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
+import dev.getelements.elements.model.schema.MetadataSpec;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
@@ -35,6 +36,8 @@ public class Item implements Serializable, Taggable {
 
     @NotNull
     private ItemCategory category;
+
+    private MetadataSpec metadataSpec;
 
     private Map<String, Object> metadata;
 
@@ -139,6 +142,14 @@ public class Item implements Serializable, Taggable {
         this.description = description;
     }
 
+    public MetadataSpec getMetadataSpec() {
+        return metadataSpec;
+    }
+
+    public void setMetadataSpec(MetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
+    }
+
     /**
      * Gets a copy of metadata of string key-value pairs for this Item.  Changes to the returned Map are not reflected
      * on this Item.
@@ -208,12 +219,12 @@ public class Item implements Serializable, Taggable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Item item = (Item) o;
-        return publicVisible == item.publicVisible && Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(tags, item.tags) && Objects.equals(displayName, item.displayName) && Objects.equals(description, item.description) && category == item.category && Objects.equals(metadata, item.metadata);
+        return Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(tags, item.tags) && Objects.equals(displayName, item.displayName) && Objects.equals(description, item.description) && category == item.category && Objects.equals(metadataSpec, item.metadataSpec) && Objects.equals(metadata, item.metadata) && Objects.equals(publicVisible, item.publicVisible);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, tags, displayName, description, category, metadata, publicVisible);
+        return Objects.hash(id, name, tags, displayName, description, category, metadataSpec, metadata, publicVisible);
     }
 
     @Override
@@ -225,6 +236,7 @@ public class Item implements Serializable, Taggable {
                 ", displayName='" + displayName + '\'' +
                 ", description='" + description + '\'' +
                 ", category=" + category +
+                ", metadataSpec=" + metadataSpec +
                 ", metadata=" + metadata +
                 ", publicVisible=" + publicVisible +
                 '}';

@@ -19,7 +19,7 @@ import static java.util.UUID.randomUUID;
 
 public class MongoTestInstanceModule extends AbstractModule {
 
-    private static final String TEST_MONGO_VERSION = "3.6.23";
+    private static final String TEST_MONGO_VERSION = "6.0.9";
 
     private final int port;
 
@@ -43,7 +43,9 @@ public class MongoTestInstanceModule extends AbstractModule {
                 return instance;
             }).asEagerSingleton();
         } else {
-            bind(MongoTestInstance.class).to(DockerMongoTestInstance.class).asEagerSingleton();
+            bind(MongoTestInstance.class)
+                    .toProvider(() -> new DockerMongoTestInstance(port, TEST_MONGO_VERSION))
+                    .asEagerSingleton();
         }
     }
 

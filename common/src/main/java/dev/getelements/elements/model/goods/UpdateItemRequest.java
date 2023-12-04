@@ -22,6 +22,8 @@ public class UpdateItemRequest {
 
     private List<String> tags;
 
+    private String metadataSpecId;
+
     private Map<String, Object> metadata;
 
     private Boolean publicVisible;
@@ -104,6 +106,24 @@ public class UpdateItemRequest {
      */
     public void setDescription(@NotNull String description) {
         this.description = description;
+    }
+
+    /**
+     * Gets the metadata spec ID.
+     *
+     * @return the metadata spec id
+     */
+    public String getMetadataSpecId() {
+        return metadataSpecId;
+    }
+
+    /**
+     * Sets the metadata spec ID.
+     *
+     * @param metadataSpecId the metadata spec id
+     */
+    public void setMetadataSpecId(String metadataSpecId) {
+        this.metadataSpecId = metadataSpecId;
     }
 
     /**
