@@ -2,7 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.MongoCommandException;
 import dev.getelements.elements.dao.ScoreDao;
-import dev.getelements.elements.dao.mongo.model.MongoScore;
+import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.dao.mongo.model.MongoScoreId;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.LeaderboardNotFoundException;

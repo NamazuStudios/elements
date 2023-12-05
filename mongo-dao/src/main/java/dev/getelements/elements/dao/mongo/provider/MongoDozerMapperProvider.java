@@ -14,6 +14,7 @@ import dev.getelements.elements.dao.mongo.model.mission.*;
 import dev.getelements.elements.dao.mongo.model.savedata.MongoSaveDataDocument;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpecProperty;
+import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.model.Deployment;
 import dev.getelements.elements.model.application.*;
 import dev.getelements.elements.model.blockchain.ElementsSmartContract;

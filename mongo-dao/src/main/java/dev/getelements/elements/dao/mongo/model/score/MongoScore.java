@@ -1,5 +1,8 @@
-package dev.getelements.elements.dao.mongo.model;
+package dev.getelements.elements.dao.mongo.model.score;
 
+import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
+import dev.getelements.elements.dao.mongo.model.MongoScoreId;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 
