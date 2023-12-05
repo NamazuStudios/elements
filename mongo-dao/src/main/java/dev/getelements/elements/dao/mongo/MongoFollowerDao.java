@@ -124,7 +124,9 @@ public class MongoFollowerDao implements FollowerDao {
                                 ))
                         )
                 )
-                .unwind(unwind("reciprocal")).replaceRoot(replaceRoot(field("reciprocal")));
+                .unwind(unwind("reciprocal"))
+                .replaceRoot(replaceRoot(field("reciprocal")))
+                ;
     }
 
     @Override

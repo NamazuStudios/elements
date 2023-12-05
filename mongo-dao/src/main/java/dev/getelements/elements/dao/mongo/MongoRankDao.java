@@ -203,7 +203,6 @@ public class MongoRankDao implements RankDao {
         );
 
         final var rank = aggregateRankForMutualFollowers(mongoProfile, mongoLeaderboard, leaderboardEpoch);
-
         final long adjustedOffset = max(0, (offset + rank) - (count / 2));
 
         return getMongoDBUtils().paginationFromAggregation(
@@ -239,22 +238,23 @@ public class MongoRankDao implements RankDao {
                         .let("followerId", field("_id.profileId"))
                         .pipeline(
                                 match(
-                                        eq("leaderboard", leaderboardDBRef),
-                                        eq("leaderboardEpoch", calculatedEpoch),
-                                        gte("pointValue", mongoScore.getPointValue()),
-                                        expr(
-                                                ComparisonExpressions.eq(
-                                                        field("_id.profileId"),
-                                                        value("$$followerId")
-                                                )
+                                        and(
+                                            eq("leaderboard", leaderboardDBRef),
+                                            eq("leaderboardEpoch", calculatedEpoch),
+                                            gte("pointValue", mongoScore.getPointValue()),
+                                            expr(
+                                                    ComparisonExpressions.eq(
+                                                            field("_id.profileId"),
+                                                            value("$$followerId")
+                                                    )
+                                            )
                                         )
                                 )
                         )
                 )
                 .unwind(unwind("score")).replaceRoot(replaceRoot(field("score")))
-//                .count("count")
-//                .unwind(unwind("count"))
-                ;
+                .count("count")
+                .unwind(unwind("count"));
 
         try (var cursor = aggregate.execute(Document.class)) {
             final var list = cursor.toList();
@@ -271,20 +271,23 @@ public class MongoRankDao implements RankDao {
         final var calculatedEpoch = calculateEpoch(mongoLeaderboard, leaderboardEpoch);
         final var leaderboardDBRef = new DBRef("leaderboard", mongoLeaderboard.getObjectId());
 
-        final var aggregate = getMongoFollowerDao().aggregateMutualFollowers(mongoProfile);
-
         return getMongoFollowerDao().aggregateMutualFollowers(mongoProfile)
                 .lookup(lookup(MongoScore.class)
                         .as("score")
                         .let("followerId", field("_id.profileId"))
                         .pipeline(
                                 match(
-                                        eq("leaderboard", leaderboardDBRef),
-                                        eq("leaderboardEpoch", calculatedEpoch),
-                                        expr(
-                                                ComparisonExpressions.eq(
-                                                        field("_id.profileId"),
-                                                        value("$$followerId")
+                                        and(
+                                                eq("leaderboard", leaderboardDBRef),
+                                                eq("leaderboardEpoch", calculatedEpoch),
+                                                or(
+                                                        eq("_id.profileId", mongoProfile.getObjectId()),
+                                                        expr(
+                                                                ComparisonExpressions.eq(
+                                                                        field("_id.profileId"),
+                                                                        value("$$followerId")
+                                                                )
+                                                        )
                                                 )
                                         )
                                 )

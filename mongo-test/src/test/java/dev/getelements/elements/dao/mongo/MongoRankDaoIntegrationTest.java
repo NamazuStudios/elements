@@ -157,7 +157,7 @@ public class MongoRankDaoIntegrationTest {
                 .getRanksForMutualFollowersRelative(
                     LEADERBOARD_NAME,
                     profileId,
-                    0, count,
+                    offset, count,
                     0
         )));
 
