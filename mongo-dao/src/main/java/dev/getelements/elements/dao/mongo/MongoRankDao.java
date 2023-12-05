@@ -1,22 +1,35 @@
 package dev.getelements.elements.dao.mongo;
 
+import com.mongodb.DBRef;
 import dev.getelements.elements.dao.RankDao;
-import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
-import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.MongoScore;
-import dev.getelements.elements.dao.mongo.model.MongoScoreId;
+import dev.getelements.elements.dao.mongo.model.*;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.morphia.Datastore;
+import dev.morphia.aggregation.Aggregation;
+import dev.morphia.aggregation.expressions.ComparisonExpressions;
+import dev.morphia.aggregation.stages.*;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import org.bson.Document;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import static dev.morphia.aggregation.expressions.Expressions.*;
+import static dev.morphia.aggregation.stages.Facet.facet;
+import static dev.morphia.aggregation.stages.Limit.limit;
+import static dev.morphia.aggregation.stages.Lookup.lookup;
+import static dev.morphia.aggregation.stages.Match.match;
+import static dev.morphia.aggregation.stages.Projection.project;
+import static dev.morphia.aggregation.stages.ReplaceRoot.replaceRoot;
+import static dev.morphia.aggregation.stages.Skip.skip;
+import static dev.morphia.aggregation.stages.Sort.sort;
+import static dev.morphia.aggregation.stages.Unwind.unwind;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.*;
 import static java.lang.Math.max;
@@ -115,7 +128,7 @@ public class MongoRankDao implements RankDao {
 
         final MongoProfile mongoProfile = optionalMongoProfile.get();
 
-        final List<MongoProfile> profiles = getMongoFriendDao()
+        final var profiles = getMongoFriendDao()
             .getAllMongoFriendshipsForUser(mongoProfile.getUser())
             .stream()
             .map(friendship -> friendship.getObjectId().getOpposite(mongoProfile.getUser().getObjectId()))
@@ -140,30 +153,31 @@ public class MongoRankDao implements RankDao {
                                                        final String  profileId,
                                                        final int offset, final int count,
                                                        final long leaderboardEpoch) {
+        return Pagination.empty();
 
-        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
-
-        if (optionalMongoProfile.isEmpty()) {
-            return Pagination.empty();
-        }
-
-        final MongoProfile mongoProfile = optionalMongoProfile.get();
-
-        final List<MongoProfile> profiles = getMongoFollowerDao()
-                .getMutualMongoFollowers(mongoProfile)
-                .stream()
-                .map(follower -> follower.getObjectId().getFollowedId())
-                .map(getMongoProfileDao()::getActiveMongoProfile)
-                .collect(toList());
-
-        profiles.add(mongoProfile);
-
-        return getRanks(
-                leaderboardNameOrId,
-                offset, count,
-                leaderboardEpoch,
-                q -> q.filter(in("profile", profiles))
-        );
+//        final var optionalMongoProfile = getMongoProfileDao().findActiveMongoProfile(profileId);
+//
+//        if (optionalMongoProfile.isEmpty()) {
+//            return Pagination.empty();
+//        }
+//
+//        final MongoProfile mongoProfile = optionalMongoProfile.get();
+//
+//        final List<MongoProfile> profiles = getMongoFollowerDao()
+//                .getMutualMongoFollowers(mongoProfile)
+//                .stream()
+//                .map(follower -> follower.getObjectId().getFollowedId())
+//                .map(getMongoProfileDao()::getActiveMongoProfile)
+//                .collect(toList());
+//
+//        profiles.add(mongoProfile);
+//
+//        return getRanks(
+//                leaderboardNameOrId,
+//                offset, count,
+//                leaderboardEpoch,
+//                q -> q.filter(in("profile", profiles))
+//        );
 
     }
 
@@ -179,26 +193,105 @@ public class MongoRankDao implements RankDao {
             return Pagination.empty();
         }
 
-        final MongoProfile mongoProfile = optionalMongoProfile.get();
+        final var mongoProfile = optionalMongoProfile.get();
+        final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
 
-        final List<MongoProfile> profiles = getMongoFollowerDao()
-                .getMutualMongoFollowers(mongoProfile)
-                .stream()
-                .map(follower -> follower.getObjectId().getFollowedId())
-                .map(getMongoProfileDao()::getActiveMongoProfile)
-                .collect(toList());
-
-        profiles.add(mongoProfile);
-
-        return getRanksRelative(
-                leaderboardNameOrId,
-                mongoProfile,
-                offset, count,
-                leaderboardEpoch,
-                q -> q.filter(in("profile", profiles)),
-                q -> q.filter(ne("profile", mongoProfile))
+        final Supplier<Aggregation<?>> aggregationSupplier = () -> aggregateScoresForMutualFollowers(
+            mongoProfile,
+            mongoLeaderboard,
+            leaderboardEpoch
         );
 
+        final var rank = aggregateRankForMutualFollowers(mongoProfile, mongoLeaderboard, leaderboardEpoch);
+
+        final long adjustedOffset = max(0, (offset + rank) - (count / 2));
+
+        return getMongoDBUtils().paginationFromAggregation(
+                aggregationSupplier,
+                MongoScore.class,
+                offset, count
+        ).transform(new Counter(adjustedOffset));
+
+    }
+
+    private int aggregateRankForMutualFollowers(
+            final MongoProfile mongoProfile,
+            final MongoLeaderboard mongoLeaderboard,
+            final long leaderboardEpoch) {
+
+        final var calculatedEpoch = calculateEpoch(mongoLeaderboard, leaderboardEpoch);
+        final var leaderboardDBRef = new DBRef("leaderboard", mongoLeaderboard.getObjectId());
+        final var leaderboardEpochLookupValue = calculateEpoch(mongoLeaderboard, leaderboardEpoch);
+        final var mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpochLookupValue);
+
+        final var mongoScore = getDatastore()
+                .find(MongoScore.class)
+                .filter(eq("_id", mongoScoreId))
+                .first();
+
+        if (mongoScore == null) {
+            return 0;
+        }
+
+        final var aggregate = getMongoFollowerDao().aggregateMutualFollowers(mongoProfile)
+                .lookup(lookup(MongoScore.class)
+                        .as("score")
+                        .let("followerId", field("_id.profileId"))
+                        .pipeline(
+                                match(
+                                        eq("leaderboard", leaderboardDBRef),
+                                        eq("leaderboardEpoch", calculatedEpoch),
+                                        gte("pointValue", mongoScore.getPointValue()),
+                                        expr(
+                                                ComparisonExpressions.eq(
+                                                        field("_id.profileId"),
+                                                        value("$$followerId")
+                                                )
+                                        )
+                                )
+                        )
+                )
+                .unwind(unwind("score")).replaceRoot(replaceRoot(field("score")))
+//                .count("count")
+//                .unwind(unwind("count"))
+                ;
+
+        try (var cursor = aggregate.execute(Document.class)) {
+            final var list = cursor.toList();
+            return list.isEmpty() ? 0 : list.get(0).get("count", Number.class).intValue();
+        }
+
+    }
+
+    private Aggregation<?> aggregateScoresForMutualFollowers(
+            final MongoProfile mongoProfile,
+            final MongoLeaderboard mongoLeaderboard,
+            final long leaderboardEpoch) {
+
+        final var calculatedEpoch = calculateEpoch(mongoLeaderboard, leaderboardEpoch);
+        final var leaderboardDBRef = new DBRef("leaderboard", mongoLeaderboard.getObjectId());
+
+        final var aggregate = getMongoFollowerDao().aggregateMutualFollowers(mongoProfile);
+
+        return getMongoFollowerDao().aggregateMutualFollowers(mongoProfile)
+                .lookup(lookup(MongoScore.class)
+                        .as("score")
+                        .let("followerId", field("_id.profileId"))
+                        .pipeline(
+                                match(
+                                        eq("leaderboard", leaderboardDBRef),
+                                        eq("leaderboardEpoch", calculatedEpoch),
+                                        expr(
+                                                ComparisonExpressions.eq(
+                                                        field("_id.profileId"),
+                                                        value("$$followerId")
+                                                )
+                                        )
+                                )
+                        )
+                )
+                .unwind(unwind("score")).replaceRoot(replaceRoot(field("score")))
+                .sort(sort().descending("pointValue"));
     }
 
     public Pagination<Rank> getRanks(
@@ -208,14 +301,11 @@ public class MongoRankDao implements RankDao {
             final Function<Query<MongoScore>, Query<MongoScore>> queryTransformer) {
 
         final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final var leaderboardEpochLookupValue = calculateEpochLookupValue(mongoLeaderboard, leaderboardEpoch);
 
         final var query = queryTransformer
                 .apply(getDatastore().find(MongoScore.class))
                 .filter(eq("leaderboard", mongoLeaderboard))
-                .filter(eq("leaderboardEpoch", leaderboardEpochLookupValue > 0
-                                ? leaderboardEpochLookupValue
-                                : mongoLeaderboard.calculateCurrentEpoch()));
+                .filter(eq("leaderboardEpoch", calculateEpoch(mongoLeaderboard, leaderboardEpoch)));
 
         final long adjustedOffset = max(0, offset);
 
@@ -237,7 +327,7 @@ public class MongoRankDao implements RankDao {
             final Function<Query<MongoScore>, Query<MongoScore>> countQueryTransformer) {
 
         final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final var leaderboardEpochLookupValue = calculateEpochLookupValue(mongoLeaderboard, leaderboardEpoch);
+        final var leaderboardEpochLookupValue = calculateEpoch(mongoLeaderboard, leaderboardEpoch);
         final var mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpochLookupValue);
 
         final var mongoScore = getDatastore()
@@ -263,13 +353,13 @@ public class MongoRankDao implements RankDao {
         return getMongoDBUtils().paginationFromQuery(
                 query,
                 (int) adjustedOffset, count,
-                new Counter(offset),
+                new Counter(adjustedOffset),
                 new FindOptions().sort(descending("pointValue"))
         );
 
     }
 
-    private long calculateEpochLookupValue(final MongoLeaderboard mongoLeaderboard, final long leaderboardEpoch ) {
+    private long calculateEpoch(final MongoLeaderboard mongoLeaderboard, final long leaderboardEpoch ) {
         switch (mongoLeaderboard.getTimeStrategyType()) {
             case ALL_TIME:
                 return MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
@@ -280,7 +370,6 @@ public class MongoRankDao implements RankDao {
             default:
                 throw new IllegalArgumentException("Invalid time strategy type.");
         }
-
     }
 
     public Datastore getDatastore() {
@@ -368,5 +457,7 @@ public class MongoRankDao implements RankDao {
         }
 
     }
+
+    public static class MongoRankPagination extends Pagination<MongoScore> {}
 
 }

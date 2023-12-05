@@ -1,13 +1,18 @@
 package dev.getelements.elements.dao.mongo.model;
 
 import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Property;
 import org.bson.types.ObjectId;
 
-@Embedded
+@Entity
 public class MongoFollowerId {
 
+
+    @Property
     private ObjectId profileId;
 
+    @Property
     private ObjectId followedId;
 
     public MongoFollowerId() {}

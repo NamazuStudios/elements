@@ -6,23 +6,37 @@ import dev.getelements.elements.model.leaderboard.Leaderboard;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import static dev.getelements.elements.model.leaderboard.Leaderboard.ScoreStrategyType.OVERWRITE_IF_GREATER;
 import static dev.getelements.elements.model.leaderboard.Leaderboard.TimeStrategyType.ALL_TIME;
-import static java.util.Collections.shuffle;
+import static java.lang.Math.min;
+import static java.util.List.copyOf;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRankDaoIntegrationTest {
 
-    private static final int TEST_USER_COUNT = 3000;
+    private static final int TEST_USER_COUNT = 300;
+
+    private static final int TEST_BATCH_SIZE = TEST_USER_COUNT / 10;
+
+    private static final int TEST_MUTUAL_FOLLOWER_COUNT = TEST_BATCH_SIZE / 2;
+
+    private static final String LEADERBOARD_NAME = "follower_integration_test";
 
     private RankDao rankDao;
 
@@ -47,6 +61,8 @@ public class MongoRankDaoIntegrationTest {
     private Map<String, Profile> allProfiles;
 
     private Map<String, List<Profile>> followers;
+
+    private Map<String, List<Profile>> mutualFollowers;
 
     @BeforeClass
     public void setupUsers() {
@@ -74,40 +90,36 @@ public class MongoRankDaoIntegrationTest {
     @BeforeClass(dependsOnMethods = "setupAllProfiles")
     public void setupFollowers() {
 
-        final var random = new Random();
-
         final var followers = new HashMap<String , List<Profile>>();
-        final var mutualFollowers = new HashMap<String, List<Profile>>();
-        final var allProfiles = new ArrayList<>(this.allProfiles.values());
+        final var mutualFollowers = new HashMap<String , List<Profile>>();
+        final var allProfiles = new LinkedList<>(this.allProfiles.values());
 
-        for (final var profile : this.allProfiles.values()) {
+        while (!allProfiles.isEmpty()) {
 
-            final var indices = IntStream.range(0, allProfiles.size())
-                    .boxed()
-                    .collect(toList());
+            final var upper = min(allProfiles.size(), TEST_BATCH_SIZE);
+            final var batch = allProfiles.subList(0, upper);
 
-            shuffle(indices, random);
+            final var profile = batch.remove(0);
+            batch.forEach(follower -> getFollowerDao().createFollowerForProfile(follower.getId(), profile.getId()));
 
-            followers.put(profile.getId(), indices.stream()
-                    .map(allProfiles::get)
-                    .filter(p -> !profile.getId().equals(p.getId()))
-                    .limit(allProfiles.size() / 10)
-                    .collect(toUnmodifiableList()));
+            final var mutualBatch = batch.subList(0, TEST_MUTUAL_FOLLOWER_COUNT);
+            mutualBatch.forEach(follower -> getFollowerDao().createFollowerForProfile(profile.getId(), follower.getId()));
 
-            followers
-                    .get(profile.getId())
-                    .forEach(p -> getFollowerDao().createFollowerForProfile(p.getId(), profile.getId()));
+            followers.put(profile.getId(), copyOf(batch));
+            mutualFollowers.put(profile.getId(), copyOf(mutualBatch));
+            batch.clear();
 
         }
 
         this.followers = followers;
+        this.mutualFollowers = mutualFollowers;
 
     }
 
     @BeforeClass
     public void createLeaderboard() {
         final var leaderboard = new Leaderboard();
-        leaderboard.setName("follower_integration_test");
+        leaderboard.setName(LEADERBOARD_NAME);
         leaderboard.setTitle("Test Followers");
         leaderboard.setScoreUnits("Points");
         leaderboard.setScoreStrategyType(OVERWRITE_IF_GREATER);
@@ -123,12 +135,34 @@ public class MongoRankDaoIntegrationTest {
         for (var profile : allProfiles.values()) {
             var score = new Score();
             score.setProfile(profile);
-            score.setScoreUnits("Points");
-            score.setProfile(profile);
-            score.setPointValue(value + 10);
+            score.setPointValue(value += 10);
             getScoreDao().createOrUpdateScore("follower_integration_test", score);
         }
-        
+
+    }
+
+    @DataProvider
+    public Object[][] allProfiles() {
+        return allProfiles
+                .entrySet()
+                .stream()
+                .map(e -> new Object[]{e.getKey(), e.getValue()})
+                .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "allProfiles")
+    public void testGetRanksForMutualFollowersRelative(final String profileId, final Profile profile) {
+
+        final var ranks = new PaginationWalker().toList(((offset, count) -> getRankDao()
+                .getRanksForMutualFollowersRelative(
+                    LEADERBOARD_NAME,
+                    profileId,
+                    0, count,
+                    0
+        )));
+
+        final var mutual = mutualFollowers.get(profileId);
+
     }
 
     public RankDao getRankDao() {

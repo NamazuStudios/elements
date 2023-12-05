@@ -10,10 +10,12 @@ import java.sql.Timestamp;
  */
 @Entity(value = "score", useDiscriminator = false)
 @Indexes({
-    @Index(fields = @Field("profile")),
-    @Index(fields = @Field("leaderboard")),
-    @Index(fields = @Field(value = "leaderboardEpoch", type = IndexType.DESC)),
-    @Index(fields = @Field(value = "pointValue", type = IndexType.DESC))
+        @Index(fields = @Field("_id.profileId")),
+        @Index(fields = @Field("_id.leaderboardId")),
+        @Index(fields = @Field("profile")),
+        @Index(fields = @Field("leaderboard")),
+        @Index(fields = @Field(value = "pointValue", type = IndexType.DESC)),
+        @Index(fields = @Field(value = "leaderboardEpoch", type = IndexType.DESC))
 })
 public class MongoScore {
 
