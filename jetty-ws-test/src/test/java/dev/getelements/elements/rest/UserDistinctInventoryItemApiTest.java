@@ -21,6 +21,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -54,12 +55,17 @@ public class UserDistinctInventoryItemApiTest {
     private ClientContext userClientContextB;
 
     @Inject
+    private ClientContext userWithPublicItems;
+
+    @Inject
     private ItemDao itemDao;
 
     @Inject
     private DistinctInventoryItemDao distinctInventoryItemDao;
 
     private Item item;
+
+    private Item publicItem;
 
     private final Map<String, Set<DistinctInventoryItem>> intermediatesByUser = new ConcurrentHashMap<>();
 
@@ -78,6 +84,11 @@ public class UserDistinctInventoryItemApiTest {
                 .createProfile("DistinctB")
                 .createSession();
 
+        userWithPublicItems
+                .createUser("distinctPublic")
+                .createProfile("DistinctPublic")
+                .createSession();
+
         final var item = new Item();
         item.setName("distinct0");
         item.setCategory(DISTINCT);
@@ -85,25 +96,34 @@ public class UserDistinctInventoryItemApiTest {
         item.setDisplayName("Test Item");
         this.item = itemDao.createItem(item);
 
+        final var publicItem = new Item();
+        publicItem.setName("publicDistinct" + UUID.randomUUID().toString().replaceAll("-", ""));
+        publicItem.setCategory(DISTINCT);
+        publicItem.setDescription("Public test item");
+        publicItem.setDisplayName("Public test item");
+        publicItem.setPublicVisible(true);
+        this.publicItem = itemDao.createItem(publicItem);
+
         for (int i = 0; i < 10; ++i) {
-            makeDistinctItems(userClientContextA);
-            makeDistinctItems(userClientContextB);
+            makeDistinctItems(userClientContextA, false);
+            makeDistinctItems(userClientContextB, false);
+            makeDistinctItems(userWithPublicItems, true);
         }
 
     }
 
-    private void makeDistinctItems(final ClientContext userClientContext) {
+    private void makeDistinctItems(final ClientContext userClientContext, final boolean isPublic) {
 
         // User Scoped
         var distinct = new DistinctInventoryItem();
-        distinct.setItem(item);
+        distinct.setItem(isPublic ? publicItem : item);
         distinct.setUser(userClientContext.getUser());
         distinct = distinctInventoryItemDao.createDistinctInventoryItem(distinct);
         updateIntermediate(distinct);
 
         // Profile Scoped
         distinct = new DistinctInventoryItem();
-        distinct.setItem(item);
+        distinct.setItem(isPublic ? publicItem : item);
         distinct.setUser(userClientContext.getUser());
         distinct.setProfile(userClientContext.getDefaultProfile());
         distinct = distinctInventoryItemDao.createDistinctInventoryItem(distinct);
@@ -248,6 +268,27 @@ public class UserDistinctInventoryItemApiTest {
                         offset,
                         count,
                         userClientContext.getUser().getId())
+                )
+                .request()
+                .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
+                .get(DistinctInventoryItemPagination.class);
+
+        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
+                        userClientContext.getUser().getId(),
+                        i.getUser().getId()
+                )
+        );
+
+    }
+
+    @Test(dataProvider = "getUserClientContexts")
+    public void testGetAllSpecifyingOtherUsersPublicInventory(final ClientContext userClientContext) {
+        final PaginationWalker.WalkFunction<DistinctInventoryItem> walkFunction = (offset, count) -> client
+                .target(format("%s/inventory/distinct?offset=%d&count=%d&userId=%s",
+                        apiRoot,
+                        offset,
+                        count,
+                        userWithPublicItems.getUser().getId())
                 )
                 .request()
                 .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
