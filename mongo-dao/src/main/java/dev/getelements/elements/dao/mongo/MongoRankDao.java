@@ -24,6 +24,7 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -188,7 +189,7 @@ public class MongoRankDao implements RankDao {
                 MongoScore.class,
                 offset, count
         ).transform(new Counter(adjustedOffset));
-        
+
     }
 
     @Override
@@ -237,7 +238,7 @@ public class MongoRankDao implements RankDao {
 
     }
 
-    private Aggregation<?> aggregateScoresForMutualFollowers(
+    public Aggregation<?> aggregateScoresForMutualFollowers(
             final MongoProfile mongoProfile,
             final MongoLeaderboard mongoLeaderboard,
             final long leaderboardEpoch) {

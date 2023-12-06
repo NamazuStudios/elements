@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.leaderboard;
 
 import dev.getelements.elements.dao.RankDao;
+import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.leaderboard.Rank;
@@ -60,6 +61,32 @@ public class UserRankService implements RankService {
             .transform(this::redactPrivateInfo);
     }
 
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowers(final String leaderboardNameOrId,
+                                                       final int offset, final int count,
+                                                       final long leaderboardEpoch) {
+        return getRankDao()
+                .getRanksForMutualFollowers(
+                        leaderboardNameOrId,
+                        getProfileSupplier().get().getId(),
+                        offset, count,
+                        leaderboardEpoch)
+                .transform(this::redactPrivateInfo);
+    }
+
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowersRelative(final String leaderboardNameOrId,
+                                                               final int offset, final int count,
+                                                               final long leaderboardEpoch) {
+        return getRankDao()
+                .getRanksForMutualFollowersRelative(
+                        leaderboardNameOrId,
+                        getProfileSupplier().get().getId(),
+                        offset, count,
+                        leaderboardEpoch)
+                .transform(this::redactPrivateInfo);
+    }
+
     private Rank redactPrivateInfo(final Rank rank) {
 
         if (!getUser().equals(rank.getScore().getProfile().getUser())) {
@@ -67,6 +94,7 @@ public class UserRankService implements RankService {
         }
 
         return rank;
+
     }
 
     public User getUser() {

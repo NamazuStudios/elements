@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo;
 import dev.getelements.elements.dao.*;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
@@ -24,13 +25,14 @@ import static dev.getelements.elements.model.leaderboard.Leaderboard.TimeStrateg
 import static java.lang.Math.min;
 import static java.util.List.copyOf;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Collectors.toUnmodifiableMap;
+import static java.util.stream.Collectors.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRankDaoIntegrationTest {
 
-    private static final int TEST_USER_COUNT = 300;
+    private static final int TEST_USER_COUNT = 3000;
 
     private static final int TEST_BATCH_SIZE = TEST_USER_COUNT / 10;
 
@@ -142,15 +144,32 @@ public class MongoRankDaoIntegrationTest {
     }
 
     @DataProvider
-    public Object[][] allProfiles() {
+    public Object[][] profilesWithMutualFollowers() {
         return allProfiles
                 .entrySet()
                 .stream()
+                .filter(e -> mutualFollowers.containsKey(e.getKey()))
                 .map(e -> new Object[]{e.getKey(), e.getValue()})
                 .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "allProfiles")
+
+    @Test(dataProvider = "profilesWithMutualFollowers")
+    public void testGetRanksForMutualFollowers(final String profileId, final Profile profile) {
+
+        final var ranks = new PaginationWalker().toList(((offset, count) -> getRankDao()
+                .getRanksForMutualFollowers(
+                        LEADERBOARD_NAME,
+                        profileId,
+                        offset, count,
+                        0
+                )));
+
+        checkMutualPostConditions(ranks, profileId);
+
+    }
+
+    @Test(dataProvider = "profilesWithMutualFollowers")
     public void testGetRanksForMutualFollowersRelative(final String profileId, final Profile profile) {
 
         final var ranks = new PaginationWalker().toList(((offset, count) -> getRankDao()
@@ -161,7 +180,28 @@ public class MongoRankDaoIntegrationTest {
                     0
         )));
 
-        final var mutual = mutualFollowers.get(profileId);
+        checkMutualPostConditions(ranks, profileId);
+
+    }
+
+    private void checkMutualPostConditions(final List<Rank> ranks, final String profileId) {
+
+        final var expected = mutualFollowers.get(profileId)
+                .stream()
+                .map(Profile::getId)
+                .collect(toSet());
+
+        final var actual = ranks.stream()
+                .map(r -> r.getScore().getProfile().getId())
+                .collect(toSet());
+
+        assertTrue(actual.contains(profileId), "Results do not contain the profile.");
+        assertTrue(actual.containsAll(expected), "Results do not contain all mutual followers.");
+
+        actual.remove(profileId);
+        actual.removeAll(expected);
+
+        assertEquals(actual.size(), 0, "Expected that the result contains only mutual followers.");
 
     }
 

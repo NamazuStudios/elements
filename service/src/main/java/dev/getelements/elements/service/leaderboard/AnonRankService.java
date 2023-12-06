@@ -53,6 +53,20 @@ public class AnonRankService implements RankService {
         throw new ForbiddenException();
     }
 
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowers(final String leaderboardNameOrId,
+                                                       final int offset, final int count,
+                                                       final long leaderboardEpoch) {
+        throw new ForbiddenException();
+    }
+
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowersRelative(final String leaderboardNameOrId,
+                                                               final int offset, final int count,
+                                                               final long leaderboardEpoch) {
+        throw new ForbiddenException();
+    }
+
     private Rank redactPrivateInfo(final Rank rank) {
         rank.getScore().getProfile().setUser(null);
         return rank;

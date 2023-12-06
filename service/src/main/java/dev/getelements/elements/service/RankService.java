@@ -24,7 +24,7 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
 public interface RankService {
 
     /**
-     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}.
+     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()}
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset
@@ -35,8 +35,8 @@ public interface RankService {
     Pagination<Rank> getRanksForGlobal(String leaderboardNameOrId, int offset, int count, long leaderboardEpoch);
 
     /**
-     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}
-     * relative to the {@link Profile} with the supplied id.
+     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard} relative to the {@link Profile} with the
+     * supplied id.
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param profileId           the value of {@link Profile#getId()}
@@ -48,9 +48,8 @@ public interface RankService {
     Pagination<Rank> getRanksForGlobalRelative(String leaderboardNameOrId, String profileId, int offset, int count, long leaderboardEpoch);
 
     /**
-     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}
-     * relative to the {@link Profile} with the supplied id returning only {@link Rank} instances within the supplied
-     * friend list for the given {@link Profile}
+     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} relative to the {@link Profile} with
+     * the supplied id returning only {@link Rank} instances within the supplied friend list for the given {@link Profile}
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset
@@ -61,9 +60,9 @@ public interface RankService {
     Pagination<Rank> getRanksForFriends(String leaderboardNameOrId, int offset, int count, long leaderboardEpoch);
 
     /**
-     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} or {@Link Leaderboard#getRank()}
-     * relative to the {@link Profile} with the supplied id returning only {@link Rank} instances within the supplied
-     * friend list for the given {@link Profile}
+     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} relative to the {@link Profile} with
+     * the supplied id returning only {@link Rank} instances within the supplied friend list for the given
+     * {@link Profile}
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
      * @param offset the offset
@@ -73,5 +72,35 @@ public interface RankService {
      */
     Pagination<Rank> getRanksForFriendsRelative(String leaderboardNameOrId, int offset, int count,
                                                 long leaderboardEpoch);
+
+    /**
+     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard#getId()} relative to the {@link Profile} with
+     * the supplied id returning only {@link Rank} instances within the supplied friend list for the given
+     * {@link Profile}
+     *
+     * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
+     * @param offset the offset
+     * @param count the count
+     * @param leaderboardEpoch the epoch timestamp
+     * @return the {@link Pagination<Rank>}
+     */
+    Pagination<Rank> getRanksForMutualFollowers(String leaderboardNameOrId,
+                                                int offset, int count,
+                                                long leaderboardEpoch);
+
+    /**
+     * Gets all {@link Rank} instances for the supplied {@Link Leaderboard} or {@Link Leaderboard#getRank()}
+     * relative to the {@link Profile} with the supplied id returning only {@link Rank} instances within the supplied
+     * friend list for the given {@link Profile}
+     *
+     * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
+     * @param offset the offset
+     * @param count the count
+     * @param leaderboardEpoch the epoch timestamp
+     * @return the {@link Pagination<Rank>}
+     */
+    Pagination<Rank> getRanksForMutualFollowersRelative(String leaderboardNameOrId,
+                                                        int offset, int count,
+                                                        long leaderboardEpoch);
 
 }
