@@ -76,7 +76,7 @@ public class MongoRankDaoIntegrationTest {
     @BeforeClass
     public void setupApplication() {
         final var application = new Application();
-        application.setName("mock");
+        application.setName("rank_dao_integration_test");
         application.setDescription("A mock application.");
         this.application = getApplicationDao().createOrUpdateInactiveApplication(application);
     }
