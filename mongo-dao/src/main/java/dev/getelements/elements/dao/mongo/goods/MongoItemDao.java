@@ -195,7 +195,7 @@ public class MongoItemDao implements ItemDao {
                         set("metadata", item.getMetadata()),
                         set("tags", item.getTags()),
                         set("description", item.getDescription()),
-                        set("publicVisible", item.getPublicVisible()),
+                        set("publicVisible", item.isPublicVisible()),
                         set("category", item.getCategory())
                 ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );

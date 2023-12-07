@@ -41,7 +41,7 @@ public class Item implements Serializable, Taggable {
 
     private Map<String, Object> metadata;
 
-    private Boolean publicVisible;
+    private boolean publicVisible;
 
     /**
      * Get the unique ID of the Item.
@@ -193,14 +193,14 @@ public class Item implements Serializable, Taggable {
      *
     * @return visibility
      */
-    public Boolean getPublicVisible() {
+    public boolean isPublicVisible() {
         return publicVisible;
     }
 
     /**
      * Sets the visibility of this item.
      */
-    public void setPublicVisible(Boolean publicVisible) {
+    public void setPublicVisible(boolean publicVisible) {
         this.publicVisible = publicVisible;
     }
 

@@ -19,12 +19,12 @@ public class SuperuserItemService implements ItemService {
 
     @Override
     public Item getItemByIdOrName(String identifier) {
-        return itemDao.getItemByIdOrName(identifier);
+        return getItemDao().getItemByIdOrName(identifier);
     }
 
     @Override
     public Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query) {
-        return itemDao.getItems(offset, count, tags, category, query);
+        return getItemDao().getItems(offset, count, tags, category, query);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class SuperuserItemService implements ItemService {
         item.setDisplayName(itemRequest.getDisplayName());
         item.setPublicVisible(!isNull(itemRequest.isPublicVisible()) && itemRequest.isPublicVisible());
 
-        return itemDao.updateItem(item);
+        return getItemDao().updateItem(item);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class SuperuserItemService implements ItemService {
         item.setDescription(itemRequest.getDescription());
         item.setDisplayName(itemRequest.getDisplayName());
         item.setPublicVisible(!isNull(itemRequest.isPublicVisible()) && itemRequest.isPublicVisible());
-        return itemDao.createItem(item);
+        return getItemDao().createItem(item);
     }
 
     @SuppressWarnings("unused")

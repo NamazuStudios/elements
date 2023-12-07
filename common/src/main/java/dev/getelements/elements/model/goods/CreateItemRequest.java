@@ -29,7 +29,7 @@ public class CreateItemRequest {
 
     private Map<String, Object> metadata;
 
-    private Boolean publicVisible;
+    private boolean publicVisible;
 
     /**
      * Get the unique name of the Item
@@ -180,7 +180,7 @@ public class CreateItemRequest {
     /**
      * Returns the visibility of this Item
      */
-    public Boolean isPublicVisible() {
+    public boolean isPublicVisible() {
         return publicVisible;
     }
 
@@ -190,7 +190,7 @@ public class CreateItemRequest {
      * @param publicVisible
      *     The boolean flag for the Item
      */
-    public void setPublicVisible(Boolean publicVisible) {
+    public void setPublicVisible(boolean publicVisible) {
         this.publicVisible = publicVisible;
     }
 
