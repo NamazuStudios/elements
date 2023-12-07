@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
+import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.testng.AssertJUnit.assertEquals;
@@ -316,10 +317,11 @@ public class UserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
                 .get(DistinctInventoryItemPagination.class);
 
-        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
-                        userClientContext.getUser().getId(),
-                        i.getUser().getId()
-                )
+
+        new PaginationWalker().forEach(walkFunction, i -> {
+            assertEquals(userClientContext.getUser().getId(), i.getUser().getId());
+            assertNotNull(i.getProfile().getImageObject().getUrl());
+            }
         );
 
     }
@@ -349,7 +351,7 @@ public class UserDistinctInventoryItemApiTest {
                 .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getDefaultProfile().getId(), item.getProfile().getId());
-
+        assertNotNull(item.getProfile().getImageObject().getUrl());
     }
 
     @Test(dataProvider = "getNonMatchingUserIntermediates")

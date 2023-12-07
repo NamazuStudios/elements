@@ -9,6 +9,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -19,11 +20,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class UserDistinctInventoryItemService implements DistinctInventoryItemService {
 
-    private UserDao userDao;
-
     private User user;
 
+    private UserDao userDao;
+
     private ProfileDao profileDao;
+
+    private LargeObjectCdnUtils largeObjectCdnUtils;
 
     private DistinctInventoryItemDao distinctInventoryItemDao;
 
@@ -44,7 +47,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             throw new DistinctInventoryItemNotFoundException("Distinct inventory item not found: " + item.getId());
         }
 
-        return item;
+        return largeObjectCdnUtils.setDistinctItemProfileCdnUrl(item);
     }
 
     @Override
@@ -54,7 +57,9 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             final String userId,
             final String profileId) {
 
-        return getDistinctInventoryItems(offset, count, userId, profileId, null);
+        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItems(offset, count, userId, profileId, null);
+        items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
+        return items;
     }
 
     @Override
@@ -72,7 +77,9 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
                 return new Pagination<>();
             }
         }
-        return getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profileId, userId, isCurrentUser(userId), query);
+        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profileId, userId, isCurrentUser(userId), query);
+        items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
+        return items;
     }
 
     @Override
@@ -129,4 +136,12 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
         this.distinctInventoryItemDao = distinctInventoryItemDao;
     }
 
+    public LargeObjectCdnUtils getLargeObjectCdnUtils() {
+        return largeObjectCdnUtils;
+    }
+
+    @Inject
+    public void setLargeObjectCdnUtils(LargeObjectCdnUtils largeObjectCdnUtils) {
+        this.largeObjectCdnUtils = largeObjectCdnUtils;
+    }
 }
