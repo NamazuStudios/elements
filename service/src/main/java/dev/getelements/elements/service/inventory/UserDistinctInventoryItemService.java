@@ -7,6 +7,7 @@ import dev.getelements.elements.exception.inventory.DistinctInventoryItemNotFoun
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.user.User;
+import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -17,6 +18,8 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
     private User user;
 
     private ProfileDao profileDao;
+
+    private LargeObjectCdnUtils largeObjectCdnUtils;
 
     private DistinctInventoryItemDao distinctInventoryItemDao;
 
@@ -37,7 +40,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             throw new DistinctInventoryItemNotFoundException("Distinct inventory item not found: " + item.getId());
         }
 
-        return item;
+        return largeObjectCdnUtils.setDistinctItemProfileCdnUrl(item);
     }
 
     @Override
@@ -70,7 +73,9 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
 
         }
 
-        return getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId);
+        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId);
+        items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
+        return items;
     }
 
     @Override
@@ -104,8 +109,9 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
 
         }
 
-        return getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId, query);
-
+        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId, query);
+        items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
+        return items;
     }
 
     @Override
@@ -149,4 +155,12 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
         this.distinctInventoryItemDao = distinctInventoryItemDao;
     }
 
+    public LargeObjectCdnUtils getLargeObjectCdnUtils() {
+        return largeObjectCdnUtils;
+    }
+
+    @Inject
+    public void setLargeObjectCdnUtils(LargeObjectCdnUtils largeObjectCdnUtils) {
+        this.largeObjectCdnUtils = largeObjectCdnUtils;
+    }
 }

@@ -29,6 +29,7 @@ import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 public class UserDistinctInventoryItemApiTest {
 
@@ -275,10 +276,10 @@ public class UserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
                 .get(DistinctInventoryItemPagination.class);
 
-        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
-                userClientContext.getUser().getId(),
-                i.getUser().getId()
-            )
+        new PaginationWalker().forEach(walkFunction, i -> {
+            assertEquals(userClientContext.getUser().getId(), i.getUser().getId());
+            assertNotNull(i.getProfile().getImageObject().getUrl());
+            }
         );
 
     }
@@ -294,7 +295,6 @@ public class UserDistinctInventoryItemApiTest {
             .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getUser().getId(), item.getUser().getId());
-
     }
 
     @Test(dataProvider = "getProfileIntermediates")
@@ -308,7 +308,7 @@ public class UserDistinctInventoryItemApiTest {
             .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getDefaultProfile().getId(), item.getProfile().getId());
-
+        assertNotNull(item.getProfile().getImageObject().getUrl());
     }
 
     @Test(dataProvider = "getNonMatchingUserIntermediates")

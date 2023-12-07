@@ -97,6 +97,7 @@ public class UserFollowerApiTest {
 
         final var fetched = response.readEntity(Profile.class);
         assertEquals(fetched.getId(), followee.getDefaultProfile().getId());
+        assertNotNull(fetched.getImageObject().getUrl());
 
     }
 
@@ -121,7 +122,7 @@ public class UserFollowerApiTest {
                 .orElse(null);
 
         assertNotNull(profile);
-
+        assertNotNull(profile.getImageObject().getUrl());
     }
 
     @Test(groups = "fetch", dataProvider = "getClientContexts", dependsOnGroups = "create")
@@ -145,7 +146,7 @@ public class UserFollowerApiTest {
                 .orElse(null);
 
         assertNotNull(profile);
-
+        assertNotNull(profile.getImageObject().getUrl());
     }
 
     @Test(groups = "delete", dataProvider = "getClientContexts", dependsOnGroups = "fetch")

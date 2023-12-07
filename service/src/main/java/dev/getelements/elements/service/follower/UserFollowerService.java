@@ -8,6 +8,7 @@ import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.FollowerService;
+import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -20,23 +21,30 @@ public class UserFollowerService implements FollowerService {
 
     private ProfileDao profileDao;
 
+    private LargeObjectCdnUtils cdnUtils;
+
     @Override
     public Pagination<Profile> getFollowers(final String profileId, final int offset, final int count) {
-        return getFollowerDao()
+        Pagination<Profile> profiles = getFollowerDao()
                 .getFollowersForProfile(profileId, offset, count)
                 .transform(this::redactPrivateInformation);
+        profiles.getObjects().forEach(profile -> getCdnUtils().setProfileCdnUrl(profile));
+        return profiles;
     }
 
     @Override
     public Pagination<Profile> getFollowees(final String profileId, final int offset, final int count) {
-        return getFollowerDao()
+        Pagination<Profile> profiles = getFollowerDao()
                 .getFolloweesForProfile(profileId, offset, count)
                 .transform(this::redactPrivateInformation);
+        profiles.getObjects().forEach(profile -> getCdnUtils().setProfileCdnUrl(profile));
+        return profiles;
     }
 
     @Override
     public Profile getFollower(final String profileId, final String followedId) {
-        return this.redactPrivateInformation(getFollowerDao().getFollowerForProfile(profileId, followedId));
+        Profile profile = this.redactPrivateInformation(getFollowerDao().getFollowerForProfile(profileId, followedId));
+        return getCdnUtils().setProfileCdnUrl(profile);
     }
 
     @Override
@@ -86,4 +94,12 @@ public class UserFollowerService implements FollowerService {
         this.profileDao = profileDao;
     }
 
+    public LargeObjectCdnUtils getCdnUtils() {
+        return cdnUtils;
+    }
+
+    @Inject
+    public void setCdnUtils(LargeObjectCdnUtils cdnUtils) {
+        this.cdnUtils = cdnUtils;
+    }
 }

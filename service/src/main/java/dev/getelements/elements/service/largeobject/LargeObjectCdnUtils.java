@@ -1,6 +1,9 @@
 package dev.getelements.elements.service.largeobject;
 
+import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.largeobject.LargeObject;
+import dev.getelements.elements.model.largeobject.LargeObjectReference;
+import dev.getelements.elements.model.profile.Profile;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -26,6 +29,21 @@ public class LargeObjectCdnUtils {
         return format("%s/object/%s", getCdnUrl(), id);
     }
 
+    public Profile setProfileCdnUrl(Profile profile) {
+        if (profile != null && profile.getImageObject() != null) {
+            LargeObjectReference reference = profile.getImageObject();
+            reference.setUrl(assembleCdnUrl(reference.getId()));
+        }
+        return profile;
+    }
+
+    public DistinctInventoryItem setDistinctItemProfileCdnUrl(DistinctInventoryItem item) {
+        if (item != null) {
+            setProfileCdnUrl(item.getProfile());
+        }
+        return item;
+    }
+
     public String getCdnUrl() {
         return cdnUrl;
     }
@@ -34,5 +52,4 @@ public class LargeObjectCdnUtils {
     public void setCdnUrl(@Named(CDN_OUTSIDE_URL) String cdnUrl) {
         this.cdnUrl = cdnUrl;
     }
-
 }
