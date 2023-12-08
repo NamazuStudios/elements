@@ -1,7 +1,9 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.goods.CreateItemRequest;
 import dev.getelements.elements.model.goods.Item;
+import dev.getelements.elements.model.goods.UpdateItemRequest;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
@@ -53,7 +55,7 @@ public interface ItemService {
      * @param item the item to update
      * @return the item, as it was written
      */
-    Item updateItem(Item item);
+    Item updateItem(String identifier, UpdateItemRequest item);
 
     /**
      * Creates a new {@link Item}.
@@ -61,6 +63,6 @@ public interface ItemService {
      * @param item the {@link Item} to create
      * @return the item, as it was written
      */
-    Item createItem(Item item);
+    Item createItem(CreateItemRequest item);
 
 }

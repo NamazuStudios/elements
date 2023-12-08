@@ -41,6 +41,8 @@ public class Item implements Serializable, Taggable {
 
     private Map<String, Object> metadata;
 
+    private boolean publicVisible;
+
     /**
      * Get the unique ID of the Item.
      *
@@ -186,6 +188,22 @@ public class Item implements Serializable, Taggable {
         this.category = category;
     }
 
+    /**
+     * Gets the visibility of this item.
+     *
+    * @return visibility
+     */
+    public boolean isPublicVisible() {
+        return publicVisible;
+    }
+
+    /**
+     * Sets the visibility of this item.
+     */
+    public void setPublicVisible(boolean publicVisible) {
+        this.publicVisible = publicVisible;
+    }
+
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {
@@ -201,27 +219,26 @@ public class Item implements Serializable, Taggable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Item item = (Item) o;
-        return Objects.equals(getId(), item.getId()) && Objects.equals(getName(), item.getName()) && Objects.equals(getTags(), item.getTags()) && Objects.equals(getDisplayName(), item.getDisplayName()) && Objects.equals(getDescription(), item.getDescription()) && getCategory() == item.getCategory() && Objects.equals(getMetadataSpec(), item.getMetadataSpec()) && Objects.equals(getMetadata(), item.getMetadata());
+        return Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(tags, item.tags) && Objects.equals(displayName, item.displayName) && Objects.equals(description, item.description) && category == item.category && Objects.equals(metadataSpec, item.metadataSpec) && Objects.equals(metadata, item.metadata) && Objects.equals(publicVisible, item.publicVisible);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getTags(), getDisplayName(), getDescription(), getCategory(), getMetadataSpec(), getMetadata());
+        return Objects.hash(id, name, tags, displayName, description, category, metadataSpec, metadata, publicVisible);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Item{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", tags=").append(tags);
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", description='").append(description).append('\'');
-        sb.append(", category=").append(category);
-        sb.append(", metadataSpec=").append(metadataSpec);
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "Item{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", tags=" + tags +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", category=" + category +
+                ", metadataSpec=" + metadataSpec +
+                ", metadata=" + metadata +
+                ", publicVisible=" + publicVisible +
+                '}';
     }
-
 }

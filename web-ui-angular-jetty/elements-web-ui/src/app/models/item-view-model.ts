@@ -8,5 +8,6 @@ export class ItemViewModel implements Item {
   displayName: string;
   metadata: {[key: string]: any};
   category: ItemCategory;
+  publicVisible: boolean;
 }
 

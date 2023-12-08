@@ -17,8 +17,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static com.google.common.base.Strings.nullToEmpty;
-
 @Path("inventory/simple")
 @Api(value = "Inventory",
     description = "Manages inventory ensuring that there is a single stack of items per item availble.  Each " +
@@ -63,12 +61,7 @@ public class SimpleInventoryItemResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        final String query = nullToEmpty(search).trim();
-
-        return query.isEmpty() ?
-            getSimpleInventoryItemService().getInventoryItems(offset, count, userId) :
-            getSimpleInventoryItemService().getInventoryItems(offset, count, userId, query);
-
+        return getSimpleInventoryItemService().getInventoryItems(offset, count, userId, search);
     }
 
     @PATCH
