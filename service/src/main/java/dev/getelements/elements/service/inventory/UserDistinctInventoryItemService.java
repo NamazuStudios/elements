@@ -2,20 +2,27 @@ package dev.getelements.elements.service.inventory;
 
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.ProfileDao;
+import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.inventory.DistinctInventoryItemNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
+import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class UserDistinctInventoryItemService implements DistinctInventoryItemService {
 
     private User user;
+
+    private UserDao userDao;
 
     private ProfileDao profileDao;
 
@@ -50,30 +57,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             final String userId,
             final String profileId) {
 
-        String resolvedUserId;
-
-        if (userId == null) {
-            resolvedUserId = getUser().getId();
-        } else if (Objects.equals(getUser().getId(), userId)) {
-            resolvedUserId = getUser().getId();
-        }  else {
-            return new Pagination<>();
-        }
-
-        if (profileId != null) {
-
-            final var valid = getProfileDao()
-                    .findActiveProfile(profileId)
-                    .map(p -> Objects.equals(getUser().getId(), p.getUser().getId()))
-                    .orElse(false);
-
-            if (!valid) {
-                return new Pagination<>();
-            }
-
-        }
-
-        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId);
+        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItems(offset, count, userId, profileId, null);
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }
@@ -86,30 +70,14 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             final String profileId,
             final String query) {
 
-        String resolvedUserId;
-
-        if (userId == null) {
-            resolvedUserId = getUser().getId();
-        } else if (Objects.equals(getUser().getId(), userId)) {
-            resolvedUserId = getUser().getId();
-        }  else {
-            return new Pagination<>();
-        }
-
-        if (profileId != null) {
-
-            final var valid = getProfileDao()
-                .findActiveProfile(profileId)
-                .map(p -> Objects.equals(getUser().getId(), p.getUser().getId()))
-                .orElse(false);
-
-            if (!valid) {
+        final Optional<Profile> profile = getProfileDao().findActiveProfile(profileId);
+        if (profile.isPresent()) {
+            final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
+            if (!user.getId().equals(profile.get().getUser().getId())) {
                 return new Pagination<>();
             }
-
         }
-
-        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId, query);
+        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profileId, userId, isCurrentUser(userId), query);
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }
@@ -126,6 +94,19 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
     @Override
     public void deleteInventoryItem(final String inventoryItemId) {
         throw new ForbiddenException();
+    }
+
+    private boolean isCurrentUser(String userId) {
+        return isBlank(userId) || getUser().getId().equals(userId);
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public User getUser() {

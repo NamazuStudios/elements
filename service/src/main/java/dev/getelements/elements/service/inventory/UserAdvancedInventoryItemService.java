@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.inventory;
 
 import dev.getelements.elements.dao.InventoryItemDao;
+import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.InventoryItem;
@@ -9,7 +10,11 @@ import dev.getelements.elements.service.AdvancedInventoryItemService;
 
 import javax.inject.Inject;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 public class UserAdvancedInventoryItemService implements AdvancedInventoryItemService {
+
+    private UserDao userDao;
 
     private User user;
 
@@ -22,9 +27,7 @@ public class UserAdvancedInventoryItemService implements AdvancedInventoryItemSe
 
     @Override
     public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final String userId) {
-        return userId == null || getUser().getId().equals(userId.trim()) ?
-            getInventoryItemDao().getInventoryItems(offset, count, getUser()) :
-            Pagination.empty();
+        return getInventoryItems(offset, count, userId, "");
     }
 
     @Override
@@ -32,9 +35,10 @@ public class UserAdvancedInventoryItemService implements AdvancedInventoryItemSe
                                                        final int count,
                                                        final String userId,
                                                        final String query) {
-        return userId == null || getUser().getId().equals(userId.trim()) ?
-            getInventoryItemDao().getInventoryItems(offset, count, getUser(), query) :
-            Pagination.empty();
+        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
+        return isCurrentUser(userId) ?
+                getInventoryItemDao().getInventoryItems(offset, count, user, query) :
+                getInventoryItemDao().getUserPublicInventoryItems(offset, count, user);
     }
 
     @Override
@@ -61,6 +65,19 @@ public class UserAdvancedInventoryItemService implements AdvancedInventoryItemSe
     @Override
     public void deleteInventoryItem(final String inventoryItemId) {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
+    }
+
+    private boolean isCurrentUser(String userId) {
+        return isBlank(userId) || getUser().getId().equals(userId);
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public User getUser() {

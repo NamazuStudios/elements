@@ -34,8 +34,8 @@ public class SuperUserDistinctInventoryItemApiTest {
     @Factory
     public Object[] getTests() {
         return new Object[] {
-            TestUtils.getInstance().getXodusTest(SuperUserDistinctInventoryItemApiTest.class),
-            TestUtils.getInstance().getUnixFSTest(SuperUserDistinctInventoryItemApiTest.class)
+                TestUtils.getInstance().getXodusTest(SuperUserDistinctInventoryItemApiTest.class),
+                TestUtils.getInstance().getUnixFSTest(SuperUserDistinctInventoryItemApiTest.class)
         };
     }
 
@@ -56,9 +56,14 @@ public class SuperUserDistinctInventoryItemApiTest {
     private ClientContext superUserClientContext;
 
     @Inject
+    private ClientContext userWithPublicItems;
+
+    @Inject
     private ItemDao itemDao;
 
     private Item item;
+
+    private Item publicItem;
 
     private final Map<String, Set<DistinctInventoryItem>> intermediatesByUser = new ConcurrentHashMap<>();
 
@@ -82,12 +87,25 @@ public class SuperUserDistinctInventoryItemApiTest {
                 .createProfile("DistinctB")
                 .createSession();
 
+        userWithPublicItems
+                .createUser("distinctPublic")
+                .createProfile("DistinctPublic")
+                .createSession();
+
         final var item = new Item();
         item.setName("distinct1");
         item.setCategory(DISTINCT);
         item.setDescription("Test Item");
         item.setDisplayName("Test Item");
         this.item = itemDao.createItem(item);
+
+        final var publicItem = new Item();
+        publicItem.setName("publicDistinct");
+        publicItem.setCategory(DISTINCT);
+        publicItem.setDescription("Public test item");
+        publicItem.setDisplayName("Public test item");
+        publicItem.setPublicVisible(true);
+        this.publicItem = itemDao.createItem(publicItem);
 
     }
 
@@ -129,26 +147,26 @@ public class SuperUserDistinctInventoryItemApiTest {
     @DataProvider
     public Object[][] getAllIntermediates() {
         return Stream.of(intermediatesByUser, intermediatesByProfile)
-            .flatMap(m -> m.values().stream())
-            .flatMap(s -> s.stream().map(DistinctInventoryItem::getId))
-            .collect(toSet())
-            .stream()
-            .map(s -> new Object[]{s})
-            .toArray(Object[][]::new);
+                .flatMap(m -> m.values().stream())
+                .flatMap(s -> s.stream().map(DistinctInventoryItem::getId))
+                .collect(toSet())
+                .stream()
+                .map(s -> new Object[]{s})
+                .toArray(Object[][]::new);
     }
 
     @DataProvider
     public Object[][] getUserIntermediates() {
         return Stream.of(userClientContextA, userClientContextB)
-            .flatMap(c -> intermediatesByUser.get(c.getUser().getId()).stream().map(i -> new Object[] {c, i}))
-            .toArray(Object[][]::new);
+                .flatMap(c -> intermediatesByUser.get(c.getUser().getId()).stream().map(i -> new Object[] {c, i}))
+                .toArray(Object[][]::new);
     }
 
     @DataProvider
     public Object[][] getProfileIntermediates() {
         return Stream.of(userClientContextA, userClientContextB)
-            .flatMap(c -> intermediatesByProfile.get(c.getDefaultProfile().getId()).stream().map(i -> new Object[] {c, i}))
-            .toArray(Object[][]::new);
+                .flatMap(c -> intermediatesByProfile.get(c.getDefaultProfile().getId()).stream().map(i -> new Object[] {c, i}))
+                .toArray(Object[][]::new);
     }
 
     @DataProvider
@@ -210,6 +228,29 @@ public class SuperUserDistinctInventoryItemApiTest {
     }
 
     @Test(threadPoolSize = 5, dataProvider = "getUserClientContexts")
+    public void testCreatePublicItemUser(final ClientContext userClientContext) {
+
+        var request = new CreateDistinctInventoryItemRequest();
+        request.setItemId(publicItem.getId());
+        request.setUserId(userWithPublicItems.getUser().getId());
+
+        final var response = client
+                .target(format("%s/inventory/distinct", apiRoot))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        assertEquals(200, response.getStatus());
+
+        final var created = response.readEntity(DistinctInventoryItem.class);
+        assertNotNull(created.getId());
+        assertNull(created.getProfile());
+        assertEquals(userWithPublicItems.getUser(), created.getUser());
+        updateIntermediate(created);
+
+    }
+
+    @Test(threadPoolSize = 5, dataProvider = "getUserClientContexts")
     public void testCreateItemProfile(final ClientContext userClientContext) {
 
         var request = new CreateDistinctInventoryItemRequest();
@@ -218,10 +259,10 @@ public class SuperUserDistinctInventoryItemApiTest {
         request.setProfileId(userClientContext.getDefaultProfile().getId());
 
         final var response = client
-            .target(format("%s/inventory/distinct", apiRoot))
-            .request()
-            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
-            .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+                .target(format("%s/inventory/distinct", apiRoot))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
 
         assertEquals(200, response.getStatus());
 
@@ -243,10 +284,10 @@ public class SuperUserDistinctInventoryItemApiTest {
         request.setMetadata(generateMockMetadata());
 
         final var response = client
-            .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItem.getId()))
-            .request()
-            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
-            .put(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+                .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItem.getId()))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .put(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
 
         assertEquals(200, response.getStatus());
 
@@ -285,26 +326,50 @@ public class SuperUserDistinctInventoryItemApiTest {
     }
 
     @Test(dataProvider = "getUserClientContexts", dependsOnMethods = {
-        "testCreateItemUser",
-        "testCreateItemProfile"
+            "testCreateItemUser",
+            "testCreateItemProfile"
     })
     public void testGetAllSpecifyingUser(final ClientContext userClientContext) {
 
         final PaginationWalker.WalkFunction<DistinctInventoryItem> walkFunction = (offset, count) -> client
-            .target(format("%s/inventory/distinct?offset=%d&count=%d&userId=%s",
-                apiRoot,
-                offset,
-                count,
-                userClientContext.getUser().getId())
-            )
-            .request()
-            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
-            .get(DistinctInventoryItemPagination.class);
+                .target(format("%s/inventory/distinct?offset=%d&count=%d&userId=%s",
+                        apiRoot,
+                        offset,
+                        count,
+                        userClientContext.getUser().getId())
+                )
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .get(DistinctInventoryItemPagination.class);
 
         new PaginationWalker().forEach(walkFunction, i -> assertEquals(
-                userClientContext.getUser().getId(),
-                i.getUser().getId()
-            )
+                        userClientContext.getUser().getId(),
+                        i.getUser().getId()
+                )
+        );
+
+    }
+
+    @Test(dataProvider = "getUserClientContexts", dependsOnMethods = {
+            "testCreateItemUser", "testCreatePublicItemUser",
+            "testCreateItemProfile"
+    })
+    public void testGetAllSpecifyingOtherUsersPublicInventory(final ClientContext userClientContext) {
+        final PaginationWalker.WalkFunction<DistinctInventoryItem> walkFunction = (offset, count) -> client
+                .target(format("%s/inventory/distinct?offset=%d&count=%d&userId=%s",
+                        apiRoot,
+                        offset,
+                        count,
+                        userWithPublicItems.getUser().getId())
+                )
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .get(DistinctInventoryItemPagination.class);
+
+        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
+                        userClientContext.getUser().getId(),
+                        i.getUser().getId()
+                )
         );
 
     }
@@ -369,18 +434,18 @@ public class SuperUserDistinctInventoryItemApiTest {
     }
 
     @Test(dataProvider = "getAllIntermediates", dependsOnMethods = {
-        "testGetAllSpecifyingUser",
-        "testGetAllSpecifyingProfile",
-        "testUserGetSingle",
-        "testProfileGetSingle"
+            "testGetAllSpecifyingUser",
+            "testGetAllSpecifyingProfile",
+            "testUserGetSingle",
+            "testProfileGetSingle"
     })
     public void testDeleteItem(final String distinctInventoryItemId) {
 
         final var response = client
-            .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
-            .request()
-            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
-            .delete();
+                .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .delete();
 
         assertEquals(204, response.getStatus());
 
@@ -390,10 +455,10 @@ public class SuperUserDistinctInventoryItemApiTest {
     public void testDeletedItemThrows404(final String distinctInventoryItemId) {
 
         final var response = client
-            .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
-            .request()
-            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
-            .delete();
+                .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .delete();
 
         assertEquals(404, response.getStatus());
 

@@ -5,14 +5,18 @@ import dev.getelements.elements.dao.ItemDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.inventory.InventoryItem;
+import dev.getelements.elements.model.user.User;
 
 import javax.inject.Inject;
 
 import static dev.getelements.elements.dao.InventoryItemDao.SIMPLE_PRIORITY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemService {
 
     private UserDao userDao;
+
+    private User user;
 
     private ItemDao itemDao;
 
@@ -25,11 +29,7 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
 
     @Override
     public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final String userId) {
-        return userId == null || userId.trim().isEmpty() ?
-            getInventoryItemDao().getInventoryItems(offset, count) :
-            getUserDao().findActiveUser(userId)
-                .map(user -> getInventoryItemDao().getInventoryItems(offset, count, user))
-                .orElseGet(Pagination::new);
+        return getInventoryItems(offset, count, userId, null);
     }
 
     @Override
@@ -37,11 +37,10 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
                                                        final int count,
                                                        final String userId,
                                                        final String query) {
-        return userId == null || userId.trim().isEmpty() ?
-            getInventoryItemDao().getInventoryItems(offset, count) :
-            getUserDao().findActiveUser(userId)
-                .map(user -> getInventoryItemDao().getInventoryItems(offset, count, user, query))
-                .orElseGet(Pagination::new);
+        final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
+        return isCurrentUser(userId) ?
+                getInventoryItemDao().getInventoryItems(offset, count, user, query) :
+                getInventoryItemDao().getUserPublicInventoryItems(offset, count, user);
     }
 
     @Override
@@ -80,13 +79,8 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
         getInventoryItemDao().deleteInventoryItem(inventoryItemId);
     }
 
-    public UserDao getUserDao() {
-        return userDao;
-    }
-
-    @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
+    private boolean isCurrentUser(String userId) {
+        return isBlank(userId) || getUser().getId().equals(userId);
     }
 
     public ItemDao getItemDao() {
@@ -107,4 +101,21 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
         this.inventoryItemDao = inventoryItemDao;
     }
 
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

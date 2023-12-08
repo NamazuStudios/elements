@@ -30,10 +30,12 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.util.List;
 
 import static dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
 import static dev.getelements.elements.model.goods.ItemCategory.FUNGIBLE;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.in;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
@@ -99,8 +101,18 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final User user) {
-        return getInventoryItems(offset, count, user, null);
+    public Pagination<InventoryItem> getUserPublicInventoryItems(final int offset, final int count, User user) {
+
+        List<MongoItem> publicItems = mongoItemDao.getPublicItems();
+
+        final var query = getDatastore()
+                .find(MongoInventoryItem.class)
+                .filter(in("item", publicItems))
+                .filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
+
+        return getMongoDBUtils().paginationFromQuery(
+                query, offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions());
     }
 
     @Override
@@ -114,7 +126,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
             mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions());
-
     }
 
     @Override
@@ -400,5 +411,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
+
 
 }

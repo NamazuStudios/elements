@@ -26,6 +26,8 @@ public class UpdateItemRequest {
 
     private Map<String, Object> metadata;
 
+    private Boolean publicVisible;
+
     /**
      * Get the unique name of the Item
      *
@@ -154,29 +156,42 @@ public class UpdateItemRequest {
 
     }
 
+    public Boolean isPublicVisible() {
+        return publicVisible;
+    }
+
+    /**
+     * Sets the visibility of this Item
+     *
+     * @param publicVisible
+     *     The boolean flag for the Item
+     */
+    public void setPublicVisible(Boolean publicVisible) {
+        this.publicVisible = publicVisible;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CreateItemRequest that = (CreateItemRequest) o;
-        return Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getTags(), that.getTags()) && Objects.equals(getMetadata(), that.getMetadata());
+        UpdateItemRequest that = (UpdateItemRequest) o;
+        return publicVisible == that.publicVisible && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDisplayName(), getDescription(), getTags(), getMetadata());
+        return Objects.hash(name, displayName, description, tags, metadata, publicVisible);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("UpdateItemRequest{");
-        sb.append("name='").append(name).append('\'');
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", description='").append(description).append('\'');
-        sb.append(", tags=").append(tags);
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "UpdateItemRequest{" +
+                "name='" + name + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", tags=" + tags +
+                ", metadata=" + metadata +
+                ", publicVisible=" + publicVisible +
+                '}';
     }
-
 }
