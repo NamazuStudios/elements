@@ -77,7 +77,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
                 return new Pagination<>();
             }
         }
-        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profileId, userId, isCurrentUser(userId), query);
+        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profileId, userId, !isCurrentUser(userId), query);
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }

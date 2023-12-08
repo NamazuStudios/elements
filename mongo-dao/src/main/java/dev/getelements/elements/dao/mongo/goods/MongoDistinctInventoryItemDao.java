@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.goods;
 
+import com.google.common.base.Strings;
 import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -136,6 +137,10 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         if (publicOnly) {
             query.filter(in("item", mongoItemDao.getPublicItems()));
+        }
+
+        if (Strings.isNullOrEmpty(queryString)) {
+            return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
         }
 
         return getBooleanQueryParser()
