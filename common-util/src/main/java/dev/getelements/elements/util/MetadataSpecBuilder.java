@@ -39,6 +39,10 @@ public class MetadataSpecBuilder {
         return this;
     }
 
+    public MetadataSpecBuilder objectType() {
+        return type(MetadataSpecPropertyType.OBJECT);
+    }
+
     public MetadataSpec endMetadataSpec() {
         return spec;
     }
@@ -93,6 +97,14 @@ public class MetadataSpecBuilder {
         public PropertyBuilder<ParentT> type(final MetadataSpecPropertyType metadataSpecPropertyType) {
             property.setType(metadataSpecPropertyType);
             return this;
+        }
+
+        public PropertyBuilder<ParentT> stringType() {
+            return type(MetadataSpecPropertyType.STRING);
+        }
+
+        public PropertyBuilder<ParentT> numberType() {
+            return type(MetadataSpecPropertyType.NUMBER);
         }
 
         public PropertyBuilder<ParentT> displayName(final String displayName) {
