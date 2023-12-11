@@ -8,7 +8,7 @@ import org.bson.types.ObjectId;
 import java.util.*;
 
 
-@Entity(value = "items")
+@Entity(value = "items", useDiscriminator = false)
 public class MongoItem {
 
     @Id
@@ -38,7 +38,7 @@ public class MongoItem {
     private ItemCategory category;
 
     @Property
-    private Boolean publicVisible;
+    private boolean publicVisible;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -104,11 +104,11 @@ public class MongoItem {
         this.category = category;
     }
 
-    public Boolean getPublicVisible() {
+    public boolean getPublicVisible() {
         return publicVisible;
     }
 
-    public void setPublicVisible(Boolean publicVisible) {
+    public void setPublicVisible(boolean publicVisible) {
         this.publicVisible = publicVisible;
     }
 
