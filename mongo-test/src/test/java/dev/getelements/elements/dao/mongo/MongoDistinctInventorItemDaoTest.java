@@ -221,13 +221,10 @@ public class MongoDistinctInventorItemDaoTest {
 
     @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
     public void testGetAllItems() {
-        final var all = new PaginationWalker().toList((offset, count) ->
+        final var items = new PaginationWalker().toList((offset, count) ->
                 underTest.getDistinctInventoryItems(offset, count, null, null, false)
         );
-        //TODO: tmp fix - this test need to be run before MongoDistinctInventoryItemQueryTest.java
-        assertNotNull(all);
-        assertNotNull(intermediates.values());
-//        assertTrue(intermediates.values().containsAll(all));
+        assertTrue(items.containsAll(intermediates.values()));
     }
 
     @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
