@@ -366,10 +366,10 @@ public class SuperUserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
                 .get(DistinctInventoryItemPagination.class);
 
-        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
-                        userClientContext.getUser().getId(),
-                        i.getUser().getId()
-                )
+        new PaginationWalker().forEach(walkFunction, i -> {
+                assertNotSame(userClientContext.getUser().getId(), i.getUser().getId());
+                assertTrue(i.getItem().isPublicVisible());
+            }
         );
 
     }

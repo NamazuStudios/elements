@@ -30,7 +30,7 @@ import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
 import static io.smallrye.common.constraint.Assert.assertNotNull;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.*;
 
 public class UserDistinctInventoryItemApiTest {
 
@@ -296,10 +296,10 @@ public class UserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
                 .get(DistinctInventoryItemPagination.class);
 
-        new PaginationWalker().forEach(walkFunction, i -> assertEquals(
-                        userClientContext.getUser().getId(),
-                        i.getUser().getId()
-                )
+        new PaginationWalker().forEach(walkFunction, i -> {
+                    assertNotSame(userClientContext.getUser().getId(), i.getUser().getId());
+                    assertTrue(i.getItem().isPublicVisible());
+                }
         );
 
     }
