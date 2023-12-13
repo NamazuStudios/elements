@@ -15,6 +15,7 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -132,7 +133,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         final var result = getDatastore()
                 .find(MongoMetadataSpec.class)
                 .filter(eq("_id", objectId))
-                .update(options, set("active", false), unset("name"));
+                .update(options, set("active", false), set("name", UUID.randomUUID().toString()));
 
         if(result.getModifiedCount() == 0) {
             throw new MetadataSpecNotFoundException("No such metadata spec: " + metadataSpecId);

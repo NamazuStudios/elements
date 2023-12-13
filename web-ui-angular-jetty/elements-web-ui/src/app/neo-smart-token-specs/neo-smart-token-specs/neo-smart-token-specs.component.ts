@@ -4,12 +4,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { filter, tap } from 'rxjs/operators';
 import { AlertService } from 'src/app/alert.service';
-import { TokenTemplate } from 'src/app/api/models/token-spec-tab';
 import { MetadataSpecsService } from 'src/app/api/services/metadata-specs.service';
 import { ConfirmationDialogService } from 'src/app/confirmation-dialog/confirmation-dialog.service';
 import { NeoSmartTokenSpecsDialogComponent } from 'src/app/neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
 import { NeoSmartTokenSpecsDuplicateDialogComponent } from 'src/app/neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
 import { NeoTokensSpecDataSource } from 'src/app/neo-tokens-spec.datasource';
+import {MetadataSpec, MetadataSpecPropertyType} from '../../api/models/token-spec-tab';
 
 @Component({
   selector: 'app-neo-smart-token-specs',
@@ -20,7 +20,7 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
 
   hasSelection = false;
   dataSource: NeoTokensSpecDataSource;
-  selection: SelectionModel<TokenTemplate>;
+  selection: SelectionModel<MetadataSpec>;
   templates = [];
   displayedColumns: Array<string> = [
     "select",
@@ -41,7 +41,7 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.selection = new SelectionModel<TokenTemplate>(true, []);
+    this.selection = new SelectionModel<MetadataSpec>(true, []);
     this.dataSource = new NeoTokensSpecDataSource(this.metadataSpecsService);
     this.dataSource.loadTemplates(null, null);
   }
@@ -59,7 +59,7 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
     this.paginator.page.pipe(tap(() => this.refresh())).subscribe();
   }
 
-  showDialog(template: TokenTemplate) {
+  showDialog(template: MetadataSpec) {
     this.dialog.open(NeoSmartTokenSpecsDialogComponent, {
       width: "800px",
       maxHeight: "90vh",
@@ -94,35 +94,37 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
       this.templates.forEach(row => this.selection.select(row));
   }
 
-  openDuplicateModal(template: TokenTemplate) {
+  openDuplicateModal(template: MetadataSpec) {
     this.dialog.open(NeoSmartTokenSpecsDuplicateDialogComponent, {
       width: "450px",
       maxHeight: "90vh",
       data: {
-        submit: this.duplicateTempalte.bind(this, template),
+        submit: this.duplicateTemplate.bind(this, template),
       },
     });
   }
 
-  duplicateTempalte(template: TokenTemplate, name: string) {
+  duplicateTemplate(template: MetadataSpec, name: string) {
     this.metadataSpecsService.createTokenSpec({
-      name,
-      contractId: template.contractId,
-      tabs: template.tabs,
+      name: name,
+      type: MetadataSpecPropertyType.STRING,  // TODO
+      properties: template.properties,
     })
     .subscribe(() => {
       this.refresh();
     });
   }
 
-  removeTemplate(template: TokenTemplate) {
+  removeTemplate(template: MetadataSpec) {
     this.metadataSpecsService.deleteTokenTemplate(template.id).subscribe(
-      (r) => {},
+      (r) => {
+        this.refresh();
+      },
       (error) => this.alertService.error(error)
     );
   }
 
-  confirmTemplateRemove(template: TokenTemplate) {
+  confirmTemplateRemove(template: MetadataSpec) {
     this.dialogService
       .confirm(
         "Confirm Dialog",

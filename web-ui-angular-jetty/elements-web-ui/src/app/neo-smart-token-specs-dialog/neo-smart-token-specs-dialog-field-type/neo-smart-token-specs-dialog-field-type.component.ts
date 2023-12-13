@@ -1,7 +1,7 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatChipInputEvent } from '@angular/material/chips';
-import { TokenSpecTabField, TokenSpecTabFieldTypes } from 'src/app/api/models/token-spec-tab';
+import { MetadataSpecProperty, MetadataSpecPropertyType } from 'src/app/api/models/token-spec-tab';
 import { enumRegex } from '../neo-smart-token-specs-dialog.component';
 
 @Component({
@@ -11,9 +11,9 @@ import { enumRegex } from '../neo-smart-token-specs-dialog.component';
 })
 export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   @Input()
-  field: TokenSpecTabField;
+  field: MetadataSpecProperty;
   @Input()
-  type: TokenSpecTabFieldTypes;
+  type: MetadataSpecPropertyType;
   @Input()
   index: number;
   @Output("openDefineObjectModal")
@@ -34,20 +34,20 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    if (this.field.fieldType === 'Enum') {
-      this.enumFields = this.field?.content ? this.field?.content.split(',') : [];
-    } else if (this.field.fieldType === 'Tags') {
+    if (this.field.type === 'ENUM') {
+      this.enumFields = this.field?.defaultValue ? this.field?.defaultValue.split(',') : [];
+    } else if (this.field.type === 'TAGS') {
       this.tagsArr = this.field.defaultValue ? this.field.defaultValue.split(',') : [];
-    } else if (this.field.fieldType === 'Array') {
-      if (this.field.fieldContentType) {
-        this.selectedArrayType = this.field.fieldContentType || 'String';
-      } else if (typeof this.field.content === 'object') {
-        this.selectedArrayType = 'Object';
-      } else if (typeof this.field.content === 'number') {
-        this.selectedArrayType = 'Number';
-      } else {
-        this.selectedArrayType = 'String';
-      }
+    } else if (this.field.type === 'ARRAY') {
+      // if (this.field.fieldContentType) {
+      //   this.selectedArrayType = this.field.fieldContentType || 'String';
+      // } else if (typeof this.field.content === 'object') {
+      //   this.selectedArrayType = 'OBJECT';
+      // } else if (typeof this.field.content === 'number') {
+      //   this.selectedArrayType = 'NUMBER';
+      // } else {
+      //   this.selectedArrayType = 'STRING';
+      // }
     }
   }
 
@@ -95,7 +95,7 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
     this.onContentUpdate.emit({
       index: this.index,
       otherProps: {
-        placeHolder: value,
+        placeholder: value,
       }
     });
   }

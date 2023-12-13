@@ -1,6 +1,6 @@
 <div class="head-title">
-  <h1 *ngIf="!!data.template" mat-dialog-title>Edit Token Spec</h1>
-  <h1 *ngIf="!data.template" mat-dialog-title>New Token Spec</h1>
+  <h1 mat-dialog-title>Edit Token Spec</h1>
+<!--  <h1 *ngIf="!data.template" mat-dialog-title>New Token Spec</h1>-->
 </div>
 
 <div class="head-controls">
@@ -12,92 +12,17 @@
         placeholder="SpecName"
         name="specname"
         type="text"
-        [value]="tokenName"
+        [value]="specName"
         (input)="changeTokenName($event.target.value)"
       >
     </mat-form-field>
   </div>
-  <!-- <mat-form-field>
-    <mat-select
-      name="contracts"
-      placeholder="Contract"
-      (selectionChange)="selectContract($event.value)"
-    >
-      <mat-option
-        *ngFor="let contract of contracts"
-        [value]="contract.id"
-        [matTooltip]="contract.displayName"
-        matTooltipPosition="left"
-      >
-        {{contract.displayName}}
-      </mat-option>
-    </mat-select>
-  </mat-form-field> -->
-  <button
-    mat-raised-button
-    color="primary"
-    class="add-tab"
-    (click)="addNewTab()"
-  >
-    Add Tab
-  </button>
+
 </div>
 
-<mat-tab-group
-  (selectedIndexChange)="selectTab($event)"
-  [selectedIndex]="activeTabIndex"
->
-  <mat-tab *ngFor="let tab of tabs; let i = index" label="{{i + 1}}">
-    <div class="tab-header">
-      <mat-form-field>
-        <mat-label>Tab Name</mat-label>
-        <input
-          matInput
-          placeholder="TabName"
-          name="tabname"
-          type="text"
-          [value]="tab.name"
-          (change)="updateTabName($event.target.value)"
-        >
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Tab Position</mat-label>
-        <input
-          matInput
-          placeholder="TabPosition"
-          name="tabposition"
-          type="number"
-          min="1"
-          [defaultValue]="i + 1"
-          [max]="tabs.length"
-          (change)="updateTabPosition($event.target.value)"
-        >
-      </mat-form-field>
-      <div class="tab-buttons">
-        <button
-          mat-raised-button
-          color="primary"
-          matTooltip="Duplicate"
-          matTooltipPosition="above"
-          [disabled]="tabs.length >= maxTabs"
-          (click)="duplicateTab()"
-        >
-          <mat-icon>file_copy</mat-icon>
-        </button>
-        <button
-          mat-raised-button
-          color="primary"
-          matTooltip="Remove"
-          matTooltipPosition="above"
-          [disabled]="tabs.length === 1"
-          (click)="removeTab()"
-        >
-          <mat-icon>delete_outline</mat-icon>
-        </button>
-      </div>
-    </div>
+<div>
     <div class="fields-header">
-      <div>Fields</div>
+      <div>Properties</div>
       <button
         mat-raised-button
         color="primary"
@@ -111,7 +36,7 @@
     <mat-card [@.disabled]="disableAnimation">
       <mat-accordion cdkDropList (cdkDropListDropped)="drop($event)">
         <mat-expansion-panel
-          *ngFor="let field of fields; let fieldIndex = index;"
+          *ngFor="let property of properties; let fieldIndex = index;"
           (opened)="handleFieldPanelStateChange(fieldIndex)"
           [expanded]="expandedField === fieldIndex"
           cdkDrag
@@ -123,10 +48,10 @@
                 <mat-icon>menu</mat-icon>
                 <div>
                   <span>1: </span>
-                  <span class="memu-keyname">{{field.name || 'KeyName'}}</span>
+                  <span class="memu-keyname">{{property.name || 'KeyName'}}</span>
                 </div>
               </div>
-              <div>{{field.fieldType || 'Type'}}</div>
+              <div>{{property.type || 'Type'}}</div>
             </div>
           </mat-expansion-panel-header>
           <div>
@@ -138,20 +63,20 @@
                   placeholder="KeyName"
                   name="keyname"
                   type="text"
-                  [value]="field.name"
+                  [value]="property.name"
                   (change)="changeFieldName($event.target.value, fieldIndex)"
                 >
               </mat-form-field>
               <mat-form-field>
-                <mat-label>{{field.fieldType || 'Type'}}</mat-label>
+                <mat-label>{{property.type || 'Type'}}</mat-label>
                 <mat-select
                   name="type"
                   placeholder="Type"
-                  [value]="field.fieldType"
-                  (selectionChange)="changeFieldType($event.value, fieldIndex)"
+                  [value]="property.type"
+                  (selectionChange)="changePropertyType($event.value, fieldIndex)"
                 >
                   <mat-option
-                    *ngFor="let tabType of tabTypes"
+                    *ngFor="let tabType of propertiesTypes"
                     [value]="tabType.key"
                     [matTooltip]="tabType.value"
                     matTooltipPosition="left"
@@ -161,13 +86,12 @@
                 </mat-select>
               </mat-form-field>
             </div>
-            <div [ngClass]="{'menu-panel-footer-column': field?.fieldType === 'Enum', 'menu-panel-footer': true}">
+            <div [ngClass]="{'menu-panel-footer-column': property?.type === 'ENUM', 'menu-panel-footer': true}">
               <app-neo-smart-token-specs-dialog-field-type
-                [type]="field.fieldType"
+                [type]="property.type"
                 [index]="fieldIndex"
-                [field]="field"
-                (onContentTypeUpdate)="changeFieldContentType($event, fieldIndex)"
-                (onContentUpdate)="updateFieldsWithContent($event)"
+                [field]="property"
+                (onContentTypeUpdate)="changePropertyType($event, fieldIndex)"
                 (openDefineObjectModal)="openDefineObjectModal($event)"
               >
               </app-neo-smart-token-specs-dialog-field-type>
@@ -177,7 +101,7 @@
                   matTooltip="Move To Another Tab"
                   matTooltipPosition="above"
                   class="move-to-other-tab"
-                  (click)="moveFieldToAnotherTab(fieldIndex)"
+                  (click)="movePropertyToAnotherParent(fieldIndex)"
                 >
                   <mat-icon>move_up</mat-icon>
                 </button>
@@ -186,7 +110,7 @@
                   color="primary"
                   matTooltip="Duplicate Field"
                   matTooltipPosition="above"
-                  (click)="duplicateField(fieldIndex)"
+                  (click)="duplicateProperty(fieldIndex)"
                 >
                   <mat-icon>file_copy</mat-icon>
                 </button>
@@ -205,8 +129,7 @@
         </mat-expansion-panel>
       </mat-accordion>
     </mat-card>
-  </mat-tab>
-</mat-tab-group>
+</div>
 
 <div style="margin-top: 20px">
   <button

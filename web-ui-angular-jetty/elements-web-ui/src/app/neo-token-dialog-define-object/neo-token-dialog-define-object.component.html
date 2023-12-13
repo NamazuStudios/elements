@@ -57,7 +57,7 @@
                 (selectionChange)="updateFieldType($event.value, i)"
               >
                 <mat-option
-                  *ngFor="let fieldType of fieldTypes"
+                  *ngFor="let fieldType of propertiesTypes"
                   [value]="fieldType.key"
                   [matTooltip]="fieldType.value"
                   matTooltipPosition="left"

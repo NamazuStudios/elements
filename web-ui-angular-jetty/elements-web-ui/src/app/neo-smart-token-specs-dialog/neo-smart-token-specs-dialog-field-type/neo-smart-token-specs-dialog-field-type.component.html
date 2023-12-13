@@ -1,12 +1,12 @@
 <div>
-  <div *ngIf="type === 'String'" class="number-field">
+  <div *ngIf="type === 'STRING'" class="number-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
       <input
         matInput
         placeholder="Placeholder Text"
         type="text"
-        [value]="field?.placeHolder || ''"
+        [value]="field?.placeholder || ''"
         (change)="onPlaceholderChange($event.target.value)"
       >
     </mat-form-field>
@@ -21,7 +21,7 @@
       >
     </mat-form-field>
   </div>
-  <div *ngIf="type === 'Number'" class="number-field">
+  <div *ngIf="type === 'NUMBER'" class="number-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
       <input
@@ -29,7 +29,7 @@
         placeholder="Placeholder Text"
         name="string"
         type="text"
-        [value]="field?.placeHolder || ''"
+        [value]="field?.placeholder || ''"
         (change)="onPlaceholderChange($event.target.value)"
       >
     </mat-form-field>
@@ -45,7 +45,7 @@
       >
     </mat-form-field>
   </div>
-  <div *ngIf="type === 'Tags'" class="tags-field">
+  <div *ngIf="type === 'TAGS'" class="tags-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
       <input
@@ -53,7 +53,7 @@
         placeholder="Placeholder Text"
         name="string"
         type="text"
-        [value]="field?.placeHolder || ''"
+        [value]="field?.placeholder || ''"
         (change)="onPlaceholderChange($event.target.value)"
       >
     </mat-form-field>
@@ -77,7 +77,7 @@
       </mat-chip-list>
     </mat-form-field>
   </div>
-  <div *ngIf="type === 'Boolean'" class="boolean-field">
+  <div *ngIf="type === 'BOOLEAN'" class="boolean-field">
     <mat-checkbox
       [checked]="field?.content"
       (change)="onBooleanChange($event.checked)"
@@ -85,7 +85,7 @@
       Default True
     </mat-checkbox>
   </div>
-  <mat-card class="enum-field" *ngIf="type === 'Enum'">
+  <mat-card class="enum-field" *ngIf="type === 'ENUM'">
     <div *ngFor="let enumField of enumFields; let i = index;" class="enum-field__row">
       <mat-form-field>
         <mat-label>Enum</mat-label>
@@ -131,7 +131,7 @@
     </div>
     <mat-error *ngIf="enumError">Invalid format</mat-error>
   </mat-card>
-  <div *ngIf="type === 'Object'">
+  <div *ngIf="type === 'OBJECT'">
     <button
       mat-raised-button
       color="primary"
@@ -140,7 +140,7 @@
       Define
     </button>
   </div>
-  <div class="array-field-wrapper" *ngIf="type === 'Array'">
+  <div class="array-field-wrapper" *ngIf="type === 'ARRAY'">
     <div class="array-field">
       <mat-form-field>
         <mat-label>Array Content Type</mat-label>
@@ -162,7 +162,7 @@
       </mat-form-field>
       <button
         mat-raised-button
-        *ngIf="selectedArrayType === 'Object'"
+        *ngIf="selectedArrayType === 'OBJECT'"
         color="primary"
         class="add-tab"
         style="margin-left: 15px"
@@ -171,7 +171,7 @@
         Define
       </button>
     </div>
-    <div *ngIf="selectedArrayType === 'String'" class="array-field__default-placeholder">
+    <div *ngIf="selectedArrayType === 'STRING'" class="array-field__default-placeholder">
       <mat-form-field>
         <mat-label>Placeholder</mat-label>
         <input
@@ -179,7 +179,7 @@
           placeholder="Placeholder Text"
           name="string"
           type="text"
-          [value]="field?.placeHolder || ''"
+          [value]="field?.placeholder || ''"
           (change)="onPlaceholderChange($event.target.value)"
         >
       </mat-form-field>
@@ -195,14 +195,14 @@
         >
       </mat-form-field>
     </div>
-    <div *ngIf="selectedArrayType === 'Number'" class="array-field__default-placeholder">
+    <div *ngIf="selectedArrayType === 'NUMBER'" class="array-field__default-placeholder">
       <mat-form-field>
         <mat-label>Placeholder</mat-label>
         <input
           matInput
           placeholder="Placeholder Text"
           type="text"
-          [value]="field?.placeHolder || ''"
+          [value]="field?.placeholder || ''"
           (change)="onPlaceholderChange($event.target.value)"
         >
       </mat-form-field>

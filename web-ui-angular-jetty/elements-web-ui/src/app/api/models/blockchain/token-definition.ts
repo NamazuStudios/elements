@@ -1,4 +1,4 @@
-import { TokenTemplate } from '../token-spec-tab';
+import { MetadataSpec } from '../token-spec-tab';
 import { NeoSmartContract } from './neo-smart-contract';
 
 export interface TokenDefinition {
@@ -6,7 +6,7 @@ export interface TokenDefinition {
   displayName: string;
   id: string;
   metadata: any;
-  metadataSpec: TokenTemplate;
+  metadataSpec: MetadataSpec;
   name: string;
   user?: string;
 }

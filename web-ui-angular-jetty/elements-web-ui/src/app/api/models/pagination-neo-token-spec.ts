@@ -1,4 +1,4 @@
-import { TokenTemplate } from './token-spec-tab';
+import { MetadataSpec } from './token-spec-tab';
 
 /* tslint:disable */
 export interface PaginationNeoTokenSpec {
@@ -8,5 +8,5 @@ export interface PaginationNeoTokenSpec {
 
   approximation?: boolean;
 
-  objects?: TokenTemplate[];
+  objects?: MetadataSpec[];
 }

@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TokenSpecTabField, TokenSpecTabFieldTypes } from '../api/models/token-spec-tab';
+import { MetadataSpecProperty, MetadataSpecPropertyType } from '../api/models/token-spec-tab';
 
 @Component({
   selector: 'app-neo-token-dialog-define-object',
@@ -10,7 +10,7 @@ import { TokenSpecTabField, TokenSpecTabFieldTypes } from '../api/models/token-s
 export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   fields = [];
-  fieldTypes = [];
+  propertiesTypes = [];
   activeObjectIndex = null;
   expandedField = null;
   // Workaround for accordion animation on init
@@ -22,7 +22,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       updateFieldsWithContent: Function,
-      content: TokenSpecTabField[],
+      content: MetadataSpecProperty[],
     },
   ) { }
 
@@ -32,9 +32,9 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     } else {
       this.fields = [this.createField()];
     }
-    this.fieldTypes = Object.keys(TokenSpecTabFieldTypes).map(key => ({
+    this.propertiesTypes = Object.keys(MetadataSpecPropertyType).map(key => ({
       key,
-      value: TokenSpecTabFieldTypes[key]
+      value: MetadataSpecPropertyType[key]
     }));
   }
 
@@ -47,16 +47,20 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     this.expandedField = index;
   }
 
-  createField(): TokenSpecTabField {
+  createField(): MetadataSpecProperty {
     return {
-      name: "",
-      fieldType: TokenSpecTabFieldTypes.STRING,
-      content: "",
+      name: '',
+      displayName: '',
+      required: false,
+      type: MetadataSpecPropertyType.STRING,
+      defaultValue: '',
+      placeholder: '',
+      properties: []
     };
   }
 
   removeField(fieldIndex: number): void {
-    this.fields = this.fields.filter((_: TokenSpecTabField, index: number): boolean => {
+    this.fields = this.fields.filter((_: MetadataSpecProperty, index: number): boolean => {
       return index !== fieldIndex;
     });
   }
@@ -67,7 +71,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     setTimeout(() => this.disableAnimation = false, 10);
   }
 
-  duplicateField(field: TokenSpecTabField): void {
+  duplicateField(field: MetadataSpecProperty): void {
     if (field) {
       this.fields = [...this.fields, field];
     }
@@ -85,13 +89,13 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     });
   }
 
-  updateFieldType(type: TokenSpecTabFieldTypes, index: number): void {
+  updateFieldType(type: MetadataSpecPropertyType, index: number): void {
     this.disableAnimation = true;
-    this.fields = this.fields.map((field: TokenSpecTabField, i: number): TokenSpecTabField => {
+    this.fields = this.fields.map((field: MetadataSpecProperty, i: number): MetadataSpecProperty => {
       if (index === i) {
         return {
           ...field,
-          fieldType: TokenSpecTabFieldTypes[type],
+          type: MetadataSpecPropertyType[type],
         }
       }
       return field;
@@ -101,7 +105,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   openDefineObjectModal(index: number): void {
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
-      width: "800px",
+      width: '800px',
       data: {
         updateFieldsWithContent: this.updateFieldsWithContent.bind(this),
       }
@@ -109,9 +113,9 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     this.activeObjectIndex = index;
   }
 
-  updateFieldContentByIndex(index: number, content: TokenSpecTabField | string | null): TokenSpecTabField[] {
+  updateFieldContentByIndex(index: number, content: MetadataSpecProperty | string | null): MetadataSpecProperty[] {
     if (!content) return this.fields;
-    return this.fields.map((field: TokenSpecTabField, i: number) => {
+    return this.fields.map((field: MetadataSpecProperty, i: number) => {
       if (index === i) {
         return {
           ...field,
@@ -128,13 +132,12 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   updateNonObjectField(data): void {
     this.fields = this.fields.map(
-      (field: TokenSpecTabField, index: number) => {
+      (field: MetadataSpecProperty, index: number) => {
         if (index === data.index) {
           return {
             ...field,
-            content: data.content || field.content,
             defaultValue: data?.otherProps?.defaultValue || field.defaultValue || '',
-            placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
+            placeHolder: data?.otherProps?.placeHolder || field.placeholder || '',
           }
         }
         return field;
@@ -142,12 +145,11 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     );
   }
 
-  updateFieldsWithContent(fields: TokenSpecTabField[]): void {
-    this.fields = this.fields.map((field: TokenSpecTabField, index: number): TokenSpecTabField => {
+  updateFieldsWithContent(fields: MetadataSpecProperty[]): void {
+    this.fields = this.fields.map((field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
       if (index === this.activeObjectIndex) {
         return {
           ...field,
-          content: fields,
         }
       }
       return field;
