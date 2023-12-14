@@ -139,4 +139,12 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
       content: this.enumFields.filter((_, fieldIndex: number) => index !== fieldIndex).join(','),
     });
   }
+  parseDefaultBooleanValue(defaultValue: string): boolean {
+    const value = defaultValue.toLowerCase();
+    if (value === 'true') {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

@@ -207,7 +207,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
       width: '800px',
       data: {
         // updateFieldsWithContent: this.updateFieldsWithContent.bind(this),
-        content: this.properties[index]?.placeholder, // TODO was conent before, not sure what now
+        content: this.properties[index]?.defaultValue, // TODO was conent before, not sure what now
       }
     });
     this.activeFieldIndex = index;

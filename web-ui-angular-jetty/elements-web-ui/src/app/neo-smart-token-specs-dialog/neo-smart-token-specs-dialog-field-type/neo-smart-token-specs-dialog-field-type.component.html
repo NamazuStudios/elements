@@ -79,7 +79,7 @@
   </div>
   <div *ngIf="type === 'BOOLEAN'" class="boolean-field">
     <mat-checkbox
-      [checked]="field?.content"
+      [checked]="parseDefaultBooleanValue(field?.defaultValue)"
       (change)="onBooleanChange($event.checked)"
     >
       Default True
