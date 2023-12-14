@@ -6,6 +6,7 @@ export interface Item {
   displayName: string;
   description: string;
   category: string;
+  publicVisible: boolean;
   metadata?: {[key: string]: any};
 }
 

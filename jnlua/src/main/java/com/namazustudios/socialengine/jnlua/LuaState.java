@@ -174,7 +174,7 @@ public class LuaState {
 	 * Logs the version info using the {@link Logger} associated with this {@link LuaState}.
 	 */
 	public static void logVersionInfo() {
-		logger.info("Namazu Elements (tm) Version {}.  Revision {}.  Timestamp {}. Using JnLua Version: {}",
+		logger.info("ECI Elements (tm) Version {}.  Revision {}.  Timestamp {}. Using JnLua Version: {}",
 			BuildVersionInfo.VERSION,
 			BuildVersionInfo.REVISION,
 			BuildVersionInfo.TIMESTAMP,

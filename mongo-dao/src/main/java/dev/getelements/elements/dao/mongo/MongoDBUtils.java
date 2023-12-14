@@ -11,12 +11,14 @@ import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -32,6 +34,8 @@ import static java.util.stream.Collectors.toList;
  */
 
 public class MongoDBUtils {
+
+    public static final String COLLSCAN = "COLLSCAN";
 
     private Datastore datastore;
 
@@ -223,6 +227,27 @@ public class MongoDBUtils {
 
         pagination.setObjects(modelTList);
         return pagination;
+
+    }
+
+    public boolean isIndexedQuery(final Query<?> query) {
+        final var planner = (Document) query.explain().get("queryPlanner");
+        final var winner = planner.get("winningPlan", Document.class);
+        return isIndexedPlan(winner);
+    }
+
+    public boolean isIndexedPlan(final Document plan) {
+
+        final var stage = plan.get("stage", String.class);
+        final var inputStage = plan.get("inputStage", Document.class);
+        final var inputStages = plan.getList("inputStages", Document.class, List.of());
+
+        return !COLLSCAN.equals(stage)
+                && (inputStage == null || isIndexedPlan(inputStage))
+                && inputStages
+                    .stream()
+                    .map(this::isIndexedPlan)
+                    .reduce(true, (a, b) -> a && b);
 
     }
 

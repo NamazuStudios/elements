@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.or;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -54,8 +52,8 @@ public class MongoItemDao implements ItemDao {
     @Override
     public Item getItemByIdOrName(final String identifier) {
         return findMongoItemByNameOrId(identifier)
-            .map(mi -> getDozerMapper().map(mi, Item.class))
-            .orElseThrow(() -> new ItemNotFoundException("Unable to find item with an id or name of " + identifier));
+                .map(mi -> getDozerMapper().map(mi, Item.class))
+                .orElseThrow(() -> new ItemNotFoundException("Unable to find item with an id or name of " + identifier));
     }
 
     public Optional<MongoItem> findMongoItem(final Item item) {
@@ -64,14 +62,14 @@ public class MongoItemDao implements ItemDao {
 
     public Optional<MongoItem> findMongoItem(final String id) {
         return Optional.ofNullable(id)
-            .flatMap(i -> getMongoDBUtils().parse(i))
-            .flatMap(this::findMongoItem);
+                .flatMap(i -> getMongoDBUtils().parse(i))
+                .flatMap(this::findMongoItem);
     }
 
     public Optional<MongoItem> findMongoItem(final ObjectId objectId) {
         final var item = getDatastore()
-            .find(MongoItem.class)
-            .filter(eq("_id", objectId)).first();
+                .find(MongoItem.class)
+                .filter(eq("_id", objectId)).first();
         return Optional.ofNullable(item);
     }
 
@@ -83,7 +81,14 @@ public class MongoItemDao implements ItemDao {
 
     public MongoItem getMongoItem(final ObjectId objectId) {
         return findMongoItem(objectId)
-            .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
+                .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
+    }
+
+    public List<MongoItem> getPublicItems() {
+        final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class);
+        mongoQuery.filter(eq("publicVisible", true));
+
+        return mongoQuery.iterator().toList();
     }
 
     public Optional<MongoItem> findMongoItemByNameOrId(final String itemNameOrId) {
@@ -140,8 +145,8 @@ public class MongoItemDao implements ItemDao {
 
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
-                        "string parameter.  This field is presently ignored and will return all values after filtering " +
-                        "by tags");
+                    "string parameter.  This field is presently ignored and will return all values after filtering " +
+                    "by tags");
         }
 
         final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class);
@@ -165,10 +170,10 @@ public class MongoItemDao implements ItemDao {
         }
 
         return getMongoDBUtils().paginationFromQuery(
-            mongoQuery,
-            offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Item.class),
-            new FindOptions()
+                mongoQuery,
+                offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Item.class),
+                new FindOptions()
         );
 
     }
@@ -183,30 +188,16 @@ public class MongoItemDao implements ItemDao {
         final var query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", objectId));
 
-        switch (item.getCategory()) {
-            case FUNGIBLE:
-                query.filter(or(
-                        eq("category", null),
-                        eq("category", item.getCategory())
-                    )
-                );
-                break;
-            case DISTINCT:
-                query.filter(eq("category", DISTINCT));
-                break;
-            default:
-                throw new InvalidDataException("Unsupported item category: " + item.getCategory());
-        }
-
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
-            query.modify(
-                set("name", item.getName()),
-                set("displayName", item.getDisplayName()),
-                set("metadata", item.getMetadata()),
-                set("tags", item.getTags()),
-                set("description", item.getDescription()),
-                set("category", item.getCategory())
-            ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+                query.modify(
+                        set("name", item.getName()),
+                        set("displayName", item.getDisplayName()),
+                        set("metadata", item.getMetadata()),
+                        set("tags", item.getTags()),
+                        set("description", item.getDescription()),
+                        set("publicVisible", item.isPublicVisible()),
+                        set("category", item.getCategory())
+                ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );
 
         if (updatedMongoItem == null) {

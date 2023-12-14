@@ -25,6 +25,7 @@ import javax.inject.Provider;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.Constants.API_OUTSIDE_URL;
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
@@ -254,6 +255,7 @@ public class FirebaseAuthServiceTest {
             bind(Mapper.class).toProvider(ServicesDozerMapperProvider.class);
             bind(User.class).toProvider(FirebaseAuthServiceTest.this::getSignedInUser);
             bind(long.class).annotatedWith(named(SESSION_TIMEOUT_SECONDS)).toInstance(300l);
+            bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("https://localhost:8080/api/rest");
 
         }
 

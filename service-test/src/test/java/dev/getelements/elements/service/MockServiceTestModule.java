@@ -119,6 +119,7 @@ public class MockServiceTestModule extends AbstractModule {
         bind(SmartContractDao.class).toInstance(mock(SmartContractDao.class));
         bind(VaultDao.class).toInstance(mock(VaultDao.class));
         bind(LargeObjectDao.class).toInstance(mock(LargeObjectDao.class));
+        bind(IndexDao.class).toInstance(mock(IndexDao.class));
 
         final var databaseHealthStatusDaos = newSetBinder(binder(), DatabaseHealthStatusDao.class);
         databaseHealthStatusDaos.addBinding().toInstance(mock(DatabaseHealthStatusDao.class));

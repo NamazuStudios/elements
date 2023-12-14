@@ -10,7 +10,6 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.morphia.Datastore;
-import dev.morphia.DeleteOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -115,7 +114,7 @@ public class MongoFollowerDao implements FollowerDao {
 
         query.filter(eq("_id", mongoFollowerId));
 
-        final var result = query.delete(new DeleteOptions());
+        final var result = query.delete();
 
         if (result.getDeletedCount() == 0) {
             throw new NotFoundException("Follower not found: " + profileToUnfollowId);

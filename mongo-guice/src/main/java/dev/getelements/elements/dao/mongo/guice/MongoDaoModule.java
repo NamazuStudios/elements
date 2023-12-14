@@ -2,6 +2,8 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.dao.*;
@@ -16,6 +18,7 @@ import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
 import dev.getelements.elements.dao.mongo.formidium.MongoFormidiumInvestorDao;
 import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemDao;
+import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemIndexable;
 import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
@@ -24,14 +27,19 @@ import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
+import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.model.index.IndexableType;
 import dev.getelements.elements.model.match.MatchingAlgorithm;
 import dev.morphia.Datastore;
 import org.dozer.Mapper;
 
 import java.security.MessageDigest;
 import java.util.function.Function;
+
+import static com.google.inject.multibindings.MapBinder.newMapBinder;
+import static dev.getelements.elements.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
 
 /**
  * Configures any Mongo-specific system properties.
@@ -88,20 +96,37 @@ public class MongoDaoModule extends PrivateModule {
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
 
         bind(Datastore.class)
-            .toProvider(MongoDatastoreProvider.class)
-            .asEagerSingleton();
+                .toProvider(MongoDatastoreProvider.class)
+                .asEagerSingleton();
 
         bind(MessageDigest.class)
-            .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
-            .toProvider(PasswordDigestProvider.class);
+                .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
+                .toProvider(PasswordDigestProvider.class);
 
         bind(Mapper.class)
-            .toProvider(MongoDozerMapperProvider.class)
-            .asEagerSingleton();
+                .toProvider(MongoDozerMapperProvider.class)
+                .asEagerSingleton();
 
         bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
-            .toProvider(MongoMatchmakerFunctionProvider.class);
+                .toProvider(MongoMatchmakerFunctionProvider.class);
 
+        bind(BooleanQueryParser.class)
+                .to(SidhantAggarwalBooleanQueryParser.class);
+
+        bind(IndexDao.class)
+                .to(MongoIndexDao.class);
+
+        bind(IndexDao.Indexer.class)
+                .to(MongoIndexer.class);
+
+        final var booleanQueryOperatorSet = Multibinder.newSetBinder(binder(), BooleanQueryOperator.class);
+        booleanQueryOperatorSet.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
+        booleanQueryOperatorSet.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
+
+        final var indexableByType = newMapBinder(binder(), IndexableType.class, Indexable.class);
+        indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoDistinctInventoryItemIndexable.class);
+
+        expose(IndexDao.class);
         expose(UserDao.class);
         expose(ProfileDao.class);
         expose(FacebookUserDao.class);

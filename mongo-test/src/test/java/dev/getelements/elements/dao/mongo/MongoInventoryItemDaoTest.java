@@ -112,7 +112,7 @@ public class MongoInventoryItemDaoTest {
         assertEquals(priority, fetched.getPriority());
         assertEquals(quantity, fetched.getQuantity());
 
-        final Pagination<InventoryItem> items = getInventoryItemDao().getInventoryItems(0, 20, user);
+        final Pagination<InventoryItem> items = getInventoryItemDao().getInventoryItems(0, 20, user, null);
 
         assertEquals(items.getTotal(), priority + 1);
 

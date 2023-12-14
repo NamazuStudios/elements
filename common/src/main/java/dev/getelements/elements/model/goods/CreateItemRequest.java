@@ -25,7 +25,11 @@ public class CreateItemRequest {
 
     private List<String> tags;
 
+    private String metadataSpecId;
+
     private Map<String, Object> metadata;
+
+    private boolean publicVisible;
 
     /**
      * Get the unique name of the Item
@@ -126,6 +130,24 @@ public class CreateItemRequest {
     }
 
     /**
+     * Gets the metadata spec ID.
+     *
+     * @return the metadata spec id
+     */
+    public String getMetadataSpecId() {
+        return metadataSpecId;
+    }
+
+    /**
+     * Sets the metadata spec ID.
+     *
+     * @param metadataSpecId the metadata spec id
+     */
+    public void setMetadataSpecId(String metadataSpecId) {
+        this.metadataSpecId = metadataSpecId;
+    }
+
+    /**
      * Gets a copy of metadata of string key-value pairs for this Item.  Changes to the returned Map are not reflected
      * on this Item.
      *
@@ -155,29 +177,46 @@ public class CreateItemRequest {
 
     }
 
+    /**
+     * Returns the visibility of this Item
+     */
+    public boolean isPublicVisible() {
+        return publicVisible;
+    }
+
+    /**
+     * Sets the visibility of this Item
+     *
+     * @param publicVisible
+     *     The boolean flag for the Item
+     */
+    public void setPublicVisible(boolean publicVisible) {
+        this.publicVisible = publicVisible;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateItemRequest that = (CreateItemRequest) o;
-        return Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getDescription(), that.getDescription()) && getCategory() == that.getCategory() && Objects.equals(getTags(), that.getTags()) && Objects.equals(getMetadata(), that.getMetadata());
+        return publicVisible == that.publicVisible && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && category == that.category && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDisplayName(), getDescription(), getCategory(), getTags(), getMetadata());
+        return Objects.hash(name, displayName, description, category, tags, metadata, publicVisible);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateItemRequest{");
-        sb.append("name='").append(name).append('\'');
-        sb.append(", displayName='").append(displayName).append('\'');
-        sb.append(", description='").append(description).append('\'');
-        sb.append(", tags=").append(tags);
-        sb.append(", metadata=").append(metadata);
-        sb.append('}');
-        return sb.toString();
+        return "CreateItemRequest{" +
+                "name='" + name + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", description='" + description + '\'' +
+                ", category=" + category +
+                ", tags=" + tags +
+                ", metadata=" + metadata +
+                ", publicVisible=" + publicVisible +
+                '}';
     }
-
 }

@@ -73,8 +73,8 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setId(userId);
         user.setActive(true);
         user.setLevel(User.Level.USER);
-        user.setName(getCurrentUser().getName());
-        user.setEmail(getCurrentUser().getEmail());
+        user.setName(userUpdateRequest.getName());
+        user.setEmail(userUpdateRequest.getEmail());
         user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
         user.setFirstName(userUpdateRequest.getFirstName());
         user.setLastName(userUpdateRequest.getLastName());
