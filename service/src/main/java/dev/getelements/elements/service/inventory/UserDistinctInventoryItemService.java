@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.inventory;
 
+import com.google.common.base.Strings;
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
@@ -70,6 +71,8 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
             final String profileId,
             final String query) {
 
+        final String resolvedUserId = Strings.isNullOrEmpty(userId) ? getUser().getId() : userId;
+
         final Optional<Profile> profile = getProfileDao().findActiveProfile(profileId);
         if (profile.isPresent()) {
             final User user = isCurrentUser(userId) ? getUser() : getUserDao().getActiveUser(userId);
@@ -77,7 +80,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
                 return new Pagination<>();
             }
         }
-        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, profileId, userId, !isCurrentUser(userId), query);
+        Pagination<DistinctInventoryItem> items =  getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, resolvedUserId, profileId, !isCurrentUser(userId), query);
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }

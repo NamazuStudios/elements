@@ -211,19 +211,20 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
-    public void testGetAllItems() {
-        final var all = new PaginationWalker().toList((offset, count) ->
-                underTest.getDistinctInventoryItems(offset, count, null, null, false)
-        );
-        assertTrue(intermediates.values().containsAll(all));
-    }
-
-    @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
     public void testGetPublicItems() {
         final var all = new PaginationWalker().toList((offset, count) ->
                 underTest.getDistinctInventoryItems(offset, count, userWithPublicItems.getId(), null, true)
         );
+        assertEquals(all.size(), PUBLIC_ITEM_COUNT);
         assertTrue(intermediates.values().containsAll(all));
+    }
+
+    @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
+    public void testGetAllItems() {
+        final var items = new PaginationWalker().toList((offset, count) ->
+                underTest.getDistinctInventoryItems(offset, count, null, null, false)
+        );
+        assertTrue(items.containsAll(intermediates.values()));
     }
 
     @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
