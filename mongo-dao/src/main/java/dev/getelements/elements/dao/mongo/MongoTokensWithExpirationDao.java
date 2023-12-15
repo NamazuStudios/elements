@@ -1,14 +1,20 @@
 package dev.getelements.elements.dao.mongo;
 
+import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.TokensWithExpirationDao;
 import dev.getelements.elements.dao.mongo.model.MongoTokenWithExpiration;
+import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
+import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.token.TokenWithExpiration;
+import dev.getelements.elements.model.user.User;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
+import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 import static dev.morphia.query.filters.Filters.eq;
@@ -20,7 +26,7 @@ public class MongoTokensWithExpirationDao implements TokensWithExpirationDao {
 
 
     @Override
-    public String insertToken(TokenWithExpiration token) {
+    public String createToken(TokenWithExpiration token) {
         MongoTokenWithExpiration mongoToken = mapToken(token);
         getMongoDBUtils().performV(ds -> getDatastore().insert(mongoToken));
 
@@ -28,7 +34,7 @@ public class MongoTokensWithExpirationDao implements TokensWithExpirationDao {
     }
 
     @Override
-    public int getTokenExpiry(String tokenId) {
+    public Timestamp getTokenExpiry(String tokenId) {
         final var query = getDatastore().find(MongoTokenWithExpiration.class);
 
         query.filter(eq("_id", new ObjectId(tokenId)));
@@ -37,21 +43,26 @@ public class MongoTokensWithExpirationDao implements TokensWithExpirationDao {
     }
 
     @Override
-    public void removeTokensForEmail(String email) {
+    public void deleteTokensByUser(User user) {
         final var query = getDatastore().find(MongoTokenWithExpiration.class);
 
-        query.filter(eq("email", email));
+        query.filter(eq("email", user.getEmail()));
 
         query.delete(new DeleteOptions().multi(true));
     }
 
     @Override
-    public void removeTokenById(String tokenId) {
+    public void deleteToken(String tokenId) {
+        final ObjectId id = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
+
         final var query = getDatastore().find(MongoTokenWithExpiration.class);
+        query.filter(eq("_id", id));
 
-        query.filter(eq("_id", new ObjectId(tokenId)));
+        final DeleteResult deleteResult = query.delete();
 
-        query.delete();
+        if (deleteResult.getDeletedCount() == 0) {
+            throw new NotFoundException("Token not found: " + tokenId);
+        }
     }
 
     public Datastore getDatastore() {

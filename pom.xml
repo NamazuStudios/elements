@@ -157,6 +157,7 @@
         <near-java-api.version>0.2.0</near-java-api.version>
         <boolparser.version>1.0.3</boolparser.version>
         <getstream.version>3.7.0</getstream.version>
+        <mailjet.client.version>5.2.5</mailjet.client.version>
     </properties>
 
     <dependencies>
@@ -717,7 +718,7 @@
             <dependency>
                 <groupId>com.mailjet</groupId>
                 <artifactId>mailjet-client</artifactId>
-                <version>5.2.5</version>
+                <version>${mailjet.client.version}</version>
             </dependency>
 
             <dependency>
