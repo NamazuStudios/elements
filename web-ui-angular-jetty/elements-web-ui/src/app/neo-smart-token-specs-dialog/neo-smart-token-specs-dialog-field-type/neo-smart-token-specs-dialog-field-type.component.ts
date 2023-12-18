@@ -22,6 +22,10 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   onContentUpdate: EventEmitter<any> = new EventEmitter();
   @Output("onContentTypeUpdate")
   onContentTypeUpdate: EventEmitter<string> = new EventEmitter();
+  @Output("onDefaultValueUpdate")
+  onDefaultValueUpdate: EventEmitter<any> = new EventEmitter();
+  @Output("onPlaceholderUpdate")
+  onPlaceholderUpdate: EventEmitter<string> = new EventEmitter();
 
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
   selectedArrayType = 'String';
@@ -92,25 +96,22 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   }
 
   onPlaceholderChange(value: string) {
-    this.onContentUpdate.emit({
-      index: this.index,
-      otherProps: {
-        placeholder: value,
-      }
-    });
+    this.onPlaceholderUpdate.emit(value);
   }
 
-  onDefaultValueChange(value: string | number) {
-    this.onContentUpdate.emit({
-      index: this.index,
-      otherProps: {
-        defaultValue: value,
-      },
-    });
+  onDefaultValueChange(value: any) {
+    this.onDefaultValueUpdate.emit(value);
+  }
+  onBooleanDefaultValueChange(value: any) {
+    if (value) {
+      this.onDefaultValueUpdate.emit('true');
+    } else {
+      this.onDefaultValueUpdate.emit('false');
+    }
   }
 
   onNumberDefaultValueChange(value: number) {
-    this.onContentUpdate.emit({
+    this.onDefaultValueUpdate.emit({
       index: this.index,
       otherProps: {
         defaultValue: +value,
@@ -119,7 +120,7 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   }
 
   onBooleanChange(state: boolean) {
-    this.onContentUpdate.emit({
+    this.onDefaultValueUpdate.emit({
       index: this.index,
       content: state,
     });

@@ -1,16 +1,8 @@
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {Component, Inject, OnInit} from '@angular/core';
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
-import {NeoSmartContract} from '../api/models/blockchain/neo-smart-contract';
-import {
-  MetadataSpec,
-  MetadataSpecProperty,
-  MetadataSpecPropertyType,
-} from '../api/models/token-spec-tab';
-
-import {NeoSmartContractsService} from '../api/services/blockchain/neo-smart-contracts.service';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
+import {MetadataSpec, MetadataSpecProperty, MetadataSpecPropertyType,} from '../api/models/token-spec-tab';
 import {MetadataSpecsService} from '../api/services/metadata-specs.service';
-import {NeoSmartContractsDataSource} from '../neo-smart-contracts.datasource';
 import {
   NeoSmartTokenSpecsMoveFieldDialogComponent
 } from '../neo-smart-token-specs-move-field-dialog/neo-smart-token-specs-move-field-dialog.component';
@@ -176,6 +168,13 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     setTimeout(() => this.disableAnimation = false);
   }
 
+  changeDefaultValue(value, propertyIndex): void {
+      this.properties[propertyIndex].defaultValue = value;
+  }
+  changePlaceholder(value, propertyIndex): void {
+    this.properties[propertyIndex].placeholder = value;
+  }
+
   drop(event: CdkDragDrop<string[]>) {
     const fields = [...this.properties];
     const currentField = {...fields[event.previousIndex]};
@@ -269,7 +268,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
 
     for (let i = 0; i < this.properties.length; i++) {
       const field = this.properties[i];
-      if (field?.type === MetadataSpecPropertyType.ENUM && !enumRegex.test(field.defaultValue)) {
+      if (field?.type === MetadataSpecPropertyType.ENUM && !enumRegex.test(field.defaultValue as string)) {
         isValid = false;
       }
     }
@@ -300,6 +299,14 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
         .subscribe(() => {
           this.data.refresh();
         });
+    }
+  }
+
+  private parseBoolean(stringVal: string): boolean {
+    if (stringVal === 'true') {
+      return true;
+    } else {
+      return false;
     }
   }
 }

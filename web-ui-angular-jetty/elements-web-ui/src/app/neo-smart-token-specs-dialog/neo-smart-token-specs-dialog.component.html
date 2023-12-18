@@ -92,6 +92,8 @@
                 [index]="fieldIndex"
                 [field]="property"
                 (onContentTypeUpdate)="changePropertyType($event, fieldIndex)"
+                (onDefaultValueUpdate)="changeDefaultValue($event, fieldIndex)"
+                (onPlaceholderUpdate)="changePlaceholder($event, fieldIndex)"
                 (openDefineObjectModal)="openDefineObjectModal($event)"
               >
               </app-neo-smart-token-specs-dialog-field-type>

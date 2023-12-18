@@ -87,8 +87,6 @@ class MetadataSpecsService extends BaseService {
     let __headers = new HttpHeaders();
     let __body: any = body;
 
-    console.log('body:\n' + JSON.stringify(__body));
-
     let req = new HttpRequest<any>(
       'POST',
       this.rootUrl + `/metadata_spec`,
