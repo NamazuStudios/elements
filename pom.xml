@@ -126,6 +126,7 @@
         <swagger.version>1.6.2</swagger.version>
         <rocoto.version>6.2</rocoto.version>
         <dozer.version>6.0.0</dozer.version>
+        <orgjson.version>20230227</orgjson.version>
         <hibernate.validator.version>6.1.0.Final</hibernate.validator.version>
         <hibernate.validator.guice.version>2.0.0</hibernate.validator.guice.version>
         <javax.el.version>3.0.1-b12</javax.el.version>
@@ -647,6 +648,11 @@
                 <groupId>com.github.dozermapper</groupId>
                 <artifactId>dozer-core</artifactId>
                 <version>${dozer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${orgjson.version}</version>
             </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->
