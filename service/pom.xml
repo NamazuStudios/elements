@@ -89,7 +89,7 @@
             <artifactId>firebase-admin</artifactId>
             <version>${firebase.admin.version}</version>
             <exclusions>
-                <!-- We don't use this and the gRPC dependencies clash with the Flow SDK. -->
+                <!-- We dont' use this and the gRPC dependencies clash with the Flow SDK. -->
                 <exclusion>
                     <groupId>com.google.cloud</groupId>
                     <artifactId>google-cloud-firestore</artifactId>

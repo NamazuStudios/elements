@@ -19,78 +19,97 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service-guice</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.kstyrc</groupId>
             <artifactId>embedded-redis</artifactId>
+            <version>${embedded.redis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-deploy</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-jaxb-annotations</artifactId>
+            <version>${annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service-redis</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-dao</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-guice</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-test</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish</groupId>
@@ -100,22 +119,22 @@
         <dependency>
             <groupId>dev.morphia.morphia</groupId>
             <artifactId>morphia-core</artifactId>
+            <version>${morphia.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>guice</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-jersey-guice</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-testkit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- Test Dependencies -->
@@ -123,6 +142,7 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
 
