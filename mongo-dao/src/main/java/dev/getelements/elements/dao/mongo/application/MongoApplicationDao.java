@@ -82,10 +82,14 @@ public class MongoApplicationDao implements ApplicationDao {
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
         query.filter(eq("active", true));
 
-        final List<Application> applicationList = query.iterator().toList()
-            .stream()
-            .map(this::transform)
-            .collect(Collectors.toList());
+        final List<Application> applicationList;
+
+        try (final var iterator = query.iterator()) {
+            applicationList = iterator.toList()
+                    .stream()
+                    .map(this::transform)
+                    .collect(Collectors.toList());
+        }
 
         final Pagination<Application> applicationPagination = new Pagination<>();
         applicationPagination.setApproximation(false);

@@ -49,7 +49,7 @@ public class MongoAppleSignInSessionDaoTest {
 
     public Application makeTestApplication() {
         final Application application = new Application();
-        application.setName("mock");
+        application.setName("apple_sign_in_session_test");
         application.setDescription("A mock application.");
         application.setAttributes(singletonMap("key", "value"));
         return getApplicationDao().createOrUpdateInactiveApplication(application);

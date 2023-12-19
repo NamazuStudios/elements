@@ -157,10 +157,12 @@ public class MongoFacebookUserDao implements FacebookUserDao {
                 )
         );
 
-        return query.iterator().toList()
-            .stream()
-            .map(u -> getDozerMapper().map(u, User.class))
-            .collect(Collectors.toMap(u -> u.getFacebookId(), identity()));
+        try (final var iterator = query.iterator()) {
+            return iterator.toList()
+                    .stream()
+                    .map(u -> getDozerMapper().map(u, User.class))
+                    .collect(Collectors.toMap(User::getFacebookId, identity()));
+        }
 
     }
 

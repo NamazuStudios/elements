@@ -50,7 +50,7 @@ public class UserFollowerService implements FollowerService {
     @Override
     public void createFollower(final String profileId, final CreateFollowerRequest createFollowerRequest) {
         checkUserAndProfile(profileId);
-        getFollowerDao().createFollowerForProfile(profileId, createFollowerRequest);
+        getFollowerDao().createFollowerForProfile(profileId, createFollowerRequest.getFollowedId());
     }
 
     @Override

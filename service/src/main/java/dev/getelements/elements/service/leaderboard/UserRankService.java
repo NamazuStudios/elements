@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.leaderboard;
 
 import dev.getelements.elements.dao.RankDao;
+import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.leaderboard.Rank;
@@ -20,17 +21,19 @@ public class UserRankService implements RankService {
 
     @Override
     public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
-                                              final int offset, final int count, final long leaderboardEpoch) {
+                                              final int offset, final int count,
+                                              final long leaderboardEpoch) {
         return getRankDao()
             .getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
     @Override
-    public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int count, final long leaderboardEpoch) {
+    public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId,
+                                                      final String profileId, int offset, final int count,
+                                                      final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, count, leaderboardEpoch)
+            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count, leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
@@ -38,7 +41,11 @@ public class UserRankService implements RankService {
     public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId,
                                                final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForFriends(leaderboardNameOrId, getProfileSupplier().get(), offset, count, leaderboardEpoch)
+            .getRanksForFriends(
+                    leaderboardNameOrId,
+                    getProfileSupplier().get().getId(),
+                    offset, count,
+                    leaderboardEpoch)
             .transform(this::redactPrivateInfo);
     }
 
@@ -46,9 +53,38 @@ public class UserRankService implements RankService {
     public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId,
                                                        final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForFriendsRelative(leaderboardNameOrId, getProfileSupplier().get(), offset, count,
+            .getRanksForFriendsRelative(
+                    leaderboardNameOrId,
+                    getProfileSupplier().get().getId(),
+                    offset, count,
                     leaderboardEpoch)
             .transform(this::redactPrivateInfo);
+    }
+
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowers(final String leaderboardNameOrId,
+                                                       final int offset, final int count,
+                                                       final long leaderboardEpoch) {
+        return getRankDao()
+                .getRanksForMutualFollowers(
+                        leaderboardNameOrId,
+                        getProfileSupplier().get().getId(),
+                        offset, count,
+                        leaderboardEpoch)
+                .transform(this::redactPrivateInfo);
+    }
+
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowersRelative(final String leaderboardNameOrId,
+                                                               final int offset, final int count,
+                                                               final long leaderboardEpoch) {
+        return getRankDao()
+                .getRanksForMutualFollowersRelative(
+                        leaderboardNameOrId,
+                        getProfileSupplier().get().getId(),
+                        offset, count,
+                        leaderboardEpoch)
+                .transform(this::redactPrivateInfo);
     }
 
     private Rank redactPrivateInfo(final Rank rank) {
@@ -58,6 +94,7 @@ public class UserRankService implements RankService {
         }
 
         return rank;
+
     }
 
     public User getUser() {

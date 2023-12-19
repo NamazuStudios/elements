@@ -41,7 +41,7 @@ public class SuperUserFollowerService implements FollowerService {
 
     @Override
     public void createFollower(final String profileId, final CreateFollowerRequest createFollowerRequest) {
-        getFollowerDao().createFollowerForProfile(profileId, createFollowerRequest);
+        getFollowerDao().createFollowerForProfile(profileId, createFollowerRequest.getFollowedId());
     }
 
     @Override

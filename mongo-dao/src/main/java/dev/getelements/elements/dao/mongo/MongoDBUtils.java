@@ -8,21 +8,31 @@ import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.morphia.Datastore;
+import dev.morphia.aggregation.Aggregation;
+import dev.morphia.aggregation.AggregationOptions;
+import dev.morphia.aggregation.stages.Count;
+import dev.morphia.mapping.codec.reader.DocumentReader;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.Sort;
 import org.bson.Document;
+import org.bson.codecs.DecoderContext;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import static dev.morphia.aggregation.expressions.Expressions.field;
+import static dev.morphia.aggregation.stages.Facet.facet;
+import static dev.morphia.aggregation.stages.Limit.limit;
+import static dev.morphia.aggregation.stages.Projection.project;
+import static dev.morphia.aggregation.stages.Skip.skip;
+import static dev.morphia.aggregation.stages.Unwind.unwind;
 import static dev.morphia.query.Sort.ascending;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
@@ -226,6 +236,77 @@ public class MongoDBUtils {
 
         pagination.setObjects(modelTList);
         return pagination;
+
+    }
+
+    /**
+     * Transforms an {@link Aggregation} to the resulting {@link Pagination}. This function must modify and build
+     * upon the supplied {@link Aggregation}.
+     *
+     * @param aggregationSupplier a {@link Supplier<?>} for the aggregation
+     * @param offset the offset
+     * @param count the count
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <MongoModelT> Pagination<MongoModelT> paginationFromAggregation(
+            final Supplier<Aggregation<?>> aggregationSupplier,
+            final Class<MongoModelT> modelTClass,
+            final int offset, final int count) {
+        return paginationFromAggregation(
+                aggregationSupplier,
+                modelTClass,
+                offset, count,
+                new AggregationOptions()
+        );
+    }
+
+    /**
+     * Transforms an {@link Aggregation} to the resulting {@link Pagination}. This function must modify and build
+     * upon the supplied {@link Aggregation}.
+     *
+     * @param aggregationSupplier a {@link Supplier<?>} for the aggregation
+     * @param offset the offset
+     * @param count the count
+     * @param options a {@link AggregationOptions} used to modify the query results
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <MongoModelT> Pagination<MongoModelT> paginationFromAggregation(
+            final Supplier<Aggregation<?>> aggregationSupplier,
+            final Class<MongoModelT> modelTClass,
+            final int offset, final int count,
+            final AggregationOptions options) {
+
+        final var aggregate = aggregationSupplier.get()
+                .facet(facet()
+                        .field("total", new Count("total"))
+                        .field("objects", skip(offset), limit(count))
+                )
+                .unwind(unwind("total"))
+                .project(project()
+                        .include("objects", field("objects"))
+                        .include("total", field("total.total"))
+                );
+
+        try (var cursor = aggregate.execute(Document.class, options)) {
+
+            final var result = cursor.next();
+            final var total = result.get("total", Number.class).intValue();
+            final var codec = getDatastore().getCodecRegistry().get(modelTClass);
+            final var objects = result.getList("objects", Document.class)
+                    .stream()
+                    .map(DocumentReader::new)
+                    .map(r -> codec.decode(r, DecoderContext.builder().build()))
+                    .collect(toList());
+
+            final var pagination = new Pagination<MongoModelT>();
+            pagination.setTotal(total);
+            pagination.setOffset(offset);
+            pagination.setObjects(objects);
+
+            return pagination;
+        }
 
     }
 

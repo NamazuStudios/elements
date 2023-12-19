@@ -46,10 +46,10 @@ public interface FollowerDao {
     /**
      * Creates a single instance of {@link CreateFollowerRequest} for the supplied profile id and toFollow id.
      *
-     * @param profileId
-     * @param createFollowerRequest the object to insert into the db
+     * @param profileId the profile id
+     * @param followedProfileId the object to insert into the db
      */
-    void createFollowerForProfile(String profileId, CreateFollowerRequest createFollowerRequest);
+    void createFollowerForProfile(String profileId, String followedProfileId);
 
     /**
      * Deletes the single instance of {@link CreateFollowerRequest} for the supplied profile id.  Throwing a

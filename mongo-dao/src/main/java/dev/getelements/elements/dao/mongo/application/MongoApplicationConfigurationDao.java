@@ -90,12 +90,18 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         query.filter(eq("parent", parent));
         query.filter(eq("category", configurationCategory));
 
-        List<T> applicationConfigurations = query
-            .iterator().toList().stream()
-            .map(mac -> getBeanMapper().map(mac, type))
-            .collect(Collectors.toList());
+        final List<T> applicationConfigurations;
+
+        try (var iterator = query.iterator()) {
+            applicationConfigurations = iterator
+                    .toList()
+                    .stream()
+                    .map(mac -> getBeanMapper().map(mac, type))
+                    .collect(Collectors.toList());
+        }
 
         return applicationConfigurations;
+
     }
 
     @Override
