@@ -38,7 +38,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         final Properties properties = new Properties();
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(getRuntime().availableProcessors()) + 1);
         properties.setProperty(HANDLER_TIMEOUT_MSEC, "180000");
-        properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
+        properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://*:28883");
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.setProperty(STATIC_HOST_INFO, "tcp://localhost:28883");
