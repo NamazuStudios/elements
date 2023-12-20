@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 import java.util.Optional;
