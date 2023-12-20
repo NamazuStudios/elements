@@ -76,7 +76,9 @@ public class JeroMQControlClient implements ControlClient {
      * @return the {@link Socket} type
      */
     public static Socket open(final ZContext zContext) {
-        return zContext.createSocket(DEALER);
+        final var socket = zContext.createSocket(DEALER);
+        socket.setIPv6(true);
+        return socket;
     }
 
     @Override

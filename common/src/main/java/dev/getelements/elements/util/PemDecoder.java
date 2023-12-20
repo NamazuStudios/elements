@@ -8,27 +8,37 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.function.Function;
 
-public class PemDecoder<KeySpecT extends KeySpec> {
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+public class PemDecoder<KeySpecT> {
 
     private static final Logger logger = LoggerFactory.getLogger(PemDecoder.class);
 
-    private static final String HEADER = "-----BEGIN";
+    private static final String SUFFIX = "-----";
 
-    private static final String FOOTER = "-----END";
+    private static final String HEADER = "-----BEGIN ";
+
+    private static final String FOOTER = "-----END ";
+
+    private final String label;
 
     private final KeySpecT spec;
 
     public PemDecoder(final String pemString,
                       final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new StringReader(pemString), keySpecFunction);
+    }
+
+    public PemDecoder(final InputStream inputStream,
+                      final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
+        this(new InputStreamReader(inputStream, UTF_8), keySpecFunction);
     }
 
     public PemDecoder(final Reader reader,
@@ -44,16 +54,26 @@ public class PemDecoder<KeySpecT extends KeySpec> {
         try {
 
             final String header = reader.readLine().trim();
-            if (!header.startsWith(HEADER)) throw new InternalException("Invalid PEM format. Missing header");
+
+            if (!header.startsWith(HEADER) && header.endsWith(SUFFIX))
+                throw new InternalException("Invalid PEM format. Missing or malformed header.");
+
+            label = header.substring(HEADER.length(), header.length() - SUFFIX.length());
 
             String line;
 
             while ((line = reader.readLine()) != null) {
-                if (line.trim().startsWith(FOOTER)) break;
+                if (line.trim().startsWith(FOOTER) && line.endsWith(SUFFIX)) break;
                 else encoded.append(line.trim());
             }
 
-            if (line == null) throw new InvalidPemException("Invalid PEM format. Missing footer.");
+            if (line == null)
+                throw new InvalidPemException("Invalid PEM format. Missing footer line.");
+
+            final String endLabel = line.substring(FOOTER.length(), line.length() - SUFFIX.length());
+
+            if (!label.equals(endLabel))
+                throw new InvalidPemException("Invalid PEM format. Header and footer labels do not match.");
 
         } catch (IOException ex) {
             throw new InvalidPemException(ex);
@@ -64,10 +84,47 @@ public class PemDecoder<KeySpecT extends KeySpec> {
 
     }
 
+    /**
+     * Gets the label from the PEM. Thsi should be
+     * @return the label
+     */
+    public String getLabel() {
+        return label;
+    }
+
+    /**
+     * Finds the {@link Rfc7468Label} associated with this PemDecoder.
+     *
+     * @return a {@link Optional} containing the label
+     */
+    public Optional<Rfc7468Label> findRfc7468Label() {
+        return Rfc7468Label.findForLabel(label);
+    }
+
+    /**
+     * Gets the spec generated from the key.
+     *
+     * @return the spec
+     */
     public KeySpecT getSpec() {
         return spec;
     }
 
+    /**
+     * Returns a human-readable version of this {@link PemDecoder}, redacting the key information.
+     *
+     * @return a string representing this instance.
+     */
+    public String toString() {
+        return
+            HEADER + label + SUFFIX + "\n" +
+            "<redacted>" + "\n" +
+            FOOTER + label + SUFFIX + "\n";
+    }
+
+    /**
+     * Validates a PEM file when passed
+     */
     public static class Validator implements ConstraintValidator<PemFile, String> {
 
         @Override
@@ -76,8 +133,8 @@ public class PemDecoder<KeySpecT extends KeySpec> {
         @Override
         public boolean isValid(final String value, final ConstraintValidatorContext context) {
             try {
-                final PemDecoder<KeySpec> pemDecoder = new PemDecoder(value, dummy -> new KeySpec(){});
-                logger.trace("Successfully decoded pem {}", pemDecoder);
+                final PemDecoder<KeySpec> pemDecoder = new PemDecoder<>(value, dummy -> new KeySpec(){});
+                logger.trace("Successfully decoded pem {} {}", pemDecoder.getLabel(), pemDecoder);
                 return true;
             } catch (InvalidPemException e) {
                 context.buildConstraintViolationWithTemplate("Invalid PEM File.");

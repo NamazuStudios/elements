@@ -20,18 +20,7 @@ public class ZContextProvider implements Provider<ZContext> {
 
     @Override
     public ZContext get() {
-
-        final ZContext zContext = new ZContext() {
-
-            @Override
-            public ZMQ.Socket createSocket(SocketType type) {
-                final var socket = super.createSocket(type);
-                socket.setIPv6(true);
-                return socket;
-            }
-
-        };
-
+        final ZContext zContext = new ZContext();
         zContext.getContext().setIOThreads(getIoThreadsProvider().get());
         zContext.getContext().setMaxSockets(getMaxSocketsProvider().get());
         return zContext;
