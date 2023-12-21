@@ -8,13 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 public class JeroMQInstanceBinding implements InstanceBinding {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceBinding.class);
 
-    private final Supplier<ZContext> zContextSupplier;
+    private final ZContext zContext;
 
     private final NodeId nodeId;
 
@@ -22,11 +21,11 @@ public class JeroMQInstanceBinding implements InstanceBinding {
 
     private final String nodeBindAddress;
 
-    public JeroMQInstanceBinding(final Supplier<ZContext> zContextSupplier,
+    public JeroMQInstanceBinding(final ZContext zContext,
                                  final NodeId nodeId,
                                  final String instanceConnectAddress,
                                  final String nodeBindAddress) {
-        this.zContextSupplier = zContextSupplier;
+        this.zContext = zContext;
         this.nodeId = nodeId;
         this.instanceConnectAddress = instanceConnectAddress;
         this.nodeBindAddress = nodeBindAddress;
@@ -44,7 +43,7 @@ public class JeroMQInstanceBinding implements InstanceBinding {
 
     @Override
     public void close() {
-        try (final ControlClient client = new JeroMQControlClient(zContextSupplier, instanceConnectAddress)) {
+        try (final ControlClient client = new JeroMQControlClient(zContext, instanceConnectAddress)) {
             client.closeBinding(nodeId);
         } catch (Exception ex) {
             logger.warn("Caught exception closing binding.", ex);

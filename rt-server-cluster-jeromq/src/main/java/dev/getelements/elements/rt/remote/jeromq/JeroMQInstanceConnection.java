@@ -58,7 +58,7 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     @Override
     public String openRouteToNode(NodeId nodeId) {
-        try (final ControlClient client = new JeroMQControlClient(zContext::shadow, internalControlAddress)) {
+        try (final ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
             final String address = client.openRouteToNode(nodeId, instanceHostInfo.getConnectAddress());
             return address;
         }

@@ -8,13 +8,11 @@ import dev.getelements.elements.rt.remote.InstanceStatus;
 import dev.getelements.elements.rt.remote.RoutingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZContext;
-import org.zeromq.ZFrame;
+import org.zeromq.*;
 import org.zeromq.ZMQ.Socket;
-import org.zeromq.ZMsg;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 import static dev.getelements.elements.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQCommandServer.TRACE_DELIMITER;
@@ -25,6 +23,7 @@ import static dev.getelements.elements.rt.remote.jeromq.JeroMQRoutingServer.CHAR
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.zeromq.SocketType.DEALER;
+import static org.zeromq.ZContext.shadow;
 
 /**
  * Implements the control protocol for interfacing with the {@link JeroMQInstanceConnectionService}.  This client
@@ -41,42 +40,30 @@ public class JeroMQControlClient implements ControlClient {
 
     public static final TimeUnit DEFAULT_TIMEOUT_UNITS = SECONDS;
 
-    private final ZContext zContextShadow;
-
-    private final Supplier<ZContext> zContextShadowSupplier;
+    private final ZContext shadowContext;
 
     private final Socket socket;
 
     private final String instanceConnectAddress;
 
-    /**
-     * Creates a new isntance of the {@link JeroMQControlClient}.
-     *
-     * @param zContextShadowSupplier a {@link Supplier} which supplies a shadow {@link ZContext}
-     * @param instanceConnectAddress the instance connection address.
-     */
-    public JeroMQControlClient(final Supplier<ZContext> zContextShadowSupplier,
+    public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress) {
-        this(zContextShadowSupplier, instanceConnectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
+        this(zContext, instanceConnectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
     }
 
     /**
      * Creates a {@link JeroMQControlClient} connecting to the remote instance to perform basic discover and control
-     * operations.  This uses a {@link Supplier}  to make a shadow copy of the {@link ZContext} and then closes it
-     * when this instance's {@link JeroMQControlClient#close()} method is invoked.
+     * operations.  This uses {@link ZContext#shadow(ZContext)} to make a shadow copy of the {@link ZContext} and then
+     * closes it later.
      *
-     * Because this instance makes a shadow in the constructor, it can only be used in the same thread that created
-     * the instance.
-     *
-     * @param zContextShadowSupplier a {@link Supplier} which supplies a shadow {@link ZContext}
+     * @param zContext the {@link ZContext} used to communicate
      * @param instanceConnectAddress 
      */
-    public JeroMQControlClient(final Supplier<ZContext> zContextShadowSupplier,
+    public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,
                                final long timeout, final TimeUnit timeUnit) {
-        this.zContextShadow = zContextShadowSupplier.get();
-        this.zContextShadowSupplier = zContextShadowSupplier;
-        this.socket = open(this.zContextShadow);
+        this.shadowContext = shadow(zContext);
+        this.socket = open(shadowContext);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAddress = instanceConnectAddress;
         setReceiveTimeout(timeout, timeUnit);
@@ -89,7 +76,9 @@ public class JeroMQControlClient implements ControlClient {
      * @return the {@link Socket} type
      */
     public static Socket open(final ZContext zContext) {
-        return zContext.createSocket(DEALER);
+        final var socket = zContext.createSocket(DEALER);
+        socket.setIPv6(true);
+        return socket;
     }
 
     @Override
@@ -163,7 +152,7 @@ public class JeroMQControlClient implements ControlClient {
 
         final ZMsg response = recv();
         final String nodeBindAddress = response.removeFirst().getString(CHARSET);
-        return new JeroMQInstanceBinding(zContextShadowSupplier, nodeId, instanceConnectAddress, nodeBindAddress);
+        return new JeroMQInstanceBinding(shadowContext, nodeId, instanceConnectAddress, nodeBindAddress);
 
     }
 
@@ -266,7 +255,7 @@ public class JeroMQControlClient implements ControlClient {
     @Override
     public void close() {
         socket.close();
-        zContextShadow.close();
+        shadowContext.close();
     }
 
 }

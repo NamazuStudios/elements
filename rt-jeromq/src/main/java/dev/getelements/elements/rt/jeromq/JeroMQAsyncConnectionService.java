@@ -70,11 +70,6 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     }
 
     @Override
-    public ZContext getCoreContext() {
-        return zContext;
-    }
-
-    @Override
     public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group(final String name) {
         final var context = getContext();
         return context.group(name);
@@ -167,7 +162,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
         }
 
         private void runIOThread(final CountDownLatch latch, final int index) {
-            try (final var shadow = getzContext().shadow();
+            try (final var shadow = shadow(getzContext());
                  final var poller = shadow.createPoller(1);
                  final var context = new JeroMQAsyncThreadContext(shadow, poller)) {
 

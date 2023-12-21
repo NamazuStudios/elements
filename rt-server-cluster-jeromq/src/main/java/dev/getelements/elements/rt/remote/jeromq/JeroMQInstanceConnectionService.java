@@ -649,7 +649,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public InstanceBinding openBinding(final NodeId nodeId) {
-            try (final ControlClient client = new JeroMQControlClient(getzContext()::shadow, getInternalBindAddress())) {
+            try (final ControlClient client = new JeroMQControlClient(getzContext(), getInternalBindAddress())) {
                 return client.openBinding(nodeId);
             }
         }
