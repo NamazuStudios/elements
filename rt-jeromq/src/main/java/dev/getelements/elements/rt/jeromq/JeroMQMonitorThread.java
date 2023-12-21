@@ -41,7 +41,7 @@ public class JeroMQMonitorThread extends Thread implements AutoCloseable {
 
     @Override
     public void run() {
-        try (final ZContext shadow = shadow(zContext);
+        try (final ZContext shadow = zContext.shadow();
              final ZMonitor zMonitor = new ZMonitor(shadow, monitored).add(ZMonitor.Event.ALL).start()) {
 
             final Stopwatch stopwatch = Stopwatch.createStarted();

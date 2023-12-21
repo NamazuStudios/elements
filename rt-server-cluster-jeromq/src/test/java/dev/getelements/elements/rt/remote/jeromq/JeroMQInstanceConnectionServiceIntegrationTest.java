@@ -158,7 +158,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
         final String controlAddress = instanceConnectionService.getLocalControlAddress();
 
-        try (var client = new JeroMQControlClient(getzContext(), controlAddress)) {
+        try (var client = new JeroMQControlClient(getzContext()::shadow, controlAddress)) {
 
             final var instanceStatus = client.getInstanceStatus();
             final var instanceStatusSet = new HashSet<>(instanceStatus.getNodeIds());
@@ -340,7 +340,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     expose(Key.get(InstanceConnectionService.class, named(BIND_URL_FIRST)));
 
                     final var zContextProvider = getProvider(ZContext.class);
-                    bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get(), ca));
+                    bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get()::shadow, ca));
 
                     final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
                     final var asp = getProvider(key);
@@ -371,7 +371,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     expose(Key.get(InstanceConnectionService.class, named(BIND_URL_SECOND)));
 
                     final var zContextProvider = getProvider(ZContext.class);
-                    bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get(), ca));
+                    bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get()::shadow, ca));
 
                     final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
                     final var asp = getProvider(key);

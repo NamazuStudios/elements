@@ -20,6 +20,13 @@ public interface AsyncConnectionService<ContextT, SocketT> {
     void stop();
 
     /**
+     * Gets the core context for this {@link AsyncConnectionService}.
+     *
+     * @return the core context
+     */
+    ContextT getCoreContext();
+
+    /**
      * Creates an anonymous group.
      *
      * @return the {@link AsyncConnectionGroup.Builder<ContextT, SocketT>}

@@ -72,7 +72,7 @@ public class JeroMQAsyncConnectionServiceTest {
     }
 
     private void runMockServer() {
-        try (final ZContext shadow = shadow(getzContext());
+        try (final ZContext shadow = getzContext().shadow();
              final ZMQ.Socket socket = shadow.createSocket(REP)) {
 
             socket.setLinger(1000);

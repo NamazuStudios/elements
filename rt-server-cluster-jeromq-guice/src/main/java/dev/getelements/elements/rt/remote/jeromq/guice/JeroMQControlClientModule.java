@@ -19,7 +19,7 @@ public class JeroMQControlClientModule extends PrivateModule {
     protected void configure() {
 
         final var zContextProvider = getProvider(ZContext.class);
-        bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get(), ca));
+        bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get()::shadow, ca));
 
         final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
         final var asp = getProvider(key);
