@@ -19,12 +19,10 @@ public class AnonGoogleSignInAuthService implements GoogleSignInAuthService {
     @Override
     public GoogleSignInSessionCreation createOrUpdateUserWithIdentityToken(
             final String applicationNameOrId,
-            final String applicationConfigurationNameOrId,
             final String identityToken) {
 
         return getGoogleSignInAuthServiceOperations().createOrUpdateUserWithGoogleSignInToken(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 identityToken,
                 googleIdentityToken ->  {
                     final var user = mapTokenToUser(googleIdentityToken);
@@ -55,12 +53,11 @@ public class AnonGoogleSignInAuthService implements GoogleSignInAuthService {
         final var payload = googleIdentityToken.getPayload();
         final var userId = payload.getSubject();
         final var email = payload.getEmail();
-        final var name = (String) payload.get("name");
 
         final User user = new User();
         user.setActive(true);
         user.setLevel(USER);
-        user.setName(name);
+        user.setName(email);
         user.setEmail(email);
         user.setGoogleSignInId(userId);
 

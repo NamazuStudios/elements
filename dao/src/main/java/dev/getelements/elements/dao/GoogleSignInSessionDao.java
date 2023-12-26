@@ -16,10 +16,9 @@ public interface GoogleSignInSessionDao {
      * Creates s {@link Session} with the
      *
      * @param session the {@link Session} to create
-     * @param tokenResponse
      * @return
      */
-    GoogleSignInSessionCreation create(Session session, TokenResponse tokenResponse);
+    GoogleSignInSessionCreation create(Session session);
 
     /**
      * Finds an instance of {@link GoogleSignInSession} using the session secret. Since not all sessions are created with

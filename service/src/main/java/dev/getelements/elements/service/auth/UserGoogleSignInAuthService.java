@@ -19,11 +19,9 @@ public class UserGoogleSignInAuthService implements GoogleSignInAuthService {
     @Override
     public GoogleSignInSessionCreation createOrUpdateUserWithIdentityToken(
             final String applicationNameOrId,
-            final String applicationConfigurationNameOrId,
             final String identityToken) {
         return getGoogleSignInAuthServiceOperations().createOrUpdateUserWithGoogleSignInToken(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 identityToken,
                 googleIdentityToken ->  {
                     final var user = mapTokenToUser(googleIdentityToken);

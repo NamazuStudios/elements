@@ -86,7 +86,6 @@ public class MockServiceTestModule extends AbstractModule {
         bind(IosApplicationConfigurationDao.class).toInstance(mock(IosApplicationConfigurationDao.class));
         bind(GooglePlayApplicationConfigurationDao.class).toInstance(mock(GooglePlayApplicationConfigurationDao.class));
         bind(FacebookApplicationConfigurationDao.class).toInstance(mock(FacebookApplicationConfigurationDao.class));
-        bind(GoogleSignInApplicationConfigurationDao.class).toInstance(mock(GoogleSignInApplicationConfigurationDao.class));
         bind(MatchmakingApplicationConfigurationDao.class).toInstance(mock(MatchmakingApplicationConfigurationDao.class));
         bind(FirebaseApplicationConfigurationDao.class).toInstance(mock(FirebaseApplicationConfigurationDao.class));
         bind(MatchDao.class).toInstance(mock(MatchDao.class));

@@ -47,32 +47,17 @@ public class GoogleSignInAuthResource {
         getValidationHelper().validateModel(googleSignInSessionRequest);
 
         final String applicationNameOrId = googleSignInSessionRequest.getApplicationNameOrId();
-        final String applicationConfigurationNameOrId = googleSignInSessionRequest.getApplicationConfigurationNameOrId();
-
-        final String authCode = googleSignInSessionRequest.getAuthCode();
         final String identityToken = googleSignInSessionRequest.getIdentityToken();
 
         if (isNullOrEmpty(applicationNameOrId)) {
             throw new InvalidDataException("Application Name not Specified");
         }
 
-        if (isNullOrEmpty(applicationConfigurationNameOrId)) {
-            throw new InvalidDataException("Application Configuration not Specified");
-        }
-
-        if (isNullOrEmpty(authCode)) {
-            throw new InvalidDataException("Auth code not specified.");
-        }
-
         if (isNullOrEmpty(identityToken)) {
             throw new InvalidDataException("Identity token not specified.");
         }
 
-        return getGoogleSignInAuthService().createOrUpdateUserWithIdentityToken(
-                applicationNameOrId,
-                applicationConfigurationNameOrId,
-                identityToken);
-
+        return getGoogleSignInAuthService().createOrUpdateUserWithIdentityToken(applicationNameOrId, identityToken);
     }
 
     public ValidationHelper getValidationHelper() {

@@ -42,14 +42,13 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
     private Provider<MessageDigest> messageDigestProvider;
 
     @Override
-    public GoogleSignInSessionCreation create(final Session session, final TokenResponse tokenResponse) {
+    public GoogleSignInSessionCreation create(final Session session) {
 
-        requireNonNull(tokenResponse, "tokenResponse");
-        requireNonNull(tokenResponse.getAccessToken(), "tokenResponse.accessToken");
+        requireNonNull(session, "tokenResponse");
 
         final MongoGoogleSignInSession mongoGoogleSignInSession = getMapper().map(session, MongoGoogleSignInSession.class);
 
-        mongoGoogleSignInSession.setExpiry(new Timestamp(tokenResponse.getExpiresAt()));
+        mongoGoogleSignInSession.setExpiry(new Timestamp(session.getExpiry()));
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(session.getUser());
         final MongoSessionSecret mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
@@ -66,10 +65,8 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
 
         creation.setSessionSecret(mongoSessionSecret.getSessionSecret());
         creation.setSession(getMapper().map(mongoGoogleSignInSession, Session.class));
-        creation.setUserAccessToken(tokenResponse.getAccessToken());
 
         return creation;
-
     }
 
     @Override

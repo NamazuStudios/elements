@@ -14,9 +14,6 @@ public class GoogleSignInSessionCreation {
     @ApiModelProperty("The Session Secret to pass to subsequent requests through headers.")
     private String sessionSecret;
 
-    @ApiModelProperty("The OAuth user access token obtained via the Google Sign-In API.")
-    private String userAccessToken;
-
     public String getSessionSecret() {
         return sessionSecret;
     }
@@ -33,27 +30,18 @@ public class GoogleSignInSessionCreation {
         this.session = session;
     }
 
-    public String getUserAccessToken() {
-        return userAccessToken;
-    }
-
-    public void setUserAccessToken(String userAccessToken) {
-        this.userAccessToken = userAccessToken;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         GoogleSignInSessionCreation that = (GoogleSignInSessionCreation) o;
         return Objects.equals(getSessionSecret(), that.getSessionSecret()) &&
-                Objects.equals(getSession(), that.getSession()) &&
-                Objects.equals(getUserAccessToken(), that.getUserAccessToken());
+                Objects.equals(getSession(), that.getSession());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSessionSecret(), getSession(), getUserAccessToken());
+        return Objects.hash(getSessionSecret(), getSession());
     }
 
     @Override

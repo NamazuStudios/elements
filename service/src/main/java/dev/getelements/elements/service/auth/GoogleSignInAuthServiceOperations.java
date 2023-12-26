@@ -1,19 +1,20 @@
 package dev.getelements.elements.service.auth;
 
-import com.auth0.jwt.impl.PublicClaims;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.JsonGenerator;
-import com.google.api.client.json.JsonParser;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import dev.getelements.elements.dao.GoogleSignInApplicationConfigurationDao;
+import com.google.api.client.json.webtoken.JsonWebSignature;
+import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.GoogleSignInSessionDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.InternalException;
-import dev.getelements.elements.exception.application.ApplicationConfigurationNotFoundException;
-import dev.getelements.elements.model.application.GoogleSignInApplicationConfiguration;
+import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.googlesignin.TokenResponse;
 import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.Profile;
@@ -21,18 +22,21 @@ import dev.getelements.elements.model.session.GoogleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.NameService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.client.Client;
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.interfaces.RSAPublicKey;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-import static java.lang.String.format;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class GoogleSignInAuthServiceOperations {
 
@@ -44,56 +48,58 @@ public class GoogleSignInAuthServiceOperations {
 
     private GoogleSignInSessionDao googleSignInSessionDao;
 
-    private GoogleSignInApplicationConfigurationDao googleSignInApplicationConfigurationDao;
+    private ApplicationDao applicationDao;
+
+    private long sessionTimeoutSeconds;
 
     public GoogleSignInSessionCreation createOrUpdateUserWithGoogleSignInToken(
             final String applicationNameOrId,
-            final String applicationConfigurationNameOrId,
             final String identityToken,
             final Function<GoogleIdToken, User> userMapper) {
 
         try {
 
-            final var appConfiguration = getApplicationConfiguration(
-                    applicationNameOrId,
-                    applicationConfigurationNameOrId
-            );
+            final var decodedToken = GoogleIdToken.parse(GsonFactory.getDefaultInstance(), identityToken);
+//            final var keyId = decodedToken.getHeader().getKeyId();
+//            final var cert = GoogleSignInCertificateHelper.certForKeyId(keyId);
+//            final var key = (RSAPublicKey) GoogleSignInCertificateHelper.certToPublicKey(cert);
+//            final var algorithm = Algorithm.RSA256(key, null);
 
-            //Verify that the audience matches the registered Google Application ID
-            final var verifier = new GoogleIdTokenVerifier
-                    .Builder(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
-                    .setAudience(appConfiguration.getClientIds().values())
-                    .build();
+            // Will throw a SignatureVerificationException if the token's signature is invalid
+            final var verified =
+                    new GoogleIdTokenVerifier(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
+                    .verify(decodedToken);
 
-            // Attempts to validate the identity, and if it is not valid presumes that the request should be forbidden.
-            final var idToken = verifier.verify(identityToken);
-
-            if (idToken != null) {
-
-                // Maps the user, writing it to the database.
-                final var user = userMapper.apply(idToken);
-                final var imageUrl = (String) idToken.getPayload().get("picture");
-                final var profile = getProfileDao().createOrRefreshProfile(map(
-                        user,
-                        appConfiguration,
-                        imageUrl)
-                );
-
-                final var session = new Session();
-                session.setUser(user);
-                session.setProfile(profile);
-                session.setApplication(profile.getApplication());
-
-                final var tokenResponse = new TokenResponse();
-                tokenResponse.setAccessToken(idToken.getPayload().getAccessTokenHash());
-                tokenResponse.setIdToken(identityToken);
-                tokenResponse.setExpiresAt(idToken.getPayload().getExpirationTimeSeconds());
-                return getGoogleSignInSessionDao().create(session, tokenResponse);
+            if(!verified) {
+                throw new ForbiddenException("Could not verify ID token.");
             }
 
-            throw new ForbiddenException("Cannot verify ID token. Please ensure that your Application is configured properly.");
+            // Maps the user, writing it to the database.
+
+            final var user = userMapper.apply(decodedToken);
+            final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+            final var session = new Session();
+
+            session.setUser(user);
+            session.setExpiry(expiry);
+
+            if(applicationNameOrId != null) {
+
+                final var application = getApplicationDao().getActiveApplication(applicationNameOrId);
+                final var imageUrl = (String) decodedToken.getPayload().get("picture");
+                final var profile = getProfileDao().createOrRefreshProfile(
+                        map(user, application, imageUrl)
+                );
+
+                session.setProfile(profile);
+                session.setApplication(application);
+            }
+
+            return getGoogleSignInSessionDao().create(session);
 
         } catch (GeneralSecurityException e) {
+            throw new InternalException(e);
+        } catch (TokenResponseException e) {
             throw new InternalException(e);
         } catch (IOException e) {
             throw new InternalException(e);
@@ -101,35 +107,18 @@ public class GoogleSignInAuthServiceOperations {
     }
 
     private Profile map(final User user,
-                        final GoogleSignInApplicationConfiguration googleSignInApplicationConfiguration,
+                        final Application application,
                         final String imageUrl) {
         final var profile = new Profile();
         profile.setUser(user);
         profile.setDisplayName(getNameService().generateQualifiedName());
-        profile.setApplication(googleSignInApplicationConfiguration.getParent());
+        profile.setApplication(application);
 
         final var profileImage = new LargeObjectReference();
         profileImage.setUrl(imageUrl);
         profile.setImageObject(profileImage);
 
         return profile;
-    }
-
-    private GoogleSignInApplicationConfiguration getApplicationConfiguration(final String applicationNameOrId,
-                                                                    final String applicationConfigurationNameOrId) {
-
-        final GoogleSignInApplicationConfiguration appConfiguration;
-
-        try {
-            appConfiguration = getGoogleApplicationConfigurationDao().getApplicationConfiguration(
-                    applicationNameOrId,
-                    applicationConfigurationNameOrId);
-        } catch (ApplicationConfigurationNotFoundException ex) {
-            throw new InternalException(ex);
-        }
-
-        return appConfiguration;
-
     }
 
 
@@ -169,13 +158,22 @@ public class GoogleSignInAuthServiceOperations {
         this.googleSignInSessionDao = googleSignInSessionDao;
     }
 
-    public GoogleSignInApplicationConfigurationDao getGoogleApplicationConfigurationDao() {
-        return googleSignInApplicationConfigurationDao;
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
     }
 
     @Inject
-    public void setGoogleSignInApplicationConfigurationDao(GoogleSignInApplicationConfigurationDao googleSignInApplicationConfigurationDao) {
-        this.googleSignInApplicationConfigurationDao = googleSignInApplicationConfigurationDao;
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
+    }
+
+    public long getSessionTimeoutSeconds() {
+        return sessionTimeoutSeconds;
+    }
+
+    @Inject
+    public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
+        this.sessionTimeoutSeconds = sessionTimeoutSeconds;
     }
 
 }

@@ -29,13 +29,14 @@ public interface GoogleSignInAuthService {
      * to a long-term token and supply the result.
      *
      * @param applicationNameOrId the application name or id
-     * @param applicationConfigurationNameOrId the application configuration name or id
      * @param identityToken the identity token issued by Google's services
      *
      * @return
      */
     GoogleSignInSessionCreation createOrUpdateUserWithIdentityToken(String applicationNameOrId,
-                                                                    String applicationConfigurationNameOrId,
                                                                     String identityToken);
 
+    default GoogleSignInSessionCreation createOrUpdateUserWithIdentityToken(String identityToken) {
+        return createOrUpdateUserWithIdentityToken(null, identityToken);
+    }
 }
