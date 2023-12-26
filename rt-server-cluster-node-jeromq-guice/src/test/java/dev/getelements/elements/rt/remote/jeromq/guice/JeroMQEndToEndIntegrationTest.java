@@ -66,7 +66,10 @@ public class JeroMQEndToEndIntegrationTest {
     public void setup() {
 
         final Injector sharedInjector = Guice.createInjector(
-                new ZContextModule().withMaxSockets(8096).withDefaultIoThreads(),
+                new ZContextModule()
+                        .withMaxSockets(8096)
+                        .withDefaultIoThreads()
+                        .withDefaultIpv6(),
                 new AbstractModule() {
                     @Override
                     protected void configure() {

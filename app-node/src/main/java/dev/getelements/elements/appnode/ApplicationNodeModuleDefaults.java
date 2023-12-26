@@ -10,8 +10,7 @@ import static dev.getelements.elements.rt.Constants.*;
 import static dev.getelements.elements.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static dev.getelements.elements.rt.git.Constants.GIT_SCRIPT_STORAGE_DIRECTORY;
 import static dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
-import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
-import static dev.getelements.elements.rt.jeromq.ZContextProvider.MAX_SOCKETS;
+import static dev.getelements.elements.rt.jeromq.ZContextProvider.*;
 import static dev.getelements.elements.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
 import static dev.getelements.elements.rt.remote.PersistentInstanceIdProvider.INSTANCE_ID_FILE;
 import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
@@ -54,6 +53,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(RESOURCE_ENVIRONMENT_PATH, "script-storage/storage.xodus.resources");
         properties.setProperty(SCHEDULER_ENVIRONMENT_PATH, "script-storage/storage.xodus.scheduler");
         properties.setProperty(UNIXFS_STORAGE_ROOT_DIRECTORY, "script-storage/storage.unixfs");
+        properties.setProperty(IPV6, "true");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(MAX_SOCKETS, "500000");
