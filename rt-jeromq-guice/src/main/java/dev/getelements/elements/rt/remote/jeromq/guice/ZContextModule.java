@@ -30,7 +30,7 @@ public class ZContextModule extends PrivateModule {
     }
 
     public ZContextModule withIpv6(final boolean ipv6) {
-        bind(Boolean.class).annotatedWith(named(IPV6)).toInstance(ipv6);
+        ipv6Action = () -> bind(Boolean.class).annotatedWith(named(IPV6)).toInstance(ipv6);
         return this;
     }
 
