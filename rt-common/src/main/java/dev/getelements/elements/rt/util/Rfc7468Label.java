@@ -1,4 +1,4 @@
-package dev.getelements.elements.util;
+package dev.getelements.elements.rt.util;
 
 import java.util.Optional;
 import java.util.stream.Stream;

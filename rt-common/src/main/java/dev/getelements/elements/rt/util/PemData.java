@@ -1,24 +1,24 @@
-package dev.getelements.elements.util;
+package dev.getelements.elements.rt.util;
 
-import dev.getelements.elements.annotation.PemFile;
-import dev.getelements.elements.exception.InternalException;
-import dev.getelements.elements.exception.InvalidPemException;
+import dev.getelements.elements.rt.exception.InvalidPemException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.io.*;
-import java.security.spec.KeySpec;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.function.Function;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class PemDecoder<KeySpecT> {
+/**
+ * Represents a section of PEM (Privacy Enhanced Mail) data which may include a section of a key.
+ *
+ * @param <KeySpecT>
+ */
+public class PemData<KeySpecT> {
 
-    private static final Logger logger = LoggerFactory.getLogger(PemDecoder.class);
+    private static final Logger logger = LoggerFactory.getLogger(PemData.class);
 
     private static final String SUFFIX = "-----";
 
@@ -30,23 +30,23 @@ public class PemDecoder<KeySpecT> {
 
     private final KeySpecT spec;
 
-    public PemDecoder(final String pemString,
-                      final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
+    public PemData(final String pemString,
+                   final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new StringReader(pemString), keySpecFunction);
     }
 
-    public PemDecoder(final InputStream inputStream,
-                      final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
+    public PemData(final InputStream inputStream,
+                   final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new InputStreamReader(inputStream, UTF_8), keySpecFunction);
     }
 
-    public PemDecoder(final Reader reader,
-                      final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
+    public PemData(final Reader reader,
+                   final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new BufferedReader(reader), keySpecFunction);
     }
 
-    public PemDecoder(final BufferedReader reader,
-                      final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
+    public PemData(final BufferedReader reader,
+                   final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
 
         final StringBuilder encoded = new StringBuilder();
 
@@ -55,7 +55,7 @@ public class PemDecoder<KeySpecT> {
             final String header = reader.readLine().trim();
 
             if (!header.startsWith(HEADER) && header.endsWith(SUFFIX))
-                throw new InternalException("Invalid PEM format. Missing or malformed header.");
+                throw new InvalidPemException("Invalid PEM format. Missing or malformed header.");
 
             label = header.substring(HEADER.length(), header.length() - SUFFIX.length());
 
@@ -81,6 +81,27 @@ public class PemDecoder<KeySpecT> {
         final byte[] bytes = Base64.getDecoder().decode(encoded.toString());
         this.spec = keySpecFunction.apply(bytes);
 
+    }
+
+    /**
+     * Creates an instance of {@link PemData} with the supplied label and specification.
+     * @param label the label
+     * @param spec the specification
+     */
+    public PemData(final String label, final KeySpecT spec) {
+        this.label = label;
+        this.spec = spec;
+    }
+
+    /**
+     * Creates an instance of {@link PemData} with the supplied label and specification.
+     *
+     * @param label the label
+     * @param spec the specification
+     */
+    public PemData(final Rfc7468Label label, final KeySpecT spec) {
+        this.label = label.getLabel();
+        this.spec = spec;
     }
 
     /**
@@ -110,7 +131,19 @@ public class PemDecoder<KeySpecT> {
     }
 
     /**
-     * Returns a human-readable version of this {@link PemDecoder}, redacting the key information.
+     * Maps this {@link PemData} to another type.
+     *
+     * @param mapper the mapper function
+     * @param <OtherKeySpecT> the other pem spec type
+     *
+     * @return a new instance of the {@link PemData} with the spec translated to the requested format
+     */
+    public <OtherKeySpecT> PemData<OtherKeySpecT> map(final Function<KeySpecT, OtherKeySpecT> mapper) {
+        return new PemData<>(label, mapper.apply(spec));
+    }
+
+    /**
+     * Returns a human-readable version of this {@link PemData}, redacting the key information.
      *
      * @return a string representing this instance.
      */
@@ -119,28 +152,6 @@ public class PemDecoder<KeySpecT> {
             HEADER + label + SUFFIX + "\n" +
             "<redacted>" + "\n" +
             FOOTER + label + SUFFIX + "\n";
-    }
-
-    /**
-     * Validates a PEM file when passed
-     */
-    public static class Validator implements ConstraintValidator<PemFile, String> {
-
-        @Override
-        public void initialize(final PemFile constraintAnnotation) {}
-
-        @Override
-        public boolean isValid(final String value, final ConstraintValidatorContext context) {
-            try {
-                final PemDecoder<KeySpec> pemDecoder = new PemDecoder<>(value, dummy -> new KeySpec(){});
-                logger.trace("Successfully decoded pem {} {}", pemDecoder.getLabel(), pemDecoder);
-                return true;
-            } catch (InvalidPemException e) {
-                context.buildConstraintViolationWithTemplate("Invalid PEM File.");
-                return false;
-            }
-        }
-
     }
 
 }
