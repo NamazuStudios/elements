@@ -1,8 +1,6 @@
 package dev.getelements.elements.rt.util;
 
 import dev.getelements.elements.rt.exception.InvalidPemException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Base64;
@@ -18,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class PemData<KeySpecT> {
 
-    private static final Logger logger = LoggerFactory.getLogger(PemData.class);
+    public static final int MAX_LINE_LENGTH = 64;
 
     private static final String SUFFIX = "-----";
 
@@ -54,7 +52,7 @@ public class PemData<KeySpecT> {
 
             final String header = reader.readLine().trim();
 
-            if (!header.startsWith(HEADER) && header.endsWith(SUFFIX))
+            if (!(header.startsWith(HEADER) && header.endsWith(SUFFIX)))
                 throw new InvalidPemException("Invalid PEM format. Missing or malformed header.");
 
             label = header.substring(HEADER.length(), header.length() - SUFFIX.length());
@@ -63,6 +61,7 @@ public class PemData<KeySpecT> {
 
             while ((line = reader.readLine()) != null) {
                 if (line.trim().startsWith(FOOTER) && line.endsWith(SUFFIX)) break;
+                else if (line.length() > MAX_LINE_LENGTH) throw new InvalidPemException("Line length exceeded.");
                 else encoded.append(line.trim());
             }
 

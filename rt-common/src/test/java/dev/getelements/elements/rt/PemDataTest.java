@@ -1,4 +1,4 @@
-package dev.getelements.elements.util;
+package dev.getelements.elements.rt;
 
 import dev.getelements.elements.rt.exception.InvalidPemException;
 import dev.getelements.elements.rt.util.PemData;

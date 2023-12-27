@@ -3,13 +3,11 @@ package dev.getelements.elements.rt.util;
 import dev.getelements.elements.rt.exception.InvalidPemException;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.nio.ByteBuffer.wrap;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Collections.unmodifiableList;
 
@@ -18,7 +16,7 @@ import static java.util.Collections.unmodifiableList;
  */
 public class PemChain {
 
-    private final List<PemData<ByteBuffer>> chain;
+    private final List<PemData<byte[]>> chain;
 
     /**
      * Constructs a {@link PemChain} from a {@link String}.
@@ -59,10 +57,10 @@ public class PemChain {
     public PemChain(final BufferedReader reader) throws InvalidPemException {
         try {
 
-            final var chain = new ArrayList<PemData<ByteBuffer>>();
+            final var chain = new ArrayList<PemData<byte[]>>();
 
             do {
-                final var data = new PemData<>(reader, b -> wrap(b).asReadOnlyBuffer());
+                final var data = new PemData<>(reader, b -> b);
                 chain.add(data);
             } while (hasMore(reader));
 
@@ -83,11 +81,20 @@ public class PemChain {
     }
 
     /**
+     * Gets the number of entries in the chain.
+     *
+     * @return the number of entries in the chain
+     */
+    public int size() {
+        return chain.size();
+    }
+
+    /**
      * Gets the chain of {@link PemData}.
      *
      * @return a {@link List} representing the chain of {@link PemData}
      */
-    public List<PemData<ByteBuffer>> getChain() {
+    public List<PemData<byte[]>> getChain() {
         return chain;
     }
 
@@ -97,7 +104,7 @@ public class PemChain {
      * @param label the label to find
      * @return an {@link Optional} specifying the requested label or null
      */
-    public Optional<PemData<ByteBuffer>> findFirstWithLabel(final String label) {
+    public Optional<PemData<byte[]>> findFirstWithLabel(final String label) {
         return getChain()
                 .stream()
                 .filter(p -> Objects.equals(p.getLabel(), label))
@@ -110,7 +117,7 @@ public class PemChain {
      * @param label the {@link Rfc7468Label} to find
      * @return an {@link Optional} specifying the requested label or null
      */
-    public Optional<PemData<ByteBuffer>> findFirstWithLabel(final Rfc7468Label label) {
+    public Optional<PemData<byte[]>> findFirstWithLabel(final Rfc7468Label label) {
         return findFirstWithLabel(label.getLabel());
     }
 
