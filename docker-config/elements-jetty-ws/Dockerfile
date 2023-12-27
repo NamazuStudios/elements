@@ -17,4 +17,6 @@ RUN apt-get update && apt-get install -y build-essential libssl-dev unzip libsas
     rm -rf luarocks-3.9.1 && \
     luarocks install ldoc
 
+USER elements:elements
+
 ENTRYPOINT ["java", "jettyws"]
