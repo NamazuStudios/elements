@@ -19,15 +19,19 @@ public class JeroMQInstanceBinding implements InstanceBinding {
 
     private final String instanceConnectAddress;
 
+    private final JeroMQSecurityChain jeroMQSecurityChain;
+
     private final String nodeBindAddress;
 
     public JeroMQInstanceBinding(final ZContext zContext,
                                  final NodeId nodeId,
                                  final String instanceConnectAddress,
+                                 final JeroMQSecurityChain jeroMQSecurityChain,
                                  final String nodeBindAddress) {
         this.zContext = zContext;
         this.nodeId = nodeId;
         this.instanceConnectAddress = instanceConnectAddress;
+        this.jeroMQSecurityChain = jeroMQSecurityChain;
         this.nodeBindAddress = nodeBindAddress;
     }
 
@@ -43,7 +47,7 @@ public class JeroMQInstanceBinding implements InstanceBinding {
 
     @Override
     public void close() {
-        try (final ControlClient client = new JeroMQControlClient(zContext, instanceConnectAddress)) {
+        try (final ControlClient client = new JeroMQControlClient(zContext, instanceConnectAddress, jeroMQSecurityChain)) {
             client.closeBinding(nodeId);
         } catch (Exception ex) {
             logger.warn("Caught exception closing binding.", ex);

@@ -42,24 +42,27 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
     private final String instanceConnectAddress;
 
+    private final JeroMQSecurityChain jeroMQSecurityChain;
+
     private final AsyncConnectionPool<ZContext, ZMQ.Socket> pool;
 
     public JeroMQAsyncControlClient(final AsyncConnectionService<ZContext, ZMQ.Socket> service,
-                                    final JeroMQSecurityChain securityChain,
-                                    final String instanceConnectAddress) {
+                                    final String instanceConnectAddress,
+                                    final JeroMQSecurityChain securityChain) {
         this(service, instanceConnectAddress, securityChain, DEFAULT_MIN_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
     }
 
     public JeroMQAsyncControlClient(final AsyncConnectionService<ZContext, ZMQ.Socket> service,
                                     final String instanceConnectAddress,
-                                    final JeroMQSecurityChain securityChain,
+                                    final JeroMQSecurityChain jeroMQSecurityChain,
                                     final int minConnections,
                                     final int maxConnections) {
 
         this.instanceConnectAddress = instanceConnectAddress;
+        this.jeroMQSecurityChain = jeroMQSecurityChain;
 
         pool = service.allocatePool(POOL_NAME, minConnections, maxConnections, zContext -> {
-            final var socket = JeroMQControlClient.open(securityChain, zContext);
+            final var socket = JeroMQControlClient.open(jeroMQSecurityChain, zContext);
             socket.connect(instanceConnectAddress);
             return socket;
         });
@@ -142,7 +145,12 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
                 final var response = zMsgResponse.map(zMsg -> {
                     final var bindAddress = zMsg.remove().getString(CHARSET);
-                    return new JeroMQInstanceBinding(_c.context(), nodeId, instanceConnectAddress, bindAddress);
+                    return new JeroMQInstanceBinding(
+                            _c.context(),
+                            nodeId,
+                            instanceConnectAddress,
+                            jeroMQSecurityChain,
+                            bindAddress);
                 });
 
                 responseConsumer.accept(response);

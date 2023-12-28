@@ -452,6 +452,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                         getzContext(),
                         getInternalBindAddress(),
                         nfo,
+                        getSecurityChain(),
                         this::disconnect
                     );
 

@@ -63,8 +63,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
         this.zContextShadow = shadow(zContext);
         this.poller = zContextShadow.createPoller(0);
 
-        final var main = zContextShadow.createSocket(ROUTER);
-        securityChain.server(main);
+        final var main = securityChain.server(() -> zContextShadow.createSocket(ROUTER));
         bindAddresses.forEach(main::bind);
 
         final var frontendIndex = poller.register(main, POLLIN | POLLERR);

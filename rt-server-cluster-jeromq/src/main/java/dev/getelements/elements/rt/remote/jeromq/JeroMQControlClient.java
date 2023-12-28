@@ -47,6 +47,8 @@ public class JeroMQControlClient implements ControlClient {
 
     private final String instanceConnectAddress;
 
+    private final JeroMQSecurityChain jeroMQSecurityChain;
+
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,
                                final JeroMQSecurityChain securityChain) {
@@ -63,12 +65,13 @@ public class JeroMQControlClient implements ControlClient {
      */
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,
-                               final JeroMQSecurityChain securityChain,
+                               final JeroMQSecurityChain jeroMQSecurityChain,
                                final long timeout, final TimeUnit timeUnit) {
         this.shadowContext = shadow(zContext);
-        this.socket = open(securityChain, shadowContext);
+        this.socket = open(jeroMQSecurityChain, shadowContext);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAddress = instanceConnectAddress;
+        this.jeroMQSecurityChain = jeroMQSecurityChain;
         setReceiveTimeout(timeout, timeUnit);
     }
 
@@ -79,8 +82,7 @@ public class JeroMQControlClient implements ControlClient {
      * @return the {@link Socket} type
      */
     public static Socket open(final JeroMQSecurityChain securityChain, final ZContext zContext) {
-        final var socket = zContext.createSocket(DEALER);
-        return securityChain.client(socket);
+        return securityChain.client(() -> zContext.createSocket(DEALER));
     }
 
     @Override
@@ -154,7 +156,14 @@ public class JeroMQControlClient implements ControlClient {
 
         final ZMsg response = recv();
         final String nodeBindAddress = response.removeFirst().getString(CHARSET);
-        return new JeroMQInstanceBinding(shadowContext, nodeId, instanceConnectAddress, nodeBindAddress);
+
+        return new JeroMQInstanceBinding(
+                shadowContext,
+                nodeId,
+                instanceConnectAddress,
+                jeroMQSecurityChain,
+                nodeBindAddress
+        );
 
     }
 
