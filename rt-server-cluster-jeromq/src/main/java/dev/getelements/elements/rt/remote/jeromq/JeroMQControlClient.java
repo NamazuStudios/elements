@@ -6,6 +6,7 @@ import dev.getelements.elements.rt.remote.ControlClient;
 import dev.getelements.elements.rt.remote.InstanceConnectionService;
 import dev.getelements.elements.rt.remote.InstanceStatus;
 import dev.getelements.elements.rt.remote.RoutingStatus;
+import dev.getelements.elements.rt.util.PemChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -47,8 +48,9 @@ public class JeroMQControlClient implements ControlClient {
     private final String instanceConnectAddress;
 
     public JeroMQControlClient(final ZContext zContext,
-                               final String instanceConnectAddress) {
-        this(zContext, instanceConnectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
+                               final String instanceConnectAddress,
+                               final JeroMQSecurityChain securityChain) {
+        this(zContext, instanceConnectAddress, securityChain, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
     }
 
     /**
@@ -61,9 +63,10 @@ public class JeroMQControlClient implements ControlClient {
      */
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,
+                               final JeroMQSecurityChain securityChain,
                                final long timeout, final TimeUnit timeUnit) {
         this.shadowContext = shadow(zContext);
-        this.socket = open(shadowContext);
+        this.socket = open(securityChain, shadowContext);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAddress = instanceConnectAddress;
         setReceiveTimeout(timeout, timeUnit);
@@ -75,10 +78,9 @@ public class JeroMQControlClient implements ControlClient {
      * @param zContext the context which to use when creating the socket
      * @return the {@link Socket} type
      */
-    public static Socket open(final ZContext zContext) {
+    public static Socket open(final JeroMQSecurityChain securityChain, final ZContext zContext) {
         final var socket = zContext.createSocket(DEALER);
-        socket.setIPv6(true);
-        return socket;
+        return securityChain.client(socket);
     }
 
     @Override

@@ -63,6 +63,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private AsyncControlClient.Factory asyncControlClientFactory;
 
+    private JeroMQSecurityChain securityChain;
+
     private final Lock lock = new ReentrantLock();
 
     private volatile InstanceConnectionContext context;
@@ -192,9 +194,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         return asyncControlClientFactory;
     }
 
+    public JeroMQSecurityChain getSecurityChain() {
+        return securityChain;
+    }
+
     @Inject
-    public void setAsyncControlClientFactory(AsyncControlClient.Factory asyncControlClientFactory) {
-        this.asyncControlClientFactory = asyncControlClientFactory;
+    public void setSecurityChain(JeroMQSecurityChain securityChain) {
+        this.securityChain = securityChain;
     }
 
     private class InstanceConnectionContext {
@@ -525,7 +531,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 .filter(addr -> !addr.isBlank())
                 .collect(toUnmodifiableList());
 
-            try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
+            try (final JeroMQRoutingServer server = new JeroMQRoutingServer(
+                    getInstanceId(),
+                    getzContext(),
+                    binds,
+                    getSecurityChain())
+            ) {
                 final var incoming = exchangeException(null);
                 assert incoming == null;
                 server.run(running::get);
@@ -649,7 +660,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public InstanceBinding openBinding(final NodeId nodeId) {
-            try (final ControlClient client = new JeroMQControlClient(getzContext(), getInternalBindAddress())) {
+            try (final ControlClient client = new JeroMQControlClient(
+                    getzContext(),
+                    getInternalBindAddress(),
+                    getSecurityChain())) {
                 return client.openBinding(nodeId);
             }
         }

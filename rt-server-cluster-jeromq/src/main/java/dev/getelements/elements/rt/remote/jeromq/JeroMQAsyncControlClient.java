@@ -45,19 +45,21 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
     private final AsyncConnectionPool<ZContext, ZMQ.Socket> pool;
 
     public JeroMQAsyncControlClient(final AsyncConnectionService<ZContext, ZMQ.Socket> service,
+                                    final JeroMQSecurityChain securityChain,
                                     final String instanceConnectAddress) {
-        this(service, instanceConnectAddress, DEFAULT_MIN_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
+        this(service, instanceConnectAddress, securityChain, DEFAULT_MIN_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
     }
 
     public JeroMQAsyncControlClient(final AsyncConnectionService<ZContext, ZMQ.Socket> service,
                                     final String instanceConnectAddress,
+                                    final JeroMQSecurityChain securityChain,
                                     final int minConnections,
                                     final int maxConnections) {
 
         this.instanceConnectAddress = instanceConnectAddress;
 
         pool = service.allocatePool(POOL_NAME, minConnections, maxConnections, zContext -> {
-            final var socket = JeroMQControlClient.open(zContext);
+            final var socket = JeroMQControlClient.open(securityChain, zContext);
             socket.connect(instanceConnectAddress);
             return socket;
         });
