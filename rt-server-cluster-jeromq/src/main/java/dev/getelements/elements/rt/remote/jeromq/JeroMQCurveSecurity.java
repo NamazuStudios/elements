@@ -14,6 +14,14 @@ import static org.zeromq.ZMQ.Curve.*;
 
 public class JeroMQCurveSecurity implements JeroMQSecurity {
 
+    public static final String SOURCE_PEM = "pem";
+
+    public static final String SOURCE_GEN = "gen";
+
+    private final String serverSource;
+
+    private final String clientSource;
+
     private final byte[] clientPublicKey;
 
     private final byte[] clientPrivateKey;
@@ -30,6 +38,9 @@ public class JeroMQCurveSecurity implements JeroMQSecurity {
 
         final var serverKeyPair = generateKeyPair();
         final var clientKeyPair = generateKeyPair();
+
+        serverSource = SOURCE_GEN;
+        clientSource = SOURCE_GEN;
 
         serverPublicKey = z85Decode(serverKeyPair.publicKey);
         serverPrivateKey = z85Decode(serverKeyPair.secretKey);
@@ -60,12 +71,18 @@ public class JeroMQCurveSecurity implements JeroMQSecurity {
 
         final var clientKeyPair = generateKeyPair();
 
+        serverSource = SOURCE_PEM;
+        clientSource = SOURCE_GEN;
+
         clientPublicKey = z85Decode(clientKeyPair.publicKey);
         clientPrivateKey = z85Decode(clientKeyPair.secretKey);
 
     }
 
     public JeroMQCurveSecurity(final PemChain server, final PemChain client) {
+
+        serverSource = SOURCE_PEM;
+        clientSource = SOURCE_PEM;
 
         serverPublicKey = server
                 .findFirstWithLabel(PUBLIC_KEY)
@@ -118,6 +135,8 @@ public class JeroMQCurveSecurity implements JeroMQSecurity {
                 ", clientPrivateKey=<redacted>" +
                 ", serverPublicKey=" + z85Encode(serverPublicKey) +
                 ", serverPrivateKey=<redacted>" +
+                ", serverSource=" + serverSource +
+                ", clientSource=" + clientSource +
                 '}';
     }
 
