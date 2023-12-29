@@ -12,6 +12,12 @@ import static dev.getelements.elements.rt.util.Rfc7468Label.PUBLIC_KEY;
 import static java.lang.String.format;
 import static org.zeromq.ZMQ.Curve.*;
 
+/**
+ * Implements JeroMQ CURVE Encryption using one of three possible combinations.
+ *
+ * {@see <a href="http://curvezmq.org/page:read-the-docs">JeroMQ CURVE Encryption</a>}
+ *
+ */
 public class JeroMQCurveSecurity implements JeroMQSecurity {
 
     public static final String SOURCE_PEM = "pem";
@@ -20,33 +26,23 @@ public class JeroMQCurveSecurity implements JeroMQSecurity {
 
     private final String serverSource;
 
-    private final String clientSource;
-
-    private final byte[] clientPublicKey;
-
-    private final byte[] clientPrivateKey;
-
     private final byte[] serverPublicKey;
 
     private final byte[] serverPrivateKey;
 
     /**
-     * Creates a new {@link JeroMQSecurity} by generating the key pair on the fly. This is really only useful
-     * for testing.
+     * Creates a new {@link JeroMQSecurity} by generating the key pair on the fly. This is really only useful  for
+     * testing when both client and server reside in the same memory space and the instance is shared among all
+     * contexts.
      */
     public JeroMQCurveSecurity() {
 
         final var serverKeyPair = generateKeyPair();
-        final var clientKeyPair = generateKeyPair();
 
         serverSource = SOURCE_GEN;
-        clientSource = SOURCE_GEN;
 
         serverPublicKey = z85Decode(serverKeyPair.publicKey);
         serverPrivateKey = z85Decode(serverKeyPair.secretKey);
-
-        clientPublicKey = z85Decode(clientKeyPair.publicKey);
-        clientPrivateKey = z85Decode(clientKeyPair.secretKey);
 
     }
 
@@ -69,74 +65,58 @@ public class JeroMQCurveSecurity implements JeroMQSecurity {
                 .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PRIVATE_KEY.getLabel())));
 
-        final var clientKeyPair = generateKeyPair();
-
         serverSource = SOURCE_PEM;
-        clientSource = SOURCE_GEN;
-
-        clientPublicKey = z85Decode(clientKeyPair.publicKey);
-        clientPrivateKey = z85Decode(clientKeyPair.secretKey);
 
     }
 
-    public JeroMQCurveSecurity(final PemChain server, final PemChain client) {
+    @Override
+    public ZMQ.Socket server(final Supplier<ZMQ.Socket> socketSupplier) {
 
-        serverSource = SOURCE_PEM;
-        clientSource = SOURCE_PEM;
+        final var socket = socketSupplier.get();
 
-        serverPublicKey = server
-                .findFirstWithLabel(PUBLIC_KEY)
-                .map(PemData::getSpec)
-                .map(byte[]::clone)
-                .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PUBLIC_KEY.getLabel())));
+        if (!socket.setCurveServer(true)) {
+            throw new InternalException("Unable to enable CURVE security on socket.");
+        }
 
-        serverPrivateKey = server
-                .findFirstWithLabel(PRIVATE_KEY)
-                .map(PemData::getSpec)
-                .map(byte[]::clone)
-                .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PRIVATE_KEY.getLabel())));
+        if (!socket.setCurveSecretKey(serverPrivateKey)) {
+            throw new InternalException("Unable to assign CURVE private key to server.");
+        }
 
-        clientPublicKey = client
-                .findFirstWithLabel(PUBLIC_KEY)
-                .map(PemData::getSpec)
-                .map(byte[]::clone)
-                .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Client Security Chain", PUBLIC_KEY.getLabel())));
-
-        clientPrivateKey = client
-                .findFirstWithLabel(PRIVATE_KEY)
-                .map(PemData::getSpec)
-                .map(byte[]::clone)
-                .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Client Security Chain", PRIVATE_KEY.getLabel())));
+        return socket;
 
     }
 
     @Override
     public ZMQ.Socket client(final Supplier<ZMQ.Socket> socketSupplier) {
-        final var socket = socketSupplier.get();
-        socket.setCurveServerKey(serverPublicKey);
-        socket.setCurvePublicKey(clientPublicKey);
-        socket.setCurveSecretKey(clientPrivateKey);
-        return socket;
-    }
 
-    @Override
-    public ZMQ.Socket server(final Supplier<ZMQ.Socket> socketSupplier) {
         final var socket = socketSupplier.get();
-        socket.setCurveServer(true);
-        socket.setCurvePublicKey(serverPublicKey);
-        socket.setCurveSecretKey(serverPrivateKey);
+        final var clientKeyPair = generateKeyPair();
+
+        final var clientPublicKey = z85Decode(clientKeyPair.publicKey);
+        final var clientPrivateKey = z85Decode(clientKeyPair.secretKey);
+
+        if (!socket.setCurveServerKey(serverPublicKey)) {
+            throw new InternalException("Unable to assign CURVE server key to client.");
+        }
+
+        if (!socket.setCurvePublicKey(clientPublicKey)) {
+            throw new InternalException("Unable to assign CURVE public key to client.");
+        }
+
+        if (!socket.setCurveSecretKey(clientPrivateKey)) {
+            throw new InternalException("Unable to assign CURVE private key to client.");
+        }
+
         return socket;
+
     }
 
     @Override
     public String toString() {
         return "JeroMQCurveSecurityChain{" +
-                "clientPublicKey=" + z85Encode(clientPublicKey) +
-                ", clientPrivateKey=<redacted>" +
-                ", serverPublicKey=" + z85Encode(serverPublicKey) +
+                "serverPublicKey=" + z85Encode(serverPublicKey) +
                 ", serverPrivateKey=<redacted>" +
                 ", serverSource=" + serverSource +
-                ", clientSource=" + clientSource +
                 '}';
     }
 
