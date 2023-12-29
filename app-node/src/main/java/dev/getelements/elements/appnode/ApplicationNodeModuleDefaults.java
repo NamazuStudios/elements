@@ -1,6 +1,7 @@
 package dev.getelements.elements.appnode;
 
 import dev.getelements.elements.config.ModuleDefaults;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurityProvider;
 
 import java.util.Properties;
 
@@ -21,6 +22,8 @@ import static dev.getelements.elements.rt.remote.StaticInstanceDiscoveryService.
 import static dev.getelements.elements.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
+import static dev.getelements.elements.rt.remote.jeromq.JeroMQSecurityProvider.JEROMQ_ALLOW_PLAIN_TRAFFIC;
+import static dev.getelements.elements.rt.remote.jeromq.JeroMQSecurityProvider.JEROMQ_SERVER_SECURITY_CHAIN_PEM_FILE;
 import static dev.getelements.elements.rt.transact.unix.UnixFSRevisionTable.UNIXFS_REVISION_TABLE_COUNT;
 import static dev.getelements.elements.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_COUNT;
 import static dev.getelements.elements.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
@@ -43,6 +46,8 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(STATIC_HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_NODE_MIN_CONNECTIONS, "10");
         properties.setProperty(JEROMQ_NODE_MAX_CONNECTIONS, "100");
+        properties.setProperty(JEROMQ_ALLOW_PLAIN_TRAFFIC, "true");
+        properties.setProperty(JEROMQ_SERVER_SECURITY_CHAIN_PEM_FILE, "");
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.setProperty(UNIXFS_REVISION_TABLE_COUNT, "8192");
