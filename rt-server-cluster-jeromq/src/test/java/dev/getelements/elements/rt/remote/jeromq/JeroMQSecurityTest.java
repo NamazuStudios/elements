@@ -13,7 +13,7 @@ import java.io.IOException;
 import static java.lang.String.format;
 import static org.testng.AssertJUnit.assertEquals;
 
-public class JeroMQSecurityChainTest {
+public class JeroMQSecurityTest {
 
     private final ZContext zContext = new ZContext();
 
@@ -24,22 +24,22 @@ public class JeroMQSecurityChainTest {
         final var server = loadChain("/server_chain.pem");
 
         return new Object[][] {
-                new Object[] { JeroMQSecurityChain.DEFAULT },
-                new Object[] { new JeroMQCurveSecurityChain() },
-                new Object[] { new JeroMQCurveSecurityChain(server) },
-                new Object[] { new JeroMQCurveSecurityChain(server, client) }
+                new Object[] { JeroMQSecurity.DEFAULT },
+                new Object[] { new JeroMQCurveSecurity() },
+                new Object[] { new JeroMQCurveSecurity(server) },
+                new Object[] { new JeroMQCurveSecurity(server, client) }
         };
 
     }
 
     @Test(dataProvider = "testChains")
-    public void testCurveSecurityChain(final JeroMQSecurityChain jeroMQSecurityChain) {
-        try (var server = jeroMQSecurityChain.server(() -> zContext.createSocket(SocketType.REP));
-             var client = jeroMQSecurityChain.client(() -> zContext.createSocket(SocketType.REQ))
+    public void testCurveSecurityChain(final JeroMQSecurity jeroMQSecurity) {
+        try (var server = jeroMQSecurity.server(() -> zContext.createSocket(SocketType.REP));
+             var client = jeroMQSecurity.client(() -> zContext.createSocket(SocketType.REQ))
         ) {
 
-            server.bind(format("inproc://%s/server", JeroMQSecurityChainTest.class.getSimpleName()));
-            client.connect(format("inproc://%s/server", JeroMQSecurityChainTest.class.getSimpleName()));
+            server.bind(format("inproc://%s/server", JeroMQSecurityTest.class.getSimpleName()));
+            client.connect(format("inproc://%s/server", JeroMQSecurityTest.class.getSimpleName()));
 
             client.send("Hello");
             assertEquals(server.recvStr(), "Hello");
@@ -51,7 +51,7 @@ public class JeroMQSecurityChainTest {
     }
 
     private static PemChain loadChain(final String path) throws IOException, InvalidPemException {
-        try (var is = JeroMQSecurityChainTest.class.getResourceAsStream(path)) {
+        try (var is = JeroMQSecurityTest.class.getResourceAsStream(path)) {
             return new PemChain(is);
         }
     }

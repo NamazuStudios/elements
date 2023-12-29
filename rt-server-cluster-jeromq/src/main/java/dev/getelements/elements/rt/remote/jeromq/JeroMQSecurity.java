@@ -9,7 +9,7 @@ import static java.lang.String.format;
 /**
  * Implements a security chain for JeroMQ Sockets.
  */
-public interface JeroMQSecurityChain {
+public interface JeroMQSecurity {
 
     /**
      * Configures the socket for use as a server socket.
@@ -52,10 +52,10 @@ public interface JeroMQSecurityChain {
     ZMQ.Socket client(Supplier<ZMQ.Socket> socketSupplier);
 
     /**
-     * The default {@link JeroMQSecurityChain} which simply returns the {@link org.zeromq.ZMQ.Socket} as provided with
+     * The default {@link JeroMQSecurity} which simply returns the {@link org.zeromq.ZMQ.Socket} as provided with
      * no alterations.
      */
-    JeroMQSecurityChain DEFAULT = new JeroMQSecurityChain() {
+    JeroMQSecurity DEFAULT = new JeroMQSecurity() {
 
         @Override
         public ZMQ.Socket client(final Supplier<ZMQ.Socket> socketSupplier) {
@@ -69,7 +69,7 @@ public interface JeroMQSecurityChain {
 
         @Override
         public String toString() {
-            return format("%s.DEFAULT", JeroMQSecurityChain.class.getName());
+            return format("%s.DEFAULT", JeroMQSecurity.class.getName());
         }
 
     };

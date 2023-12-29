@@ -59,7 +59,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
     private static final String BIND_URL_SECOND = "inproc://bind-second";
 
-    private static final JeroMQSecurityChain TEST_SECURITY_CHAIN = new JeroMQCurveSecurityChain();
+    private static final JeroMQSecurity TEST_SECURITY_CHAIN = new JeroMQCurveSecurity();
 
     private ZContext zContext;
 
@@ -326,7 +326,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
             bind(RemoteInvoker.class).toProvider(remoteInvokerSupplier::get);
             bind(new TypeLiteral<Supplier<RemoteInvoker>>(){}).toInstance(remoteInvokerSupplier);
 
-            bind(JeroMQSecurityChain.class).toInstance(TEST_SECURITY_CHAIN);
+            bind(JeroMQSecurity.class).toInstance(TEST_SECURITY_CHAIN);
 
             bind(ZContext.class).asEagerSingleton();
 

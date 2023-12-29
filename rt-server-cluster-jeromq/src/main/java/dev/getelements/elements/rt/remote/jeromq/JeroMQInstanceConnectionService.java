@@ -63,7 +63,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private AsyncControlClient.Factory asyncControlClientFactory;
 
-    private JeroMQSecurityChain securityChain;
+    private JeroMQSecurity securityChain;
 
     private final Lock lock = new ReentrantLock();
 
@@ -199,12 +199,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         this.asyncControlClientFactory = asyncControlClientFactory;
     }
 
-    public JeroMQSecurityChain getSecurityChain() {
+    public JeroMQSecurity getSecurityChain() {
         return securityChain;
     }
 
     @Inject
-    public void setSecurityChain(JeroMQSecurityChain securityChain) {
+    public void setSecurityChain(JeroMQSecurity securityChain) {
         this.securityChain = securityChain;
     }
 

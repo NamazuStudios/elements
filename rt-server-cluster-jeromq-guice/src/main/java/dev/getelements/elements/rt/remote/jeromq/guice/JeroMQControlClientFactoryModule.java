@@ -8,7 +8,7 @@ import dev.getelements.elements.rt.remote.AsyncControlClient;
 import dev.getelements.elements.rt.remote.ControlClient;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQAsyncControlClient;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQControlClient;
-import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurityChain;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
@@ -17,7 +17,7 @@ public class JeroMQControlClientFactoryModule extends PrivateModule {
     protected void configure() {
 
         final var zContextProvider = getProvider(ZContext.class);
-        final var jeroMQSecurityChainProvider = getProvider(JeroMQSecurityChain.class);
+        final var jeroMQSecurityChainProvider = getProvider(JeroMQSecurity.class);
 
         bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(
                 zContextProvider.get(),

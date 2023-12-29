@@ -51,12 +51,12 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     private final JeroMQMonitorThread monitorThread;
 
-    private final JeroMQSecurityChain securityChain;
+    private final JeroMQSecurity securityChain;
 
     public JeroMQRoutingServer(final InstanceId instanceId,
                                final ZContext zContext,
                                final List<String> bindAddresses,
-                               final JeroMQSecurityChain securityChain) {
+                               final JeroMQSecurity securityChain) {
 
         this.securityChain = securityChain;
         this.logger = getLogger(instanceId);

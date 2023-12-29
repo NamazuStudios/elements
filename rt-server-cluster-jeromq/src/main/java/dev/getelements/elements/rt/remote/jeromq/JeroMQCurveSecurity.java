@@ -12,7 +12,7 @@ import static dev.getelements.elements.rt.util.Rfc7468Label.PUBLIC_KEY;
 import static java.lang.String.format;
 import static org.zeromq.ZMQ.Curve.*;
 
-public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
+public class JeroMQCurveSecurity implements JeroMQSecurity {
 
     private final byte[] clientPublicKey;
 
@@ -23,10 +23,10 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
     private final byte[] serverPrivateKey;
 
     /**
-     * Creates a new {@link JeroMQSecurityChain} by generating the key pair on the fly. This is really only useful
+     * Creates a new {@link JeroMQSecurity} by generating the key pair on the fly. This is really only useful
      * for testing.
      */
-    public JeroMQCurveSecurityChain() {
+    public JeroMQCurveSecurity() {
 
         final var serverKeyPair = generateKeyPair();
         final var clientKeyPair = generateKeyPair();
@@ -40,11 +40,11 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
     }
 
     /**
-     * Creates a new {@link JeroMQSecurityChain} with the supplied server key chain.
+     * Creates a new {@link JeroMQSecurity} with the supplied server key chain.
      *
      * @param server
      */
-    public JeroMQCurveSecurityChain(final PemChain server) {
+    public JeroMQCurveSecurity(final PemChain server) {
 
         serverPublicKey = server
                 .findFirstWithLabel(PUBLIC_KEY)
@@ -65,7 +65,7 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
 
     }
 
-    public JeroMQCurveSecurityChain(final PemChain server, final PemChain client) {
+    public JeroMQCurveSecurity(final PemChain server, final PemChain client) {
 
         serverPublicKey = server
                 .findFirstWithLabel(PUBLIC_KEY)

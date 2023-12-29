@@ -10,7 +10,7 @@ import dev.getelements.elements.rt.remote.ControlClient;
 import dev.getelements.elements.rt.remote.ControlClientProvider;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQAsyncControlClient;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQControlClient;
-import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurityChain;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
@@ -20,7 +20,7 @@ public class JeroMQControlClientModule extends PrivateModule {
     protected void configure() {
 
         final var zContextProvider = getProvider(ZContext.class);
-        final var jeroMQSecurityChainProvider = getProvider(JeroMQSecurityChain.class);
+        final var jeroMQSecurityChainProvider = getProvider(JeroMQSecurity.class);
 
         bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(
                 zContextProvider.get(),

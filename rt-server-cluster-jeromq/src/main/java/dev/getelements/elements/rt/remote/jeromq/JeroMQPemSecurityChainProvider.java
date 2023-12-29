@@ -2,10 +2,10 @@ package dev.getelements.elements.rt.remote.jeromq;
 
 import javax.inject.Provider;
 
-public class JeroMQPemSecurityChainProvider implements Provider<JeroMQSecurityChain> {
+public class JeroMQPemSecurityChainProvider implements Provider<JeroMQSecurity> {
 
     @Override
-    public JeroMQSecurityChain get() {
+    public JeroMQSecurity get() {
 
 
         return null;
