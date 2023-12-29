@@ -13,7 +13,7 @@ import java.io.IOException;
 import static java.lang.String.format;
 import static org.testng.AssertJUnit.assertEquals;
 
-public class JeroMQCurveSecurityChainTest {
+public class JeroMQSecurityChainTest {
 
     private final ZContext zContext = new ZContext();
 
@@ -25,6 +25,7 @@ public class JeroMQCurveSecurityChainTest {
 
         return new Object[][] {
                 new Object[] { JeroMQSecurityChain.DEFAULT },
+                new Object[] { new JeroMQCurveSecurityChain() },
                 new Object[] { new JeroMQCurveSecurityChain(server) },
                 new Object[] { new JeroMQCurveSecurityChain(server, client) }
         };
@@ -37,8 +38,8 @@ public class JeroMQCurveSecurityChainTest {
              var client = jeroMQSecurityChain.client(() -> zContext.createSocket(SocketType.REQ))
         ) {
 
-            server.bind(format("inproc://%s/server", JeroMQCurveSecurityChainTest.class.getSimpleName()));
-            client.connect(format("inproc://%s/server", JeroMQCurveSecurityChainTest.class.getSimpleName()));
+            server.bind(format("inproc://%s/server", JeroMQSecurityChainTest.class.getSimpleName()));
+            client.connect(format("inproc://%s/server", JeroMQSecurityChainTest.class.getSimpleName()));
 
             client.send("Hello");
             assertEquals(server.recvStr(), "Hello");
@@ -50,7 +51,7 @@ public class JeroMQCurveSecurityChainTest {
     }
 
     private static PemChain loadChain(final String path) throws IOException, InvalidPemException {
-        try (var is = JeroMQCurveSecurityChainTest.class.getResourceAsStream(path)) {
+        try (var is = JeroMQSecurityChainTest.class.getResourceAsStream(path)) {
             return new PemChain(is);
         }
     }

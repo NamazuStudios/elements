@@ -194,6 +194,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         return asyncControlClientFactory;
     }
 
+    @Inject
+    public void setAsyncControlClientFactory(AsyncControlClient.Factory asyncControlClientFactory) {
+        this.asyncControlClientFactory = asyncControlClientFactory;
+    }
+
     public JeroMQSecurityChain getSecurityChain() {
         return securityChain;
     }

@@ -5,8 +5,6 @@ import dev.getelements.elements.rt.util.PemChain;
 import dev.getelements.elements.rt.util.PemData;
 import org.zeromq.ZMQ;
 
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.rt.util.Rfc7468Label.PRIVATE_KEY;
@@ -25,6 +23,23 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
     private final byte[] serverPrivateKey;
 
     /**
+     * Creates a new {@link JeroMQSecurityChain} by generating the key pair on the fly. This is really only useful
+     * for testing.
+     */
+    public JeroMQCurveSecurityChain() {
+
+        final var serverKeyPair = generateKeyPair();
+        final var clientKeyPair = generateKeyPair();
+
+        serverPublicKey = z85Decode(serverKeyPair.publicKey);
+        serverPrivateKey = z85Decode(serverKeyPair.secretKey);
+
+        clientPublicKey = z85Decode(clientKeyPair.publicKey);
+        clientPrivateKey = z85Decode(clientKeyPair.secretKey);
+
+    }
+
+    /**
      * Creates a new {@link JeroMQSecurityChain} with the supplied server key chain.
      *
      * @param server
@@ -34,11 +49,13 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
         serverPublicKey = server
                 .findFirstWithLabel(PUBLIC_KEY)
                 .map(PemData::getSpec)
+                .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PUBLIC_KEY.getLabel())));
 
         serverPrivateKey = server
                 .findFirstWithLabel(PRIVATE_KEY)
                 .map(PemData::getSpec)
+                .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PRIVATE_KEY.getLabel())));
 
         final var clientKeyPair = generateKeyPair();
@@ -53,21 +70,25 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
         serverPublicKey = server
                 .findFirstWithLabel(PUBLIC_KEY)
                 .map(PemData::getSpec)
+                .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PUBLIC_KEY.getLabel())));
 
         serverPrivateKey = server
                 .findFirstWithLabel(PRIVATE_KEY)
                 .map(PemData::getSpec)
+                .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Server Security Chain", PRIVATE_KEY.getLabel())));
 
         clientPublicKey = client
                 .findFirstWithLabel(PUBLIC_KEY)
                 .map(PemData::getSpec)
+                .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Client Security Chain", PUBLIC_KEY.getLabel())));
 
         clientPrivateKey = client
                 .findFirstWithLabel(PRIVATE_KEY)
                 .map(PemData::getSpec)
+                .map(byte[]::clone)
                 .orElseThrow(() -> new InternalException(format("No %s in JeroMQ Client Security Chain", PRIVATE_KEY.getLabel())));
 
     }

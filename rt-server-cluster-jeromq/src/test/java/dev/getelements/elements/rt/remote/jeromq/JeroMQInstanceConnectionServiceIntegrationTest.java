@@ -59,6 +59,8 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
     private static final String BIND_URL_SECOND = "inproc://bind-second";
 
+    private static final JeroMQSecurityChain TEST_SECURITY_CHAIN = new JeroMQCurveSecurityChain();
+
     private ZContext zContext;
 
     private Supplier<RemoteInvoker> remoteInvokerSupplier;
@@ -158,7 +160,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
         final String controlAddress = instanceConnectionService.getLocalControlAddress();
 
-        try (var client = new JeroMQControlClient(getzContext(), controlAddress, JeroMQSecurityChain.DEFAULT)) {
+        try (var client = new JeroMQControlClient(getzContext(), controlAddress, TEST_SECURITY_CHAIN)) {
 
             final var instanceStatus = client.getInstanceStatus();
             final var instanceStatusSet = new HashSet<>(instanceStatus.getNodeIds());
@@ -324,6 +326,8 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
             bind(RemoteInvoker.class).toProvider(remoteInvokerSupplier::get);
             bind(new TypeLiteral<Supplier<RemoteInvoker>>(){}).toInstance(remoteInvokerSupplier);
 
+            bind(JeroMQSecurityChain.class).toInstance(TEST_SECURITY_CHAIN);
+
             bind(ZContext.class).asEagerSingleton();
 
             bind(MockInstanceDiscoveryService.class).toInstance(spy(MockInstanceDiscoveryService.class));
@@ -344,7 +348,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(
                             zContextProvider.get(),
                             ca,
-                            JeroMQSecurityChain.DEFAULT)
+                            TEST_SECURITY_CHAIN)
                     );
 
                     final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
@@ -353,7 +357,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     bind(AsyncControlClient.Factory.class).toInstance(ca -> new JeroMQAsyncControlClient(
                             asp.get(),
                             ca,
-                            JeroMQSecurityChain.DEFAULT)
+                            TEST_SECURITY_CHAIN)
                     );
 
                     bind(InstanceConnectionService.class)
@@ -384,7 +388,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(
                             zContextProvider.get(),
                             ca,
-                            JeroMQSecurityChain.DEFAULT)
+                            TEST_SECURITY_CHAIN)
                     );
 
                     final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
@@ -392,7 +396,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     bind(AsyncControlClient.Factory.class).toInstance(ca -> new JeroMQAsyncControlClient(
                             asp.get(),
                             ca,
-                            JeroMQSecurityChain.DEFAULT)
+                            TEST_SECURITY_CHAIN)
                     );
 
                     bind(InstanceConnectionService.class)
