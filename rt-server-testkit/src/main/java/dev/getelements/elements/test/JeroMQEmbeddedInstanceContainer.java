@@ -13,6 +13,7 @@ import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.RemoteInvokerRegistry;
 import dev.getelements.elements.rt.remote.SimpleRemoteInvokerRegistry;
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQControlClientModule;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
@@ -51,6 +52,8 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
     // Configuration Fields (non-final)
 
     private ZContext zContext;
+
+    private JeroMQSecurity jeroMQSecurity;
 
     private InstanceId instanceId = randomInstanceId();
 
@@ -120,6 +123,13 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
         return this;
     }
 
+    public JeroMQEmbeddedInstanceContainer withSecurity(final JeroMQSecurity jeroMQSecurity) {
+        checkNotRunning();
+        requireNonNull(jeroMQSecurity);
+        this.jeroMQSecurity = jeroMQSecurity;
+        return this;
+    }
+
     protected void checkRunning() {
         if (!running.get()) throw new IllegalStateException("Already running.");
     }
@@ -150,7 +160,7 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
     protected void doStart(final ZContext zContext) {
 
         final var zContextShadow = shadow(zContext);
-        final var module = new TestInstanceModule(zContextShadow);
+        final var module = new TestInstanceModule(zContextShadow, jeroMQSecurity);
 
         // Creates injector and starts the instance.
         injector = Guice.createInjector(module);
@@ -217,8 +227,11 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
 
         private final ZContext zContext;
 
-        private TestInstanceModule(final ZContext zContext) {
+        private final JeroMQSecurity jeroMQSecurity;
+
+        private TestInstanceModule(final ZContext zContext, final JeroMQSecurity jeroMQSecurity) {
             this.zContext = zContext;
+            this.jeroMQSecurity = jeroMQSecurity;
         }
 
         @Override
@@ -226,6 +239,7 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
 
             bind(ZContext.class).toInstance(zContext);
             bind(InstanceId.class).toInstance(instanceId);
+            bind(JeroMQSecurity.class).toInstance(jeroMQSecurity);
 
             bind(RemoteInvokerRegistry.class)
                 .to(SimpleRemoteInvokerRegistry.class)
