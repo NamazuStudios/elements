@@ -5,13 +5,14 @@ import dev.getelements.elements.rt.util.PemChain;
 import dev.getelements.elements.rt.util.PemData;
 import org.zeromq.ZMQ;
 
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.rt.util.Rfc7468Label.PRIVATE_KEY;
 import static dev.getelements.elements.rt.util.Rfc7468Label.PUBLIC_KEY;
 import static java.lang.String.format;
-import static org.zeromq.ZMQ.Curve.generateKeyPair;
-import static org.zeromq.ZMQ.Curve.z85Decode;
+import static org.zeromq.ZMQ.Curve.*;
 
 public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
 
@@ -48,14 +49,6 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
     }
 
     public JeroMQCurveSecurityChain(final PemChain server, final PemChain client) {
-
-        if (server != client) {
-            throw new InternalException(
-                    "Must specify both client and server security chains or none at all: " +
-                            "Server Configured: " + (server != null) +
-                            "Client Configured: " + (client != null)
-            );
-        }
 
         serverPublicKey = server
                 .findFirstWithLabel(PUBLIC_KEY)
@@ -95,6 +88,16 @@ public class JeroMQCurveSecurityChain implements JeroMQSecurityChain {
         socket.setCurvePublicKey(serverPublicKey);
         socket.setCurveSecretKey(serverPrivateKey);
         return socket;
+    }
+
+    @Override
+    public String toString() {
+        return "JeroMQCurveSecurityChain{" +
+                "clientPublicKey=" + z85Encode(clientPublicKey) +
+                ", clientPrivateKey=<redacted>" +
+                ", serverPublicKey=" + z85Encode(serverPublicKey) +
+                ", serverPrivateKey=<redacted>" +
+                '}';
     }
 
 }

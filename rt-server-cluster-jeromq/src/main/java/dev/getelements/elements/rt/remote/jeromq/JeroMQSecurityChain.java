@@ -4,6 +4,8 @@ import org.zeromq.ZMQ;
 
 import java.util.function.Supplier;
 
+import static java.lang.String.format;
+
 /**
  * Implements a security chain for JeroMQ Sockets.
  */
@@ -63,6 +65,11 @@ public interface JeroMQSecurityChain {
         @Override
         public ZMQ.Socket server(final Supplier<ZMQ.Socket> socketSupplier) {
             return socketSupplier.get();
+        }
+
+        @Override
+        public String toString() {
+            return format("%s.DEFAULT", JeroMQSecurityChain.class.getName());
         }
 
     };
