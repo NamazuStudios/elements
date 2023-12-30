@@ -15,7 +15,6 @@ import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.model.googlesignin.TokenResponse;
 import dev.getelements.elements.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.session.GoogleSignInSessionCreation;

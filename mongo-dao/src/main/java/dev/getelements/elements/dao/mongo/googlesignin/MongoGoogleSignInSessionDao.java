@@ -8,7 +8,6 @@ import dev.getelements.elements.dao.mongo.model.MongoSession;
 import dev.getelements.elements.dao.mongo.model.MongoSessionSecret;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.exception.security.BadSessionSecretException;
-import dev.getelements.elements.model.googlesignin.TokenResponse;
 import dev.getelements.elements.model.session.GoogleSignInSession;
 import dev.getelements.elements.model.session.GoogleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;

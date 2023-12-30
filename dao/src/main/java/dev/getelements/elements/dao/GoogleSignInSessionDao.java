@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao;
 
-import dev.getelements.elements.model.googlesignin.TokenResponse;
 import dev.getelements.elements.model.session.GoogleSignInSession;
 import dev.getelements.elements.model.session.GoogleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;
