@@ -3,7 +3,6 @@ package dev.getelements.elements.dao.mongo.googlesignin;
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.dao.GoogleSignInSessionDao;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
-import dev.getelements.elements.dao.mongo.model.MongoGoogleSignInSession;
 import dev.getelements.elements.dao.mongo.model.MongoSession;
 import dev.getelements.elements.dao.mongo.model.MongoSessionSecret;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -44,7 +43,7 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
 
         requireNonNull(session, "tokenResponse");
 
-        final MongoGoogleSignInSession mongoGoogleSignInSession = getMapper().map(session, MongoGoogleSignInSession.class);
+        final MongoSession mongoGoogleSignInSession = getMapper().map(session, MongoSession.class);
 
         mongoGoogleSignInSession.setExpiry(new Timestamp(session.getExpiry()));
 
@@ -84,7 +83,7 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
-        final Query<MongoGoogleSignInSession> query = getDatastore().find(MongoGoogleSignInSession.class);
+        final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
         query.filter(Filters.and(
                 Filters.eq("_id", sessionId),
