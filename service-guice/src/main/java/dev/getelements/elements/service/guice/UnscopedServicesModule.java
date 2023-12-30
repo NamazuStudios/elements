@@ -95,6 +95,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserFCMRegistrationService.class);
 
+        bind(ScoreService.class)
+                .annotatedWith(Unscoped.class)
+                .to(ScoreService.class);
+
         bind(LeaderboardService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserLeaderboardService.class);
@@ -146,6 +150,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(AppleSignInAuthService.class)
                 .annotatedWith(Unscoped.class)
                 .to(AnonAppleSignInAuthService.class);
+
+        bind(GoogleSignInAuthService.class)
+                .annotatedWith(Unscoped.class)
+                .to(AnonGoogleSignInAuthService.class);
 
         bind(NameService.class)
                 .annotatedWith(Unscoped.class)
@@ -204,7 +212,7 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(NearSmartContractInvocationService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserNearSmartContractInvocationService.class);
-        
+
         bind(LargeObjectService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserLargeObjectService.class);

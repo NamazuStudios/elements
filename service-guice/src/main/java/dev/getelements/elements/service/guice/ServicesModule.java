@@ -77,6 +77,7 @@ public class ServicesModule extends PrivateModule {
         expose(FirebaseApplicationConfigurationService.class);
         expose(IosApplicationConfigurationService.class);
         expose(GooglePlayApplicationConfigurationService.class);
+        expose(GoogleSignInAuthService.class);
         expose(ProfileService.class);
         expose(FollowerService.class);
         expose(ProfileOverrideService.class);
@@ -130,6 +131,7 @@ public class ServicesModule extends PrivateModule {
         expose(FirebaseApplicationConfigurationService.class).annotatedWith(Unscoped.class);
         expose(IosApplicationConfigurationService.class).annotatedWith(Unscoped.class);
         expose(GooglePlayApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(GoogleSignInAuthService.class).annotatedWith(Unscoped.class);
         expose(ProfileService.class).annotatedWith(Unscoped.class);
         expose(FollowerService.class).annotatedWith(Unscoped.class);
         expose(ProfileOverrideService.class).annotatedWith(Unscoped.class);
