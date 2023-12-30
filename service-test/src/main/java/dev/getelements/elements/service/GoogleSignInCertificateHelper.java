@@ -1,25 +1,23 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service;
 
 import javax.ws.rs.client.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class GoogleSignInCertificateHelper {
 
-    private static Map<String, String> googleSignInCerts;
+    private static final Map<String, String> googleSignInCerts = new HashMap<>();
 
     public static Map<String, String> getGoogleSignInCerts() throws ExecutionException, InterruptedException {
-        if(googleSignInCerts == null || googleSignInCerts.isEmpty()) {
+        if(googleSignInCerts.isEmpty()) {
             fetchGoogleSignInCerts();
         }
 
@@ -27,7 +25,7 @@ public class GoogleSignInCertificateHelper {
     }
 
     public static String certForKeyId(String keyId) throws ExecutionException, InterruptedException {
-        if(googleSignInCerts == null || googleSignInCerts.isEmpty() || !googleSignInCerts.containsKey(keyId)) {
+        if(googleSignInCerts.isEmpty() || !googleSignInCerts.containsKey(keyId)) {
             //Attempt to refresh just in case Google changed things up
             fetchGoogleSignInCerts();
 
@@ -61,6 +59,6 @@ public class GoogleSignInCertificateHelper {
                 .readEntity(HashMap.class);
 
 
-        googleSignInCerts = response;
+        googleSignInCerts.putAll(response);
     }
 }

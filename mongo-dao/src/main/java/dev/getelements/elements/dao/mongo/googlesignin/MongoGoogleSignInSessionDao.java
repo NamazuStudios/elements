@@ -8,7 +8,6 @@ import dev.getelements.elements.dao.mongo.model.MongoSession;
 import dev.getelements.elements.dao.mongo.model.MongoSessionSecret;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.exception.security.BadSessionSecretException;
-import dev.getelements.elements.model.session.GoogleSignInSession;
 import dev.getelements.elements.model.session.GoogleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.util.ValidationHelper;
@@ -69,7 +68,7 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
     }
 
     @Override
-    public Optional<GoogleSignInSession> findSession(String sessionSecret) {
+    public Optional<Session> findSession(String sessionSecret) {
 
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;
@@ -97,7 +96,7 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
         if (mongoSession == null) {
             return Optional.empty();
         } else {
-            final GoogleSignInSession googleSignInSession = getMapper().map(mongoSession, GoogleSignInSession.class);
+            final Session googleSignInSession = getMapper().map(mongoSession, Session.class);
             return Optional.ofNullable(googleSignInSession);
         }
 

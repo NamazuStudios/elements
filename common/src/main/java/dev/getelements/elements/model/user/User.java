@@ -1,9 +1,6 @@
 package dev.getelements.elements.model.user;
 
 import dev.getelements.elements.Constants;
-import dev.getelements.elements.model.ValidationGroups;
-import dev.getelements.elements.model.profile.Profile;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -11,7 +8,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 
 import static dev.getelements.elements.model.ValidationGroups.*;
@@ -365,12 +361,12 @@ public class User implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return active == user.active && Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(facebookId, user.facebookId) && Objects.equals(firebaseId, user.firebaseId) && Objects.equals(appleSignInId, user.appleSignInId) && Objects.equals(externalUserId, user.externalUserId);
+        return active == user.active && Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(facebookId, user.facebookId) && Objects.equals(firebaseId, user.firebaseId) && Objects.equals(appleSignInId, user.appleSignInId) && Objects.equals(externalUserId, user.externalUserId) && Objects.equals(googleSignInId, user.googleSignInId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, active, facebookId, firebaseId, appleSignInId, externalUserId);
+        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, active, facebookId, firebaseId, appleSignInId, googleSignInId, externalUserId);
     }
 
     @Override

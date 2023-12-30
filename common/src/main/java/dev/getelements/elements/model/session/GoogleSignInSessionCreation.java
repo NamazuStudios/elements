@@ -5,6 +5,11 @@ import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
 
+/**
+ * Represents a newly created session, authorized by Elements.  This includes the associated {@link Session}, and
+ * the session secret (or auth token) to authenticate subsequent requests as this user.
+ *
+ */
 @ApiModel
 public class GoogleSignInSessionCreation {
 

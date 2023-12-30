@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao;
 
-import dev.getelements.elements.model.session.GoogleSignInSession;
 import dev.getelements.elements.model.session.GoogleSignInSessionCreation;
 import dev.getelements.elements.model.session.Session;
 
@@ -20,15 +19,15 @@ public interface GoogleSignInSessionDao {
     GoogleSignInSessionCreation create(Session session);
 
     /**
-     * Finds an instance of {@link GoogleSignInSession} using the session secret. Since not all sessions are created with
+     * Finds an instance of {@link Session} using the session secret. Since not all sessions are created with
      * the Google Sign-In process, this may find no results even if the supplied secret is a valid session. Therefore,
-     * this method return an {@link Optional<GoogleSignInSession>} instance.
+     * this method return an {@link Optional<Session>} instance.
      *
      * This can be used to re-verify the session with the refresh service.
      *
      * @param sessionSecret the session secret
-     * @return an {@link Optional<GoogleSignInSession>} instance
+     * @return an {@link Optional<Session>} instance
      */
-    Optional<GoogleSignInSession> findSession(String sessionSecret);
+    Optional<Session> findSession(String sessionSecret);
 
 }

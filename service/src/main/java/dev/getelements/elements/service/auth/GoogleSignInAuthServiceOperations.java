@@ -1,14 +1,10 @@
 package dev.getelements.elements.service.auth;
 
-import com.auth0.jwt.algorithms.Algorithm;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.json.webtoken.JsonWebSignature;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.GoogleSignInSessionDao;
 import dev.getelements.elements.dao.ProfileDao;
@@ -26,10 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.interfaces.RSAPublicKey;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
@@ -59,12 +52,7 @@ public class GoogleSignInAuthServiceOperations {
         try {
 
             final var decodedToken = GoogleIdToken.parse(GsonFactory.getDefaultInstance(), identityToken);
-//            final var keyId = decodedToken.getHeader().getKeyId();
-//            final var cert = GoogleSignInCertificateHelper.certForKeyId(keyId);
-//            final var key = (RSAPublicKey) GoogleSignInCertificateHelper.certToPublicKey(cert);
-//            final var algorithm = Algorithm.RSA256(key, null);
 
-            // Will throw a SignatureVerificationException if the token's signature is invalid
             final var verified =
                     new GoogleIdTokenVerifier(GoogleNetHttpTransport.newTrustedTransport(), GsonFactory.getDefaultInstance())
                     .verify(decodedToken);
@@ -72,8 +60,6 @@ public class GoogleSignInAuthServiceOperations {
             if(!verified) {
                 throw new ForbiddenException("Could not verify ID token.");
             }
-
-            // Maps the user, writing it to the database.
 
             final var user = userMapper.apply(decodedToken);
             final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
