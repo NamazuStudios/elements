@@ -22,11 +22,11 @@ public class PhoneNormalizer {
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
         final String region = getRegionForPhoneNumber(phoneUtil, phoneNb);
         return (isNull(region) || region.isEmpty()) ?
-                normalizeWithoutKnowingRegion(phoneUtil, phoneNb) :
+                normalizeWithoutKnowingRegion(phoneNb) :
                 normalizeForRegion(phoneUtil, phoneNb, region);
     }
 
-    private static Optional<String> normalizeWithoutKnowingRegion(PhoneNumberUtil phoneUtil, String phoneNb) {
+    private static Optional<String> normalizeWithoutKnowingRegion(String phoneNb) {
         return Optional.of(PhoneNumberUtil.normalizeDiallableCharsOnly(phoneNb).replaceAll("[^0-9]", ""));
     }
 

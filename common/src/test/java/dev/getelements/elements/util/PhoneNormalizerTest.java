@@ -12,7 +12,6 @@ public class PhoneNormalizerTest {
 
     @Test
     public void shouldNormalizeCommonNumbers() {
-        final String phone = "+17034567890";
         Assert.assertEquals(normalizePhoneNb("+17034567890"), Optional.of("+17034567890"));
         Assert.assertEquals(normalizePhoneNb("+13 034 567 890"), Optional.of("+13034567890"));
         Assert.assertEquals(normalizePhoneNb("0048782733456"), Optional.of("0048782733456"));

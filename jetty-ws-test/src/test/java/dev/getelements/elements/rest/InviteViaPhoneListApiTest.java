@@ -5,7 +5,6 @@ import dev.getelements.elements.model.invite.InviteViaPhonesRequest;
 import dev.getelements.elements.model.invite.InviteViaPhonesResponse;
 import dev.getelements.elements.model.invite.PhoneMatchedInvitation;
 import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.util.PhoneNormalizer;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -16,7 +15,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static dev.getelements.elements.Headers.SESSION_SECRET;
