@@ -1,12 +1,12 @@
 package dev.getelements.elements.service.leaderboard;
 
 import dev.getelements.elements.dao.RankDao;
-import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.service.RankService;
+import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 import java.util.function.Supplier;
@@ -19,13 +19,15 @@ public class UserRankService implements RankService {
 
     private Supplier<Profile> profileSupplier;
 
+    private LargeObjectCdnUtils cdnUtils;
+
     @Override
     public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
                                               final int offset, final int count,
                                               final long leaderboardEpoch) {
         return getRankDao()
             .getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .transform(this::setupRank);
     }
 
     @Override
@@ -34,7 +36,7 @@ public class UserRankService implements RankService {
                                                       final long leaderboardEpoch) {
         return getRankDao()
             .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count, leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .transform(this::setupRank);
     }
 
     @Override
@@ -46,7 +48,7 @@ public class UserRankService implements RankService {
                     getProfileSupplier().get().getId(),
                     offset, count,
                     leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .transform(this::setupRank);
     }
 
     @Override
@@ -58,7 +60,7 @@ public class UserRankService implements RankService {
                     getProfileSupplier().get().getId(),
                     offset, count,
                     leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .transform(this::setupRank);
     }
 
     @Override
@@ -71,7 +73,7 @@ public class UserRankService implements RankService {
                         getProfileSupplier().get().getId(),
                         offset, count,
                         leaderboardEpoch)
-                .transform(this::redactPrivateInfo);
+                .transform(this::setupRank);
     }
 
     @Override
@@ -84,15 +86,16 @@ public class UserRankService implements RankService {
                         getProfileSupplier().get().getId(),
                         offset, count,
                         leaderboardEpoch)
-                .transform(this::redactPrivateInfo);
+                .transform(this::setupRank);
     }
 
-    private Rank redactPrivateInfo(final Rank rank) {
+    private Rank setupRank(final Rank rank) {
 
         if (!getUser().equals(rank.getScore().getProfile().getUser())) {
             rank.getScore().getProfile().setUser(null);
         }
 
+        getCdnUtils().setProfileCdnUrl(rank.getScore().getProfile());
         return rank;
 
     }
@@ -124,4 +127,12 @@ public class UserRankService implements RankService {
         this.profileSupplier = profileSupplier;
     }
 
+    public LargeObjectCdnUtils getCdnUtils() {
+        return cdnUtils;
+    }
+
+    @Inject
+    public void setCdnUtils(LargeObjectCdnUtils cdnUtils) {
+        this.cdnUtils = cdnUtils;
+    }
 }
