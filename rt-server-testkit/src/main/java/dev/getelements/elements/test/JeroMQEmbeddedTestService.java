@@ -52,7 +52,7 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
      * @return this instance
      */
     public JeroMQEmbeddedTestService withClient() {
-        if (client == null) client = new JeroMQEmbeddedClientInstanceContainer();
+        if (client == null) client = new JeroMQEmbeddedClientInstanceContainer().withSecurity(jeroMQSecurity);
         return this;
     }
 
@@ -62,7 +62,7 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
      * @return this instance
      */
     public JeroMQEmbeddedTestService withWorker() {
-        if (worker == null) worker = new JeroMQEmbeddedWorkerInstanceContainer();
+        if (worker == null) worker = new JeroMQEmbeddedWorkerInstanceContainer().withSecurity(jeroMQSecurity);
         return this;
     }
 

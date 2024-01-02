@@ -12,6 +12,7 @@ import dev.getelements.elements.rt.id.NodeId;
 import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.Node;
 import dev.getelements.elements.rt.remote.Worker;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
 import dev.getelements.elements.test.guice.TestApplicationNodeModule;
 import dev.getelements.elements.test.guice.TestMasterNodeModule;
@@ -136,6 +137,11 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
     @Override
     public JeroMQEmbeddedWorkerInstanceContainer withZContext(ZContext zContext) {
         return (JeroMQEmbeddedWorkerInstanceContainer) super.withZContext(zContext);
+    }
+
+    @Override
+    public JeroMQEmbeddedWorkerInstanceContainer withSecurity(JeroMQSecurity jeroMQSecurity) {
+        return (JeroMQEmbeddedWorkerInstanceContainer) super.withSecurity(jeroMQSecurity);
     }
 
     public JeroMQEmbeddedWorkerInstanceContainer withDefaultHttpClient() {
