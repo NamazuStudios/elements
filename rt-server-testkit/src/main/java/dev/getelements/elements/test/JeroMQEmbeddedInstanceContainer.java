@@ -231,7 +231,7 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
 
         private TestInstanceModule(final ZContext zContext, final JeroMQSecurity jeroMQSecurity) {
             this.zContext = zContext;
-            this.jeroMQSecurity = jeroMQSecurity;
+            this.jeroMQSecurity = jeroMQSecurity == null ? JeroMQSecurity.DEFAULT : jeroMQSecurity;
         }
 
         @Override
