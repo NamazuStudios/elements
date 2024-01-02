@@ -19,7 +19,6 @@ public interface InviteService {
 
     int PROFILES_PER_USER_LIMIT = 5;
     int USERS_PER_PHONE_LIMIT = 5;
-    String USER_BY_PHONE_QUERY = "primaryPhoneNb:%s";
 
     /**
      * Get an {@link InviteViaPhonesResponse} by invite request data with phone number list

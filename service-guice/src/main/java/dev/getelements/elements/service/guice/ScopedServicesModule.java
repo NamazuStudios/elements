@@ -24,6 +24,7 @@ import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptServic
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
 import dev.getelements.elements.service.index.IndexServiceProvider;
 import dev.getelements.elements.service.inventory.*;
+import dev.getelements.elements.service.invite.InviteServiceProvider;
 import dev.getelements.elements.service.largeobject.LargeObjectServiceProvider;
 import dev.getelements.elements.service.leaderboard.LeaderboardServiceProvider;
 import dev.getelements.elements.service.leaderboard.RankServiceProvider;
@@ -250,6 +251,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(IndexService.class)
                 .toProvider(IndexServiceProvider.class)
+                .in(scope);
+
+        bind(InviteService.class)
+                .toProvider(InviteServiceProvider.class)
                 .in(scope);
 
     }

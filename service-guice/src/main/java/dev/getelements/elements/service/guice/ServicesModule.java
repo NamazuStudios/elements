@@ -118,6 +118,7 @@ public class ServicesModule extends PrivateModule {
         expose(FlowSmartContractInvocationService.class);
         expose(NearSmartContractInvocationService.class);
         expose(LargeObjectService.class);
+        expose(InviteService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);

@@ -105,6 +105,16 @@ public interface UserDao {
     Pagination<User> getActiveUsers(int offset, int count, String query);
 
     /**
+     * Gets a listing of all users given the offset, count and phone number
+     *
+     * @param offset the offset
+     * @param count the count
+     * @param phone a phone numberto filter the results
+     * @return the users in the system
+     */
+    Pagination<User> getActiveUsersByPrimaryPhoneNb(int offset, int count, String phone);
+
+    /**
      * Creates a user with the given User object.  Using "Strict" semantics, if the user exists
      * then this will throw an exception.  The resulting user will have a scrambled password.
      *

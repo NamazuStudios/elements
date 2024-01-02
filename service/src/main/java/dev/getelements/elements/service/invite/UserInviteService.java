@@ -8,7 +8,7 @@ import dev.getelements.elements.model.invite.PhoneMatchedInvitation;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.InviteService;
-import dev.getelements.elements.service.user.UserPhoneNumberUtils;
+import dev.getelements.elements.util.PhoneNormalizer;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ public class UserInviteService implements InviteService {
     public InviteViaPhonesResponse inviteViaPhoneNumbers(InviteViaPhonesRequest inviteRequest, int offset, int count) {
 
         List<String> normalizedPhoneList = inviteRequest.getPhoneNumbers().stream()
-                .map(UserPhoneNumberUtils::normalizePhoneNb)
+                .map(PhoneNormalizer::normalizePhoneNb)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(toUnmodifiableList());
@@ -35,7 +35,7 @@ public class UserInviteService implements InviteService {
         List<PhoneMatchedInvitation> invitations = new ArrayList<>();
 
         normalizedPhoneList.forEach(phone -> getUserDao()
-                .getActiveUsers(0, USERS_PER_PHONE_LIMIT, String.format(USER_BY_PHONE_QUERY,phone))
+                .getActiveUsersByPrimaryPhoneNb(0, USERS_PER_PHONE_LIMIT, phone)
                 .forEach(matchedUser -> invitations.add(createInvitation(matchedUser))
                 ));
 

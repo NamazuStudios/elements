@@ -158,6 +158,14 @@ public class MongoUserDao implements UserDao {
 
     }
 
+    @Override
+    public Pagination<User> getActiveUsersByPrimaryPhoneNb(int offset, int count, String phone) {
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        query.filter(eq("active", true));
+        query.filter(eq("primaryPhoneNb", phone));
+        return paginationFromQuery(query, offset, count);
+    }
+
     private Pagination<User> paginationFromQuery(final Query<MongoUser> query, final int offset, final int count) {
         return getMongoDBUtils().paginationFromQuery(query, offset, count, u -> getDozerMapper().map(u, User.class), new FindOptions());
     }

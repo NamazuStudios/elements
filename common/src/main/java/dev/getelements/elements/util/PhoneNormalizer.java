@@ -1,35 +1,33 @@
-package dev.getelements.elements.service.user;
+package dev.getelements.elements.util;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
-import dev.getelements.elements.service.profile.SuperUserProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-import static com.google.i18n.phonenumbers.PhoneNumberUtil.normalizeDiallableCharsOnly;
-import static io.netty.util.internal.StringUtil.isNullOrEmpty;
+import static java.util.Objects.isNull;
 
-public class UserPhoneNumberUtils {
+public class PhoneNormalizer {
 
-    private static final Logger logger = LoggerFactory.getLogger(SuperUserProfileService.class);
+    private static final Logger logger = LoggerFactory.getLogger(PhoneNormalizer.class);
 
     public static Optional<String> normalizePhoneNb(String phoneNb) {
-        if(isNullOrEmpty(phoneNb)) {
+        if(isNull(phoneNb) || phoneNb.isEmpty()) {
             return Optional.empty();
         }
 
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
         final String region = getRegionForPhoneNumber(phoneUtil, phoneNb);
-        return isNullOrEmpty(region) ?
+        return (isNull(region) || region.isEmpty()) ?
                 normalizeWithoutKnowingRegion(phoneUtil, phoneNb) :
                 normalizeForRegion(phoneUtil, phoneNb, region);
     }
 
     private static Optional<String> normalizeWithoutKnowingRegion(PhoneNumberUtil phoneUtil, String phoneNb) {
-        return Optional.of(normalizeDiallableCharsOnly(phoneNb).replaceAll("[^0-9]", ""));
+        return Optional.of(PhoneNumberUtil.normalizeDiallableCharsOnly(phoneNb).replaceAll("[^0-9]", ""));
     }
 
     private static Optional<String> normalizeForRegion(PhoneNumberUtil phoneUtil, String phoneNb, String region) {

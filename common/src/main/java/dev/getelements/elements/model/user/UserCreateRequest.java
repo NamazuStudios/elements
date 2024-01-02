@@ -2,6 +2,7 @@ package dev.getelements.elements.model.user;
 
 import dev.getelements.elements.Constants;
 import dev.getelements.elements.model.profile.CreateProfileSignupRequest;
+import dev.getelements.elements.util.PhoneNormalizer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -87,7 +88,7 @@ public class UserCreateRequest implements Serializable {
     }
 
     public void setPrimaryPhoneNb(String primaryPhoneNb) {
-        this.primaryPhoneNb = primaryPhoneNb;
+        this.primaryPhoneNb = PhoneNormalizer.normalizePhoneNb(primaryPhoneNb).orElse(null);
     }
 
     public String getFirstName() {
