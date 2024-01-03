@@ -44,7 +44,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
     public DistinctInventoryItem getDistinctInventoryItem(final String itemNameOrId) {
         final var item = getDistinctInventoryItemDao().getDistinctInventoryItem(itemNameOrId);
 
-        if (!Objects.equals(getUser(). getId(), item.getUser().getId())) {
+        if (!item.getItem().isPublicVisible() && !Objects.equals(getUser(). getId(), item.getUser().getId())) {
             throw new DistinctInventoryItemNotFoundException("Distinct inventory item not found: " + item.getId());
         }
 
