@@ -8,6 +8,7 @@ import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.service.UserService;
+import dev.getelements.elements.util.PhoneNormalizer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -75,7 +76,7 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setLevel(User.Level.USER);
         user.setName(userUpdateRequest.getName());
         user.setEmail(userUpdateRequest.getEmail());
-        user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
+        user.setPrimaryPhoneNb(PhoneNormalizer.normalizePhoneNb(userUpdateRequest.getPrimaryPhoneNb()).orElse(null));
         user.setFirstName(userUpdateRequest.getFirstName());
         user.setLastName(userUpdateRequest.getLastName());
 

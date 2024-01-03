@@ -11,8 +11,6 @@ public class InviteServiceProvider implements Provider<InviteService> {
 
     private User user;
 
-    private Provider<AnonInviteService> anonInviteService;
-
     private Provider<UserInviteService> userInviteService;
 
     private Provider<SuperUserInviteService> superUserInviteService;
@@ -20,8 +18,6 @@ public class InviteServiceProvider implements Provider<InviteService> {
     @Override
     public InviteService get() {
         switch (getUser().getLevel()) {
-            case UNPRIVILEGED:
-                return getAnonInviteService().get();
             case USER:
                 return getUserInviteService().get();
             case SUPERUSER:
@@ -38,15 +34,6 @@ public class InviteServiceProvider implements Provider<InviteService> {
     @Inject
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public Provider<AnonInviteService> getAnonInviteService() {
-        return anonInviteService;
-    }
-
-    @Inject
-    public void setAnonInviteService(Provider<AnonInviteService> anonInviteService) {
-        this.anonInviteService = anonInviteService;
     }
 
     public Provider<UserInviteService> getUserInviteService() {

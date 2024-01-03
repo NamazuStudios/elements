@@ -26,6 +26,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -159,10 +160,10 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public Pagination<User> getActiveUsersByPrimaryPhoneNb(int offset, int count, String phone) {
+    public Pagination<User> getActiveUsersByPrimaryPhoneNumbers(int offset, int count, List<String> phones) {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
         query.filter(eq("active", true));
-        query.filter(eq("primaryPhoneNb", phone));
+        query.filter(in("primaryPhoneNb", phones));
         return paginationFromQuery(query, offset, count);
     }
 

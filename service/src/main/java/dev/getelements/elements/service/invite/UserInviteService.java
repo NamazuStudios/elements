@@ -34,10 +34,8 @@ public class UserInviteService implements InviteService {
 
         List<PhoneMatchedInvitation> invitations = new ArrayList<>();
 
-        normalizedPhoneList.forEach(phone -> getUserDao()
-                .getActiveUsersByPrimaryPhoneNb(0, USERS_PER_PHONE_LIMIT, phone)
-                .forEach(matchedUser -> invitations.add(createInvitation(matchedUser))
-                ));
+        getUserDao().getActiveUsersByPrimaryPhoneNumbers(0, USERS_PER_PHONE_LIMIT, normalizedPhoneList)
+                .forEach(matchedUser -> invitations.add(createInvitation(matchedUser)));
 
         InviteViaPhonesResponse response = new InviteViaPhonesResponse();
         response.setMatched(invitations);

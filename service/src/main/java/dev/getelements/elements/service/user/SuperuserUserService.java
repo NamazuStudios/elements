@@ -12,6 +12,7 @@ import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.service.UserService;
+import dev.getelements.elements.util.PhoneNormalizer;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -20,6 +21,7 @@ import javax.inject.Named;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
+import static dev.getelements.elements.util.PhoneNormalizer.normalizePhoneNb;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -69,7 +71,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
         user.setLevel(userCreateRequest.getLevel());
-        user.setPrimaryPhoneNb(userCreateRequest.getPrimaryPhoneNb());
+        user.setPrimaryPhoneNb(normalizePhoneNb(userCreateRequest.getPrimaryPhoneNb()).orElse(null));
         user.setFirstName(userCreateRequest.getFirstName());
         user.setLastName(userCreateRequest.getLastName());
 
@@ -108,7 +110,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         user.setEmail(userUpdateRequest.getEmail());
         user.setName(userUpdateRequest.getName());
         user.setLevel(userUpdateRequest.getLevel());
-        user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
+        user.setPrimaryPhoneNb(normalizePhoneNb(userUpdateRequest.getPrimaryPhoneNb()).orElse(null));
         user.setFirstName(userUpdateRequest.getFirstName());
         user.setLastName(userUpdateRequest.getLastName());
 
