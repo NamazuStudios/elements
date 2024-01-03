@@ -1,10 +1,8 @@
 package dev.getelements.elements.service.user;
 
-import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.rt.exception.BadRequestException;
@@ -20,10 +18,8 @@ import javax.inject.Named;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
-import static java.lang.System.currentTimeMillis;
+import static dev.getelements.elements.util.PhoneNormalizer.normalizePhoneNb;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  *
@@ -69,7 +65,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
         user.setLevel(userCreateRequest.getLevel());
-        user.setPrimaryPhoneNb(userCreateRequest.getPrimaryPhoneNb());
+        user.setPrimaryPhoneNb(normalizePhoneNb(userCreateRequest.getPrimaryPhoneNb()).orElse(null));
         user.setFirstName(userCreateRequest.getFirstName());
         user.setLastName(userCreateRequest.getLastName());
 
@@ -108,7 +104,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         user.setEmail(userUpdateRequest.getEmail());
         user.setName(userUpdateRequest.getName());
         user.setLevel(userUpdateRequest.getLevel());
-        user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
+        user.setPrimaryPhoneNb(normalizePhoneNb(userUpdateRequest.getPrimaryPhoneNb()).orElse(null));
         user.setFirstName(userUpdateRequest.getFirstName());
         user.setLastName(userUpdateRequest.getLastName());
 

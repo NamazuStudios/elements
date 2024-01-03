@@ -31,6 +31,7 @@
             <artifactId>rt-common</artifactId>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 
     <profiles>

@@ -8,6 +8,7 @@ import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -103,6 +104,16 @@ public interface UserDao {
      * @return the users in the system
      */
     Pagination<User> getActiveUsers(int offset, int count, String query);
+
+    /**
+     * Gets a listing of all users given the offset, count and phone number
+     *
+     * @param offset the offset
+     * @param count the count
+     * @param phone a phone numberto filter the results
+     * @return the users in the system
+     */
+    Pagination<User> getActiveUsersByPrimaryPhoneNumbers(int offset, int count, List<String> phone);
 
     /**
      * Creates a user with the given User object.  Using "Strict" semantics, if the user exists
