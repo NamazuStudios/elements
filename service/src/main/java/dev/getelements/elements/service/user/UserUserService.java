@@ -13,7 +13,6 @@ import dev.getelements.elements.util.PhoneNormalizer;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;

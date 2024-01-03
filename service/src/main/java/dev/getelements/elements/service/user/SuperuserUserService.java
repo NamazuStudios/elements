@@ -1,10 +1,8 @@
 package dev.getelements.elements.service.user;
 
-import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.rt.exception.BadRequestException;
@@ -12,7 +10,6 @@ import dev.getelements.elements.security.PasswordGenerator;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.Unscoped;
 import dev.getelements.elements.service.UserService;
-import dev.getelements.elements.util.PhoneNormalizer;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -22,10 +19,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
 import static dev.getelements.elements.util.PhoneNormalizer.normalizePhoneNb;
-import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  *
