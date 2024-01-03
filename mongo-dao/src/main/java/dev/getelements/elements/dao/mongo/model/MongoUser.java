@@ -91,6 +91,9 @@ public class MongoUser {
     private String appleSignInId;
 
     @Property
+    private String googleSignInId;
+
+    @Property
     private String externalUserId;
 
     public ObjectId getObjectId() {
@@ -181,6 +184,14 @@ public class MongoUser {
         this.appleSignInId = appleSignInId;
     }
 
+    public String getGoogleSignInId() {
+        return googleSignInId;
+    }
+
+    public void setGoogleSignInId(String googleSignInId) {
+        this.googleSignInId = googleSignInId;
+    }
+
     public String getExternalUserId() {
         return externalUserId;
     }
@@ -218,12 +229,12 @@ public class MongoUser {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-        return active == mongoUser.active && Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(firebaseId, mongoUser.firebaseId) && Objects.equals(facebookId, mongoUser.facebookId) && Objects.equals(appleSignInId, mongoUser.appleSignInId) && Objects.equals(externalUserId, mongoUser.externalUserId);
+        return active == mongoUser.active && Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(firebaseId, mongoUser.firebaseId) && Objects.equals(facebookId, mongoUser.facebookId) && Objects.equals(appleSignInId, mongoUser.appleSignInId) && Objects.equals(googleSignInId, mongoUser.googleSignInId) && Objects.equals(externalUserId, mongoUser.externalUserId);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, active, firebaseId, facebookId, appleSignInId, externalUserId);
+        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, active, firebaseId, facebookId, appleSignInId, googleSignInId, externalUserId);
         result = 31 * result + Arrays.hashCode(salt);
         result = 31 * result + Arrays.hashCode(passwordHash);
         return result;
@@ -246,6 +257,7 @@ public class MongoUser {
                 ", firebaseId='" + firebaseId + '\'' +
                 ", facebookId='" + facebookId + '\'' +
                 ", appleSignInId='" + appleSignInId + '\'' +
+                ", googleSignInId='" + googleSignInId + '\'' +
                 ", externalUserId='" + externalUserId + '\'' +
                 '}';
     }

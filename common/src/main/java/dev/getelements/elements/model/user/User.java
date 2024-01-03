@@ -64,6 +64,9 @@ public class User implements Serializable {
     @ApiModelProperty("The user's Apple Sign-In ID.")
     private String appleSignInId;
 
+    @ApiModelProperty("The user's Google Sign-In ID.")
+    private String googleSignInId;
+
     @ApiModelProperty("The user's external user ID. Used for custom authorization.")
     private String externalUserId;
 
@@ -256,6 +259,24 @@ public class User implements Serializable {
     }
 
     /**
+     * Gets the Google sign-in ID.
+     *
+     * @return the google sign-in id
+     */
+    public String getGoogleSignInId() {
+        return googleSignInId;
+    }
+
+    /**
+     * Sets the user's Google sign-in ID.
+     *
+     * @param googleSignInId
+     */
+    public void setGoogleSignInId(String googleSignInId) {
+        this.googleSignInId = googleSignInId;
+    }
+
+    /**
      * Gets the user's external user ID.
      *
      * @return the user's external user ID.
@@ -340,12 +361,12 @@ public class User implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return active == user.active && Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(facebookId, user.facebookId) && Objects.equals(firebaseId, user.firebaseId) && Objects.equals(appleSignInId, user.appleSignInId) && Objects.equals(externalUserId, user.externalUserId);
+        return active == user.active && Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(facebookId, user.facebookId) && Objects.equals(firebaseId, user.firebaseId) && Objects.equals(appleSignInId, user.appleSignInId) && Objects.equals(externalUserId, user.externalUserId) && Objects.equals(googleSignInId, user.googleSignInId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, active, facebookId, firebaseId, appleSignInId, externalUserId);
+        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, active, facebookId, firebaseId, appleSignInId, googleSignInId, externalUserId);
     }
 
     @Override
@@ -362,6 +383,7 @@ public class User implements Serializable {
                 ", facebookId='" + facebookId + '\'' +
                 ", firebaseId='" + firebaseId + '\'' +
                 ", appleSignInId='" + appleSignInId + '\'' +
+                ", googleSignInId='" + googleSignInId + '\'' +
                 ", externalUserId='" + externalUserId + '\'' +
                 '}';
     }

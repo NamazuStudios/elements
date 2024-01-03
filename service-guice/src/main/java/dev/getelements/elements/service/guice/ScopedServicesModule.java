@@ -197,6 +197,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(AppleSignInAuthServiceProvider.class)
                 .in(scope);
 
+        bind(GoogleSignInAuthService.class)
+                .toProvider(GoogleSignInAuthServiceProvider.class)
+                .in(scope);
+
         bind(AuthSchemeService.class)
                 .toProvider(AuthSchemeServiceProvider.class)
                 .in(scope);
