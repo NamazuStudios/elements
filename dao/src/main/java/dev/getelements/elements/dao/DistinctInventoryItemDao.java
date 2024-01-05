@@ -68,6 +68,18 @@ public interface DistinctInventoryItemDao {
             boolean publicOnly, String queryString);
 
     /**
+     * Gets a total number of items for provided userId or profileId
+     *
+     * @param userId checked id of user
+     * @param profileId checked id of profile.
+     * @param publicOnly mark inventory items that are referred to only this with publicVisible flag
+     * @return a number of items
+     */
+    Long getTotalDistinctInventoryItems(
+            String userId, String profileId,
+            boolean publicOnly, String queryString);
+
+    /**
      * Updates a distinct inventory item.
      *
      * @param distinctInventoryItem the distinct inventory item
