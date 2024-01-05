@@ -22,6 +22,7 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -222,7 +223,11 @@ public class MongoDBUtils {
 
         options.skip(offset);
         options.limit(limit);
-        options.sort(ascending("_id"));
+
+        //TODO: get rid of this deprecated solution
+        if (Objects.isNull(options.getSort())) {
+            options.sort(ascending("_id"));
+        }
 
         final List<ModelT> modelTList;
 

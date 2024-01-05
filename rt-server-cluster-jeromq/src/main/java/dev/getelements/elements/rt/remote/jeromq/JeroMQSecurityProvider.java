@@ -47,6 +47,7 @@ public class JeroMQSecurityProvider implements Provider<JeroMQSecurity> {
     private static Optional<PemChain> tryLoadChain(final String file) {
 
         if (file.isBlank()) {
+            logger.info("No pem file specified.");
             return Optional.empty();
         }
 
