@@ -5,6 +5,7 @@ import com.google.inject.Module;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.id.InstanceId;
 import dev.getelements.elements.rt.remote.guice.SimpleInstanceModule;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
 import dev.getelements.elements.test.guice.TestClientContextFactoryModule;
 import org.zeromq.ZContext;
@@ -16,7 +17,6 @@ public class JeroMQEmbeddedClientInstanceContainer extends JeroMQEmbeddedInstanc
         withInstanceModules(new AbstractModule() {
             @Override
             protected void configure() {
-//                install(new CommonTestModule());
                 install(new SimpleInstanceModule());
                 install(new TestClientContextFactoryModule());
                 install(new JeroMQInstanceConnectionServiceModule()
@@ -66,5 +66,10 @@ public class JeroMQEmbeddedClientInstanceContainer extends JeroMQEmbeddedInstanc
     public JeroMQEmbeddedClientInstanceContainer withZContext(ZContext zContext) {
         return (JeroMQEmbeddedClientInstanceContainer) super.withZContext(zContext);
     }
-    
+
+    @Override
+    public JeroMQEmbeddedClientInstanceContainer withSecurity(JeroMQSecurity jeroMQSecurity) {
+        return (JeroMQEmbeddedClientInstanceContainer) super.withSecurity(jeroMQSecurity);
+    }
+
 }

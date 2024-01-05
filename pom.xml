@@ -160,6 +160,9 @@
         <near-java-api.version>0.2.0</near-java-api.version>
         <boolparser.version>1.0.3</boolparser.version>
         <getstream.version>3.7.0</getstream.version>
+        <jsr.305.groupId>com.google.code.findbugs</jsr.305.groupId>
+        <jsr.305.artifactId>jsr305</jsr.305.artifactId>
+        <jsr.305.version>3.0.2</jsr.305.version>
     </properties>
 
     <dependencies>
@@ -462,6 +465,11 @@
                 <classifier>luastubs</classifier>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>${jsr.305.groupId}</groupId>
+                <artifactId>${jsr.305.artifactId}</artifactId>
+                <version>${jsr.305.version}</version>
+            </dependency>
 
             <!-- Third-party Dependencies -->
 
@@ -556,6 +564,11 @@
                 <version>${logback.version}</version>
             </dependency>
             <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.spotify</groupId>
                 <artifactId>dns</artifactId>
                 <version>${spotify.dns.version}</version>
@@ -564,6 +577,7 @@
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
@@ -825,7 +839,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.5</version>
+                    <version>2.16.0</version>
                     <configuration>
                         <generateBackupPoms>false</generateBackupPoms>
                     </configuration>

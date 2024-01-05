@@ -15,6 +15,7 @@ import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.service.guice.*;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
@@ -88,6 +89,8 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
                 expose(Datastore.class);
             }
         });
+
+        bind(JeroMQSecurity.class).toInstance(JeroMQSecurity.DEFAULT);
 
         install(new ZContextModule());
         install(new JeroMQAsyncConnectionServiceModule());

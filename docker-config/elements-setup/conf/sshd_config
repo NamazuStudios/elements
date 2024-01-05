@@ -3,9 +3,9 @@
 Port 2022
 
 # Host keys are all placed in the elements configuration directory for the sake of convenience
-HostKey /opt/elements/conf/ssh_host_rsa_key
-HostKey /opt/elements/conf/ssh_host_dsa_key
-HostKey /opt/elements/conf/ssh_host_ecdsa_key
+HostKey /opt/elements/conf/sshd/ssh_host_rsa_key
+HostKey /opt/elements/conf/sshd/ssh_host_dsa_key
+HostKey /opt/elements/conf/sshd/ssh_host_ecdsa_key
 
 # Like host keys. We hardcode the file to the authorized_keys to make it easy to authorize specific keys
 AuthorizedKeysFile /opt/elements/conf/authorized_keys

@@ -43,7 +43,7 @@ public class BuildPropertiesVersionService implements VersionService {
         REVISION = properties.getProperty("revision", UNKNOWN_PROPERTY);
         TIMESTAMP =  properties.getProperty("timestamp", UNKNOWN_PROPERTY);
 
-        logger.info("ECI Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
+        logVersion();
 
     }
 
@@ -53,6 +53,10 @@ public class BuildPropertiesVersionService implements VersionService {
         version.setRevision(REVISION);
         version.setTimestamp(TIMESTAMP);
         return version;
+    }
+
+    public static void logVersion() {
+        logger.info("ECI Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
     }
 
 }
