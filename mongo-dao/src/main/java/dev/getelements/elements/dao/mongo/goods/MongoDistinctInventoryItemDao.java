@@ -187,6 +187,15 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     }
 
     @Override
+    public Long countUniqueMetadataField(String fieldName, String fieldValue){
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        query.filter(eq("metadata." + fieldName, fieldValue));
+
+        return getMongoDBUtils().perform(data -> query.count());
+    }
+
+    @Override
     public DistinctInventoryItem updateDistinctInventoryItem(final DistinctInventoryItem distinctInventoryItem) {
 
         validationHelper.validateModel(distinctInventoryItem, ValidationGroups.Update.class);

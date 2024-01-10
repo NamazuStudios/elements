@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -319,6 +320,44 @@ public class MongoDistinctInventorItemDaoTest {
             expectedExceptions = DistinctInventoryItemNotFoundException.class)
     public void testFetchPostDelete(final String owner, final DistinctInventoryItem item) {
         underTest.getDistinctInventoryItem(item.getId());
+    }
+
+    @Test()
+    public void testCountMetadataFieldValues() {
+        User userWithMatadataItems = userTestFactory.createTestUser();
+        var itemWithSimpleMetadata = new DistinctInventoryItem();
+        var itemWithBiggerMetadata = new DistinctInventoryItem();
+        itemWithSimpleMetadata.setUser(userWithMatadataItems);
+        itemWithBiggerMetadata.setUser(userWithMatadataItems);
+        Map<String, Object> simpleMetadata = new HashMap<>();
+        Map<String, Object> biggerMetadata = new HashMap<>();
+
+        simpleMetadata.put("key1", "value1");
+        simpleMetadata.put("key2", "value2");
+
+        biggerMetadata.put("key1", "value1");
+        biggerMetadata.put("key2", "value1");
+        biggerMetadata.put("key3", "value3");
+        biggerMetadata.put("key4", "value4");
+
+        itemWithSimpleMetadata.setMetadata(simpleMetadata);
+        itemWithBiggerMetadata.setMetadata(biggerMetadata);
+        itemWithSimpleMetadata.setItem(itemTestFactory.createTestItem(DISTINCT, true));
+        itemWithBiggerMetadata.setItem(itemTestFactory.createTestItem(DISTINCT, true));
+
+        underTest.createDistinctInventoryItem(itemWithSimpleMetadata);
+        underTest.createDistinctInventoryItem(itemWithBiggerMetadata);
+
+        Long expectedTwoValuesInBothItems = underTest.countUniqueMetadataField("key1", "value1");
+        Long expectedOneValueForFirstItem = underTest.countUniqueMetadataField("key2", "value2");
+        Long expectedOneValueForSecondItem = underTest.countUniqueMetadataField("key2", "value1");
+        Long expectedNoValueInItems = underTest.countUniqueMetadataField("key3", "value4");
+
+        assertEquals(expectedTwoValuesInBothItems.longValue(), 2);
+        assertEquals(expectedOneValueForFirstItem.longValue(), 1);
+        assertEquals(expectedOneValueForSecondItem.longValue(), 1);
+        assertEquals(expectedNoValueInItems.longValue(), 0);
+
     }
 
 }
