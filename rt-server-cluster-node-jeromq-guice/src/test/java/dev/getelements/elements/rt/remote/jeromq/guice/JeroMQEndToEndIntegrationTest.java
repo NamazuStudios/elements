@@ -13,6 +13,8 @@ import dev.getelements.elements.rt.id.NodeId;
 import dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService;
 import dev.getelements.elements.rt.remote.*;
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQCurveSecurity;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -56,6 +58,8 @@ public class JeroMQEndToEndIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 
+    private static final JeroMQSecurity TEST_SECURITY = new JeroMQCurveSecurity();
+
     private Instance client;
 
     private List<Instance> workers;
@@ -66,7 +70,10 @@ public class JeroMQEndToEndIntegrationTest {
     public void setup() {
 
         final Injector sharedInjector = Guice.createInjector(
-                new ZContextModule().withMaxSockets(8096).withDefaultIoThreads(),
+                new ZContextModule()
+                        .withMaxSockets(8096)
+                        .withDefaultIoThreads()
+                        .withDefaultIpv6(),
                 new AbstractModule() {
                     @Override
                     protected void configure() {
@@ -84,6 +91,8 @@ public class JeroMQEndToEndIntegrationTest {
 
                         bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
                             .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+
+                        bind(JeroMQSecurity.class).toInstance(TEST_SECURITY);
 
                     }
                 });
@@ -382,6 +391,8 @@ public class JeroMQEndToEndIntegrationTest {
                 .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
                 .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
 
+            bind(JeroMQSecurity.class).toInstance(TEST_SECURITY);
+
         }
 
     }
@@ -591,6 +602,8 @@ public class JeroMQEndToEndIntegrationTest {
             bind(Long.class)
                 .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
                 .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
+
+            bind(JeroMQSecurity.class).toInstance(TEST_SECURITY);
 
         }
 

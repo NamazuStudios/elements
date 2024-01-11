@@ -10,11 +10,12 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
 @ApiModel
-public class DistinctInventoryItem {
+public class DistinctInventoryItem implements Serializable {
 
     @Null(groups = {ValidationGroups.Create.class, Insert.class})
     @NotNull(groups = ValidationGroups.Update.class)

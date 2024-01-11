@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +29,8 @@ import static org.testng.Assert.*;
 public class MongoDistinctInventorItemDaoTest {
 
     private static final int ITEM_COUNT = 5;
+
+    private static final int PUBLIC_ITEM_COUNT = 2;
 
     private static final int USER_COUNT = 5;
 
@@ -50,7 +53,11 @@ public class MongoDistinctInventorItemDaoTest {
 
     private List<Item> itemList;
 
+    private List<Item> publicItemList;
+
     private List<User> userList;
+
+    private User userWithPublicItems;
 
     private List<Profile> profileList;
 
@@ -60,14 +67,19 @@ public class MongoDistinctInventorItemDaoTest {
     public void setup() {
 
         var itemList = new ArrayList<Item>();
+        var publicItemList = new ArrayList<Item>();
         var userList = new ArrayList<User>();
         var profileList = new ArrayList<Profile>();
 
         final var application = applicationTestFactory.createMockApplication("Distinct Items");
 
         for (int i = 0; i < ITEM_COUNT; ++i) {
-            final var item = itemTestFactory.createTestItem(DISTINCT);
+            final var item = itemTestFactory.createTestItem(DISTINCT, false);
             itemList.add(item);
+        }
+        for (int i = 0; i < PUBLIC_ITEM_COUNT; ++i) {
+            final var publicItem = itemTestFactory.createTestItem(DISTINCT, true);
+            publicItemList.add(publicItem);
         }
 
         for (int i = 0; i < USER_COUNT; ++i) {
@@ -79,13 +91,15 @@ public class MongoDistinctInventorItemDaoTest {
                 final var profile = profileTestFactory.makeMockProfile(user, application);
                 profileList.add(profile);
             }
-
         }
+
+        userWithPublicItems = userTestFactory.createTestUser();
 
         // Immutable for thread safety
         this.itemList = unmodifiableList(itemList);
         this.userList = unmodifiableList(userList);
         this.profileList = unmodifiableList(profileList);
+        this.publicItemList = unmodifiableList(publicItemList);
 
     }
 
@@ -143,6 +157,23 @@ public class MongoDistinctInventorItemDaoTest {
 
         }
 
+        for (var publicItem : publicItemList) {
+
+            final var toCreate = new DistinctInventoryItem();
+            toCreate.setUser(userWithPublicItems);
+            toCreate.setItem(publicItem);
+            output.add(new Object[]{toCreate});
+
+            for (var profile : profileList) {
+                final var distinctToCreate = new DistinctInventoryItem();
+                distinctToCreate.setProfile(profile);
+                distinctToCreate.setUser(profile.getUser());
+                distinctToCreate.setItem(publicItem);
+                output.add(new Object[]{distinctToCreate});
+            }
+
+        }
+
         return output.toArray(Object[][]::new);
 
     }
@@ -181,11 +212,20 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
-    public void testGetAllItems() {
+    public void testGetPublicItems() {
         final var all = new PaginationWalker().toList((offset, count) ->
-            underTest.getDistinctInventoryItems(offset, count, null, null)
+                underTest.getDistinctInventoryItems(offset, count, userWithPublicItems.getId(), null, true)
         );
-        intermediates.values().containsAll(all);
+        assertEquals(all.size(), PUBLIC_ITEM_COUNT);
+        assertTrue(intermediates.values().containsAll(all));
+    }
+
+    @Test(dependsOnMethods = "testCreateDistinctUserInventoryItem")
+    public void testGetAllItems() {
+        final var items = new PaginationWalker().toList((offset, count) ->
+                underTest.getDistinctInventoryItems(offset, count, null, null, false)
+        );
+        assertTrue(items.containsAll(intermediates.values()));
     }
 
     @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
@@ -201,8 +241,8 @@ public class MongoDistinctInventorItemDaoTest {
 
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         final var fetched = underTest
-            .findDistinctInventoryItemForOwner(id, owner)
-            .get();
+                .findDistinctInventoryItemForOwner(id, owner)
+                .get();
 
         assertEquals(fetched, item);
 
@@ -213,8 +253,8 @@ public class MongoDistinctInventorItemDaoTest {
 
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         final var fetched = underTest.findDistinctInventoryItemForOwner(
-            new ObjectId().toHexString(),
-            new ObjectId().toHexString()
+                new ObjectId().toHexString(),
+                new ObjectId().toHexString()
         );
 
         assertNotNull(fetched);
@@ -269,17 +309,55 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test(dataProvider = "getIntermediates",
-          dependsOnMethods = {"testDelete"},
-          expectedExceptions = DistinctInventoryItemNotFoundException.class)
+            dependsOnMethods = {"testDelete"},
+            expectedExceptions = DistinctInventoryItemNotFoundException.class)
     public void testDoubleDelete(final String owner, final DistinctInventoryItem item) {
         underTest.deleteDistinctInventoryItem(item.getId());
     }
 
     @Test(dataProvider = "getIntermediates",
-          dependsOnMethods = {"testDelete"},
-          expectedExceptions = DistinctInventoryItemNotFoundException.class)
+            dependsOnMethods = {"testDelete"},
+            expectedExceptions = DistinctInventoryItemNotFoundException.class)
     public void testFetchPostDelete(final String owner, final DistinctInventoryItem item) {
         underTest.getDistinctInventoryItem(item.getId());
+    }
+
+    @Test()
+    public void testCountMetadataFieldValues() {
+        User userWithMatadataItems = userTestFactory.createTestUser();
+        var itemWithSimpleMetadata = new DistinctInventoryItem();
+        var itemWithBiggerMetadata = new DistinctInventoryItem();
+        itemWithSimpleMetadata.setUser(userWithMatadataItems);
+        itemWithBiggerMetadata.setUser(userWithMatadataItems);
+        Map<String, Object> simpleMetadata = new HashMap<>();
+        Map<String, Object> biggerMetadata = new HashMap<>();
+
+        simpleMetadata.put("key1", "value1");
+        simpleMetadata.put("key2", "value2");
+
+        biggerMetadata.put("key1", "value1");
+        biggerMetadata.put("key2", "value1");
+        biggerMetadata.put("key3", "value3");
+        biggerMetadata.put("key4", "value4");
+
+        itemWithSimpleMetadata.setMetadata(simpleMetadata);
+        itemWithBiggerMetadata.setMetadata(biggerMetadata);
+        itemWithSimpleMetadata.setItem(itemTestFactory.createTestItem(DISTINCT, true));
+        itemWithBiggerMetadata.setItem(itemTestFactory.createTestItem(DISTINCT, true));
+
+        underTest.createDistinctInventoryItem(itemWithSimpleMetadata);
+        underTest.createDistinctInventoryItem(itemWithBiggerMetadata);
+
+        Long expectedTwoValuesInBothItems = underTest.countUniqueMetadataField("key1", "value1");
+        Long expectedOneValueForFirstItem = underTest.countUniqueMetadataField("key2", "value2");
+        Long expectedOneValueForSecondItem = underTest.countUniqueMetadataField("key2", "value1");
+        Long expectedNoValueInItems = underTest.countUniqueMetadataField("key3", "value4");
+
+        assertEquals(expectedTwoValuesInBothItems.longValue(), 2);
+        assertEquals(expectedOneValueForFirstItem.longValue(), 1);
+        assertEquals(expectedOneValueForSecondItem.longValue(), 1);
+        assertEquals(expectedNoValueInItems.longValue(), 0);
+
     }
 
 }

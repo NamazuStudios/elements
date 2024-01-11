@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 import org.zeromq.ZMQ.Socket;
 
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static dev.getelements.elements.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
@@ -46,9 +45,12 @@ public class JeroMQControlClient implements ControlClient {
 
     private final String instanceConnectAddress;
 
+    private final JeroMQSecurity jeroMQSecurity;
+
     public JeroMQControlClient(final ZContext zContext,
-                               final String instanceConnectAddress) {
-        this(zContext, instanceConnectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
+                               final String instanceConnectAddress,
+                               final JeroMQSecurity securityChain) {
+        this(zContext, instanceConnectAddress, securityChain, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
     }
 
     /**
@@ -61,11 +63,13 @@ public class JeroMQControlClient implements ControlClient {
      */
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,
+                               final JeroMQSecurity jeroMQSecurity,
                                final long timeout, final TimeUnit timeUnit) {
         this.shadowContext = shadow(zContext);
-        this.socket = open(shadowContext);
+        this.socket = open(jeroMQSecurity, shadowContext);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAddress = instanceConnectAddress;
+        this.jeroMQSecurity = jeroMQSecurity;
         setReceiveTimeout(timeout, timeUnit);
     }
 
@@ -75,8 +79,8 @@ public class JeroMQControlClient implements ControlClient {
      * @param zContext the context which to use when creating the socket
      * @return the {@link Socket} type
      */
-    public static Socket open(final ZContext zContext) {
-        return zContext.createSocket(DEALER);
+    public static Socket open(final JeroMQSecurity securityChain, final ZContext zContext) {
+        return securityChain.client(() -> zContext.createSocket(DEALER));
     }
 
     @Override
@@ -150,7 +154,14 @@ public class JeroMQControlClient implements ControlClient {
 
         final ZMsg response = recv();
         final String nodeBindAddress = response.removeFirst().getString(CHARSET);
-        return new JeroMQInstanceBinding(shadowContext, nodeId, instanceConnectAddress, nodeBindAddress);
+
+        return new JeroMQInstanceBinding(
+                shadowContext,
+                nodeId,
+                instanceConnectAddress,
+                jeroMQSecurity,
+                nodeBindAddress
+        );
 
     }
 

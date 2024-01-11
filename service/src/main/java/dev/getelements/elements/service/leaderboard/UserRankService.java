@@ -6,6 +6,7 @@ import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.service.RankService;
+import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 
 import javax.inject.Inject;
 import java.util.function.Supplier;
@@ -18,46 +19,85 @@ public class UserRankService implements RankService {
 
     private Supplier<Profile> profileSupplier;
 
+    private LargeObjectCdnUtils cdnUtils;
+
     @Override
     public Pagination<Rank> getRanksForGlobal(final String leaderboardNameOrId,
-                                              final int offset, final int count, final long leaderboardEpoch) {
+                                              final int offset, final int count,
+                                              final long leaderboardEpoch) {
         return getRankDao()
             .getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .transform(this::setupRank);
     }
 
     @Override
-    public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId, final String profileId,
-                                                      final int count, final long leaderboardEpoch) {
+    public Pagination<Rank> getRanksForGlobalRelative(final String leaderboardNameOrId,
+                                                      final String profileId, int offset, final int count,
+                                                      final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, count, leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .getRanksForGlobalRelative(leaderboardNameOrId, profileId, offset, count, leaderboardEpoch)
+            .transform(this::setupRank);
     }
 
     @Override
     public Pagination<Rank> getRanksForFriends(final String leaderboardNameOrId,
                                                final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForFriends(leaderboardNameOrId, getProfileSupplier().get(), offset, count, leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .getRanksForFriends(
+                    leaderboardNameOrId,
+                    getProfileSupplier().get().getId(),
+                    offset, count,
+                    leaderboardEpoch)
+            .transform(this::setupRank);
     }
 
     @Override
     public Pagination<Rank> getRanksForFriendsRelative(final String leaderboardNameOrId,
                                                        final int offset, final int count, final long leaderboardEpoch) {
         return getRankDao()
-            .getRanksForFriendsRelative(leaderboardNameOrId, getProfileSupplier().get(), offset, count,
+            .getRanksForFriendsRelative(
+                    leaderboardNameOrId,
+                    getProfileSupplier().get().getId(),
+                    offset, count,
                     leaderboardEpoch)
-            .transform(this::redactPrivateInfo);
+            .transform(this::setupRank);
     }
 
-    private Rank redactPrivateInfo(final Rank rank) {
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowers(final String leaderboardNameOrId,
+                                                       final int offset, final int count,
+                                                       final long leaderboardEpoch) {
+        return getRankDao()
+                .getRanksForMutualFollowers(
+                        leaderboardNameOrId,
+                        getProfileSupplier().get().getId(),
+                        offset, count,
+                        leaderboardEpoch)
+                .transform(this::setupRank);
+    }
+
+    @Override
+    public Pagination<Rank> getRanksForMutualFollowersRelative(final String leaderboardNameOrId,
+                                                               final int offset, final int count,
+                                                               final long leaderboardEpoch) {
+        return getRankDao()
+                .getRanksForMutualFollowersRelative(
+                        leaderboardNameOrId,
+                        getProfileSupplier().get().getId(),
+                        offset, count,
+                        leaderboardEpoch)
+                .transform(this::setupRank);
+    }
+
+    private Rank setupRank(final Rank rank) {
 
         if (!getUser().equals(rank.getScore().getProfile().getUser())) {
             rank.getScore().getProfile().setUser(null);
         }
 
+        getCdnUtils().setProfileCdnUrl(rank.getScore().getProfile());
         return rank;
+
     }
 
     public User getUser() {
@@ -87,4 +127,12 @@ public class UserRankService implements RankService {
         this.profileSupplier = profileSupplier;
     }
 
+    public LargeObjectCdnUtils getCdnUtils() {
+        return cdnUtils;
+    }
+
+    @Inject
+    public void setCdnUtils(LargeObjectCdnUtils cdnUtils) {
+        this.cdnUtils = cdnUtils;
+    }
 }

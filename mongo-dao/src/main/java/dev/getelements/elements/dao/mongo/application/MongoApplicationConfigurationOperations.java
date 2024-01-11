@@ -142,10 +142,13 @@ public class MongoApplicationConfigurationOperations {
             )
         );
 
-        return query
-            .iterator().toList().stream()
-            .map(fac -> getBeanMapper().map(fac, applicationConfigurationClass))
-            .collect(Collectors.toList());
+        try (var iterator = query.iterator()) {
+            return iterator
+                    .toList()
+                    .stream()
+                    .map(fac -> getBeanMapper().map(fac, applicationConfigurationClass))
+                    .collect(Collectors.toList());
+        }
 
     }
 

@@ -103,7 +103,9 @@ public class MongoFriendDao implements FriendDao {
                 )
         ));
 
-        return query.iterator().toList();
+        try (var iterator = query.iterator()) {
+            return iterator.toList();
+        }
 
     }
 

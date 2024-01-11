@@ -127,7 +127,7 @@ public class MongoLeaderboard {
      * @return the epoch in millis if an epochal leaderboard and valid input, {@link MongoScoreId#ALL_TIME_LEADERBOARD_EPOCH}
      * if a global leaderboard, -1L if invalid input (i.e. the given millis occur before the firstEpochTimestamp).
      */
-    public long getEpochForMillis(long millis) {
+    public long calculateEpochForMillis(long millis) {
         if (this.timeStrategyType != TimeStrategyType.EPOCHAL) {
             return MongoScoreId.ALL_TIME_LEADERBOARD_EPOCH;
         }
@@ -151,9 +151,9 @@ public class MongoLeaderboard {
      * @return the epoch in millis if an epochal leaderboard and valid input, {@link MongoScoreId#ALL_TIME_LEADERBOARD_EPOCH}
      * if a global leaderboard.
      */
-    public long getCurrentEpoch() {
+    public long calculateCurrentEpoch() {
         long millis = currentTimeMillis();
-        return getEpochForMillis(millis);
+        return calculateEpochForMillis(millis);
     }
 
     /**
@@ -165,7 +165,7 @@ public class MongoLeaderboard {
      * if a global leaderboard, -1L if invalid input (i.e. the given date occurs before the firstEpochTimestamp).
      */
     public long getEpochForDate(Date date) {
-        return this.getEpochForMillis(date.getTime());
+        return this.calculateEpochForMillis(date.getTime());
     }
 
     @Override

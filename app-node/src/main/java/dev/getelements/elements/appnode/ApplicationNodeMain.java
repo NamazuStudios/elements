@@ -1,6 +1,7 @@
 package dev.getelements.elements.appnode;
 
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
+import dev.getelements.elements.service.BuildPropertiesVersionService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -46,6 +47,7 @@ public class ApplicationNodeMain {
             } else {
                 final var storageDriver = optionSet.valueOf(STORAGE_DRIVER_OPTION);
                 final var applicationNode = new ApplicationNode(defaultConfigurationSupplier, storageDriver);
+                BuildPropertiesVersionService.logVersion();
                 applicationNode.start();
                 applicationNode.waitForShutdown();
             }

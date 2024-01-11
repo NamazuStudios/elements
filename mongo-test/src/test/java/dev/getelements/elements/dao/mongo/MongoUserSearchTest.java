@@ -4,27 +4,20 @@ import dev.getelements.elements.dao.AppleSignInSessionDao;
 import dev.getelements.elements.dao.ApplicationDao;
 import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.UserDao;
-import dev.getelements.elements.model.applesignin.TokenResponse;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.session.AppleSignInSessionCreation;
-import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.user.User;
-import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-
-import java.util.Collections;
 import java.util.List;
 
 import static dev.getelements.elements.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoUserSearchTest {
@@ -54,7 +47,7 @@ public class MongoUserSearchTest {
 
     public Application makeTestApplication() {
         final Application application = new Application();
-        application.setName("mock");
+        application.setName("user_search_test");
         application.setDescription("A mock application.");
         return getApplicationDao().createOrUpdateInactiveApplication(application);
     }

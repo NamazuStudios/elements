@@ -170,7 +170,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null, false,
                 "metadata.test_bogus:0"
         );
 
@@ -186,7 +186,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null, false,
                 "metadata.test_string:0"
         );
 
@@ -213,7 +213,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null, false,
                 "metadata.test_string:0"
         );
 
@@ -229,7 +229,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null,false,
                 "metadata.test_object.test_string:0"
         );
 
@@ -245,7 +245,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null,false,
                 "metadata.test_object.test_number = 0"
         );
 
@@ -261,7 +261,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null,false,
                 "metadata.test_number > 1 AND metadata.test_number < 15"
         );
 
@@ -315,7 +315,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null,false,
                 "metadata.test_object.test_string:0"
         );
 
@@ -331,7 +331,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null,false,
                 "metadata.test_number = 0"
         );
 
@@ -359,7 +359,7 @@ public class MongoDistinctInventoryItemQueryTest {
 
         final var result = getDistinctInventoryItemDao().getDistinctInventoryItems(
                 0, 100,
-                null, null,
+                null, null,false,
                 "metadata.test_new_string_property:Hello"
         );
 

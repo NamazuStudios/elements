@@ -49,4 +49,9 @@ public enum ConfigurationCategory implements Serializable {
      */
     FIREBASE,
 
+    /**
+     * Represents an application configuration for Google Sign in
+     */
+    GOOGLE_SIGN_IN
+
 }

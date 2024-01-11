@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.model;
 
 import dev.getelements.elements.dao.mongo.HexableId;
 import dev.getelements.elements.rt.util.Hex;
+import dev.morphia.annotations.Entity;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.Property;
 
@@ -10,6 +11,7 @@ import java.util.Base64;
 
 import static java.lang.System.arraycopy;
 
+@Entity
 public class MongoScoreId implements HexableId {
 
     /**
@@ -31,7 +33,7 @@ public class MongoScoreId implements HexableId {
     @Property
     private long leaderboardEpoch;
 
-    MongoScoreId() {}
+    public MongoScoreId() {}
 
     public MongoScoreId(final String hexString) {
 

@@ -59,13 +59,6 @@ public interface AsyncControlClient extends AutoCloseable {
      */
     Request closeBinding(NodeId nodeId, ResponseConsumer<Void> responseConsumer);
 
-    default Request openBinding0(Consumer<Runnable> dispatch,
-                                 NodeId nodeId,
-                                 ResponseConsumer<InstanceBinding> responseConsumer) {
-        final ResponseConsumer<InstanceBinding> wrapped = r -> dispatch.accept(() -> responseConsumer.accept(r));
-        return openBinding(nodeId, wrapped);
-    }
-
     /**
      * Configures this {@link AsyncControlClient} to dispatch the response handling to the supplied
      * {@link Consumer<Runnable>}. There are cases in which it may be desirable to dispatch the actual interactions

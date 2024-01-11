@@ -38,30 +38,55 @@ public interface DistinctInventoryItemDao {
     DistinctInventoryItem getDistinctInventoryItem(String id);
 
     /**
-     * Gets a listing distinct inventory tiems.
+     * Gets a listing distinct inventory items.
      *
      * @param offset the offset from the beginning of the dataset
      * @param count the number of items to return
-     * @param userId the user id, if specified. Otherwise null.
-     * @param profileId the profile id, if specified. Otherwise null.
+     * @param userId checked id of user
+     * @param profileId checked id of profile.
+     * @param publicOnly mark inventory items that are referred to only this with publicVisible flag
      * @return a {@link Pagination<InventoryItem>}
      */
     Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
-            String userId, String profileId);
+            String userId, String profileId,
+            boolean publicOnly);
 
     /**
      * Gets a listing distinct inventory items filtering by query string.
      *
      * @param offset the offset from the beginning of the dataset
      * @param count the number of items to return
-     * @param userId the user id, if specified. Otherwise null.
-     * @param profileId the profile id, if specified. Otherwise null.
+     * @param userId checked id of user
+     * @param profileId checked id of profile.
+     * @param publicOnly mark inventory items that are referred to only this with publicVisible flag
      * @return a {@link Pagination<InventoryItem>}
      */
     Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
-            String userId, String profileId, String query);
+            String userId, String profileId,
+            boolean publicOnly, String queryString);
+
+    /**
+     * Gets a total number of items for provided userId or profileId
+     *
+     * @param userId checked id of user
+     * @param profileId checked id of profile.
+     * @param publicOnly mark inventory items that are referred to only this with publicVisible flag
+     * @return a number of items
+     */
+    Long getTotalDistinctInventoryItems(
+            String userId, String profileId,
+            boolean publicOnly, String queryString);
+
+    /**
+     * Gets a total number of specified value for provided metadata field name.
+     *
+     * @param fieldName metadata field name
+     * @param fieldValue value of metadata field to be counted
+     * @return a number of items
+     */
+    Long countUniqueMetadataField(String fieldName, String fieldValue);
 
     /**
      * Updates a distinct inventory item.

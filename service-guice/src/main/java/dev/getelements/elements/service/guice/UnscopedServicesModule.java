@@ -18,6 +18,7 @@ import dev.getelements.elements.service.formidium.SuperuserFormidiumService;
 import dev.getelements.elements.service.goods.SuperuserItemService;
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
 import dev.getelements.elements.service.inventory.*;
+import dev.getelements.elements.service.invite.SuperUserInviteService;
 import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.SuperUserLeaderboardService;
 import dev.getelements.elements.service.mission.MissionService;
@@ -95,6 +96,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserFCMRegistrationService.class);
 
+        bind(ScoreService.class)
+                .annotatedWith(Unscoped.class)
+                .to(ScoreService.class);
+
         bind(LeaderboardService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserLeaderboardService.class);
@@ -146,6 +151,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(AppleSignInAuthService.class)
                 .annotatedWith(Unscoped.class)
                 .to(AnonAppleSignInAuthService.class);
+
+        bind(GoogleSignInAuthService.class)
+                .annotatedWith(Unscoped.class)
+                .to(AnonGoogleSignInAuthService.class);
 
         bind(NameService.class)
                 .annotatedWith(Unscoped.class)
@@ -204,10 +213,14 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(NearSmartContractInvocationService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserNearSmartContractInvocationService.class);
-        
+
         bind(LargeObjectService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserLargeObjectService.class);
+
+        bind(InviteService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserInviteService.class);
 
     }
 

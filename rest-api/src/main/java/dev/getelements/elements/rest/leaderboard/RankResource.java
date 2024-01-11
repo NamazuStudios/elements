@@ -24,56 +24,6 @@ public class RankResource {
 
     private RankService rankService;
 
-    @GET @Path("friends/{leaderboardNameOrId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets Rank among Friends",
-                  notes = "Gets the current Profile's rank among friends for the particular leaderboard.")
-    public Pagination<Rank> getRankAmongFriends(
-
-            @QueryParam("offset")
-            @DefaultValue("0")
-            @ApiParam("May be negative to place the requested player in the middle of the page.")
-            final int offset,
-
-            @QueryParam("count")
-            @DefaultValue("20")
-            @ApiParam("The number of results to return in the page.")
-            final int count,
-
-
-            @QueryParam("relative")
-            @DefaultValue("false")
-            @ApiParam("Indicates whether or not to fetch results in a relative fashion.")
-            final boolean relative,
-
-            @QueryParam("leaderboardEpoch")
-            @DefaultValue("0")
-            @ApiParam("Specifies the epoch for the leaderboard. If no value is provided, the current epoch will be" +
-                    "fetched.")
-            final long leaderboardEpoch,
-
-            @PathParam("leaderboardNameOrId")
-            @ApiParam("Specifies the leaderboard name or ID.")
-            final String leaderboardNameOrId) {
-
-        if (count < 0) {
-            throw new InvalidParameterException("Count must have positive value.");
-        }
-
-        if (!relative && offset < 0) {
-            throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
-        }
-
-        if (leaderboardEpoch < 0) {
-            throw new InvalidParameterException("LeaderboardEpoch must have positive value.");
-        }
-
-        return !relative ?
-                getRankService().getRanksForFriends(leaderboardNameOrId, offset, count, leaderboardEpoch) :
-                getRankService().getRanksForFriendsRelative(leaderboardNameOrId, offset, count, leaderboardEpoch);
-
-    }
-
     @GET @Path("global/{leaderboardNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets Rank Among all Players",
@@ -121,10 +71,109 @@ public class RankResource {
             throw new InvalidParameterException("Offset must have non-negative value when using non-relative offset.");
         }
 
+        return !relative
+            ? getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
+            : getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, offset, count, leaderboardEpoch);
+
+    }
+
+    @GET @Path("friends/{leaderboardNameOrId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets Rank among Friends",
+            notes = "Gets the current Profile's rank among friends for the particular leaderboard.")
+    public Pagination<Rank> getRankAmongFriends(
+
+            @QueryParam("offset")
+            @DefaultValue("0")
+            @ApiParam("May be negative to place the requested player in the middle of the page.")
+            final int offset,
+
+            @QueryParam("count")
+            @DefaultValue("20")
+            @ApiParam("The number of results to return in the page.")
+            final int count,
+
+
+            @QueryParam("relative")
+            @DefaultValue("false")
+            @ApiParam("Indicates whether or not to fetch results in a relative fashion.")
+            final boolean relative,
+
+            @QueryParam("leaderboardEpoch")
+            @DefaultValue("0")
+            @ApiParam("Specifies the epoch for the leaderboard. If no value is provided, the current epoch will be" +
+                    "fetched.")
+            final long leaderboardEpoch,
+
+            @PathParam("leaderboardNameOrId")
+            @ApiParam("Specifies the leaderboard name or ID.")
+            final String leaderboardNameOrId) {
+
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
+
+        if (!relative && offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
+        }
+
+        if (leaderboardEpoch < 0) {
+            throw new InvalidParameterException("LeaderboardEpoch must have positive value.");
+        }
+
         return !relative ?
-            getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch) :
-            getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, count,
-                    leaderboardEpoch);
+                getRankService().getRanksForFriends(leaderboardNameOrId, offset, count, leaderboardEpoch) :
+                getRankService().getRanksForFriendsRelative(leaderboardNameOrId, offset, count, leaderboardEpoch);
+
+    }
+
+    @GET
+    @Path("mutual_followers/{leaderboardNameOrId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets Rank among Mutual Followers",
+            notes = "Gets the current Profile's rank among mutual followers for the particular leaderboard.")
+    public Pagination<Rank> getRankAmongMutualFollowers(
+
+            @QueryParam("offset")
+            @DefaultValue("0")
+            @ApiParam("May be negative to place the requested player in the middle of the page.")
+            final int offset,
+
+            @QueryParam("count")
+            @DefaultValue("20")
+            @ApiParam("The number of results to return in the page.")
+            final int count,
+
+            @QueryParam("relative")
+            @DefaultValue("false")
+            @ApiParam("Indicates whether or not to fetch results in a relative fashion.")
+            final boolean relative,
+
+            @QueryParam("leaderboardEpoch")
+            @DefaultValue("0")
+            @ApiParam("Specifies the epoch for the leaderboard. If no value is provided, the current epoch will be" +
+                    "fetched.")
+            final long leaderboardEpoch,
+
+            @PathParam("leaderboardNameOrId")
+            @ApiParam("Specifies the leaderboard name or ID.")
+            final String leaderboardNameOrId) {
+
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
+
+        if (!relative && offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value when using non-relative offset.");
+        }
+
+        if (leaderboardEpoch < 0) {
+            throw new InvalidParameterException("LeaderboardEpoch must have positive value.");
+        }
+
+        return !relative ?
+                getRankService().getRanksForMutualFollowers(leaderboardNameOrId, offset, count, leaderboardEpoch) :
+                getRankService().getRanksForMutualFollowersRelative(leaderboardNameOrId, offset, count, leaderboardEpoch);
 
     }
 

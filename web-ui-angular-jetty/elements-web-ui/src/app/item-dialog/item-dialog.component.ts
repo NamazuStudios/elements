@@ -39,6 +39,7 @@ export class ItemDialogComponent implements OnInit {
     displayName: [ this.data.item.displayName, [Validators.required]],
     description: [ this.data.item.description, [Validators.required]],
     category: [ this.data.item.category, [Validators.required] ],
+    publicVisible: [ this.data.item.publicVisible ],
     tags: []
   });
 
@@ -116,5 +117,4 @@ export class ItemDialogComponent implements OnInit {
       ? this.itemCategories[0].description
       : this.itemCategories.find(value => this.data.item.category == value.key).description
   }
-
 }

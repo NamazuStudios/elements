@@ -8,11 +8,11 @@ import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.model.user.*;
 import dev.getelements.elements.service.UserService;
+import dev.getelements.elements.util.PhoneNormalizer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;
@@ -73,9 +73,9 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setId(userId);
         user.setActive(true);
         user.setLevel(User.Level.USER);
-        user.setName(getCurrentUser().getName());
-        user.setEmail(getCurrentUser().getEmail());
-        user.setPrimaryPhoneNb(userUpdateRequest.getPrimaryPhoneNb());
+        user.setName(userUpdateRequest.getName());
+        user.setEmail(userUpdateRequest.getEmail());
+        user.setPrimaryPhoneNb(PhoneNormalizer.normalizePhoneNb(userUpdateRequest.getPrimaryPhoneNb()).orElse(null));
         user.setFirstName(userUpdateRequest.getFirstName());
         user.setLastName(userUpdateRequest.getLastName());
 

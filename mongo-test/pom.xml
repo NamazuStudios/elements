@@ -67,14 +67,13 @@
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.el</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.sidhant92</groupId>
-            <artifactId>boolparser</artifactId>
+            <version>${javax.el.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.dozermapper</groupId>
             <artifactId>dozer-core</artifactId>
+            <version>${dozer.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>

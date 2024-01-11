@@ -154,7 +154,12 @@ public class MongoSession {
         /**
          * A session created by Apple Sign-In
          */
-        APPLE_SIGN_IN
+        APPLE_SIGN_IN,
+
+        /**
+         * A session created by Google Sign-In
+         */
+        GOOGLE_SIGN_IN
 
     }
 

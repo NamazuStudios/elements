@@ -88,6 +88,11 @@
             <version>${guice.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>

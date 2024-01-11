@@ -5,10 +5,7 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.rt.remote.ControlClient;
 import dev.getelements.elements.rt.remote.InstanceStatus;
-import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
-import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQControlClientFactoryModule;
-import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQControlClientModule;
-import dev.getelements.elements.rt.remote.jeromq.guice.ZContextModule;
+import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +24,11 @@ public class StatusCheck {
         final var configurationSupplier = new DefaultConfigurationSupplier();
 
         final var injector = Guice.createInjector(
-            new ZContextModule(),
-            new ConfigurationModule(configurationSupplier),
-            new JeroMQAsyncConnectionServiceModule(),
-            new JeroMQControlClientFactoryModule()
+                new ZContextModule(),
+                new JeroMQSecurityModule(),
+                new ConfigurationModule(configurationSupplier),
+                new JeroMQAsyncConnectionServiceModule(),
+                new JeroMQControlClientFactoryModule()
         );
 
         final var controlClientFactory = injector.getInstance(ControlClient.Factory.class);

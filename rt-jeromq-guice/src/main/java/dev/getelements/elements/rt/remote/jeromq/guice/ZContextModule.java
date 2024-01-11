@@ -5,11 +5,12 @@ import dev.getelements.elements.rt.jeromq.ZContextProvider;
 import org.zeromq.ZContext;
 
 import static com.google.inject.name.Names.named;
-import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
-import static dev.getelements.elements.rt.jeromq.ZContextProvider.MAX_SOCKETS;
+import static dev.getelements.elements.rt.jeromq.ZContextProvider.*;
 import static java.lang.Runtime.getRuntime;
 
 public class ZContextModule extends PrivateModule {
+
+    private Runnable ipv6Action = () -> {};
 
     private Runnable ioThreadsAction = () -> {};
 
@@ -17,10 +18,20 @@ public class ZContextModule extends PrivateModule {
 
     @Override
     protected void configure() {
+        ipv6Action.run();
         ioThreadsAction.run();
         maxSocketsAction.run();
         bind(ZContext.class).toProvider(ZContextProvider.class).asEagerSingleton();
         expose(ZContext.class);
+    }
+
+    public ZContextModule withDefaultIpv6() {
+        return withIpv6(true);
+    }
+
+    public ZContextModule withIpv6(final boolean ipv6) {
+        ipv6Action = () -> bind(Boolean.class).annotatedWith(named(IPV6)).toInstance(ipv6);
+        return this;
     }
 
     public ZContextModule withDefaultIoThreads() {

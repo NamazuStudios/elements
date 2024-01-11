@@ -21,6 +21,8 @@ import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemIndexable;
 import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
+import dev.getelements.elements.dao.mongo.googlesignin.MongoGoogleSignInSessionDao;
+import dev.getelements.elements.dao.mongo.googlesignin.MongoGoogleSignInUserDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
@@ -80,7 +82,10 @@ public class MongoDaoModule extends PrivateModule {
         bind(FirebaseUserDao.class).to(MongoFirebaseUserDao.class);
         bind(AppleSignInUserDao.class).to(MongoAppleSignInUserDao.class);
         bind(AppleSignInSessionDao.class).to(MongoAppleSignInSessionDao.class);
+        bind(GoogleSignInUserDao.class).to(MongoGoogleSignInUserDao.class);
+        bind(GoogleSignInSessionDao.class).to(MongoGoogleSignInSessionDao.class);
         bind(FollowerDao.class).to(MongoFollowerDao.class);
+        bind(TokensWithExpirationDao.class).to(MongoTokensWithExpirationDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
@@ -127,6 +132,7 @@ public class MongoDaoModule extends PrivateModule {
 
         expose(IndexDao.class);
         expose(UserDao.class);
+        expose(GoogleSignInUserDao.class);
         expose(ProfileDao.class);
         expose(FacebookUserDao.class);
         expose(ShortLinkDao.class);
@@ -141,6 +147,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
+        expose(GoogleSignInSessionDao.class);
         expose(LeaderboardDao.class);
         expose(ScoreDao.class);
         expose(RankDao.class);
@@ -156,6 +163,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(AppleSignInUserDao.class);
         expose(AppleSignInSessionDao.class);
         expose(FollowerDao.class);
+        expose(TokensWithExpirationDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
         expose(MetadataSpecDao.class);

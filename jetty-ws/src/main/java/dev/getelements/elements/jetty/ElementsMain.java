@@ -1,6 +1,7 @@
 package dev.getelements.elements.jetty;
 
 import com.google.inject.Guice;
+import dev.getelements.elements.service.BuildPropertiesVersionService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -39,6 +40,8 @@ public class ElementsMain {
     }
 
     private static void run(final OptionSet options) {
+
+        BuildPropertiesVersionService.logVersion();
 
         final var services = servicesOptionSpec.values(options);
 
