@@ -85,6 +85,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(GoogleSignInUserDao.class).to(MongoGoogleSignInUserDao.class);
         bind(GoogleSignInSessionDao.class).to(MongoGoogleSignInSessionDao.class);
         bind(FollowerDao.class).to(MongoFollowerDao.class);
+        bind(TokensWithExpirationDao.class).to(MongoTokensWithExpirationDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
@@ -162,6 +163,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(AppleSignInUserDao.class);
         expose(AppleSignInSessionDao.class);
         expose(FollowerDao.class);
+        expose(TokensWithExpirationDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
         expose(MetadataSpecDao.class);

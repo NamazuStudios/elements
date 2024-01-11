@@ -10,13 +10,11 @@ import dev.getelements.elements.rt.id.NodeId;
 import dev.getelements.elements.rt.remote.AsyncControlClient;
 import dev.getelements.elements.rt.remote.InstanceConnectionService.InstanceBinding;
 import dev.getelements.elements.rt.remote.InstanceStatus;
-import com.sun.nio.sctp.PeerAddressChangeNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
-import zmq.ZError;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,8 +25,6 @@ import static dev.getelements.elements.rt.AsyncConnection.Event.*;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQControlClient.trace;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQRoutingCommand.*;
 import static dev.getelements.elements.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
-import static javax.security.auth.callback.ConfirmationCallback.OK;
-import static zmq.ZError.EAGAIN;
 
 public class JeroMQAsyncControlClient implements AsyncControlClient {
 
@@ -42,22 +38,27 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
     private final String instanceConnectAddress;
 
+    private final JeroMQSecurity jeroMQSecurity;
+
     private final AsyncConnectionPool<ZContext, ZMQ.Socket> pool;
 
     public JeroMQAsyncControlClient(final AsyncConnectionService<ZContext, ZMQ.Socket> service,
-                                    final String instanceConnectAddress) {
-        this(service, instanceConnectAddress, DEFAULT_MIN_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
+                                    final String instanceConnectAddress,
+                                    final JeroMQSecurity securityChain) {
+        this(service, instanceConnectAddress, securityChain, DEFAULT_MIN_CONNECTIONS, DEFAULT_MAX_CONNECTIONS);
     }
 
     public JeroMQAsyncControlClient(final AsyncConnectionService<ZContext, ZMQ.Socket> service,
                                     final String instanceConnectAddress,
+                                    final JeroMQSecurity jeroMQSecurity,
                                     final int minConnections,
                                     final int maxConnections) {
 
         this.instanceConnectAddress = instanceConnectAddress;
+        this.jeroMQSecurity = jeroMQSecurity;
 
         pool = service.allocatePool(POOL_NAME, minConnections, maxConnections, zContext -> {
-            final var socket = JeroMQControlClient.open(zContext);
+            final var socket = JeroMQControlClient.open(jeroMQSecurity, zContext);
             socket.connect(instanceConnectAddress);
             return socket;
         });
@@ -140,7 +141,12 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
                 final var response = zMsgResponse.map(zMsg -> {
                     final var bindAddress = zMsg.remove().getString(CHARSET);
-                    return new JeroMQInstanceBinding(_c.context(), nodeId, instanceConnectAddress, bindAddress);
+                    return new JeroMQInstanceBinding(
+                            _c.context(),
+                            nodeId,
+                            instanceConnectAddress,
+                            jeroMQSecurity,
+                            bindAddress);
                 });
 
                 responseConsumer.accept(response);

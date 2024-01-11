@@ -22,6 +22,7 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -42,6 +43,7 @@ import static java.util.stream.Collectors.toList;
  *
  * Created by patricktwohig on 6/10/15.
  */
+
 public class MongoDBUtils {
 
     public static final String COLLSCAN = "COLLSCAN";
@@ -222,7 +224,11 @@ public class MongoDBUtils {
 
         options.skip(offset);
         options.limit(limit);
-        options.sort(ascending("_id"));
+
+        //TODO: get rid of this deprecated solution
+        if (Objects.isNull(options.getSort())) {
+            options.sort(ascending("_id"));
+        }
 
         final List<ModelT> modelTList;
 

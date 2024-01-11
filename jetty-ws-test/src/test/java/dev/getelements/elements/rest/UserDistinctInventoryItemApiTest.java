@@ -366,7 +366,11 @@ public class UserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
                 .get();
 
-        assertEquals(404, response.getStatus());
+        if (distinctInventoryItem.getItem().isPublicVisible()) {
+            assertEquals(200, response.getStatus());
+        } else {
+            assertEquals(404, response.getStatus());
+        }
 
     }
 
@@ -382,7 +386,11 @@ public class UserDistinctInventoryItemApiTest {
                 .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
                 .get();
 
-        assertEquals(404, response.getStatus());
+        if (distinctInventoryItem.getItem().isPublicVisible()) {
+            assertEquals(200, response.getStatus());
+        } else {
+            assertEquals(404, response.getStatus());
+        }
 
     }
 

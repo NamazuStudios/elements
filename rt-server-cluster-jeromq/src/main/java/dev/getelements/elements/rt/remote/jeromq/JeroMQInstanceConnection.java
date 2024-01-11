@@ -28,6 +28,8 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     private final InstanceHostInfo instanceHostInfo;
 
+    private final JeroMQSecurity jeroMQSecurity;
+
     private final InstanceMetadataContext instanceMetadataContext;
 
     private final Consumer<JeroMQInstanceConnection> onDisconnect;
@@ -37,12 +39,14 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
                                     final ZContext zContext,
                                     final String internalControlAddress,
                                     final InstanceHostInfo instanceHostInfo,
+                                    final JeroMQSecurity jeroMQSecurity,
                                     final Consumer<JeroMQInstanceConnection> onDisconnect) {
         this.zContext = zContext;
         this.instanceId = instanceId;
         this.onDisconnect = onDisconnect;
         this.remoteInvoker = remoteInvoker;
         this.instanceHostInfo = instanceHostInfo;
+        this.jeroMQSecurity = jeroMQSecurity;
         this.internalControlAddress = internalControlAddress;
         this.instanceMetadataContext = new ProxyBuilder<>(InstanceMetadataContext.class)
             .dontProxyDefaultMethods()
@@ -58,7 +62,11 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     @Override
     public String openRouteToNode(NodeId nodeId) {
-        try (final ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
+        try (final ControlClient client = new JeroMQControlClient(
+                zContext,
+                internalControlAddress,
+                jeroMQSecurity)
+        ) {
             final String address = client.openRouteToNode(nodeId, instanceHostInfo.getConnectAddress());
             return address;
         }

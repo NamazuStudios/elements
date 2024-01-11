@@ -1,6 +1,5 @@
 package dev.getelements.elements.rt.remote.jeromq.guice;
 
-import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.rt.remote.InstanceConnectionService;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQInstanceConnectionService;

@@ -89,7 +89,7 @@
             <artifactId>firebase-admin</artifactId>
             <version>${firebase.admin.version}</version>
             <exclusions>
-                <!-- We don't use this and the gRPC dependencies clash with the Flow SDK. -->
+                <!-- We dont' use this and the gRPC dependencies clash with the Flow SDK. -->
                 <exclusion>
                     <groupId>com.google.cloud</groupId>
                     <artifactId>google-cloud-firestore</artifactId>
@@ -168,6 +168,11 @@
             <groupId>io.getstream.client</groupId>
             <artifactId>stream-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mailjet</groupId>
+            <artifactId>mailjet-client</artifactId>
+            <version>5.2.5</version>
+        </dependency>
 
         <!-- Manual Kotlin Dependencies -->
         <dependency>
@@ -184,11 +189,6 @@
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
         </dependency>
 
         <dependency>
