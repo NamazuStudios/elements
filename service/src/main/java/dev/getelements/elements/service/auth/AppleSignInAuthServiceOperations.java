@@ -1,7 +1,6 @@
 package dev.getelements.elements.service.auth;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -13,7 +12,7 @@ import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.InvalidDataException;
-import dev.getelements.elements.exception.InvalidPemException;
+import dev.getelements.elements.rt.exception.InvalidPemException;
 import dev.getelements.elements.exception.application.ApplicationConfigurationNotFoundException;
 import dev.getelements.elements.model.applesignin.JWKSet;
 import dev.getelements.elements.model.applesignin.TokenResponse;
@@ -25,7 +24,7 @@ import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.service.NameService;
 import dev.getelements.elements.service.Unscoped;
-import dev.getelements.elements.util.PemDecoder;
+import dev.getelements.elements.rt.util.PemData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,14 +277,14 @@ public class AppleSignInAuthServiceOperations {
 
         try {
 
-            final PemDecoder<PKCS8EncodedKeySpec> pemDecoder = new PemDecoder<>(
+            final PemData<PKCS8EncodedKeySpec> pemData = new PemData<>(
                 appleSignInConfiguration.getAppleSignInPrivateKey(),
                 PKCS8EncodedKeySpec::new
             );
 
             ecPrivateKey = (ECPrivateKey) KeyFactory
                 .getInstance(EC_ALGO)
-                .generatePrivate(pemDecoder.getSpec());
+                .generatePrivate(pemData.getSpec());
 
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | InvalidPemException e) {
             throw new InternalException(e);

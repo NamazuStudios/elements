@@ -74,6 +74,7 @@ public class ApplicationNode {
             new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
             new PersistentInstanceIdModule(),
             new ZContextModule(),
+            new JeroMQSecurityModule(),
             new MasterNodeModule(),
             new JeroMQRemoteInvokerModule(),
             new JeroMQAsyncConnectionServiceModule(),

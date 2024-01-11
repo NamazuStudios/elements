@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo;
 import dev.getelements.elements.dao.FollowerDao;
 import dev.getelements.elements.dao.mongo.model.MongoFollower;
 import dev.getelements.elements.dao.mongo.model.MongoFollowerId;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.profile.ProfileNotFoundException;
@@ -10,12 +11,32 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.morphia.Datastore;
+import dev.morphia.aggregation.Aggregation;
+import dev.morphia.aggregation.expressions.ComparisonExpressions;
+import dev.morphia.aggregation.expressions.Expressions;
+import dev.morphia.aggregation.expressions.impls.Expression;
+import dev.morphia.aggregation.stages.Match;
+import dev.morphia.aggregation.stages.Redact;
+import dev.morphia.aggregation.stages.Unset;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.util.List;
 
+import static dev.morphia.aggregation.expressions.Expressions.field;
+import static dev.morphia.aggregation.expressions.Expressions.value;
+import static dev.morphia.aggregation.stages.Lookup.lookup;
+import static dev.morphia.aggregation.stages.Match.match;
+import static dev.morphia.aggregation.stages.Redact.redact;
+import static dev.morphia.aggregation.stages.ReplaceRoot.replaceRoot;
+import static dev.morphia.aggregation.stages.Unset.unset;
+import static dev.morphia.aggregation.stages.Unwind.unwind;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.expr;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 public class MongoFollowerDao implements FollowerDao {
 
@@ -88,12 +109,30 @@ public class MongoFollowerDao implements FollowerDao {
 
     }
 
+    public Aggregation<?> aggregateMutualFollowers(final MongoProfile mongoProfile) {
+        return getDatastore().aggregate(MongoFollower.class)
+                .match(eq("_id.profileId", mongoProfile.getObjectId()))
+                .lookup(lookup(MongoFollower.class)
+                        .as("reciprocal")
+                        .let("followedId", field("_id.followedId"))
+                        .pipeline(
+                                match(expr(
+                                        ComparisonExpressions.eq(
+                                                field("_id.profileId"),
+                                                value("$$followedId")
+                                        )
+                                ))
+                        )
+                )
+                .unwind(unwind("reciprocal"))
+                .replaceRoot(replaceRoot(field("reciprocal")));
+    }
+
     @Override
-    public void createFollowerForProfile(final String profileId,
-                                         final CreateFollowerRequest createFollowerRequest) {
+    public void createFollowerForProfile(final String profileId, final String followedProfileId) {
 
         final var follower = getMongoProfileDao().getActiveMongoProfile(profileId);
-        final var followed = getMongoProfileDao().getActiveMongoProfile(createFollowerRequest.getFollowedId());
+        final var followed = getMongoProfileDao().getActiveMongoProfile(followedProfileId);
 
         final var mongoFollower = new MongoFollower();
         final var mongoFollowerId = new MongoFollowerId(follower.getObjectId(), followed.getObjectId());

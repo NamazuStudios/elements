@@ -120,10 +120,15 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
     @Override
     public Stream<FCMRegistration> getRegistrationsForRecipient(final String recipientId) {
+
         final var recipient = getMongoProfileDao().getActiveMongoProfile(recipientId);
         final var query = getDatastore().find(MongoFCMRegistration.class);
         query.filter(eq("profile", recipient));
-        return query.iterator().toList().stream().map(p -> getMapper().map(p, FCMRegistration.class));
+
+        try (final var iterator = query.iterator()) {
+            return iterator.toList().stream().map(p -> getMapper().map(p, FCMRegistration.class));
+        }
+
     }
 
     public Mapper getMapper() {

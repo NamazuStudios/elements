@@ -6,8 +6,7 @@ import java.util.Properties;
 
 import static dev.getelements.elements.rt.Constants.*;
 import static dev.getelements.elements.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
-import static dev.getelements.elements.rt.jeromq.ZContextProvider.IO_THREADS;
-import static dev.getelements.elements.rt.jeromq.ZContextProvider.MAX_SOCKETS;
+import static dev.getelements.elements.rt.jeromq.ZContextProvider.*;
 import static dev.getelements.elements.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
 import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
@@ -25,6 +24,7 @@ public class DocServeModuleDefaults implements ModuleDefaults {
     public Properties get() {
         final var properties = new Properties();
         properties.setProperty(MAX_SOCKETS, "500000");
+        properties.setProperty(IPV6, "true");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");

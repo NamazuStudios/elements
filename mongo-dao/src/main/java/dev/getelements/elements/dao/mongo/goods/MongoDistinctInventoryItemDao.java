@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.goods;
 
-import com.google.common.base.Strings;
 import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -25,6 +24,7 @@ import javax.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.in;
@@ -139,7 +139,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             query.filter(in("item", mongoItemDao.getPublicItems()));
         }
 
-        if (Strings.isNullOrEmpty(queryString)) {
+        if (isNullOrEmpty(queryString)) {
             return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
         }
 
@@ -149,6 +149,50 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
                 .map(q -> getMongoDBUtils().paginationFromQuery(q, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class)))
                 .orElseGet(Pagination::empty);
 
+    }
+
+    @Override
+    public Long getTotalDistinctInventoryItems(String userId, String profileId, boolean publicOnly, String queryString) {
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        if (!isNullOrEmpty(userId)) {
+            var user = getMongoUserDao().findActiveMongoUser(userId);
+            if (user.isEmpty()) {
+                return 0L;
+            }
+            user.ifPresent(u -> query.filter(eq("user", u)));
+        }
+
+        if (!isNullOrEmpty(profileId)) {
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
+            if (profile.isEmpty()) {
+                return 0L;
+            }
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+        }
+
+        if (publicOnly) {
+            query.filter(in("item", mongoItemDao.getPublicItems()));
+        }
+
+        if (isNullOrEmpty(queryString)) {
+            return getMongoDBUtils().perform(data -> query.count());
+        }
+
+        return getBooleanQueryParser()
+                .parse(query, queryString)
+                .filter(getMongoDBUtils()::isIndexedQuery)
+                .map(q -> getMongoDBUtils().perform(data -> query.count()))
+                .orElse(0L);
+    }
+
+    @Override
+    public Long countUniqueMetadataField(String fieldName, String fieldValue){
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        query.filter(eq("metadata." + fieldName, fieldValue));
+
+        return getMongoDBUtils().perform(data -> query.count());
     }
 
     @Override

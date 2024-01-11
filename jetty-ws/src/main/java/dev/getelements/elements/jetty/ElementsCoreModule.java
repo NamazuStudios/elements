@@ -58,6 +58,7 @@ public class ElementsCoreModule extends AbstractModule {
         install(new MongoDaoModule());
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ZContextModule());
+        install(new JeroMQSecurityModule());
         install(new ClusterContextFactoryModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());

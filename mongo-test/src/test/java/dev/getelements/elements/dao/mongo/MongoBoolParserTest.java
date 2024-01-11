@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
-import dev.getelements.elements.dao.mongo.model.MongoScore;
+import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;

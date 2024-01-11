@@ -9,6 +9,7 @@ import dev.getelements.elements.rt.id.ApplicationId;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.Node;
 import dev.getelements.elements.rt.remote.Worker;
+import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.transact.JournalTransactionalResourceServicePersistenceModule;
 import dev.getelements.elements.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import dev.getelements.elements.rt.xodus.XodusEnvironmentModule;
@@ -39,6 +40,8 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
 
     private JeroMQEmbeddedWorkerInstanceContainer worker;
 
+    private JeroMQSecurity jeroMQSecurity = JeroMQSecurity.DEFAULT;
+
     private final AtomicBoolean running = new AtomicBoolean();
 
     private final Publisher<JeroMQEmbeddedTestService> onClosePublisher = new SimplePublisher<>();
@@ -63,8 +66,25 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
         return this;
     }
 
+    /**
+     * Specifies an alternative ZContext.
+     *
+     * @param zContext a zContext
+     * @return
+     */
     public JeroMQEmbeddedTestService withZContext(final ZContext zContext) {
         this.zContext = zContext;
+        return this;
+    }
+
+    /**
+     * Specifies an alternative security context.
+     *
+     * @param jeroMQSecurity
+     * @return
+     */
+    public JeroMQEmbeddedTestService withSecurity(final JeroMQSecurity jeroMQSecurity) {
+        this.jeroMQSecurity = jeroMQSecurity;
         return this;
     }
 
@@ -218,11 +238,14 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
             zc = zContext;
         }
 
-        if (worker != null) worker.withZContext(zc);
+        if (worker != null) worker
+                .withZContext(zc)
+                .withSecurity(jeroMQSecurity);
 
         if (client != null) {
-            client.withZContext(zc);
-            client.clearConnectAddresses()
+            client.withZContext(zc)
+                  .withSecurity(jeroMQSecurity)
+                  .clearConnectAddresses()
                   .withConnectAddress(worker.getBindAddress());
         }
 

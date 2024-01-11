@@ -199,15 +199,22 @@ public class MongoProfileDao implements ProfileDao {
             )
         );
 
+        final List<MongoUser> userList;
+
+        try (var iterator = userQuery.iterator()) {
+            userList = iterator.toList();
+        }
+
         profileQuery.filter(
             eq("active", true),
             Filters.or(
                 regex("displayName", compile(trimmedSearch)),
-                Filters.in("user", userQuery.iterator().toList())
+                in("user", userList)
             )
         );
 
         return paginationFromQuery(profileQuery, offset, count);
+
     }
 
     private Pagination<Profile> paginationFromQuery(final Query<MongoProfile> query, final int offset, final int count) {
@@ -244,7 +251,9 @@ public class MongoProfileDao implements ProfileDao {
                 eq("active", true)
         ));
 
-        return query.iterator().toList().stream();
+        try (var iterator = query.iterator()) {
+            return iterator.toList().stream();
+        }
 
     }
 

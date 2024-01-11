@@ -1,21 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import dev.getelements.elements.rt.util.ShutdownHooks;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import static java.lang.String.format;
-import static java.lang.Thread.sleep;
-import static java.util.UUID.randomUUID;
 
 public class MongoTestInstanceModule extends AbstractModule {
 

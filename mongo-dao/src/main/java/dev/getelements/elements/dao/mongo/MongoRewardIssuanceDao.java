@@ -79,7 +79,11 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         query.filter(eq("user", mongoUser));
         query.filter(eq("context", context));
 
-        final List<MongoRewardIssuance> mongoRewardIssuances = query.iterator().toList();
+        final List<MongoRewardIssuance> mongoRewardIssuances;
+
+        try (var iterator = query.iterator()) {
+            mongoRewardIssuances = iterator.toList();
+        }
 
         if (mongoRewardIssuances != null && !mongoRewardIssuances.isEmpty()) {
             final MongoRewardIssuance mongoRewardIssuance = mongoRewardIssuances.get(0);

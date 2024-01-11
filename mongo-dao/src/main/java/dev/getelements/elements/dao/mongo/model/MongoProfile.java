@@ -130,26 +130,28 @@ public class MongoProfile {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoProfile that = (MongoProfile) o;
-        return active == that.active && Objects.equals(objectId, that.objectId) && Objects.equals(user, that.user) && Objects.equals(application, that.application) && Objects.equals(imageUrl, that.imageUrl) && Objects.equals(imageObject, that.imageObject) && Objects.equals(displayName, that.displayName) && Objects.equals(metadata, that.metadata) && Objects.equals(lastLogin, that.lastLogin);
+        return isActive() == that.isActive() && Objects.equals(getObjectId(), that.getObjectId()) && Objects.equals(getUser(), that.getUser()) && Objects.equals(getApplication(), that.getApplication()) && Objects.equals(getImageUrl(), that.getImageUrl()) && Objects.equals(getImageObject(), that.getImageObject()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getMetadata(), that.getMetadata()) && Objects.equals(getLastLogin(), that.getLastLogin());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, active, user, application, imageUrl, imageObject, displayName, metadata, lastLogin);
+        return Objects.hash(getObjectId(), isActive(), getUser(), getApplication(), getImageUrl(), getImageObject(), getDisplayName(), getMetadata(), getLastLogin());
     }
 
     @Override
     public String toString() {
-        return "MongoProfile{" +
-                "objectId=" + objectId +
-                ", active=" + active +
-                ", user=" + user +
-                ", application=" + application +
-                ", imageUrl='" + imageUrl + '\'' +
-                ", imageObject=" + imageObject +
-                ", displayName='" + displayName + '\'' +
-                ", metadata=" + metadata +
-                ", lastLogin=" + lastLogin +
-                '}';
+        final StringBuilder sb = new StringBuilder("MongoProfile{");
+        sb.append("objectId=").append(objectId);
+        sb.append(", active=").append(active);
+        sb.append(", user=").append(user);
+        sb.append(", application=").append(application);
+        sb.append(", imageUrl='").append(imageUrl).append('\'');
+        sb.append(", imageObject=").append(imageObject);
+        sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", metadata=").append(metadata);
+        sb.append(", lastLogin=").append(lastLogin);
+        sb.append('}');
+        return sb.toString();
     }
+
 }

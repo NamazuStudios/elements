@@ -55,21 +55,21 @@ public class MongoFollowerDaoTest {
     public void createFollowerForProfile(){
         final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
         createFollowerRequest.setFollowedId(testProfileB.getId());
-        getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest);
+        getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest.getFollowedId());
     }
 
     @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = DuplicateException.class)
     public void createFollowerForProfileDuplicate(){
         final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
         createFollowerRequest.setFollowedId(testProfileB.getId());
-        getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest);
+        getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest.getFollowedId());
     }
 
     @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = ProfileNotFoundException.class)
     public void createFollowerForProfileFails(){
         final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
         createFollowerRequest.setFollowedId(new ObjectId().toString());
-        getFollowerDao().createFollowerForProfile(new ObjectId().toString(), createFollowerRequest);
+        getFollowerDao().createFollowerForProfile(new ObjectId().toString(), createFollowerRequest.getFollowedId());
     }
 
     @Test(dependsOnMethods = "createFollowerForProfile")
