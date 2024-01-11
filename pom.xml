@@ -163,6 +163,7 @@
         <jsr.305.groupId>com.google.code.findbugs</jsr.305.groupId>
         <jsr.305.artifactId>jsr305</jsr.305.artifactId>
         <jsr.305.version>3.0.2</jsr.305.version>
+        <mailjet.client.version>5.2.5</mailjet.client.version>
     </properties>
 
     <dependencies>
@@ -720,6 +721,31 @@
                         <artifactId>kotlin-stdlib</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>io.getstream.client</groupId>
+                <artifactId>stream-java</artifactId>
+                <version>${getstream.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-databind</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.core</groupId>
+                        <artifactId>jackson-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.mailjet</groupId>
+                <artifactId>mailjet-client</artifactId>
+                <version>${mailjet.client.version}</version>
             </dependency>
 
             <dependency>
