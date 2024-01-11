@@ -12,6 +12,7 @@ import dev.getelements.elements.model.follower.CreateFollowerRequest;
 import dev.getelements.elements.model.profile.Profile;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
+import dev.morphia.aggregation.expressions.BooleanExpressions;
 import dev.morphia.aggregation.expressions.ComparisonExpressions;
 import dev.morphia.aggregation.expressions.Expressions;
 import dev.morphia.aggregation.expressions.impls.Expression;
@@ -33,8 +34,7 @@ import static dev.morphia.aggregation.stages.Redact.redact;
 import static dev.morphia.aggregation.stages.ReplaceRoot.replaceRoot;
 import static dev.morphia.aggregation.stages.Unset.unset;
 import static dev.morphia.aggregation.stages.Unwind.unwind;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.expr;
+import static dev.morphia.query.filters.Filters.*;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
@@ -114,18 +114,17 @@ public class MongoFollowerDao implements FollowerDao {
                 .match(eq("_id.profileId", mongoProfile.getObjectId()))
                 .lookup(lookup(MongoFollower.class)
                         .as("reciprocal")
+                        .let("profileId", field("_id.profileId"))
                         .let("followedId", field("_id.followedId"))
-                        .pipeline(
-                                match(expr(
-                                        ComparisonExpressions.eq(
-                                                field("_id.profileId"),
-                                                value("$$followedId")
-                                        )
-                                ))
-                        )
-                )
-                .unwind(unwind("reciprocal"))
-                .replaceRoot(replaceRoot(field("reciprocal")));
+                        .pipeline(match(expr(
+                                BooleanExpressions.and(
+                                        ComparisonExpressions.eq(field("_id.profileId"), value("$$followedId")),
+                                        ComparisonExpressions.eq(field("_id.followedId"), value("$$profileId"))
+                                )
+                        )))
+            )
+            .unwind(unwind("reciprocal"))
+            .replaceRoot(replaceRoot(field("reciprocal")));
     }
 
     @Override
