@@ -22,9 +22,6 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
     @NotNull
     private String applicationId;
 
-    @Valid
-    private AppleSignInConfiguration appleSignInConfiguration;
-
     /**
      * Gets the Application ID, as defined in the AppStore (com.mycompany.app)
      * @return the app id
@@ -41,22 +38,6 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
         this.applicationId = applicationId;
     }
 
-    /**
-     * Gets the {@link AppleSignInConfiguration} for use with this {@link IosApplicationConfiguration}.
-     * @return the {@link AppleSignInConfiguration}
-     */
-    public AppleSignInConfiguration getAppleSignInConfiguration() {
-        return appleSignInConfiguration;
-    }
-
-    /**
-     * Sets the {@link AppleSignInConfiguration} for use with this {@link IosApplicationConfiguration}.
-     *
-     * @param appleSignInConfiguration
-     */
-    public void setAppleSignInConfiguration(AppleSignInConfiguration appleSignInConfiguration) {
-        this.appleSignInConfiguration = appleSignInConfiguration;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -64,20 +45,18 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         IosApplicationConfiguration that = (IosApplicationConfiguration) o;
-        return Objects.equals(getApplicationId(), that.getApplicationId()) &&
-                Objects.equals(appleSignInConfiguration, that.appleSignInConfiguration);
+        return Objects.equals(getApplicationId(), that.getApplicationId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getApplicationId(), appleSignInConfiguration);
+        return Objects.hash(super.hashCode(), getApplicationId());
     }
 
     @Override
     public String toString() {
         return "IosApplicationConfiguration{" +
                 "applicationId='" + applicationId + '\'' +
-                ", appleSignInConfiguration=" + appleSignInConfiguration +
                 '}';
     }
 

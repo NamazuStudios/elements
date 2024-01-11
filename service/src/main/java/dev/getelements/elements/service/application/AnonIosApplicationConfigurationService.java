@@ -2,7 +2,6 @@ package dev.getelements.elements.service.application;
 
 import dev.getelements.elements.dao.IosApplicationConfigurationDao;
 import dev.getelements.elements.exception.ForbiddenException;
-import dev.getelements.elements.model.application.AppleSignInConfiguration;
 import dev.getelements.elements.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.service.IosApplicationConfigurationService;
 import org.dozer.Mapper;
@@ -26,7 +25,7 @@ public class AnonIosApplicationConfigurationService implements IosApplicationCon
                                                                    final String applicationProfileNameOrId) {
         final IosApplicationConfiguration applicationConfiguration = getIosApplicationConfigurationDao()
             .getIosApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
-        return redactPrivateInformation(applicationConfiguration);
+        return applicationConfiguration;
     }
 
     @Override
@@ -42,22 +41,6 @@ public class AnonIosApplicationConfigurationService implements IosApplicationCon
         throw new ForbiddenException();
     }
 
-
-    private IosApplicationConfiguration redactPrivateInformation(final IosApplicationConfiguration iosApplicationConfiguration) {
-
-        final IosApplicationConfiguration redacted = getMapper().map(iosApplicationConfiguration, IosApplicationConfiguration.class);
-        final AppleSignInConfiguration redactedSignInConfiguration = redacted.getAppleSignInConfiguration();
-
-        if (redactedSignInConfiguration != null) {
-            redactedSignInConfiguration.setKeyId(null);
-            redactedSignInConfiguration.setTeamId(null);
-            redactedSignInConfiguration.setAppleSignInPrivateKey(null);
-        }
-
-        redacted.setAppleSignInConfiguration(redactedSignInConfiguration);
-
-        return redacted;
-    }
 
     public Mapper getMapper() {
         return mapper;

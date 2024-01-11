@@ -158,9 +158,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
 
         final var builder = new UpdateBuilder();
 
-        final var mongoAppleSignInConfiguration = getBeanMapper()
-            .map(iosApplicationConfiguration.getAppleSignInConfiguration(), MongoAppleSignInConfiguration.class);
-
         if (iosApplicationConfiguration.getProductBundles() != null &&
             iosApplicationConfiguration.getProductBundles().size() > 0) {
 
@@ -174,7 +171,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
                 set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim()),
                 set("category", iosApplicationConfiguration.getCategory()),
                 set("parent", mongoApplication),
-                set("appleSignInConfiguration", mongoAppleSignInConfiguration),
                 set("productBundles", mongoProductBundles)
             );
 
@@ -183,7 +179,6 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
                 set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim()),
                 set("category", iosApplicationConfiguration.getCategory()),
                 set("parent", mongoApplication),
-                set("appleSignInConfiguration", mongoAppleSignInConfiguration),
                 unset("productBundles")
             );
         }
