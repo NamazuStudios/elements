@@ -187,8 +187,16 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     }
 
     @Override
-    public Long countUniqueMetadataField(String fieldName, String fieldValue){
+    public Long countUniqueMetadataField(final String profileId, final String fieldName, final String fieldValue){
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        if (!isNullOrEmpty(profileId)) {
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
+            if (profile.isEmpty()) {
+                return 0L;
+            }
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+        }
 
         query.filter(eq("metadata." + fieldName, fieldValue));
 

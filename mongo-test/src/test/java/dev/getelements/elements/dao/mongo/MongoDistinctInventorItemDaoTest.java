@@ -348,10 +348,10 @@ public class MongoDistinctInventorItemDaoTest {
         underTest.createDistinctInventoryItem(itemWithSimpleMetadata);
         underTest.createDistinctInventoryItem(itemWithBiggerMetadata);
 
-        Long expectedTwoValuesInBothItems = underTest.countUniqueMetadataField("key1", "value1");
-        Long expectedOneValueForFirstItem = underTest.countUniqueMetadataField("key2", "value2");
-        Long expectedOneValueForSecondItem = underTest.countUniqueMetadataField("key2", "value1");
-        Long expectedNoValueInItems = underTest.countUniqueMetadataField("key3", "value4");
+        Long expectedTwoValuesInBothItems = underTest.countUniqueMetadataField(null,"key1", "value1");
+        Long expectedOneValueForFirstItem = underTest.countUniqueMetadataField(null,"key2", "value2");
+        Long expectedOneValueForSecondItem = underTest.countUniqueMetadataField(null,"key2", "value1");
+        Long expectedNoValueInItems = underTest.countUniqueMetadataField(null,"key3", "value4");
 
         assertEquals(expectedTwoValuesInBothItems.longValue(), 2);
         assertEquals(expectedOneValueForFirstItem.longValue(), 1);
