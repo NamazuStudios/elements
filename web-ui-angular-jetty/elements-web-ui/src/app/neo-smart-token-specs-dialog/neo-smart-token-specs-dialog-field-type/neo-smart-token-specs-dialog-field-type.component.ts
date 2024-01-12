@@ -38,9 +38,7 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    if (this.field.type === 'ENUM') {
-      this.enumFields = this.field?.defaultValue ? this.field?.defaultValue.split(',') : [];
-    } else if (this.field.type === 'TAGS') {
+    if (this.field.type === 'TAGS') {
       this.tagsArr = this.field.defaultValue ? this.field.defaultValue.split(',') : [];
     } else if (this.field.type === 'ARRAY') {
       // if (this.field.fieldContentType) {

@@ -47,7 +47,7 @@
               <div class="menu-index-keyname">
                 <mat-icon>menu</mat-icon>
                 <div>
-                  <span>1: </span>
+                  <span>{{fieldIndex+1}}: </span>
                   <span class="memu-keyname">{{property.name || 'KeyName'}}</span>
                 </div>
               </div>
@@ -64,7 +64,7 @@
                   name="keyname"
                   type="text"
                   [value]="property.name"
-                  (change)="changeFieldName($event.target.value, fieldIndex)"
+                  (change)="changeFieldName($event.target, fieldIndex)"
                 >
               </mat-form-field>
               <mat-form-field>

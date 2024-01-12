@@ -135,12 +135,12 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.expandedField = index;
   }
 
-  changeFieldName(value: string, fieldIndex: number) {
+  changeFieldName(target: EventTarget, fieldIndex: number) {
     this.properties = this.properties.map((field, index) => {
       if (fieldIndex === index) {
         return {
           ...field,
-          name: value,
+          name: (target as HTMLInputElement).value,
         };
       }
       return field;
@@ -261,18 +261,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   // }
 
   isValid(): boolean {
-    let isValid = true;
-    if (!this.specName) {
-      isValid = false;
-    }
-
-    for (let i = 0; i < this.properties.length; i++) {
-      const field = this.properties[i];
-      if (field?.type === MetadataSpecPropertyType.ENUM && !enumRegex.test(field.defaultValue as string)) {
-        isValid = false;
-      }
-    }
-    return isValid;
+    return !!(this.specName);
   }
 
   close() {
