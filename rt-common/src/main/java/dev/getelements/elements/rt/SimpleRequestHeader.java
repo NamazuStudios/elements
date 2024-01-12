@@ -1,9 +1,12 @@
 package dev.getelements.elements.rt;
 
 import java.io.Serializable;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Simple implementation of the response.
@@ -71,6 +74,12 @@ public class SimpleRequestHeader implements RequestHeader, Serializable {
         } else {
             return parameterizedPath.extract(getParsedPath());
         }
+    }
+
+    @Override
+    public Map<String, String> getDecodedPathParameters() {
+        return getPathParameters().entrySet().stream().collect(toMap(Map.Entry::getKey,
+                pathParam -> URLDecoder.decode(pathParam.getValue(), StandardCharsets.UTF_8)));
     }
 
     public ParameterizedPath getParameterizedPath() {
