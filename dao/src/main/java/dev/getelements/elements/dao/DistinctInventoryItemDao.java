@@ -80,14 +80,13 @@ public interface DistinctInventoryItemDao {
             boolean publicOnly, String queryString);
 
     /**
-     * Gets a total number of specified value for provided metadata field name.
+     * Gets a total number of distinct values for provided metadata field name.
      *
      * @param profileId optional value to count items that belongs only to that profile
      * @param fieldName metadata field name
-     * @param fieldValue value of metadata field to be counted
-     * @return a number of items
+     * @return a number of distinct values
      */
-    Long countUniqueMetadataField(String profileId, String fieldName, String fieldValue);
+    Long countDistinctMetadataField(String profileId, String fieldName);
 
     /**
      * Updates a distinct inventory item.

@@ -26,8 +26,7 @@ import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static dev.getelements.elements.model.goods.ItemCategory.DISTINCT;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.in;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
@@ -187,7 +186,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     }
 
     @Override
-    public Long countUniqueMetadataField(final String profileId, final String fieldName, final String fieldValue){
+    public Long countDistinctMetadataField(final String profileId, final String fieldName){
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
         if (!isNullOrEmpty(profileId)) {
@@ -198,9 +197,11 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             profile.ifPresent(p -> query.filter(eq("profile", p)));
         }
 
-        query.filter(eq("metadata." + fieldName, fieldValue));
+        query.filter(exists("metadata." + fieldName));
 
-        return getMongoDBUtils().perform(data -> query.count());
+        return getMongoDBUtils().perform(data -> query.stream()
+                .map(entry -> entry.getMetadata().get(fieldName))
+                .distinct().count());
     }
 
     @Override
