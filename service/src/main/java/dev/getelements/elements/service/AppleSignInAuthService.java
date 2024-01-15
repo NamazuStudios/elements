@@ -32,21 +32,16 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
 public interface AppleSignInAuthService {
 
     /**
-     * Creates a new session using the supplied application, application configuration, and the identity token.
+     * Creates a new session using the supplied identity token.
      *
-     * In addition to manipulating the user account, this should also convert the short-term facebook token
-     * to a long-term token and supply the result.
+     * Will validate token signature using Apple's identity certificates.
      *
      * @param applicationNameOrId the application name or id
-     * @param applicationConfigurationNameOrId the application configuration name or id
      * @param identityToken the identity token issued by Apple's services
-     * @param authorizationCode the authorization code issued by Apple's services
      *
      * @return
      */
     AppleSignInSessionCreation createOrUpdateUserWithIdentityTokenAndAuthCode(String applicationNameOrId,
-                                                                              String applicationConfigurationNameOrId,
-                                                                              String identityToken,
-                                                                              String authorizationCode);
+                                                                              String identityToken);
 
 }

@@ -19,14 +19,11 @@ public class UserAppleSignInAuthService implements AppleSignInAuthService {
     @Override
     public AppleSignInSessionCreation createOrUpdateUserWithIdentityTokenAndAuthCode(
             final String applicationNameOrId,
-            final String applicationConfigurationNameOrId,
-            final String identityToken,
-            final String authorizationCode) {
-        return getAppleSignInAuthServiceOperations().createOrUpdateUserWithAppleSignInTokenAndAuthorizationCode(
+            final String identityToken) {
+
+        return getAppleSignInAuthServiceOperations().createOrUpdateUserWithAppleSignInToken(
             applicationNameOrId,
-            applicationConfigurationNameOrId,
             identityToken,
-            authorizationCode,
             appleIdentityToken ->  {
                 final User user = new User();
                 user.setId(getUser().getId());

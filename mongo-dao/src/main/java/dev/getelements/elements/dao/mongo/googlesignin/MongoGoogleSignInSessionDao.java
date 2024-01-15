@@ -41,7 +41,7 @@ public class MongoGoogleSignInSessionDao implements GoogleSignInSessionDao {
     @Override
     public GoogleSignInSessionCreation create(final Session session) {
 
-        requireNonNull(session, "tokenResponse");
+        requireNonNull(session, "Session");
 
         final MongoSession mongoGoogleSignInSession = getMapper().map(session, MongoSession.class);
 
