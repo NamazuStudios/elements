@@ -323,40 +323,37 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test()
-    public void testCountMetadataFieldValues() {
+    public void testCountDistinctMetadataField() {
         User userWithMatadataItems = userTestFactory.createTestUser();
-        var itemWithSimpleMetadata = new DistinctInventoryItem();
-        var itemWithBiggerMetadata = new DistinctInventoryItem();
-        itemWithSimpleMetadata.setUser(userWithMatadataItems);
-        itemWithBiggerMetadata.setUser(userWithMatadataItems);
-        Map<String, Object> simpleMetadata = new HashMap<>();
-        Map<String, Object> biggerMetadata = new HashMap<>();
+        var itemWithMetadata1 = new DistinctInventoryItem();
+        var itemWithMetadata2 = new DistinctInventoryItem();
+        itemWithMetadata1.setUser(userWithMatadataItems);
+        itemWithMetadata2.setUser(userWithMatadataItems);
+        Map<String, Object> metadata1 = new HashMap<>();
+        Map<String, Object> metadata2 = new HashMap<>();
 
-        simpleMetadata.put("key1", "value1");
-        simpleMetadata.put("key2", "value2");
+        metadata1.put("country", "USA");
+        metadata1.put("city", "City1");
 
-        biggerMetadata.put("key1", "value1");
-        biggerMetadata.put("key2", "value1");
-        biggerMetadata.put("key3", "value3");
-        biggerMetadata.put("key4", "value4");
+        metadata2.put("country", "USA");
+        metadata2.put("city", "City2");
+        metadata2.put("book", "StrangBook");
 
-        itemWithSimpleMetadata.setMetadata(simpleMetadata);
-        itemWithBiggerMetadata.setMetadata(biggerMetadata);
-        itemWithSimpleMetadata.setItem(itemTestFactory.createTestItem(DISTINCT, true));
-        itemWithBiggerMetadata.setItem(itemTestFactory.createTestItem(DISTINCT, true));
+        itemWithMetadata1.setMetadata(metadata1);
+        itemWithMetadata2.setMetadata(metadata2);
+        itemWithMetadata1.setItem(itemTestFactory.createTestItem(DISTINCT, true));
+        itemWithMetadata2.setItem(itemTestFactory.createTestItem(DISTINCT, true));
 
-        underTest.createDistinctInventoryItem(itemWithSimpleMetadata);
-        underTest.createDistinctInventoryItem(itemWithBiggerMetadata);
+        underTest.createDistinctInventoryItem(itemWithMetadata1);
+        underTest.createDistinctInventoryItem(itemWithMetadata2);
 
-        Long expectedTwoValuesInBothItems = underTest.countUniqueMetadataField(null,"key1", "value1");
-        Long expectedOneValueForFirstItem = underTest.countUniqueMetadataField(null,"key2", "value2");
-        Long expectedOneValueForSecondItem = underTest.countUniqueMetadataField(null,"key2", "value1");
-        Long expectedNoValueInItems = underTest.countUniqueMetadataField(null,"key3", "value4");
+        Long expectedTwoDisctinctCity = underTest.countDistinctMetadataField(null,"city");
+        Long expectedOneDisctinctCountry = underTest.countDistinctMetadataField(null,"country");
+        Long expectedOneDisctinctBook= underTest.countDistinctMetadataField(null,"book");
 
-        assertEquals(expectedTwoValuesInBothItems.longValue(), 2);
-        assertEquals(expectedOneValueForFirstItem.longValue(), 1);
-        assertEquals(expectedOneValueForSecondItem.longValue(), 1);
-        assertEquals(expectedNoValueInItems.longValue(), 0);
+        assertEquals(expectedTwoDisctinctCity.longValue(), 2);
+        assertEquals(expectedOneDisctinctCountry.longValue(), 1);
+        assertEquals(expectedOneDisctinctBook.longValue(), 1);
 
     }
 
