@@ -43,19 +43,12 @@ public class MongoAppleSignInSessionDao implements AppleSignInSessionDao {
     private Provider<MessageDigest> messageDigestProvider;
 
     @Override
-    public AppleSignInSessionCreation create(final Session session, final TokenResponse tokenResponse) {
+    public AppleSignInSessionCreation create(final Session session) {
 
-        requireNonNull(tokenResponse, "tokenResponse");
-        requireNonNull(tokenResponse.getAccessToken(), "tokenResponse.accessToken");
-        requireNonNull(tokenResponse.getRefreshToken(), "tokenResponse.refreshToken");
+        requireNonNull(session, "Session");
 
         final MongoAppleSignInSession mongoAppleSignInSession = getMapper().map(session, MongoAppleSignInSession.class);
-
-        // Apple Sign-In created sessions do not expire automatically, they are expired by Apple when a refresh token
-        // fails to refresh with Apple's REST APIs. This way we can always recall the session if we need to.
-
-        mongoAppleSignInSession.setExpiry(null);
-        mongoAppleSignInSession.setAppleSignInRefreshTime(new Timestamp(currentTimeMillis()));
+        mongoAppleSignInSession.setExpiry(new Timestamp(session.getExpiry()));
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(session.getUser());
         final MongoSessionSecret mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
@@ -72,7 +65,6 @@ public class MongoAppleSignInSessionDao implements AppleSignInSessionDao {
 
         creation.setSessionSecret(mongoSessionSecret.getSessionSecret());
         creation.setSession(getMapper().map(mongoAppleSignInSession, Session.class));
-        creation.setUserAccessToken(tokenResponse.getAccessToken());
 
         return creation;
 

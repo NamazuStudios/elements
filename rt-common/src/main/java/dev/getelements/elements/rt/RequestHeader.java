@@ -4,7 +4,6 @@ import dev.getelements.elements.rt.exception.BadRequestException;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -75,6 +74,15 @@ public interface RequestHeader extends NamedHeaders {
      * @return the path parameters where the key is the parameter name and the value is the matching path component
      */
     default Map<String, String> getPathParameters() {
+        return Collections.emptyMap();
+    }
+
+    /**
+     * GetPathParameters version of method, that decodes eventually encoded params, be e.g. client.
+     *
+     * @return the path parameters with decoded values
+     */
+    default Map<String, String> getDecodedPathParameters() {
         return Collections.emptyMap();
     }
 

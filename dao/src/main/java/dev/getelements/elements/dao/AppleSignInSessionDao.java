@@ -17,10 +17,9 @@ public interface AppleSignInSessionDao {
      * Creates s {@link Session} with the
      *
      * @param session the {@link Session} to create
-     * @param tokenResponse
      * @return
      */
-    AppleSignInSessionCreation create(Session session, TokenResponse tokenResponse);
+    AppleSignInSessionCreation create(Session session);
 
     /**
      * Finds an instance of {@link AppleSignInSession} using the session secret. Since not all sessions are created with

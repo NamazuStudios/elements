@@ -19,14 +19,11 @@ public class AnonAppleSignInAuthService implements AppleSignInAuthService {
     @Override
     public AppleSignInSessionCreation createOrUpdateUserWithIdentityTokenAndAuthCode(
             final String applicationNameOrId,
-            final String applicationConfigurationNameOrId,
-            final String identityToken,
-            final String authorizationCode) {
-        return getAppleSignInAuthServiceOperations().createOrUpdateUserWithAppleSignInTokenAndAuthorizationCode(
+            final String identityToken) {
+
+        return getAppleSignInAuthServiceOperations().createOrUpdateUserWithAppleSignInToken(
             applicationNameOrId,
-            applicationConfigurationNameOrId,
             identityToken,
-            authorizationCode,
             appleIdentityToken ->  {
                 final User user = new User();
                 user.setActive(true);
@@ -56,5 +53,4 @@ public class AnonAppleSignInAuthService implements AppleSignInAuthService {
     public void setAppleSignInAuthServiceOperations(AppleSignInAuthServiceOperations appleSignInAuthServiceOperations) {
         this.appleSignInAuthServiceOperations = appleSignInAuthServiceOperations;
     }
-
 }

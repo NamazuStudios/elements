@@ -47,32 +47,18 @@ public class AppleSignInAuthResource {
         getValidationHelper().validateModel(appleSignInSessionRequest);
 
         final String applicationNameOrId = appleSignInSessionRequest.getApplicationNameOrId();
-        final String applicationConfigurationNameOrId = appleSignInSessionRequest.getApplicationConfigurationNameOrId();
 
-        final String authCode = appleSignInSessionRequest.getAuthCode();
         final String identityToken = appleSignInSessionRequest.getIdentityToken();
 
         if (isNullOrEmpty(applicationNameOrId)) {
             throw new InvalidDataException("Application Name not Specified");
         }
 
-        if (isNullOrEmpty(applicationConfigurationNameOrId)) {
-            throw new InvalidDataException("Application Configuration not Specified");
-        }
-
-        if (isNullOrEmpty(authCode)) {
-            throw new InvalidDataException("Auth code not specified.");
-        }
-
         if (isNullOrEmpty(identityToken)) {
             throw new InvalidDataException("Identity token not specified.");
         }
 
-        return getAppleSignInAuthService().createOrUpdateUserWithIdentityTokenAndAuthCode(
-                applicationNameOrId,
-                applicationConfigurationNameOrId,
-                identityToken,
-                authCode);
+        return getAppleSignInAuthService().createOrUpdateUserWithIdentityTokenAndAuthCode(applicationNameOrId, identityToken);
 
     }
 

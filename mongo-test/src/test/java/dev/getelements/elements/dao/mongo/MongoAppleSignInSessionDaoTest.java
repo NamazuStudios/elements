@@ -72,7 +72,6 @@ public class MongoAppleSignInSessionDaoTest {
         tokenResponse.setExpiresIn(300);
         tokenResponse.setIdToken("id token");
         tokenResponse.setTokenType("auth");
-        tokenResponse.setRefreshToken("refresh token");
 
         final Session session = new Session();
 
@@ -80,9 +79,7 @@ public class MongoAppleSignInSessionDaoTest {
         session.setProfile(testProfile);
         session.setApplication(testProfile.getApplication());
 
-        final AppleSignInSessionCreation creation = getAppleSignInSessionDao().create(session, tokenResponse);
-
-        assertEquals(creation.getUserAccessToken(), "access token");
+        final AppleSignInSessionCreation creation = getAppleSignInSessionDao().create(session);
 
         assertNotNull(creation.getSession());
         assertNotNull(creation.getSessionSecret());
