@@ -142,5 +142,5 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
     return defaultValue && defaultValue.toLowerCase() === 'true';
   }
 
-  protected readonly MetadataSpecPropertyType = MetadataSpecPropertyType;
+  public readonly MetadataSpecPropertyType = MetadataSpecPropertyType;
 }
