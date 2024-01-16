@@ -106,13 +106,6 @@ mat-expansion-panel-header {
   margin-left: 10px;
 }
 
-.field-buttons .move-to-other-tab {
-  transform: rotate(90deg);
-  height: 45px;
-  width: 36px;
-  min-width: 36px;
-}
-
 .menu-panel-footer {
   display: flex;
   justify-content: flex-end;
@@ -136,4 +129,12 @@ app-neo-smart-token-specs-dialog-field-type {
   border: dotted 3px #cbcbcb;
   min-height: 48px;
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+mb-20 {
+  margin-bottom: 20px;
 }

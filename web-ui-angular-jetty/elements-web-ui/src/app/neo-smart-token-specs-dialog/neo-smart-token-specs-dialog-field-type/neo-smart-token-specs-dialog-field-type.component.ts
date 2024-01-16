@@ -139,11 +139,6 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
     });
   }
   parseDefaultBooleanValue(defaultValue: string): boolean {
-    const value = defaultValue.toLowerCase();
-    if (value === 'true') {
-      return true;
-    } else {
-      return false;
-    }
+    return defaultValue && defaultValue.toLowerCase() === 'true';
   }
 }

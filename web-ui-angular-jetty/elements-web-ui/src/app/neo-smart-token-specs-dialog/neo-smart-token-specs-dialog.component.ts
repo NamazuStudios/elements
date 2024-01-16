@@ -4,9 +4,6 @@ import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog
 import {MetadataSpec, MetadataSpecProperty, MetadataSpecPropertyType,} from '../api/models/token-spec-tab';
 import {MetadataSpecsService} from '../api/services/metadata-specs.service';
 import {
-  NeoSmartTokenSpecsMoveFieldDialogComponent
-} from '../neo-smart-token-specs-move-field-dialog/neo-smart-token-specs-move-field-dialog.component';
-import {
   NeoTokenDialogDefineObjectComponent
 } from '../neo-token-dialog-define-object/neo-token-dialog-define-object.component';
 
@@ -35,6 +32,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   expandedField = null;
   // Workaround for accordion animation on init
   disableAnimation = true;
+  showError: boolean = false;
 
   constructor(
     private metadataSpecsService: MetadataSpecsService,
@@ -62,12 +60,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     } else {
       this.properties = [this.createField()];
     }
-  }
-
-  ngAfterViewInit(): void {
-    // timeout required to avoid the dreaded 'ExpressionChangedAfterItHasBeenCheckedError'
-    setTimeout(() => this.disableAnimation = false);
-
   }
 
   createField(): MetadataSpecProperty {
@@ -152,6 +144,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.properties = this.properties.map(
       (field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
         if (index === fieldIndex) {
+          console.log(index,'===',fieldIndex);
           return {
             name: '',
             displayName: '',
@@ -168,18 +161,17 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     setTimeout(() => this.disableAnimation = false);
   }
 
-  changeDefaultValue(value, propertyIndex): void {
+  changeDefaultValue(value: string, propertyIndex: string | number): void {
       this.properties[propertyIndex].defaultValue = value;
   }
-  changePlaceholder(value, propertyIndex): void {
+  changePlaceholder(value: string, propertyIndex: string | number): void {
     this.properties[propertyIndex].placeholder = value;
   }
 
   drop(event: CdkDragDrop<string[]>) {
     const fields = [...this.properties];
     const currentField = {...fields[event.previousIndex]};
-    const fieldToReplace = {...fields[event.currentIndex]};
-    fields[event.previousIndex] = fieldToReplace;
+    fields[event.previousIndex] = {...fields[event.currentIndex]};
     fields[event.currentIndex] = currentField;
     this.properties = fields;
   }
@@ -212,36 +204,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.activeFieldIndex = index;
   }
 
-  changeFieldTab(fieldIndex: number, newTabIndex: number) {
-    let field;
-    const newFields = this.properties?.filter(
-      (f: MetadataSpecProperty, index: number): boolean => {
-        if (index === fieldIndex) {
-          field = f;
-        }
-        return index !== fieldIndex;
-      }
-    );
-    this.properties = newFields;
-  }
-
-  movePropertyToAnotherParent(index: number) {
-    this.dialog.open(NeoSmartTokenSpecsMoveFieldDialogComponent, {
-      width: '500px',
-      data: {
-        fieldIndex: index,
-        activeTabIndex: this.activeFieldIndex + 1,
-        max: this.properties.length,
-        changeFieldTab: this.changeFieldTab.bind(this),
-      }
-    });
-    this.activeFieldIndex = index;
-  }
-
-  // Tab actions
-
-  //
-
   // updateFieldsWithContent(data) {
   //   const fieldIndex = data.index || data.index === 0 ? data.index : this.activeFieldIndex;
   //   this.properties = this.properties.map(
@@ -261,7 +223,9 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   // }
 
   isValid(): boolean {
-    return !!(this.specName);
+    return !!(this.specName) && this.properties.every(property => {
+      return !!(property.name && property.type);
+    });
   }
 
   close() {
@@ -269,6 +233,11 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   }
 
   async submit() {
+    if (!this.isValid()) {
+      this.showError = true;
+      return;
+    }
+    this.showError = false;
     this.close();
 
     // Convert body for the api format
@@ -292,10 +261,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   }
 
   private parseBoolean(stringVal: string): boolean {
-    if (stringVal === 'true') {
-      return true;
-    } else {
-      return false;
-    }
+    return stringVal === 'true';
   }
 }

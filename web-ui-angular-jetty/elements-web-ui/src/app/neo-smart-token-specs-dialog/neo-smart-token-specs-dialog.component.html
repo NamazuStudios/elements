@@ -99,15 +99,6 @@
               </app-neo-smart-token-specs-dialog-field-type>
               <div class="field-buttons">
                 <button
-                  mat-raised-button color="primary"
-                  matTooltip="Move To Another Tab"
-                  matTooltipPosition="above"
-                  class="move-to-other-tab"
-                  (click)="movePropertyToAnotherParent(fieldIndex)"
-                >
-                  <mat-icon>move_up</mat-icon>
-                </button>
-                <button
                   mat-raised-button
                   color="primary"
                   matTooltip="Duplicate Field"
@@ -133,7 +124,8 @@
     </mat-card>
 </div>
 
-<div style="margin-top: 20px">
+<div class="mt-20">
+  <div class="mat-error mb-20" *ngIf="showError">Fill all required fields.</div>
   <button
     mat-raised-button
     color="primary"
