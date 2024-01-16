@@ -1,39 +1,39 @@
-<mat-form-field *ngIf="field?.fieldType === 'String'" class="field full-width">
+<mat-form-field *ngIf="field?.type === 'String'" class="field full-width">
   <mat-label>{{field.name}}</mat-label>
   <input
     matInput
     placeholder="String"
     name="description"
     type="text"
-    [value]="field.value || ''"
+    [value]="field.name || ''"
     (change)="changeValue($event.target.value)"
   >
 </mat-form-field>
-<mat-form-field *ngIf="field?.fieldType === 'Number'" class="field">
+<mat-form-field *ngIf="field?.type === 'Number'" class="field">
   <mat-label>{{field.name}}</mat-label>
   <input
     matInput
     placeholder="Number"
     name="number"
     type="number"
-    [value]="field.value || ''"
+    [value]="field.name || ''"
     (change)="changeValue($event.target.value)"
   >
 </mat-form-field>
-<div *ngIf="field?.fieldType === 'Object'" class="field object-field">
-  <div>{{field.name}}</div>
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="openDefineModal()"
-  >
-    Define
-  </button>
-</div>
-<mat-form-field *ngIf="field?.fieldType === 'Tags'" appearance="standard" class="field full-width">
+<!--<div *ngIf="field?.fieldType === 'Object'" class="field object-field">-->
+<!--  <div>{{field.name}}</div>-->
+<!--  <button-->
+<!--    mat-raised-button-->
+<!--    color="primary"-->
+<!--    (click)="openDefineModal()"-->
+<!--  >-->
+<!--    Define-->
+<!--  </button>-->
+<!--</div>-->
+<mat-form-field *ngIf="field?.type === 'Tags'" appearance="standard" class="field full-width">
   <mat-label>{{field.name}}</mat-label>
   <mat-chip-list #chipList aria-label="Tag selection">
-    <mat-chip *ngFor="let tag of (field.value || [])" (removed)="remove(tag)">
+    <mat-chip *ngFor="let tag of (field.name || [])" (removed)="remove(tag)">
       {{tag}}
       <button matChipRemove>
         <mat-icon>cancel</mat-icon>
@@ -50,12 +50,12 @@
   </mat-chip-list>
 </mat-form-field>
 
-<mat-form-field *ngIf="field?.fieldType === 'Enum'" class="field">
+<mat-form-field *ngIf="field?.type === 'Enum'" class="field">
   <mat-select
     name="enum"
     placeholder="Enum"
     (selectionChange)="changeValue($event.value)"
-    [value]="field.value"
+    [value]="field.name"
   >
     <mat-option
       *ngFor="let enumValue of enumValues"
@@ -68,23 +68,23 @@
   </mat-select>
 </mat-form-field>
 
-<div *ngIf="field?.fieldType === 'Boolean'" class="field boolean-field">
+<div *ngIf="field?.type === 'Boolean'" class="field boolean-field">
   <mat-checkbox
-    [checked]="field.value === undefined ? !!field.content : !!field.value"
+    [checked]="field.name === undefined ? !!field.name : !!field.name"
     (change)="changeValue($event.checked)"
   >
     {{field.name}}
   </mat-checkbox>
 </div>
 
-<mat-card *ngIf="field?.fieldType === 'Array'" class="field">
-  <div *ngFor="let item of (field.value || []); let i = index;" class="array-row">
+<mat-card *ngIf="field?.type === 'Array'" class="field">
+  <div *ngFor="let item of (field.name || []); let i = index;" class="array-row">
     <mat-form-field *ngIf="arrayContentType === 'string'">
       <mat-label>Array</mat-label>
       <input
         matInput
         type="text"
-        [placeholder]="field?.placeHolder || ''"
+        [placeholder]="field?.placeholder || ''"
         [value]="item || ''"
         (change)="changeArrItem($event.target.value, i)"
       >
@@ -94,7 +94,7 @@
       <input
         matInput
         type="text"
-        [placeholder]="field?.placeHolder || ''"
+        [placeholder]="field?.placeholder || ''"
         [value]="item || ''"
         (change)="changeArrItem($event.target.value, i)"
       >
@@ -123,8 +123,8 @@
       <input
         matInput
         type="text"
-        [defaultValue]="field?.content"
-        [placeholder]="field?.placeHolder || ''"
+        [defaultValue]="field?.name"
+        [placeholder]="field?.placeholder || ''"
         [value]="arrValue"
         (input)="changeArrValue($event.target.value)"
       >
@@ -133,21 +133,21 @@
       <input
         matInput
         type="number"
-        [defaultValue]="field?.content"
-        [placeholder]="field?.placeHolder || ''"
+        [defaultValue]="field?.name"
+        [placeholder]="field?.placeholder || ''"
         [value]="arrValue"
         (input)="changeArrNumberValue($event.target.value)"
       >
     </mat-form-field>
-    <div *ngIf="arrayContentType === 'object'">
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="openDefineModal(item, i)"
-      >
-        Define
-      </button>
-    </div>
+<!--    <div *ngIf="arrayContentType === 'object'">-->
+<!--      <button-->
+<!--        mat-raised-button-->
+<!--        color="primary"-->
+<!--        (click)="openDefineModal(item, i)"-->
+<!--      >-->
+<!--        Define-->
+<!--      </button>-->
+<!--    </div>-->
     <button
       mat-raised-button
       color="secondary"

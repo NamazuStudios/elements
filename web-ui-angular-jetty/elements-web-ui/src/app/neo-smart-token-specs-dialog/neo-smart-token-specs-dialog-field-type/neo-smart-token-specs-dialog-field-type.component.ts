@@ -141,4 +141,6 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   parseDefaultBooleanValue(defaultValue: string): boolean {
     return defaultValue && defaultValue.toLowerCase() === 'true';
   }
+
+  protected readonly MetadataSpecPropertyType = MetadataSpecPropertyType;
 }
