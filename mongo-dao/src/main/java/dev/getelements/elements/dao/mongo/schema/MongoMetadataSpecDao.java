@@ -125,6 +125,9 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
 
     @Override
     public void deleteMetadataSpec(final String metadataSpecId) {
+        if (findActiveMongoMetadataSpec(metadataSpecId).isEmpty()) {
+            throw new MetadataSpecNotFoundException("No such metadata spec: " + metadataSpecId);
+        }
 
         final var objectId = getMongoDBUtils().parseOrThrow(metadataSpecId, MetadataSpecNotFoundException::new);
 
@@ -133,11 +136,9 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         final var result = getDatastore()
                 .find(MongoMetadataSpec.class)
                 .filter(eq("_id", objectId))
-                .update(options, set("active", false), set("name", UUID.randomUUID().toString()));
-
-        if(result.getModifiedCount() == 0) {
-            throw new MetadataSpecNotFoundException("No such metadata spec: " + metadataSpecId);
-        }
+                .update(options,
+                        set("active", false),
+                        set("name", UUID.randomUUID().toString())); //name must be randomized
 
     }
 
