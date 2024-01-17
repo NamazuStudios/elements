@@ -124,7 +124,7 @@ public class AppleSignInAuthServiceOperations {
             final var exp = jwt.getClaim("exp").asLong();
             final var now = currentTimeMillis() / 1000;
 
-            if(exp > now) {
+            if(exp < now) {
                 throw new ForbiddenException("Token has expired");
             }
 
