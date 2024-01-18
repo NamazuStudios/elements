@@ -48,7 +48,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.propertiesTypes = Object.keys(MetadataSpecPropertyType)
-      .filter(key => key !== MetadataSpecPropertyType.ARRAY && key !== MetadataSpecPropertyType.OBJECT)
+      .filter(key => key !== MetadataSpecPropertyType.ARRAY)
       .map(key => ({
       key,
       value: MetadataSpecPropertyType[key]
@@ -197,30 +197,30 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
       width: '800px',
       data: {
-        // updateFieldsWithContent: this.updateFieldsWithContent.bind(this),
-        content: this.properties[index]?.defaultValue, // TODO was conent before, not sure what now
+        updateProperties: this.updateProperties.bind(this),
+        content: this.properties[index]?.defaultValue
       }
     });
     this.activeFieldIndex = index;
   }
 
-  // updateFieldsWithContent(data) {
-  //   const fieldIndex = data.index || data.index === 0 ? data.index : this.activeFieldIndex;
-  //   this.properties = this.properties.map(
-  //     (field: MetadataSpecProperty, index: number) => {
-  //       if (index === fieldIndex) {
-  //         const content = data.hasOwnProperty('content') ? data.content : data;
-  //         return {
-  //           ...field,
-  //           content: content && !content?.otherProps ? content : field.content,
-  //           placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
-  //           defaultValue: data?.otherProps?.defaultValue || field.defaultValue || '',
-  //         }
-  //       }
-  //       return field;
-  //     }
-  //   );
-  // }
+  updateProperties(data) {
+    const fieldIndex = data.index || data.index === 0 ? data.index : this.activeFieldIndex;
+    this.properties = this.properties.map(
+      (field: MetadataSpecProperty, index: number) => {
+        if (index === fieldIndex) {
+          const content = data.hasOwnProperty('content') ? data.content : data;
+          return {
+            ...field,
+            name: data?.otherProps?.name || field.name || '',
+            // placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
+            defaultValue: data?.otherProps?.defaultValue || field.defaultValue || ''
+          }
+        }
+        return field;
+      }
+    );
+  }
 
   isValid(): boolean {
     return !!(this.specName) && this.properties.every(property => {

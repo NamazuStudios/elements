@@ -21,14 +21,14 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
     public data: {
-      updateFieldsWithContent: Function,
-      content: MetadataSpecProperty[],
+      updateProperties: Function,
+      inheritedProperties: MetadataSpecProperty[]
     },
   ) { }
 
   ngOnInit(): void {
-    if (this.data.content) {
-      this.fields = this.data.content;
+    if (this.data.inheritedProperties) {
+      this.fields = this.data.inheritedProperties;
     } else {
       this.fields = [this.createField()];
     }
@@ -36,11 +36,6 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
       key,
       value: MetadataSpecPropertyType[key]
     }));
-  }
-
-  ngAfterViewInit(): void {
-    // timeout required to avoid the dreaded 'ExpressionChangedAfterItHasBeenCheckedError'
-    setTimeout(() => this.disableAnimation = false);
   }
 
   handleFieldPanelStateChange(index: number) {
@@ -77,12 +72,12 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     }
   }
 
-  changeFieldName(value: string, fieldIndex: number) {
+  changeFieldName(target: EventTarget, fieldIndex: number) {
     this.fields = this.fields.map((field, index) => {
-      if (fieldIndex === index) {
+      if (fieldIndex === index && target) {
         return {
           ...field,
-          name: value,
+          name: (target as HTMLInputElement).value,
         }
       }
       return field;
@@ -107,7 +102,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
       width: '800px',
       data: {
-        updateFieldsWithContent: this.updateFieldsWithContent.bind(this),
+        updateProperties: this.updateProperties.bind(this),
       }
     });
     this.activeObjectIndex = index;
@@ -145,8 +140,8 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     );
   }
 
-  updateFieldsWithContent(fields: MetadataSpecProperty[]): void {
-    this.fields = this.fields.map((field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
+  updateProperties(fields: MetadataSpecProperty[]): void {
+    this.fields = fields.map((field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
       if (index === this.activeObjectIndex) {
         return {
           ...field,
@@ -154,11 +149,11 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
       }
       return field;
     });
+    console.log('field ',this.fields);
   }
 
   submit(): void {
-    console.log(this.fields);
-    this.data.updateFieldsWithContent(this.fields);
+    this.data.updateProperties(this.fields);
     this.dialogRef.close();
   }
 }
