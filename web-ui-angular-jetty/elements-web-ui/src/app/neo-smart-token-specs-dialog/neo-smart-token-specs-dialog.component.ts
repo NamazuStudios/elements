@@ -144,7 +144,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.properties = this.properties.map(
       (field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
         if (index === fieldIndex) {
-          console.log(index,'===',fieldIndex);
           return {
             name: '',
             displayName: '',
@@ -197,29 +196,16 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
       width: '800px',
       data: {
-        updateProperties: this.updateProperties.bind(this),
-        content: this.properties[index]?.defaultValue
+        updateProperties: this.updatePropertiesFromObjectComponent.bind(this),
+        properties: this.properties[index].properties
+        //TODO: above updating
       }
     });
     this.activeFieldIndex = index;
   }
 
-  updateProperties(data) {
-    const fieldIndex = data.index || data.index === 0 ? data.index : this.activeFieldIndex;
-    this.properties = this.properties.map(
-      (field: MetadataSpecProperty, index: number) => {
-        if (index === fieldIndex) {
-          const content = data.hasOwnProperty('content') ? data.content : data;
-          return {
-            ...field,
-            name: data?.otherProps?.name || field.name || '',
-            // placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
-            defaultValue: data?.otherProps?.defaultValue || field.defaultValue || ''
-          }
-        }
-        return field;
-      }
-    );
+  updatePropertiesFromObjectComponent(data: MetadataSpecProperty[]) {
+    this.properties[this.activeFieldIndex].properties = data;
   }
 
   isValid(): boolean {

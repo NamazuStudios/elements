@@ -20,15 +20,17 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     public dialogRef: MatDialogRef<NeoTokenDialogDefineObjectComponent>,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
-    public data: {
+    public parentData: {
       updateProperties: Function,
-      inheritedProperties: MetadataSpecProperty[]
+      properties: MetadataSpecProperty[]
     },
   ) { }
 
   ngOnInit(): void {
-    if (this.data.inheritedProperties) {
-      this.fields = this.data.inheritedProperties;
+    console.log('filling: ',this.parentData)
+    if (this.parentData.properties) {
+      console.log('filling: ',this.parentData.properties)
+      this.fields = this.parentData.properties;
     } else {
       this.fields = [this.createField()];
     }
@@ -153,7 +155,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
   }
 
   submit(): void {
-    this.data.updateProperties(this.fields);
+    this.parentData.updateProperties(this.fields);
     this.dialogRef.close();
   }
 }
