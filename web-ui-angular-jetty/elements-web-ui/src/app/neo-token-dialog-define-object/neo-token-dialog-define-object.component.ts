@@ -9,7 +9,7 @@ import { MetadataSpecProperty, MetadataSpecPropertyType } from '../api/models/to
 })
 export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
-  fields = [];
+  properties = [];
   propertiesTypes = [];
   activeObjectIndex = null;
   expandedField = null;
@@ -27,17 +27,16 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log('filling: ',this.parentData)
     if (this.parentData.properties) {
-      console.log('filling: ',this.parentData.properties)
-      this.fields = this.parentData.properties;
+      this.properties = this.parentData.properties;
     } else {
-      this.fields = [this.createField()];
+      this.properties = [this.createField()];
     }
-    this.propertiesTypes = Object.keys(MetadataSpecPropertyType).map(key => ({
-      key,
-      value: MetadataSpecPropertyType[key]
-    }));
+    this.propertiesTypes = Object.keys(MetadataSpecPropertyType)
+      //TODO: implement
+      .filter(key => key !== MetadataSpecPropertyType.ARRAY)
+      .filter(key => key !== MetadataSpecPropertyType.TAGS)
+      .map(key => ({key, value: MetadataSpecPropertyType[key]}));
   }
 
   handleFieldPanelStateChange(index: number) {
@@ -57,25 +56,25 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
   }
 
   removeField(fieldIndex: number): void {
-    this.fields = this.fields.filter((_: MetadataSpecProperty, index: number): boolean => {
+    this.properties = this.properties.filter((_: MetadataSpecProperty, index: number): boolean => {
       return index !== fieldIndex;
     });
   }
 
   addNewField(): void {
     this.disableAnimation = true;
-    this.fields = [...this.fields, this.createField()];
+    this.properties = [...this.properties, this.createField()];
     setTimeout(() => this.disableAnimation = false, 10);
   }
 
   duplicateField(field: MetadataSpecProperty): void {
     if (field) {
-      this.fields = [...this.fields, field];
+      this.properties = [...this.properties, field];
     }
   }
 
   changeFieldName(target: EventTarget, fieldIndex: number) {
-    this.fields = this.fields.map((field, index) => {
+    this.properties = this.properties.map((field, index) => {
       if (fieldIndex === index && target) {
         return {
           ...field,
@@ -88,7 +87,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   updateFieldType(type: MetadataSpecPropertyType, index: number): void {
     this.disableAnimation = true;
-    this.fields = this.fields.map((field: MetadataSpecProperty, i: number): MetadataSpecProperty => {
+    this.properties = this.properties.map((field: MetadataSpecProperty, i: number): MetadataSpecProperty => {
       if (index === i) {
         return {
           ...field,
@@ -104,46 +103,51 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
       width: '800px',
       data: {
-        updateProperties: this.updateProperties.bind(this),
+        updateProperties: this.updatePropertiesFromObjectComponent.bind(this),
+        properties: this.properties[index].properties
       }
     });
     this.activeObjectIndex = index;
   }
 
-  updateFieldContentByIndex(index: number, content: MetadataSpecProperty | string | null): MetadataSpecProperty[] {
-    if (!content) return this.fields;
-    return this.fields.map((field: MetadataSpecProperty, i: number) => {
-      if (index === i) {
-        return {
-          ...field,
-          content,
+  updatePropertiesFromObjectComponent(data: MetadataSpecProperty[]) {
+    this.properties[this.activeObjectIndex].properties = data;
+  }
+
+  changePropertyType(typeKey: MetadataSpecPropertyType, fieldIndex): void {
+    this.disableAnimation = true;
+    this.properties = this.properties.map(
+      (field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
+        if (index === fieldIndex) {
+          return {
+            name: '',
+            displayName: '',
+            required: false,
+            defaultValue: '',
+            placeholder: '',
+            type: MetadataSpecPropertyType[typeKey],
+            properties: []
+          };
         }
+        return field;
       }
-      return field;
-    });
+    );
+    setTimeout(() => this.disableAnimation = false);
+  }
+
+  changeDefaultValue(value: string, propertyIndex: string | number): void {
+    this.properties[propertyIndex].defaultValue = value;
+  }
+  changePlaceholder(value: string, propertyIndex: string | number): void {
+    this.properties[propertyIndex].placeholder = value;
   }
 
   close(): void {
     this.dialogRef.close();
   }
 
-  updateNonObjectField(data): void {
-    this.fields = this.fields.map(
-      (field: MetadataSpecProperty, index: number) => {
-        if (index === data.index) {
-          return {
-            ...field,
-            defaultValue: data?.otherProps?.defaultValue || field.defaultValue || '',
-            placeHolder: data?.otherProps?.placeHolder || field.placeholder || '',
-          }
-        }
-        return field;
-      }
-    );
-  }
-
   updateProperties(fields: MetadataSpecProperty[]): void {
-    this.fields = fields.map((field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
+    this.properties = fields.map((field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
       if (index === this.activeObjectIndex) {
         return {
           ...field,
@@ -151,11 +155,11 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
       }
       return field;
     });
-    console.log('field ',this.fields);
+    console.log('field ',this.properties);
   }
 
   submit(): void {
-    this.parentData.updateProperties(this.fields);
+    this.parentData.updateProperties(this.properties);
     this.dialogRef.close();
   }
 }

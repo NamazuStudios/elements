@@ -9,7 +9,7 @@
   justify-content: space-between;
   align-items: center;
   margin-top: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .sharp-panel {
@@ -84,3 +84,12 @@ app-neo-smart-token-specs-dialog-field-type {
   min-height: 48px;
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+mb-20 {
+  margin-bottom: 20px;
+}
+

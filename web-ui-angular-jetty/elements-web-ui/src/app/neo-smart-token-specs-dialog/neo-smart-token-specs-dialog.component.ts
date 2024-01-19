@@ -48,7 +48,9 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.propertiesTypes = Object.keys(MetadataSpecPropertyType)
+      //TODO: implement
       .filter(key => key !== MetadataSpecPropertyType.ARRAY)
+      .filter(key => key !== MetadataSpecPropertyType.TAGS)
       .map(key => ({
       key,
       value: MetadataSpecPropertyType[key]
@@ -92,32 +94,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     }
     return newFields;
   }
-
-  // convertFieldsToObject(properties: MetadataSpecProperty[]) {
-  //   if (properties?.length === undefined) return properties;
-  //   const newProperties = {};
-  //   for (let i = 0; i < properties.length; i++) {
-  //     const field = properties[i];
-  //     let defaultValue;
-  //     if (field.defaultValue) {
-  //       if (complexFields.includes(field.type)) {
-  //         defaultValue = JSON.stringify(field.defaultValue);
-  //       } else {
-  //         defaultValue = field.defaultValue;
-  //       }
-  //     }
-  //     newProperties[i] = {
-  //       name: field.name,
-  //       displayName: field?.displayName,
-  //       type: field.type,
-  //       required: field.required,
-  //       placeHolder: field.placeHolder,
-  //       defaultValue: field.defaultValue,
-  //       properties: this.convertFieldsToObject(field.properties)
-  //     }
-  //   };
-  //   return newProperties;
-  // }
 
   addNewField() {
     this.properties = [...this.properties, this.createField()];
@@ -198,7 +174,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
       data: {
         updateProperties: this.updatePropertiesFromObjectComponent.bind(this),
         properties: this.properties[index].properties
-        //TODO: above updating
       }
     });
     this.activeFieldIndex = index;
