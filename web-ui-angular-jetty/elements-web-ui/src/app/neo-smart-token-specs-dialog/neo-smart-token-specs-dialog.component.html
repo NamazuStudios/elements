@@ -22,16 +22,7 @@
 
 <div>
     <div class="fields-header">
-      <div>Properties</div>
-      <button
-        mat-raised-button
-        color="primary"
-        matTooltip="Add Field"
-        matTooltipPosition="above"
-        (click)="addNewField()"
-      >
-        Add Field
-      </button>
+      <div>Properties:</div>
     </div>
     <mat-card [@.disabled]="disableAnimation">
       <mat-accordion cdkDropList (cdkDropListDropped)="drop($event)">
@@ -48,7 +39,8 @@
                 <mat-icon>menu</mat-icon>
                 <div>
                   <span>{{fieldIndex+1}}: </span>
-                  <span class="memu-keyname">{{property.name || 'KeyName'}}</span>
+                  <span *ngIf="property.name" class="menu-keyname" style="color: #333333">{{property.name}}</span>
+                  <span *ngIf="!property.name" class="menu-keyname-empty">KeyName</span>
                 </div>
               </div>
               <div>{{property.type || 'Type'}}</div>
@@ -120,6 +112,14 @@
             </div>
           </div>
         </mat-expansion-panel>
+        <button
+          mat-raised-button
+          color="primary" class="mt-20"
+          matTooltip="Add Field"
+          matTooltipPosition="above"
+          (click)="addNewField()">
+          Add Field
+        </button>
       </mat-accordion>
     </mat-card>
 </div>

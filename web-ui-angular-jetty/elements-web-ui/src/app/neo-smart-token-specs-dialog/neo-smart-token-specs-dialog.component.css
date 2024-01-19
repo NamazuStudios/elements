@@ -88,7 +88,12 @@ mat-expansion-panel-header {
   margin-right: 20px;
 }
 
-.menu-index-keyname .memu-keyname {
+.menu-index-keyname .menu-keyname {
+  color: #333333;
+  margin-left: 10px;
+}
+
+.menu-index-keyname .menu-keyname-empty {
   opacity: 0.4;
   margin-left: 10px;
 }

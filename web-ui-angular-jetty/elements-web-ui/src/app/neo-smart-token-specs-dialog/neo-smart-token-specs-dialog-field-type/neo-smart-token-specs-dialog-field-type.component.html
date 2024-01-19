@@ -86,12 +86,15 @@
     </mat-checkbox>
   </div>
   <div *ngIf="type === MetadataSpecPropertyType.OBJECT">
+    <div class="nested-prop-preview" *ngIf="field.properties && field.properties.length > 0">
+      Nested properties: {{propertiesPrieview(field.properties)}}</div>
     <button
       mat-raised-button
       color="primary"
       (click)="openDefineModal()"
     >
-      Define
+      <span *ngIf="field.properties && field.properties.length > 0">Update nested properties</span>
+      <span *ngIf="!field.properties || field.properties.length < 1">Add nested properties</span>
     </button>
   </div>
 <!--  <div class="array-field-wrapper" *ngIf="type === 'ARRAY'">-->

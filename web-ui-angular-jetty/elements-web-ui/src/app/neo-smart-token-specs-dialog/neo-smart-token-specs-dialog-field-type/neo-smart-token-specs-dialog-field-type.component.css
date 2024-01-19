@@ -61,3 +61,8 @@
   column-gap: 25px;
   padding-right: 25px;
 }
+
+.nested-prop-preview {
+  margin-bottom: 10px;
+  color: #737373;
+}
