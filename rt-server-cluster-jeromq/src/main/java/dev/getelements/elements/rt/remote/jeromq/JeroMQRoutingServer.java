@@ -66,7 +66,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
         final var main = securityChain.server(() -> zContextShadow.createSocket(ROUTER));
 
         bindAddresses.forEach(addr -> {
-            logger.info("Binding on {}", addr);
+            logger.info("Binding on {} - ", addr);
             main.bind(addr);
         });
 
