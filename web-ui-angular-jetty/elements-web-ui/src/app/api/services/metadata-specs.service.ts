@@ -1,15 +1,13 @@
-import { HttpClient, HttpHeaders, HttpRequest, HttpResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map as __map, filter as __filter } from 'rxjs/operators';
+import {HttpClient, HttpHeaders, HttpRequest, HttpResponse} from '@angular/common/http';
+import {Injectable} from '@angular/core';
+import {Observable} from 'rxjs';
+import {filter as __filter, map as __map} from 'rxjs/operators';
 
-import { ApiConfiguration } from '../api-configuration';
-import { BaseService } from '../base-service';
-import { CreateNeoTokenSpecRequest } from '../models/create-neo-token-spec-request';
-import { PaginationNeoTokenSpec } from '../models/pagination-neo-token-spec';
-import { UpdateNeoTokenSpecRequest } from '../models/update-neo-token-spec-request';
-import { StrictHttpResponse } from '../strict-http-response';
-import {CreateMetadataSpecRequest, MetadataSpec, MetadataSpecPropertyType} from "../models/token-spec-tab";
+import {ApiConfiguration} from '../api-configuration';
+import {BaseService} from '../base-service';
+import {PaginationNeoTokenSpec} from '../models/pagination-neo-token-spec';
+import {StrictHttpResponse} from '../strict-http-response';
+import {CreateMetadataSpecRequest, MetadataSpec} from "../models/token-spec-tab";
 
 @Injectable({
   providedIn: 'root'
@@ -240,6 +238,33 @@ class MetadataSpecsService extends BaseService {
   deleteTokenTemplate(tokenId: string): Observable<void> {
     return this.deleteTokenTemplateResponse(tokenId).pipe(
       __map(_r => _r.body)
+    );
+  }
+
+  callReindex() {
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+    let __body: any = null;
+
+    __body = {
+      plan: true
+    };
+
+    let req = new HttpRequest<any>(
+      'GET',
+      this.rootUrl + `/index/plan`,
+      __body,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'json'
+      });
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r as StrictHttpResponse<MetadataSpec>;
+      })
     );
   }
 }

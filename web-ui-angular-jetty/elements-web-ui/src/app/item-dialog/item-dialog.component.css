@@ -17,3 +17,7 @@
 .item-form-row mat-form-field:last-of-type {
   margin-right: 0;
 }
+
+.edit-schema-btn {
+  display: flex;
+}

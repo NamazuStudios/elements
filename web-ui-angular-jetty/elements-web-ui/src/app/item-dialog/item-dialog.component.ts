@@ -117,4 +117,8 @@ export class ItemDialogComponent implements OnInit {
       ? this.itemCategories[0].description
       : this.itemCategories.find(value => this.data.item.category == value.key).description
   }
+
+  // selectSchemaDialog() {
+  //   console.log("ok");
+  // }
 }

@@ -1,14 +1,18 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { MatPaginator } from '@angular/material/paginator';
-import { filter, tap } from 'rxjs/operators';
-import { AlertService } from 'src/app/alert.service';
-import { MetadataSpecsService } from 'src/app/api/services/metadata-specs.service';
-import { ConfirmationDialogService } from 'src/app/confirmation-dialog/confirmation-dialog.service';
-import { NeoSmartTokenSpecsDialogComponent } from 'src/app/neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
-import { NeoSmartTokenSpecsDuplicateDialogComponent } from 'src/app/neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
-import { NeoTokensSpecDataSource } from 'src/app/neo-tokens-spec.datasource';
+import {SelectionModel} from '@angular/cdk/collections';
+import {Component, OnInit, ViewChild} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {MatPaginator} from '@angular/material/paginator';
+import {filter, tap} from 'rxjs/operators';
+import {AlertService} from 'src/app/alert.service';
+import {MetadataSpecsService} from 'src/app/api/services/metadata-specs.service';
+import {ConfirmationDialogService} from 'src/app/confirmation-dialog/confirmation-dialog.service';
+import {
+  NeoSmartTokenSpecsDialogComponent
+} from 'src/app/neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
+import {
+  NeoSmartTokenSpecsDuplicateDialogComponent
+} from 'src/app/neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
+import {NeoTokensSpecDataSource} from 'src/app/neo-tokens-spec.datasource';
 import {MetadataSpec, MetadataSpecPropertyType} from '../../api/models/token-spec-tab';
 
 @Component({
@@ -150,6 +154,24 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
       .subscribe(() => {
         this.selection.selected.forEach(template => this.removeTemplate(template));
         this.refresh();
+      });
+  }
+
+  confitmRebuildDialog() {
+    this.dialogService
+      .confirm(
+        "Confirm Reindexing",
+        `Reindexing a large database can take a very long time depending on Its size. Do you wish to proceed?`
+      )
+      .pipe(filter((r) => r))
+      .subscribe(() => {
+
+        this.metadataSpecsService.callReindex().subscribe(
+          (r) => {
+            this.refresh();
+          },
+          (error) => this.alertService.error(error)
+        );
       });
   }
 }
