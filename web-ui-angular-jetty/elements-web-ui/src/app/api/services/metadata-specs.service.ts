@@ -247,12 +247,13 @@ class MetadataSpecsService extends BaseService {
     let __body: any = null;
 
     __body = {
-      plan: true
+      plan: true,
+      toIndex: ["DISTINCT_INVENTORY_ITEM"]
     };
 
     let req = new HttpRequest<any>(
-      'GET',
-      this.rootUrl + `/index/plan`,
+      'POST',
+      this.rootUrl + `/index/build`,
       __body,
       {
         headers: __headers,
