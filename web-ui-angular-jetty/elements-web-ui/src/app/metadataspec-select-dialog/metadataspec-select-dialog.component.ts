@@ -34,7 +34,6 @@ export class MetadataspecSelectDialogComponent implements OnInit, AfterViewInit 
 
   ngAfterViewInit() {
     this.paginator.pageSize = 10;
-    // server-side search
     fromEvent(this.input.nativeElement,'keyup')
       .pipe(
         debounceTime(150),
@@ -59,7 +58,6 @@ export class MetadataspecSelectDialogComponent implements OnInit, AfterViewInit 
   refresh(delay = 500) {
     setTimeout(() => {
       this.dataSource.loadSpecs(
-        this.input.nativeElement.value,
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize);
     }, delay);

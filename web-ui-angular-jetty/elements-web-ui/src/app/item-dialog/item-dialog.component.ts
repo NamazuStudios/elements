@@ -1,12 +1,13 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {AlertService} from '../alert.service';
 import {ItemCategory} from "../api/models/item";
+import {MetadataspecSelectDialogComponent} from "../metadataspec-select-dialog/metadataspec-select-dialog.component";
 
 export interface ItemCategoryPair {
   key: string;
@@ -39,12 +40,13 @@ export class ItemDialogComponent implements OnInit {
     displayName: [ this.data.item.displayName, [Validators.required]],
     description: [ this.data.item.description, [Validators.required]],
     category: [ this.data.item.category, [Validators.required] ],
+    metadataSpec: [ this.data.item.metadataSpec],
     publicVisible: [ this.data.item.publicVisible ],
     tags: []
   });
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any,
+              @Inject(MAT_DIALOG_DATA) public data: any, public dialog: MatDialog,
               private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {}
 
   addTag(event: MatChipInputEvent): void {
@@ -116,5 +118,16 @@ export class ItemDialogComponent implements OnInit {
     return this.data.item.category == null
       ? this.itemCategories[0].description
       : this.itemCategories.find(value => this.data.item.category == value.key).description
+  }
+
+  showSelectMetadataSpecDialog() {
+    this.dialog.open(MetadataspecSelectDialogComponent, {
+      width: '700px',
+      data: {
+        next: result => {
+          this.data.item.metadataSpecs$ = result;
+        }
+      }
+    });
   }
 }

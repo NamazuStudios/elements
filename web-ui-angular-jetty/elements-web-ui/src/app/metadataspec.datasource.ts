@@ -25,11 +25,11 @@ export class MetadataspecDatasource implements DataSource<MetadataSpec> {
     this.loadingSubject.complete();
   }
 
-  loadSpecs(search:string, offset: number, count: number) {
+  loadSpecs(offset: number, count: number) {
     this.loadingSubject.next(true);
 
     // add search when ready
-    this.metadataSpecsService.getTokenTemplates({ offset: offset, count: count })
+    this.metadataSpecsService.getTokenTemplates({ offset: offset, count: count})
       .pipe(
         catchError(() => of({ objects: [], total: 0 })),
         finalize(() => this.loadingSubject.next(false)))
