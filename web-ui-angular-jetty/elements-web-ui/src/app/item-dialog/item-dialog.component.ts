@@ -40,8 +40,8 @@ export class ItemDialogComponent implements OnInit {
     displayName: [ this.data.item.displayName, [Validators.required]],
     description: [ this.data.item.description, [Validators.required]],
     category: [ this.data.item.category, [Validators.required] ],
-    metadataSpec: [ this.data.item.metadataSpec],
-    publicVisible: [ this.data.item.publicVisible ],
+    metadataSpec: [ { value: this.data.item.metadataSpec, disabled: true } ],
+    publicVisible: [ this.data.item.publicVisible],
     tags: []
   });
 
@@ -125,7 +125,9 @@ export class ItemDialogComponent implements OnInit {
       width: '700px',
       data: {
         next: result => {
-          this.data.item.metadataSpecs$ = result;
+          this.data.item.metadataSpec = result;
+          console.log("TODO: render schema");
+          console.log(this.data.item.metadataSpec.properties);
         }
       }
     });

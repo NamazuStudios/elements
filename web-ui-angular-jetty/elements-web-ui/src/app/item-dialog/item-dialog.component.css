@@ -17,3 +17,13 @@
 .item-form-row mat-form-field:last-of-type {
   margin-right: 0;
 }
+
+.spec-button {
+  display: flex;
+  height: fit-content;
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}

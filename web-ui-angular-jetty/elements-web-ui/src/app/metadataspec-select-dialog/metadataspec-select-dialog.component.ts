@@ -34,16 +34,6 @@ export class MetadataspecSelectDialogComponent implements OnInit, AfterViewInit 
 
   ngAfterViewInit() {
     this.paginator.pageSize = 10;
-    fromEvent(this.input.nativeElement,'keyup')
-      .pipe(
-        debounceTime(150),
-        distinctUntilChanged(),
-        tap(() => {
-          this.paginator.pageIndex = 0;
-          this.refresh();
-        })
-      )
-      .subscribe();
 
     this.paginator.page
       .pipe(

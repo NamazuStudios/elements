@@ -55,13 +55,25 @@
         </mat-chip-list>
       </mat-form-field>
 
-      <button color="primary" type="button" mat-raised-button (click)="showSelectMetadataSpecDialog()">Select Metadata Spec</button>
+      <div class="item-form-row mb-20">
+        <mat-form-field>
+          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.item.metadataSpec ? data.item.metadataSpec.name : ''">
+        </mat-form-field>
+        <div class="spec-button">
+          <button color="primary" type="button" mat-raised-button (click)="showSelectMetadataSpecDialog()">Select Metadata Spec</button>
+        </div>
+      </div>
 
       <mat-checkbox name="publicVisible" formControlName="publicVisible">
         Public visible
       </mat-checkbox>
 
-      <app-json-editor-card topic="Item" [editTarget]="data.item"></app-json-editor-card>
+      <div *ngIf="data.item.metadataSpec">
+        <h5>TODO: render this schema:</h5>
+        <pre>{{ data.item.metadataSpec.properties | json }}</pre>
+      </div>
+
+<!--      <app-json-editor-card topic="Item" [editTarget]="data.item"></app-json-editor-card>-->
     </div>
   </form>
 </div>
