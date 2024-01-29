@@ -68,14 +68,21 @@
         Public visible
       </mat-checkbox>
 
-      <div *ngIf="data.item.metadataSpec">
-        <h5>TODO: render this schema:</h5>
-        <pre>{{ data.item.metadataSpec.properties | json }}</pre>
-      </div>
-
-<!--      <app-json-editor-card topic="Item" [editTarget]="data.item"></app-json-editor-card>-->
     </div>
   </form>
+
+  <div *ngIf="data.item.metadataSpec && data.item.metadataSpec.name">
+    <div style="margin-top: 20px; margin-bottom: 20px; font-weight: 500;">Matedata Editor:</div>
+    <form [formGroup]="metadataSpecForm">
+      <div *ngFor="let item of metadataSpecForm.controls | keyvalue">
+        <div>{{item.key}}:</div>
+        <mat-form-field>
+          <input matInput placeholder="" name="{{item.key}}" formControlName="{{item.key}}" >
+        </mat-form-field>
+      </div>
+    </form>
+
+  </div>
 </div>
 
 <div mat-dialog-actions>

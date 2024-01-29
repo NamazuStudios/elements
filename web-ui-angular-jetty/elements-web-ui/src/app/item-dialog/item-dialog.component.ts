@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -8,6 +8,7 @@ import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.comp
 import {AlertService} from '../alert.service';
 import {ItemCategory} from "../api/models/item";
 import {MetadataspecSelectDialogComponent} from "../metadataspec-select-dialog/metadataspec-select-dialog.component";
+import {MetadataSpecProperty, MetadataSpecPropertyType} from "../api/models/token-spec-tab";
 
 export interface ItemCategoryPair {
   key: string;
@@ -44,6 +45,8 @@ export class ItemDialogComponent implements OnInit {
     publicVisible: [ this.data.item.publicVisible],
     tags: []
   });
+
+  metadataSpecForm = this.formBuilder.group({});
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any, public dialog: MatDialog,
@@ -128,6 +131,14 @@ export class ItemDialogComponent implements OnInit {
           this.data.item.metadataSpec = result;
           console.log("TODO: render schema");
           console.log(this.data.item.metadataSpec.properties);
+          Object.keys(this.metadataSpecForm.controls).forEach(key => {
+            this.metadataSpecForm.removeControl(key);
+          });
+          let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
+          props.forEach(prop => {
+            this.metadataSpecForm.addControl(prop.name, new FormControl(('')));
+          })
+          console.log('mform: ', this.metadataSpecForm);
         }
       }
     });
