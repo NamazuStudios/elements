@@ -27,3 +27,34 @@
 .mb-20 {
   margin-bottom: 20px;
 }
+
+.metadata-header {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/*no scss :(*/
+.ml-1 {
+  margin-left: 20px;
+}
+.ml-2 {
+  margin-left: 40px;
+}
+.ml-3 {
+  margin-left: 60px;
+}
+.ml-4 {
+  margin-left: 80px;
+}
+.ml-5 {
+  margin-left: 100px;
+}
+.ml-6 {
+  margin-left: 120px;
+}
+
+.nested-checkbox {
+  color: #737373;
+  margin-bottom: 15px;
+}

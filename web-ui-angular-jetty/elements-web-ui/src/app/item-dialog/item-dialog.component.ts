@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder, FormControl, Validators} from '@angular/forms';
+import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -47,6 +47,8 @@ export class ItemDialogComponent implements OnInit {
   });
 
   metadataSpecForm = this.formBuilder.group({});
+  formMap = [];
+  private metadataFormNestLevel: number = 0;
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any, public dialog: MatDialog,
@@ -129,18 +131,41 @@ export class ItemDialogComponent implements OnInit {
       data: {
         next: result => {
           this.data.item.metadataSpec = result;
-          console.log("TODO: render schema");
-          console.log(this.data.item.metadataSpec.properties);
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
+          this.metadataFormNestLevel = 0;
+          this.formMap = [];
           let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
-          props.forEach(prop => {
-            this.metadataSpecForm.addControl(prop.name, new FormControl(('')));
-          })
-          console.log('mform: ', this.metadataSpecForm);
+          this.addFormControlsFromProperties("", props);
+          console.log('created map: ', this.formMap);
         }
       }
     });
+  }
+
+  private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[]) {
+    console.log("adding props: ", props);
+    props.forEach(prop => {
+      let controlName = ((currentName) && currentName.length > 0) ? (currentName + "." + prop.name) : prop.name;
+      if (prop.type === 'NUMBER') {
+        this.formMap.push({name: prop.name, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.metadataSpecForm.addControl(prop.name, new FormControl('', [Validators.pattern('^[0-9]+$')]));
+      }
+      if (prop.type === 'OBJECT') {
+        this.metadataFormNestLevel++;
+        this.formMap.push({name: prop.name, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.addFormControlsFromProperties(controlName, prop.properties);
+      }
+      if (prop.type === 'STRING' || prop.type === 'BOOLEAN') {
+        this.formMap.push({name: prop.name, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.metadataSpecForm.addControl(prop.name, new FormControl(('')));
+      }
+    });
+    this.metadataFormNestLevel--;
+  }
+
+  getNestedMargin(nestLevel: number) {
+    return 'ml-' + nestLevel;
   }
 }
