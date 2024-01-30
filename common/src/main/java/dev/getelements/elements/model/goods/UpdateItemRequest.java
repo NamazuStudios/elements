@@ -1,6 +1,7 @@
 package dev.getelements.elements.model.goods;
 
 import dev.getelements.elements.Constants;
+import dev.getelements.elements.model.schema.MetadataSpec;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ public class UpdateItemRequest {
 
     private List<String> tags;
 
-    private String metadataSpecId;
+    private MetadataSpec metadataSpec;
 
     private Map<String, Object> metadata;
 
@@ -113,17 +114,17 @@ public class UpdateItemRequest {
      *
      * @return the metadata spec id
      */
-    public String getMetadataSpecId() {
-        return metadataSpecId;
+    public MetadataSpec getMetadataSpec() {
+        return metadataSpec;
     }
 
     /**
      * Sets the metadata spec ID.
      *
-     * @param metadataSpecId the metadata spec id
+     * @param MetadataSpec the metadata spec id
      */
-    public void setMetadataSpecId(String metadataSpecId) {
-        this.metadataSpecId = metadataSpecId;
+    public void setMetadataSpec(MetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
     }
 
     /**

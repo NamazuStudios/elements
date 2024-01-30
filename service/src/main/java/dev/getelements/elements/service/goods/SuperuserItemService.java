@@ -36,6 +36,7 @@ public class SuperuserItemService implements ItemService {
 
         item.setName(itemRequest.getName());
         item.setTags(itemRequest.getTags());
+        item.setMetadataSpec(itemRequest.getMetadataSpec());
         item.setMetadata(itemRequest.getMetadata());
         item.setDescription(itemRequest.getDescription());
         item.setDisplayName(itemRequest.getDisplayName());
@@ -51,9 +52,10 @@ public class SuperuserItemService implements ItemService {
         item.setTags(itemRequest.getTags());
         item.setCategory(itemRequest.getCategory());
         item.setMetadata(itemRequest.getMetadata());
+        item.setMetadataSpec(itemRequest.getMetadataSpec());
         item.setDescription(itemRequest.getDescription());
         item.setDisplayName(itemRequest.getDisplayName());
-        item.setPublicVisible(!isNull(itemRequest.isPublicVisible()) && itemRequest.isPublicVisible());
+        item.setPublicVisible(itemRequest.isPublicVisible());
         return getItemDao().createItem(item);
     }
 
