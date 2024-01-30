@@ -9,6 +9,7 @@ import {AlertService} from '../alert.service';
 import {ItemCategory} from "../api/models/item";
 import {MetadataspecSelectDialogComponent} from "../metadataspec-select-dialog/metadataspec-select-dialog.component";
 import {MetadataSpecProperty, MetadataSpecPropertyType} from "../api/models/token-spec-tab";
+import { APIError } from '../api/models/api-error';
 
 export interface ItemCategoryPair {
   key: string;
@@ -23,26 +24,22 @@ export interface ItemCategoryPair {
 export class ItemDialogComponent implements OnInit {
 
   itemCategories: ItemCategoryPair[] = [
-    { key: ItemCategory.FUNGIBLE, description: "Fungible" },
-    { key: ItemCategory.DISTINCT, description: "Distinct" }
+    {key: ItemCategory.FUNGIBLE, description: "Fungible"},
+    {key: ItemCategory.DISTINCT, description: "Distinct"}
   ];
-
-  @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
   selectable = true;
   removable = true;
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
-  originalMetadata = JSON.parse(JSON.stringify(this.data.item.metadata || {}));
-
   itemForm = this.formBuilder.group({
-    name: [ this.data.item.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$') ]],
-    displayName: [ this.data.item.displayName, [Validators.required]],
-    description: [ this.data.item.description, [Validators.required]],
-    category: [ this.data.item.category, [Validators.required] ],
-    metadataSpec: [ { value: this.data.item.metadataSpec, disabled: true } ],
-    publicVisible: [ this.data.item.publicVisible],
+    name: [this.data.item.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
+    displayName: [this.data.item.displayName, [Validators.required]],
+    description: [this.data.item.description, [Validators.required]],
+    category: [this.data.item.category, [Validators.required]],
+    metadataSpec: [{value: this.data.item.metadataSpec, disabled: true}],
+    publicVisible: [this.data.item.publicVisible],
     tags: []
   });
 
@@ -52,14 +49,17 @@ export class ItemDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any, public dialog: MatDialog,
-              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {}
+              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {
+  }
 
   addTag(event: MatChipInputEvent): void {
     const input = event.input;
     const value = event.value;
 
     if ((value || '').trim()) {
-      if (!this.data.item.tags) { this.data.item.tags = []; }
+      if (!this.data.item.tags) {
+        this.data.item.tags = [];
+      }
       this.data.item.tags.push(value);
     }
 
@@ -83,30 +83,28 @@ export class ItemDialogComponent implements OnInit {
   */
   close(saveChanges?: boolean): void {
     if (!saveChanges) {
-      this.data.item.metadata = this.originalMetadata;
       this.dialogRef.close();
       return;
     }
-
-    this.editorCard.validateMetadata(true);
 
     const formData = this.itemForm.value;
     if (this.data.item.tags !== undefined) {
       formData.tags = this.data.item.tags;
     }
 
-    if (this.data.item.metadata !== undefined) {
-      formData.metadata = this.data.item.metadata;
+    if (this.data.item.metadataSpec) {
+      let parsedMetadataForm = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
+      formData.metadata = parsedMetadataForm;
     }
 
     if (!this.data.isNew && formData.category !== undefined) {
       delete formData.category
     }
 
-    this.data.next(formData).subscribe(r => {
+    this.data.next(formData).subscribe(() => {
       this.dialogRef.close();
       this.data.refresher.refresh();
-    }, err => {
+    }, (err: APIError) => {
       this.alertService.error(err);
     });
   }
@@ -138,7 +136,6 @@ export class ItemDialogComponent implements OnInit {
           this.formMap = [];
           let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
           this.addFormControlsFromProperties("", props);
-          console.log('created map: ', this.formMap);
         }
       }
     });
@@ -149,17 +146,17 @@ export class ItemDialogComponent implements OnInit {
     props.forEach(prop => {
       let controlName = ((currentName) && currentName.length > 0) ? (currentName + "." + prop.name) : prop.name;
       if (prop.type === 'NUMBER') {
-        this.formMap.push({name: prop.name, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.metadataSpecForm.addControl(prop.name, new FormControl('', [Validators.pattern('^[0-9]+$')]));
+        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.metadataSpecForm.addControl(controlName, new FormControl('', [Validators.pattern('^[0-9]+$')]));
       }
       if (prop.type === 'OBJECT') {
         this.metadataFormNestLevel++;
-        this.formMap.push({name: prop.name, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
         this.addFormControlsFromProperties(controlName, prop.properties);
       }
       if (prop.type === 'STRING' || prop.type === 'BOOLEAN') {
-        this.formMap.push({name: prop.name, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.metadataSpecForm.addControl(prop.name, new FormControl(('')));
+        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.metadataSpecForm.addControl(controlName, new FormControl(('')));
       }
     });
     this.metadataFormNestLevel--;
@@ -168,4 +165,16 @@ export class ItemDialogComponent implements OnInit {
   getNestedMargin(nestLevel: number) {
     return 'ml-' + nestLevel;
   }
+
+  private makeNestedObjectFromDotSeparated(obj: {}) {
+    const result = {};
+    for (const key in obj) {
+      key.split('.').reduce((res, k, i, arr) => {
+        return res[k] = arr.length - 1 === i
+          ? obj[key]
+          : res[k] || {};
+      }, result);
+    }
+    return result;
+  };
 }

@@ -90,6 +90,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid || !editorCard?.isJSONValid">OK</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid || !metadataSpecForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
