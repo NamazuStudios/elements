@@ -153,7 +153,7 @@ export class ItemDialogComponent implements OnInit {
       let controlValue = (values) ? this.getValueByPath(values, controlName) : '';
 
       if (prop.type === 'NUMBER') {
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
         this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
       }
       if (prop.type === 'OBJECT') {
@@ -162,7 +162,7 @@ export class ItemDialogComponent implements OnInit {
         this.addFormControlsFromProperties(controlName, prop.properties,values);
       }
       if (prop.type === 'STRING' || prop.type === 'BOOLEAN') {
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
+        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
         this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
       }
     });
@@ -171,6 +171,10 @@ export class ItemDialogComponent implements OnInit {
 
   getNestedMargin(nestLevel: number) {
     return 'ml-' + nestLevel;
+  }
+
+  getPlaceholder(item: any[]) {
+    return (item['placeholder']) ? item['placeholder'] : item['name'];
   }
 
   private makeNestedObjectFromDotSeparated(obj: {}) {
@@ -186,7 +190,6 @@ export class ItemDialogComponent implements OnInit {
   };
 
   private getValueByPath(obj: any, path: string): any {
-    console.log('getting ' + path + ' from ', obj);
     let parts = path.split('.');
     let value = obj;
     for (let part of parts) {
