@@ -220,8 +220,4 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
         });
     }
   }
-
-  private parseBoolean(stringVal: string): boolean {
-    return stringVal === 'true';
-  }
 }

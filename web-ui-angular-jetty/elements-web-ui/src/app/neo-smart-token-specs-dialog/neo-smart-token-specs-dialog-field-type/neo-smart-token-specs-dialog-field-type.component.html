@@ -1,5 +1,5 @@
 <div>
-  <div *ngIf="type === MetadataSpecPropertyType.STRING" class="number-field">
+  <div *ngIf="type === MetadataSpecPropertyType.STRING" class="std-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
       <input
@@ -10,18 +10,8 @@
         (change)="onPlaceholderChange($event.target.value)"
       >
     </mat-form-field>
-    <mat-form-field>
-      <mat-label>Default</mat-label>
-      <input
-        matInput
-        placeholder="Default String"
-        type="string"
-        [value]="field?.defaultValue || ''"
-        (change)="onDefaultValueChange($event.target.value)"
-      >
-    </mat-form-field>
   </div>
-  <div *ngIf="type === MetadataSpecPropertyType.NUMBER" class="number-field">
+  <div *ngIf="type === MetadataSpecPropertyType.NUMBER" class="std-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
       <input
@@ -33,19 +23,8 @@
         (change)="onPlaceholderChange($event.target.value)"
       >
     </mat-form-field>
-    <mat-form-field>
-      <mat-label>Default</mat-label>
-      <input
-        matInput
-        placeholder="Default Number"
-        name="string"
-        type="number"
-        [value]="field?.defaultValue || ''"
-        (change)="onDefaultValueChange($event.target.value)"
-      >
-    </mat-form-field>
   </div>
-  <div *ngIf="type === 'TAGS'" class="tags-field">
+  <div *ngIf="type === 'TAGS'" class="std-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
       <input
@@ -57,33 +36,19 @@
         (change)="onPlaceholderChange($event.target.value)"
       >
     </mat-form-field>
-    <mat-form-field appearance="standard">
-      <mat-label>Default</mat-label>
-      <mat-chip-list #chipList aria-label="Tag selection">
-        <mat-chip *ngFor="let tag of tagsArr" (removed)="remove(tag)">
-          {{tag}}
-          <button matChipRemove>
-            <mat-icon>cancel</mat-icon>
-          </button>
-        </mat-chip>
-        <input
-          matInput
-          placeholder="Default Tags"
-          [matChipInputFor]="chipList"
-          [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-          [matChipInputAddOnBlur]="true"
-          (matChipInputTokenEnd)="add($event)"
-        >
-      </mat-chip-list>
-    </mat-form-field>
   </div>
-  <div *ngIf="type === MetadataSpecPropertyType.BOOLEAN" class="boolean-field">
-    <mat-checkbox
-      [checked]="parseDefaultBooleanValue(field.defaultValue)"
-      (change)="onBooleanDefaultValueChange($event.checked)"
-    >
-      Default True
-    </mat-checkbox>
+  <div *ngIf="type === 'ARRAY'" class="std-field">
+    <mat-form-field>
+      <mat-label>Placeholder</mat-label>
+      <input
+        matInput
+        placeholder="Placeholder Text"
+        name="string"
+        type="text"
+        [value]="field?.placeholder || ''"
+        (change)="onPlaceholderChange($event.target.value)"
+      >
+    </mat-form-field>
   </div>
   <div *ngIf="type === MetadataSpecPropertyType.OBJECT">
     <div class="nested-prop-preview" *ngIf="field.properties && field.properties.length > 0">
