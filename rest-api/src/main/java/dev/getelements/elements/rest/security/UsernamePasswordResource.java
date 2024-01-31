@@ -39,25 +39,8 @@ public class UsernamePasswordResource {
                           "the session expires, the user will have to reestablish the session by supplying " +
                           "credentials again.  This is most useful for applications delivered in a web page.")
     public SessionCreation createUsernamePasswordSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
-
         getValidationHelper().validateModel(usernamePasswordSessionRequest);
-
-        final String userId = usernamePasswordSessionRequest.getUserId().trim();
-        final String password = usernamePasswordSessionRequest.getPassword().trim();
-        final String profileId = nullToEmpty(usernamePasswordSessionRequest.getProfileId()).trim();
-
-        if (isNullOrEmpty(userId)) {
-            throw new InvalidDataException("User ID must be specified.");
-        }
-
-        if (isNullOrEmpty(password)) {
-            throw new InvalidDataException("Password must be specified.");
-        }
-
-        return profileId.isEmpty() ?
-            getUsernamePasswordAuthService().createSessionWithLogin(userId, password) :
-            getUsernamePasswordAuthService().createSessionWithLogin(userId, password, profileId);
-
+        return getUsernamePasswordAuthService().createSession(usernamePasswordSessionRequest);
     }
 
     public UsernamePasswordAuthService getUsernamePasswordAuthService() {

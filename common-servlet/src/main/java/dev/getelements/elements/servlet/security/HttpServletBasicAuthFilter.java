@@ -68,12 +68,13 @@ public class HttpServletBasicAuthFilter implements Filter {
         }
 
         final var authorizationHeader = new AuthorizationHeader(authHeaderValue);
-        final var basicAuthHeader = authorizationHeader
-            .asBasicHeader(httpServletRequest.getCharacterEncoding());
+        final var basicAuthHeader = authorizationHeader.asBasicHeader(httpServletRequest.getCharacterEncoding());
 
-        final var user = getUsernamePasswordAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
+        final var user = getUsernamePasswordAuthService().createSession(basicAuthHeader)
+                .getSession()
+                .getUser();
+
         httpServletRequest.setAttribute(User.USER_ATTRIBUTE, user);
-
         return new AuthenticatedRequest(httpServletRequest, authorizationHeader);
 
     }

@@ -1,9 +1,8 @@
 package dev.getelements.elements.service;
 
-import dev.getelements.elements.model.user.User;
-import dev.getelements.elements.model.profile.Profile;
-import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
+import dev.getelements.elements.model.session.UsernamePasswordSessionRequest;
+import dev.getelements.elements.security.BasicAuthorizationHeader;
 
 /**
  * Created by patricktwohig on 4/1/15.
@@ -11,36 +10,26 @@ import dev.getelements.elements.model.session.SessionCreation;
 public interface UsernamePasswordAuthService {
 
     /**
-     * Generates an API key for the given userId and password.
+     * Performs a sign-in with the supplied {@link UsernamePasswordSessionRequest}.
      *
-     * @param userId the user Id
-     * @param password the user's password
-     * @return the API key instance
-     * @deprecated user {@link #createSessionWithLogin(String, String)}
+     * @param basicAuthorizationHeader the basic authorization header
+     *
+     * @return the {@link SessionCreation} if the session was created successfully.
      */
-    default User loginUser(final String userId, final String password) {
-        final SessionCreation sessionCreation = createSessionWithLogin(userId, password);
-        return sessionCreation.getSession().getUser();
+    default SessionCreation createSession(BasicAuthorizationHeader basicAuthorizationHeader) {
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(basicAuthorizationHeader.getUsername());
+        request.setPassword(basicAuthorizationHeader.getPassword());
+        return createSession(request);
     }
 
     /**
-     * Creates a {@link Session} with the login credentials for a {@link User}.
+     * Performs a sign-in with the supplied {@link UsernamePasswordSessionRequest}.
      *
-     * @param userId the user ID
-     * @param password the password
-     * @return the {@link Session} created
-     */
-    SessionCreation createSessionWithLogin(String userId, String password);
-
-    /**
-     * Creates a {@link Session} with the login credentials for a {@link User} while also specifying the id of the
-     * {@link Profile} to use.
+     * @param usernamePasswordSessionRequest the user name password session request
      *
-     * @param userId the user ID
-     * @param password the password
-     * @param profileId the profileId
-     * @return the {@link Session} created
+     * @return the {@link SessionCreation} if the session was created successfully.
      */
-    SessionCreation createSessionWithLogin(String userId, String password, String profileId);
+    SessionCreation createSession(UsernamePasswordSessionRequest usernamePasswordSessionRequest);
 
 }

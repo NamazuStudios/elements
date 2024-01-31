@@ -4,18 +4,22 @@ import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.ForbiddenException;
+import dev.getelements.elements.exception.profile.ProfileNotFoundException;
+import dev.getelements.elements.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.service.UsernamePasswordAuthService;
+import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;
@@ -34,34 +38,30 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     private ProfileDao profileDao;
 
+    private ValidationHelper validationHelper;
+
     private long sessionTimeoutSeconds;
 
     @Override
-    public SessionCreation createSessionWithLogin(final String userId, final String password) {
+    public SessionCreation createSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
 
-        final User user = getUserDao().validateActiveUserPassword(userId, password);
+        getValidationHelper().validateModel(usernamePasswordSessionRequest);
 
-        final Session session = new Session();
-        session.setUser(user);
+        final var userId = usernamePasswordSessionRequest.getUserId().trim();
+        final var password = usernamePasswordSessionRequest.getPassword();
+        final var profileId = usernamePasswordSessionRequest.getProfileId().trim();
+        final var profileSelector = usernamePasswordSessionRequest.getProfileSelector().trim();
 
-        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
-        session.setExpiry(expiry);
-
-        return getSessionDao().create(session);
-
-    }
-
-    @Override
-    public SessionCreation createSessionWithLogin(final String userId, final String password, final String profileId) {
-
-        final User user = getUserDao().validateActiveUserPassword(userId, password);
-        final Profile profile = getProfileDao().getActiveProfile(profileId);
+        final var user = getUserDao().validateActiveUserPassword(userId, password);
+        final var profile = getProfileIfSpecified(profileId)
+                .or(() -> selectProfileIfSelectorSpecified(user, profileSelector))
+                .orElseThrow(() -> new ProfileNotFoundException("Profile not found."));
 
         if (!Objects.equals(user, profile.getUser())) {
             throw new ForbiddenException("Invalid credentials for " + userId);
         }
 
-        final Session session = new Session();
+        final var session = new Session();
 
         session.setUser(user);
         session.setProfile(profile);
@@ -76,6 +76,28 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         session.setExpiry(expiry);
 
         return getSessionDao().create(session);
+
+    }
+
+    private Optional<Profile> getProfileIfSpecified(final String profileId) {
+        return profileId == null ?
+                Optional.empty() :
+                Optional.of(getProfileDao().getActiveProfile(profileId));
+    }
+
+    private Optional<Profile> selectProfileIfSelectorSpecified(final User user, final String selector) {
+
+        if (selector == null) {
+            return Optional.empty();
+        }
+
+        final var query = String.format(".ref.user:%s %s", user.getId(), selector);
+
+        return getProfileDao()
+                .getActiveProfiles(0, 1, query)
+                .getObjects()
+                .stream()
+                .findFirst();
 
     }
 
@@ -113,6 +135,15 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
     @Inject
     public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
         this.sessionTimeoutSeconds = sessionTimeoutSeconds;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
 }
