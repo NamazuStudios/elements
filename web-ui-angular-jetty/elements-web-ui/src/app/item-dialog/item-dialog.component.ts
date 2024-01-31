@@ -114,7 +114,9 @@ export class ItemDialogComponent implements OnInit {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
-    this.initMetadataSpecForm();
+    if (this.data.item.metadata && this.data.item.metadataSpec) {
+      this.initMetadataSpecForm(this.data.item.metadata);
+    }
   }
 
   currentItemCategory() {
@@ -132,35 +134,36 @@ export class ItemDialogComponent implements OnInit {
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
-          this.initMetadataSpecForm();
+          this.initMetadataSpecForm(null);
         }
       }
     });
   }
 
-  private initMetadataSpecForm() {
+  private initMetadataSpecForm(values: any[]) {
     this.metadataFormNestLevel = 0;
     this.formMap = [];
     let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
-    this.addFormControlsFromProperties("", props);
+    this.addFormControlsFromProperties("", props, values);
   }
 
-  private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[]) {
-    console.log("adding props: ", props);
+  private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[], values: any[]) {
     props.forEach(prop => {
       let controlName = ((currentName) && currentName.length > 0) ? (currentName + "." + prop.name) : prop.name;
+      let controlValue = (values) ? this.getValueByPath(values, controlName) : '';
+
       if (prop.type === 'NUMBER') {
         this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.metadataSpecForm.addControl(controlName, new FormControl('', [Validators.pattern('^[0-9]+$')]));
+        this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
       }
       if (prop.type === 'OBJECT') {
         this.metadataFormNestLevel++;
         this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.addFormControlsFromProperties(controlName, prop.properties);
+        this.addFormControlsFromProperties(controlName, prop.properties,values);
       }
       if (prop.type === 'STRING' || prop.type === 'BOOLEAN') {
         this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.metadataSpecForm.addControl(controlName, new FormControl(('')));
+        this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
       }
     });
     this.metadataFormNestLevel--;
@@ -181,4 +184,18 @@ export class ItemDialogComponent implements OnInit {
     }
     return result;
   };
+
+  private getValueByPath(obj: any, path: string): any {
+    console.log('getting ' + path + ' from ', obj);
+    let parts = path.split('.');
+    let value = obj;
+    for (let part of parts) {
+      if (value && part in value) {
+        value = value[part];
+      } else {
+        return undefined;
+      }
+    }
+    return value;
+  }
 }
