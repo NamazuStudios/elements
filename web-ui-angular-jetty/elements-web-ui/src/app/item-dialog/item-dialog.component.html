@@ -82,7 +82,7 @@
           <mat-checkbox *ngIf="item.type === 'BOOLEAN'" name="{{item.name}}" formControlName="{{item.name}}" [ngClass]="getNestedMargin(item.nestLvl)" class="nested-checkbox">
             {{getPlaceholder(item)}}"
           </mat-checkbox>
-          <div *ngIf="item.type === 'OBJECT'" [ngClass]="getNestedMargin(item.nestLvl - 1)">{{item.name}} :</div>
+          <div *ngIf="item.type === 'OBJECT'" class="mh-1" [ngClass]="getNestedMargin(item.nestLvl - 1)">{{item.name}} :</div>
         </div>
       </div>
     </form>
