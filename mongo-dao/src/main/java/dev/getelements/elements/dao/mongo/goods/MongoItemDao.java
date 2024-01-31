@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -187,21 +188,21 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item updateItem(final Item item) {
-
         getValidationHelper().validateModel(item, ValidationGroups.Update.class);
         normalize(item);
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
-        final var mongoMetadataSpec = isNull(item.getMetadataSpec()) ? null :
-                getMongoMetadataSpec(item.getMetadataSpec().getId());
         final var query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", objectId));
+
+        if (!isNull(item.getMetadataSpec())) {
+            return updateItemWtihMetadata(item ,query);
+        }
 
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
                 query.modify(
                         set("name", item.getName()),
                         set("displayName", item.getDisplayName()),
-                        set("metadataSpec", mongoMetadataSpec),
                         set("metadata", item.getMetadata()),
                         set("tags", item.getTags()),
                         set("description", item.getDescription()),
@@ -216,6 +217,29 @@ public class MongoItemDao implements ItemDao {
 
         return getDozerMapper().map(updatedMongoItem, Item.class);
 
+    }
+
+    public Item updateItemWtihMetadata(final Item item, Query<MongoItem> query) {
+        final var mongoMetadataSpec = isNull(item.getMetadataSpec()) ? null :
+                getMongoMetadataSpec(item.getMetadataSpec().getId());
+
+        final var updatedMongoItem = getMongoDBUtils().perform(ds ->
+                query.modify(
+                        set("name", item.getName()),
+                        set("displayName", item.getDisplayName()),
+                        set("metadataSpec", Objects.requireNonNull(mongoMetadataSpec)),
+                        set("metadata", item.getMetadata()),
+                        set("tags", item.getTags()),
+                        set("description", item.getDescription()),
+                        set("publicVisible", item.isPublicVisible()),
+                        set("category", item.getCategory())
+                ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+        );
+
+        if (updatedMongoItem == null) {
+            throw new ItemNotFoundException("Item with ID not found: " + item.getId());
+        }
+        return getDozerMapper().map(updatedMongoItem, Item.class);
     }
 
     @Override

@@ -37,7 +37,7 @@ export class ItemDialogComponent implements OnInit {
     displayName: [this.data.item.displayName, [Validators.required]],
     description: [this.data.item.description, [Validators.required]],
     category: [this.data.item.category, [Validators.required]],
-    metadataSpec: [{value: this.data.item.metadataSpec.name, disabled: true}],
+    metadataSpec: [{value: (this.data.item.metadataSpec) ? this.data.item.metadataSpec.name : null, disabled: true}],
     publicVisible: [this.data.item.publicVisible],
     tags: []
   });
