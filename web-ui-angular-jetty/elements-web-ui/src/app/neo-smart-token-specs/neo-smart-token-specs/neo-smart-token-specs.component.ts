@@ -157,7 +157,7 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
       });
   }
 
-  confitmRebuildDialog() {
+  confirmRebuildDialog() {
     this.dialogService
       .confirm(
         "Confirm Reindexing",
