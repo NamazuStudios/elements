@@ -197,7 +197,9 @@ public class MongoProfileDao implements ProfileDao {
                 .parse(MongoProfile.class, search)
                 .orElseGet(() -> parseLegacyQuery(search));
 
-        return paginationFromQuery(query, offset, count);
+        return getMongoDBUtils().isIndexedQuery(query)
+                ? paginationFromQuery(query, offset, count)
+                : Pagination.empty();
 
     }
 

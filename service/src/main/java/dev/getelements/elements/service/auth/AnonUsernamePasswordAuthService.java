@@ -49,28 +49,23 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
         final var userId = usernamePasswordSessionRequest.getUserId().trim();
         final var password = usernamePasswordSessionRequest.getPassword();
-        final var profileId = usernamePasswordSessionRequest.getProfileId().trim();
-        final var profileSelector = usernamePasswordSessionRequest.getProfileSelector().trim();
+        final var profileId = usernamePasswordSessionRequest.getProfileId();
+        final var profileSelector = usernamePasswordSessionRequest.getProfileSelector();
 
         final var user = getUserDao().validateActiveUserPassword(userId, password);
-        final var profile = getProfileIfSpecified(profileId)
-                .or(() -> selectProfileIfSelectorSpecified(user, profileSelector))
-                .orElseThrow(() -> new ProfileNotFoundException("Profile not found."));
+        final var profile = getProfileIfSpecified(profileId).or(() -> selectProfileIfSpecified(user, profileSelector));
 
-        if (!Objects.equals(user, profile.getUser())) {
-            throw new ForbiddenException("Invalid credentials for " + userId);
-        }
+        profile.ifPresent(p -> {
+            if (!Objects.equals(user, p.getUser())) {
+                throw new ForbiddenException("Invalid credentials for " + userId);
+            }
+        });
 
         final var session = new Session();
 
         session.setUser(user);
-        session.setProfile(profile);
-
-        final Application application = profile.getApplication();
-
-        if (application != null) {
-            session.setApplication(application);
-        }
+        session.setProfile(profile.orElse(null));
+        profile.map(Profile::getApplication).ifPresent(session::setApplication);
 
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         session.setExpiry(expiry);
@@ -85,19 +80,23 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
                 Optional.of(getProfileDao().getActiveProfile(profileId));
     }
 
-    private Optional<Profile> selectProfileIfSelectorSpecified(final User user, final String selector) {
+    private Optional<Profile> selectProfileIfSpecified(final User user, final String selector) {
 
         if (selector == null) {
             return Optional.empty();
         }
 
-        final var query = String.format(".ref.user:%s %s", user.getId(), selector);
+        final var query = String.format(".ref.user:%s AND %s", user.getId(), selector);
 
-        return getProfileDao()
+        final var profiles = getProfileDao()
                 .getActiveProfiles(0, 1, query)
-                .getObjects()
-                .stream()
-                .findFirst();
+                .getObjects();
+
+        if (profiles.isEmpty()) {
+            throw new ProfileNotFoundException("Profile not found.");
+        }
+
+        return Optional.of(profiles.get(0));
 
     }
 
