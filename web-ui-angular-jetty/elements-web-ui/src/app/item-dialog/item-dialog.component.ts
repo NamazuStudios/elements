@@ -1,15 +1,14 @@
-import {Component, Inject, OnInit, ViewChild} from '@angular/core';
-import {FormArray, FormBuilder, FormControl, FormGroup, Validators} from '@angular/forms';
+import {Component, Inject, OnInit} from '@angular/core';
+import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
-import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {AlertService} from '../alert.service';
 import {ItemCategory} from "../api/models/item";
 import {MetadataspecSelectDialogComponent} from "../metadataspec-select-dialog/metadataspec-select-dialog.component";
-import {MetadataSpecProperty, MetadataSpecPropertyType} from "../api/models/token-spec-tab";
-import { APIError } from '../api/models/api-error';
+import {MetadataSpecProperty} from "../api/models/token-spec-tab";
+import {APIError} from '../api/models/api-error';
 
 export interface ItemCategoryPair {
   key: string;
@@ -38,7 +37,7 @@ export class ItemDialogComponent implements OnInit {
     displayName: [this.data.item.displayName, [Validators.required]],
     description: [this.data.item.description, [Validators.required]],
     category: [this.data.item.category, [Validators.required]],
-    metadataSpec: [{value: this.data.item.metadataSpec, disabled: true}],
+    metadataSpec: [{value: this.data.item.metadataSpec.name, disabled: true}],
     publicVisible: [this.data.item.publicVisible],
     tags: []
   });
@@ -94,8 +93,7 @@ export class ItemDialogComponent implements OnInit {
 
     if (this.data.item.metadataSpec) {
       formData.metadataSpec = this.data.item.metadataSpec;
-      let parsedMetadataForm = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
-      formData.metadata = parsedMetadataForm;
+      formData.metadata = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
     }
 
     if (!this.data.isNew && formData.category !== undefined) {
@@ -116,6 +114,7 @@ export class ItemDialogComponent implements OnInit {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
+    this.initMetadataSpecForm();
   }
 
   currentItemCategory() {
@@ -133,13 +132,17 @@ export class ItemDialogComponent implements OnInit {
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
-          this.metadataFormNestLevel = 0;
-          this.formMap = [];
-          let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
-          this.addFormControlsFromProperties("", props);
+          this.initMetadataSpecForm();
         }
       }
     });
+  }
+
+  private initMetadataSpecForm() {
+    this.metadataFormNestLevel = 0;
+    this.formMap = [];
+    let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
+    this.addFormControlsFromProperties("", props);
   }
 
   private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[]) {
