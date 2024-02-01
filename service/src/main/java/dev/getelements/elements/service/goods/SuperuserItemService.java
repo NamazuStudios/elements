@@ -1,14 +1,18 @@
 package dev.getelements.elements.service.goods;
 
 import dev.getelements.elements.dao.ItemDao;
+import dev.getelements.elements.dao.MetadataSpecDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.goods.CreateItemRequest;
 import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.goods.UpdateItemRequest;
+import dev.getelements.elements.model.schema.MetadataSpec;
+import dev.getelements.elements.rt.exception.BadRequestException;
 import dev.getelements.elements.service.ItemService;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 
 import static dev.getelements.elements.model.goods.ItemCategory.FUNGIBLE;
 import static java.util.Objects.isNull;
@@ -16,6 +20,8 @@ import static java.util.Objects.isNull;
 public class SuperuserItemService implements ItemService {
 
     private ItemDao itemDao;
+
+    private MetadataSpecDao metadataSpecDao;
 
     @Override
     public Item getItemByIdOrName(String identifier) {
@@ -47,16 +53,25 @@ public class SuperuserItemService implements ItemService {
 
     @Override
     public Item createItem(CreateItemRequest itemRequest) {
+
         final Item item = new Item();
+
         item.setName(itemRequest.getName());
         item.setTags(itemRequest.getTags());
         item.setCategory(itemRequest.getCategory());
         item.setMetadata(itemRequest.getMetadata());
-        item.setMetadataSpec(itemRequest.getMetadataSpec());
         item.setDescription(itemRequest.getDescription());
         item.setDisplayName(itemRequest.getDisplayName());
         item.setPublicVisible(itemRequest.isPublicVisible());
+
+        Optional.ofNullable(itemRequest.getMetadataSpecId())
+                .map(id -> getMetadataSpecDao()
+                        .findActiveMetadataSpec(id)
+                        .orElseThrow(() -> new BadRequestException("Unknown metadata spec id: " + id)))
+                .ifPresent(item::setMetadataSpec);
+
         return getItemDao().createItem(item);
+
     }
 
     @SuppressWarnings("unused")
@@ -69,4 +84,14 @@ public class SuperuserItemService implements ItemService {
     public void setItemDao(ItemDao itemDao) {
         this.itemDao = itemDao;
     }
+
+    public MetadataSpecDao getMetadataSpecDao() {
+        return metadataSpecDao;
+    }
+
+    @Inject
+    public void setMetadataSpecDao(MetadataSpecDao metadataSpecDao) {
+        this.metadataSpecDao = metadataSpecDao;
+    }
+
 }

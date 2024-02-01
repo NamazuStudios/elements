@@ -92,7 +92,7 @@ export class ItemDialogComponent implements OnInit {
     }
 
     if (this.data.item.metadataSpec) {
-      formData.metadataSpec = this.data.item.metadataSpec;
+      formData.metadataSpec = this.data.item.metadataSpec.id;
       formData.metadata = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
     }
 
