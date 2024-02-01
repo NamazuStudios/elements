@@ -4,18 +4,22 @@ import dev.getelements.elements.dao.ProfileDao;
 import dev.getelements.elements.dao.SessionDao;
 import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.exception.ForbiddenException;
+import dev.getelements.elements.exception.profile.ProfileNotFoundException;
+import dev.getelements.elements.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.session.Session;
 import dev.getelements.elements.model.session.SessionCreation;
 import dev.getelements.elements.service.UsernamePasswordAuthService;
+import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static dev.getelements.elements.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;
@@ -34,15 +38,34 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     private ProfileDao profileDao;
 
+    private ValidationHelper validationHelper;
+
     private long sessionTimeoutSeconds;
 
     @Override
-    public SessionCreation createSessionWithLogin(final String userId, final String password) {
+    public SessionCreation createSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
 
-        final User user = getUserDao().validateActiveUserPassword(userId, password);
+        getValidationHelper().validateModel(usernamePasswordSessionRequest);
 
-        final Session session = new Session();
+        final var userId = usernamePasswordSessionRequest.getUserId().trim();
+        final var password = usernamePasswordSessionRequest.getPassword();
+        final var profileId = usernamePasswordSessionRequest.getProfileId();
+        final var profileSelector = usernamePasswordSessionRequest.getProfileSelector();
+
+        final var user = getUserDao().validateActiveUserPassword(userId, password);
+        final var profile = getProfileIfSpecified(profileId).or(() -> selectProfileIfSpecified(user, profileSelector));
+
+        profile.ifPresent(p -> {
+            if (!Objects.equals(user, p.getUser())) {
+                throw new ForbiddenException("Invalid credentials for " + userId);
+            }
+        });
+
+        final var session = new Session();
+
         session.setUser(user);
+        session.setProfile(profile.orElse(null));
+        profile.map(Profile::getApplication).ifPresent(session::setApplication);
 
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         session.setExpiry(expiry);
@@ -51,31 +74,29 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     }
 
-    @Override
-    public SessionCreation createSessionWithLogin(final String userId, final String password, final String profileId) {
+    private Optional<Profile> getProfileIfSpecified(final String profileId) {
+        return profileId == null ?
+                Optional.empty() :
+                Optional.of(getProfileDao().getActiveProfile(profileId));
+    }
 
-        final User user = getUserDao().validateActiveUserPassword(userId, password);
-        final Profile profile = getProfileDao().getActiveProfile(profileId);
+    private Optional<Profile> selectProfileIfSpecified(final User user, final String selector) {
 
-        if (!Objects.equals(user, profile.getUser())) {
-            throw new ForbiddenException("Invalid credentials for " + userId);
+        if (selector == null) {
+            return Optional.empty();
         }
 
-        final Session session = new Session();
+        final var query = String.format(".ref.user:%s AND %s", user.getId(), selector);
 
-        session.setUser(user);
-        session.setProfile(profile);
+        final var profiles = getProfileDao()
+                .getActiveProfiles(0, 1, query)
+                .getObjects();
 
-        final Application application = profile.getApplication();
-
-        if (application != null) {
-            session.setApplication(application);
+        if (profiles.isEmpty()) {
+            throw new ProfileNotFoundException("Profile not found.");
         }
 
-        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
-        session.setExpiry(expiry);
-
-        return getSessionDao().create(session);
+        return Optional.of(profiles.get(0));
 
     }
 
@@ -113,6 +134,15 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
     @Inject
     public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
         this.sessionTimeoutSeconds = sessionTimeoutSeconds;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
 }

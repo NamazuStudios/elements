@@ -7,6 +7,8 @@ import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
+import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.exception.BadQueryException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.profile.ProfileNotFoundException;
@@ -31,6 +33,7 @@ import java.util.stream.Stream;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.and;
+import static dev.morphia.query.filters.Filters.or;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.lang.String.format;
@@ -59,6 +62,8 @@ public class MongoProfileDao implements ProfileDao {
     private MongoLargeObjectDao mongoLargeObjectDao;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
+
+    private BooleanQueryParser booleanQueryParser;
 
     @Override
     public Optional<Profile> findActiveProfile(final String profileId) {
@@ -188,15 +193,33 @@ public class MongoProfileDao implements ProfileDao {
             throw new InvalidDataException("search must be specified.");
         }
 
+        final var query = getBooleanQueryParser()
+                .parse(MongoProfile.class, search)
+                .orElseGet(() -> parseLegacyQuery(search));
+
+        return getMongoDBUtils().isIndexedQuery(query)
+                ? paginationFromQuery(query, offset, count)
+                : Pagination.empty();
+
+    }
+
+    public Query<MongoProfile> parseLegacyQuery(final String search) {
+
+        final String trimmedSearch = nullToEmpty(search).trim();
+
+        if (trimmedSearch.isEmpty()) {
+            throw new BadQueryException("search must be specified.");
+        }
+
         final Query<MongoProfile> profileQuery = getDatastore().find(MongoProfile.class);
         final Query<MongoUser> userQuery = getDatastore().find(MongoUser.class);
 
         userQuery.filter(
-            eq("active", true),
-            Filters.or(
-                regex("name", compile(trimmedSearch)),
-                regex("email", compile(trimmedSearch))
-            )
+                eq("active", true),
+                or(
+                        regex("name", compile(trimmedSearch)),
+                        regex("email", compile(trimmedSearch))
+                )
         );
 
         final List<MongoUser> userList;
@@ -205,15 +228,13 @@ public class MongoProfileDao implements ProfileDao {
             userList = iterator.toList();
         }
 
-        profileQuery.filter(
-            eq("active", true),
-            Filters.or(
-                regex("displayName", compile(trimmedSearch)),
-                in("user", userList)
-            )
+        return profileQuery.filter(
+                eq("active", true),
+                or(
+                        regex("displayName", compile(trimmedSearch)),
+                        in("user", userList)
+                )
         );
-
-        return paginationFromQuery(profileQuery, offset, count);
 
     }
 
@@ -579,4 +600,14 @@ public class MongoProfileDao implements ProfileDao {
     public void setMongoLargeObjectDao(MongoLargeObjectDao mongoLargeObjectDao) {
         this.mongoLargeObjectDao = mongoLargeObjectDao;
     }
+
+    public BooleanQueryParser getBooleanQueryParser() {
+        return booleanQueryParser;
+    }
+
+    @Inject
+    public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
+        this.booleanQueryParser = booleanQueryParser;
+    }
+
 }
