@@ -1,23 +1,14 @@
 <div>
   <div class="dialog-define-object-title">
-    Define Object
+    Manage Object Type
   </div>
   <div class="fields-header">
-    <div>Fields</div>
-    <button
-      mat-raised-button
-      color="primary"
-      matTooltip="Add Field"
-      matTooltipPosition="above"
-      (click)="addNewField()"
-    >
-      Add Field
-    </button>
+    <div>Nested properties:</div>
   </div>
   <mat-card [@.disabled]="disableAnimation">
     <mat-accordion cdkDropList>
       <mat-expansion-panel
-        *ngFor="let field of fields; let i = index"
+        *ngFor="let field of properties; let i = index"
         (opened)="handleFieldPanelStateChange(i)"
         [expanded]="expandedField === i"
         cdkDrag
@@ -28,14 +19,14 @@
             <div class="menu-index-keyname">
               <mat-icon>menu</mat-icon>
               <div>
-                <span>1: </span>
+                <span>{{i+1}}</span>
                 <span class="memu-keyname">{{field.name || 'KeyName'}}</span>
               </div>
             </div>
-            <div>{{field.fieldType || 'Type'}}</div>
+            <div>{{field.type}}</div>
           </div>
         </mat-expansion-panel-header>
-        <div>
+        <div class="sharp-panel">
           <div class="field-name-type">
             <mat-form-field>
               <mat-label>Name</mat-label>
@@ -45,7 +36,7 @@
                 name="keyname"
                 type="text"
                 [value]="field.name"
-                (change)="changeFieldName($event.target.value, i)"
+                (change)="changeFieldName($event.target, i)"
               >
             </mat-form-field>
             <mat-form-field>
@@ -53,11 +44,11 @@
               <mat-select
                 name="type"
                 placeholder="Type"
-                [value]="field.fieldType?.toUpperCase()"
+                [value]="field.type?.toUpperCase()"
                 (selectionChange)="updateFieldType($event.value, i)"
               >
                 <mat-option
-                  *ngFor="let fieldType of fieldTypes"
+                  *ngFor="let fieldType of propertiesTypes"
                   [value]="fieldType.key"
                   [matTooltip]="fieldType.value"
                   matTooltipPosition="left"
@@ -69,13 +60,14 @@
           </div>
           <div class="menu-panel-footer">
             <app-neo-smart-token-specs-dialog-field-type
-              [type]="field.fieldType"
-              [field]="field"
+              [type]="field.type"
               [index]="i"
-              (onContentUpdate)="updateNonObjectField($event)"
+              [field]="field"
+              (onContentTypeUpdate)="changePropertyType($event, i)"
+              (onDefaultValueUpdate)="changeDefaultValue($event, i)"
+              (onPlaceholderUpdate)="changePlaceholder($event, i)"
               (openDefineObjectModal)="openDefineObjectModal($event)"
-            >
-            </app-neo-smart-token-specs-dialog-field-type>
+            ></app-neo-smart-token-specs-dialog-field-type>
             <div class="field-buttons">
               <button
                 mat-raised-button
@@ -99,6 +91,14 @@
           </div>
         </div>
       </mat-expansion-panel>
+      <button
+        mat-raised-button
+        color="primary" class="mt-20"
+        matTooltip="Add Field"
+        matTooltipPosition="above"
+        (click)="addNewField()">
+        Add Field
+      </button>
     </mat-accordion>
   </mat-card>
 

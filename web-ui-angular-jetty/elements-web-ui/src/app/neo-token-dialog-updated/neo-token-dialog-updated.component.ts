@@ -4,7 +4,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { NeoSmartContract } from '../api/models/blockchain/neo-smart-contract';
 import { TokenDefinition } from '../api/models/blockchain/token-definition';
-import { TokenSpecTab, TokenSpecTabField, TokenSpecTabFieldTypes, TokenTemplate } from '../api/models/token-spec-tab';
+import { MetadataSpecProperty, MetadataSpecPropertyType } from '../api/models/token-spec-tab';
 import { NeoSmartContractsService } from '../api/services/blockchain/neo-smart-contracts.service';
 import { TokenDefinitionService } from '../api/services/blockchain/token-definition.service';
 import { MetadataSpecsService } from '../api/services/metadata-specs.service';
@@ -13,9 +13,9 @@ import { NeoSmartContractsDataSource } from '../neo-smart-contracts.datasource';
 import { NeoTokensSpecDataSource } from '../neo-tokens-spec.datasource';
 
 const complexFields = [
-  TokenSpecTabFieldTypes.OBJECT,
-  TokenSpecTabFieldTypes.ARRAY,
-  TokenSpecTabFieldTypes.BOOLEAN,
+  MetadataSpecPropertyType.OBJECT,
+  MetadataSpecPropertyType.ARRAY,
+  MetadataSpecPropertyType.BOOLEAN,
 ];
 
 @Component({
@@ -27,15 +27,15 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
 
   readonly separatorKeysCodes = [ENTER, COMMA ] as const;
   contractsDataSource: NeoSmartContractsDataSource;
-  tokenSpecsDataSource: NeoTokensSpecDataSource;
+  // tokenSpecsDataSource: NeoTokensSpecDataSource;
   name = '';
   activeTabIndex = 0;
-  fields: TokenSpecTabField[] = [];
+  fields: MetadataSpecProperty[] = [];
   contracts: NeoSmartContract[] = [];
-  templates: TokenTemplate[] = [];
+  // templates: TokenTemplate[] = [];
   selectedContract: NeoSmartContract;
-  selectedTemplate: TokenTemplate;
-  tabs: TokenSpecTab[];
+  // selectedTemplate: TokenTemplate;
+  // tabs: TokenSpecTab[];
   // Workaround for accordion animation on init
   disableAnimation = true;
 
@@ -48,10 +48,10 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       token: TokenDefinition,
-      template: TokenTemplate,
+      // template: TokenTemplate,
       contract: NeoSmartContract,
       contracts: NeoSmartContract[],
-      templates: TokenTemplate[],
+      // templates: TokenTemplate[],
       refresher;
       close;
     },
@@ -60,33 +60,33 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
   ngOnInit(): void {
     this.contractsDataSource = new NeoSmartContractsDataSource(this.neoSmartContractsService);
     this.contractsDataSource.loadNeoSmartContracts(null, null, null);
-    this.tokenSpecsDataSource = new NeoTokensSpecDataSource(this.metadataSpecsService);
-    this.tokenSpecsDataSource.loadTemplates(null, null);
-    if (this.data.token?.id) {
-      this.tabs = this.data?.token?.metadata?.tabs.map((tab) => {
-        const fields = tab.fields.map((field) => {
-          if (field?.fieldType === 'Array' || field?.fieldType === 'Object') {
-            return {
-              ...field,
-              content: field.value,
-            }
-          }
-          return field;
-        });
-        return {
-          ...tab,
-          fields,
-        }
-      });
-      this.name = this.data.token.name;
-      this.selectedContract = this.data.token.contract;
-      this.selectedTemplate = this.data.token.metadataSpec;
-    } else {
-      this.tabs = this.selectedTemplate?.tabs.map(tab => ({
-        ...tab,
-        fields: this.convertFieldsToArray(tab.fields),
-      }));
-    }
+    // this.tokenSpecsDataSource = new NeoTokensSpecDataSource(this.metadataSpecsService);
+    // this.tokenSpecsDataSource.loadTemplates(null, null);
+    // if (this.data.token?.id) {
+    //   this.tabs = this.data?.token?.metadata?.tabs.map((tab) => {
+    //     const fields = tab.fields.map((field) => {
+    //       if (field?.fieldType === 'Array' || field?.fieldType === 'Object') {
+    //         return {
+    //           ...field,
+    //           content: field.value,
+    //         }
+    //       }
+    //       return field;
+    //     });
+    //     return {
+    //       ...tab,
+    //       fields,
+    //     };
+    //   });
+    //   this.name = this.data.token.name;
+    //   this.selectedContract = this.data.token.contract;
+    //   // this.selectedTemplate = this.data.token.metadataSpec;
+    // } else {
+    //   this.tabs = this.selectedTemplate?.tabs.map(tab => ({
+    //     ...tab,
+    //     fields: this.convertFieldsToArray(tab.fields),
+    //   }));
+    // }
     this.selectTab(0);
   }
 
@@ -97,11 +97,11 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
     this.contractsDataSource.neoSmartContracts$.subscribe(
       (currentNeoSmartContracts: NeoSmartContract[]) => (this.contracts = currentNeoSmartContracts)
     );
-    this.tokenSpecsDataSource.tokens$.subscribe(
-      (templates: TokenTemplate[]): void => {
-        this.templates = templates;
-      }
-    );
+    // this.tokenSpecsDataSource.tokens$.subscribe(
+    //   (templates: TokenTemplate[]): void => {
+    //     this.templates = templates;
+    //   }
+    // );
   }
 
   selectContract(contractId: string): void {
@@ -112,37 +112,37 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
   }
 
   selectTemplate(tempalteId: string): void {
-    const template = this.templates.find((template: TokenTemplate): boolean =>
-      template.id === tempalteId,
-    );
-    this.selectedTemplate = template;
-    this.tabs = template.tabs.map(tab => ({
-      ...tab,
-      fields: this.convertFieldsToArray(tab.fields),
-    }));
+    // const template = this.templates.find((template: TokenTemplate): boolean =>
+    //   template.id === tempalteId,
+    // );
+    // this.selectedTemplate = template;
+    // this.tabs = template.tabs.map(tab => ({
+    //   ...tab,
+    //   fields: this.convertFieldsToArray(tab.fields),
+    // }));
     this.fields = [];
     this.selectTab(0);
   }
 
-  getFieldValue(field: TokenSpecTabField) {
-    switch(field.fieldType) {
-      case 'Tags': {
+  getFieldValue(field: MetadataSpecProperty) {
+    switch(field.type) {
+      case 'TAGS': {
         if (field.defaultValue) {
           return field.defaultValue.split(',');
         }
         break;
       }
-      case 'Number':
+      case 'NUMBER':
         return field.defaultValue;
       default:
         return '';
     }
   }
 
-  convertFieldsToArray(fields): TokenSpecTabField[] {
+  convertFieldsToArray(fields): MetadataSpecProperty[] {
     if (fields?.length !== undefined) return fields;
     const keys = Object.keys(fields);
-    const newFields: TokenSpecTabField[] = [];
+    const newFields: MetadataSpecProperty[] = [];
     for (let i = 0; i < keys.length; i++) {
       const field = fields[keys[i]];
       const fieldDefaulValue = complexFields.includes(field.fieldType) && field.defaultValue
@@ -150,11 +150,11 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
         : field.defaultValue;
       newFields.push({
         name: field?.name || '',
-        fieldType: field.fieldType,
-        placeHolder: fieldDefaulValue?.[0]?.placeHolder || field.placeHolder,
+        displayName: field?.displayName || '',
+        type: field.type,
+        required: field.required,
+        placeholder: fieldDefaulValue?.[0]?.placeholder || field.placeholder,
         defaultValue: fieldDefaulValue?.[0]?.defaultValue || field.defaultValue || '',
-        value: this.getFieldValue(field),
-        content: fieldDefaulValue,
       });
     }
     return newFields;
@@ -169,63 +169,63 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
       this.updateActiveTabFields(this.fields);
     }
     this.activeTabIndex = tabIndex;
-    if (this.tabs?.[tabIndex]) {
-      this.fields = this.tabs[tabIndex].fields;
-    }
+    // if (this.tabs?.[tabIndex]) {
+    //   this.fields = this.tabs[tabIndex].fields;
+    // }
   }
 
-  updateActiveTabFields(newFields: TokenSpecTabField[]) {
-    this.tabs = this.tabs.map((tab: TokenSpecTab, index: number) => {
-      if (index === this.activeTabIndex) {
-        return {
-          ...tab,
-          fields: newFields,
-        };
-      }
-      return tab;
-    });
+  updateActiveTabFields(newFields: MetadataSpecProperty[]) {
+    // this.tabs = this.tabs.map((tab: TokenSpecTab, index: number) => {
+    //   if (index === this.activeTabIndex) {
+    //     return {
+    //       ...tab,
+    //       fields: newFields,
+    //     };
+    //   }
+    //   return tab;
+    // });
   }
 
   changeFieldValue(value: string, fieldIndex: number) {
-    this.fields = this.fields.map((field, index) => {
-      if (fieldIndex === index) {
-        return {
-          ...field,
-          content: field?.fieldType === 'Object' ? value : field.content,
-          value: value,
-        }
-      }
-      return field;
-    });
+    // this.fields = this.fields.map((field, index) => {
+    //   if (fieldIndex === index) {
+    //     return {
+    //       ...field,
+    //       content: field?.fieldType === 'Object' ? value : field.content,
+    //       value: value,
+    //     }
+    //   }
+    //   return field;
+    // });
   }
 
   submit() {
-    const session = this.authenticationService.currentSession;
-    this.updateActiveTabFields(this.fields);
-    const data = {
-      name: this.name,
-      displayName: this.name,
-      metadataSpecId: this.selectedTemplate.id,
-      contractId: this.selectedContract.id,
-      userId: session.session.user.id,
-      metadata: {
-        tabs: this.tabs,
-      },
-    }
-    if (this.data.token?.id) {
-      this.tokenDefinitionService.updateTokenDefinition({
-        id: this.data.token.id,
-        body: data,
-      }).subscribe(() => {
-        this.data.refresher.refresh();
-      });
-    } else {
-      this.tokenDefinitionService.createTokenDefinition(data)
-        .subscribe(() => {
-          this.data.refresher.refresh();
-        });
-    }
-    this.close();
+    // const session = this.authenticationService.currentSession;
+    // this.updateActiveTabFields(this.fields);
+    // const data = {
+    //   name: this.name,
+    //   displayName: this.name,
+    //   metadataSpecId: this.selectedTemplate.id,
+    //   contractId: this.selectedContract.id,
+    //   userId: session.session.user.id,
+    //   metadata: {
+    //     tabs: this.tabs,
+    //   },
+    // }
+    // if (this.data.token?.id) {
+    //   this.tokenDefinitionService.updateTokenDefinition({
+    //     id: this.data.token.id,
+    //     body: data,
+    //   }).subscribe(() => {
+    //     this.data.refresher.refresh();
+    //   });
+    // } else {
+    //   this.tokenDefinitionService.createTokenDefinition(data)
+    //     .subscribe(() => {
+    //       this.data.refresher.refresh();
+    //     });
+    // }
+    // this.close();
   }
 
   close() {

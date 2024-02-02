@@ -37,18 +37,11 @@ public @interface ValidProperties {
         public boolean isValid(final MetadataSpecPropertiesContainer value, final ConstraintValidatorContext context) {
 
             final var type = value.getType();
-            final var properties = value.getProperties();
 
             if (ARRAY.equals(type)) {
                 return checkArrayProperties(value, context);
             } else if (OBJECT.equals(type)) {
                 return checkObjectProperties(value, context);
-            } else if (properties != null && !properties.isEmpty()) {
-                final var msg = format("'properties' must not be null for %s type fields.", type);
-                context.buildConstraintViolationWithTemplate(msg)
-                        .addPropertyNode("tabs")
-                        .addConstraintViolation();
-                return false;
             }
 
             return true;

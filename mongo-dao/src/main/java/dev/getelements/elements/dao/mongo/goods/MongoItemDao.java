@@ -5,6 +5,8 @@ import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.ItemDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
+import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
+import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
@@ -28,11 +30,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoItemDao implements ItemDao {
@@ -48,6 +54,8 @@ public class MongoItemDao implements ItemDao {
     private Mapper dozerMapper;
 
     private MongoDBUtils mongoDBUtils;
+
+    private MongoMetadataSpecDao mongoMetadataSpecDao;
 
     @Override
     public Item getItemByIdOrName(final String identifier) {
@@ -180,13 +188,16 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item updateItem(final Item item) {
-
         getValidationHelper().validateModel(item, ValidationGroups.Update.class);
         normalize(item);
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
         final var query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", objectId));
+
+        if (!isNull(item.getMetadataSpec())) {
+            return updateItemWtihMetadata(item ,query);
+        }
 
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
                 query.modify(
@@ -208,6 +219,29 @@ public class MongoItemDao implements ItemDao {
 
     }
 
+    public Item updateItemWtihMetadata(final Item item, Query<MongoItem> query) {
+        final var mongoMetadataSpec = isNull(item.getMetadataSpec()) ? null :
+                getMongoMetadataSpec(item.getMetadataSpec().getId());
+
+        final var updatedMongoItem = getMongoDBUtils().perform(ds ->
+                query.modify(
+                        set("name", item.getName()),
+                        set("displayName", item.getDisplayName()),
+                        set("metadataSpec", Objects.requireNonNull(mongoMetadataSpec)),
+                        set("metadata", item.getMetadata()),
+                        set("tags", item.getTags()),
+                        set("description", item.getDescription()),
+                        set("publicVisible", item.isPublicVisible()),
+                        set("category", item.getCategory())
+                ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+        );
+
+        if (updatedMongoItem == null) {
+            throw new ItemNotFoundException("Item with ID not found: " + item.getId());
+        }
+        return getDozerMapper().map(updatedMongoItem, Item.class);
+    }
+
     @Override
     public Item createItem(Item item) {
 
@@ -215,6 +249,10 @@ public class MongoItemDao implements ItemDao {
         normalize(item);
 
         final MongoItem mongoItem = getDozerMapper().map(item, MongoItem.class);
+
+        final var mongoMetadataSpec = isNull(item.getMetadataSpec()) ? null :
+                getMongoMetadataSpec(item.getMetadataSpec().getId());
+        mongoItem.setMetadataSpec(mongoMetadataSpec);
 
         try {
             getDatastore().save(mongoItem);
@@ -232,6 +270,11 @@ public class MongoItemDao implements ItemDao {
         item.setDisplayName(item.getDisplayName().trim());
         item.setDescription(item.getDescription().trim());
         item.validateTags();
+    }
+
+    private MongoMetadataSpec getMongoMetadataSpec(final String specId) {
+        return isNullOrEmpty(specId) ? null : getMongoMetadataSpecDao().findActiveMongoMetadataSpec(specId)
+            .orElseThrow(()-> new NotFoundException(format("Not found metadataspec object %s", specId)));
     }
 
     public Datastore getDatastore() {
@@ -280,4 +323,12 @@ public class MongoItemDao implements ItemDao {
         this.standardQueryParser = standardQueryParser;
     }
 
+    public MongoMetadataSpecDao getMongoMetadataSpecDao() {
+        return mongoMetadataSpecDao;
+    }
+
+    @Inject
+    public void setMongoMetadataSpecDao(MongoMetadataSpecDao mongoMetadataSpecDao) {
+        this.mongoMetadataSpecDao = mongoMetadataSpecDao;
+    }
 }

@@ -101,6 +101,7 @@ import { OmniChainWalletsVaultSearchDialogComponent } from './omni-chain-wallets
 import { OmniChainUserSearchDialogComponent } from './omni-chain-user-search-dialog/omni-chain-user-search-dialog.component';
 import { OmniChainWalletsAccountsDialogComponent } from './omni-chain-wallets-accounts-dialog/omni-chain-wallets-accounts-dialog.component';
 import { ApplicationAttributesComponent } from './application-attributes/application-attributes.component';
+import {MetadataspecSelectDialogComponent} from "./metadataspec-select-dialog/metadataspec-select-dialog.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -121,6 +122,7 @@ export function initialize(configService: ConfigService) {
     ProductBundleEditorComponent,
     ProfileDialogComponent,
     UserSelectDialogComponent,
+    MetadataspecSelectDialogComponent,
     LeaderboardDialogComponent,
     InventoryDialogComponent,
     ItemSelectDialogComponent
@@ -157,6 +159,7 @@ export function initialize(configService: ConfigService) {
     ProfilesListComponent,
     ProfileDialogComponent,
     UserSelectDialogComponent,
+    MetadataspecSelectDialogComponent,
     LeaderboardsListComponent,
     LeaderboardDialogComponent,
     WalletsListComponent,

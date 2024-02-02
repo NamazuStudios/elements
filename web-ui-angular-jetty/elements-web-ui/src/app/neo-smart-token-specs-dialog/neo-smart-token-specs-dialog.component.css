@@ -71,6 +71,13 @@ mat-expansion-panel-header {
   padding-right: 20px;
 }
 
+.sharp-panel {
+  background: #f7f7f7;
+  padding: 20px;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+}
+
 .menu-index-keyname {
   display: flex;
   justify-content: flex-start;
@@ -81,7 +88,12 @@ mat-expansion-panel-header {
   margin-right: 20px;
 }
 
-.menu-index-keyname .memu-keyname {
+.menu-index-keyname .menu-keyname {
+  color: #333333;
+  margin-left: 10px;
+}
+
+.menu-index-keyname .menu-keyname-empty {
   opacity: 0.4;
   margin-left: 10px;
 }
@@ -104,13 +116,6 @@ mat-expansion-panel-header {
   min-width: 45px;
   max-width: 45px;
   margin-left: 10px;
-}
-
-.field-buttons .move-to-other-tab {
-  transform: rotate(90deg);
-  height: 45px;
-  width: 36px;
-  min-width: 36px;
 }
 
 .menu-panel-footer {
@@ -136,4 +141,12 @@ app-neo-smart-token-specs-dialog-field-type {
   border: dotted 3px #cbcbcb;
   min-height: 48px;
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+mb-20 {
+  margin-bottom: 20px;
 }

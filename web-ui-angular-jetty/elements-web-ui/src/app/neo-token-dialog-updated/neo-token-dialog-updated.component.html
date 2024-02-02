@@ -21,25 +21,6 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field class="header__form-field">
-        <mat-label>Token Spec</mat-label>
-        <mat-select
-          name="tokenspec"
-          placeholder="Token Spec"
-          [value]="selectedTemplate?.id"
-          [disabled]="data.token?.id"
-          (selectionChange)="selectTemplate($event.value)"
-        >
-          <mat-option
-            *ngFor="let template of templates"
-            [value]="template.id"
-            [matTooltip]="template.name"
-            matTooltipPosition="left"
-          >
-            {{template.name}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
     </div>
   </div>
   <div class="dialog-updated-name">
@@ -55,31 +36,12 @@
       >
     </mat-form-field>
   </div>
-  <mat-tab-group
-    (selectedIndexChange)="selectTab($event)"
-    [selectedIndex]="activeTabIndex"
-    [@.disabled]="disableAnimation"
-  >
-    <mat-tab
-      *ngFor="let tab of tabs; let i = index"
-      label="{{tab.name}}"
-    >
-      <div class="mat-tab-inner">
-        <app-neo-token-dialog-updated-field
-          *ngFor="let field of fields; let fieldIndex = index;"
-          [field]="field"
-          (updateFieldValue)="changeFieldValue($event, fieldIndex)"
-        >
-        </app-neo-token-dialog-updated-field>
-      </div>
-    </mat-tab>
-  </mat-tab-group>
   <div class="dialog-updated-footer">
     <button
       mat-raised-button
       color="primary"
       (click)="submit()"
-      [disabled]="!selectedContract || !selectedTemplate || !name"
+      [disabled]="!selectedContract || !name"
     >
       Ok
     </button>

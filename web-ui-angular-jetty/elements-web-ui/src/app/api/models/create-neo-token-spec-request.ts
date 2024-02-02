@@ -1,9 +1,11 @@
+import {MetadataSpecProperty, MetadataSpecPropertyType} from "./token-spec-tab";
+
 export interface CreateNeoTokenSpecRequest {
   /**
-   * Tabs listed.
+   * Properties listed.
    */
   // tabs: TokenSpecTab[];
-  tabs: any[];
+  properties: MetadataSpecProperty[];
 
   /**
    * The token spec name.
@@ -11,7 +13,7 @@ export interface CreateNeoTokenSpecRequest {
   name: string;
 
   /**
-   * The contract id.
+   * The type of property.
    */
-  contractId?: string;
+  type: MetadataSpecPropertyType;
 }

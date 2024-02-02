@@ -1,31 +1,31 @@
-export enum TokenSpecTabFieldTypes {
-  STRING = 'String',
-  NUMBER = 'Number',
-  BOOLEAN = 'Boolean',
-  ENUM = 'Enum',
-  OBJECT = 'Object',
-  TAGS = 'Tags',
-  ARRAY = 'Array',
+export enum MetadataSpecPropertyType {
+  STRING = 'STRING',
+  NUMBER = 'NUMBER',
+  BOOLEAN = 'BOOLEAN',
+  OBJECT = 'OBJECT',
+  TAGS = 'TAGS',
+  ARRAY = 'ARRAY',
 }
 
-export interface TokenSpecTabField {
+export interface MetadataSpecProperty {
   name: string;
-  fieldType: TokenSpecTabFieldTypes;
-  content: any;
-  fieldContentType?: string;
-  value?: any;
-  placeHolder?: string;
+  displayName: string;
+  type: MetadataSpecPropertyType;
+  required: boolean;
+  placeholder?: string;
   defaultValue?: string;
+  properties?: MetadataSpecProperty[];
 }
 
-export interface TokenSpecTab {
-  name: string;
-  fields: TokenSpecTabField[];
-}
-
-export interface TokenTemplate {
-  contractId: string;
+export interface MetadataSpec {
   id: string;
   name: string;
-  tabs: TokenSpecTab[];
+  type: MetadataSpecPropertyType;
+  properties?: MetadataSpecProperty[];
+}
+
+export interface CreateMetadataSpecRequest {
+  name: string;
+  type: MetadataSpecPropertyType;
+  properties?: MetadataSpecProperty[];
 }

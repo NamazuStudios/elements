@@ -1,6 +1,7 @@
 package dev.getelements.elements.model.goods;
 
 import dev.getelements.elements.Constants;
+import dev.getelements.elements.model.schema.MetadataSpec;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
@@ -139,11 +140,11 @@ public class CreateItemRequest {
     }
 
     /**
-     * Sets the metadata spec ID.
+     * Sets the metadata spec.
      *
-     * @param metadataSpecId the metadata spec id
+     * @param MetadataSpec the metadata spec id
      */
-    public void setMetadataSpecId(String metadataSpecId) {
+    public void setMetadataSpec(String metadataSpecId) {
         this.metadataSpecId = metadataSpecId;
     }
 
@@ -199,24 +200,27 @@ public class CreateItemRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateItemRequest that = (CreateItemRequest) o;
-        return publicVisible == that.publicVisible && Objects.equals(name, that.name) && Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && category == that.category && Objects.equals(tags, that.tags) && Objects.equals(metadata, that.metadata);
+        return isPublicVisible() == that.isPublicVisible() && Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getDescription(), that.getDescription()) && getCategory() == that.getCategory() && Objects.equals(getTags(), that.getTags()) && Objects.equals(getMetadataSpecId(), that.getMetadataSpecId()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, displayName, description, category, tags, metadata, publicVisible);
+        return Objects.hash(getName(), getDisplayName(), getDescription(), getCategory(), getTags(), getMetadataSpecId(), getMetadata(), isPublicVisible());
     }
 
     @Override
     public String toString() {
-        return "CreateItemRequest{" +
-                "name='" + name + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", description='" + description + '\'' +
-                ", category=" + category +
-                ", tags=" + tags +
-                ", metadata=" + metadata +
-                ", publicVisible=" + publicVisible +
-                '}';
+        final StringBuilder sb = new StringBuilder("CreateItemRequest{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", displayName='").append(displayName).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", category=").append(category);
+        sb.append(", tags=").append(tags);
+        sb.append(", metadataSpecId='").append(metadataSpecId).append('\'');
+        sb.append(", metadata=").append(metadata);
+        sb.append(", publicVisible=").append(publicVisible);
+        sb.append('}');
+        return sb.toString();
     }
+
 }

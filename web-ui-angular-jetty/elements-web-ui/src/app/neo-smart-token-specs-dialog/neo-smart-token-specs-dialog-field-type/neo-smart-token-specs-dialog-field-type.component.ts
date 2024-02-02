@@ -1,7 +1,7 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatChipInputEvent } from '@angular/material/chips';
-import { TokenSpecTabField, TokenSpecTabFieldTypes } from 'src/app/api/models/token-spec-tab';
+import { MetadataSpecProperty, MetadataSpecPropertyType } from 'src/app/api/models/token-spec-tab';
 import { enumRegex } from '../neo-smart-token-specs-dialog.component';
 
 @Component({
@@ -11,9 +11,9 @@ import { enumRegex } from '../neo-smart-token-specs-dialog.component';
 })
 export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   @Input()
-  field: TokenSpecTabField;
+  field: MetadataSpecProperty;
   @Input()
-  type: TokenSpecTabFieldTypes;
+  type: MetadataSpecPropertyType;
   @Input()
   index: number;
   @Output("openDefineObjectModal")
@@ -22,6 +22,10 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   onContentUpdate: EventEmitter<any> = new EventEmitter();
   @Output("onContentTypeUpdate")
   onContentTypeUpdate: EventEmitter<string> = new EventEmitter();
+  @Output("onDefaultValueUpdate")
+  onDefaultValueUpdate: EventEmitter<any> = new EventEmitter();
+  @Output("onPlaceholderUpdate")
+  onPlaceholderUpdate: EventEmitter<string> = new EventEmitter();
 
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
   selectedArrayType = 'String';
@@ -34,20 +38,18 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
-    if (this.field.fieldType === 'Enum') {
-      this.enumFields = this.field?.content ? this.field?.content.split(',') : [];
-    } else if (this.field.fieldType === 'Tags') {
+    if (this.field.type === 'TAGS') {
       this.tagsArr = this.field.defaultValue ? this.field.defaultValue.split(',') : [];
-    } else if (this.field.fieldType === 'Array') {
-      if (this.field.fieldContentType) {
-        this.selectedArrayType = this.field.fieldContentType || 'String';
-      } else if (typeof this.field.content === 'object') {
-        this.selectedArrayType = 'Object';
-      } else if (typeof this.field.content === 'number') {
-        this.selectedArrayType = 'Number';
-      } else {
-        this.selectedArrayType = 'String';
-      }
+    } else if (this.field.type === 'ARRAY') {
+      // if (this.field.fieldContentType) {
+      //   this.selectedArrayType = this.field.fieldContentType || 'String';
+      // } else if (typeof this.field.content === 'object') {
+      //   this.selectedArrayType = 'OBJECT';
+      // } else if (typeof this.field.content === 'number') {
+      //   this.selectedArrayType = 'NUMBER';
+      // } else {
+      //   this.selectedArrayType = 'STRING';
+      // }
     }
   }
 
@@ -92,25 +94,22 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   }
 
   onPlaceholderChange(value: string) {
-    this.onContentUpdate.emit({
-      index: this.index,
-      otherProps: {
-        placeHolder: value,
-      }
-    });
+    this.onPlaceholderUpdate.emit(value);
   }
 
-  onDefaultValueChange(value: string | number) {
-    this.onContentUpdate.emit({
-      index: this.index,
-      otherProps: {
-        defaultValue: value,
-      },
-    });
+  onDefaultValueChange(value: any) {
+    this.onDefaultValueUpdate.emit(value);
+  }
+  onBooleanDefaultValueChange(value: any) {
+    if (value) {
+      this.onDefaultValueUpdate.emit('true');
+    } else {
+      this.onDefaultValueUpdate.emit('false');
+    }
   }
 
   onNumberDefaultValueChange(value: number) {
-    this.onContentUpdate.emit({
+    this.onDefaultValueUpdate.emit({
       index: this.index,
       otherProps: {
         defaultValue: +value,
@@ -119,7 +118,7 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   }
 
   onBooleanChange(state: boolean) {
-    this.onContentUpdate.emit({
+    this.onDefaultValueUpdate.emit({
       index: this.index,
       content: state,
     });
@@ -139,4 +138,15 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
       content: this.enumFields.filter((_, fieldIndex: number) => index !== fieldIndex).join(','),
     });
   }
+  parseDefaultBooleanValue(defaultValue: string): boolean {
+    return defaultValue && defaultValue.toLowerCase() === 'true';
+  }
+
+  propertiesPrieview(properties: MetadataSpecProperty[]) {
+    return (properties && properties.length > 0) ?
+      properties.map(property => property.name) :
+      ""
+  }
+
+  public readonly MetadataSpecPropertyType = MetadataSpecPropertyType;
 }

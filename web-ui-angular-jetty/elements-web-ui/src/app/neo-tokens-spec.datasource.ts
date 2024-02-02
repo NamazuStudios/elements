@@ -2,11 +2,11 @@ import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 import { BehaviorSubject, Observable, of } from "rxjs";
 import { catchError, finalize } from "rxjs/operators";
 
-import { TokenTemplate } from './api/models/token-spec-tab';
 import { MetadataSpecsService } from "./api/services/metadata-specs.service";
+import {MetadataSpec} from "./api/models/token-spec-tab";
 
-export class NeoTokensSpecDataSource implements DataSource<TokenTemplate> {
-  private tokensSubject = new BehaviorSubject<TokenTemplate[]>([]);
+export class NeoTokensSpecDataSource implements DataSource<MetadataSpec> {
+  private tokensSubject = new BehaviorSubject<MetadataSpec[]>([]);
   private totalCountSubject = new BehaviorSubject<number>(0);
   private loadingSubject = new BehaviorSubject<boolean>(false);
 
@@ -16,7 +16,7 @@ export class NeoTokensSpecDataSource implements DataSource<TokenTemplate> {
 
   constructor(private metadataSpecsService: MetadataSpecsService) {}
 
-  connect(collectionViewer: CollectionViewer): Observable<TokenTemplate[]> {
+  connect(collectionViewer: CollectionViewer): Observable<MetadataSpec[]> {
     return this.tokens$;
   }
 

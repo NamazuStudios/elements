@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+//TODO: whole model should be SU visible
 @ValidProperties
 @ApiModel(description = "Represents a spec for metadata.")
 public class MetadataSpec implements Serializable, MetadataSpecPropertiesContainer {

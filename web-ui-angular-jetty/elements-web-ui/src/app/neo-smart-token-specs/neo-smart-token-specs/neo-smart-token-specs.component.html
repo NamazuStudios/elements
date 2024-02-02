@@ -1,7 +1,7 @@
 <div class="data-list tab">
-  <div class="spinner-container" *ngIf="dataSource.loading$ | async">
-    <mat-spinner></mat-spinner>
-  </div>
+<!--  <div class="spinner-container" *ngIf="dataSource.loading$ | async">-->
+<!--    <mat-spinner></mat-spinner>-->
+<!--  </div>-->
 
   <section style="display: grid; justify-content: space-between; margin: 10px auto;">
     <div>
@@ -18,6 +18,9 @@
         [disabled]="!hasSelection"
       >
         Delete Selected
+      </button>
+      <button mat-raised-button color="primary" (click)="confirmRebuildDialog()">
+        Reindex
       </button>
     </div>
   </section>
@@ -65,7 +68,7 @@
         <button
           mat-raised-button
           color="primary"
-          matTooltip="Duplicate Token Spec"
+          matTooltip="Duplicate Metadata Spec"
           matTooltipPosition="above"
           (click)="openDuplicateModal(template)"
         >

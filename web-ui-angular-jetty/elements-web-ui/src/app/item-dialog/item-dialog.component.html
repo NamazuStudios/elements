@@ -55,16 +55,41 @@
         </mat-chip-list>
       </mat-form-field>
 
+      <div class="item-form-row mb-20">
+        <mat-form-field>
+          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.item.metadataSpec ? data.item.metadataSpec.name : ''">
+        </mat-form-field>
+        <div class="spec-button">
+          <button color="primary" type="button" mat-raised-button (click)="showSelectMetadataSpecDialog()">Select Metadata Spec</button>
+        </div>
+      </div>
+
       <mat-checkbox name="publicVisible" formControlName="publicVisible">
         Public visible
       </mat-checkbox>
 
-      <app-json-editor-card topic="Item" [editTarget]="data.item"></app-json-editor-card>
     </div>
   </form>
+
+  <div *ngIf="data.item.metadataSpec && data.item.metadataSpec.name">
+    <div class="metadata-header">Matedata Editor:</div>
+    <form [formGroup]="metadataSpecForm">
+      <div class="item-form-container">
+        <div *ngFor="let item of formMap" class="item-form-row">
+          <mat-form-field *ngIf="item.type === 'STRING' || item.type === 'NUMBER'" [ngClass]="getNestedMargin(item.nestLvl)">
+            <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
+          </mat-form-field>
+          <mat-checkbox *ngIf="item.type === 'BOOLEAN'" name="{{item.name}}" formControlName="{{item.name}}" [ngClass]="getNestedMargin(item.nestLvl)" class="nested-checkbox">
+            {{getPlaceholder(item)}}"
+          </mat-checkbox>
+          <div *ngIf="item.type === 'OBJECT'" class="mh-1" [ngClass]="getNestedMargin(item.nestLvl - 1)">{{item.name}} :</div>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid || !editorCard?.isJSONValid">OK</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid || !metadataSpecForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>

@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TokenSpecTabField, TokenSpecTabFieldTypes } from '../api/models/token-spec-tab';
+import { MetadataSpecProperty, MetadataSpecPropertyType } from '../api/models/token-spec-tab';
 
 @Component({
   selector: 'app-neo-token-dialog-define-object',
@@ -9,8 +9,8 @@ import { TokenSpecTabField, TokenSpecTabFieldTypes } from '../api/models/token-s
 })
 export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
-  fields = [];
-  fieldTypes = [];
+  properties = [];
+  propertiesTypes = [];
   activeObjectIndex = null;
   expandedField = null;
   // Workaround for accordion animation on init
@@ -20,78 +20,78 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     public dialogRef: MatDialogRef<NeoTokenDialogDefineObjectComponent>,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
-    public data: {
-      updateFieldsWithContent: Function,
-      content: TokenSpecTabField[],
+    public parentData: {
+      updateProperties: Function,
+      properties: MetadataSpecProperty[]
     },
   ) { }
 
   ngOnInit(): void {
-    if (this.data.content) {
-      this.fields = this.data.content;
+    if (this.parentData.properties) {
+      this.properties = this.parentData.properties;
     } else {
-      this.fields = [this.createField()];
+      this.properties = [this.createField()];
     }
-    this.fieldTypes = Object.keys(TokenSpecTabFieldTypes).map(key => ({
-      key,
-      value: TokenSpecTabFieldTypes[key]
-    }));
-  }
-
-  ngAfterViewInit(): void {
-    // timeout required to avoid the dreaded 'ExpressionChangedAfterItHasBeenCheckedError'
-    setTimeout(() => this.disableAnimation = false);
+    this.propertiesTypes = Object.keys(MetadataSpecPropertyType)
+      //TODO: implement
+      .filter(key => key !== MetadataSpecPropertyType.ARRAY)
+      .filter(key => key !== MetadataSpecPropertyType.TAGS)
+      .map(key => ({key, value: MetadataSpecPropertyType[key]}));
   }
 
   handleFieldPanelStateChange(index: number) {
     this.expandedField = index;
   }
 
-  createField(): TokenSpecTabField {
+  createField(): MetadataSpecProperty {
     return {
-      name: "",
-      fieldType: TokenSpecTabFieldTypes.STRING,
-      content: "",
+      name: '',
+      displayName: '',
+      required: false,
+      type: MetadataSpecPropertyType.STRING,
+      defaultValue: '',
+      placeholder: '',
+      properties: []
     };
   }
 
   removeField(fieldIndex: number): void {
-    this.fields = this.fields.filter((_: TokenSpecTabField, index: number): boolean => {
+    this.properties = this.properties.filter((_: MetadataSpecProperty, index: number): boolean => {
       return index !== fieldIndex;
     });
   }
 
   addNewField(): void {
     this.disableAnimation = true;
-    this.fields = [...this.fields, this.createField()];
+    this.properties = [...this.properties, this.createField()];
     setTimeout(() => this.disableAnimation = false, 10);
   }
 
-  duplicateField(field: TokenSpecTabField): void {
+  duplicateField(field: MetadataSpecProperty): void {
     if (field) {
-      this.fields = [...this.fields, field];
+      this.properties = [...this.properties, field];
     }
   }
 
-  changeFieldName(value: string, fieldIndex: number) {
-    this.fields = this.fields.map((field, index) => {
-      if (fieldIndex === index) {
+  changeFieldName(target: EventTarget, fieldIndex: number) {
+    this.properties = this.properties.map((field, index) => {
+      if (fieldIndex === index && target) {
         return {
           ...field,
-          name: value,
+          name: (target as HTMLInputElement).value,
         }
       }
       return field;
     });
   }
 
-  updateFieldType(type: TokenSpecTabFieldTypes, index: number): void {
+  updateFieldType(type: MetadataSpecPropertyType, index: number): void {
     this.disableAnimation = true;
-    this.fields = this.fields.map((field: TokenSpecTabField, i: number): TokenSpecTabField => {
+    this.properties = this.properties.map((field: MetadataSpecProperty, i: number): MetadataSpecProperty => {
       if (index === i) {
         return {
           ...field,
-          fieldType: TokenSpecTabFieldTypes[type],
+          type: MetadataSpecPropertyType[type],
         }
       }
       return field;
@@ -101,62 +101,65 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   openDefineObjectModal(index: number): void {
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
-      width: "800px",
+      width: '800px',
       data: {
-        updateFieldsWithContent: this.updateFieldsWithContent.bind(this),
+        updateProperties: this.updatePropertiesFromObjectComponent.bind(this),
+        properties: this.properties[index].properties
       }
     });
     this.activeObjectIndex = index;
   }
 
-  updateFieldContentByIndex(index: number, content: TokenSpecTabField | string | null): TokenSpecTabField[] {
-    if (!content) return this.fields;
-    return this.fields.map((field: TokenSpecTabField, i: number) => {
-      if (index === i) {
-        return {
-          ...field,
-          content,
+  updatePropertiesFromObjectComponent(data: MetadataSpecProperty[]) {
+    this.properties[this.activeObjectIndex].properties = data;
+  }
+
+  changePropertyType(typeKey: MetadataSpecPropertyType, fieldIndex): void {
+    this.disableAnimation = true;
+    this.properties = this.properties.map(
+      (field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
+        if (index === fieldIndex) {
+          return {
+            name: '',
+            displayName: '',
+            required: false,
+            defaultValue: '',
+            placeholder: '',
+            type: MetadataSpecPropertyType[typeKey],
+            properties: []
+          };
         }
+        return field;
       }
-      return field;
-    });
+    );
+    setTimeout(() => this.disableAnimation = false);
+  }
+
+  changeDefaultValue(value: string, propertyIndex: string | number): void {
+    this.properties[propertyIndex].defaultValue = value;
+  }
+  changePlaceholder(value: string, propertyIndex: string | number): void {
+    this.properties[propertyIndex].placeholder = value;
   }
 
   close(): void {
     this.dialogRef.close();
   }
 
-  updateNonObjectField(data): void {
-    this.fields = this.fields.map(
-      (field: TokenSpecTabField, index: number) => {
-        if (index === data.index) {
-          return {
-            ...field,
-            content: data.content || field.content,
-            defaultValue: data?.otherProps?.defaultValue || field.defaultValue || '',
-            placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
-          }
-        }
-        return field;
-      }
-    );
-  }
-
-  updateFieldsWithContent(fields: TokenSpecTabField[]): void {
-    this.fields = this.fields.map((field: TokenSpecTabField, index: number): TokenSpecTabField => {
+  updateProperties(fields: MetadataSpecProperty[]): void {
+    this.properties = fields.map((field: MetadataSpecProperty, index: number): MetadataSpecProperty => {
       if (index === this.activeObjectIndex) {
         return {
           ...field,
-          content: fields,
         }
       }
       return field;
     });
+    console.log('field ',this.properties);
   }
 
   submit(): void {
-    console.log(this.fields);
-    this.data.updateFieldsWithContent(this.fields);
+    this.parentData.updateProperties(this.properties);
     this.dialogRef.close();
   }
 }
