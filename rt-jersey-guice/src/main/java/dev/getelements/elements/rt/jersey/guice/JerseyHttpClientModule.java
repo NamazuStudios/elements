@@ -6,6 +6,7 @@ import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import dev.getelements.elements.rt.jersey.ClientObjectMapperContextResolver;
+import dev.getelements.elements.rt.jersey.CsvFeature;
 import dev.getelements.elements.rt.jersey.GenericMultipartFeature;
 import dev.getelements.elements.rt.jersey.OctetStreamJsonMessageBodyReader;
 import dev.getelements.elements.rt.util.AppleDateFormat;
@@ -122,6 +123,7 @@ public class JerseyHttpClientModule extends PrivateModule {
         bind(Client.class).toProvider(() -> {
 
             final ClientBuilder builder = newBuilder()
+                .register(CsvFeature.class)
                 .register(JacksonFeature.class)
                 .register(MultiPartFeature.class)
                 .register(GenericMultipartFeature.class)
