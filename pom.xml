@@ -1,27 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <version>2.2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
         <connection>scm:git:ssh://git@bitbucket.org:eci-elements/web-services.git</connection>
         <developerConnection>scm:git:git@bitbucket.org:eci-elements/web-services.git</developerConnection>
     </scm>
-
     <repositories>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
-
     <modules>
         <module>common</module>
         <module>common-util</module>
@@ -69,6 +63,7 @@
         <module>rt-jackson</module>
         <module>rt-jackson-guice</module>
         <module>rt-server-guice</module>
+        <module>rt-jersey</module>
         <module>rt-jersey-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>docker-config</module>
@@ -100,7 +95,6 @@
         <module>web-ui-angular-jetty</module>
         <module>jnlua</module>
     </modules>
-
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>4.2.3</guice.version>
@@ -164,8 +158,8 @@
         <jsr.305.artifactId>jsr305</jsr.305.artifactId>
         <jsr.305.version>3.0.2</jsr.305.version>
         <mailjet.client.version>5.2.5</mailjet.client.version>
+        <opencsv.version>5.9</opencsv.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -179,12 +173,9 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <dependencyManagement>
         <dependencies>
-
             <!-- First-party Dependencies -->
-
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>common</artifactId>
@@ -298,6 +289,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-jeromq-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>rt-jersey</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -471,9 +467,7 @@
                 <artifactId>${jsr.305.artifactId}</artifactId>
                 <version>${jsr.305.version}</version>
             </dependency>
-
             <!-- Third-party Dependencies -->
-
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-http</artifactId>
@@ -644,7 +638,6 @@
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-multipart</artifactId>
                 <version>${jersey.version}</version>
-                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.github.kstyrc</groupId>
@@ -676,9 +669,13 @@
                 <artifactId>libphonenumber</artifactId>
                 <version>${libphonenumber.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.opencsv</groupId>
+                <artifactId>opencsv</artifactId>
+                <version>${opencsv.version}</version>
+            </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->
-
             <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-jersey2-jaxrs</artifactId>
@@ -694,7 +691,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-json-jackson</artifactId>
@@ -710,7 +706,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <dependency>
                 <groupId>org.jetbrains.xodus</groupId>
                 <artifactId>xodus-openAPI</artifactId>
@@ -722,7 +717,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <dependency>
                 <groupId>io.getstream.client</groupId>
                 <artifactId>stream-java</artifactId>
@@ -747,7 +741,6 @@
                 <artifactId>mailjet-client</artifactId>
                 <version>${mailjet.client.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson</artifactId>
@@ -759,7 +752,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <dependency>
                 <groupId>com.syntifi.near</groupId>
                 <artifactId>near-java-api-common</artifactId>
@@ -783,7 +775,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <dependency>
                 <groupId>com.syntifi.near</groupId>
                 <artifactId>near-java-api-rpc</artifactId>
@@ -807,7 +798,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
             <dependency>
                 <groupId>com.google.api-client</groupId>
                 <artifactId>google-api-client</artifactId>
@@ -827,11 +817,8 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
         </dependencies>
-
     </dependencyManagement>
-
     <build>
         <pluginManagement>
             <plugins>
@@ -903,5 +890,4 @@
             </plugins>
         </pluginManagement>
     </build>
-
 </project>

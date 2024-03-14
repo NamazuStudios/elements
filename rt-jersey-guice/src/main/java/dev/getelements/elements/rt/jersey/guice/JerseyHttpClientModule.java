@@ -1,10 +1,13 @@
-package dev.getelements.elements.rt.jersey;
+package dev.getelements.elements.rt.jersey.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
+import dev.getelements.elements.rt.jersey.ClientObjectMapperContextResolver;
+import dev.getelements.elements.rt.jersey.GenericMultipartFeature;
+import dev.getelements.elements.rt.jersey.OctetStreamJsonMessageBodyReader;
 import dev.getelements.elements.rt.util.AppleDateFormat;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;

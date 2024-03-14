@@ -11,7 +11,7 @@ import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
 import dev.getelements.elements.rt.id.InstanceId;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;

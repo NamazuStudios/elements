@@ -2,7 +2,7 @@ package dev.getelements.elements.service;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import dev.getelements.elements.service.appleiap.client.invoker.builder.DefaultAppleIapVerifyReceiptInvokerBuilder;
 import org.testng.annotations.Guice;

@@ -2,7 +2,6 @@ package dev.getelements.elements.rt.lua.guice;
 
 import dev.getelements.elements.rt.Attributes;
 import dev.getelements.elements.rt.guice.ClasspathAssetLoaderModule;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
 import dev.getelements.elements.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
 import dev.getelements.elements.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
 import dev.getelements.elements.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment;
