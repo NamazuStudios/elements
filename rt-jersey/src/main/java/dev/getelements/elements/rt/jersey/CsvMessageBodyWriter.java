@@ -2,6 +2,8 @@ package dev.getelements.elements.rt.jersey;
 
 import com.opencsv.CSVWriter;
 import com.opencsv.bean.MappingStrategy;
+import com.opencsv.exceptions.CsvChainedException;
+import com.opencsv.exceptions.CsvFieldAssignmentException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 import javax.inject.Inject;
@@ -34,7 +36,7 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
             final Type genericType,
             final Annotation[] annotations,
             final MediaType mediaType) {
-        return type.isAssignableFrom(Iterable.class)  && TEXT_CSV.isCompatible(mediaType);
+        return type.isAssignableFrom(Iterable.class) && TEXT_CSV.isCompatible(mediaType);
     }
 
     @Override
@@ -58,15 +60,35 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
         final var mappingStrategy = getMappingStrategyProvider().get();
 
         try (var ioWriter = new OutputStreamWriter(entityStream, charsetName);
+
              var csvWriter = getCsvWriterConstructor().apply(ioWriter)) {
 
-            final var header = mappingStrategy.generateHeader(o);
+            final var iterator = ((Iterable<?>) o).iterator();
+
+            Object value = null;
+
+            while (value == null && iterator.hasNext()) {
+                value = iterator.next();
+            }
+
+            final var header = mappingStrategy.generateHeader(value);
             csvWriter.writeNext(header);
 
-            final var iterable = (Iterable<?>) o;
-            final var iterator = iterable.iterator();
+            var line = mappingStrategy.transmuteBean(value);
+            csvWriter.writeNext(line);
 
-        } catch (CsvRequiredFieldEmptyException e) {
+            while (iterator.hasNext()) {
+
+                value = iterator.next();
+
+                if (value != null) {
+                    line = mappingStrategy.transmuteBean(value);
+                    csvWriter.writeNext(line);
+                }
+
+            }
+
+        } catch (CsvChainedException | CsvFieldAssignmentException e) {
             throw new WebApplicationException(e);
         }
 
