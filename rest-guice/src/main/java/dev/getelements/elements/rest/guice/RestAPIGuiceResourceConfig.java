@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.guice;
 import com.google.inject.Injector;
 import dev.getelements.elements.rest.jersey.swagger.EnhancedApiListingResource;
 import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.rt.jersey.CsvFeature;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
@@ -28,6 +29,7 @@ public class RestAPIGuiceResourceConfig extends ResourceConfig {
     @Inject
     public RestAPIGuiceResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
 
+        register(CsvFeature.class);
         register(SwaggerSerializers.class);
         register(EnhancedApiListingResource.class);
 
