@@ -62,7 +62,6 @@ public class JettyEmbeddedRESTService {
 
     public static class EmbeddedResourceConfig extends ResourceConfig {
         public EmbeddedResourceConfig() {
-            register(CsvFeature.class);
             register(JacksonFeature.class);
             register(MultiPartFeature.class);
             register(GenericMultipartFeature.class);
