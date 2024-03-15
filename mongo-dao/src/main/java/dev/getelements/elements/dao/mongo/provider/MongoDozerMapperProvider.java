@@ -27,6 +27,7 @@ import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.inventory.InventoryItem;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.match.Match;
@@ -45,7 +46,6 @@ import dev.getelements.elements.model.user.User;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
 import org.dozer.loader.api.BeanMappingBuilder;
-import org.glassfish.hk2.api.Rank;
 
 import javax.inject.Provider;
 
