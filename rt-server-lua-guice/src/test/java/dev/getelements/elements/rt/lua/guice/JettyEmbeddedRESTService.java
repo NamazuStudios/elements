@@ -1,6 +1,7 @@
 package dev.getelements.elements.rt.lua.guice;
 
 import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.rt.jersey.CsvFeature;
 import dev.getelements.elements.rt.jersey.GenericMultipartFeature;
 import dev.getelements.elements.rt.lua.guice.rest.SimpleModelEndpoint;
 import dev.getelements.elements.rt.lua.guice.rest._t;
@@ -61,6 +62,7 @@ public class JettyEmbeddedRESTService {
 
     public static class EmbeddedResourceConfig extends ResourceConfig {
         public EmbeddedResourceConfig() {
+            register(CsvFeature.class);
             register(JacksonFeature.class);
             register(MultiPartFeature.class);
             register(GenericMultipartFeature.class);

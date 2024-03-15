@@ -5,7 +5,9 @@ import dev.getelements.elements.dao.RankDao;
 import dev.getelements.elements.dao.mongo.model.*;
 import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
@@ -235,6 +237,23 @@ public class MongoRankDao implements RankDao {
                 MongoScore.class,
                 offset, count
         ).transform(new Counter(adjustedOffset));
+
+    }
+
+    @Override
+    public Tabulation<RankRow> getRanksForGlobalTabular(final String leaderboardNameOrId, final long leaderboardEpoch) {
+
+        final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
+
+        final var query = getDatastore().find(MongoScore.class)
+                .filter(eq("leaderboard", mongoLeaderboard))
+                .filter(eq("leaderboardEpoch", calculateEpoch(mongoLeaderboard, leaderboardEpoch)));
+
+        return getMongoDBUtils().tabulationFromQuery(
+                query,
+                row -> getDozerMapper().map(row, RankRow.class),
+                new FindOptions().sort(descending("pointValue"))
+        );
 
     }
 

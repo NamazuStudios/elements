@@ -4,7 +4,6 @@ import com.opencsv.CSVWriter;
 import com.opencsv.bean.MappingStrategy;
 import com.opencsv.exceptions.CsvChainedException;
 import com.opencsv.exceptions.CsvFieldAssignmentException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

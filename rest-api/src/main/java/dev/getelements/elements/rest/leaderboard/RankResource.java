@@ -2,7 +2,9 @@ package dev.getelements.elements.rest.leaderboard;
 
 import dev.getelements.elements.exception.InvalidParameterException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.RankService;
 import io.swagger.annotations.Api;
@@ -75,6 +77,25 @@ public class RankResource {
             ? getRankService().getRanksForGlobal(leaderboardNameOrId, offset, count, leaderboardEpoch)
             : getRankService().getRanksForGlobalRelative(leaderboardNameOrId, profileIdTrimmed, offset, count, leaderboardEpoch);
 
+    }
+
+    @GET @Path("global/{leaderboardNameOrId}.csv")
+    @Produces("text/csv")
+    @ApiOperation(value = "Gets Rank Among all Players",
+            notes = "Gets the current Profile's rank among all players for the particular leaderboard.")
+    public Tabulation<RankRow> getGlobalRankTabular(
+            @PathParam("leaderboardNameOrId")
+            @ApiParam("Specifies the leaderboard name or ID.")
+            final String leaderboardNameOrId,
+
+            @QueryParam("leaderboardEpoch")
+            @DefaultValue("0")
+            @ApiParam("Specifies the epoch for the leaderboard. If not provided, the current epoch will be used by " +
+                    "default for epochal leaderboards. This value will be ignored for all-time leaderboards. Set " +
+                    "this value to 0 to explicitly reference the current epoch (when applicable).")
+            final long leaderboardEpoch
+            ) {
+        return getRankService().getRanksForGlobalTabular(leaderboardNameOrId, leaderboardEpoch);
     }
 
     @GET @Path("friends/{leaderboardNameOrId}")
