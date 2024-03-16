@@ -35,7 +35,7 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
             final Type genericType,
             final Annotation[] annotations,
             final MediaType mediaType) {
-        return type.isAssignableFrom(Iterable.class) && TEXT_CSV.isCompatible(mediaType);
+        return TEXT_CSV.isCompatible(mediaType);
     }
 
     @Override
@@ -48,9 +48,17 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
             final MultivaluedMap<String, Object> httpHeaders,
             final OutputStream entityStream) throws IOException, WebApplicationException {
 
-        if (o == null) {
-            return;
+        if (o instanceof Iterable) {
+            writeIterable(o, mediaType, entityStream);
+        } else if (o != null) {
+            writeSingleObject(o, mediaType, entityStream);
         }
+
+    }
+
+    private void writeIterable(final Object o,
+                               final MediaType mediaType,
+                               final OutputStream entityStream) throws IOException {
 
         final var charsetName = mediaType
                 .getParameters()
@@ -59,7 +67,6 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
         final var mappingStrategy = getMappingStrategyProvider().get();
 
         try (var ioWriter = new OutputStreamWriter(entityStream, charsetName);
-
              var csvWriter = getCsvWriterConstructor().apply(ioWriter)) {
 
             final var iterator = ((Iterable<?>) o).iterator();
@@ -86,6 +93,32 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
                 }
 
             }
+
+        } catch (CsvChainedException | CsvFieldAssignmentException e) {
+            throw new WebApplicationException(e);
+        }
+
+    }
+
+    private void writeSingleObject(final Object o,
+                                   final MediaType mediaType,
+                                   final OutputStream entityStream) throws IOException {
+
+        final var charsetName = mediaType
+                .getParameters()
+                .getOrDefault("charset", UTF_8.name());
+
+        final var mappingStrategy = getMappingStrategyProvider().get();
+        mappingStrategy.setType(o.getClass());
+
+        try (var ioWriter = new OutputStreamWriter(entityStream, charsetName);
+             var csvWriter = getCsvWriterConstructor().apply(ioWriter)) {
+
+            final var header = mappingStrategy.generateHeader(o);
+            csvWriter.writeNext(header);
+
+            final var line = mappingStrategy.transmuteBean(o);
+            csvWriter.writeNext(line);
 
         } catch (CsvChainedException | CsvFieldAssignmentException e) {
             throw new WebApplicationException(e);
