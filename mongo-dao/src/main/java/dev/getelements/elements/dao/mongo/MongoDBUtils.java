@@ -251,6 +251,21 @@ public class MongoDBUtils {
      *
      * @param query the query
      * @param function the function to transform the values
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Tabulation<ModelT> tabulationFromQuery(
+            final Query<MongoModelT> query,
+            final Function<MongoModelT,  ModelT> function) {
+        return tabulationFromQuery(query, function, new FindOptions());
+    }
+
+    /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param function the function to transform the values
      * @param options a {@link FindOptions} used to modify the query results
      * @param <ModelT> the desired model type
      * @param <MongoModelT> the mongoDB model type

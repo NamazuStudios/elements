@@ -1,11 +1,15 @@
 package dev.getelements.elements.rest.mission;
 
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.progress.ProgressService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
@@ -16,7 +20,11 @@ import java.util.List;
 @Path("progress")
 @Api(value = "Progress",
         description = "Manages progress",
-        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {
+                @Authorization(AuthSchemes.AUTH_BEARER),
+                @Authorization(AuthSchemes.SESSION_SECRET),
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
+})
 @Produces(MediaType.APPLICATION_JSON)
 public class ProgressResource {
 
@@ -41,6 +49,14 @@ public class ProgressResource {
             @QueryParam("tags")   final List<String> tags,
             @QueryParam("search") final String search) {
         return getProgressService().getProgresses(offset, count, tags, search);
+    }
+
+    @GET
+    @Produces("text/csv")
+    @ApiOperation(value = "Gets Rank Among all Players",
+            notes = "Gets the current Profile's rank among all players for the particular leaderboard.")
+    public Tabulation<ProgressRow> getProgressTabular() {
+        return getProgressService().getProgressesTabular();
     }
 
     @GET

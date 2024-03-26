@@ -4,8 +4,10 @@ import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.mission.Mission;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
@@ -73,6 +75,13 @@ public interface ProgressDao {
     Pagination<Progress> getProgresses(int offset, int count, List<String> tags, String search);
 
     /**
+     * Gets a {@link Tabulation<ProgressRow>} for all progresses.
+     *
+     * @return the tabulation of progresses
+     */
+    Tabulation<ProgressRow> getProgressesTabular();
+
+    /**
      * Gets the progress with the id, or throws a {@link NotFoundException} if the
      * progress can't be found.
      *
@@ -125,4 +134,5 @@ public interface ProgressDao {
      * @return all active {@link Progress} instances
      */
     Progress getProgressForProfileAndMission(Profile profile, String missionNameOrId);
+
 }
