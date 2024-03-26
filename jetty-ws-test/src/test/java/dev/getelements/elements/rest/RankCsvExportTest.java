@@ -1,10 +1,12 @@
 package dev.getelements.elements.rest;
 
-import dev.getelements.elements.dao.CustomAuthUserDao;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
+import dev.getelements.elements.Headers;
 import dev.getelements.elements.dao.LeaderboardDao;
 import dev.getelements.elements.dao.ScoreDao;
-import dev.getelements.elements.dao.UserDao;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
@@ -14,14 +16,17 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import static dev.getelements.elements.model.leaderboard.Leaderboard.ScoreStrategyType.ACCUMULATE;
 import static dev.getelements.elements.model.leaderboard.Leaderboard.TimeStrategyType.ALL_TIME;
 import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class RankCsvExportTest {
 
@@ -55,6 +60,8 @@ public class RankCsvExportTest {
     @Inject
     private Provider<ClientContext> clientContextProvider;
 
+    private List<Score> scores;
+
     @BeforeClass
     public void setupUsers() {
         user.createUser("test_csv_scores").createSession();
@@ -74,6 +81,9 @@ public class RankCsvExportTest {
 
     @BeforeClass(dependsOnMethods = "setupLeaderboard")
     public void setupScores() {
+
+        scores = new ArrayList<>();
+
         for (int i = 0; i < 100; ++i) {
 
             final var client = clientContextProvider.get();
@@ -84,6 +94,7 @@ public class RankCsvExportTest {
             score.setProfile(client.getDefaultProfile());
             score.setPointValue(10 * i);
 
+            scores.add(score);
             scoreDao.createOrUpdateScore("test_csv_api", score);
 
         }
@@ -91,7 +102,6 @@ public class RankCsvExportTest {
 
     @Test
     public void testGetAnon() {
-        // global/{leaderboardNameOrId}.csv
 
         final var response = client
                 .target(apiRoot + "/rank/global/test_csv_api.csv")
@@ -100,15 +110,67 @@ public class RankCsvExportTest {
 
         assertEquals(response.getStatus(), 403);
 
-
     }
 
     @Test
     public void testGetUser() {
+
+        final var response = client
+                .target(apiRoot + "/rank/global/test_csv_api.csv")
+                .request()
+                .header(Headers.SESSION_SECRET, user.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 403);
+
     }
 
     @Test
-    public void testGetSuperUser() {
+    public void testGetSuperUser() throws Exception {
+
+        final var response = client
+                .target(apiRoot + "/rank/global/test_csv_api.csv")
+                .request()
+                .header(Headers.SESSION_SECRET, superUser.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var entityStream = response.readEntity(InputStream.class);
+        final var mappingStrategy = new HeaderColumnNameMappingStrategy<>();
+        mappingStrategy.setType(RankRow.class);
+
+        final var ranks = new ArrayList<RankRow>();
+
+        try (var ioReader = new InputStreamReader(entityStream, StandardCharsets.UTF_8);
+             var csvReader = new CSVReader(ioReader)) {
+
+            mappingStrategy.captureHeader(csvReader);
+
+            for (var line : csvReader) {
+                final var rank = (RankRow) mappingStrategy.populateNewBean(line);
+                ranks.add(rank);
+            }
+
+        }
+
+        final var iterator = ranks.iterator();
+
+        RankRow previous = null;
+
+        while (iterator.hasNext()) {
+
+            var rank = iterator.next();
+
+            if (previous != null) {
+                assertTrue(rank.getPosition() > previous.getPosition());
+                assertTrue(rank.getPointValue() < previous.getPointValue());
+            }
+
+            previous = rank;
+
+        }
+
     }
 
 }

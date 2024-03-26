@@ -106,7 +106,7 @@
         <slf4j.version>1.7.32</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <guava.version>21.0</guava.version>
-        <commons.lang.version>3.3.2</commons.lang.version>
+        <commons.lang.version>3.12.0</commons.lang.version>
         <jaxrs.api.version>2.1</jaxrs.api.version>
         <jersey.version>2.32</jersey.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
@@ -158,7 +158,7 @@
         <jsr.305.artifactId>jsr305</jsr.305.artifactId>
         <jsr.305.version>3.0.2</jsr.305.version>
         <mailjet.client.version>5.2.5</mailjet.client.version>
-        <opencsv.version>5.9</opencsv.version>
+        <opencsv.version>5.7.1</opencsv.version>
     </properties>
     <dependencies>
         <dependency>

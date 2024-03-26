@@ -77,6 +77,12 @@ public class CsvMessageBodyWriter implements MessageBodyWriter<Object> {
                 value = iterator.next();
             }
 
+            if (value == null) {
+                return;
+            }
+
+            mappingStrategy.setType(value.getClass());
+
             final var header = mappingStrategy.generateHeader(value);
             csvWriter.writeNext(header);
 

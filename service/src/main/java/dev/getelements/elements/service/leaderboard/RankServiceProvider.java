@@ -10,6 +10,8 @@ public class RankServiceProvider implements Provider<RankService> {
 
     private User user;
 
+    private Provider<SuperUserRankService> superUserRankServiceProvider;
+
     private Provider<UserRankService> userRankServiceProvider;
 
     private Provider<AnonRankService> anonRankServiceProvider;
@@ -17,7 +19,7 @@ public class RankServiceProvider implements Provider<RankService> {
     @Override
     public RankService get() {
         switch (getUser().getLevel()) {
-            case SUPERUSER:
+            case SUPERUSER: return getSuperUserRankServiceProvider().get();
             case USER:      return getUserRankServiceProvider().get();
             default:        return getAnonRankServiceProvider().get();
         }
@@ -30,6 +32,15 @@ public class RankServiceProvider implements Provider<RankService> {
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Provider<SuperUserRankService> getSuperUserRankServiceProvider() {
+        return superUserRankServiceProvider;
+    }
+
+    @Inject
+    public void setSuperUserRankServiceProvider(Provider<SuperUserRankService> superUserRankServiceProvider) {
+        this.superUserRankServiceProvider = superUserRankServiceProvider;
     }
 
     public Provider<UserRankService> getUserRankServiceProvider() {
