@@ -2,20 +2,19 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DBRef;
 import dev.getelements.elements.dao.RankDao;
-import dev.getelements.elements.dao.mongo.model.*;
+import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
+import dev.getelements.elements.dao.mongo.model.MongoScoreId;
 import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
-import dev.morphia.aggregation.expressions.ArrayExpressions;
 import dev.morphia.aggregation.expressions.ComparisonExpressions;
-import dev.morphia.aggregation.expressions.WindowExpressions;
-import dev.morphia.aggregation.stages.Facet;
-import dev.morphia.aggregation.stages.Limit;
 import dev.morphia.aggregation.stages.Lookup;
-import dev.morphia.aggregation.stages.SetWindowFields;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import org.bson.Document;
@@ -24,16 +23,14 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static dev.morphia.aggregation.expressions.ArrayExpressions.array;
 import static dev.morphia.aggregation.expressions.ArrayExpressions.concatArrays;
-import static dev.morphia.aggregation.expressions.Expressions.*;
+import static dev.morphia.aggregation.expressions.Expressions.field;
+import static dev.morphia.aggregation.expressions.Expressions.value;
 import static dev.morphia.aggregation.expressions.WindowExpressions.rank;
 import static dev.morphia.aggregation.stages.Facet.facet;
-import static dev.morphia.aggregation.stages.Group.group;
 import static dev.morphia.aggregation.stages.Limit.limit;
 import static dev.morphia.aggregation.stages.Lookup.lookup;
 import static dev.morphia.aggregation.stages.Match.match;
@@ -41,7 +38,6 @@ import static dev.morphia.aggregation.stages.Projection.project;
 import static dev.morphia.aggregation.stages.ReplaceRoot.replaceRoot;
 import static dev.morphia.aggregation.stages.SetWindowFields.Output.output;
 import static dev.morphia.aggregation.stages.SetWindowFields.setWindowFields;
-import static dev.morphia.aggregation.stages.Sort.sort;
 import static dev.morphia.aggregation.stages.Unwind.unwind;
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.*;
@@ -235,6 +231,23 @@ public class MongoRankDao implements RankDao {
                 MongoScore.class,
                 offset, count
         ).transform(new Counter(adjustedOffset));
+
+    }
+
+    @Override
+    public Tabulation<RankRow> getRanksForGlobalTabular(final String leaderboardNameOrId, final long leaderboardEpoch) {
+
+        final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
+
+        final var query = getDatastore().find(MongoScore.class)
+                .filter(eq("leaderboard", mongoLeaderboard))
+                .filter(eq("leaderboardEpoch", calculateEpoch(mongoLeaderboard, leaderboardEpoch)));
+
+        return getMongoDBUtils().tabulationFromQuery(
+                query,
+                new Counter(0).andThen(rank -> getDozerMapper().map(rank, RankRow.class)),
+                new FindOptions().sort(descending("pointValue"))
+        );
 
     }
 

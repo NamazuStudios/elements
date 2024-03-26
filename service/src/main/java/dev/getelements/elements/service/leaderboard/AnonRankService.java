@@ -2,9 +2,10 @@ package dev.getelements.elements.service.leaderboard;
 
 import dev.getelements.elements.dao.RankDao;
 import dev.getelements.elements.exception.ForbiddenException;
-import dev.getelements.elements.exception.UnauthorizedException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.service.RankService;
 
 import javax.inject.Inject;
@@ -64,6 +65,11 @@ public class AnonRankService implements RankService {
     public Pagination<Rank> getRanksForMutualFollowersRelative(final String leaderboardNameOrId,
                                                                final int offset, final int count,
                                                                final long leaderboardEpoch) {
+        throw new ForbiddenException();
+    }
+
+    @Override
+    public Tabulation<RankRow> getRanksForGlobalTabular(final String leaderboardNameOrId, final long leaderboardEpoch) {
         throw new ForbiddenException();
     }
 

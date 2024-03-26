@@ -10,7 +10,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModu
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.guice.*;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;

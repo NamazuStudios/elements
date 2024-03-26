@@ -1,8 +1,10 @@
 package dev.getelements.elements.dao;
 
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
@@ -123,5 +125,13 @@ public interface RankDao {
             long leaderboardEpoch
     );
 
-}
+    /**
+     * Gets the ranks for a leaderboard as a tabulation.
+     *
+     * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
+     * @param leaderboardEpoch the epoch timestamp
+     * @return the tabular
+     */
+    Tabulation<RankRow> getRanksForGlobalTabular(String leaderboardNameOrId, long leaderboardEpoch);
 
+}

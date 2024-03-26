@@ -9,7 +9,7 @@ import dev.getelements.elements.rt.guice.SimpleExecutorsModule;
 import dev.getelements.elements.rt.id.ApplicationId;
 import dev.getelements.elements.rt.id.InstanceId;
 import dev.getelements.elements.rt.id.NodeId;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.Node;
 import dev.getelements.elements.rt.remote.Worker;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
@@ -19,8 +19,6 @@ import dev.getelements.elements.test.guice.TestMasterNodeModule;
 import dev.getelements.elements.test.guice.TestWorkerInstanceModule;
 import org.zeromq.ZContext;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import java.util.*;
 import java.util.function.Supplier;
 

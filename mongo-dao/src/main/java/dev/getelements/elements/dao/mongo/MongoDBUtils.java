@@ -7,6 +7,7 @@ import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
 import dev.morphia.aggregation.AggregationOptions;
@@ -242,6 +243,38 @@ public class MongoDBUtils {
 
         pagination.setObjects(modelTList);
         return pagination;
+
+    }
+
+    /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param function the function to transform the values
+     * @param options a {@link FindOptions} used to modify the query results
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Tabulation<ModelT> tabulationFromQuery(
+            final Query<MongoModelT> query,
+            final Function<MongoModelT,  ModelT> function,
+            final FindOptions options) {
+
+        final Tabulation<ModelT> tabulation = new Tabulation<>();
+
+        final List<ModelT> modelTList;
+
+        try (final var iterator = query.iterator(options)) {
+            modelTList = iterator
+                    .toList()
+                    .stream()
+                    .map(function)
+                    .collect(toList());
+        }
+
+        tabulation.setRows(modelTList);
+        return tabulation;
 
     }
 

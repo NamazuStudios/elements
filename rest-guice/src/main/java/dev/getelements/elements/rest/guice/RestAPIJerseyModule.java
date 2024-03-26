@@ -1,5 +1,9 @@
 package dev.getelements.elements.rest.guice;
 
+import com.google.inject.TypeLiteral;
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
+import com.opencsv.bean.MappingStrategy;
 import dev.getelements.elements.guice.BaseServletModule;
 import dev.getelements.elements.rest.MethodOverrideFilter;
 import dev.getelements.elements.rest.ShortLinkForwardingFilter;
@@ -9,7 +13,9 @@ import dev.getelements.elements.rest.jersey.swagger.EnhancedApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 
+import java.io.Writer;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -27,6 +33,9 @@ public class RestAPIJerseyModule extends BaseServletModule {
         bind(MethodOverrideFilter.class);
         bind(DefaultExceptionMapper.class);
         bind(ShortLinkForwardingFilter.class);
+
+        bind(new TypeLiteral<Function<Writer, CSVWriter>>(){}).toInstance(CSVWriter::new);
+        bind(new TypeLiteral<MappingStrategy<Object>>(){}).toProvider(HeaderColumnNameMappingStrategy::new);
 
         // Setup servlet and servlet-related features.
 

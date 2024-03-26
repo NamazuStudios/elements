@@ -1,8 +1,10 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.rt.annotation.DeprecationDefinition;
@@ -102,5 +104,13 @@ public interface RankService {
     Pagination<Rank> getRanksForMutualFollowersRelative(String leaderboardNameOrId,
                                                         int offset, int count,
                                                         long leaderboardEpoch);
+
+
+    /**
+     * Gets the global ranks for tabular data.
+     *
+     * @return the tabular ranks
+     */
+    Tabulation<RankRow> getRanksForGlobalTabular(String leaderboardNameOrId, long leaderboardEpoch);
 
 }

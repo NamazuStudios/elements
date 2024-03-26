@@ -1,7 +1,7 @@
 package dev.getelements.elements.service;
 
 import com.google.inject.Inject;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

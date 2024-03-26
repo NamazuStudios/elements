@@ -27,6 +27,8 @@ import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.inventory.InventoryItem;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.match.Match;
 import dev.getelements.elements.model.mission.Mission;
@@ -119,6 +121,17 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Score.class, MongoScore.class)
                 .fields("id", "objectId", customConverter(MongoScoreIdConverter.class))
                 .fields("scoreUnits", "leaderboard.scoreUnits");
+
+            mapping(RankRow.class, Rank.class)
+                .fields("id", "score.id")
+                .fields("pointValue", "score.pointValue")
+                .fields("scoreUnits", "score.scoreUnits")
+                .fields("creationTimestamp", "score.creationTimestamp")
+                .fields("leaderboardEpoch", "score.leaderboardEpoch")
+                .fields("profileId", "score.profile.id")
+                .fields("profileDisplayName", "score.profile.displayName")
+                .fields("profileImageUrl", "score.profile.imageUrl")
+                .fields("lastLogin", "score.profile.lastLogin");
 
             mapping(Friend.class, MongoFriendship.class)
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));

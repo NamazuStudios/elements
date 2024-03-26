@@ -4,6 +4,7 @@ import dev.getelements.elements.dao.*;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
 import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.user.User;
@@ -26,8 +27,7 @@ import static java.lang.Math.min;
 import static java.util.List.copyOf;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.*;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRankDaoIntegrationTest {
@@ -181,6 +181,33 @@ public class MongoRankDaoIntegrationTest {
         )));
 
         checkMutualPostConditions(ranks, profileId);
+
+    }
+
+    @Test
+    public void checkTabularScores() {
+
+        final var tabulation = getRankDao().getRanksForGlobalTabular(LEADERBOARD_NAME, 0);
+
+        RankRow previous = null;
+
+        for (var row : tabulation) {
+            assertNotNull(row.getId());
+            assertNotNull(row.getCreationTimestamp());
+            assertNotNull(row.getLeaderboardEpoch());
+            assertNotNull(row.getProfileDisplayName());
+            assertNotNull(row.getProfileDisplayName());
+            assertNotNull(row.getProfileImageUrl());
+            assertNotNull(row.getScoreUnits());
+
+            if (previous != null) {
+                assertTrue(previous.getPointValue() > row.getPointValue(), "Mismatched score.");
+                assertTrue(previous.getPosition() < row.getPosition(), "Mismatched position.");
+            }
+
+            previous = row;
+
+        }
 
     }
 
