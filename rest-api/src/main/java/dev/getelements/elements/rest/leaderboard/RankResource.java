@@ -79,7 +79,8 @@ public class RankResource {
 
     }
 
-    @GET @Path("global/{leaderboardNameOrId}.csv")
+    @GET
+    @Path("global/{leaderboardNameOrId}")
     @Produces("text/csv")
     @ApiOperation(value = "Gets Rank Among all Players",
             notes = "Gets the current Profile's rank among all players for the particular leaderboard.")
