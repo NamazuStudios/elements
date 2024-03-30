@@ -16,7 +16,11 @@ import java.util.List;
 @Path("progress")
 @Api(value = "Progress",
         description = "Manages progress",
-        authorizations = {@Authorization(AuthSchemes.AUTH_BEARER), @Authorization(AuthSchemes.SESSION_SECRET), @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {
+                @Authorization(AuthSchemes.AUTH_BEARER),
+                @Authorization(AuthSchemes.SESSION_SECRET),
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)}
+)
 @Produces(MediaType.APPLICATION_JSON)
 public class ProgressResource {
 
