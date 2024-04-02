@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.model.mission;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.morphia.annotations.*;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,6 +36,9 @@ public class MongoProgress {
 
     @Property
     private int remaining;
+
+    @Property
+    private Timestamp expiration;
 
     @Reference(ignoreMissing = true)
     private List<MongoRewardIssuance> rewardIssuances;
@@ -111,44 +115,18 @@ public class MongoProgress {
         this.rewardIssuances = rewardIssuances;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof MongoProgress)) return false;
-        MongoProgress that = (MongoProgress) object;
-        return getRemaining() == that.getRemaining() &&
-                getSequence() == that.getSequence() &&
-                Objects.equals(getObjectId(), that.getObjectId()) &&
-                Objects.equals(getVersion(), that.getVersion()) &&
-                Objects.equals(getProfile(), that.getProfile()) &&
-                Objects.equals(getMission(), that.getMission()) &&
-                Objects.equals(getCurrentStep(), that.getCurrentStep()) &&
-                Objects.equals(getRewardIssuances(), that.getRewardIssuances());
+    public Timestamp getExpiration() {
+        return expiration;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getObjectId(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getSequence(), getRewardIssuances());
-    }
-
-    @Override
-    public String toString() {
-        return "MongoProgress{" +
-                "objectId=" + objectId +
-                ", version='" + version + '\'' +
-                ", profile=" + profile +
-                ", mission=" + mission +
-                ", currentStep=" + getCurrentStep() +
-                ", remaining=" + remaining +
-                ", sequence=" + sequence +
-                ", rewardIssuances=" + rewardIssuances +
-                '}';
+    public void setExpiration(Timestamp expiration) {
+        this.expiration = expiration;
     }
 
     @PostLoad
     public void clearNulls() {
         if (rewardIssuances != null) {
-            rewardIssuances = rewardIssuances.stream().filter(p -> p != null).collect(toList());
+            rewardIssuances = rewardIssuances.stream().filter(Objects::nonNull).collect(toList());
         }
     }
 

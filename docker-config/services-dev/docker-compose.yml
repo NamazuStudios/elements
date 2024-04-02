@@ -18,6 +18,10 @@ services:
 
   mongo:
     image: mongo:6.0.9
+    command:
+      - mongod
+      - --replSet
+      - test
     deploy:
       replicas: 1
     networks:

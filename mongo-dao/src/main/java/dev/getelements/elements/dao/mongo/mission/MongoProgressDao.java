@@ -1,8 +1,9 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.mission;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.ProgressDao;
+import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
@@ -84,6 +85,7 @@ public class MongoProgressDao implements ProgressDao {
     @Override
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
                                               final List<String> tags, final String search) {
+
         if (isNotEmpty(nullToEmpty(search).trim())) {
             logger.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values");
@@ -96,6 +98,8 @@ public class MongoProgressDao implements ProgressDao {
         if (tags != null && !tags.isEmpty()) {
             query.filter(Filters.in("mission.tags", tags));
         }
+
+
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,

@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.Constants;
@@ -26,6 +25,8 @@ import dev.getelements.elements.dao.mongo.googlesignin.MongoGoogleSignInUserDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
+import dev.getelements.elements.dao.mongo.mission.MongoMissionDao;
+import dev.getelements.elements.dao.mongo.mission.MongoProgressDao;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
