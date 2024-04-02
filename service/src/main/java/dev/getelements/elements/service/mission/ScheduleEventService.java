@@ -7,14 +7,17 @@ import dev.getelements.elements.model.mission.ScheduleEvent;
 import dev.getelements.elements.model.mission.UpdateScheduleEventRequest;
 
 public interface ScheduleEventService {
-    ScheduleEvent createScheduleEvent(CreateScheduleEventRequest createScheduleEventRequest);
 
-    Pagination<ScheduleEvent> getScheduleEvents(int offset, int count);
-    Pagination<ScheduleEvent> getScheduleEvents(int offset, int count, String search);
+    ScheduleEvent createScheduleEvent(String scheduleNameOrId, CreateScheduleEventRequest createScheduleEventRequest);
 
-    ScheduleEvent getScheduleEventByNameOrId(String scheduleNameOrId);
+    Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count);
+    Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count, String search);
 
-    ScheduleEvent updateScheduleEvent(UpdateScheduleEventRequest updatedScheduleEvent);
+    ScheduleEvent getScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventNameOrId);
+
+    ScheduleEvent updateScheduleEvent(String scheduleNameOrId,
+                                      String scheduleEventNameOrId,
+                                      UpdateScheduleEventRequest updatedScheduleEvent);
 
     void deleteScheduleEvent(String scheduleNameOrId);
 

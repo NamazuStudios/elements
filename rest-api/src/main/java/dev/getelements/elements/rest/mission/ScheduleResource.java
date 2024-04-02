@@ -83,7 +83,7 @@ public class ScheduleResource {
                     "from the passed in request body. ")
     public Schedule updateSchedule(final UpdateScheduleRequest updateScheduleRequest,
                                  @PathParam("scheduleNameOrId") String scheduleNameOrId) {
-        return scheduleService.updateSchedule(updateScheduleRequest);
+        return scheduleService.updateSchedule(scheduleNameOrId, updateScheduleRequest);
     }
 
     @DELETE

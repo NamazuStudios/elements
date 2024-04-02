@@ -1,12 +1,12 @@
-package dev.getelements.elements.service.mission;
+package dev.getelements.elements.dao;
 
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.mission.CreateScheduleRequest;
 import dev.getelements.elements.model.mission.Schedule;
 import dev.getelements.elements.model.mission.UpdateScheduleRequest;
 
-public interface ScheduleService {
-    Schedule createSchedule(CreateScheduleRequest createScheduleRequest);
+public interface ScheduleDao {
+
+    Schedule create(Schedule schedule);
 
     Schedule getScheduleByNameOrId(String scheduleNameOrId);
 
@@ -14,8 +14,7 @@ public interface ScheduleService {
 
     Pagination<Schedule> getSchedules(int offset, int count, String search);
 
-
-    Schedule updateSchedule(String scheduleNameOrId, UpdateScheduleRequest updatedSchedule);
+    Schedule updateSchedule(Schedule updatedSchedule);
 
     void deleteSchedule(String scheduleNameOrId);
 

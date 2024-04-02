@@ -18,7 +18,7 @@ import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
 
-@Path("schedule/{scheduleNameOrId}")
+@Path("schedule/{scheduleNameOrId}/event")
 @Api(value = "ScheduleEvent",
         description = "Manages ScheduleEvents",
         authorizations = {
@@ -36,8 +36,11 @@ public class ScheduleEventResource {
                     "The ScheduleEvent representation returned in the response body is a representation of the ScheduleEvent as persisted " +
                     "with a unique identifier assigned and with its fields properly normalized.  The supplied schedule object " +
                     "submitted with the request must have a name property that is unique across all items.")
-    public ScheduleEvent createScheduleEvent(CreateScheduleEventRequest createScheduleEventRequest) {
-        return scheduleService.createScheduleEvent(createScheduleEventRequest);
+    public ScheduleEvent createScheduleEvent(
+            @PathParam("scheduleNameOrId")
+            final String scheduleNameOrId,
+            final CreateScheduleEventRequest createScheduleEventRequest) {
+        return scheduleService.createScheduleEvent(scheduleNameOrId, createScheduleEventRequest);
     }
 
 
@@ -47,6 +50,8 @@ public class ScheduleEventResource {
             notes = "Searches all schedules in the system and returning a number of matches against " +
                     "the given search filter, delimited by the offset and count.")
     public Pagination<ScheduleEvent> getScheduleEvents(
+            @PathParam("scheduleNameOrId")
+            final String scheduleNameOrId,
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags,
@@ -63,8 +68,8 @@ public class ScheduleEventResource {
         final String query = nullToEmpty(search).trim();
 
         return query.isEmpty() ?
-                getscheduleService().getScheduleEvents(offset, count) :
-                getscheduleService().getScheduleEvents(offset, count, search);
+                getscheduleService().getScheduleEvents(scheduleNameOrId, offset, count) :
+                getscheduleService().getScheduleEvents(scheduleNameOrId, offset, count, search);
 
     }
 
@@ -72,8 +77,12 @@ public class ScheduleEventResource {
     @Path("{scheduleNameOrId}")
     @ApiOperation(value = "Retrieves a single ScheduleEvent by id or by name",
             notes = "Looks up a schedule by the passed in identifier")
-    public ScheduleEvent getScheduleEventByNameOrId(@PathParam("scheduleNameOrId") String scheduleNameOrId) {
-        return scheduleService.getScheduleEventByNameOrId(scheduleNameOrId);
+    public ScheduleEvent getScheduleEventByNameOrId(
+            @PathParam("scheduleNameOrId")
+            final String scheduleNameOrId,
+            @PathParam("scheduleNameOrId")
+            final String scheduleEventNameOrId) {
+        return scheduleService.getScheduleEventByNameOrId(scheduleNameOrId, scheduleEventNameOrId);
     }
 
     @PUT
@@ -81,9 +90,13 @@ public class ScheduleEventResource {
     @ApiOperation(value = "Updates an entire single ScheduleEvent",
             notes = "Supplying a schedule, this will update the ScheduleEvent identified by the name or ID in the path with contents " +
                     "from the passed in request body. ")
-    public ScheduleEvent updateScheduleEvent(final UpdateScheduleEventRequest updateScheduleEventRequest,
-                                   @PathParam("scheduleNameOrId") String scheduleNameOrId) {
-        return scheduleService.updateScheduleEvent(updateScheduleEventRequest);
+    public ScheduleEvent updateScheduleEvent(
+            @PathParam("scheduleNameOrId")
+            final String scheduleNameOrId,
+            @PathParam("scheduleNameOrId")
+            final String scheduleEventNameOrId,
+            final UpdateScheduleEventRequest updateScheduleEventRequest) {
+        return scheduleService.updateScheduleEvent(scheduleNameOrId, scheduleEventNameOrId, updateScheduleEventRequest);
     }
 
     @DELETE

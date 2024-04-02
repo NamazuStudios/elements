@@ -9,6 +9,7 @@ import dev.getelements.elements.rt.annotation.DeprecationDefinition;
 import dev.getelements.elements.rt.annotation.Expose;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -46,6 +47,14 @@ public interface MissionDao {
      * @return a {@link Pagination} of {@link Mission} objects.
      */
     Pagination<Mission> getMissions(int offset, int count, String search);
+
+    /**
+     * Gets all {@link Mission}s matching the list of names or ids.
+     *
+     * @param missionNamesOrIds a list containing missions or ids
+     * @return the {@link List<Mission>}
+     */
+    List<Mission> getMissionsMatching(Collection<String> missionNamesOrIds);
 
     /**
      * Gets the mission with the id, or throws a {@link NotFoundException} if the
