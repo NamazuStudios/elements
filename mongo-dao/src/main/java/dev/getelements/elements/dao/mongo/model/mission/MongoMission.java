@@ -20,9 +20,10 @@ public class MongoMission {
     private ObjectId objectId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String name;
 
+    @Text
     @Property
     private String displayName;
 

@@ -8,6 +8,7 @@ import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.Tabulation;
+import dev.getelements.elements.model.mission.Schedule;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
 import dev.morphia.aggregation.AggregationOptions;
@@ -61,10 +62,24 @@ public class MongoDBUtils {
      *
      * @param operation the operation
      * @param <T> the expected return type
-     * @return the object retured by the supplied operation
+     * @return the object returned by the supplied operation
      */
     public <T> T perform(final Function<Datastore, T> operation) {
         return perform(operation, DuplicateException::new);
+    }
+
+    /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropriate type of exception internally.
+     *
+     * @param operation the operation
+     * @param uClass the type which to convert out of the type returned from the Datastore.
+     * @param <T> the expected return type from the datastore
+     * @param <U> the function return type
+     * @return the object returned by the supplied operation
+     */
+    public <T, U> U perform(final Function<Datastore, T> operation, final Class<U> uClass) {
+        return perform(operation.andThen(t -> getMapper().map(t, uClass)));
     }
 
     /**

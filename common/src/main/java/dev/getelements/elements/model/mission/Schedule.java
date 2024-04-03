@@ -25,6 +25,10 @@ public class Schedule {
     private String name;
 
     @NotNull
+    @ApiModelProperty
+    private String displayName;
+
+    @NotNull
     @ApiModelProperty("The description for this schedule.")
     private String description;
 
@@ -44,6 +48,14 @@ public class Schedule {
         this.name = name;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -57,12 +69,12 @@ public class Schedule {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Schedule schedule = (Schedule) o;
-        return Objects.equals(getId(), schedule.getId()) && Objects.equals(getName(), schedule.getName()) && Objects.equals(getDescription(), schedule.getDescription());
+        return Objects.equals(getId(), schedule.getId()) && Objects.equals(getName(), schedule.getName()) && Objects.equals(getDisplayName(), schedule.getDisplayName()) && Objects.equals(getDescription(), schedule.getDescription());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getDescription());
+        return Objects.hash(getId(), getName(), getDisplayName(), getDescription());
     }
 
     @Override
@@ -70,6 +82,7 @@ public class Schedule {
         final StringBuilder sb = new StringBuilder("Schedule{");
         sb.append("id='").append(id).append('\'');
         sb.append(", name='").append(name).append('\'');
+        sb.append(", displayName='").append(displayName).append('\'');
         sb.append(", description='").append(description).append('\'');
         sb.append('}');
         return sb.toString();

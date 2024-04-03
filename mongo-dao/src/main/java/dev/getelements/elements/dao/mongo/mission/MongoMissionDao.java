@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.mission;
 
+import com.google.common.base.Strings;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.MissionDao;
@@ -10,6 +11,7 @@ import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
 import dev.getelements.elements.dao.mongo.model.mission.MongoReward;
 import dev.getelements.elements.dao.mongo.model.mission.MongoStep;
+import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
@@ -22,20 +24,21 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filter;
 import dev.morphia.query.filters.Filters;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.Collection;
 import java.util.List;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.util.stream.Collectors.toList;
@@ -44,8 +47,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 public class MongoMissionDao implements MissionDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoMissionDao.class);
-
-    private StandardQueryParser standardQueryParser;
 
     private Datastore datastore;
 
@@ -57,13 +58,15 @@ public class MongoMissionDao implements MissionDao {
 
     private MongoItemDao mongoItemDao;
 
+    private BooleanQueryParser booleanQueryParser;
+
     @Override
     public Pagination<Mission> getMissions(int offset, int count, List<String> tags)  {
 
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
         if (tags != null && !tags.isEmpty()) {
-            query.filter(Filters.in("tags", tags));
+            query.filter(in("tags", tags));
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
@@ -72,14 +75,15 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public Pagination<Mission> getMissions(int offset, int count, String search) {
+    public Pagination<Mission> getMissions(final int offset, final int count, final String search) {
 
-        if (StringUtils.isNotEmpty(search)) {
-            LOGGER.warn(" getMissions(int offset, int count, String query) was called with a query " +
-                    "string parameter.  This field is presently ignored and will return all values");
+        if (isNullOrEmpty(search)) {
+            return getMissions(offset, count, List.of());
         }
 
-        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
+        final var query = getBooleanQueryParser()
+                .parse(MongoMission.class, search)
+                .orElseGet(() -> getDatastore().find(MongoMission.class).filter(text(search)));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
             mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions());
@@ -114,6 +118,11 @@ public class MongoMissionDao implements MissionDao {
 
         return mission;
 
+    }
+
+    @Override
+    public List<Mission> getMissionsMatching(final Collection<String> missionNamesOrIds) {
+        return null;
     }
 
     @Override
@@ -310,16 +319,6 @@ public class MongoMissionDao implements MissionDao {
         this.mongoDBUtils = mongoDBUtils;
     }
 
-
-    public StandardQueryParser getStandardQueryParser() {
-        return standardQueryParser;
-    }
-
-    @Inject
-    public void setStandardQueryParser(StandardQueryParser standardQueryParser) {
-        this.standardQueryParser = standardQueryParser;
-    }
-
     public MongoItemDao getMongoItemDao() {
         return mongoItemDao;
     }
@@ -328,4 +327,14 @@ public class MongoMissionDao implements MissionDao {
     public void setMongoItemDao(MongoItemDao mongoItemDao) {
         this.mongoItemDao = mongoItemDao;
     }
+
+    public BooleanQueryParser getBooleanQueryParser() {
+        return booleanQueryParser;
+    }
+
+    @Inject
+    public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
+        this.booleanQueryParser = booleanQueryParser;
+    }
+
 }

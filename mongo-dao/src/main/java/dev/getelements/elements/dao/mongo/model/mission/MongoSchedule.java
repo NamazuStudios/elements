@@ -1,20 +1,26 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import dev.morphia.annotations.Id;
-import dev.morphia.annotations.Property;
+import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import javax.validation.constraints.NotNull;
 
-public class MongoSchedule {
 
+@Entity(value = "mission", useDiscriminator = false)
+public class MongoSchedule {
 
     @Id
     private ObjectId objectId;
 
     @Property
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String name;
 
+    @Text
+    @Property
+    private String displayName;
+
+    @Indexed
     @Property
     private String description;
 
@@ -34,6 +40,14 @@ public class MongoSchedule {
         this.name = name;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -41,6 +55,5 @@ public class MongoSchedule {
     public void setDescription(String description) {
         this.description = description;
     }
-
 
 }
