@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -127,7 +128,35 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public List<Mission> getMissionsMatching(final Collection<String> missionNamesOrIds) {
-        return null;
+
+        if (missionNamesOrIds.isEmpty()) {
+            return List.of();
+        }
+
+        final var objectIds = missionNamesOrIds
+                .stream()
+                .map(id -> getMongoDBUtils().parse(id))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(toList());
+
+        final var names = missionNamesOrIds
+                .stream()
+                .filter(id -> getMongoDBUtils().parse(id).isEmpty())
+                .collect(toList());
+
+        final var query = getDatastore().find(MongoMission.class)
+                .filter(or(
+                        in("_id", objectIds),
+                        in("name", names)
+                ));
+
+        try (final var stream = query.stream()) {
+            return stream
+                    .map(m -> getDozerMapper().map(m, Mission.class))
+                    .collect(toList());
+        }
+
     }
 
     @Override
