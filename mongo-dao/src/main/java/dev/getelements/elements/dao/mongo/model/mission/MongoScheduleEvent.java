@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
 import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Reference;
 import org.bson.types.ObjectId;
@@ -12,12 +13,15 @@ public class MongoScheduleEvent {
     @Id
     private ObjectId objectId;
 
+    @Indexed
     @Property
     private Long begin;
 
+    @Indexed
     @Property
     private Long end;
 
+    @Indexed
     @Reference
     private MongoSchedule schedule;
 

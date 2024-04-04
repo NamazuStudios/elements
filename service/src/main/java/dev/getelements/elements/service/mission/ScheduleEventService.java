@@ -13,12 +13,14 @@ public interface ScheduleEventService {
     Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count);
     Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count, String search);
 
-    ScheduleEvent getScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventNameOrId);
+    ScheduleEvent getScheduleEventByNameOrId(
+            String scheduleNameOrId,
+            String scheduleEventId);
 
     ScheduleEvent updateScheduleEvent(String scheduleNameOrId,
                                       String scheduleEventNameOrId,
                                       UpdateScheduleEventRequest updatedScheduleEvent);
 
-    void deleteScheduleEvent(String scheduleNameOrId);
+    void deleteScheduleEvent(String scheduleNameOrId, String scheduleEventId);
 
 }

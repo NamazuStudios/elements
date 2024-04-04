@@ -1,8 +1,6 @@
 package dev.getelements.elements.dao.mongo.mission;
 
-import com.google.common.base.Strings;
 import com.mongodb.DuplicateKeyException;
-import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.MissionDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -15,6 +13,7 @@ import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
+import dev.getelements.elements.exception.mission.MissionNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
@@ -24,9 +23,6 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.filters.Filter;
-import dev.morphia.query.filters.Filters;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,15 +30,14 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoMissionDao implements MissionDao {
 
@@ -63,14 +58,19 @@ public class MongoMissionDao implements MissionDao {
     @Override
     public Pagination<Mission> getMissions(int offset, int count, List<String> tags)  {
 
-        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
+        final Query<MongoMission> query = getDatastore()
+                .find(MongoMission.class)
+                .filter(exists("name"));
 
         if (tags != null && !tags.isEmpty()) {
             query.filter(in("tags", tags));
         }
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(
+                query,
+                offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions()
+        );
 
     }
 
@@ -83,11 +83,36 @@ public class MongoMissionDao implements MissionDao {
 
         final var query = getBooleanQueryParser()
                 .parse(MongoMission.class, search)
-                .orElseGet(() -> getDatastore().find(MongoMission.class).filter(text(search)));
+                .orElseGet(() -> getDatastore().find(MongoMission.class).filter(text(search)))
+                .filter(exists("name"));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions());
+        return getMongoDBUtils().isScanQuery(query)
+            ? Pagination.empty()
+            : getMongoDBUtils().paginationFromQuery(
+                query,
+                offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions()
+        );
 
+    }
+
+    @Override
+    public Optional<Mission> findMissionByNameOrId(final String missionNameOrId) {
+        return findMongoMissionByNameOrId(missionNameOrId).map(mm -> getDozerMapper().map(mm, Mission.class));
+    }
+
+    public Optional<MongoMission> findMongoMissionByNameOrId(final String missionNameOrId) {
+        final var query = getQueryForNameOrId(missionNameOrId);
+        final MongoMission mission = query.first();
+        return Optional.ofNullable(mission);
+    }
+
+    public Query<MongoMission> getQueryForNameOrId(final String missionNameOrId) {
+        return getMongoDBUtils()
+                .parse(missionNameOrId)
+                .map(oid -> getDatastore().find(MongoMission.class).filter(eq("_id", oid)))
+                .orElseGet(() -> getDatastore().find(MongoMission.class).filter(eq("name", missionNameOrId)))
+                .filter(exists("name"));
     }
 
     @Override
@@ -97,27 +122,7 @@ public class MongoMissionDao implements MissionDao {
     }
 
     public MongoMission getMongoMissionByNameOrId(final String missionNameOrId) {
-
-        if (isEmpty(nullToEmpty(missionNameOrId).trim())) {
-            throw new NotFoundException("Unable to find mission with an id or name of " + missionNameOrId);
-        }
-
-        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
-
-        if (ObjectId.isValid(missionNameOrId)) {
-            query.filter(eq("_id", new ObjectId(missionNameOrId)));
-        } else {
-            query.filter(eq("name", missionNameOrId));
-        }
-
-        final MongoMission mission = query.first();
-
-        if (mission == null) {
-            throw new NotFoundException("Unable to find item with an id or name of " + missionNameOrId);
-        }
-
-        return mission;
-
+        return findMongoMissionByNameOrId(missionNameOrId).orElseThrow(MissionNotFoundException::new);
     }
 
     @Override
@@ -182,7 +187,7 @@ public class MongoMissionDao implements MissionDao {
         );
 
         if (updatedMongoItem == null) {
-            throw new NotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
+            throw new MissionNotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
         }
 
         return getDozerMapper().map(updatedMongoItem, Mission.class);
@@ -264,17 +269,12 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public void deleteMission(String missionId) {
+    public void deleteMission(final String missionNameOrID) {
 
-        final ObjectId id = getMongoDBUtils().parseOrThrowNotFoundException(missionId);
-
-        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
-        query.filter(eq("_id", id));
-
-        final DeleteResult deleteResult = query.delete();
+        final var deleteResult = getQueryForNameOrId(missionNameOrID).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
-            throw new NotFoundException("Mission not found: " + missionId);
+            throw new NotFoundException("Mission not found: " + missionNameOrID);
         }
 
     }

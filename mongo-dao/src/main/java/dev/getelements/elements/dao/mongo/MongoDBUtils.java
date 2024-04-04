@@ -364,6 +364,10 @@ public class MongoDBUtils {
 
     }
 
+    public boolean isScanQuery(final Query<?> query) {
+        return !isIndexedQuery(query);
+    }
+
     public boolean isIndexedQuery(final Query<?> query) {
         final var planner = (Document) query.explain().get("queryPlanner");
         final var winner = planner.get("winningPlan", Document.class);

@@ -11,6 +11,7 @@ import dev.getelements.elements.rt.annotation.ModuleDefinition;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by davidjbrooks on 11/24/18.
@@ -56,13 +57,16 @@ public interface MissionDao {
      */
     List<Mission> getMissionsMatching(Collection<String> missionNamesOrIds);
 
+    Optional<Mission> findMissionByNameOrId(String missionNameOrId);
     /**
      * Gets the mission with the id, or throws a {@link NotFoundException} if the
      * mission can't be found.
      *
      * @return the {@link Mission} that was requested, never null
      */
-    Mission getMissionByNameOrId(String missionId);
+    default Mission getMissionByNameOrId(final String missionNameOrId) {
+        return findMissionByNameOrId(missionNameOrId).orElseThrow(NotFoundException::new);
+    }
 
     /**
      * Updates the mission, or throws a {@link NotFoundException} if the

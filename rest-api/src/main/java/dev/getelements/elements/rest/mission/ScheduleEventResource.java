@@ -74,15 +74,15 @@ public class ScheduleEventResource {
     }
 
     @GET
-    @Path("{scheduleNameOrId}")
+    @Path("{scheduleEventId}")
     @ApiOperation(value = "Retrieves a single ScheduleEvent by id or by name",
             notes = "Looks up a schedule by the passed in identifier")
     public ScheduleEvent getScheduleEventByNameOrId(
             @PathParam("scheduleNameOrId")
             final String scheduleNameOrId,
-            @PathParam("scheduleNameOrId")
-            final String scheduleEventNameOrId) {
-        return scheduleService.getScheduleEventByNameOrId(scheduleNameOrId, scheduleEventNameOrId);
+            @PathParam("scheduleEventId")
+            final String scheduleEventId) {
+        return scheduleService.getScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId);
     }
 
     @PUT
@@ -94,17 +94,21 @@ public class ScheduleEventResource {
             @PathParam("scheduleNameOrId")
             final String scheduleNameOrId,
             @PathParam("scheduleNameOrId")
-            final String scheduleEventNameOrId,
+            final String scheduleEventId,
             final UpdateScheduleEventRequest updateScheduleEventRequest) {
-        return scheduleService.updateScheduleEvent(scheduleNameOrId, scheduleEventNameOrId, updateScheduleEventRequest);
+        return scheduleService.updateScheduleEvent(scheduleNameOrId, scheduleEventId, updateScheduleEventRequest);
     }
 
     @DELETE
     @Path("{scheduleNameOrId}")
     @ApiOperation(value = "Deletes the ScheduleEvent identified by id or by name",
             notes = "Deletes a schedule by the passed in identifier")
-    public void deleteScheduleEvent(@PathParam("scheduleNameOrId") String scheduleNameOrId) {
-        scheduleService.deleteScheduleEvent(scheduleNameOrId);
+    public void deleteScheduleEvent(
+            @PathParam("scheduleNameOrId")
+            final String scheduleNameOrId,
+            @PathParam("scheduleNameOrId")
+            final String scheduleEventId) {
+        scheduleService.deleteScheduleEvent(scheduleNameOrId, scheduleEventId);
     }
 
     public ScheduleEventService getscheduleService() {

@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.mission;
 
 import dev.getelements.elements.dao.ScheduleDao;
+import dev.getelements.elements.dao.ScheduleEventDao;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.CreateScheduleRequest;
 import dev.getelements.elements.model.mission.Schedule;
@@ -12,6 +13,8 @@ import javax.inject.Inject;
 public class SuperUserScheduleService implements ScheduleService {
 
     private ScheduleDao scheduleDao;
+
+    private ScheduleEventDao scheduleEventDao;
 
     private ValidationHelper validationHelper;
 
@@ -60,6 +63,7 @@ public class SuperUserScheduleService implements ScheduleService {
     @Override
     public void deleteSchedule(final String scheduleNameOrId) {
         getScheduleDao().deleteSchedule(scheduleNameOrId);
+        getScheduleEventDao().deleteScheduleEvents(scheduleNameOrId);
     }
 
     public ScheduleDao getScheduleDao() {
@@ -78,6 +82,15 @@ public class SuperUserScheduleService implements ScheduleService {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public ScheduleEventDao getScheduleEventDao() {
+        return scheduleEventDao;
+    }
+
+    @Inject
+    public void setScheduleEventDao(ScheduleEventDao scheduleEventDao) {
+        this.scheduleEventDao = scheduleEventDao;
     }
 
 }

@@ -61,8 +61,8 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
     @Override
     public ScheduleEvent getScheduleEventByNameOrId(
             final String scheduleNameOrId,
-            final String scheduleEventNameOrId) {
-        return getScheduleEventDao().getScheduleEventByNameOrId(scheduleNameOrId, scheduleEventNameOrId);
+            final String scheduleEventId) {
+        return getScheduleEventDao().getScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId);
     }
 
     @Override
@@ -93,8 +93,8 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
     }
 
     @Override
-    public void deleteScheduleEvent(final String scheduleNameOrId) {
-        getScheduleEventDao().deleteScheduleEvent(scheduleNameOrId);
+    public void deleteScheduleEvent(final String scheduleNameOrId, final String scheduleEventId) {
+        getScheduleEventDao().deleteScheduleEvent(scheduleNameOrId, scheduleEventId);
     }
 
     public ScheduleDao getScheduleDao() {

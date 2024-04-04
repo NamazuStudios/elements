@@ -1,7 +1,10 @@
 package dev.getelements.elements.dao;
 
+import dev.getelements.elements.exception.mission.ScheduleEventNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.ScheduleEvent;
+
+import java.util.Optional;
 
 public interface ScheduleEventDao {
 
@@ -13,8 +16,16 @@ public interface ScheduleEventDao {
 
     Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count, String search);
 
-    ScheduleEvent getScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventNameOrId);
+    Optional<ScheduleEvent> findScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventId);
 
-    void deleteScheduleEvent(String scheduleNameOrId);
+    default ScheduleEvent getScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventId) {
+        return findScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId)
+                .orElseThrow(ScheduleEventNotFoundException::new);
+    }
+
+    void deleteScheduleEvents(String scheduleNameOrId);
+
+    void deleteScheduleEvent(String scheduleNameOrId, String scheduleEventId);
+
 
 }

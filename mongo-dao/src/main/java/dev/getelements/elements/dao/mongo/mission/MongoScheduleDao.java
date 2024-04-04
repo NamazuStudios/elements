@@ -3,7 +3,6 @@ package dev.getelements.elements.dao.mongo.mission;
 import dev.getelements.elements.dao.ScheduleDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
-import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.model.mission.MongoSchedule;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.mission.ScheduleNotFoundException;
@@ -33,8 +32,6 @@ public class MongoScheduleDao implements ScheduleDao {
     private Mapper dozerMapper;
 
     private MongoDBUtils mongoDBUtils;
-
-    private MongoItemDao mongoItemDao;
 
     private Mapper mapper;
 
@@ -90,11 +87,13 @@ public class MongoScheduleDao implements ScheduleDao {
                 .parse(MongoSchedule.class, search)
                 .orElseGet(() -> getDatastore().find(MongoSchedule.class).filter(text(search)));
 
-        return getMongoDBUtils().paginationFromQuery(
-                query,
-                offset, count,
-                ms -> getDozerMapper().map(ms, Schedule.class)
-        );
+        return getMongoDBUtils().isScanQuery(query)
+                ? Pagination.empty()
+                : getMongoDBUtils().paginationFromQuery(
+                        query,
+                        offset, count,
+                        ms -> getDozerMapper().map(ms, Schedule.class)
+                );
 
     }
 
@@ -176,15 +175,6 @@ public class MongoScheduleDao implements ScheduleDao {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
-    }
-
-    public MongoItemDao getMongoItemDao() {
-        return mongoItemDao;
-    }
-
-    @Inject
-    public void setMongoItemDao(MongoItemDao mongoItemDao) {
-        this.mongoItemDao = mongoItemDao;
     }
 
     public Mapper getMapper() {

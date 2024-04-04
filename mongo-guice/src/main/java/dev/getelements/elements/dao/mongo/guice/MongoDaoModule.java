@@ -28,6 +28,8 @@ import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.mission.MongoMissionDao;
 import dev.getelements.elements.dao.mongo.mission.MongoProgressDao;
 import dev.getelements.elements.dao.mongo.mission.MongoScheduleDao;
+import dev.getelements.elements.dao.mongo.mission.MongoScheduleEventDao;
+import dev.getelements.elements.dao.mongo.model.mission.MongoScheduleEvent;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
@@ -101,6 +103,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(VaultDao.class).to(MongoVaultDao.class);
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
         bind(ScheduleDao.class).to(MongoScheduleDao.class);
+        bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
 
         bind(Datastore.class)
                 .toProvider(MongoDatastoreProvider.class)
@@ -179,7 +182,8 @@ public class MongoDaoModule extends PrivateModule {
         expose(SmartContractDao.class);
         expose(VaultDao.class);
         expose(LargeObjectDao.class);
-        expose(MongoScheduleDao.class);
+        expose(ScheduleDao.class);
+        expose(ScheduleEventDao.class);
 
     }
 
