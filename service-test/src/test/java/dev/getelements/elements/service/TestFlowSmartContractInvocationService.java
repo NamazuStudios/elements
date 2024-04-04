@@ -1,6 +1,6 @@
 package dev.getelements.elements.service;
 
-import dev.getelements.elements.dao.mongo.UserTestFactory;
+import dev.getelements.elements.dao.mongo.test.UserTestFactory;
 import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.model.blockchain.contract.CreateSmartContractRequest;
 import dev.getelements.elements.model.blockchain.contract.SmartContractAddress;

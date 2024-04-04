@@ -1,6 +1,6 @@
 package dev.getelements.elements.rest;
 
-import dev.getelements.elements.dao.mongo.MongoTestInstance;
+import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
 import dev.getelements.elements.jetty.ElementsWebServices;
 import dev.getelements.elements.test.EmbeddedTestService;
 import org.slf4j.Logger;
