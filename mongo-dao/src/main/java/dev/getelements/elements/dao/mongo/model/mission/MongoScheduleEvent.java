@@ -6,6 +6,7 @@ import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Reference;
 import org.bson.types.ObjectId;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 public class MongoScheduleEvent {
@@ -15,11 +16,11 @@ public class MongoScheduleEvent {
 
     @Indexed
     @Property
-    private Long begin;
+    private Timestamp begin;
 
     @Indexed
     @Property
-    private Long end;
+    private Timestamp end;
 
     @Indexed
     @Reference
@@ -36,19 +37,19 @@ public class MongoScheduleEvent {
         this.objectId = objectId;
     }
 
-    public Long getBegin() {
+    public Timestamp getBegin() {
         return begin;
     }
 
-    public void setBegin(Long begin) {
+    public void setBegin(Timestamp begin) {
         this.begin = begin;
     }
 
-    public Long getEnd() {
+    public Timestamp getEnd() {
         return end;
     }
 
-    public void setEnd(Long end) {
+    public void setEnd(Timestamp end) {
         this.end = end;
     }
 

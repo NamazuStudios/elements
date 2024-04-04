@@ -61,18 +61,27 @@ public abstract class CliMongoTestInstance implements MongoTestInstance {
             logger.info("Starting test mongo process via Docker.");
 
             final var uuid = format("%s_%s", getClass().getSimpleName(), randomUUID());
-
             final var process = newProcess(uuid);
-            final var stdout = new Thread(log(process::getInputStream, m -> logger.info("mongod {}", m)));
-            stdout.setDaemon(true);
-            stdout.start();
-
-            final var stderr = new Thread(log(process::getErrorStream, m -> logger.error("mongod {}", m)));
-            stderr.setDaemon(true);
-            stderr.start();
+            runProcess(process);
 
             hooks.add(this::close);
             waitForConnect(port);
+
+            final var initializeProcess = newInitializeProcess(uuid);
+
+            if (initializeProcess != null) {
+
+                runProcess(initializeProcess);
+
+                final int initializeProcessExit = initializeProcess.exitValue();
+
+                if (initializeProcessExit == 0) {
+                    logger.info("Mongo Initializer process exited with code: 0");
+                } else {
+                    logger.error("Mongo Initializer process exited with code: {}", initializeProcessExit);
+                }
+
+            }
 
             this.uuid = uuid;
             this.process = process;
@@ -84,7 +93,23 @@ public abstract class CliMongoTestInstance implements MongoTestInstance {
 
     }
 
+    private void runProcess(final Process process) {
+
+        final var stdout = new Thread(log(process::getInputStream, m -> logger.info("mongod {}", m)));
+        stdout.setDaemon(true);
+        stdout.start();
+
+        final var stderr = new Thread(log(process::getErrorStream, m -> logger.error("mongod {}", m)));
+        stderr.setDaemon(true);
+        stderr.start();
+
+    }
+
     protected abstract Process newProcess(final String uuid) throws IOException;
+
+    protected Process newInitializeProcess(final String uuid) throws IOException {
+        return null;
+    }
 
     @Override
     public void close() {

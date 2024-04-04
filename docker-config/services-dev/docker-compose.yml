@@ -12,7 +12,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "6379:6379"
 
@@ -21,13 +21,21 @@ services:
     command:
       - mongod
       - --replSet
-      - test
+      - local-test
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "27017:27017"
 
+  rs-init:
+    build:
+      context: rs-init
+    deploy:
+      replicas: 1
+    networks:
+      - elements
+
 networks:
-  socialengine:
+  elements:

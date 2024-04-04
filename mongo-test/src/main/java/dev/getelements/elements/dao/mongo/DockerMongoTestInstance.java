@@ -38,13 +38,28 @@ public class DockerMongoTestInstance extends CliMongoTestInstance {
                         uuid,
                         "--rm",
                         format("-p%d:27017", port),
-                        format("mongo:%s", version)
-//                        ,
-//                        "--replSet",
-//                        "integration-test"
+                        format("mongo:%s", version),
+                        "--replSet",
+                        "integration-test"
                 )
                 .redirectErrorStream(true)
                 .start();
+    }
+
+    @Override
+    protected Process newInitializeProcess(final String uuid) throws IOException {
+        return new ProcessBuilder()
+                .command(
+                        "docker",
+                        "exec",
+                        uuid,
+                        "mongosh",
+                        "--eval",
+                        "rs.initiate()"
+                )
+                .redirectErrorStream(true)
+                .start();
+//        mongosh --eval "rs.initiate()"
     }
 
     @Override
