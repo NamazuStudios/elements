@@ -9,6 +9,7 @@ import dev.getelements.elements.security.SessionSecretHeader;
 import dev.getelements.elements.service.ProfileOverrideService;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 public class SessionSecretHeaderProfileIdentificationMethod implements ProfileIdentificationMethod {
 
@@ -17,16 +18,10 @@ public class SessionSecretHeaderProfileIdentificationMethod implements ProfileId
     private ProfileOverrideService profileOverrideService;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
-
-       final String profileId = getSessionSecretHeader()
-            .getOverrideProfileId()
-            .orElseThrow(UnidentifiedProfileException::new);
-
-        return getProfileOverrideService()
-            .findOverrideProfile(profileId)
-            .orElseThrow(UnidentifiedProfileException::new);
-
+    public Optional<Profile> attempt() {
+       return getSessionSecretHeader()
+               .getOverrideProfileId()
+               .flatMap(getProfileOverrideService()::findOverrideProfile);
     }
 
     public SessionSecretHeader getSessionSecretHeader() {

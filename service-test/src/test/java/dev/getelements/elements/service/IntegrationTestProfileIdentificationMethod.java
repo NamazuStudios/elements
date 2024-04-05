@@ -6,6 +6,8 @@ import dev.getelements.elements.security.ProfileIdentificationMethod;
 
 import javax.inject.Inject;
 
+import java.util.Optional;
+
 import static dev.getelements.elements.model.profile.Profile.PROFILE_ATTRIBUTE;
 
 public class IntegrationTestProfileIdentificationMethod implements ProfileIdentificationMethod {
@@ -13,12 +15,11 @@ public class IntegrationTestProfileIdentificationMethod implements ProfileIdenti
     private TestScope.Context testScopeContext;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
+    public Optional<Profile> attempt() {
         return getTestScopeContext()
                 .getAttributes()
                 .getAttributeOptional(PROFILE_ATTRIBUTE)
-                .map(Profile.class::cast)
-                .orElseThrow(UnidentifiedProfileException::new);
+                .map(Profile.class::cast);
     }
 
     public TestScope.Context getTestScopeContext() {

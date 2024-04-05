@@ -14,11 +14,10 @@ public class SessionProfileIdentificationMethod implements ProfileIdentification
     private Provider<Optional<Session>> optionalSessionProvider;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
+    public Optional<Profile> attempt() {
         return getOptionalSessionProvider()
             .get()
-            .map(Session::getProfile)
-            .orElseThrow(UnidentifiedProfileException::new);
+            .map(Session::getProfile);
     }
 
     public Provider<Optional<Session>> getOptionalSessionProvider() {

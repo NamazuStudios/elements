@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
 public class HttpRequestAttributeProfileIdentificationMethod implements ProfileIdentificationMethod {
 
@@ -16,18 +17,18 @@ public class HttpRequestAttributeProfileIdentificationMethod implements ProfileI
     private HttpServletRequest httpServletRequest;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
+    public Optional<Profile> attempt() {
 
         final Object profile = getHttpServletRequest().getAttribute(Profile.PROFILE_ATTRIBUTE);
 
         if (profile == null) {
-            throw new UnidentifiedProfileException();
+            return Optional.empty();
         } else if (!(profile instanceof Profile)) {
             logger.error("{} is not instance of {}", profile, Profile.class.getName());
-            throw new UnidentifiedProfileException();
+            return Optional.empty();
+        } else {
+            return Optional.of(profile).map(Profile.class::cast);
         }
-
-        return (Profile) profile;
 
     }
 
