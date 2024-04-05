@@ -38,6 +38,13 @@ public class MongoScheduleDaoTest {
                 .toArray(Object[][]::new);
     }
 
+    @DataProvider
+    public static Object[][] mockScheduleNamesUpdated() {
+        return mockScheduleNamesList()
+                .stream().map(name -> new Object[]{name, format("%s_updated", name)})
+                .toArray(Object[][]::new);
+    }
+
     @Test(
             groups = "create",
             dataProvider = "mockScheduleNames"
@@ -124,13 +131,14 @@ public class MongoScheduleDaoTest {
     )
     public void searchSchedulesText(final String name) {
 
-        final var schedulesById = mockScheduleNamesList()
-                .stream()
-                .map(getScheduleDao()::getScheduleByNameOrId)
-                .collect(toMap(Schedule::getId, Schedule::getName));
+        final var fetched = getScheduleDao().getScheduleByNameOrId(name);
 
-        final var allSchedules = new PaginationWalker().toList(getScheduleDao()::getSchedules);
-        allSchedules.forEach(s -> assertTrue(schedulesById.containsKey(s.getId())));
+        final var searched = getScheduleDao()
+                .getSchedules(0, 1, name)
+                .getObjects()
+                .get(0);
+
+        assertEquals(searched.getId(), fetched.getId());
 
     }
 
@@ -154,16 +162,22 @@ public class MongoScheduleDaoTest {
 
     @Test(
             groups = "update",
-            dataProvider = "mockScheduleNames",
+            dataProvider = "mockScheduleNamesUpdated",
             dependsOnGroups = "read"
     )
-    public void updateSchedule(final String name) {
+    public void updateSchedule(final String original, final String update) {
 
-        final var byName = getScheduleDao().findScheduleByNameOrId(name);
-        assertTrue(byName.isPresent());
+        final var byName = getScheduleDao().getScheduleByNameOrId(original);
+        byName.setName(update);
 
-        final var byId = getScheduleDao().findScheduleByNameOrId(byName.get().getId());
-        assertTrue(byId.isPresent());
+        final var updated = getScheduleDao().updateSchedule(byName);
+        assertEquals(updated.getName(), update);
+
+        final var fetched = getScheduleDao().getScheduleByNameOrId(update);
+        assertEquals(fetched.getName(), update);
+
+        assertEquals(updated.getId(), byName.getId());
+        assertEquals(fetched.getId(), byName.getId());
 
     }
 

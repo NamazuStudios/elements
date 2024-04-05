@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.mission;
 
+import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.ScheduleDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -12,6 +13,7 @@ import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.mission.Schedule;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.updates.UpdateOperators;
 import org.dozer.Mapper;
@@ -19,6 +21,7 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import java.util.Optional;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.text;
 import static dev.morphia.query.updates.UpdateOperators.set;
@@ -113,8 +116,7 @@ public class MongoScheduleDao implements ScheduleDao {
                         .with(set("name", updatedSchedule.getName()))
                         .with(set("displayName", updatedSchedule.getDisplayName()))
                         .with(set("description", updatedSchedule.getDescription()))
-                        .modify(query)
-                        .execute(),
+                        .execute(query, new ModifyOptions().returnDocument(AFTER)),
                 Schedule.class
         );
 
