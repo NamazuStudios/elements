@@ -111,7 +111,7 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
 
         getOptionalProfileProvider()
                 .get()
-                .ifPresent(p -> request.setAttribute(PROFILE_ATTRIBUTE, profile));
+                .ifPresent(p -> request.setAttribute(PROFILE_ATTRIBUTE, p));
 
     }
 
