@@ -8,6 +8,8 @@ import dev.getelements.elements.security.ProfileIdentificationMethod;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import java.util.Optional;
+
 import static dev.getelements.elements.model.profile.Profile.PROFILE_ATTRIBUTE;
 
 public class ResourceProfileIdentificationMethod implements ProfileIdentificationMethod {
@@ -15,13 +17,12 @@ public class ResourceProfileIdentificationMethod implements ProfileIdentificatio
     private Provider<Resource> resourceProvider;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
+    public Optional<Profile> attempt() {
         return getResourceProvider()
             .get()
             .getAttributes()
             .getAttributeOptional(PROFILE_ATTRIBUTE)
-            .map(Profile.class::cast)
-            .orElseThrow(UnidentifiedProfileException::new);
+            .map(Profile.class::cast);
     }
 
     public Provider<Resource> getResourceProvider() {

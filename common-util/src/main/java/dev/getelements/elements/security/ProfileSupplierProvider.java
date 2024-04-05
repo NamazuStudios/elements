@@ -5,6 +5,7 @@ import dev.getelements.elements.model.profile.Profile;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -15,32 +16,20 @@ import java.util.function.Supplier;
  */
 public class ProfileSupplierProvider implements Provider<Supplier<Profile>> {
 
-    private Set<ProfileIdentificationMethod> profileIdentificationMethodSet;
+    private Optional<Profile> optionalProfile;
     
     @Override
     public Supplier<Profile> get() {
-        return () -> {
-
-            for(final ProfileIdentificationMethod method : getProfileIdentificationMethodSet()) {
-                try {
-                    return method.attempt();
-                } catch (UnidentifiedProfileException ex) {
-                    continue;
-                }
-            }
-
-            return ProfileIdentificationMethod.UNIDENTIFIED.attempt();
-
-        };
+        return () -> getOptionalProfile().orElseThrow(UnidentifiedProfileException::new);
     }
 
-    public Set<ProfileIdentificationMethod> getProfileIdentificationMethodSet() {
-        return profileIdentificationMethodSet;
+    public Optional<Profile> getOptionalProfile() {
+        return optionalProfile;
     }
 
     @Inject
-    public void setProfileIdentificationMethodSet(Set<ProfileIdentificationMethod> profileIdentificationMethodSet) {
-        this.profileIdentificationMethodSet = profileIdentificationMethodSet;
+    public void setOptionalProfile(Optional<Profile> optionalProfile) {
+        this.optionalProfile = optionalProfile;
     }
 
 }
