@@ -31,10 +31,7 @@ import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.match.Match;
-import dev.getelements.elements.model.mission.Mission;
-import dev.getelements.elements.model.mission.Progress;
-import dev.getelements.elements.model.mission.ProgressMissionInfo;
-import dev.getelements.elements.model.mission.Step;
+import dev.getelements.elements.model.mission.*;
 import dev.getelements.elements.model.notification.FCMRegistration;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.reward.Reward;
@@ -170,6 +167,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(ProductBundle.class, MongoProductBundle.class)
                     .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(Schedule.class, MongoSchedule.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(Deployment.class, MongoDeployment.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));

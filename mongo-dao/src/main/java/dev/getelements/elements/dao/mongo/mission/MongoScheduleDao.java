@@ -46,7 +46,7 @@ public class MongoScheduleDao implements ScheduleDao {
     }
 
     @Override
-    public Optional<Schedule> findSchedulByNameOrId(final String scheduleNameOrId) {
+    public Optional<Schedule> findScheduleByNameOrId(final String scheduleNameOrId) {
         return findMongoScheduleByNameOrId(scheduleNameOrId).map(ms -> getMapper().map(ms, Schedule.class));
     }
 

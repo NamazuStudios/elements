@@ -23,8 +23,8 @@ public class MissionTestFactory {
     private Mission buildTestFiniteMission(final String name, final Item rewardItem) {
         final Mission testMission = new Mission();
         testMission.setName(format("test_finite_%s_%d", name, sequence.incrementAndGet()));
-        testMission.setDisplayName("Tally me Banana");
-        testMission.setDescription("Collect all the bananas");
+        testMission.setDisplayName("Test Finite Mission");
+        testMission.setDescription("Collect all of the " + rewardItem.getDisplayName());
         testMission.setTags(of("finite").collect(toList()));
         testMission.setSteps(asList(
                 testStep("Collect 5", "Collect 5", 5, rewardItem),
@@ -38,8 +38,8 @@ public class MissionTestFactory {
     private Mission buildTestRepeatingMission(final String name, final Item rewardItem) {
         final Mission testMission = new Mission();
         testMission.setName(format("test_repeating_%s_%d", name, sequence.incrementAndGet()));
-        testMission.setDisplayName("Tally me Banana");
-        testMission.setDescription("Collect all the bananas");
+        testMission.setDisplayName("Test Repeating Mission");
+        testMission.setDescription("Collect all of the " + rewardItem.getDisplayName());
         testMission.setTags(of("repeating").collect(toList()));
         testMission.setSteps(asList(
                 testStep("Collect 5", "Collect 5", 5, rewardItem),

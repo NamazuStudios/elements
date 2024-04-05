@@ -47,7 +47,6 @@ public class DockerMongoTestInstance extends CliMongoTestInstance {
                 )
                 .redirectErrorStream(true)
                 .start();
-//        mongosh --eval "rs.initiate()"
     }
 
     @Override

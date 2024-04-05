@@ -72,6 +72,7 @@ public abstract class CliMongoTestInstance implements MongoTestInstance {
             if (initializeProcess != null) {
 
                 runProcess(initializeProcess);
+                initializeProcess.waitFor();
 
                 final int initializeProcessExit = initializeProcess.exitValue();
 

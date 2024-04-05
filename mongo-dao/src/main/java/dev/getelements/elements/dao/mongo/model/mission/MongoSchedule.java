@@ -6,7 +6,7 @@ import org.bson.types.ObjectId;
 import javax.validation.constraints.NotNull;
 
 
-@Entity(value = "mission", useDiscriminator = false)
+@Entity(value = "schedule")
 public class MongoSchedule {
 
     @Id

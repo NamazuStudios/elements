@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static dev.getelements.elements.dao.mongo.MongoWalletDaoTest.randomKey;
+import static dev.getelements.elements.dao.mongo.test.MongoWalletDaoTest.randomKey;
 import static dev.getelements.elements.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static dev.getelements.elements.model.user.User.Level.SUPERUSER;
 import static java.lang.String.format;
