@@ -15,6 +15,7 @@ import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filters;
 import dev.morphia.query.updates.UpdateOperators;
 import org.dozer.Mapper;
 
@@ -22,8 +23,7 @@ import javax.inject.Inject;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.text;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoScheduleDao implements ScheduleDao {
@@ -67,13 +67,15 @@ public class MongoScheduleDao implements ScheduleDao {
                 ).orElseGet(() -> getDatastore()
                         .find(MongoSchedule.class)
                         .filter(eq("name", scheduleNameOrId))
-                );
+                ).filter(exists("name"));
     }
 
     @Override
     public Pagination<Schedule> getSchedules(final int offset, final int count) {
 
-        final var query = getDatastore().find(MongoSchedule.class);
+        final var query = getDatastore()
+                .find(MongoSchedule.class)
+                .filter(exists("name"));
 
         return getMongoDBUtils().paginationFromQuery(
                 query,
@@ -88,7 +90,8 @@ public class MongoScheduleDao implements ScheduleDao {
 
         final var query = getBooleanQueryParser()
                 .parse(MongoSchedule.class, search)
-                .orElseGet(() -> getDatastore().find(MongoSchedule.class).filter(text(search)));
+                .orElseGet(() -> getDatastore().find(MongoSchedule.class).filter(text(search)))
+                .filter(exists("name"));
 
         return getMongoDBUtils().isScanQuery(query)
                 ? Pagination.empty()

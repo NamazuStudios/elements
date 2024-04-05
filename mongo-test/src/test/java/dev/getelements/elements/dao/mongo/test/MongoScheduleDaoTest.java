@@ -1,6 +1,8 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.dao.ScheduleDao;
+import dev.getelements.elements.exception.mission.ScheduleEventNotFoundException;
+import dev.getelements.elements.exception.mission.ScheduleNotFoundException;
 import dev.getelements.elements.model.mission.Schedule;
 import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.util.PaginationWalker;
@@ -16,8 +18,7 @@ import java.util.stream.IntStream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertNotNull;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -178,6 +179,63 @@ public class MongoScheduleDaoTest {
 
         assertEquals(updated.getId(), byName.getId());
         assertEquals(fetched.getId(), byName.getId());
+
+    }
+
+
+    @Test(
+            groups = "delete",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update"
+    )
+    public void deleteScheduleByName(final String original, final String update) {
+
+        getScheduleDao().deleteSchedule(update);
+
+        final var exists = getScheduleDao().findScheduleByNameOrId(update).isPresent();
+        assertFalse(exists);
+
+    }
+
+    @Test(
+            groups = "delete",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update",
+            dependsOnMethods = "deleteScheduleByName",
+            expectedExceptions = ScheduleNotFoundException.class
+    )
+    public void doubleDeleteScheduleByName(final String original, final String update) {
+        getScheduleDao().deleteSchedule(update);
+    }
+
+    @Test(
+            groups = "delete",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update"
+    )
+    public void testDeletedAreAbsentFromQueries(final String original, final String update) {
+
+        final var allSchedules = new PaginationWalker().toList(getScheduleDao()::getSchedules);
+
+        final var matchedInListing = allSchedules
+                .stream()
+                .anyMatch(schedule -> original.equals(schedule.getName()) || update.equals(schedule.getName()));
+
+        final var matchedInSearchByOriginalName = !getScheduleDao()
+                .getSchedules(0, 1, format("name:%s", original))
+                .getObjects()
+                .isEmpty();
+
+        final var matchedInSearchByUpdatedName = !getScheduleDao()
+                .getSchedules(0, 1, format("name:%s", update))
+                .getObjects()
+                .isEmpty();
+
+        assertFalse(matchedInListing);
+        assertFalse(matchedInSearchByOriginalName);
+        assertFalse(matchedInSearchByUpdatedName);
+        assertTrue(getScheduleDao().findScheduleByNameOrId(update).isEmpty());
+        assertTrue(getScheduleDao().findScheduleByNameOrId(original).isEmpty());
 
     }
 
