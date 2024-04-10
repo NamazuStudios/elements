@@ -171,8 +171,11 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Schedule.class, MongoSchedule.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
-            mapping(Deployment.class, MongoDeployment.class)
+            mapping(ScheduleEvent.class, MongoScheduleEvent.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(Deployment.class, MongoDeployment.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(ElementsSmartContract.class, MongoNeoSmartContract.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));

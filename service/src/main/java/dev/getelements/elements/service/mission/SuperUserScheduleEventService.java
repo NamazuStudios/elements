@@ -62,7 +62,7 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
     public ScheduleEvent getScheduleEventByNameOrId(
             final String scheduleNameOrId,
             final String scheduleEventId) {
-        return getScheduleEventDao().getScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId);
+        return getScheduleEventDao().getScheduleEventById(scheduleNameOrId, scheduleEventId);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
 
         final var schedule = getScheduleDao().getScheduleByNameOrId(scheduleNameOrId);
 
-        final var scheduleEvent = getScheduleEventDao().getScheduleEventByNameOrId(
+        final var scheduleEvent = getScheduleEventDao().getScheduleEventById(
                 scheduleNameOrId,
                 scheduleEventNameOrId)
         ;
@@ -88,7 +88,7 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
         final var missions = getMissionDao().getMissionsMatching(missionNamesOrIds);
         scheduleEvent.setMissions(missions);
 
-        return getScheduleEventDao().createScheduleEvent(scheduleEvent);
+        return getScheduleEventDao().updateScheduleEvent(scheduleEvent);
 
     }
 

@@ -1,14 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import dev.morphia.annotations.Id;
-import dev.morphia.annotations.Indexed;
-import dev.morphia.annotations.Property;
-import dev.morphia.annotations.Reference;
+import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.sql.Timestamp;
 import java.util.List;
 
+@Entity("schedule_event")
 public class MongoScheduleEvent {
 
     @Id

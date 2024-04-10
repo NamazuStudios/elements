@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.mission;
 
+import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.ScheduleEventDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -8,19 +9,24 @@ import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.mission.ScheduleEventNotFoundException;
 import dev.getelements.elements.exception.mission.ScheduleNotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Read;
+import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.mission.ScheduleEvent;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.Query;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
@@ -71,7 +77,7 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
     @Override
     public ScheduleEvent updateScheduleEvent(final ScheduleEvent scheduleEvent) {
 
-        getValidationHelper().validateModel(scheduleEvent, Insert.class);
+        getValidationHelper().validateModel(scheduleEvent, Update.class);
         getValidationHelper().validateModel(scheduleEvent.getSchedule(), Read.class);
         scheduleEvent.getMissions().forEach(m -> getValidationHelper().validateModel(m, Read.class));
 
@@ -91,13 +97,23 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
                 .filter(eq("_id", objectId))
                 .filter(eq("schedule", mongoSchedule));
 
+        final var begin = scheduleEvent.getBegin() == null
+                ? unset("begin")
+                : set("begin", new Timestamp(scheduleEvent.getBegin()));
+
+        final var end = scheduleEvent.getEnd() == null
+                ? unset("end")
+                : set("end", new Timestamp(scheduleEvent.getEnd()));
+
         final var builder = new UpdateBuilder()
                 .with(set("schedule", mongoSchedule))
                 .with(set("missions", mongoMissions))
-                .with(scheduleEvent.getEnd() == null ? unset("end") : set("end", scheduleEvent.getEnd()))
-                .with(scheduleEvent.getBegin() == null ? unset("begin") : set("begin", scheduleEvent.getBegin()));
+                .with(begin)
+                .with(end);
 
-        return getMongoDBUtils().perform(ds -> builder.update(query), ScheduleEvent.class);
+        return getMongoDBUtils().perform(ds -> builder
+                .modify(query)
+                .execute(new ModifyOptions().returnDocument(AFTER)), ScheduleEvent.class);
 
     }
 
@@ -147,7 +163,7 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
     }
 
     @Override
-    public Optional<ScheduleEvent> findScheduleEventByNameOrId(
+    public Optional<ScheduleEvent> findScheduleEventById(
             final String scheduleNameOrId,
             final String scheduleEventId) {
         return findMongoScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId)

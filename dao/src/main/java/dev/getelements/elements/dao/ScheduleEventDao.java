@@ -16,10 +16,10 @@ public interface ScheduleEventDao {
 
     Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count, String search);
 
-    Optional<ScheduleEvent> findScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventId);
+    Optional<ScheduleEvent> findScheduleEventById(String scheduleNameOrId, String scheduleEventId);
 
-    default ScheduleEvent getScheduleEventByNameOrId(String scheduleNameOrId, String scheduleEventId) {
-        return findScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId)
+    default ScheduleEvent getScheduleEventById(String scheduleNameOrId, String scheduleEventId) {
+        return findScheduleEventById(scheduleNameOrId, scheduleEventId)
                 .orElseThrow(ScheduleEventNotFoundException::new);
     }
 

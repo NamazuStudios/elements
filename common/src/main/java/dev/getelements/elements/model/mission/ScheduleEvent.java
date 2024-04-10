@@ -92,7 +92,6 @@ public class ScheduleEvent {
         sb.append(", begin=").append(begin);
         sb.append(", end=").append(end);
         sb.append(", schedule=").append(schedule);
-        sb.append(", missions=").append(missions);
         sb.append('}');
         return sb.toString();
     }
