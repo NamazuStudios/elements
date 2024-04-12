@@ -29,7 +29,6 @@ import dev.getelements.elements.dao.mongo.mission.MongoMissionDao;
 import dev.getelements.elements.dao.mongo.mission.MongoProgressDao;
 import dev.getelements.elements.dao.mongo.mission.MongoScheduleDao;
 import dev.getelements.elements.dao.mongo.mission.MongoScheduleEventDao;
-import dev.getelements.elements.dao.mongo.model.mission.MongoScheduleEvent;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
@@ -56,6 +55,9 @@ public class MongoDaoModule extends PrivateModule {
 
     @Override
     protected void configure() {
+
+        bindDatastore();
+        bindTransaction();
 
         bind(UserDao.class).to(MongoUserDao.class);
         bind(ProfileDao.class).to(MongoProfileDao.class);
@@ -104,11 +106,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
         bind(ScheduleDao.class).to(MongoScheduleDao.class);
         bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
-
-        bind(Datastore.class)
-                .toProvider(MongoDatastoreProvider.class)
-                .asEagerSingleton();
-
+        
         bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
@@ -185,6 +183,16 @@ public class MongoDaoModule extends PrivateModule {
         expose(ScheduleDao.class);
         expose(ScheduleEventDao.class);
 
+    }
+
+    protected void bindDatastore() {
+        bind(Datastore.class)
+                .toProvider(MongoDatastoreProvider.class)
+                .asEagerSingleton();
+    }
+
+    protected void bindTransaction() {
+        bind(Transaction.class).toProvider(MongoTransactionProvider.class);
     }
 
 }
