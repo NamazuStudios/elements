@@ -28,6 +28,7 @@ import java.util.List;
         )
 })
 public interface ProgressDao {
+
     /**
      * Gets progresses specifying the user, offset and the count.
      *
@@ -125,4 +126,5 @@ public interface ProgressDao {
      * @return all active {@link Progress} instances
      */
     Progress getProgressForProfileAndMission(Profile profile, String missionNameOrId);
+
 }

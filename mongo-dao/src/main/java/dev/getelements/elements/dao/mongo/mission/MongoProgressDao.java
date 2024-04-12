@@ -10,6 +10,7 @@ import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
 import dev.getelements.elements.dao.mongo.model.mission.MongoProgress;
 import dev.getelements.elements.dao.mongo.model.mission.MongoProgressId;
 import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
+import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +47,9 @@ import static dev.getelements.elements.dao.mongo.model.mission.MongoProgressId.p
 import static dev.getelements.elements.model.mission.Step.buildRewardIssuanceTags;
 import static dev.getelements.elements.model.reward.RewardIssuance.*;
 import static dev.getelements.elements.model.reward.RewardIssuance.Type.PERSISTENT;
-import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.*;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -76,61 +79,82 @@ public class MongoProgressDao implements ProgressDao {
 
     private MongoRewardIssuanceDao rewardIssuanceDao;
 
+    private BooleanQueryParser booleanQueryParser;
+
     @Override
-    public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
+    public Pagination<Progress> getProgresses(final Profile profile,
+                                              final int offset, final int count,
                                               final List<String> tags)  {
-        return getProgresses(profile, offset, count, tags,null);
-    }
 
-    @Override
-    public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
-                                              final List<String> tags, final String search) {
-
-        if (isNotEmpty(nullToEmpty(search).trim())) {
-            logger.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
-                        "string parameter.  This field is presently ignored and will return all values");
-        }
-
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
-
-        query.filter(eq("profile", getDozerMapper().map(profile, MongoProfile.class)));
+        final var mongoProfile = getDozerMapper().map(profile, MongoProfile.class);
+        final var query = getQueryForActiveProgress().filter(eq("profile",mongoProfile));
 
         if (tags != null && !tags.isEmpty()) {
-            query.filter(Filters.in("mission.tags", tags));
+            query.filter(in("mission.tags", tags));
         }
 
-
-
         return getMongoDBUtils().paginationFromQuery(
-            query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Progress.class), new FindOptions());
+                query, offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
 
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count, List<String> tags)  {
-        return getProgresses(offset, count, tags, null);
+    public Pagination<Progress> getProgresses(final Profile profile,
+                                              final int offset, final int count,
+                                              final List<String> tags,
+                                              final String search) {
+        return getBooleanQueryParser().parse(getQueryForActiveProgress(), search)
+                .filter(q -> getMongoDBUtils().isIndexedQuery(q))
+                .map(query -> {
+
+                    final var mongoProfile = getDozerMapper().map(profile, MongoProfile.class);
+                    query.filter(eq("profile",mongoProfile));
+
+                    if (tags != null && !tags.isEmpty()) {
+                        query.filter(in("mission.tags", tags));
+                    }
+
+                    return getMongoDBUtils().paginationFromQuery(
+                            query, offset, count,
+                            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
+
+                })
+                .orElseGet(Pagination::empty);
+    }
+
+    @Override
+    public Pagination<Progress> getProgresses(final int offset, final int count, final List<String> tags)  {
+
+        final var query = getQueryForActiveProgress();
+
+        if (tags != null && !tags.isEmpty()) {
+            query.filter(in("mission.tags", tags));
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+                query, offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Progress.class), new FindOptions());
+
     }
 
     @Override
     public Pagination<Progress> getProgresses(final int offset, final int count,
                                               final List<String> tags, final String search) {
+        return getBooleanQueryParser().parse(getQueryForActiveProgress(), search)
+                .filter(q -> getMongoDBUtils().isIndexedQuery(q))
+                .map(query -> {
 
-        if (isNotEmpty(search)) {
-            logger.warn(" getProgresss(int offset, int count, String query) was called with a query " +
-                    "string parameter.  This field is presently ignored and will return all values");
-        }
+                    if (tags != null && !tags.isEmpty()) {
+                        query.filter(in("mission.tags", tags));
+                    }
 
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+                    return getMongoDBUtils().paginationFromQuery(
+                            query, offset, count,
+                            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
 
-        if (tags != null && !tags.isEmpty()) {
-            query.filter(Filters.in("mission.tags", tags));
-        }
-
-        return getMongoDBUtils().paginationFromQuery(
-            query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Progress.class), new FindOptions());
-
+                })
+                .orElseGet(Pagination::empty);
     }
 
     @Override
@@ -139,7 +163,7 @@ public class MongoProgressDao implements ProgressDao {
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
         final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(missionNameOrId);
 
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+        final Query<MongoProgress> query = getQueryForActiveProgress();
         query.filter(eq("profile", mongoProfile));
         query.filter(eq("_id.missionId", mongoMission.getObjectId()));
 
@@ -161,7 +185,7 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(identifier);
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+        final Query<MongoProgress> query = getQueryForActiveProgress();
 
         query.filter(eq("_id", mongoProgressId));
 
@@ -182,7 +206,7 @@ public class MongoProgressDao implements ProgressDao {
 
         final var mongoProgressId = parseOrThrowNotFoundException(progress.getId());
 
-        final var query = getDatastore().find(MongoProgress.class);
+        final var query = getQueryForActiveProgress();
         query.filter(eq("_id", mongoProgressId));
 
         final var mongoProgress = query.modify(
@@ -204,8 +228,6 @@ public class MongoProgressDao implements ProgressDao {
 
         getValidationHelper().validateModel(progress, Insert.class);
 
-        normalize(progress);
-
         final MongoProgress result;
 
         try {
@@ -215,7 +237,7 @@ public class MongoProgressDao implements ProgressDao {
                 final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(progress.getMission().getId());
                 final MongoProgressId mongoProgressId = new MongoProgressId(mongoProfile, mongoMission);
 
-                final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+                final Query<MongoProgress> query = getQueryForActiveProgress();
                 query.filter(eq("_id", mongoProgressId));
                 final MongoProgress mongoProgress = query.first();
                 if (mongoProgress != null) return mongoProgress;
@@ -251,9 +273,6 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
-// TODO: Per SOC-364
-// Disabling this For Now SOC-364
-//        getObjectIndex().index(result);
         return getDozerMapper().map(result, Progress.class);
 
     }
@@ -261,17 +280,13 @@ public class MongoProgressDao implements ProgressDao {
     @Override
     public void deleteProgress(final String progressId) {
         final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(progressId);
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+        final Query<MongoProgress> query = getQueryForActiveProgress();
         query.filter(eq("_id", mongoProgressId));
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Progress not found: " + progressId);
         }
-    }
-
-    private void normalize(Progress item) {
-        // leave this stub here in case we implement some normalization logic later
     }
 
     @Override
@@ -293,7 +308,7 @@ public class MongoProgressDao implements ProgressDao {
 
         final var mongoProgressId = parseOrThrowNotFoundException(progress.getId());
 
-        final var query = getDatastore().find(MongoProgress.class);
+        final var query = getQueryForActiveProgress();
         query.filter(eq("_id", mongoProgressId));
 
         final var mongoProgress = query.first();
@@ -412,6 +427,21 @@ public class MongoProgressDao implements ProgressDao {
 
     }
 
+    public Query<MongoProgress> getQueryForActiveProgress() {
+        final var now = new Timestamp(currentTimeMillis());
+        return getQueryForActiveProgress(now);
+    }
+
+    public Query<MongoProgress> getQueryForActiveProgress(final Timestamp now) {
+        return getDatastore().find(MongoProgress.class)
+                .filter(
+                        or(gte("begin", now), eq("begin", null)),
+                        or(gte("begin", now), eq("begin", null)),
+                        or(lte("end", now), eq("end", null)),
+                        or(lte("end", now), eq("end", null))
+                );
+    }
+
     public Map<String, Object> generateMissionProgressMetadata(Progress progress, Step step) {
         final Map<String, Object> map = new HashMap<>();
         final Map stepMap = getDozerMapper().map(step, Map.class);
@@ -502,6 +532,15 @@ public class MongoProgressDao implements ProgressDao {
     @Inject
     public void setRewardIssuanceDao(MongoRewardIssuanceDao rewardIssuanceDao) {
         this.rewardIssuanceDao = rewardIssuanceDao;
+    }
+
+    public BooleanQueryParser getBooleanQueryParser() {
+        return booleanQueryParser;
+    }
+
+    @Inject
+    public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
+        this.booleanQueryParser = booleanQueryParser;
     }
 
 }

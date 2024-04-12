@@ -14,7 +14,6 @@ import static java.util.stream.Collectors.toList;
  *
  * Created by davidjbrooks on 12/04/2018.
  */
-
 @Entity(value = "progress", useDiscriminator = false)
 public class MongoProgress {
 
@@ -29,6 +28,7 @@ public class MongoProgress {
     @Reference
     private MongoProfile profile;
 
+    @Property
     private MongoProgressMissionInfo mission;
 
     @Property
@@ -38,7 +38,13 @@ public class MongoProgress {
     private int remaining;
 
     @Property
-    private Timestamp expiration;
+    private Timestamp begin;
+
+    @Property
+    private Timestamp end;
+
+    @Reference
+    private List<MongoSchedule> schedules;
 
     @Reference(ignoreMissing = true)
     private List<MongoRewardIssuance> rewardIssuances;
@@ -115,12 +121,28 @@ public class MongoProgress {
         this.rewardIssuances = rewardIssuances;
     }
 
-    public Timestamp getExpiration() {
-        return expiration;
+    public Timestamp getBegin() {
+        return begin;
     }
 
-    public void setExpiration(Timestamp expiration) {
-        this.expiration = expiration;
+    public void setBegin(Timestamp begin) {
+        this.begin = begin;
+    }
+
+    public Timestamp getEnd() {
+        return end;
+    }
+
+    public void setEnd(Timestamp end) {
+        this.end = end;
+    }
+
+    public List<MongoSchedule> getSchedules() {
+        return schedules;
+    }
+
+    public void setSchedules(List<MongoSchedule> schedules) {
+        this.schedules = schedules;
     }
 
     @PostLoad

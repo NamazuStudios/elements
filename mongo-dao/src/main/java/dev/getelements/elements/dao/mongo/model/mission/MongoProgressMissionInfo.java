@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
 
@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@Embedded
+
+@Entity
 public class MongoProgressMissionInfo {
 
     @Indexed
