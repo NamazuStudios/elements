@@ -117,6 +117,20 @@ public class MongoScheduleEventDaoTest {
 
     }
 
+    @Test(groups = "read", dependsOnGroups = "create")
+    public void testGetAllEvents() {
+
+        final var fetchedEvents = getScheduleEventDao().getAllScheduleEvents(schedule.getId());
+
+        fetchedEvents.forEach(event -> {
+            final var found = scheduleEvents
+                    .stream()
+                    .anyMatch(e -> e.getId().equals(event.getId()));
+            assertTrue(found);
+        });
+
+    }
+
     @Test(groups = "read", dataProvider = "allEvents", dependsOnGroups = "create")
     public void testGetEventsById(final ScheduleEvent scheduleEvent) {
 

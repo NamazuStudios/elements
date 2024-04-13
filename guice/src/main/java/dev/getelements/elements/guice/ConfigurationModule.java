@@ -48,7 +48,7 @@ public class ConfigurationModule extends AbstractModule {
 
         bind(Properties.class).toProvider(() -> new Properties(properties));
 
-        logger.info("Using configuration properties {} from {}", properties, propertiesSupplier.getClass().getName());
+        logger.debug("Using configuration properties {} from {}", properties, propertiesSupplier.getClass().getName());
         bindProperties(binder(), properties);
 
         final Multibinder<URI> corsAllowedOriginsMultibinder;

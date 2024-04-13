@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.mission;
 
-import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.ScheduleEventDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -9,7 +8,6 @@ import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.mission.ScheduleEventNotFoundException;
 import dev.getelements.elements.exception.mission.ScheduleNotFoundException;
 import dev.getelements.elements.model.Pagination;
-import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Read;
 import dev.getelements.elements.model.ValidationGroups.Update;
@@ -22,14 +20,15 @@ import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
+import static java.util.stream.Collectors.toList;
 
 public class MongoScheduleEventDao implements ScheduleEventDao {
 
@@ -64,7 +63,7 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
                 .getMissions()
                 .stream()
                 .map(mission -> getMongoMissionDao().getMongoMissionByNameOrId(mission.getId()))
-                .collect(Collectors.toList());
+                .collect(toList());
 
         final var mongoScheduleEvent = getMapper().map(scheduleEvent, MongoScheduleEvent.class);
         mongoScheduleEvent.setSchedule(mongoSchedule);
@@ -89,7 +88,7 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
                 .getMissions()
                 .stream()
                 .map(mission -> getMongoMissionDao().getMongoMissionByNameOrId(mission.getId()))
-                .collect(Collectors.toList());
+                .collect(toList());
 
         final var objectId = getMongoDBUtils().parseOrThrow(scheduleEvent.getId(), ScheduleNotFoundException::new);
 
@@ -159,6 +158,44 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
                         offset, count,
                         se -> getDozerMapper().map(se, ScheduleEvent.class)
                 );
+
+    }
+
+    @Override
+    public List<ScheduleEvent> getAllScheduleEvents(final String scheduleNameOrId,
+                                                    final boolean includeExpired,
+                                                    final boolean includeFuture,
+                                                    final long reference) {
+
+        final var referenceTimestamp = new Timestamp(reference);
+
+        final var mongoSchedule = getMongoScheduleDao()
+                .findMongoScheduleByNameOrId(scheduleNameOrId)
+                .orElseThrow(ScheduleNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoScheduleEvent.class)
+                .filter(eq("schedule", mongoSchedule));
+
+        if (!includeExpired) {
+            query.filter(or(
+                    eq("begin", null),
+                    gte("begin", referenceTimestamp)
+            ));
+        }
+
+        if (!includeFuture) {
+            query.filter(or(
+                    eq("end", null),
+                    lte("end", referenceTimestamp)
+            ));
+        }
+
+        try (final var stream = query.stream()) {
+            return stream
+                    .map(ev -> getDozerMapper().map(ev, ScheduleEvent.class))
+                    .collect(toList());
+        }
 
     }
 

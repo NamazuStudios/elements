@@ -49,8 +49,8 @@ public interface Transaction extends AutoCloseable {
      * @return the result of the operation
      */
     default  <T> T performAndClose(final Function<Transaction, T> op) {
-        try (var _t = this) {
-            final var result = op.apply(_t);
+        try (this) {
+            final var result = op.apply(this);
             commit();
             return result;
         } catch (Exception ex) {
@@ -64,8 +64,6 @@ public interface Transaction extends AutoCloseable {
      * operation.
      *
      * @param op the operation
-     * @param <T> the return type
-     * @return the result of the operation
      */
     default void performAndCloseV(final Consumer<Transaction> op) {
         performAndClose(t -> {

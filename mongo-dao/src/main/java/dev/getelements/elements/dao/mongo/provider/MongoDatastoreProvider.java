@@ -28,7 +28,7 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
     public Datastore get() {
 
         final var client = mongoProvider.get();
-        final var datastore = Morphia.createDatastore(client, "elements");
+        final var datastore = Morphia.createDatastore(client);
 
         new Reflections("dev.getelements.elements.dao.mongo")
             .getTypesAnnotatedWith(Entity.class)

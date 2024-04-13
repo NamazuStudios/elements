@@ -2,6 +2,7 @@ package dev.getelements.elements.service.mission;
 
 import dev.getelements.elements.dao.ScheduleDao;
 import dev.getelements.elements.dao.ScheduleEventDao;
+import dev.getelements.elements.dao.Transaction;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.CreateScheduleRequest;
 import dev.getelements.elements.model.mission.Schedule;
@@ -9,6 +10,7 @@ import dev.getelements.elements.model.mission.UpdateScheduleRequest;
 import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 public class SuperUserScheduleService implements ScheduleService {
 
@@ -17,6 +19,8 @@ public class SuperUserScheduleService implements ScheduleService {
     private ScheduleEventDao scheduleEventDao;
 
     private ValidationHelper validationHelper;
+
+    private Provider<Transaction> transactionProvider;
 
     @Override
     public Schedule createSchedule(final CreateScheduleRequest createScheduleRequest) {
@@ -52,18 +56,28 @@ public class SuperUserScheduleService implements ScheduleService {
 
         getValidationHelper().validateModel(updatedScheduleRequest);
 
-        final var schedule = getScheduleDao().getScheduleByNameOrId(scheduleNameOrId);
-        schedule.setName(updatedScheduleRequest.getName());
-        schedule.setDescription(updatedScheduleRequest.getDescription());
-
-        return getScheduleDao().updateSchedule(schedule);
+        return getTransactionProvider()
+                .get()
+                .performAndClose(txn -> {
+                    final var scheduleDao = txn.getDao(ScheduleDao.class);
+                    final var schedule = scheduleDao.getScheduleByNameOrId(scheduleNameOrId);
+                    schedule.setName(updatedScheduleRequest.getName());
+                    schedule.setDescription(updatedScheduleRequest.getDescription());
+                    return scheduleDao.updateSchedule(schedule);
+                });
 
     }
 
     @Override
     public void deleteSchedule(final String scheduleNameOrId) {
-        getScheduleDao().deleteSchedule(scheduleNameOrId);
-        getScheduleEventDao().deleteScheduleEvents(scheduleNameOrId);
+        getTransactionProvider()
+                .get()
+                .performAndCloseV(txn -> {
+                    final var scheduleDao = txn.getDao(ScheduleDao.class);
+                    final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
+                    scheduleDao.deleteSchedule(scheduleNameOrId);
+                    scheduleEventDao.deleteScheduleEvents(scheduleNameOrId);
+                });
     }
 
     public ScheduleDao getScheduleDao() {
@@ -91,6 +105,15 @@ public class SuperUserScheduleService implements ScheduleService {
     @Inject
     public void setScheduleEventDao(ScheduleEventDao scheduleEventDao) {
         this.scheduleEventDao = scheduleEventDao;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 
 }

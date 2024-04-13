@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 
 import static java.lang.String.format;
-import static java.lang.Thread.sleep;
 
 public class DockerMongoTestInstance extends CliMongoTestInstance {
 

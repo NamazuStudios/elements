@@ -56,6 +56,7 @@ public class MongoDaoModule extends PrivateModule {
     @Override
     protected void configure() {
 
+        bindMapper();
         bindDatastore();
         bindTransaction();
 
@@ -106,14 +107,10 @@ public class MongoDaoModule extends PrivateModule {
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
         bind(ScheduleDao.class).to(MongoScheduleDao.class);
         bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
-        
+
         bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
-
-        bind(Mapper.class)
-                .toProvider(MongoDozerMapperProvider.class)
-                .asEagerSingleton();
 
         bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
                 .toProvider(MongoMatchmakerFunctionProvider.class);
@@ -133,6 +130,9 @@ public class MongoDaoModule extends PrivateModule {
 
         final var indexableByType = newMapBinder(binder(), IndexableType.class, Indexable.class);
         indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoDistinctInventoryItemIndexable.class);
+
+        expose(Datastore.class);
+        expose(Transaction.class);
 
         expose(IndexDao.class);
         expose(UserDao.class);
@@ -183,6 +183,12 @@ public class MongoDaoModule extends PrivateModule {
         expose(ScheduleDao.class);
         expose(ScheduleEventDao.class);
 
+    }
+
+    protected void bindMapper() {
+        bind(Mapper.class)
+                .toProvider(MongoDozerMapperProvider.class)
+                .asEagerSingleton();
     }
 
     protected void bindDatastore() {

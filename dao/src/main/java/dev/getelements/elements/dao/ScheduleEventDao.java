@@ -8,6 +8,8 @@ import dev.getelements.elements.model.mission.ScheduleEvent;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.System.currentTimeMillis;
+
 /**
  * Manges {@link ScheduleEvent} instances within the database.
  */
@@ -30,22 +32,6 @@ public interface ScheduleEventDao {
     ScheduleEvent updateScheduleEvent(ScheduleEvent scheduleEvent);
 
     /**
-     * Gets all {@link ScheduleEvent} instances for the supplied {@link Schedule}
-     * @param scheduleNameOrId the name or id of the {@link ScheduleEvent}
-     * @return a {@link List<ScheduleEvent>} of schedule events.
-     */
-    default List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId) {
-        return getAllScheduleEvents(scheduleNameOrId, false, false);
-    }
-
-    /**
-     * Gets all {@link ScheduleEvent} instances for the supplied {@link Schedule}
-     * @param scheduleNameOrId the name or id of the {@link ScheduleEvent}
-     * @return a {@link List<ScheduleEvent>} of schedule events.
-     */
-    List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId, boolean includeExpired, boolean includeFuture);
-
-    /**
      * Gets a {@link Pagination<ScheduleEvent>} of {@link ScheduleEvent} instances for the supplied {@link Schedule}
      * @param scheduleNameOrId the name or id of the {@link Schedule}
      * @return a  {@link Pagination<ScheduleEvent>} of schedule events.
@@ -59,6 +45,37 @@ public interface ScheduleEventDao {
      * @return a  {@link Pagination<ScheduleEvent>} of schedule events.
      */
     Pagination<ScheduleEvent> getScheduleEvents(String scheduleNameOrId, int offset, int count, String search);
+
+    /**
+     * Gets all {@link ScheduleEvent} instances for the supplied {@link Schedule}
+     * @param scheduleNameOrId the name or id of the {@link ScheduleEvent}
+     * @return a {@link List<ScheduleEvent>} of schedule events.
+     */
+    default List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId) {
+        return getAllScheduleEvents(scheduleNameOrId, false, false);
+    }
+
+    /**
+     * Gets all {@link ScheduleEvent} instances for the supplied {@link Schedule}
+     * @param scheduleNameOrId the name or id of the {@link ScheduleEvent}
+     * @param includeExpired true to include events that have expired
+     * @param includeFuture true to include events that have yet to be scheduled
+     * @return a {@link List<ScheduleEvent>} of schedule events.
+     */
+    default List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId,
+                                                     boolean includeExpired, boolean includeFuture) {
+        final var reference = currentTimeMillis();
+        return getAllScheduleEvents(scheduleNameOrId, includeExpired, includeFuture, reference);
+    }
+
+    /**
+     * Gets all {@link ScheduleEvent} instances for the supplied {@link Schedule}
+     * @param scheduleNameOrId the name or id of the {@link ScheduleEvent}
+     * @return a {@link List<ScheduleEvent>} of schedule events.
+     */
+    List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId,
+                                             boolean includeExpired, boolean includeFuture,
+                                             long reference);
 
     /**
      * Finds a {@link Schedule} by name or ID.
