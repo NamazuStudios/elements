@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.dao.*;
-import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.morphia.Datastore;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -9,8 +8,6 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoTransactionTest {
@@ -18,8 +15,6 @@ public class MongoTransactionTest {
     private Datastore datastore;
 
     private Provider<Transaction> transactionProvider;
-
-    private List<Transaction> oldTransactions = new CopyOnWriteArrayList<>();
 
     @DataProvider
     public static Object[][] daoClasses() {
@@ -75,16 +70,10 @@ public class MongoTransactionTest {
         };
     }
 
-    @Test
-    public void testIndexes() {
-        final var query = getDatastore().find(MongoUser.class);
-    }
-
     @Test(dataProvider = "daoClasses")
     public void testTransaction(final Class<?> daoT) {
         try (final var txn = getTransactionProvider().get()) {
             txn.getDao(daoT);
-            oldTransactions.add(txn);
         }
     }
 
