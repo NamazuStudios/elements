@@ -37,12 +37,6 @@ public class MongoProgress {
     @Property
     private int remaining;
 
-    @Property
-    private Timestamp begin;
-
-    @Property
-    private Timestamp end;
-
     @Reference
     private List<MongoSchedule> schedules;
 
@@ -119,22 +113,6 @@ public class MongoProgress {
 
     public void setRewardIssuances(List<MongoRewardIssuance> rewardIssuances) {
         this.rewardIssuances = rewardIssuances;
-    }
-
-    public Timestamp getBegin() {
-        return begin;
-    }
-
-    public void setBegin(Timestamp begin) {
-        this.begin = begin;
-    }
-
-    public Timestamp getEnd() {
-        return end;
-    }
-
-    public void setEnd(Timestamp end) {
-        this.end = end;
     }
 
     public List<MongoSchedule> getSchedules() {
