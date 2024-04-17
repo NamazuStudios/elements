@@ -37,7 +37,6 @@ public class MissionResource {
         return missionService.createMission(missionToBeCreated);
     }
 
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Search Missions",

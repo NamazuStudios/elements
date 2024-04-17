@@ -49,6 +49,19 @@ public class Progress implements Serializable {
             "i.e. the final step may be repeated infinitely.")
     private Integer sequence;
 
+    @ApiModelProperty("Indicates that this progress is managed by a Schedule. If true, the Progress will be deleted " +
+            "when no schedules have the progress active. This will be true if the Progress was created as part of a " +
+            "Schedule.")
+    private boolean managedBySchedule;
+
+    @ApiModelProperty("A listing of the Schedules which are managing this Progress. Empty or null if the Progress " +
+            "is not managed as part of a Schedule.")
+    private List<Schedule> schedules;
+
+    @ApiModelProperty("A listing of ScheduleEvents which are managing this Progress. Empty or null if the Progress " +
+            "is not managed as part of a Schedule.")
+    private List<ScheduleEvent> scheduleEvents;
+
     public String getId() {
         return id;
     }
@@ -100,6 +113,8 @@ public class Progress implements Serializable {
     public void setSequence(Integer sequence) {
         this.sequence = sequence;
     }
+
+
 
     @Override
     public boolean equals(Object o) {
