@@ -40,18 +40,12 @@ public class UserScheduleProgressService implements ScheduleProgressService {
     private void syncProgresses(final Transaction txn,
                                 final String profileId,
                                 final String scheduleNameOrId) {
-
-        final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
+        final var scheuldeEventDao = txn.getDao(ScheduleEventDao.class);
         final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
 
-        final var missions = scheduleEventDao
-                .getAllScheduleEvents(scheduleNameOrId)
-                .stream()
-                .flatMap(event -> event.getMissions().stream())
-                .collect(toList());
-
-        scheduleProgressDao.createProgressesForMissionsIn(scheduleNameOrId, profileId, missions);
-        scheduleProgressDao.deleteProgressesForMissionsNotIn(scheduleNameOrId, profileId, missions);
+        final var events = scheuldeEventDao.getAllScheduleEvents(scheduleNameOrId);
+        scheduleProgressDao.createProgressesForMissionsIn(scheduleNameOrId, profileId, events);
+        scheduleProgressDao.deleteProgressesForMissionsNotIn(scheduleNameOrId, profileId, events);
 
     }
 

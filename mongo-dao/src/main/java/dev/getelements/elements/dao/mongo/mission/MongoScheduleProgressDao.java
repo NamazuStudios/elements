@@ -1,0 +1,254 @@
+package dev.getelements.elements.dao.mongo.mission;
+
+import dev.getelements.elements.dao.ScheduleProgressDao;
+import dev.getelements.elements.dao.mongo.MongoDBUtils;
+import dev.getelements.elements.dao.mongo.MongoProfileDao;
+import dev.getelements.elements.dao.mongo.UpdateBuilder;
+import dev.getelements.elements.dao.mongo.model.mission.MongoProgress;
+import dev.getelements.elements.dao.mongo.model.mission.MongoProgressId;
+import dev.getelements.elements.dao.mongo.model.mission.MongoScheduleEvent;
+import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.ValidationGroups.Read;
+import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ScheduleEvent;
+import dev.getelements.elements.util.ValidationHelper;
+import dev.morphia.Datastore;
+import dev.morphia.UpdateOptions;
+import org.dozer.Mapper;
+
+import javax.inject.Inject;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.updates.UpdateOperators.*;
+
+public class MongoScheduleProgressDao implements ScheduleProgressDao {
+
+
+    private Datastore datastore;
+
+    private ValidationHelper validationHelper;
+
+    private Mapper dozerMapper;
+
+    private MongoDBUtils mongoDBUtils;
+
+    private Mapper mapper;
+
+    private MongoProfileDao mongoProfileDao;
+
+    private MongoMissionDao mongoMissionDao;
+
+    private MongoScheduleDao mongoScheduleDao;
+
+    private MongoScheduleEventDao mongoScheduleEventDao;
+
+    @Override
+    public Pagination<Progress> getProgresses(
+            final String profileId,
+            final String scheduleNameOrId,
+            final int offset, final int count) {
+        return getMongoScheduleDao()
+                .findMongoScheduleByNameOrId(scheduleNameOrId)
+                .map(mongoSchedule -> {
+                    final var query = getDatastore().find(MongoProgress.class);
+                    query.filter(elemMatch("schedules", eq("$ref", mongoSchedule.getObjectId())));
+                    return getMongoDBUtils().paginationFromQuery(
+                            query,
+                            offset, count,
+                            p -> getDozerMapper().map(p, Progress.class));
+                })
+                .orElseGet(Pagination::empty);
+    }
+
+    @Override
+    public long createProgressesForMissionsIn(
+            final String scheduleNameOrId,
+            final String profileId,
+            final List<ScheduleEvent> events) {
+
+        final var mongoProfileOptional = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+        if (mongoProfileOptional.isEmpty()) {
+            return 0;
+        }
+
+        final var mongoProfile = mongoProfileOptional.get();
+
+        return events.stream()
+                .map(ev -> getValidationHelper().validateModel(ev, Read.class))
+                .map(ev -> getMongoScheduleEventDao().findMongoScheduleEventById(scheduleNameOrId, ev.getId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMapToLong(mongoEvent -> mongoEvent.getMissions().stream().mapToLong(mongoMission -> {
+
+                    final var progressId = new MongoProgressId(mongoProfile, mongoMission);
+
+                    final var query = getDatastore()
+                            .find(MongoProgress.class)
+                            .filter(eq("_id", progressId));
+
+                    final var result = new UpdateBuilder().with(
+                            set("_id", progressId),
+                            setOnInsert(Map.of("managedBySchedule", true)),
+                            addToSet("schedules", mongoEvent.getSchedule()),
+                            addToSet("scheduleEvents", mongoEvent)
+                    ).execute(query, new UpdateOptions().upsert(true).multi(true));
+
+                    return result.getMatchedCount();
+
+                }))
+                .reduce(0, Long::sum);
+
+    }
+
+    @Override
+    public long deleteProgressesForMissionsNotIn(
+            final String scheduleNameOrId,
+            final String profileId, List<ScheduleEvent> events) {
+
+        final var mongoProfileOptional = getMongoProfileDao().findActiveMongoProfile(profileId);
+        final var mongoScheduleOptional = getMongoScheduleDao().findMongoScheduleByNameOrId(scheduleNameOrId);
+
+        if (mongoProfileOptional.isEmpty() || mongoScheduleOptional.isEmpty()) {
+            return 0;
+        }
+
+        final var mongoProfile = mongoProfileOptional.get();
+        final var mongoSchedule = mongoScheduleOptional.get();
+
+        return events.stream()
+                .map(ev -> getValidationHelper().validateModel(ev, Read.class))
+                .map(ev -> getMongoScheduleEventDao().findMongoScheduleEventById(scheduleNameOrId, ev.getId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .flatMapToLong(mongoEvent -> mongoEvent.getMissions().stream().mapToLong(mongoMission -> {
+
+                    final var progressId = new MongoProgressId(mongoProfile, mongoMission);
+
+                    final var query = getDatastore()
+                            .find(MongoProgress.class)
+                            .filter(eq("_id", progressId));
+
+                    final var mongoProgress = query.first();
+
+                    if (mongoProgress == null) {
+                        return 0;
+                    }
+
+                    final var removedEvent = mongoProgress
+                            .getScheduleEvents()
+                            .removeIf(ev -> Objects.equals(ev.getObjectId(), mongoEvent.getObjectId()));
+
+                    final var removeSchedule = removedEvent && mongoProgress
+                            .getScheduleEvents()
+                            .stream()
+                            .map(MongoScheduleEvent::getSchedule)
+                            .filter(Objects::nonNull)
+                            .noneMatch(sc -> Objects.equals(sc.getObjectId(), mongoSchedule.getObjectId()));
+
+                    final var removedSchedule = removeSchedule && mongoProgress
+                            .getSchedules()
+                            .removeIf(sc -> Objects.equals(sc.getObjectId(), mongoSchedule.getObjectId()));
+
+                    if (mongoProgress.isManagedBySchedule()) {
+                        if (mongoProgress.getScheduleEvents().isEmpty()) {
+                            getDatastore().delete(mongoProgress);
+                        } else {
+                            getDatastore().save(mongoProgress);
+                        }
+                    }
+
+                    return removedSchedule ? 1 : 0;
+
+                }))
+                .reduce(0, Long::sum);
+
+    }
+
+    public Datastore getDatastore() {
+        return datastore;
+    }
+
+    @Inject
+    public void setDatastore(Datastore datastore) {
+        this.datastore = datastore;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public Mapper getDozerMapper() {
+        return dozerMapper;
+    }
+
+    @Inject
+    public void setDozerMapper(Mapper dozerMapper) {
+        this.dozerMapper = dozerMapper;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
+    }
+
+    public MongoProfileDao getMongoProfileDao() {
+        return mongoProfileDao;
+    }
+
+    @Inject
+    public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
+        this.mongoProfileDao = mongoProfileDao;
+    }
+
+    public MongoMissionDao getMongoMissionDao() {
+        return mongoMissionDao;
+    }
+
+    @Inject
+    public void setMongoMissionDao(MongoMissionDao mongoMissionDao) {
+        this.mongoMissionDao = mongoMissionDao;
+    }
+
+    public MongoScheduleDao getMongoScheduleDao() {
+        return mongoScheduleDao;
+    }
+
+    @Inject
+    public void setMongoScheduleDao(MongoScheduleDao mongoScheduleDao) {
+        this.mongoScheduleDao = mongoScheduleDao;
+    }
+
+    public MongoScheduleEventDao getMongoScheduleEventDao() {
+        return mongoScheduleEventDao;
+    }
+
+    @Inject
+    public void setMongoScheduleEventDao(MongoScheduleEventDao mongoScheduleEventDao) {
+        this.mongoScheduleEventDao = mongoScheduleEventDao;
+    }
+
+}

@@ -81,18 +81,36 @@ public interface ScheduleEventDao {
      * Finds a {@link Schedule} by name or ID.
      *
      * @param scheduleNameOrId the schedule name or id
-     * @param scheduleEventId the schedule
-     * @return
+     * @param scheduleEventId the schedule event id
+     * @return {@link Optional<ScheduleEvent>}
      */
     Optional<ScheduleEvent> findScheduleEventById(String scheduleNameOrId, String scheduleEventId);
 
+    /**
+     * Gets the {@link ScheduleEvent} with the id and schedule id.
+     *
+     * @param scheduleNameOrId the schedule name or id
+     * @param scheduleEventId the schedule event id
+     * @return a {@link ScheduleEvent}, never null
+     */
     default ScheduleEvent getScheduleEventById(String scheduleNameOrId, String scheduleEventId) {
         return findScheduleEventById(scheduleNameOrId, scheduleEventId)
                 .orElseThrow(ScheduleEventNotFoundException::new);
     }
 
+    /**
+     * Deletes all events associated with the supplied schedule id.
+     *
+     * @param scheduleNameOrId the schedule name or id
+     */
     void deleteScheduleEvents(String scheduleNameOrId);
 
+    /**
+     * Deletes a specific schedule event.
+     *
+     * @param scheduleNameOrId the schedule name or id
+     * @param scheduleEventId the schedule event id
+     */
     void deleteScheduleEvent(String scheduleNameOrId, String scheduleEventId);
 
 }

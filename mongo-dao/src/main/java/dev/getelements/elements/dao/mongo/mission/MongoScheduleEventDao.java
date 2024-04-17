@@ -16,6 +16,7 @@ import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.Query;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
+import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toList;
 
 public class MongoScheduleEventDao implements ScheduleEventDao {
@@ -179,14 +181,14 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
 
         if (!includeExpired) {
             query.filter(or(
-                    eq("begin", null),
+                    exists("begin").not(),
                     gte("begin", referenceTimestamp)
             ));
         }
 
         if (!includeFuture) {
             query.filter(or(
-                    eq("end", null),
+                    exists("end").not(),
                     lte("end", referenceTimestamp)
             ));
         }
@@ -203,15 +205,35 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
     public Optional<ScheduleEvent> findScheduleEventById(
             final String scheduleNameOrId,
             final String scheduleEventId) {
-        return findMongoScheduleEventByNameOrId(scheduleNameOrId, scheduleEventId)
+        return findMongoScheduleEventById(scheduleNameOrId, scheduleEventId)
                 .map(se -> getDozerMapper().map(se, ScheduleEvent.class));
     }
 
-    public Optional<MongoScheduleEvent> findMongoScheduleEventByNameOrId(
+    public Optional<MongoScheduleEvent> findMongoScheduleEventById(
             final String scheduleNameOrId,
             final String scheduleEventId) {
         final var query = getQuery(scheduleNameOrId, scheduleEventId);
         return Optional.ofNullable(query.first());
+    }
+
+    public MongoScheduleEvent getMongoScheduleEventById(final String scheduleEventId) {
+        return findMongoScheduleEventById(scheduleEventId).orElseThrow(ScheduleEventNotFoundException::new);
+    }
+
+    public Optional<MongoScheduleEvent> findMongoScheduleEventById(final String scheduleEventId) {
+        return getMongoDBUtils().parse(scheduleEventId).flatMap(this::findMongoScheduleEventById);
+    }
+
+    public MongoScheduleEvent getMongoScheduleEventById(final ObjectId scheduleEventId) {
+        return findMongoScheduleEventById(scheduleEventId).orElseThrow(ScheduleEventNotFoundException::new);
+    }
+
+    public Optional<MongoScheduleEvent> findMongoScheduleEventById(final ObjectId scheduleEventId) {
+        final var event = getDatastore()
+                .find(MongoScheduleEvent.class)
+                .filter(eq("_id", scheduleEventId))
+                .first();
+        return Optional.ofNullable(event);
     }
 
     public Query<MongoScheduleEvent> getQuery(final String scheduleNameOrId,

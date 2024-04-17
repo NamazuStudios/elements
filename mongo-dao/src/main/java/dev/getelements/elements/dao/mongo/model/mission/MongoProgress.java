@@ -37,8 +37,16 @@ public class MongoProgress {
     @Property
     private int remaining;
 
+    @Property
+    private boolean managedBySchedule;
+
+    @Indexed
     @Reference
     private List<MongoSchedule> schedules;
+
+    @Indexed
+    @Reference
+    private List<MongoScheduleEvent> scheduleEvents;
 
     @Reference(ignoreMissing = true)
     private List<MongoRewardIssuance> rewardIssuances;
@@ -115,12 +123,28 @@ public class MongoProgress {
         this.rewardIssuances = rewardIssuances;
     }
 
+    public boolean isManagedBySchedule() {
+        return managedBySchedule;
+    }
+
+    public void setManagedBySchedule(boolean managedBySchedule) {
+        this.managedBySchedule = managedBySchedule;
+    }
+
     public List<MongoSchedule> getSchedules() {
         return schedules;
     }
 
     public void setSchedules(List<MongoSchedule> schedules) {
         this.schedules = schedules;
+    }
+
+    public List<MongoScheduleEvent> getScheduleEvents() {
+        return scheduleEvents;
+    }
+
+    public void setScheduleEvents(List<MongoScheduleEvent> scheduleEvents) {
+        this.scheduleEvents = scheduleEvents;
     }
 
     @PostLoad

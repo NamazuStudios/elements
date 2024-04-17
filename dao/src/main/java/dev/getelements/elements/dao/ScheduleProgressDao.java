@@ -4,6 +4,7 @@ import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.Mission;
 import dev.getelements.elements.model.mission.Progress;
 import dev.getelements.elements.model.mission.Schedule;
+import dev.getelements.elements.model.mission.ScheduleEvent;
 import dev.getelements.elements.model.profile.Profile;
 
 import java.util.List;
@@ -29,19 +30,21 @@ public interface ScheduleProgressDao {
      * this will ensure that the {@link Mission} is now linked to the {@link Schedule} if not already assigned.
      *
      * @param scheduleNameOrId the {@link Schedule} name or ID
-     * @param profileId {@link Profile} identifier
-     * @param missions the {@link Mission}s to assign
+     * @param profileId        {@link Profile} identifier
+     * @param events
+     * @return
      */
-    void createProgressesForMissionsIn(String scheduleNameOrId, String profileId, List<Mission> missions);
+    long createProgressesForMissionsIn(String scheduleNameOrId, String profileId, List<ScheduleEvent> events);
 
     /**
      * Deletes {@link Progress} instances for {@link Mission}s not in the supplied list. If no other {@link Schedule}
      * links the {@link Mission}, then this will permamently remove the {@link Progress} instances.
      *
      * @param scheduleNameOrId the {@link Schedule} name or ID
-     * @param profileId {@link Profile} identifier
-     * @param missions the {@link Mission}s to keep
+     * @param profileId        {@link Profile} identifier
+     * @param events
+     * @return
      */
-    void deleteProgressesForMissionsNotIn(String scheduleNameOrId, String profileId, List<Mission> missions);
+    long deleteProgressesForMissionsNotIn(String scheduleNameOrId, String profileId, List<ScheduleEvent> events);
 
 }

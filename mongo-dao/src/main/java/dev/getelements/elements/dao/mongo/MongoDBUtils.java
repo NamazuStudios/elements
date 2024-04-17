@@ -8,7 +8,6 @@ import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.Tabulation;
-import dev.getelements.elements.model.mission.Schedule;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
 import dev.morphia.aggregation.AggregationOptions;
