@@ -25,10 +25,7 @@ import dev.getelements.elements.dao.mongo.googlesignin.MongoGoogleSignInUserDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
-import dev.getelements.elements.dao.mongo.mission.MongoMissionDao;
-import dev.getelements.elements.dao.mongo.mission.MongoProgressDao;
-import dev.getelements.elements.dao.mongo.mission.MongoScheduleDao;
-import dev.getelements.elements.dao.mongo.mission.MongoScheduleEventDao;
+import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
@@ -107,6 +104,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
         bind(ScheduleDao.class).to(MongoScheduleDao.class);
         bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
+        bind(ScheduleProgressDao.class).to(MongoScheduleProgressDao.class);
 
         bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
@@ -182,6 +180,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(LargeObjectDao.class);
         expose(ScheduleDao.class);
         expose(ScheduleEventDao.class);
+        expose(ScheduleProgressDao.class);
 
     }
 
