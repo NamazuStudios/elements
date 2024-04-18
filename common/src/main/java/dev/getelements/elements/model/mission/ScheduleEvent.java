@@ -1,6 +1,6 @@
 package dev.getelements.elements.model.mission;
 
-import dev.getelements.elements.model.ValidationGroups;
+import dev.getelements.elements.model.ValidWithGroups;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Read;
 import dev.getelements.elements.model.ValidationGroups.Update;
@@ -27,10 +27,13 @@ public class ScheduleEvent {
     private Long end;
 
     @NotNull
+    @ValidWithGroups(Read.class)
     private Schedule schedule;
 
+    @Valid
     @NotNull
-    private List<Mission> missions;
+    @ValidWithGroups
+    private List<@ValidWithGroups(Read.class) Mission> missions;
 
     public String getId() {
         return id;
