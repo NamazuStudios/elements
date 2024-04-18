@@ -5,6 +5,7 @@ import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.rt.util.Hex;
 import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
 import org.bson.types.ObjectId;
@@ -14,7 +15,7 @@ import java.util.Objects;
 
 import static java.lang.System.arraycopy;
 
-@Embedded
+@Entity
 public class MongoProgressId implements HexableId {
 
     private static final int PROFILE_ID_INDEX = 0;

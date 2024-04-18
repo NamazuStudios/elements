@@ -26,7 +26,8 @@ public interface ValidationGroups {
     interface Insert {}
 
     /**
-     * Used when the value is read from the database.
+     * Used when the value is read or referenced. Typically, this means that the object needs a non-null id field such
+     * that it's value can be read from the database.
      */
     interface Read {}
 
