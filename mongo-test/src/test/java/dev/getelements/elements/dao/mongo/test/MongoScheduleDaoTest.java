@@ -150,7 +150,14 @@ public class MongoScheduleDaoTest {
                 .collect(toMap(Schedule::getId, Schedule::getName));
 
         final var allSchedules = new PaginationWalker().toList(getScheduleDao()::getSchedules);
-        allSchedules.forEach(s -> assertTrue(schedulesById.containsKey(s.getId())));
+        allSchedules.forEach(s -> assertTrue(
+                schedulesById.containsKey(s.getId()),
+                format("%s not in [%s](%d)",
+                        s.getId(),
+                        String.join(",", schedulesById.keySet()),
+                        schedulesById.size()
+                ))
+        );
 
     }
 
