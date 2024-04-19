@@ -118,12 +118,16 @@ public class MongoMetadataSpecDaoTest {
         getMetadataSpecDao().deleteMetadataSpec(working.getId());
     }
 
-    @Test(groups = "postDelete", dependsOnGroups = "delete", expectedExceptions = MetadataSpecNotFoundException.class)
+    @Test(groups = "delete",
+            dependsOnMethods = "testDelete",
+            expectedExceptions = MetadataSpecNotFoundException.class)
     public void testDoubleDelete() {
         getMetadataSpecDao().deleteMetadataSpec(working.getId());
     }
 
-    @Test(groups = "postDelete", dependsOnGroups = "delete", expectedExceptions = MetadataSpecNotFoundException.class)
+    @Test(groups = "delete",
+            dependsOnMethods = "testDelete",
+            expectedExceptions = MetadataSpecNotFoundException.class)
     public void testSpecIsDeleted() {
         getMetadataSpecDao().getActiveMetadataSpec(working.getId());
     }

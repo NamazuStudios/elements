@@ -102,66 +102,7 @@ public class MongoScheduleEventDaoTest {
 
     }
 
-
-    @Test(groups = "read", dependsOnGroups = "create")
-    public void testGetEvents() {
-        final var fetchedEvents = new PaginationWalker()
-                .toList(((offset, count) -> getScheduleEventDao().getScheduleEvents(schedule.getId(), offset, count)));
-
-        fetchedEvents.forEach(event -> {
-            final var found = scheduleEvents
-                    .stream()
-                    .anyMatch(e -> e.getId().equals(event.getId()));
-            assertTrue(found);
-        });
-
-    }
-
-    @Test(groups = "read", dependsOnGroups = "create")
-    public void testGetAllEvents() {
-
-        final var fetchedEvents = getScheduleEventDao().getAllScheduleEvents(schedule.getId());
-
-        fetchedEvents.forEach(event -> {
-            final var found = scheduleEvents
-                    .stream()
-                    .anyMatch(e -> e.getId().equals(event.getId()));
-            assertTrue(found);
-        });
-
-    }
-
-    @Test(groups = "read", dataProvider = "allEvents", dependsOnGroups = "create")
-    public void testGetEventsById(final ScheduleEvent scheduleEvent) {
-
-        final var event = getScheduleEventDao().getScheduleEventById(
-                schedule.getId(),
-                scheduleEvent.getId()
-        );
-
-        assertEquals(event.getId(), scheduleEvent.getId());
-        assertEquals(event.getSchedule().getId(), scheduleEvent.getSchedule().getId());
-        assertEquals(event.getBegin(), scheduleEvent.getBegin());
-        assertEquals(event.getEnd(), scheduleEvent.getEnd());
-
-    }
-
-    @Test(groups = "read", dataProvider = "allEvents", dependsOnGroups = "create")
-    public void testFindEventsById(final ScheduleEvent scheduleEvent) {
-
-        final var event = getScheduleEventDao().findScheduleEventById(
-                schedule.getId(),
-                scheduleEvent.getId()
-        ).get();
-
-        assertEquals(event.getId(), scheduleEvent.getId());
-        assertEquals(event.getSchedule().getId(), scheduleEvent.getSchedule().getId());
-        assertEquals(event.getBegin(), scheduleEvent.getBegin());
-        assertEquals(event.getEnd(), scheduleEvent.getEnd());
-
-    }
-
-    @Test(groups = "update", dataProvider = "allEventIndexesAndDateBounds", dependsOnGroups = "read")
+    @Test(groups = "update", dataProvider = "allEventIndexesAndDateBounds", dependsOnGroups = "create")
     public void testUpdateEvent(final int index, final Long begin, final Long end) {
 
         final var event = scheduleEvents.get(index);
@@ -179,9 +120,69 @@ public class MongoScheduleEventDaoTest {
         assertEquals(updated.getBegin(), begin);
         assertEquals(updated.getEnd(), end);
 
+        scheduleEvents.set(index, updated);
+
     }
 
-    @Test(groups = "delete", dataProvider = "allEvents", dependsOnGroups = "update")
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetEvents() {
+        final var fetchedEvents = new PaginationWalker()
+                .toList(((offset, count) -> getScheduleEventDao().getScheduleEvents(schedule.getId(), offset, count)));
+
+        fetchedEvents.forEach(event -> {
+            final var found = scheduleEvents
+                    .stream()
+                    .anyMatch(e -> e.getId().equals(event.getId()));
+            assertTrue(found);
+        });
+
+    }
+
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetAllEvents() {
+
+        final var fetchedEvents = getScheduleEventDao().getAllScheduleEvents(schedule.getId());
+
+        fetchedEvents.forEach(event -> {
+            final var found = scheduleEvents
+                    .stream()
+                    .anyMatch(e -> e.getId().equals(event.getId()));
+            assertTrue(found);
+        });
+
+    }
+
+    @Test(groups = "fetch", dataProvider = "allEvents", dependsOnGroups = "update")
+    public void testGetEventsById(final ScheduleEvent scheduleEvent) {
+
+        final var event = getScheduleEventDao().getScheduleEventById(
+                schedule.getId(),
+                scheduleEvent.getId()
+        );
+
+        assertEquals(event.getId(), scheduleEvent.getId());
+        assertEquals(event.getSchedule().getId(), scheduleEvent.getSchedule().getId());
+        assertEquals(event.getBegin(), scheduleEvent.getBegin());
+        assertEquals(event.getEnd(), scheduleEvent.getEnd());
+
+    }
+
+    @Test(groups = "fetch", dataProvider = "allEvents", dependsOnGroups = "update")
+    public void testFindEventsById(final ScheduleEvent scheduleEvent) {
+
+        final var event = getScheduleEventDao().findScheduleEventById(
+                schedule.getId(),
+                scheduleEvent.getId()
+        ).get();
+
+        assertEquals(event.getId(), scheduleEvent.getId());
+        assertEquals(event.getSchedule().getId(), scheduleEvent.getSchedule().getId());
+        assertEquals(event.getBegin(), scheduleEvent.getBegin());
+        assertEquals(event.getEnd(), scheduleEvent.getEnd());
+
+    }
+
+    @Test(groups = "delete", dataProvider = "allEvents", dependsOnGroups = "fetch")
     public void deleteEvent(final ScheduleEvent scheduleEvent) {
         getScheduleEventDao().deleteScheduleEvent(scheduleEvent.getSchedule().getId(), scheduleEvent.getId());
     }
@@ -189,7 +190,7 @@ public class MongoScheduleEventDaoTest {
     @Test(
             groups = "delete",
             dataProvider = "allEvents",
-            dependsOnGroups = "update",
+            dependsOnGroups = "fetch",
             dependsOnMethods = "deleteEvent",
             expectedExceptions = ScheduleEventNotFoundException.class
     )
@@ -198,9 +199,9 @@ public class MongoScheduleEventDaoTest {
     }
 
     @Test(
-            groups = "postDelete",
+            groups = "delete",
             dataProvider = "allEvents",
-            dependsOnGroups = "delete",
+            dependsOnMethods = "deleteEvent",
             expectedExceptions = ScheduleEventNotFoundException.class
     )
     public void checkDeletedRecordsArentFound(final ScheduleEvent scheduleEvent) {

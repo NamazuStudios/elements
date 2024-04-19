@@ -30,9 +30,7 @@ public class ScheduleEvent {
     @ValidWithGroups(Read.class)
     private Schedule schedule;
 
-    @Valid
     @NotNull
-    @ValidWithGroups
     private List<@ValidWithGroups(Read.class) Mission> missions;
 
     public String getId() {

@@ -25,6 +25,7 @@ import java.util.Optional;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 
 public class MongoScheduleDao implements ScheduleDao {
 
@@ -63,11 +64,12 @@ public class MongoScheduleDao implements ScheduleDao {
                 .parse(scheduleNameOrId)
                 .map(objectId -> getDatastore()
                         .find(MongoSchedule.class)
+                        .filter(exists("name"))
                         .filter(eq("_id", objectId))
                 ).orElseGet(() -> getDatastore()
                         .find(MongoSchedule.class)
                         .filter(eq("name", scheduleNameOrId))
-                ).filter(exists("name"));
+                );
     }
 
     @Override
@@ -89,13 +91,11 @@ public class MongoScheduleDao implements ScheduleDao {
     public Pagination<Schedule> getSchedules(final int offset, final int count, final String search) {
 
         final var query = getBooleanQueryParser()
-                .parse(MongoSchedule.class, search)
-                .orElseGet(() -> getDatastore().find(MongoSchedule.class).filter(text(search)))
-                .filter(exists("name"));
+                .parse(getDatastore().find(MongoSchedule.class).filter(exists("name")), search)
+                .filter(getMongoDBUtils()::isIndexedQuery)
+                .orElseGet(() -> getDatastore().find(MongoSchedule.class).filter(text(search)));
 
-        return getMongoDBUtils().isScanQuery(query)
-                ? Pagination.empty()
-                : getMongoDBUtils().paginationFromQuery(
+        return getMongoDBUtils().paginationFromQuery(
                         query,
                         offset, count,
                         ms -> getDozerMapper().map(ms, Schedule.class)
@@ -136,7 +136,7 @@ public class MongoScheduleDao implements ScheduleDao {
 
         final var query = getScheduleQuery(scheduleNameOrId);
         final var result = new UpdateBuilder()
-                .with(UpdateOperators.unset("name"))
+                .with(unset("name"))
                 .update(query)
                 .execute();
 

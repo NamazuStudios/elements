@@ -27,7 +27,7 @@ public class DockerMongoTestInstance extends CliMongoTestInstance {
                         format("-p%d:27017", port),
                         format("mongo:%s", version),
                         "--replSet",
-                        "integration-test"
+                        format("integration-test-%s", uuid)
                 )
                 .redirectErrorStream(true)
                 .start();

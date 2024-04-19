@@ -32,10 +32,18 @@ public class MongoScheduleDaoTest {
                 .collect(toList());
     }
 
+    public static List<String> mockScheduleNamesUpdatedList() {
+        return mockScheduleNamesList()
+                .stream()
+                .map(name -> format("%s_updated", name))
+                .collect(toList());
+    }
+
     @DataProvider
     public static Object[][] mockScheduleNames() {
         return mockScheduleNamesList()
-                .stream().map(name -> new Object[]{name})
+                .stream()
+                .map(name -> new Object[]{name})
                 .toArray(Object[][]::new);
     }
 
@@ -80,91 +88,9 @@ public class MongoScheduleDaoTest {
     }
 
     @Test(
-            groups = "read",
-            dataProvider = "mockScheduleNames",
-            dependsOnGroups = "create"
-    )
-    public void getScheduleByNameAndId(final String name) {
-
-        final var byName = getScheduleDao().getScheduleByNameOrId(name);
-        assertNotNull(byName);
-
-        final var byId = getScheduleDao().getScheduleByNameOrId(byName.getId());
-        assertNotNull(byId);
-
-    }
-
-    @Test(
-            groups = "read",
-            dataProvider = "mockScheduleNames",
-            dependsOnGroups = "create"
-    )
-    public void findScheduleByNameAndId(final String name) {
-
-        final var byName = getScheduleDao().findScheduleByNameOrId(name);
-        assertTrue(byName.isPresent());
-
-        final var byId = getScheduleDao().findScheduleByNameOrId(byName.get().getId());
-        assertTrue(byId.isPresent());
-
-    }
-
-    @Test(
-            groups = "read",
-            dependsOnGroups = "create"
-    )
-    public void listSchedules() {
-
-        final var schedulesById = mockScheduleNamesList()
-                .stream()
-                .map(getScheduleDao()::getScheduleByNameOrId)
-                .collect(toMap(Schedule::getId, Schedule::getName));
-
-        final var allSchedules = new PaginationWalker().toList(getScheduleDao()::getSchedules);
-        allSchedules.forEach(s -> assertTrue(schedulesById.containsKey(s.getId())));
-
-    }
-
-    @Test(
-            groups = "read",
-            dataProvider = "mockScheduleNames",
-            dependsOnGroups = "create"
-    )
-    public void searchSchedulesText(final String name) {
-
-        final var fetched = getScheduleDao().getScheduleByNameOrId(name);
-
-        final var searched = getScheduleDao()
-                .getSchedules(0, 1, name)
-                .getObjects()
-                .get(0);
-
-        assertEquals(searched.getId(), fetched.getId());
-
-    }
-
-    @Test(
-            groups = "read",
-            dataProvider = "mockScheduleNames",
-            dependsOnGroups = "create"
-    )
-    public void searchSchedulesQuery(final String name) {
-
-        final var fetched = getScheduleDao().getScheduleByNameOrId(name);
-
-        final var searched = getScheduleDao()
-                .getSchedules(0, 1, format("name:%s", name))
-                .getObjects()
-                .get(0);
-
-        assertEquals(searched.getId(), fetched.getId());
-
-    }
-
-    @Test(
             groups = "update",
             dataProvider = "mockScheduleNamesUpdated",
-            dependsOnGroups = "read"
+            dependsOnGroups = "create"
     )
     public void updateSchedule(final String original, final String update) {
 
@@ -182,11 +108,92 @@ public class MongoScheduleDaoTest {
 
     }
 
+    @Test(
+            groups = "fetch",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update"
+    )
+    public void getScheduleByNameAndId(final String name, final String update) {
+
+        final var byName = getScheduleDao().getScheduleByNameOrId(update);
+        assertNotNull(byName);
+
+        final var byId = getScheduleDao().getScheduleByNameOrId(byName.getId());
+        assertNotNull(byId);
+
+    }
+
+    @Test(
+            groups = "fetch",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update"
+    )
+    public void findScheduleByNameAndId(final String name, final String updated) {
+
+        final var byName = getScheduleDao().findScheduleByNameOrId(updated);
+        assertTrue(byName.isPresent());
+
+        final var byId = getScheduleDao().findScheduleByNameOrId(byName.get().getId());
+        assertTrue(byId.isPresent());
+
+    }
+
+    @Test(
+            groups = "fetch",
+            dependsOnGroups = "update"
+    )
+    public void listSchedules() {
+
+        final var schedulesById = mockScheduleNamesUpdatedList()
+                .stream()
+                .map(getScheduleDao()::getScheduleByNameOrId)
+                .collect(toMap(Schedule::getId, Schedule::getName));
+
+        final var allSchedules = new PaginationWalker().toList(getScheduleDao()::getSchedules);
+        allSchedules.forEach(s -> assertTrue(schedulesById.containsKey(s.getId())));
+
+    }
+
+    @Test(
+            groups = "fetch",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update"
+    )
+    public void searchSchedulesText(final String name, final String updated) {
+
+        final var fetched = getScheduleDao().getScheduleByNameOrId(updated);
+
+        final var searched = getScheduleDao()
+                .getSchedules(0, 1, name)
+                .getObjects()
+                .get(0);
+
+        assertEquals(searched.getId(), fetched.getId());
+
+    }
+
+    @Test(
+            groups = "fetch",
+            dataProvider = "mockScheduleNamesUpdated",
+            dependsOnGroups = "update"
+    )
+    public void searchSchedulesQuery(final String name, final String updated) {
+
+        final var fetched = getScheduleDao().getScheduleByNameOrId(updated);
+
+        final var searched = getScheduleDao()
+                .getSchedules(0, 1, format("name:%s", updated))
+                .getObjects()
+                .get(0);
+
+        assertEquals(searched.getId(), fetched.getId());
+
+    }
 
     @Test(
             groups = "delete",
             dataProvider = "mockScheduleNamesUpdated",
-            dependsOnGroups = "update"
+            dependsOnGroups = "fetch"
     )
     public void deleteScheduleByName(final String original, final String update) {
 
@@ -200,7 +207,7 @@ public class MongoScheduleDaoTest {
     @Test(
             groups = "delete",
             dataProvider = "mockScheduleNamesUpdated",
-            dependsOnGroups = "update",
+            dependsOnGroups = "fetch",
             dependsOnMethods = "deleteScheduleByName",
             expectedExceptions = ScheduleNotFoundException.class
     )
@@ -211,7 +218,7 @@ public class MongoScheduleDaoTest {
     @Test(
             groups = "delete",
             dataProvider = "mockScheduleNamesUpdated",
-            dependsOnGroups = "update"
+            dependsOnGroups = "fetch"
     )
     public void testDeletedAreAbsentFromQueries(final String original, final String update) {
 

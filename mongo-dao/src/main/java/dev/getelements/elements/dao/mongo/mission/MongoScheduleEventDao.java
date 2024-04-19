@@ -54,8 +54,6 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
     public ScheduleEvent createScheduleEvent(final ScheduleEvent scheduleEvent) {
 
         getValidationHelper().validateModel(scheduleEvent, Insert.class);
-        getValidationHelper().validateModel(scheduleEvent.getSchedule(), Read.class);
-        scheduleEvent.getMissions().forEach(m -> getValidationHelper().validateModel(m, Read.class));
 
         final var mongoSchedule = getMongoScheduleDao()
                 .findMongoScheduleByNameOrId(scheduleEvent.getSchedule().getId())

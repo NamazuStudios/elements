@@ -114,38 +114,58 @@ public class Progress implements Serializable {
         this.sequence = sequence;
     }
 
+    public boolean isManagedBySchedule() {
+        return managedBySchedule;
+    }
 
+    public void setManagedBySchedule(boolean managedBySchedule) {
+        this.managedBySchedule = managedBySchedule;
+    }
+
+    public List<Schedule> getSchedules() {
+        return schedules;
+    }
+
+    public void setSchedules(List<Schedule> schedules) {
+        this.schedules = schedules;
+    }
+
+    public List<ScheduleEvent> getScheduleEvents() {
+        return scheduleEvents;
+    }
+
+    public void setScheduleEvents(List<ScheduleEvent> scheduleEvents) {
+        this.scheduleEvents = scheduleEvents;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Progress progress = (Progress) o;
-        return Objects.equals(getId(), progress.getId()) &&
-                Objects.equals(getProfile(), progress.getProfile()) &&
-                Objects.equals(getCurrentStep(), progress.getCurrentStep()) &&
-                Objects.equals(getRemaining(), progress.getRemaining()) &&
-                Objects.equals(getMission(), progress.getMission()) &&
-                Objects.equals(getRewardIssuances(), progress.getRewardIssuances()) &&
-                Objects.equals(getSequence(), progress.getSequence());
+        return isManagedBySchedule() == progress.isManagedBySchedule() && Objects.equals(getId(), progress.getId()) && Objects.equals(getProfile(), progress.getProfile()) && Objects.equals(getCurrentStep(), progress.getCurrentStep()) && Objects.equals(getRemaining(), progress.getRemaining()) && Objects.equals(getMission(), progress.getMission()) && Objects.equals(getRewardIssuances(), progress.getRewardIssuances()) && Objects.equals(getSequence(), progress.getSequence()) && Objects.equals(getSchedules(), progress.getSchedules()) && Objects.equals(getScheduleEvents(), progress.getScheduleEvents());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(),
-                getRewardIssuances(), getSequence());
+        return Objects.hash(getId(), getProfile(), getCurrentStep(), getRemaining(), getMission(), getRewardIssuances(), getSequence(), isManagedBySchedule(), getSchedules(), getScheduleEvents());
     }
 
     @Override
     public String toString() {
-        return "Progress{" +
-                "id='" + id + '\'' +
-                ", profile=" + profile +
-                ", currentStep=" + currentStep +
-                ", remaining=" + remaining +
-                ", mission=" + mission +
-                ", rewardIssuances=" + rewardIssuances +
-                ", sequence=" + sequence +
-                '}';
+        final StringBuilder sb = new StringBuilder("Progress{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", profile=").append(profile);
+        sb.append(", currentStep=").append(currentStep);
+        sb.append(", remaining=").append(remaining);
+        sb.append(", mission=").append(mission);
+        sb.append(", rewardIssuances=").append(rewardIssuances);
+        sb.append(", sequence=").append(sequence);
+        sb.append(", managedBySchedule=").append(managedBySchedule);
+        sb.append(", schedules=").append(schedules);
+        sb.append(", scheduleEvents=").append(scheduleEvents);
+        sb.append('}');
+        return sb.toString();
     }
+
 }
