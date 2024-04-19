@@ -11,6 +11,7 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -149,15 +150,17 @@ public class MongoScheduleDaoTest {
                 .map(getScheduleDao()::getScheduleByNameOrId)
                 .collect(toMap(Schedule::getId, Schedule::getName));
 
-        final var allSchedules = new PaginationWalker().toList(getScheduleDao()::getSchedules);
-        allSchedules.forEach(s -> assertTrue(
-                schedulesById.containsKey(s.getId()),
-                format("%s not in [%s](%d)",
-                        s.getId(),
-                        String.join(",", schedulesById.keySet()),
-                        schedulesById.size()
-                ))
-        );
+        final var allScheduleIds = new PaginationWalker().aggregate(
+                new HashSet<String>(),
+                getScheduleDao()::getSchedules,
+                (ids, schedules) -> {
+                    schedules.stream()
+                            .map(Schedule::getId)
+                            .forEach(ids::add);
+                    return ids;
+                });
+
+        assertTrue(allScheduleIds.containsAll(schedulesById.keySet()));
 
     }
 
