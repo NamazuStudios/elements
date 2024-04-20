@@ -19,13 +19,6 @@ public interface Transaction extends AutoCloseable {
     <DaoT> DaoT getDao(Class<DaoT> daoT);
 
     /**
-     * Returns true if this transaction has been committed.
-     *
-     * @return true if committed, flase
-     */
-    boolean isCommitted();
-
-    /**
      * Commits the transaction.
      */
     void commit();
@@ -41,6 +34,13 @@ public interface Transaction extends AutoCloseable {
     void close();
 
     /**
+     * Returns true if this transaction is still active and open.
+     *
+     * @return true if active, false if it has been committed or rolled back.
+     */
+    boolean isActive();
+
+    /**
      * Performs the operation on this {@link Transaction}, processing the result and returning the result of the
      * operation.
      *
@@ -53,9 +53,6 @@ public interface Transaction extends AutoCloseable {
             final var result = op.apply(this);
             commit();
             return result;
-        } catch (Exception ex) {
-            rollback();
-            throw ex;
         }
     }
 

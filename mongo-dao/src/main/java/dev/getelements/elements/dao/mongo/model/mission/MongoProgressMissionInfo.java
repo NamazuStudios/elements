@@ -1,8 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Indexed;
-import dev.morphia.annotations.Property;
+import dev.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Map;
@@ -22,8 +20,10 @@ public class MongoProgressMissionInfo {
     @Property
     private String description;
 
+    @Property
     private List<MongoStep> steps;
 
+    @Property
     private MongoStep finalRepeatStep;
 
     @Indexed

@@ -6,14 +6,11 @@ import dev.getelements.elements.dao.ProgressDao;
 import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
-import dev.getelements.elements.dao.mongo.model.mission.MongoProgress;
-import dev.getelements.elements.dao.mongo.model.mission.MongoProgressId;
-import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
+import dev.getelements.elements.dao.mongo.model.mission.*;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.InvalidDataException;
-import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
+import dev.getelements.elements.exception.mission.ProgressNotFoundException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
@@ -37,6 +34,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -156,7 +154,24 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Progress getProgressForProfileAndMission(final Profile profile, final String missionNameOrId) {
+    public Optional<Progress> findProgress(final String identifier) {
+
+        if (isEmpty(nullToEmpty(identifier).trim())) {
+            throw new ProgressNotFoundException("Unable to find progress with an id " + identifier);
+        }
+
+        final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(identifier);
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+
+        query.filter(eq("_id", mongoProgressId));
+
+        final MongoProgress mongoProgress = query.first();
+        return Optional.ofNullable(mongoProgress).map(p -> getDozerMapper().map(p, Progress.class));
+
+    }
+
+    @Override
+    public Optional<Progress> findProgressForProfileAndMission(final Profile profile, final String missionNameOrId) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
         final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(missionNameOrId);
@@ -166,34 +181,7 @@ public class MongoProgressDao implements ProgressDao {
         query.filter(eq("_id.missionId", mongoMission.getObjectId()));
 
         final MongoProgress mongoProgress = query.first();
-
-        if (mongoProgress == null) {
-            throw new NotFoundException("Progress not found.");
-        }
-
-        return getDozerMapper().map(mongoProgress, Progress.class);
-
-    }
-
-    @Override
-    public Progress getProgress(final String identifier) {
-
-        if (isEmpty(nullToEmpty(identifier).trim())) {
-            throw new NotFoundException("Unable to find progress with an id " + identifier);
-        }
-
-        final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(identifier);
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
-
-        query.filter(eq("_id", mongoProgressId));
-
-        final MongoProgress progress = query.first();
-
-        if (progress == null) {
-            throw new NotFoundException("Unable to find item with an id or name of " + identifier);
-        }
-
-        return getDozerMapper().map(progress, Progress.class);
+        return Optional.ofNullable(mongoProgress).map(p -> getDozerMapper().map(p, Progress.class));
 
     }
 
@@ -214,7 +202,7 @@ public class MongoProgressDao implements ProgressDao {
             ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (mongoProgress == null) {
-            throw new NotFoundException("Progress with id or name of " + progress.getId() + " does not exist");
+            throw new ProgressNotFoundException("Progress with id or name of " + progress.getId() + " does not exist");
         }
 
         return getDozerMapper().map(mongoProgress, Progress.class);
@@ -237,6 +225,7 @@ public class MongoProgressDao implements ProgressDao {
 
                 final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
                 query.filter(eq("_id", mongoProgressId));
+
                 final MongoProgress mongoProgress = query.first();
                 if (mongoProgress != null) return mongoProgress;
 
@@ -283,7 +272,7 @@ public class MongoProgressDao implements ProgressDao {
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
-            throw new NotFoundException("Progress not found: " + progressId);
+            throw new ProgressNotFoundException("Progress not found: " + progressId);
         }
     }
 
@@ -311,7 +300,7 @@ public class MongoProgressDao implements ProgressDao {
 
         final var mongoProgress = query.first();
 
-        if (mongoProgress == null) throw new NotFoundException("Progress with id not found: " + progress.getId());
+        if (mongoProgress == null) throw new ProgressNotFoundException("Progress with id not found: " + progress.getId());
         query.filter(eq("version", mongoProgress.getVersion()));
 
         final var result = progress.getRemaining() - actionsPerformed > 0

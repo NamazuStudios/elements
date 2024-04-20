@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 /**
@@ -22,13 +23,17 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
     public static final String DATABASE_NAME = "dev.getelements.elements.mongo.database.name";
 
     @Inject
+    @Named(MongoDatastoreProvider.DATABASE_NAME)
+    private Provider<String> databaseNameProvider;
+
+    @Inject
     private Provider<MongoClient> mongoProvider;
 
     @Override
     public Datastore get() {
 
         final var client = mongoProvider.get();
-        final var datastore = Morphia.createDatastore(client);
+        final var datastore = Morphia.createDatastore(client, databaseNameProvider.get());
 
         new Reflections("dev.getelements.elements.dao.mongo")
             .getTypesAnnotatedWith(Entity.class)

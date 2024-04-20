@@ -18,7 +18,7 @@ public class MorphiaGuiceTransaction implements Transaction {
     }
 
     @Override
-    public boolean isCommitted() {
+    public boolean isActive() {
         return getMorphiaSession().hasActiveTransaction();
     }
 

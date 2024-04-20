@@ -159,14 +159,20 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(Reward.class, MongoReward.class)
                     .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
+            mapping(MongoMission.class, MongoProgressMissionInfo.class)
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
             mapping(ProgressMissionInfo.class, MongoProgressMissionInfo.class)
                     .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Step.class, MongoStep.class)
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(MongoItem.class, MongoItem.class)
+                    .fields("objectId","objectId", customConverter(IdentityConverter.class));
 
             mapping(ProductBundle.class, MongoProductBundle.class)
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Schedule.class, MongoSchedule.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));

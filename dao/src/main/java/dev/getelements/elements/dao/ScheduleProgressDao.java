@@ -34,7 +34,7 @@ public interface ScheduleProgressDao {
      * @param events
      * @return
      */
-    long createProgressesForMissionsIn(String scheduleNameOrId, String profileId, List<ScheduleEvent> events);
+    List<Progress> createProgressesForMissionsIn(String scheduleNameOrId, String profileId, List<ScheduleEvent> events);
 
     /**
      * Deletes {@link Progress} instances for {@link Mission}s not in the supplied list. If no other {@link Schedule}
