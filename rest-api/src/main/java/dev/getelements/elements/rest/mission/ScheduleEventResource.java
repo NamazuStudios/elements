@@ -93,7 +93,7 @@ public class ScheduleEventResource {
     public ScheduleEvent updateScheduleEvent(
             @PathParam("scheduleNameOrId")
             final String scheduleNameOrId,
-            @PathParam("scheduleNameOrId")
+            @PathParam("scheduleEventId")
             final String scheduleEventId,
             final UpdateScheduleEventRequest updateScheduleEventRequest) {
         return scheduleService.updateScheduleEvent(scheduleNameOrId, scheduleEventId, updateScheduleEventRequest);
@@ -106,7 +106,7 @@ public class ScheduleEventResource {
     public void deleteScheduleEvent(
             @PathParam("scheduleNameOrId")
             final String scheduleNameOrId,
-            @PathParam("scheduleNameOrId")
+            @PathParam("scheduleEventId")
             final String scheduleEventId) {
         scheduleService.deleteScheduleEvent(scheduleNameOrId, scheduleEventId);
     }

@@ -30,6 +30,7 @@ public class SuperUserScheduleService implements ScheduleService {
         final var schedule = new Schedule();
         schedule.setName(createScheduleRequest.getName());
         schedule.setDescription(createScheduleRequest.getDescription());
+        schedule.setDisplayName(createScheduleRequest.getDisplayName());
 
         return getScheduleDao().create(schedule);
 

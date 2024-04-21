@@ -15,6 +15,9 @@ public class UpdateScheduleRequest {
     private String name;
 
     @NotNull
+    private String displayName;
+
+    @NotNull
     private String description;
 
     public String getName() {
@@ -23,6 +26,14 @@ public class UpdateScheduleRequest {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getDescription() {
@@ -37,20 +48,23 @@ public class UpdateScheduleRequest {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UpdateScheduleRequest that = (UpdateScheduleRequest) o;
-        return Objects.equals(getName(), that.getName()) && Objects.equals(getDescription(), that.getDescription());
+        CreateScheduleRequest that = (CreateScheduleRequest) o;
+        return Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getDescription(), that.getDescription()) &&
+                Objects.equals(getDisplayName(), that.getDisplayName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDescription());
+        return Objects.hash(getName(), getDescription(), getDisplayName());
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("UpdateScheduleRequest{");
+        final StringBuilder sb = new StringBuilder("CreateScheduleRequest{");
         sb.append("name='").append(name).append('\'');
         sb.append(", description='").append(description).append('\'');
+        sb.append(", displayName='").append(displayName).append('\'');
         sb.append('}');
         return sb.toString();
     }
