@@ -1,32 +1,30 @@
 package dev.getelements.elements.dao.mongo.mission;
 
-import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.ScheduleProgressDao;
+import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.mission.*;
 import dev.getelements.elements.exception.InvalidDataException;
+import dev.getelements.elements.exception.TooBusyException;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.ValidationGroups.Read;
 import dev.getelements.elements.model.mission.Progress;
 import dev.getelements.elements.model.mission.ScheduleEvent;
-import dev.getelements.elements.model.mission.Step;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.filters.Filters.elemMatch;
+import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -52,6 +50,8 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
     private MongoScheduleDao mongoScheduleDao;
 
     private MongoScheduleEventDao mongoScheduleEventDao;
+
+    private MongoConcurrentUtils mongoConcurrentUtils;
 
     @Override
     public Pagination<Progress> getProgresses(
@@ -90,45 +90,89 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
                 .map(ev -> getMongoScheduleEventDao().findMongoScheduleEventById(scheduleNameOrId, ev.getId()))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .flatMap(mongoEvent -> mongoEvent.getMissions().stream().map(mongoMission -> {
-
-                    final var mongoProgressId = new MongoProgressId(mongoProfile, mongoMission);
-
-                    final var query = getDatastore()
-                            .find(MongoProgress.class)
-                            .filter(eq("_id", mongoProgressId));
-
-                    final var steps = mongoMission.getSteps();
-                    final var finalRepeatStep = mongoMission.getFinalRepeatStep();
-
-                    final MongoStep first;
-
-                    if (steps == null || steps.isEmpty()) {
-                        if (finalRepeatStep == null) throw new InvalidDataException("one step must be defined");
-                        first = finalRepeatStep;
-                    } else {
-                        first = steps.get(0);
-                    }
-
-                    final var mongoProgressMissionInfo = getMapper().map(mongoMission, MongoProgressMissionInfo.class);
-
-                    return new UpdateBuilder().with(
-                            set("_id", mongoProgressId),
-                            setOnInsert(Map.of(
-                                    "remaining", first.getCount(),
-                                    "rewardIssuances", List.of(),
-                                    "managedBySchedule", true,
-                                    "version", randomUUID().toString(),
-                                    "profile", mongoProfile,
-                                    "mission", mongoProgressMissionInfo
-                            )),
-                            addToSet("schedules", mongoEvent.getSchedule()),
-                            addToSet("scheduleEvents", mongoEvent)
-                    ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER));
-
-                }))
+                .flatMap(mongoEvent -> mongoEvent
+                        .getMissions()
+                        .stream()
+                        .map(mongoMission -> doCreateProgress(mongoProfile, mongoEvent, mongoMission)))
                 .map(mp -> getDozerMapper().map(mp, Progress.class))
                 .collect(toList());
+
+    }
+
+    private MongoProgress doCreateProgress(final MongoProfile mongoProfile,
+                                           final MongoScheduleEvent mongoScheduleEvent,
+                                           final MongoMission mongoMission) {
+
+        final var mongoProgressId = new MongoProgressId(mongoProfile, mongoMission);
+
+        final var query = getDatastore().find(MongoProgress.class);
+        query.filter(eq("_id", mongoProgressId));
+
+        final Consumer<MongoProgress> doPersist;
+
+        var mongoProgress = query.first();
+
+        if (mongoProgress == null) {
+            mongoProgress = new MongoProgress();
+            doPersist = getDatastore()::insert;
+
+            final var steps = mongoMission.getSteps();
+            final var finalRepeatStep = mongoMission.getFinalRepeatStep();
+
+            final MongoStep first;
+
+            if (steps == null || steps.isEmpty()) {
+                if (finalRepeatStep == null) throw new InvalidDataException("one step must be defined");
+                first = finalRepeatStep;
+            } else {
+                first = steps.get(0);
+            }
+
+            final var mongoProgressMissionInfo = getMapper().map(mongoMission, MongoProgressMissionInfo.class);
+
+            mongoProgress.setRemaining(first.getCount());
+            mongoProgress.setRewardIssuances(List.of());
+            mongoProgress.setManagedBySchedule(true);
+            mongoProgress.setVersion(randomUUID().toString());
+            mongoProgress.setProfile(mongoProfile);
+            mongoProgress.setMission(mongoProgressMissionInfo);
+
+        } else {
+            doPersist = getDatastore()::save;
+        }
+
+        if (mongoProgress.getSchedules() == null) {
+            mongoProgress.setSchedules(new ArrayList<>());
+        }
+
+        if (mongoProgress.getScheduleEvents() == null) {
+            mongoProgress.setScheduleEvents(new ArrayList<>());
+        }
+
+        final var mongoSchedule = mongoScheduleEvent.getSchedule();
+
+        final var addSchedule = mongoProgress
+                .getSchedules()
+                .stream()
+                .map(MongoSchedule::getObjectId)
+                .noneMatch(id -> Objects.equals(id, mongoSchedule.getObjectId()));
+
+        final var addScheduleEvent = mongoProgress
+                .getScheduleEvents()
+                .stream()
+                .map(MongoScheduleEvent::getObjectId)
+                .noneMatch(id -> Objects.equals(id, mongoScheduleEvent.getObjectId()));
+
+        if (addSchedule) {
+            mongoProgress.getSchedules().add(mongoSchedule);
+        }
+
+        if (addScheduleEvent) {
+            mongoProgress.getScheduleEvents().add(mongoScheduleEvent);
+        }
+
+        doPersist.accept(mongoProgress);
+        return mongoProgress;
 
     }
 
@@ -284,6 +328,15 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
     @Inject
     public void setMongoScheduleEventDao(MongoScheduleEventDao mongoScheduleEventDao) {
         this.mongoScheduleEventDao = mongoScheduleEventDao;
+    }
+
+    public MongoConcurrentUtils getMongoConcurrentUtils() {
+        return mongoConcurrentUtils;
+    }
+
+    @Inject
+    public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
+        this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
 }
