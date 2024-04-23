@@ -16,7 +16,7 @@ import java.util.Objects;
 
 import static java.lang.System.arraycopy;
 
-@Entity
+@Entity(useDiscriminator = false)
 public class MongoProgressId implements HexableId {
 
     private static final int PROFILE_ID_INDEX = 0;

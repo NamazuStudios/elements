@@ -28,8 +28,12 @@ public class MongoProgress {
     @Reference
     private MongoProfile profile;
 
-    @Property
-    private MongoProgressMissionInfo mission;
+    @Indexed
+    @Reference
+    private MongoMission mission;
+
+    @Indexed
+    private List<String> missionTags;
 
     @Property
     private int sequence;
@@ -82,12 +86,13 @@ public class MongoProgress {
 
     public MongoStep getStepForSequence(final int sequence) {
 
-        final MongoProgressMissionInfo mission = getMission();
-        final List<MongoStep> mongoSteps = mission.getSteps();
+        final var mission = getMission();
+        final var mongoSteps = mission == null ? null : mission.getSteps();
+        final var finalRepeatStep = mission == null ? null : mission.getFinalRepeatStep();
 
-        return (mongoSteps == null || sequence >= mongoSteps.size()) ?
-                mission.getFinalRepeatStep() :
-                mongoSteps.get(sequence);
+        return (mongoSteps == null || sequence >= mongoSteps.size())
+                ? finalRepeatStep
+                : mongoSteps.get(sequence);
 
     }
 
@@ -99,12 +104,20 @@ public class MongoProgress {
         this.remaining = remaining;
     }
 
-    public MongoProgressMissionInfo getMission() {
+    public MongoMission getMission() {
         return mission;
     }
 
-    public void setMission(MongoProgressMissionInfo mission) {
+    public void setMission(MongoMission mission) {
         this.mission = mission;
+    }
+
+    public List<String> getMissionTags() {
+        return missionTags;
+    }
+
+    public void setMissionTags(List<String> missionTags) {
+        this.missionTags = missionTags;
     }
 
     public int getSequence() {

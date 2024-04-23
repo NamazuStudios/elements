@@ -30,12 +30,16 @@ public class MongoMission {
     @Property
     private String description;
 
+    @Property
     private List<String> tags;
 
+    @Property
     private List<MongoStep> steps;
 
+    @Property
     private MongoStep finalRepeatStep;
 
+    @Property
     private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {

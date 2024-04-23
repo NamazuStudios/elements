@@ -21,8 +21,11 @@ import dev.getelements.elements.model.mission.Mission;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.updates.UpdateOperator;
+import dev.morphia.query.updates.UpdateOperators;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -300,9 +303,11 @@ public class MongoMissionDao implements MissionDao {
     @Override
     public void deleteMission(final String missionNameOrID) {
 
-        final var deleteResult = getQueryForNameOrId(missionNameOrID).delete();
+        final var modifiedCount = getQueryForNameOrId(missionNameOrID)
+                .update(new UpdateOptions(), unset("name"))
+                .getModifiedCount();
 
-        if (deleteResult.getDeletedCount() == 0) {
+        if (modifiedCount == 0) {
             throw new NotFoundException("Mission not found: " + missionNameOrID);
         }
 

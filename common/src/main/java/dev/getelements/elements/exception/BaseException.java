@@ -38,10 +38,10 @@ public abstract class BaseException extends RuntimeException {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
-    @Override
-    public synchronized Throwable fillInStackTrace() {
-        return getTracer(getClass()).apply(this);
-    }
+//    @Override
+//    public synchronized Throwable fillInStackTrace() {
+//        return getTracer(getClass()).apply(this);
+//    }
 
     /**
      * Gets the error code.

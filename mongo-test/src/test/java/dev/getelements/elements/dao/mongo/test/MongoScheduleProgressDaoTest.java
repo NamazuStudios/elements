@@ -160,6 +160,27 @@ public class MongoScheduleProgressDaoTest {
             );
         });
 
+        progresses.forEach(p -> getProgressDao().getProgress(p.getId()));
+        
+        scheduleEvent.getMissions().forEach(mission -> {
+            final var progress = getProgressDao().getProgressForProfileAndMission(profile, mission.getId());
+            assertEquals(progress.getMission().getId(), mission.getId());
+        });
+
+    }
+
+    @Test(dependsOnMethods = "activateSingleEvent", dataProvider = "profilesAndScheduleEvents")
+    public void activateSingleEventAgainDoesNotDuplicate(final Profile profile, final ScheduleEvent scheduleEvent) {
+
+        final var progresses = getTransactionProvider().get().performAndClose(txn -> {
+            final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
+            return scheduleProgressDao.createProgressesForMissionsIn(
+                    schedule.getId(),
+                    profile.getId(),
+                    List.of(scheduleEvent)
+            );
+        });
+
         scheduleEvent.getMissions().forEach(mission -> {
             final var progress = getProgressDao().getProgressForProfileAndMission(profile, mission.getId());
             assertEquals(progress.getMission().getId(), mission.getId());
