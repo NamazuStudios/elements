@@ -22,6 +22,7 @@ import java.util.stream.IntStream;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoScheduleProgressDaoTest {
@@ -160,32 +161,46 @@ public class MongoScheduleProgressDaoTest {
             );
         });
 
-        progresses.forEach(p -> getProgressDao().getProgress(p.getId()));
-        
+        progresses.forEach(progress -> getProgressDao().getProgress(progress.getId()));
+
         scheduleEvent.getMissions().forEach(mission -> {
             final var progress = getProgressDao().getProgressForProfileAndMission(profile, mission.getId());
+
             assertEquals(progress.getMission().getId(), mission.getId());
+            assertNotNull(progress.getId());
+            assertEquals(progress.getProfile(), profile);
+            assertEquals(progress.getCurrentStep(), mission.getSteps().get(0));
+            assertEquals(progress.getRemaining(), progress.getCurrentStep().getCount());
+            assertEquals(progress.getRemaining(), mission.getSteps().get(0).getCount());
+            Assert.assertTrue(progress.getRewardIssuances().isEmpty());
+
+            assertNotNull(progress.getMission());
+            assertEquals(progress.getMission().getId(), mission.getId());
+            assertEquals(progress.getMission().getName(), mission.getName());
+            assertEquals(progress.getMission().getDisplayName(), mission.getDisplayName());
+            assertEquals(progress.getMission().getDescription(), mission.getDescription());
+            assertEquals(progress.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
+            assertEquals(progress.getMission().getSteps(), mission.getSteps());
+            assertEquals(progress.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
+            assertEquals(progress.getMission().getTags(), mission.getTags());
+
+            assertEquals(progress.getSchedules().size(), 1);
+            assertEquals(progress.getScheduleEvents().size(), 1);
+
+            final var s = progress.getSchedules().get(0);
+            final var se = progress.getScheduleEvents().get(0);
+
+            assertEquals(s.getId(), schedule.getId());
+            assertEquals(se.getId(), scheduleEvent.getId());
+
         });
 
     }
 
     @Test(dependsOnMethods = "activateSingleEvent", dataProvider = "profilesAndScheduleEvents")
     public void activateSingleEventAgainDoesNotDuplicate(final Profile profile, final ScheduleEvent scheduleEvent) {
-
-        final var progresses = getTransactionProvider().get().performAndClose(txn -> {
-            final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
-            return scheduleProgressDao.createProgressesForMissionsIn(
-                    schedule.getId(),
-                    profile.getId(),
-                    List.of(scheduleEvent)
-            );
-        });
-
-        scheduleEvent.getMissions().forEach(mission -> {
-            final var progress = getProgressDao().getProgressForProfileAndMission(profile, mission.getId());
-            assertEquals(progress.getMission().getId(), mission.getId());
-        });
-
+        // This can repeat the previous test just to ensure that the list does not grow indefinitely.
+        activateSingleEvent(profile, scheduleEvent);
     }
 
     public ProgressDao getProgressDao() {
