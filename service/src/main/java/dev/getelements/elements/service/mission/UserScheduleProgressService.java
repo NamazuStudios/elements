@@ -38,10 +38,10 @@ public class UserScheduleProgressService implements ScheduleProgressService {
     private void syncProgresses(final Transaction txn,
                                 final String profileId,
                                 final String scheduleNameOrId) {
-        final var scheuldeEventDao = txn.getDao(ScheduleEventDao.class);
+        final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
         final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
 
-        final var events = scheuldeEventDao.getAllScheduleEvents(scheduleNameOrId);
+        final var events = scheduleEventDao.getAllScheduleEvents(scheduleNameOrId);
         scheduleProgressDao.assignProgressesForMissionsIn(scheduleNameOrId, profileId, events);
         scheduleProgressDao.unassignProgressesForMissionsNotIn(scheduleNameOrId, profileId, events);
 
@@ -73,4 +73,5 @@ public class UserScheduleProgressService implements ScheduleProgressService {
     public void setProfileSupplier(Supplier<Profile> profileSupplier) {
         this.profileSupplier = profileSupplier;
     }
+
 }

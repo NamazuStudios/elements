@@ -14,6 +14,9 @@ import dev.getelements.elements.service.googleplayiap.GooglePlayIapReceiptServic
 import dev.getelements.elements.service.inventory.DistinctInventoryItemService;
 import dev.getelements.elements.service.inventory.SimpleInventoryItemService;
 import dev.getelements.elements.service.mission.MissionService;
+import dev.getelements.elements.service.mission.ScheduleEventService;
+import dev.getelements.elements.service.mission.ScheduleProgressService;
+import dev.getelements.elements.service.mission.ScheduleService;
 import dev.getelements.elements.service.progress.ProgressService;
 import dev.getelements.elements.service.rewardissuance.RewardIssuanceService;
 import dev.getelements.elements.service.schema.MetadataSpecService;
@@ -121,6 +124,9 @@ public class ServicesModule extends PrivateModule {
         expose(LargeObjectService.class);
         expose(InviteService.class);
         expose(IndexService.class);
+        expose(ScheduleService.class);
+        expose(ScheduleEventService.class);
+        expose(ScheduleProgressService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -167,6 +173,9 @@ public class ServicesModule extends PrivateModule {
         expose(NearSmartContractInvocationService.class).annotatedWith(Unscoped.class);
         expose(LargeObjectService.class).annotatedWith(Unscoped.class);
         expose(InviteService.class).annotatedWith(Unscoped.class);
+        expose(ScheduleService.class).annotatedWith(Unscoped.class);
+        expose(ScheduleEventService.class).annotatedWith(Unscoped.class);
+        expose(ScheduleProgressService.class);
 
     }
 
