@@ -1,9 +1,11 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.dao.*;
+import dev.getelements.elements.dao.mongo.mission.MongoScheduleProgressDao;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.goods.ItemCategory;
 import dev.getelements.elements.model.mission.Mission;
+import dev.getelements.elements.model.mission.Progress;
 import dev.getelements.elements.model.mission.Schedule;
 import dev.getelements.elements.model.mission.ScheduleEvent;
 import dev.getelements.elements.model.profile.Profile;
@@ -17,17 +19,21 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoScheduleProgressDaoTest {
 
-    private final int TEST_USER_COUNT = 10;
+    private final int TEST_USER_COUNT = 5;
+
+    private final int TEST_EVENT_COUNT = 5;
+
+    private final int TEST_MISSION_COUNT = 5;
 
     private ProgressDao progressDao;
 
@@ -93,12 +99,12 @@ public class MongoScheduleProgressDaoTest {
 
         final var item = getItemTestFactory().createTestItem(ItemCategory.FUNGIBLE, true);
 
-        scheduleEvents = IntStream.range(0, 5)
+        scheduleEvents = IntStream.range(0, TEST_EVENT_COUNT)
                 .mapToObj(eventIdx -> {
 
                     final var event = new ScheduleEvent();
 
-                    final var missions = IntStream.range(0, 5)
+                    final var missions = IntStream.range(0, TEST_MISSION_COUNT)
                             .mapToObj(missionIdx -> getMissionTestFactory().createTestFiniteMission(
                                     "sp_" + missionIdx,
                                     item)
@@ -123,6 +129,13 @@ public class MongoScheduleProgressDaoTest {
     }
 
     @DataProvider
+    public Object[][] profiles() {
+        return profiles.stream()
+                .map(o -> new Object[]{o})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
     public Object[][] profilesAndMissions() {
         return profiles.stream()
                 .flatMap(profile -> missions
@@ -143,18 +156,18 @@ public class MongoScheduleProgressDaoTest {
     }
 
     @Test(dataProvider = "profilesAndMissions")
-    public void testPreconditionNoProgress(final Profile profile, final Mission mission) {
+    public void testPreConditionNoProgress(final Profile profile, final Mission mission) {
         getProgressDao()
                 .findProgressForProfileAndMission(profile, mission.getId())
                 .ifPresent(p -> Assert.fail("Progress with id should not exist: " + p.getId()));
     }
 
-    @Test(dependsOnMethods = "testPreconditionNoProgress", dataProvider = "profilesAndScheduleEvents")
+    @Test(dependsOnMethods = "testPreConditionNoProgress", dataProvider = "profilesAndScheduleEvents")
     public void activateSingleEvent(final Profile profile, final ScheduleEvent scheduleEvent) {
 
         final var progresses = getTransactionProvider().get().performAndClose(txn -> {
             final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
-            return scheduleProgressDao.createProgressesForMissionsIn(
+            return scheduleProgressDao.assignProgressesForMissionsIn(
                     schedule.getId(),
                     profile.getId(),
                     List.of(scheduleEvent)
@@ -162,7 +175,38 @@ public class MongoScheduleProgressDaoTest {
         });
 
         progresses.forEach(progress -> getProgressDao().getProgress(progress.getId()));
+        checkScheduleEvent(scheduleEvent, profile);
 
+    }
+
+    @Test(dependsOnMethods = "activateSingleEvent", dataProvider = "profilesAndScheduleEvents")
+    public void activateSingleEventAgainDoesNotDuplicate(final Profile profile, final ScheduleEvent scheduleEvent) {
+        // This can repeat the previous test just to ensure that the list does not grow indefinitely. I just wanted
+        // this to be reported as a second test even though it is functionally identical.
+        activateSingleEvent(profile, scheduleEvent);
+    }
+
+    @Test(dependsOnMethods = "activateSingleEventAgainDoesNotDuplicate", dataProvider = "profiles")
+    public void activateAllScheduleEvents(final Profile profile) {
+
+        final var progresses = getTransactionProvider().get().performAndClose(txn -> {
+            final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
+            final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
+            final var scheduleEvents = scheduleEventDao.getAllScheduleEvents(schedule.getId());
+            return scheduleProgressDao.assignProgressesForMissionsIn(
+                    schedule.getId(),
+                    profile.getId(),
+                    scheduleEvents
+            );
+        });
+
+        final var scheduleEvents = scheduleEventDao.getAllScheduleEvents(schedule.getId());
+        scheduleEvents.forEach(scheduleEvent -> checkScheduleEvent(scheduleEvent, profile));
+        progresses.forEach(progress -> getProgressDao().getProgress(progress.getId()));
+
+    }
+
+    private void checkScheduleEvent(final ScheduleEvent scheduleEvent, final Profile profile) {
         scheduleEvent.getMissions().forEach(mission -> {
             final var progress = getProgressDao().getProgressForProfileAndMission(profile, mission.getId());
 
@@ -194,13 +238,60 @@ public class MongoScheduleProgressDaoTest {
             assertEquals(se.getId(), scheduleEvent.getId());
 
         });
+    }
+
+    @Test(dependsOnMethods = "activateAllScheduleEvents", dataProvider = "profilesAndScheduleEvents")
+    public void deactivateSingleEvent(final Profile profile, final ScheduleEvent scheduleEvent) {
+
+        final List<Progress> progresses = getTransactionProvider().get().performAndClose(txn -> {
+            final var mongoScheduleProgressDao = txn.getDao(MongoScheduleProgressDao.class);
+
+            final var toRetain = scheduleEvents
+                    .stream()
+                    .filter(sev -> !scheduleEvent.getId().equals(sev.getId()))
+                    .collect(toList());
+
+            return mongoScheduleProgressDao.unassignProgressesForMissionsNotIn(
+                    schedule.getId(),
+                    profile.getId(),
+                    toRetain
+            );
+
+        });
+
+        progresses.forEach(p -> {
+
+            final var wasScheduleEventRemoved = p.getScheduleEvents()
+                    .stream()
+                    .noneMatch((e -> Objects.equals(e.getId(), scheduleEvent.getId())));
+
+            assertTrue(wasScheduleEventRemoved, "Expected schedule event to be removed.");
+
+            if (p.getSchedules().isEmpty() != p.getScheduleEvents().isEmpty()) {
+                fail("Schedules and events must co-exist.");
+            }
+
+            final var fetched = getProgressDao().findProgress(p.getId());
+
+            if (p.getSchedules().isEmpty()) {
+                assertTrue(fetched.isEmpty(), "Expected Progress to be deleted.");
+            } else {
+                assertTrue(fetched.isPresent(), "Expected progress to be present.");
+            }
+
+            if (p.getScheduleEvents().isEmpty()) {
+                assertTrue(fetched.isEmpty(), "Expected Progress to be deleted.");
+            } else {
+                assertTrue(fetched.isPresent(), "Expected progress to be present.");
+            }
+
+        });
 
     }
 
-    @Test(dependsOnMethods = "activateSingleEvent", dataProvider = "profilesAndScheduleEvents")
-    public void activateSingleEventAgainDoesNotDuplicate(final Profile profile, final ScheduleEvent scheduleEvent) {
-        // This can repeat the previous test just to ensure that the list does not grow indefinitely.
-        activateSingleEvent(profile, scheduleEvent);
+    @Test(dataProvider = "profilesAndMissions")
+    public void deactivateSingleEvent(final Profile profile, final Mission mission) {
+        testPreConditionNoProgress(profile, mission);
     }
 
     public ProgressDao getProgressDao() {

@@ -15,11 +15,13 @@ import dev.getelements.elements.model.mission.ScheduleEvent;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.*;
-import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.elemMatch;
@@ -32,6 +34,7 @@ import static java.util.stream.Collectors.toSet;
 
 public class MongoScheduleProgressDao implements ScheduleProgressDao {
 
+    private final Logger logger = LoggerFactory.getLogger(MongoScheduleProgressDao.class);
 
     private Datastore datastore;
 
@@ -72,10 +75,10 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
     }
 
     @Override
-    public List<Progress> createProgressesForMissionsIn(
+    public List<Progress> assignProgressesForMissionsIn(
             final String scheduleNameOrId,
             final String profileId,
-            final List<ScheduleEvent> events) {
+            final Collection<ScheduleEvent> events) {
 
         final var mongoProfileOptional = getMongoProfileDao().findActiveMongoProfile(profileId);
 
@@ -139,32 +142,27 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
     }
 
     @Override
-    public long deleteProgressesForMissionsNotIn(
+    public List<Progress> unassignProgressesForMissionsNotIn(
             final String scheduleNameOrId,
             final String profileId,
-            final List<ScheduleEvent> events) {
+            final Collection<ScheduleEvent> events) {
 
         final var mongoProfileOptional = getMongoProfileDao().findActiveMongoProfile(profileId);
         final var mongoScheduleOptional = getMongoScheduleDao().findMongoScheduleByNameOrId(scheduleNameOrId);
 
         if (mongoProfileOptional.isEmpty() || mongoScheduleOptional.isEmpty()) {
-            return 0;
+            return List.of();
         }
 
         final var mongoProfile = mongoProfileOptional.get();
         final var mongoSchedule = mongoScheduleOptional.get();
 
-        final var mongoScheduleEvents = events.stream()
+        final var mongoScheduleEventIds = events.stream()
                 .map(ev -> getValidationHelper().validateModel(ev, Read.class))
                 .map(ev -> getMongoScheduleEventDao().findMongoScheduleEventById(scheduleNameOrId, ev.getId()))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(toList());
-
-        final var mongoMissionIds = mongoScheduleEvents
-                .stream()
-                .flatMap(ev -> ev.getMissions().stream())
-                .map(MongoMission::getObjectId)
+                .map(MongoScheduleEvent::getObjectId)
                 .collect(toSet());
 
         final var progressStream = getDatastore()
@@ -173,41 +171,77 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
                 .stream();
 
         try (progressStream) {
-            return progressStream.mapToLong(mongoProgress -> {
-
-                    if (mongoProgress == null) {
-                        return 0;
-                    }
-
-                    final var removedEvent = mongoProgress
-                            .getScheduleEvents()
-                            .removeIf(mongoScheduleEvent -> mongoScheduleEvent
-                                    .getMissions()
-                                    .stream()
-                                    .noneMatch(mongoMission -> mongoMissionIds.contains(mongoMission.getObjectId()))
-                            );
-
-                    final var removeSchedule = removedEvent && mongoProgress
-                            .getScheduleEvents()
-                            .stream()
-                            .map(MongoScheduleEvent::getSchedule)
-                            .filter(Objects::nonNull)
-                            .noneMatch(sc -> Objects.equals(sc.getObjectId(), mongoSchedule.getObjectId()));
-
-                    final var removedSchedule = removeSchedule && mongoProgress
-                            .getSchedules()
-                            .removeIf(sc -> Objects.equals(sc.getObjectId(), mongoSchedule.getObjectId()));
-
-                    if (mongoProgress.isManagedBySchedule() && mongoProgress.getScheduleEvents().isEmpty()) {
-                        getDatastore().delete(mongoProgress);
-                    } else {
-                        getDatastore().save(mongoProgress);
-                    }
-
-                    return removedSchedule ? 1 : 0;
-            })
-            .reduce(0, Long::sum);
+            return progressStream
+                    .map(mongoProgress -> doUnassignProgressesForMissionsNotIn(
+                            mongoProgress,
+                            mongoSchedule,
+                            mongoScheduleEventIds)
+                    )
+                    .map(mongoProgress -> getMapper().map(mongoProgress, Progress.class))
+                    .collect(toList());
         }
+
+    }
+
+    private MongoProgress doUnassignProgressesForMissionsNotIn(
+            final MongoProgress mongoProgress,
+            final MongoSchedule mongoSchedule,
+            final Set<ObjectId> mongoScheduleEventIds) {
+
+        final List<MongoSchedule> schedules = mongoProgress.getSchedules() == null
+                ? new ArrayList<>()
+                : new ArrayList<>(mongoProgress.getSchedules());
+
+        final List<MongoScheduleEvent> scheduleEvents = mongoProgress.getScheduleEvents() == null
+                ? new ArrayList<>()
+                : new ArrayList<>(mongoProgress.getScheduleEvents());
+
+        final var removed = scheduleEvents.removeIf(mse -> !mongoScheduleEventIds.contains(mse.getObjectId()));
+        logger.debug("Removed events from progress {}: {}.", mongoProgress.getObjectId(), removed);
+
+        final var removeSchedule = scheduleEvents
+                .stream()
+                .map(MongoScheduleEvent::getSchedule)
+                .filter(Objects::nonNull)
+                .map(MongoSchedule::getObjectId)
+                .noneMatch(scheduleId -> Objects.equals(scheduleId, mongoSchedule.getObjectId()));
+
+        logger.debug("Removing schedule {} from progress progress {}: {}",
+                mongoSchedule.getObjectId(),
+                mongoProgress.getObjectId(),
+                removeSchedule
+        );
+
+        if (removeSchedule) {
+
+            final var removedSchedule = schedules
+                    .removeIf(sc -> Objects.equals(sc.getObjectId(), mongoSchedule.getObjectId()));
+
+            logger.debug("Removing schedule {} from progress progress {}: {}",
+                    mongoSchedule.getObjectId(),
+                    mongoProgress.getObjectId(),
+                    removedSchedule
+            );
+
+            logger.warn(
+                    "Schedule and Event Inconsistency Detected. " +
+                    "Event belonging to schedule was removed. Schedule {}/{} was not removed.",
+                    mongoSchedule.getName(),
+                    mongoSchedule.getObjectId()
+            );
+
+        }
+
+        mongoProgress.setSchedules(schedules);
+        mongoProgress.setScheduleEvents(scheduleEvents);
+
+        if (mongoProgress.isManagedBySchedule() && mongoProgress.getScheduleEvents().isEmpty()) {
+            getDatastore().delete(mongoProgress);
+        } else {
+            getDatastore().save(mongoProgress);
+        }
+
+        return mongoProgress;
 
     }
 

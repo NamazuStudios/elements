@@ -11,8 +11,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.function.Supplier;
 
-import static java.util.stream.Collectors.toList;
-
 public class UserScheduleProgressService implements ScheduleProgressService {
 
     private Supplier<Profile> profileSupplier;
@@ -44,8 +42,8 @@ public class UserScheduleProgressService implements ScheduleProgressService {
         final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
 
         final var events = scheuldeEventDao.getAllScheduleEvents(scheduleNameOrId);
-        scheduleProgressDao.createProgressesForMissionsIn(scheduleNameOrId, profileId, events);
-        scheduleProgressDao.deleteProgressesForMissionsNotIn(scheduleNameOrId, profileId, events);
+        scheduleProgressDao.assignProgressesForMissionsIn(scheduleNameOrId, profileId, events);
+        scheduleProgressDao.unassignProgressesForMissionsNotIn(scheduleNameOrId, profileId, events);
 
     }
 

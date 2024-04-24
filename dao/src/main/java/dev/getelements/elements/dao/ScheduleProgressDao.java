@@ -7,6 +7,7 @@ import dev.getelements.elements.model.mission.Schedule;
 import dev.getelements.elements.model.mission.ScheduleEvent;
 import dev.getelements.elements.model.profile.Profile;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -34,7 +35,7 @@ public interface ScheduleProgressDao {
      * @param events
      * @return
      */
-    List<Progress> createProgressesForMissionsIn(String scheduleNameOrId, String profileId, List<ScheduleEvent> events);
+    List<Progress> assignProgressesForMissionsIn(String scheduleNameOrId, String profileId, Collection<ScheduleEvent> events);
 
     /**
      * Deletes {@link Progress} instances for {@link Mission}s not in the supplied list. If no other {@link Schedule}
@@ -45,6 +46,6 @@ public interface ScheduleProgressDao {
      * @param events
      * @return
      */
-    long deleteProgressesForMissionsNotIn(String scheduleNameOrId, String profileId, List<ScheduleEvent> events);
+    List<Progress> unassignProgressesForMissionsNotIn(String scheduleNameOrId, String profileId, Collection<ScheduleEvent> events);
 
 }
