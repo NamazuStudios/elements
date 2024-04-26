@@ -3,8 +3,6 @@ package dev.getelements.elements.rest.test;
 import dev.getelements.elements.model.mission.CreateScheduleRequest;
 import dev.getelements.elements.model.mission.Schedule;
 import dev.getelements.elements.model.mission.UpdateScheduleRequest;
-import dev.getelements.elements.rest.test.ClientContext;
-import dev.getelements.elements.rest.test.TestUtils;
 import dev.getelements.elements.rest.test.model.SchedulePagination;
 import dev.getelements.elements.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
@@ -16,8 +14,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
@@ -110,7 +108,10 @@ public class ScheduleApiTest {
 
     }
 
-    @Test(groups = "create_schedules",dataProvider = "getSchedulesAndUserContexts")
+    @Test(
+            dependsOnGroups = {"create_schedules"},
+            dataProvider = "getSchedulesAndUserContexts"
+    )
     public void testRegularUserIsDeniedUpdate(final Schedule schedule, final ClientContext userContext) {
 
         final var update = new UpdateScheduleRequest();
@@ -127,7 +128,10 @@ public class ScheduleApiTest {
 
     }
 
-    @Test(groups = "create_schedules",dataProvider = "getSchedulesAndUserContexts")
+    @Test(
+            dependsOnGroups = {"create_schedules"},
+            dataProvider = "getSchedulesAndUserContexts"
+    )
     public void testRegularUserIsDeniedDelete(final Schedule schedule, final ClientContext userContext) {
 
         final var response = client
@@ -140,27 +144,26 @@ public class ScheduleApiTest {
 
     }
 
-    @Test(groups = "create_schedules", dataProvider = "getUserContext")
+    @Test(
+            dependsOnGroups = { "create_schedules" },
+            dataProvider = "getUserContext"
+    )
     public void testRegularUserIsDeniedFetch(final ClientContext userContext) {
-
-        final var schedules = new PaginationWalker().toList(((offset, count) -> client
-                .target(format("%s/schedule?offset=%d&count=%d", apiRoot, offset, count))
-                .request()
-                .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
-                .get(SchedulePagination.class)
-        ));
 
         final var response = client
                 .target(apiRoot + "/schedule")
                 .request()
                 .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
-                .delete();
+                .get();
 
         assertEquals(response.getStatus(), 403);
 
     }
 
-    @Test(groups = "create_schedules", dataProvider = "getSchedulesAndUserContexts")
+    @Test(
+            dependsOnGroups = { "create_schedules" },
+            dataProvider = "getSchedulesAndUserContexts"
+    )
     public void testRegularUserIsDeniedFetch(final Schedule schedule, final ClientContext userContext) {
 
         final var response = client
@@ -200,12 +203,16 @@ public class ScheduleApiTest {
         };
     }
 
-    @Test(dependsOnGroups = "create_schedules", dataProvider = "getSchedulesAndUpdaters")
+    @Test(
+            groups = { "update_schedules" },
+            dependsOnGroups = {"create_schedules"},
+            dataProvider = "getSchedulesAndUpdaters"
+    )
     public void testUpdateSchedule(final Schedule schedule, final Consumer<Schedule> updater) {
 
         final var request = new UpdateScheduleRequest();
 
-        request.setName("updated_schedule_name");
+        request.setName(format("%s_updated", schedule.getName()));
         request.setDescription("updated_schedule_desc");
         request.setDisplayName("updated_schedule_display_name");
 
@@ -221,46 +228,129 @@ public class ScheduleApiTest {
         assertEquals(response.getName(), request.getName());
         assertEquals(response.getDisplayName(), request.getDisplayName());
         assertEquals(response.getDescription(), request.getDescription());
-        updater.accept(schedule);
+        updater.accept(response);
 
     }
 
-    public void testGetSchedules() {
+    @DataProvider
+    public Object[][] getSchedules() {
+        return new Object[][] {
+                new Object[] { scheduleA },
+                new Object[] { scheduleB }
+        };
+    }
 
-        final var schedules = client
-                .target(apiRoot + "/schedule")
+    @Test(
+            groups = { "fetch_schedules" },
+            dependsOnGroups = {"update_schedules"},
+            dataProvider = "getSchedules"
+    )
+    public void testGetSchedules(final Schedule schedule) {
+
+        final var schedules = new PaginationWalker().toList(((offset, count) -> client
+                .target(format("%s/schedule?offset=%d&count=%d", apiRoot, offset, count))
                 .request()
                 .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
-                .get()
-                .readEntity(SchedulePagination.class);
+                .get(SchedulePagination.class)
+        ));
 
-        assertFalse(schedules.getObjects().isEmpty(), "Expected non-empty object response.");
+        assertFalse(schedules.isEmpty(), "Expected non-empty object response.");
 
-        final var schedule = schedules.getObjects()
+        final var result = schedules
                 .stream()
-                .filter(i -> i.getName().equals(scheduleA.getName()))
-                .findFirst()
-                .get();
+                .filter(i -> i.getId().equals(schedule.getId()))
+                .findFirst();
+
+        assertTrue(result.isPresent());
 
     }
 
-    @Test(dependsOnMethods = "testUpdateSchedule", dataProvider = "getUserContext")
-    public void testDeleteSchedule(final ClientContext userContext) {
-
-        final var schedule = client
-                .target(apiRoot + "/schedule/" + scheduleA.getId())
-                .request()
-                .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
-                .get()
-                .readEntity(Schedule.class);
+    @Test(
+            groups = { "fetch_schedules" },
+            dependsOnGroups = {"update_schedules"},
+            dataProvider = "getSchedules"
+    )
+    public void testGetScheduleById(final Schedule schedule) {
 
         final var response = client
                 .target(format("%s/schedule/%s", apiRoot, schedule.getId()))
                 .request()
                 .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
-                .delete();
+                .get();
 
-        assertEquals(response.getStatus(), 204);
+        assertEquals(response.getStatus(), 200);
+
+        final var result = response.readEntity(Schedule.class);
+        assertEquals(result.getId(), schedule.getId());
+        assertEquals(result.getName(), schedule.getName());
+        assertEquals(result.getDisplayName(), schedule.getDisplayName());
+        assertEquals(result.getDescription(), schedule.getDescription());
 
     }
+
+
+    @Test(
+            groups = { "fetch_schedules" },
+            dependsOnGroups = {"update_schedules"},
+            dataProvider = "getSchedules"
+    )
+    public void testGetScheduleByName(final Schedule schedule) {
+
+        final var response = client
+                .target(format("%s/schedule/%s", apiRoot, schedule.getName()))
+                .request()
+                .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+                .get();
+
+        assertEquals(response.getStatus(), 200);
+
+        final var result = response.readEntity(Schedule.class);
+        assertEquals(result.getId(), schedule.getId());
+        assertEquals(result.getName(), schedule.getName());
+        assertEquals(result.getDisplayName(), schedule.getDisplayName());
+        assertEquals(result.getDescription(), schedule.getDescription());
+
+    }
+
+    @Test(
+            groups = { "delete_schedules" },
+            dependsOnGroups = {"fetch_schedules"}
+    )
+    public void testDeleteSchedules() {
+        doDelete(scheduleA::getId, 204);
+        doDelete(scheduleB::getName, 204);
+    }
+
+    @Test(
+            groups = { "delete_schedules" },
+            dependsOnGroups = {"fetch_schedules"},
+            dependsOnMethods = { "testDeleteSchedules" }
+    )
+    public void testDoubleDeleteSchedules() {
+        doDelete(scheduleA::getId, 404);
+        doDelete(scheduleB::getName, 404);
+    }
+
+    private void doDelete(final Supplier<String> idSupplier, final int expectedResponse) {
+
+        final var id = idSupplier.get();
+
+        final var deleteResponse = client
+                .target(apiRoot + "/schedule/" + id)
+                .request()
+                .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+                .delete();
+
+        assertEquals(deleteResponse.getStatus(), expectedResponse);
+
+        final var fetchResponse = client
+                .target(format("%s/schedule/%s", apiRoot, id))
+                .request()
+                .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+                .get();
+
+        assertEquals(fetchResponse.getStatus(), 404);
+
+    }
+
 }

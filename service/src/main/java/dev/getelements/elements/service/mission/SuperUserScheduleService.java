@@ -63,6 +63,7 @@ public class SuperUserScheduleService implements ScheduleService {
                     final var scheduleDao = txn.getDao(ScheduleDao.class);
                     final var schedule = scheduleDao.getScheduleByNameOrId(scheduleNameOrId);
                     schedule.setName(updatedScheduleRequest.getName());
+                    schedule.setDisplayName(updatedScheduleRequest.getDisplayName());
                     schedule.setDescription(updatedScheduleRequest.getDescription());
                     return scheduleDao.updateSchedule(schedule);
                 });
@@ -76,8 +77,8 @@ public class SuperUserScheduleService implements ScheduleService {
                 .performAndCloseV(txn -> {
                     final var scheduleDao = txn.getDao(ScheduleDao.class);
                     final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
-                    scheduleDao.deleteSchedule(scheduleNameOrId);
                     scheduleEventDao.deleteScheduleEvents(scheduleNameOrId);
+                    scheduleDao.deleteSchedule(scheduleNameOrId);
                 });
     }
 
