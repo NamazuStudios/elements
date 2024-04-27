@@ -3,6 +3,7 @@ package dev.getelements.elements.service.mission;
 import dev.getelements.elements.dao.MissionDao;
 import dev.getelements.elements.dao.ScheduleDao;
 import dev.getelements.elements.dao.ScheduleEventDao;
+import dev.getelements.elements.dao.Transaction;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.CreateScheduleEventRequest;
 import dev.getelements.elements.model.mission.ScheduleEvent;
@@ -10,16 +11,15 @@ import dev.getelements.elements.model.mission.UpdateScheduleEventRequest;
 import dev.getelements.elements.util.ValidationHelper;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 public class SuperUserScheduleEventService implements ScheduleEventService {
-
-    private MissionDao missionDao;
-
-    private ScheduleDao scheduleDao;
 
     private ScheduleEventDao scheduleEventDao;
 
     private ValidationHelper validationHelper;
+
+    private Provider<Transaction> transactionProvider;
 
     @Override
     public ScheduleEvent createScheduleEvent(
@@ -28,19 +28,26 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
 
         getValidationHelper().validateModel(createScheduleEventRequest);
 
-        final var schedule = getScheduleDao().getScheduleByNameOrId(scheduleNameOrId);
+        return getTransactionProvider().get().performAndClose(txn -> {
 
-        final var scheduleEvent = new ScheduleEvent();
+            final var missionDao = txn.getDao(MissionDao.class);
+            final var scheduleDao = txn.getDao(ScheduleDao.class);
+            final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
 
-        scheduleEvent.setSchedule(schedule);
-        scheduleEvent.setBegin(createScheduleEventRequest.getBegin());
-        scheduleEvent.setEnd(createScheduleEventRequest.getEnd());
+            final var schedule = scheduleDao.getScheduleByNameOrId(scheduleNameOrId);
 
-        final var missionNamesOrIds = createScheduleEventRequest.getMissionNamesOrIds();
-        final var missions = getMissionDao().getMissionsMatching(missionNamesOrIds);
-        scheduleEvent.setMissions(missions);
+            final var scheduleEvent = new ScheduleEvent();
+            scheduleEvent.setSchedule(schedule);
+            scheduleEvent.setBegin(createScheduleEventRequest.getBegin());
+            scheduleEvent.setEnd(createScheduleEventRequest.getEnd());
 
-        return getScheduleEventDao().createScheduleEvent(scheduleEvent);
+            final var missionNamesOrIds = createScheduleEventRequest.getMissionNamesOrIds();
+            final var missions = missionDao.getMissionsMatching(missionNamesOrIds);
+            scheduleEvent.setMissions(missions);
+
+            return scheduleEventDao.createScheduleEvent(scheduleEvent);
+
+        });
 
     }
 
@@ -73,46 +80,35 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
 
         getValidationHelper().validateModel(updatedScheduleEvent);
 
-        final var schedule = getScheduleDao().getScheduleByNameOrId(scheduleNameOrId);
+        return getTransactionProvider().get().performAndClose(txn -> {
 
-        final var scheduleEvent = getScheduleEventDao().getScheduleEventById(
-                scheduleNameOrId,
-                scheduleEventNameOrId)
-        ;
+            final var missionDao = txn.getDao(MissionDao.class);
+            final var scheduleDao = txn.getDao(ScheduleDao.class);
+            final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
 
-        scheduleEvent.setSchedule(schedule);
-        scheduleEvent.setBegin(updatedScheduleEvent.getBegin());
-        scheduleEvent.setEnd(updatedScheduleEvent.getEnd());
+            final var schedule = scheduleDao.getScheduleByNameOrId(scheduleNameOrId);
 
-        final var missionNamesOrIds = updatedScheduleEvent.getMissionNamesOrIds();
-        final var missions = getMissionDao().getMissionsMatching(missionNamesOrIds);
-        scheduleEvent.setMissions(missions);
+            final var scheduleEvent = getScheduleEventDao().getScheduleEventById(
+                    scheduleNameOrId,
+                    scheduleEventNameOrId);
 
-        return getScheduleEventDao().updateScheduleEvent(scheduleEvent);
+            scheduleEvent.setSchedule(schedule);
+            scheduleEvent.setBegin(updatedScheduleEvent.getBegin());
+            scheduleEvent.setEnd(updatedScheduleEvent.getEnd());
+
+            final var missionNamesOrIds = updatedScheduleEvent.getMissionNamesOrIds();
+            final var missions = missionDao.getMissionsMatching(missionNamesOrIds);
+            scheduleEvent.setMissions(missions);
+
+            return scheduleEventDao.updateScheduleEvent(scheduleEvent);
+
+        });
 
     }
 
     @Override
     public void deleteScheduleEvent(final String scheduleNameOrId, final String scheduleEventId) {
         getScheduleEventDao().deleteScheduleEvent(scheduleNameOrId, scheduleEventId);
-    }
-
-    public ScheduleDao getScheduleDao() {
-        return scheduleDao;
-    }
-
-    @Inject
-    public void setScheduleDao(ScheduleDao scheduleDao) {
-        this.scheduleDao = scheduleDao;
-    }
-
-    public MissionDao getMissionDao() {
-        return missionDao;
-    }
-
-    @Inject
-    public void setMissionDao(MissionDao missionDao) {
-        this.missionDao = missionDao;
     }
 
     public ScheduleEventDao getScheduleEventDao() {
@@ -131,6 +127,15 @@ public class SuperUserScheduleEventService implements ScheduleEventService {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 
 }

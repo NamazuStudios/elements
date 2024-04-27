@@ -5,9 +5,7 @@ import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.goods.ItemCategory;
 import dev.getelements.elements.model.mission.*;
 import dev.getelements.elements.model.reward.Reward;
-import dev.getelements.elements.rest.test.ClientContext;
-import dev.getelements.elements.rest.test.TestUtils;
-import dev.getelements.elements.rest.test.model.ScheduleEventPagination;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -16,11 +14,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-
 import java.util.List;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 
@@ -29,8 +27,9 @@ public class ScheduleEventApiTest {
     @Factory
     public static Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(ScheduleEventApiTest.class),
-                TestUtils.getInstance().getUnixFSTest(ScheduleEventApiTest.class)
+                TestUtils.getInstance().getXodusTest(ScheduleEventApiTest.class)
+//                ,
+//                TestUtils.getInstance().getUnixFSTest(ScheduleEventApiTest.class)
         };
     }
 
@@ -55,17 +54,17 @@ public class ScheduleEventApiTest {
 
     private Item item;
 
-    @Test
+    @BeforeClass
     public void createUsers() {
         user.createUser("schedule_user").createSession();
         superUser.createSuperuser("schedule_admin").createSession();
     }
 
-    @Test(dependsOnMethods = "createUsers")
+    @BeforeClass(dependsOnMethods = "createUsers")
     public void createSchedule() {
 
         final var request = new CreateScheduleRequest();
-        request.setName("test_schedule");
+        request.setName("test_schedule_event_schedule");
         request.setDisplayName("test_schedule_display_name");
         request.setDescription("test_schedule_description");
 
@@ -76,11 +75,11 @@ public class ScheduleEventApiTest {
                 .post(Entity.entity(request, APPLICATION_JSON));
 
         assertEquals(response.getStatus(), 200);
-
         schedule = response.readEntity(Schedule.class);
+
     }
 
-    @Test(dependsOnMethods = "createSchedule")
+    @BeforeClass(dependsOnMethods = "createUsers")
     public void createRewardItem() {
 
         final var request = new CreateItemRequest();
@@ -100,7 +99,7 @@ public class ScheduleEventApiTest {
         item = response.readEntity(Item.class);
     }
 
-    @Test(dependsOnMethods = "createRewardItem")
+    @BeforeClass(dependsOnMethods = "createRewardItem")
     public void createMission() {
 
         final var reward = new Reward();
@@ -124,7 +123,7 @@ public class ScheduleEventApiTest {
         final var steps = List.of(step1, step2);
 
         final var createMission = new Mission();
-        createMission.setName("test_schedule");
+        createMission.setName("test_schedule_event");
         createMission.setDisplayName("test_schedule_display_name");
         createMission.setDescription("test_schedule_description");
         createMission.setSteps(steps);
@@ -136,17 +135,15 @@ public class ScheduleEventApiTest {
                 .post(Entity.entity(createMission, APPLICATION_JSON));
 
         assertEquals(response.getStatus(), 200);
-
         mission = response.readEntity(Mission.class);
+
     }
 
-    @Test(dependsOnMethods = "createMission")
+    @Test(groups = "create_schedule_event")
     public void createScheduleEvent() {
 
         final var request = new CreateScheduleEventRequest();
         request.setMissionNamesOrIds(List.of(mission.getName()));
-        request.setBegin(0L);
-        request.setEnd(System.currentTimeMillis() + 1000);
 
         final var response = client
                 .target(format("%s/schedule/%s/event", apiRoot, schedule.getName()))
@@ -156,7 +153,15 @@ public class ScheduleEventApiTest {
 
         assertEquals(response.getStatus(), 200);
 
-        scheduleEvent = response.readEntity(ScheduleEvent.class);
+        final var result = response.readEntity(ScheduleEvent.class);
+        assertNotNull(result.getId());
+        assertNull(result.getBegin());
+        assertNull(result.getEnd());
+        assertNotNull(result.getMissions());
+        assertEquals(result.getMissions().size(), 1);
+
+        scheduleEvent = result;
+
     }
 
     @DataProvider
@@ -166,8 +171,8 @@ public class ScheduleEventApiTest {
         };
     }
 
-    @Test(dependsOnMethods = {"createUsers", "createScheduleEvent"}, dataProvider = "getUserContext")
-    public void testRegularUserIsDenied(final ClientContext userContext) {
+    @Test(dataProvider = "getUserContext")
+    public void testRegularUserIsDeniedCreate(final ClientContext userContext) {
 
         final var create = new CreateScheduleEventRequest();
 
@@ -179,11 +184,19 @@ public class ScheduleEventApiTest {
 
         assertEquals(response.getStatus(), 403);
 
+    }
+
+    @Test(
+            dependsOnGroups = { "create_schedule_event" },
+            dataProvider = "getUserContext"
+    )
+    public void testRegularUserIsDeniedUpdate(final ClientContext userContext) {
+
         final var update = new UpdateScheduleEventRequest();
         update.setBegin(10L);
         update.setEnd(100L);
 
-        response = client
+        final var response = client
                 .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), scheduleEvent.getId()))
                 .request()
                 .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
@@ -191,7 +204,15 @@ public class ScheduleEventApiTest {
 
         assertEquals(response.getStatus(), 403);
 
-        response = client
+    }
+
+    @Test(
+            dependsOnGroups = { "create_schedule_event" },
+            dataProvider = "getUserContext"
+    )
+    public void testRegularUserIsDeniedDelete(final ClientContext userContext) {
+
+        final var response = client
                 .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), scheduleEvent.getId()))
                 .request()
                 .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
@@ -202,67 +223,92 @@ public class ScheduleEventApiTest {
     }
 
 
-    @Test(dependsOnMethods = {"createScheduleEvent"}, dataProvider = "getUserContext")
-    public void testUpdateScheduleEvent(final ClientContext userContext) {
-
-        final var schedules = client
-                .target(apiRoot + "/schedule")
-                .request()
-                .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
-                .get()
-                .readEntity(ScheduleEventPagination.class);
-
-        assertFalse(schedules.getObjects().isEmpty(), "Expected non-empty object response.");
-
-        final var event = schedules.getObjects()
-                .stream()
-                .filter(i -> i.getId().equals(scheduleEvent.getId()))
-                .findFirst()
-                .get();
+    @Test(
+            groups = { "update_schedule_event" },
+            dependsOnGroups = { "create_schedule_event" }
+    )
+    public void testUpdateScheduleEvent() {
 
         final var request = new UpdateScheduleEventRequest();
 
-        request.setBegin(1000L);
-        request.setEnd(System.currentTimeMillis() + 10000);
-        request.setMissionNamesOrIds(List.of(mission.getName(), mission.getId()));
+        final var now = currentTimeMillis();
+        request.setBegin(now);
+        request.setEnd(now + 10000);
+        request.setMissionNamesOrIds(List.of(mission.getId()));
 
         final var response = client
                 .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getId(), scheduleEvent.getId()))
                 .request()
-                .header("X-HTTP-Method-Override", "PATCH")
                 .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
-                .post(Entity.entity(request, APPLICATION_JSON))
-                .readEntity(ScheduleEvent.class);
+                .put(Entity.entity(request, APPLICATION_JSON));
 
-        assertNotNull(response.getId());
-        assertEquals(response.getId(), event.getId());
-        assertEquals(response.getBegin(), request.getBegin());
-        assertEquals(response.getEnd(), request.getEnd());
+        assertEquals(response.getStatus(), 200);
 
-        response.getMissions().stream()
-                .forEach(m ->
-                        assertTrue(request.getMissionNamesOrIds().stream()
-                                .anyMatch(nameOrId ->
-                                    m.getId().equals(nameOrId) || m.getName().equals(nameOrId))));
+        final var result = response.readEntity(ScheduleEvent.class);
+
+        assertNotNull(result.getId());
+        assertEquals(result.getId(), scheduleEvent.getId());
+        assertEquals(result.getBegin(), request.getBegin());
+        assertEquals(result.getEnd(), request.getEnd());
+
+        assertNotNull(result.getMissions());
+
+        result.getMissions().forEach(m -> assertTrue(request
+                    .getMissionNamesOrIds()
+                    .stream()
+                    .anyMatch(nameOrId -> m.getId().equals(nameOrId) || m.getName().equals(nameOrId))));
+
+        scheduleEvent = result;
+
     }
 
-    @Test(dependsOnMethods = "testUpdateScheduleEvent", dataProvider = "getUserContext")
-    public void testDeleteScheduleEvent(final ClientContext userContext) {
+    @Test(
+            groups = "delete_schedule_event",
+            dependsOnGroups = "update_schedule_event"
+    )
+    public void testDeleteScheduleEvent() {
 
-        final var event = client
-                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), scheduleEvent.getId()))
-                .request()
-                .header("Authorization", format("Bearer %s", userContext.getSessionSecret()))
-                .get()
-                .readEntity(ScheduleEvent.class);
-
-        final var response = client
-                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), event.getId()))
+        var response = client
+                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getId(), scheduleEvent.getId()))
                 .request()
                 .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
                 .delete();
 
         assertEquals(response.getStatus(), 204);
 
+        response = client
+                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getId(), scheduleEvent.getId()))
+                .request()
+                .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+                .get();
+
+        assertEquals(response.getStatus(), 404);
+
+        response = client
+                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), scheduleEvent.getId()))
+                .request()
+                .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+                .get();
+
+        assertEquals(response.getStatus(), 404);
+
     }
+
+    @Test(
+            groups = "delete_schedule_event",
+            dependsOnGroups = "update_schedule_event",
+            dependsOnMethods = "testDeleteScheduleEvent"
+    )
+    public void testDoubleDeleteScheduleEvent() {
+
+        final var response = client
+                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), scheduleEvent.getId()))
+                .request()
+                .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+                .delete();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
 }

@@ -14,7 +14,7 @@ public class CreateScheduleEventRequest {
     private Long end;
 
     @NotNull
-    private List<String> missionNamesOrIds;
+    private List<@NotNull String> missionNamesOrIds;
 
     public Long getBegin() {
         return begin;

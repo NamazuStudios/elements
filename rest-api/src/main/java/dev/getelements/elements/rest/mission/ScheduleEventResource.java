@@ -31,6 +31,8 @@ public class ScheduleEventResource {
     private ScheduleEventService scheduleService;
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new schedule",
             notes = "Supplying a schedule object, this will create a new schedule with a newly assigned unique id.  " +
                     "The ScheduleEvent representation returned in the response body is a representation of the ScheduleEvent as persisted " +
@@ -75,6 +77,7 @@ public class ScheduleEventResource {
 
     @GET
     @Path("{scheduleEventId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieves a single ScheduleEvent by id or by name",
             notes = "Looks up a schedule by the passed in identifier")
     public ScheduleEvent getScheduleEventByNameOrId(
@@ -86,7 +89,9 @@ public class ScheduleEventResource {
     }
 
     @PUT
-    @Path("{scheduleNameOrId}")
+    @Path("{scheduleEventId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates an entire single ScheduleEvent",
             notes = "Supplying a schedule, this will update the ScheduleEvent identified by the name or ID in the path with contents " +
                     "from the passed in request body. ")
@@ -100,7 +105,8 @@ public class ScheduleEventResource {
     }
 
     @DELETE
-    @Path("{scheduleNameOrId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{scheduleEventId}")
     @ApiOperation(value = "Deletes the ScheduleEvent identified by id or by name",
             notes = "Deletes a schedule by the passed in identifier")
     public void deleteScheduleEvent(
