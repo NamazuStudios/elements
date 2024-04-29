@@ -6,6 +6,8 @@ import dev.getelements.elements.dao.Transaction;
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.mission.Progress;
 import dev.getelements.elements.model.profile.Profile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -13,9 +15,9 @@ import java.util.function.Supplier;
 
 public class UserScheduleProgressService implements ScheduleProgressService {
 
-    private Supplier<Profile> profileSupplier;
+    private static final Logger logger = LoggerFactory.getLogger(UserScheduleProgressService.class);
 
-    private ScheduleProgressDao  scheduleProgressDao;
+    private Supplier<Profile> profileSupplier;
 
     private Provider<Transaction> transactionProvider;
 
@@ -26,24 +28,37 @@ public class UserScheduleProgressService implements ScheduleProgressService {
 
         final var profileId = getProfileSupplier().get().getId();
 
-        getTransactionProvider()
+        final var progresses = getTransactionProvider()
                 .get()
-                .performAndCloseV(txn -> syncProgresses(txn, profileId, scheduleNameOrId));
+                .performAndClose(txn -> syncProgresses(txn, profileId, scheduleNameOrId, offset, count));
 
-        return getScheduleProgressDao()
-                .getProgresses(profileId, scheduleNameOrId, offset, count);
+        return progresses;
 
     }
 
-    private void syncProgresses(final Transaction txn,
+    private Pagination<Progress> syncProgresses(final Transaction txn,
                                 final String profileId,
-                                final String scheduleNameOrId) {
+                                final String scheduleNameOrId,
+                                final int offset, final int count) {
         final var scheduleEventDao = txn.getDao(ScheduleEventDao.class);
         final var scheduleProgressDao = txn.getDao(ScheduleProgressDao.class);
 
         final var events = scheduleEventDao.getAllScheduleEvents(scheduleNameOrId);
-        scheduleProgressDao.assignProgressesForMissionsIn(scheduleNameOrId, profileId, events);
-        scheduleProgressDao.unassignProgressesForMissionsNotIn(scheduleNameOrId, profileId, events);
+
+        final var assigned = scheduleProgressDao.assignProgressesForMissionsIn(
+                scheduleNameOrId,
+                profileId,
+                events);
+
+        final var unassigned = scheduleProgressDao.unassignProgressesForMissionsNotIn(
+                scheduleNameOrId,
+                profileId,
+                events);
+
+        logger.debug("Assigned progresses {}", assigned);
+        logger.debug("Unassigned progresses {}", unassigned);
+
+        return scheduleProgressDao.getProgresses(profileId, scheduleNameOrId, offset, count);
 
     }
 
@@ -54,15 +69,6 @@ public class UserScheduleProgressService implements ScheduleProgressService {
     @Inject
     public void setTransactionProvider(Provider<Transaction> transactionProvider) {
         this.transactionProvider = transactionProvider;
-    }
-
-    public ScheduleProgressDao getScheduleProgressDao() {
-        return scheduleProgressDao;
-    }
-
-    @Inject
-    public void setScheduleProgressDao(ScheduleProgressDao scheduleProgressDao) {
-        this.scheduleProgressDao = scheduleProgressDao;
     }
 
     public Supplier<Profile> getProfileSupplier() {

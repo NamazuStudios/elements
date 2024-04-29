@@ -233,18 +233,22 @@ public class MongoProgressDao implements ProgressDao {
             first = steps.get(0);
         }
 
+        final var missionTags = mongoMission.getTags();
+
         final var result = new UpdateBuilder().with(
                 set("_id", mongoProgressId),
                 set("profile", mongoProfile),
                 set("mission", mongoMission),
+                missionTags == null
+                        ? unset("missionTags")
+                        : set("missionTags", missionTags),
                 setOnInsert(Map.of(
                         "version", randomUUID().toString(),
                         "remaining", first.getCount(),
                         "rewardIssuances", List.of(),
                         "managedBySchedule", false,
                         "schedules", List.of(),
-                        "scheduleEvents", List.of(),
-                        "missionTags", mongoMission.getTags()
+                        "scheduleEvents", List.of()
                 ))
         ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER));
 

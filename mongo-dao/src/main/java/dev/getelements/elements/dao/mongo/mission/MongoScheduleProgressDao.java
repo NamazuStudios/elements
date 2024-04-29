@@ -22,10 +22,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.elemMatch;
-import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static dev.morphia.query.updates.UpdateOperators.addToSet;
 import static java.util.UUID.randomUUID;
@@ -64,12 +64,15 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
         return getMongoScheduleDao()
                 .findMongoScheduleByNameOrId(scheduleNameOrId)
                 .map(mongoSchedule -> {
+
                     final var query = getDatastore().find(MongoProgress.class);
-                    query.filter(elemMatch("schedules", eq("$ref", mongoSchedule.getObjectId())));
+                    query.filter(in("schedules", List.of(mongoSchedule)));
+
                     return getMongoDBUtils().paginationFromQuery(
                             query,
                             offset, count,
                             p -> getDozerMapper().map(p, Progress.class));
+
                 })
                 .orElseGet(Pagination::empty);
     }
@@ -124,16 +127,20 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
             first = steps.get(0);
         }
 
+        final var missionTags = mongoMission.getTags();
+
         return new UpdateBuilder().with(
                 set("_id", mongoProgressId),
                 set("profile", mongoProfile),
                 set("mission", mongoMission),
+                missionTags == null
+                        ? unset("missionTags")
+                        : set("missionTags", missionTags),
                 setOnInsert(Map.of(
                         "version", randomUUID().toString(),
                         "remaining", first.getCount(),
                         "rewardIssuances", List.of(),
-                        "managedBySchedule", true,
-                        "missionTags", mongoMission.getTags()
+                        "managedBySchedule", true
                 )),
                 addToSet("schedules", mongoScheduleEvent.getSchedule()),
                 addToSet("scheduleEvents", mongoScheduleEvent)
@@ -157,17 +164,21 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
         final var mongoProfile = mongoProfileOptional.get();
         final var mongoSchedule = mongoScheduleOptional.get();
 
-        final var mongoScheduleEventIds = events.stream()
+        final var mongoScheduleEvents = events.stream()
                 .map(ev -> getValidationHelper().validateModel(ev, Read.class))
                 .map(ev -> getMongoScheduleEventDao().findMongoScheduleEventById(scheduleNameOrId, ev.getId()))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
+                .collect(toList());
+
+        final var mongoScheduleEventIds = mongoScheduleEvents.stream()
                 .map(MongoScheduleEvent::getObjectId)
                 .collect(toSet());
 
         final var progressStream = getDatastore()
                 .find(MongoProgress.class)
                 .filter(eq("_id.profileId", mongoProfile.getObjectId()))
+                .filter(in("scheduleEvents", mongoScheduleEvents).not())
                 .stream();
 
         try (progressStream) {
@@ -238,7 +249,7 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
         if (mongoProgress.isManagedBySchedule() && mongoProgress.getScheduleEvents().isEmpty()) {
             getDatastore().delete(mongoProgress);
         } else {
-            getDatastore().save(mongoProgress);
+            getDatastore().merge(mongoProgress);
         }
 
         return mongoProgress;

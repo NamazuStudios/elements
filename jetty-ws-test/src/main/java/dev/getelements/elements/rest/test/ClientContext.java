@@ -124,6 +124,11 @@ public class ClientContext {
         return createSession(null);
     }
 
+    public ClientContext createSessionWithDefaultProfile() {
+        final var profile = getDefaultProfile();
+        return createSession(profile);
+    }
+
     public ClientContext createSession(final Profile profile) {
         final Session session = new Session();
         final long expiry = MILLISECONDS.convert(1, DAYS) + currentTimeMillis();
@@ -134,6 +139,7 @@ public class ClientContext {
         sessionCreation = sessionDao.create(session);
         return this;
     }
+
 
     public UserDao getUserDao() {
         return userDao;

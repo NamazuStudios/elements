@@ -27,9 +27,8 @@ public class ScheduleEventApiTest {
     @Factory
     public static Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(ScheduleEventApiTest.class)
-//                ,
-//                TestUtils.getInstance().getUnixFSTest(ScheduleEventApiTest.class)
+                TestUtils.getInstance().getXodusTest(ScheduleEventApiTest.class),
+                TestUtils.getInstance().getUnixFSTest(ScheduleEventApiTest.class)
         };
     }
 

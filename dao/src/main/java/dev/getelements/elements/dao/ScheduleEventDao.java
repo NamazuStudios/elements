@@ -51,7 +51,7 @@ public interface ScheduleEventDao {
      * @param scheduleNameOrId the name or id of the {@link ScheduleEvent}
      * @return a {@link List<ScheduleEvent>} of schedule events.
      */
-    default List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId) {
+    default List<ScheduleEvent> getAllScheduleEvents(final String scheduleNameOrId) {
         return getAllScheduleEvents(scheduleNameOrId, false, false);
     }
 
@@ -62,8 +62,8 @@ public interface ScheduleEventDao {
      * @param includeFuture true to include events that have yet to be scheduled
      * @return a {@link List<ScheduleEvent>} of schedule events.
      */
-    default List<ScheduleEvent> getAllScheduleEvents(String scheduleNameOrId,
-                                                     boolean includeExpired, boolean includeFuture) {
+    default List<ScheduleEvent> getAllScheduleEvents(final String scheduleNameOrId,
+                                                     final boolean includeExpired, final boolean includeFuture) {
         final var reference = currentTimeMillis();
         return getAllScheduleEvents(scheduleNameOrId, includeExpired, includeFuture, reference);
     }
