@@ -25,7 +25,6 @@ public class ServiceScopingTest {
         injector = Guice.createInjector(new MockServiceTestModule());
     }
 
-
     @DataProvider
     public Object[][] scopedServiceClasses() {
         final var classLaoder = ClassLoader.getSystemClassLoader();
@@ -61,7 +60,6 @@ public class ServiceScopingTest {
 
     @Test(dataProvider = "scopedServiceClasses")
     public void testScopedServices(final Class<?> serviceClass) {
-
         try {
             MockServiceTestModule.enter();
             logger.error("Testing {}", serviceClass);
