@@ -1,4 +1,4 @@
-package dev.getelements.elements.rest;
+package dev.getelements.elements.rest.test;
 
 import com.opencsv.CSVReader;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static dev.getelements.elements.rest.TestUtils.TEST_API_ROOT;
+import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
 
