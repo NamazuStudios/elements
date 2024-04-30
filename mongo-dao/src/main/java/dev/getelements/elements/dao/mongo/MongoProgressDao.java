@@ -13,9 +13,11 @@ import dev.getelements.elements.exception.InvalidDataException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.model.mission.Step;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.reward.Reward;
@@ -127,6 +129,12 @@ public class MongoProgressDao implements ProgressDao {
             query, offset, count,
             mongoItem -> getDozerMapper().map(mongoItem, Progress.class), new FindOptions());
 
+    }
+
+    @Override
+    public Tabulation<ProgressRow> getProgressesTabular() {
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+        return getMongoDBUtils().tabulationFromQuery(query, p -> getDozerMapper().map(p, ProgressRow.class));
     }
 
     @Override

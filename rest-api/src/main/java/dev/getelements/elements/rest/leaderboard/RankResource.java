@@ -79,7 +79,8 @@ public class RankResource {
 
     }
 
-    @GET @Path("global/{leaderboardNameOrId}.csv")
+    @GET
+    @Path("global/{leaderboardNameOrId}")
     @Produces("text/csv")
     @ApiOperation(value = "Gets Rank Among all Players",
             notes = "Gets the current Profile's rank among all players for the particular leaderboard.")
@@ -91,8 +92,8 @@ public class RankResource {
             @QueryParam("leaderboardEpoch")
             @DefaultValue("0")
             @ApiParam("Specifies the epoch for the leaderboard. If not provided, the current epoch will be used by " +
-                    "default for epochal leaderboards. This value will be ignored for all-time leaderboards. Set " +
-                    "this value to 0 to explicitly reference the current epoch (when applicable).")
+                      "default for epochal leaderboards. This value will be ignored for all-time leaderboards. Set " +
+                      "this value to 0 to explicitly reference the current epoch (when applicable).")
             final long leaderboardEpoch
             ) {
         return getRankService().getRanksForGlobalTabular(leaderboardNameOrId, leaderboardEpoch);
