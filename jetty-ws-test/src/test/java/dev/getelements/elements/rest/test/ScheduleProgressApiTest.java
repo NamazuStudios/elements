@@ -70,8 +70,8 @@ public class ScheduleProgressApiTest {
     public void createSchedule() {
 
         final var request = new CreateScheduleRequest();
-        request.setName("test_schedule_event_progress");
-        request.setDisplayName("test_schedule_event_progress");
+        request.setName("test_schedule_progress_progress");
+        request.setDisplayName("test_schedule_progress_progress");
         request.setDescription("test_schedule_description");
 
         final var response = client
@@ -89,9 +89,9 @@ public class ScheduleProgressApiTest {
     public void createRewardItem() {
 
         final var request = new CreateItemRequest();
-        request.setName("test_schedule_event_reward_item");
-        request.setDisplayName("test_schedule_event_reward_item_display_name");
-        request.setDescription("test_schedule_event_reward_item_description");
+        request.setName("test_schedule_progress_reward_item");
+        request.setDisplayName("test_schedule_progress_reward_item_display_name");
+        request.setDescription("test_schedule_progress_reward_item_description");
         request.setCategory(ItemCategory.FUNGIBLE);
 
         final var response = client
@@ -129,7 +129,7 @@ public class ScheduleProgressApiTest {
         final var steps = List.of(step1, step2);
 
         final var createMission = new Mission();
-        createMission.setName("test_schedule_event");
+        createMission.setName("test_schedule_progress");
         createMission.setDisplayName("test_schedule_display_name");
         createMission.setDescription("test_schedule_description");
         createMission.setSteps(steps);
