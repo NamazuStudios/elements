@@ -106,8 +106,9 @@ public class RankCsvExportTest {
     public void testGetAnon() {
 
         final var response = client
-                .target(apiRoot + "/rank/global/test_csv_api.csv")
+                .target(apiRoot + "/rank/global/test_csv_api")
                 .request()
+                .header("Accept", "text/csv")
                 .get();
 
         assertEquals(response.getStatus(), 403);
@@ -118,8 +119,9 @@ public class RankCsvExportTest {
     public void testGetUser() {
 
         final var response = client
-                .target(apiRoot + "/rank/global/test_csv_api.csv")
+                .target(apiRoot + "/rank/global/test_csv_api")
                 .request()
+                .header("Accept", "text/csv")
                 .header(Headers.SESSION_SECRET, user.getSessionSecret())
                 .get();
 
@@ -131,8 +133,9 @@ public class RankCsvExportTest {
     public void testGetSuperUser() throws Exception {
 
         final var response = client
-                .target(apiRoot + "/rank/global/test_csv_api.csv")
+                .target(apiRoot + "/rank/global/test_csv_api")
                 .request()
+                .header("Accept", "text/csv")
                 .header(Headers.SESSION_SECRET, superUser.getSessionSecret())
                 .get();
 

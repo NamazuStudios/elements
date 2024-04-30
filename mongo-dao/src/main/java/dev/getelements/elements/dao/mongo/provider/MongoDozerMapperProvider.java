@@ -148,13 +148,23 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
-                    .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
-                    .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
-                    .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
+                .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
+                .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
+
+            mapping(ProgressRow.class, MongoProgress.class)
+                .fields("id", "objectId", customConverter(MongoHexableIdConverter.class))
+                .fields("profileId", "profile.objectId", customConverter(ObjectIdConverter.class))
+                .fields("profileImageUrl", "profile.imageUrl")
+                .fields("profileDisplayName", "profile.displayName")
+                .fields("stepDisplayName", "currentStep.displayName")
+                .fields("stepDescription", "currentStep.description")
+                .fields("remaining", "remaining")
+                .fields("stepCount", "currentStep.count");
 
             mapping(RewardIssuance.class, MongoRewardIssuance.class)
-                    .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Reward.class, MongoReward.class)
                     .fields("metadata","metadata", customConverter(IdentityConverter.class));

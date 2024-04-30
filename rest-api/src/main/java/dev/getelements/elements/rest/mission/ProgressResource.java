@@ -27,6 +27,7 @@ public class ProgressResource {
     private ProgressService progressService;
 
     @POST
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new progress",
             notes = "Supplying a progress object, this will create a new progress with a newly assigned unique id.  " +
                     "The Progress representation returned in the response body is a representation of the Progress as persisted " +
@@ -37,6 +38,7 @@ public class ProgressResource {
 
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieves all Progresses",
             notes = "Searches all progress and returns all matching items, filtered by the passed in search parameters.")
     public Pagination<Progress> getProgress(
@@ -48,7 +50,16 @@ public class ProgressResource {
     }
 
     @GET
+    @Produces("text/csv")
+    @ApiOperation(value = "Gets Rank Among all Players",
+            notes = "Gets the current Profile's rank among all players for the particular leaderboard.")
+    public Tabulation<ProgressRow> getProgressTabular() {
+        return getProgressService().getProgressesTabular();
+    }
+
+    @GET
     @Path("{progressId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Retrieves a single Progress by id",
             notes = "Looks up a progress by the passed in identifier")
     public Progress getProgressByNameOrId(@PathParam("progressId") String progressId) {
@@ -57,6 +68,7 @@ public class ProgressResource {
 
     @PUT
     @Path("{progressId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a single Progress",
             notes = "Supplying a progress, this will update the Progress identified by the ID in the path with contents " +
                     "from the passed in request body. ")
@@ -66,7 +78,8 @@ public class ProgressResource {
     }
 
     @DELETE
-    @Path("{progressId}")
+    @Path("progress/{progressId}")
+    @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes the Progress identified by id",
             notes = "Deletes a progress by the passed in identifier")
     public void deleteProgress(@PathParam("progressId") String progressId) {

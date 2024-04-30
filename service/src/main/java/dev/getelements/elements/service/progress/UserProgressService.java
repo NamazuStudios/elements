@@ -4,7 +4,9 @@ import dev.getelements.elements.dao.ProgressDao;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.model.profile.Profile;
 
 import javax.inject.Inject;
@@ -38,6 +40,11 @@ public class UserProgressService implements ProgressService {
     @Override
     public Pagination<Progress> getProgresses(final int offset, final int count, final List<String> tags, final String query)  {
         return getProgressDao().getProgresses(getCurrentProfileSupplier().get(), offset, count, tags, query);
+    }
+
+    @Override
+    public Tabulation<ProgressRow> getProgressesTabular() {
+        throw new ForbiddenException();
     }
 
     @Override

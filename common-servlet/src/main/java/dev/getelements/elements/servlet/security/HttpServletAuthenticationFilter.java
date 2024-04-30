@@ -5,6 +5,7 @@ import dev.getelements.elements.exception.BaseException;
 import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.exception.UnauthorizedException;
 import dev.getelements.elements.model.ErrorResponse;
+import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.security.JWTCredentials;
 import dev.getelements.elements.service.CustomAuthSessionService;
 import dev.getelements.elements.service.SessionService;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,6 +38,8 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
     private SessionService sessionService;
 
     private CustomAuthSessionService customAuthSessionService;
+
+    private Provider<Optional<Profile>> optionalProfileProvider;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -99,11 +103,16 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         final var user = session.getUser();
         final var profile = session.getProfile();
         final var application = session.getApplication();
+
         request.setAttribute(SESSION_ATTRIBUTE, session);
         
         if (user != null) request.setAttribute(USER_ATTRIBUTE, user);
         if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
         if (application != null) request.setAttribute(APPLICATION_ATTRIBUTE, application);
+
+        getOptionalProfileProvider()
+                .get()
+                .ifPresent(p -> request.setAttribute(PROFILE_ATTRIBUTE, p));
 
     }
 
@@ -132,6 +141,15 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
     @Inject
     public void setCustomAuthSessionService(CustomAuthSessionService customAuthSessionService) {
         this.customAuthSessionService = customAuthSessionService;
+    }
+
+    public Provider<Optional<Profile>> getOptionalProfileProvider() {
+        return optionalProfileProvider;
+    }
+
+    @Inject
+    public void setOptionalProfileProvider(Provider<Optional<Profile>> optionalProfileProvider) {
+        this.optionalProfileProvider = optionalProfileProvider;
     }
 
 }
