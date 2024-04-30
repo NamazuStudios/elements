@@ -180,14 +180,14 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
         if (!includeExpired) {
             query.filter(or(
                     exists("begin").not(),
-                    gte("begin", referenceTimestamp)
+                    lte("begin", referenceTimestamp)
             ));
         }
 
         if (!includeFuture) {
             query.filter(or(
                     exists("end").not(),
-                    lte("end", referenceTimestamp)
+                    gte("end", referenceTimestamp)
             ));
         }
 

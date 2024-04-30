@@ -21,6 +21,8 @@ public class UserScheduleProgressService implements ScheduleProgressService {
 
     private Provider<Transaction> transactionProvider;
 
+    private ScheduleProgressDao scheduleProgressDao;
+
     @Override
     public Pagination<Progress> getScheduleProgressService(
             final String scheduleNameOrId,
@@ -32,7 +34,7 @@ public class UserScheduleProgressService implements ScheduleProgressService {
                 .get()
                 .performAndClose(txn -> syncProgresses(txn, profileId, scheduleNameOrId, offset, count));
 
-        return progresses;
+        return getScheduleProgressDao().getProgresses(profileId, scheduleNameOrId, offset, count);
 
     }
 
@@ -78,6 +80,15 @@ public class UserScheduleProgressService implements ScheduleProgressService {
     @Inject
     public void setProfileSupplier(Supplier<Profile> profileSupplier) {
         this.profileSupplier = profileSupplier;
+    }
+
+    public ScheduleProgressDao getScheduleProgressDao() {
+        return scheduleProgressDao;
+    }
+
+    @Inject
+    public void setScheduleProgressDao(ScheduleProgressDao scheduleProgressDao) {
+        this.scheduleProgressDao = scheduleProgressDao;
     }
 
 }
