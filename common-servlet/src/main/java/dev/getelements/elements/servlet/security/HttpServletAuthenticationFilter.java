@@ -103,9 +103,8 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         final var user = session.getUser();
         final var profile = session.getProfile();
         final var application = session.getApplication();
-
         request.setAttribute(SESSION_ATTRIBUTE, session);
-        
+
         if (user != null) request.setAttribute(USER_ATTRIBUTE, user);
         if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
         if (application != null) request.setAttribute(APPLICATION_ATTRIBUTE, application);

@@ -1,23 +1,21 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.mission;
 
-import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.ProgressDao;
+import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
-import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
-import dev.getelements.elements.dao.mongo.model.mission.MongoProgress;
-import dev.getelements.elements.dao.mongo.model.mission.MongoProgressId;
-import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
 import dev.getelements.elements.dao.mongo.model.mission.*;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.exception.InvalidDataException;
-import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.exception.TooBusyException;
+import dev.getelements.elements.exception.mission.ProgressNotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.ValidationGroups.Insert;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.model.mission.Step;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.reward.Reward;
@@ -26,9 +24,7 @@ import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
@@ -39,6 +35,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -47,14 +44,12 @@ import static dev.getelements.elements.model.mission.Step.buildRewardIssuanceTag
 import static dev.getelements.elements.model.reward.RewardIssuance.*;
 import static dev.getelements.elements.model.reward.RewardIssuance.Type.PERSISTENT;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.in;
 import static dev.morphia.query.updates.UpdateOperators.*;
-import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-@Singleton
 public class MongoProgressDao implements ProgressDao {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoProgressDao.class);
@@ -77,18 +72,18 @@ public class MongoProgressDao implements ProgressDao {
 
     private MongoRewardIssuanceDao rewardIssuanceDao;
 
+    private BooleanQueryParser booleanQueryParser;
+
     @Override
     public Pagination<Progress> getProgresses(final Profile profile,
                                               final int offset, final int count,
                                               final List<String> tags)  {
-        return getProgresses(profile, offset, count, tags,null);
-    }
 
         final var mongoProfile = getDozerMapper().map(profile, MongoProfile.class);
         final var query = getDatastore().find(MongoProgress.class).filter(eq("profile",mongoProfile));
 
         if (tags != null && !tags.isEmpty()) {
-            query.filter(Filters.in("mission.tags", tags));
+            query.filter(in("missionTags", tags));
         }
 
         return getMongoDBUtils().paginationFromQuery(
@@ -123,8 +118,7 @@ public class MongoProgressDao implements ProgressDao {
     }
 
     @Override
-    public Pagination<Progress> getProgresses(final int offset, final int count,
-                                              final List<String> tags, final String search) {
+    public Pagination<Progress> getProgresses(final int offset, final int count, final List<String> tags)  {
 
         final var query = getDatastore().find(MongoProgress.class);
 
@@ -156,6 +150,12 @@ public class MongoProgressDao implements ProgressDao {
 
                 })
                 .orElseGet(Pagination::empty);
+    }
+
+    @Override
+    public Tabulation<ProgressRow> getProgressesTabular() {
+        final var query = getDatastore().find(MongoProgress.class);
+        return getMongoDBUtils().tabulationFromQuery(query, mp -> getDozerMapper().map(mp, ProgressRow.class));
     }
 
     @Override
@@ -259,35 +259,6 @@ public class MongoProgressDao implements ProgressDao {
                 ))
         ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER));
 
-                if (steps == null || steps.isEmpty()) {
-                    if (finalRepeatStep == null) throw new InvalidDataException("one step must be defined");
-                    first = finalRepeatStep;
-                } else {
-                    first = steps.get(0);
-                }
-
-                progress.setRewardIssuances(emptyList());
-                progress.setRemaining(first.getCount());
-                getValidationHelper().validateModel(first);
-
-                final MongoProgress toCreate = getDozerMapper().map(progress, MongoProgress.class);
-                toCreate.setVersion(randomUUID().toString());
-
-                try {
-                    getDatastore().insert(toCreate);
-                    return toCreate;
-                } catch (DuplicateKeyException ex) {
-                    throw new ContentionException(ex);
-                }
-
-            });
-        } catch (MongoConcurrentUtils.ConflictException e) {
-            throw new TooBusyException(e);
-        }
-
-// TODO: Per SOC-364
-// Disabling this For Now SOC-364
-//        getObjectIndex().index(result);
         return getDozerMapper().map(result, Progress.class);
 
     }
@@ -300,12 +271,8 @@ public class MongoProgressDao implements ProgressDao {
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
-            throw new NotFoundException("Progress not found: " + progressId);
+            throw new ProgressNotFoundException("Progress not found: " + progressId);
         }
-    }
-
-    private void normalize(Progress item) {
-        // leave this stub here in case we implement some normalization logic later
     }
 
     @Override
@@ -332,7 +299,9 @@ public class MongoProgressDao implements ProgressDao {
 
         final var mongoProgress = query.first();
 
-        if (mongoProgress == null) throw new NotFoundException("Progress with id not found: " + progress.getId());
+        if (mongoProgress == null)
+            throw new ProgressNotFoundException("Progress with id not found: " + progress.getId());
+
         query.filter(eq("version", mongoProgress.getVersion()));
 
         final var result = progress.getRemaining() - actionsPerformed > 0
@@ -352,10 +321,10 @@ public class MongoProgressDao implements ProgressDao {
 
     private MongoProgress debitActions(final Query<MongoProgress> query,
                                        final int actionsPerformed) {
-        return query.modify(
-            set("version", randomUUID().toString()),
-            dec("remaining", actionsPerformed)
-        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
+        return new UpdateBuilder().with(
+                set("version", randomUUID().toString()),
+                dec("remaining", actionsPerformed)
+        ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
     }
 
     private MongoProgress advanceMission(final Query<MongoProgress> query,

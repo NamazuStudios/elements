@@ -1,7 +1,9 @@
 package dev.getelements.elements.rest.mission;
 
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.progress.ProgressService;
 import io.swagger.annotations.Api;
