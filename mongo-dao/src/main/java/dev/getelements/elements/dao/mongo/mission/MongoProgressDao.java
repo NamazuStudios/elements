@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +78,16 @@ public class MongoProgressDao implements ProgressDao {
                                               final int offset, final int count,
                                               final List<String> tags)  {
 
-        final var mongoProfile = getDozerMapper().map(profile, MongoProfile.class);
-        final var query = getDatastore().find(MongoProgress.class).filter(eq("profile",mongoProfile));
+        final var mongoProfileOptional = getMongoProfileDao()
+                .findActiveMongoProfile(profile);
+
+        if (mongoProfileOptional.isEmpty()) {
+            return Pagination.empty();
+        }
+
+        final var query = getDatastore()
+                .find(MongoProgress.class)
+                .filter(eq("profile", mongoProfileOptional.get()));
 
         if (tags != null && !tags.isEmpty()) {
             query.filter(in("missionTags", tags));
@@ -98,13 +105,19 @@ public class MongoProgressDao implements ProgressDao {
                                               final List<String> tags,
                                               final String search) {
 
+        final var mongoProfileOptional = getMongoProfileDao()
+                .findActiveMongoProfile(profile);
+
+        if (mongoProfileOptional.isEmpty()) {
+            return Pagination.empty();
+        }
+
         final var query = getBooleanQueryParser()
                 .parse(getDatastore().find(MongoProgress.class), search)
                 .filter(q -> getMongoDBUtils().isIndexedQuery(q))
                 .orElseGet(() -> getDatastore().find(MongoProgress.class));
 
-        final var mongoProfile = getDozerMapper().map(profile, MongoProfile.class);
-        query.filter(eq("profile",mongoProfile));
+        query.filter(eq("profile",mongoProfileOptional.get()));
 
         if (tags != null && !tags.isEmpty()) {
             query.filter(in("missionTags", tags));
@@ -134,21 +147,20 @@ public class MongoProgressDao implements ProgressDao {
     @Override
     public Pagination<Progress> getProgresses(final int offset, final int count,
                                               final List<String> tags, final String search) {
-        return getBooleanQueryParser()
+
+        final var query = getBooleanQueryParser()
                 .parse(getDatastore().find(MongoProgress.class), search)
                 .filter(q -> getMongoDBUtils().isIndexedQuery(q))
-                .map(query -> {
+                .orElseGet(() -> getDatastore().find(MongoProgress.class));
 
-                    if (tags != null && !tags.isEmpty()) {
-                        query.filter(in("missionTags", tags));
-                    }
+        if (tags != null && !tags.isEmpty()) {
+            query.filter(in("missionTags", tags));
+        }
 
-                    return getMongoDBUtils().paginationFromQuery(
-                            query, offset, count,
-                            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
+        return getMongoDBUtils().paginationFromQuery(
+                query, offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
 
-                })
-                .orElseGet(Pagination::empty);
     }
 
     @Override
