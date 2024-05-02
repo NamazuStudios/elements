@@ -30,11 +30,9 @@ public class UserScheduleProgressService implements ScheduleProgressService {
 
         final var profileId = getProfileSupplier().get().getId();
 
-        final var progresses = getTransactionProvider()
+        return getTransactionProvider()
                 .get()
                 .performAndClose(txn -> syncProgresses(txn, profileId, scheduleNameOrId, offset, count));
-
-        return getScheduleProgressDao().getProgresses(profileId, scheduleNameOrId, offset, count);
 
     }
 

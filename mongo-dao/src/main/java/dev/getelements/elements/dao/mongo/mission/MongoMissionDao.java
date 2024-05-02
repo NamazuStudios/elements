@@ -24,14 +24,11 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.updates.UpdateOperator;
-import dev.morphia.query.updates.UpdateOperators;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +42,7 @@ import static java.util.stream.Collectors.toList;
 
 public class MongoMissionDao implements MissionDao {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MongoMissionDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoMissionDao.class);
 
     private Datastore datastore;
 

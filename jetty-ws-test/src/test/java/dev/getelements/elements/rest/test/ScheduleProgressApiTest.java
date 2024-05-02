@@ -12,30 +12,29 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Objects;
 
-import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class ScheduleProgressApiTest {
 
     @Factory
     public static Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(ScheduleProgressApiTest.class)
-//                ,
-//                TestUtils.getInstance().getUnixFSTest(ScheduleProgressApiTest.class)
+                TestUtils.getInstance().getXodusTest(ScheduleProgressApiTest.class),
+                TestUtils.getInstance().getUnixFSTest(ScheduleProgressApiTest.class)
         };
     }
 
     @Inject
-    @Named(TEST_API_ROOT)
-    private String apiRoot;
+    private ApiRoot apiRoot;
 
     @Inject
     private Client client;
@@ -165,13 +164,22 @@ public class ScheduleProgressApiTest {
     @Test
     public void testEventAssignsMission() {
 
-        final var progresses = new PaginationWalker().toList((offset, count) -> client
-                .target(format("%s/schedule/%s/progress?offset=%d&count=%d", apiRoot, schedule.getName(), offset, count))
+        final var assignedProgresses = new PaginationWalker().toList((offset, count) -> apiRoot
+                .formatPagination("/schedule/%s/progress?", offset, count, schedule.getName())
                 .request()
                 .header("Authorization", format("Bearer %s", user.getSessionSecret()))
                 .get(ProgressPagination.class));
 
-        assertEquals(progresses.size(), 1);
+        assertEquals(assignedProgresses.size(), 1);
+
+        final var allProgresses = getAllProgresses();
+
+        assignedProgresses.forEach(progress -> {
+            final var exists = allProgresses
+                    .stream()
+                    .anyMatch(p -> Objects.equals(p.getId(), progress.getId()));
+            assertTrue(exists, "Expected progress to exist in listing of all Progresses.");
+        });
 
     }
 
@@ -182,8 +190,8 @@ public class ScheduleProgressApiTest {
         update.setEnd(1000L);
         update.setMissionNamesOrIds(List.of(mission.getName()));
 
-        final var response = client
-                .target(format("%s/schedule/%s/event/%s", apiRoot, schedule.getName(), scheduleEvent.getId()))
+        final var response = apiRoot
+                .formatTarget("/schedule/%s/event/%s", schedule.getName(), scheduleEvent.getId())
                 .request()
                 .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
                 .put(Entity.entity(update, APPLICATION_JSON));
@@ -196,20 +204,32 @@ public class ScheduleProgressApiTest {
     @Test(dependsOnMethods = "testForceEventExpiration")
     public void testEventExpiresMission() {
 
-        final var request = new CreateScheduleEventRequest();
-        request.setMissionNamesOrIds(List.of(mission.getName()));
-
-        final var progresses = new PaginationWalker().toList((offset, count) -> client
-                .target(format("%s/schedule/%s/progress?offset=%d&count=%d",
-                        apiRoot,
-                        schedule.getName(),
-                        offset, count))
+        final var assignedProgresses = new PaginationWalker().toList((offset, count) -> apiRoot
+                .formatPagination("/schedule/%s/progress?", offset, count, schedule.getName())
                 .request()
                 .header("Authorization", format("Bearer %s", user.getSessionSecret()))
                 .get(ProgressPagination.class));
 
-        assertEquals(progresses.size(), 0);
+        assertEquals(assignedProgresses.size(), 0);
 
+        final var allProgresses = getAllProgresses();
+
+        assignedProgresses.forEach(progress -> {
+            final var exists = allProgresses
+                    .stream()
+                    .noneMatch(p -> Objects.equals(p.getId(), progress.getId()));
+            assertTrue(exists, "Expected progress to exist in listing of all Progresses.");
+        });
+
+    }
+
+    private List<Progress> getAllProgresses() {
+        return new PaginationWalker().toList((offset, count) -> apiRoot
+                .formatPagination("/progress?", offset, count)
+                .request()
+                .accept(APPLICATION_JSON)
+                .header("Authorization", format("Bearer %s", user.getSessionSecret()))
+                .get(ProgressPagination.class));
     }
 
 }
