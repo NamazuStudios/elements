@@ -276,6 +276,7 @@ public class MongoProgressDao implements ProgressDao {
 
     @Override
     public void deleteProgress(final String progressId) {
+
         final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(progressId);
         final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
         query.filter(eq("_id", mongoProgressId));

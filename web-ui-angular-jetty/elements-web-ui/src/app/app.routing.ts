@@ -23,7 +23,6 @@ const appRoutes: Routes = [
     component: UsersListComponent,
     canActivate: [AuthenticationGuard],
   },
-  // { path: 'users/:id', component: UserDetailComponent, canActivate: [AuthenticationGuard] },
   {
     path: "applications",
     component: ApplicationsListComponent,
@@ -36,6 +35,11 @@ const appRoutes: Routes = [
   },
   {
     path: "missions",
+    component: MissionsListComponent,
+    canActivate: [AuthenticationGuard],
+  },
+  {
+    path: "schedules",
     component: MissionsListComponent,
     canActivate: [AuthenticationGuard],
   },
@@ -74,8 +78,6 @@ const appRoutes: Routes = [
     component: NeoSmartContractsListComponent,
     canActivate: [AuthenticationGuard],
   },
-  // { path: 'applications/:id', component: ApplicationDetailComponent, canActivate: [AuthenticationGuard] },
-  // { path: 'applications/:applicationId/configurations/:id', component: ApplicationConfigurationDetailComponent, canActivate: [AuthenticationGuard] },
   { path: "**", redirectTo: "" },
 ];
 

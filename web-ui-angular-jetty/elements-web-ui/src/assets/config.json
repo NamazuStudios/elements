@@ -1,5 +1,5 @@
 {
   "api": {
-    "url": "https://api-dev.wincast.io/api/rest"
+    "url": "http://localhost:4200/api/rest"
   }
 }
