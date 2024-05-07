@@ -43,3 +43,9 @@ export { UsernamePasswordSessionRequest } from './models/username-password-sessi
 export { Mission } from './models/mission';
 export { MissionStep } from './models/mission-step';
 export { Reward } from './models/reward';
+export { Schedule } from './models/schedule'
+export { CreateScheduleRequest } from './models/create-schedule-request'
+export { UpdateScheduleRequest } from './models/update-schedule-request'
+export { ScheduleEvent } from './models/schedule-event'
+export { CreateScheduleEventRequest } from './models/create-schedule-event-request'
+export { UpdateScheduleEventRequest } from './models/update-schedule-event-request'
