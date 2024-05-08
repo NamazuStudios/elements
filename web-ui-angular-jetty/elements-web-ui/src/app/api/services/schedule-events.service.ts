@@ -10,11 +10,12 @@ import {filter as __filter, map as __map} from 'rxjs/operators';
 import {Item} from '../models/item';
 import {CreateScheduleRequest, Schedule, UpdateScheduleRequest} from '../models';
 import {Pagination} from "../models/pagination";
+import GetScheduleEventParams = ScheduleEventsService.GetScheduleEventParams;
 
 @Injectable({
   providedIn: 'root'
 })
-export class SchedulesService extends BaseService {
+export class ScheduleEventsService extends BaseService {
 
   constructor(
     config: ApiConfiguration,
@@ -24,9 +25,9 @@ export class SchedulesService extends BaseService {
   }
 
   /**
-   * Searches all schedules and returns all matching schedules, filtered by the passed in search parameters.
+   * Searches all ScheduleEvents and returns all matching schedules, filtered by the passed in search parameters.
    * If multiple tags are specified,then all items that contain an least one of the passed in tags are returned.
-   * @param params The 'SchedulesServce.GetSchedulesParams' containing the following parameters:
+   * @param params The 'ScheduleEventsService.GetScheduleEventsParams' containing the following parameters:
    *
    * - 'tags':
    *
@@ -38,7 +39,7 @@ export class SchedulesService extends BaseService {
    *
    * @return successful operation
    */
-  getSchedulesResponse(params: SchedulesService.GetSchedulesParams) : Observable<StrictHttpResponse<Pagination<Schedule>>> {
+  getScheduleEventsResponse(params: ScheduleEventsService.GetScheduleEventsParams) : Observable<StrictHttpResponse<Pagination<Schedule>>> {
 
     let __params = this.newParams();
     let __headers = new HttpHeaders();
@@ -69,7 +70,7 @@ export class SchedulesService extends BaseService {
   /**
    * Searches all schedules and returns all matching schedules, filtered by the passed in search parameters.
    * If multiple tags are specified, then all schedules that contain at least one of the passed in tags is returned.
-   * @param params The `SchedulesService.GetSchedulesParams` containing the following parameters:
+   * @param params The `ScheduleEventsService.GetScheduleEventsParams` containing the following parameters:
    *
    * - `tags`:
    *
@@ -81,8 +82,8 @@ export class SchedulesService extends BaseService {
    *
    * @return successful operation
    */
-  getSchedules(params: SchedulesService.GetSchedulesParams): Observable<Pagination<Schedule>> {
-    return this.getSchedulesResponse(params).pipe(
+  getScheduleEvents(params: ScheduleEventsService.GetScheduleEventsParams): Observable<Pagination<Schedule>> {
+    return this.getScheduleEventsResponse(params).pipe(
       __map(_r => _r.body)
     );
   }
@@ -143,7 +144,7 @@ export class SchedulesService extends BaseService {
    * @param identifier undefined
    * @return successful operation
    */
-  getScheduleByIdentifierResponse(identifier: string): Observable<StrictHttpResponse<Schedule>> {
+  getScheduleByIdentifierResponse(params: GetScheduleEventParams): Observable<StrictHttpResponse<Schedule>> {
 
     let __params = this.newParams();
     let __headers = new HttpHeaders();
@@ -151,7 +152,7 @@ export class SchedulesService extends BaseService {
 
     let req = new HttpRequest<any>(
       'GET',
-      this.rootUrl + `/schedule/${identifier}`,
+      this.rootUrl + `/schedule/${params.scheduleNameOrId}/event/${params.scheduleEventId}`,
       __body,
       {
         headers: __headers,
@@ -172,15 +173,15 @@ export class SchedulesService extends BaseService {
    * @param identifier undefined
    * @return successful operation
    */
-  getScheduleByIdentifier(identifier: string): Observable<Schedule> {
-    return this.getScheduleByIdentifierResponse(identifier).pipe(
+  getScheduleByIdentifier(params: GetScheduleEventParams): Observable<Schedule> {
+    return this.getScheduleByIdentifierResponse(params).pipe(
       __map(_r => _r.body)
     );
   }
 
   /**
    * Supplying a schedule, this will update the Schedule identified by the identifier in the path with contents from the passed in request body.
-   * @param params The `SchedulesService.UpdateScheduleParams` containing the following parameters:
+   * @param params The `ScheduleEventsService.UpdateScheduleParams` containing the following parameters:
    *
    * - `identifier`:
    *
@@ -188,7 +189,7 @@ export class SchedulesService extends BaseService {
    *
    * @return successful operation
    */
-  updateScheduleResponse(params: SchedulesService.UpdateScheduleParams): Observable<StrictHttpResponse<Schedule>> {
+  updateScheduleResponse(params: ScheduleEventsService.UpdateScheduleParams): Observable<StrictHttpResponse<Schedule>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -215,7 +216,7 @@ export class SchedulesService extends BaseService {
 
   /**
    * Supplying a schedule, this will update the Schedule identified by the identifier in the path with contents from the passed in request body.
-   * @param params The `SchedulesService.UpdateScheduleParams` containing the following parameters:
+   * @param params The `ScheduleEventsService.UpdateScheduleParams` containing the following parameters:
    *
    * - `identifier`:
    *
@@ -223,7 +224,7 @@ export class SchedulesService extends BaseService {
    *
    * @return successful operation
    */
-  updateSchedule(params: SchedulesService.UpdateScheduleParams): Observable<Schedule> {
+  updateSchedule(params: ScheduleEventsService.UpdateScheduleParams): Observable<Schedule> {
     return this.updateScheduleResponse(params).pipe(
       __map(_r => _r.body)
     );
@@ -268,12 +269,21 @@ export class SchedulesService extends BaseService {
   }
 }
 
-module SchedulesService {
+module ScheduleEventsService {
 
   /**
-   * Parameters for getSchedules
+   * Parameters to fetch a specific schedule event.
    */
-  export interface GetSchedulesParams {
+  export interface GetScheduleEventParams {
+    scheduleNameOrId: string;
+    scheduleEventId: string;
+  }
+
+  /**
+   * Parameters for getScheduleEvents
+   */
+  export interface GetScheduleEventsParams {
+    scheduleNameOrId: string;
     tags?: Array<string>;
     search?: string;
     offset?: number;
@@ -285,6 +295,7 @@ module SchedulesService {
    */
   export interface UpdateScheduleParams {
     identifier: string;
+    scheduleNameOrId: string;
     body?: UpdateScheduleRequest;
   }
 
