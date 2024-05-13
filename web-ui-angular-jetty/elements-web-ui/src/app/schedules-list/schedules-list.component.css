@@ -7,9 +7,14 @@
   min-width: 72px;
 }
 
+.mat-column-events-action {
+  max-width: 110px;
+  min-width: 110px;
+}
+
 .mat-column-delete-action {
-  max-width: 49px;
-  min-width: 49px;
+  max-width: 80px;
+  min-width: 80px;
 }
 
 mat-cell:last-of-type,

@@ -14,6 +14,7 @@ import { AuthSchemesListComponent } from "./auth-schemes-list/auth-schemes-list.
 import { NeoSmartContractsListComponent } from "./neo-smart-contracts-list/neo-smart-contracts-list.component";
 import { CustomizationMenuComponent } from "./customization-menu/customization-menu.component";
 import { OmniChainComponent } from "./omni-chain/omni-chain.component";
+import {SchedulesListComponent} from "./schedules-list/schedules-list.component";
 
 const appRoutes: Routes = [
   { path: "login", component: LoginComponent },
@@ -40,7 +41,7 @@ const appRoutes: Routes = [
   },
   {
     path: "schedules",
-    component: MissionsListComponent,
+    component: SchedulesListComponent,
     canActivate: [AuthenticationGuard],
   },
   {
