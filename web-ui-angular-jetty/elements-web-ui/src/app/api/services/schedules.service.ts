@@ -98,7 +98,7 @@ export class SchedulesService extends BaseService {
   createScheduleResponse(body?: CreateScheduleRequest): Observable<StrictHttpResponse<Schedule>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
-    let __body: any = null;
+    let __body: any;
     __body = body;
 
     let req = new HttpRequest<any>(
@@ -119,7 +119,7 @@ export class SchedulesService extends BaseService {
       }),
       __map((_r: HttpResponse<any>) => {
         //console.log(_r);
-        return _r as StrictHttpResponse<Item>;
+        return _r as StrictHttpResponse<Schedule>;
       })
     );
   }
@@ -191,7 +191,7 @@ export class SchedulesService extends BaseService {
   updateScheduleResponse(params: SchedulesService.UpdateScheduleParams): Observable<StrictHttpResponse<Schedule>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
-    let __body: any = null;
+    let __body: any;
 
     __body = params.body;
     __body.id = params.identifier;

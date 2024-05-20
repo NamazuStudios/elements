@@ -1,0 +1,170 @@
+import {AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
+import {FormBuilder} from '@angular/forms';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
+import {ScheduleEventsService} from "../api/services/schedule-events.service";
+import {CreateScheduleEventRequest} from "../api/models/create-schedule-event-request";
+import {AlertService} from "../alert.service";
+import {MatPaginator} from "@angular/material/paginator";
+import {MatTable} from "@angular/material/table";
+import {ScheduleEventsDatasource} from "../schedule.events.datasource";
+import {fromEvent} from "rxjs";
+import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
+import {ScheduleEvent} from "../api/models/schedule-event";
+import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
+import {
+  ScheduleEventMissionsDialogComponent
+} from "../schedule-event-missions-dialog/schedule-event-missions-dialog.component";
+
+@Component({
+  selector: 'schedule-events-dialog',
+  templateUrl: './schedule-events-dialog.component.html',
+  styleUrls: ['./schedule-events-dialog.component.css']
+})
+export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
+
+  hasSelection = false;
+  scheduleEventsDatasource: ScheduleEventsDatasource;
+  displayedColumns = ['id', 'begin', 'end', 'delete-action', 'missions-action'];
+  currentScheduleEvents: ScheduleEvent[];
+
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild('input') input: ElementRef;
+  @ViewChild(MatTable) table: MatTable<ScheduleEvent>;
+
+  scheduleEventForm = this.formBuilder.group({
+    begin: [],
+    end: [],
+    scheduleId: [{value: this.data.schedule.id, disabled: true}],
+    missionNamesOrIds: []
+  });
+
+  constructor(
+    private scheduleEventsService: ScheduleEventsService, private dialogService: ConfirmationDialogService,
+    private alertService: AlertService, public dialog: MatDialog,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private formBuilder: FormBuilder,
+    public dialogRef: MatDialogRef<ScheduleEventsDialogComponent>
+  ) { }
+
+  ngOnInit() {
+    this.scheduleEventsDatasource = new ScheduleEventsDatasource(this.scheduleEventsService);
+    this.refresh(0);
+  }
+
+  close(saveChanges?: boolean): void {
+    if (!saveChanges) {
+      this.dialogRef.close();
+      return;
+    }
+  }
+
+  addScheduleEvent() {
+    const formData = this.scheduleEventForm.value;
+    console.log('data: ? ', this.data)
+    let createEventRequest: CreateScheduleEventRequest = {
+      begin: this.convertToTimestamp(formData.begin),
+      end: this.convertToTimestamp(formData.end),
+      missionNamesOrIds: formData.missionNamesOrIds
+    }
+
+    this.scheduleEventsService.createScheduleEvent(createEventRequest, this.data.schedule.id).subscribe(() => {
+      this.refresh(0);
+      this.scheduleEventForm.reset();
+      },
+        err => {
+      this.alertService.error(err);
+    });
+
+  }
+
+  refresh(delay = 500) {
+    setTimeout(() => {
+      this.scheduleEventsDatasource.loadScheduleEvents(
+        this.data.schedule.id,
+        this.paginator.pageIndex * this.paginator.pageSize,
+        this.paginator.pageSize);
+    }, delay)
+  }
+
+  ngAfterViewInit() {
+    this.paginator.pageSize = 10;
+    // server-side search
+    fromEvent(this.input.nativeElement, 'keyup')
+      .pipe(
+        debounceTime(150),
+        distinctUntilChanged(),
+        tap(() => {
+          this.paginator.pageIndex = 0;
+          this.refresh();
+        })
+      )
+      .subscribe();
+
+    this.paginator.page
+      .pipe(
+        tap(() => this.refresh())
+      )
+      .subscribe();
+
+    this.scheduleEventsDatasource.scheduleEvents$.subscribe(scheduleEvents => this.currentScheduleEvents = scheduleEvents);
+    this.scheduleEventsDatasource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
+  }
+
+  deleteScheduleEvent(scheduleEvent) {
+    this.dialogService
+      .confirm('Confirm Dialog', `Are you sure you want to delete this event`)
+      .pipe(filter(r => r))
+      .subscribe(() => {
+        this.doDeleteScheduleEvent(scheduleEvent);
+        this.refresh();
+      });
+  }
+
+  doDeleteScheduleEvent(scheduleEvent) {
+    this.scheduleEventsService.deleteScheduleEvent(this.data.schedule.id, scheduleEvent.id).subscribe(() => {},
+      error => this.alertService.error(error));
+  }
+
+  newEventMissionsSet() {
+    let missionNamesOrIds = this.scheduleEventForm.value.missionNamesOrIds;
+    return missionNamesOrIds && missionNamesOrIds.length > 0;
+  }
+
+  convertToTimestamp(date: string) {
+    return new Date(date).getTime();
+  }
+
+  convertToDate(timestamp: number) {
+    if (timestamp == 0) {
+      return 'not set'
+    }
+
+    const date = new Date(timestamp);
+    let day = String(date.getDate()).padStart(2, '0');
+    let month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0
+    let year = date.getFullYear();
+
+    return month + '/' + day + '/' + year;
+  }
+
+  addScheduleEventMissions() {
+    this.showDialog(true, []);
+  }
+
+  // editScheduleEventMissions() {
+  //   this.showDialog(false, event, result => {
+  //     return this.schedulesService.createSchedule(result);
+  //   });
+  // }
+
+  showDialog(isNew: boolean, missionsNames: string[]) {
+    this.dialog.open(ScheduleEventMissionsDialogComponent, {
+      width: '600px',
+      data: { isNew: isNew, missions: missionsNames, refresher: this }
+    });
+  }
+
+  editScheduleEventMissions(scheduleEvent) {
+
+  }
+}

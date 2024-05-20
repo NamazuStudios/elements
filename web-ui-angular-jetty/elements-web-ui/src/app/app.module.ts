@@ -104,6 +104,10 @@ import { ApplicationAttributesComponent } from './application-attributes/applica
 import {MetadataspecSelectDialogComponent} from "./metadataspec-select-dialog/metadataspec-select-dialog.component";
 import {SchedulesListComponent} from "./schedules-list/schedules-list.component";
 import {ScheduleDialogComponent} from "./schedule-dialog/schedule-dialog.component";
+import {ScheduleEventsDialogComponent} from "./schedule-events-dialog/schedule-events-dialog.component";
+import {
+  ScheduleEventMissionsDialogComponent
+} from "./schedule-event-missions-dialog/schedule-event-missions-dialog.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -117,6 +121,8 @@ export function initialize(configService: ConfigService) {
     ItemDialogComponent,
     MissionDialogComponent,
     ScheduleDialogComponent,
+    ScheduleEventsDialogComponent,
+    ScheduleEventMissionsDialogComponent,
     FacebookApplicationConfigurationDialogComponent,
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
@@ -154,6 +160,8 @@ export function initialize(configService: ConfigService) {
     SchedulesListComponent,
     MissionDialogComponent,
     ScheduleDialogComponent,
+    ScheduleEventsDialogComponent,
+    ScheduleEventMissionsDialogComponent,
     MissionStepsCardComponent,
     MissionRewardsEditorComponent,
     IosApplicationConfigurationDialogComponent,

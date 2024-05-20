@@ -7,11 +7,12 @@ import {AlertService} from '../alert.service';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
 import {fromEvent} from 'rxjs';
 import {debounceTime, distinctUntilChanged, filter, tap} from 'rxjs/operators';
-import {SchedulesDatasource} from "../api/schedule.datasource";
+import {SchedulesDatasource} from "../schedule.datasource";
 import {Schedule} from "../api/models/schedule";
 import {SchedulesService} from "../api/services/schedules.service";
 import {ScheduleDialogComponent} from "../schedule-dialog/schedule-dialog.component";
 import {ScheduleViewModel} from "../models/schedule-view-model";
+import {ScheduleEventsDialogComponent} from "../schedule-events-dialog/schedule-events-dialog.component";
 
 @Component({
   selector: 'app-digital-goods-list',
@@ -120,6 +121,13 @@ export class SchedulesListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  showEventsDialog(isNew: boolean, schedule: Schedule, next) {
+    this.dialog.open(ScheduleEventsDialogComponent, {
+      width: '900px',
+      data: { isNew: isNew, schedule: schedule, next: next, refresher: this }
+    });
+  }
+
   addSchedule() {
     this.showDialog(true, new ScheduleViewModel(), result => {
       return this.schedulesService.createSchedule(result);
@@ -132,7 +140,9 @@ export class SchedulesListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  editEvents(schedule) {
-    console.log(schedule)
+  editScheduleEvents(schedule) {
+    this.showEventsDialog(false, schedule, res => {
+      return this.schedulesService.updateSchedule({ identifier: schedule.id, body: res });
+    });
   }
 }

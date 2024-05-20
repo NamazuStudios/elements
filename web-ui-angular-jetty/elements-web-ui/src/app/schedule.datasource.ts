@@ -1,8 +1,8 @@
 import {CollectionViewer, DataSource} from '@angular/cdk/collections';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {catchError, finalize} from 'rxjs/operators';
-import {Schedule} from "./models/schedule";
-import {SchedulesService} from "./services/schedules.service";
+import {Schedule} from "./api/models/schedule";
+import {SchedulesService} from "./api/services/schedules.service";
 
 export class SchedulesDatasource implements DataSource<Schedule> {
   private schedulesSubject = new BehaviorSubject<Schedule[]>([]);

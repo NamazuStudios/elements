@@ -13,8 +13,8 @@
 }
 
 .mat-column-delete-action {
-  max-width: 80px;
-  min-width: 80px;
+  max-width: 90px;
+  min-width: 90px;
 }
 
 mat-cell:last-of-type,

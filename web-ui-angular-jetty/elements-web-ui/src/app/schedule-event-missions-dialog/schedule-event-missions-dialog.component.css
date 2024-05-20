@@ -1,0 +1,59 @@
+.prof-form-row {
+  display: flex;
+  align-items: center;
+}
+
+.prof-form-row button {
+  margin-right: 8px;
+}
+
+.prof-form-field {
+  margin-left: 25px;
+  margin-top: 15px;
+}
+
+.mat-column-delete-action {
+  max-width: 90px;
+  min-width: 90px;
+}
+
+.new-mission {
+  background: #f7f7f7;
+  padding: 20px;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+
+.new-mission-title {
+  margin-bottom: 10px;
+}
+
+.prof-form-row button:last-of-type {
+  margin-right: 0;
+}
+
+mat-form-field {
+  flex-grow: 1;
+  width: 100%;
+  margin-right: 60px;
+}
+
+h2 {
+  font-size: 18px;
+  width: 100%;
+}
+
+button {
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: auto;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+
+

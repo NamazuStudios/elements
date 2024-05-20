@@ -1,0 +1,44 @@
+<div class="schedule-events-dialog">
+  <h1 mat-dialog-title>{{data.isNew ? "Add" : "Edit"}} missions for event</h1>
+
+  <div mat-dialog-content>
+    <form [formGroup]="missionsForm">
+      <div class="new-mission">
+        <div class="prof-form-row">
+          <mat-form-field>
+            <input matInput placeholder="New mission name" name="name" formControlName="name">
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="addMission()" class="prof-form-field">
+            <mat-icon>add</mat-icon>Add Mission
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <mat-table class="data-table mb-20 mat-elevation-z8" [dataSource]="currentMissions">
+
+      <ng-container matColumnDef="name">
+        <mat-header-cell *matHeaderCellDef>Mission name</mat-header-cell>
+        <mat-cell *matCellDef="let name">{{name}}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="delete-action">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let name">
+          <button mat-raised-button color="primary" (click)="removeMission(name)">Remove</button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
+    </mat-table>
+
+  </div>
+
+  <div mat-dialog-actions>
+    <button type="button" mat-raised-button (click)="close()" [disabled]="true">Done</button>
+  </div>
+
+</div>

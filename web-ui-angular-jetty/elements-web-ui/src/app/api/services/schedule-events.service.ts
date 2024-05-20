@@ -1,14 +1,12 @@
 /* tslint:disable */
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {ApiConfiguration} from '../api-configuration';
 import {HttpClient, HttpHeaders, HttpRequest, HttpResponse} from '@angular/common/http';
 import {BaseService} from '../base-service';
 import {Observable} from 'rxjs';
 import {StrictHttpResponse} from '../strict-http-response';
-import {PaginationItem} from '../models/pagination-item';
 import {filter as __filter, map as __map} from 'rxjs/operators';
-import {Item} from '../models/item';
-import {CreateScheduleRequest, Schedule, UpdateScheduleRequest} from '../models';
+import {CreateScheduleEventRequest, ScheduleEvent, UpdateScheduleRequest} from '../models';
 import {Pagination} from "../models/pagination";
 import GetScheduleEventParams = ScheduleEventsService.GetScheduleEventParams;
 
@@ -39,7 +37,7 @@ export class ScheduleEventsService extends BaseService {
    *
    * @return successful operation
    */
-  getScheduleEventsResponse(params: ScheduleEventsService.GetScheduleEventsParams) : Observable<StrictHttpResponse<Pagination<Schedule>>> {
+  getScheduleEventsResponse(params: ScheduleEventsService.GetScheduleEventsParams) : Observable<StrictHttpResponse<Pagination<ScheduleEvent>>> {
 
     let __params = this.newParams();
     let __headers = new HttpHeaders();
@@ -50,7 +48,8 @@ export class ScheduleEventsService extends BaseService {
     if (params.count != null) __params = __params.set('count', params.count.toString());
     let req = new HttpRequest<any>(
       'GET',
-      this.rootUrl + `/schedule`,
+      // this.rootUrl + '/schedule',
+      this.rootUrl + '/schedule/' + params.scheduleNameOrId + '/event',
       __body,
       {
         headers: __headers,
@@ -61,7 +60,7 @@ export class ScheduleEventsService extends BaseService {
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<PaginationItem>;
+        return _r as StrictHttpResponse<Pagination<ScheduleEvent>>;
       })
     );
 
@@ -82,7 +81,7 @@ export class ScheduleEventsService extends BaseService {
    *
    * @return successful operation
    */
-  getScheduleEvents(params: ScheduleEventsService.GetScheduleEventsParams): Observable<Pagination<Schedule>> {
+  getScheduleEvents(params: ScheduleEventsService.GetScheduleEventsParams): Observable<Pagination<ScheduleEvent>> {
     return this.getScheduleEventsResponse(params).pipe(
       __map(_r => _r.body)
     );
@@ -94,9 +93,10 @@ export class ScheduleEventsService extends BaseService {
    * signed and with its fields properly normalized.  The supplied schedule object submitted with the request must have a name property
    * that is unique across all schedules.
    * @param body undefined
+   * @param scheduleId
    * @return successful operation
    */
-  createScheduleResponse(body?: CreateScheduleRequest): Observable<StrictHttpResponse<Schedule>> {
+  createScheduleEventResponse(body: CreateScheduleEventRequest, scheduleId: string): Observable<StrictHttpResponse<ScheduleEvent>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -104,7 +104,7 @@ export class ScheduleEventsService extends BaseService {
 
     let req = new HttpRequest<any>(
       'POST',
-      this.rootUrl + `/schedule`,
+      this.rootUrl + '/schedule/' + scheduleId + '/event',
       __body,
       {
         headers: __headers,
@@ -120,7 +120,7 @@ export class ScheduleEventsService extends BaseService {
       }),
       __map((_r: HttpResponse<any>) => {
         //console.log(_r);
-        return _r as StrictHttpResponse<Item>;
+        return _r as StrictHttpResponse<ScheduleEvent>;
       })
     );
   }
@@ -131,10 +131,11 @@ export class ScheduleEventsService extends BaseService {
    * signed and with its fields properly normalized.  The supplied schedule object submitted with the request must have a name property
    * that is unique across all schedules.
    * @param body undefined
+   * @param scheduleId
    * @return successful operation
    */
-  createSchedule(body?: CreateScheduleRequest): Observable<Schedule> {
-    return this.createScheduleResponse(body).pipe(
+  createScheduleEvent(body: CreateScheduleEventRequest, scheduleId: string): Observable<ScheduleEvent> {
+    return this.createScheduleEventResponse(body, scheduleId).pipe(
       __map(_r => _r.body)
     );
   }
@@ -144,7 +145,7 @@ export class ScheduleEventsService extends BaseService {
    * @param identifier undefined
    * @return successful operation
    */
-  getScheduleByIdentifierResponse(params: GetScheduleEventParams): Observable<StrictHttpResponse<Schedule>> {
+  getScheduleByIdentifierResponse(params: GetScheduleEventParams): Observable<StrictHttpResponse<ScheduleEvent>> {
 
     let __params = this.newParams();
     let __headers = new HttpHeaders();
@@ -163,7 +164,7 @@ export class ScheduleEventsService extends BaseService {
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<Item>;
+        return _r as StrictHttpResponse<ScheduleEvent>;
       })
     );
   }
@@ -173,7 +174,7 @@ export class ScheduleEventsService extends BaseService {
    * @param identifier undefined
    * @return successful operation
    */
-  getScheduleByIdentifier(params: GetScheduleEventParams): Observable<Schedule> {
+  getScheduleByIdentifier(params: GetScheduleEventParams): Observable<ScheduleEvent> {
     return this.getScheduleByIdentifierResponse(params).pipe(
       __map(_r => _r.body)
     );
@@ -189,7 +190,7 @@ export class ScheduleEventsService extends BaseService {
    *
    * @return successful operation
    */
-  updateScheduleResponse(params: ScheduleEventsService.UpdateScheduleParams): Observable<StrictHttpResponse<Schedule>> {
+  updateScheduleResponse(params: ScheduleEventsService.UpdateScheduleParams): Observable<StrictHttpResponse<ScheduleEvent>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -209,7 +210,7 @@ export class ScheduleEventsService extends BaseService {
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<Item>;
+        return _r as StrictHttpResponse<ScheduleEvent>;
       })
     );
   }
@@ -224,7 +225,7 @@ export class ScheduleEventsService extends BaseService {
    *
    * @return successful operation
    */
-  updateSchedule(params: ScheduleEventsService.UpdateScheduleParams): Observable<Schedule> {
+  updateSchedule(params: ScheduleEventsService.UpdateScheduleParams): Observable<ScheduleEvent> {
     return this.updateScheduleResponse(params).pipe(
       __map(_r => _r.body)
     );
@@ -234,14 +235,14 @@ export class ScheduleEventsService extends BaseService {
    * Deletes a specific schedule known to the server.
    * @param nameOrId undefined
    */
-  deleteScheduleResponse(nameOrId: string): Observable<StrictHttpResponse<void>> {
+  deleteScheduleEventResponse(scheduleId: string, nameOrId: string): Observable<StrictHttpResponse<void>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
 
     let req = new HttpRequest<any>(
       "DELETE",
-      this.rootUrl + `/schedule/${nameOrId}`,
+      this.rootUrl + '/schedule/' + scheduleId + '/event/' + nameOrId,
       __body,
       {
         headers: __headers,
@@ -262,8 +263,8 @@ export class ScheduleEventsService extends BaseService {
    * Deletes a specific schedule known to the server.
    * @param nameOrId undefined
    */
-  deleteSchedule(nameOrId: string): Observable<void> {
-    return this.deleteScheduleResponse(nameOrId).pipe(
+  deleteScheduleEvent(scheduleId: string, nameOrId: string): Observable<void> {
+    return this.deleteScheduleEventResponse(scheduleId, nameOrId).pipe(
       __map(_r => _r.body)
     );
   }
