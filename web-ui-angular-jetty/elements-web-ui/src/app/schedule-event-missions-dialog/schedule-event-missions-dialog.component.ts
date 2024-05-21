@@ -1,5 +1,4 @@
 import {Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatTable} from "@angular/material/table";
 import {Mission} from "../api/models/mission";
@@ -22,7 +21,6 @@ export class ScheduleEventMissionsDialogComponent implements OnInit {
   constructor(
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private formBuilder: FormBuilder,
     public dialogRef: MatDialogRef<ScheduleEventMissionsDialogComponent>
   ) { }
 
@@ -43,7 +41,6 @@ export class ScheduleEventMissionsDialogComponent implements OnInit {
   removeMission(name) {
     this.currentMissionNames = this.currentMissionNames.filter(mission => mission !== name);
   }
-
 
   addMission() {
     this.dialog.open(MissionSelectDialogComponent, {

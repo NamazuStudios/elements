@@ -1,9 +1,7 @@
 import {AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatPaginator} from '@angular/material/paginator';
-import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTable} from '@angular/material/table';
-import {AlertService} from '../../alert.service';
 import {fromEvent} from 'rxjs';
 import {debounceTime, distinctUntilChanged, tap} from 'rxjs/operators';
 import {Mission} from 'src/app/api/models';
@@ -28,9 +26,7 @@ export class MissionSelectDialogComponent implements OnInit, AfterViewInit {
   constructor(public dialogRef: MatDialogRef<MissionSelectDialogComponent>,
               public dialog: MatDialog,
               @Inject(MAT_DIALOG_DATA) public data: any,
-              private missionsService: MissionsService,
-              private alertService: AlertService,
-              private snackBar: MatSnackBar) { }
+              private missionsService: MissionsService){ }
 
   ngOnInit() {
     this.dataSource = new MissionsDatasource(this.missionsService);

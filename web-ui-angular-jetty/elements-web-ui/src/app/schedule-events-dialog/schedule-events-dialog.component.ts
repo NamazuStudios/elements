@@ -52,61 +52,9 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
     this.refresh(0);
   }
 
-  close(saveChanges?: boolean): void {
-    if (!saveChanges) {
-      this.dialogRef.close();
-      return;
-    }
-  }
-
-  addScheduleEvent() {
-    const formData = this.scheduleEventForm.value;
-    let createEventRequest: CreateScheduleEventRequest = {
-      begin: this.convertToTimestamp(formData.begin),
-      end: this.convertToTimestamp(formData.end),
-      missionNamesOrIds: this.newMissionNames
-    }
-
-    this.scheduleEventsService.createScheduleEvent(createEventRequest, this.data.schedule.id).subscribe(() => {
-      this.refresh(0);
-      this.scheduleEventForm.reset();
-      this.newMissionNames = [];
-      this.alertService.success("New event added.")
-      },
-        err => {
-      this.alertService.error(err);
-    });
-  }
-
-  updateScheduleEvent(updatedScheduleEvent: ScheduleEvent, updatedMissionNames?: string[]) {
-    let updateRequest: UpdateScheduleEventRequest = {
-      begin: updatedScheduleEvent.begin,
-      end: updatedScheduleEvent.end,
-      missionNamesOrIds: updatedMissionNames
-    }
-    this.scheduleEventsService.updateScheduleEvent(updateRequest, this.data.schedule.id, updatedScheduleEvent.id).subscribe(() => {
-        this.refresh(0);
-        this.scheduleEventForm.reset();
-        this.newMissionNames = [];
-        this.alertService.success("Event updated.")
-      },
-      err => {
-        this.alertService.error(err);
-      });
-  }
-
-  refresh(delay = 500) {
-    setTimeout(() => {
-      this.scheduleEventsDatasource.loadScheduleEvents(
-        this.data.schedule.id,
-        this.paginator.pageIndex * this.paginator.pageSize,
-        this.paginator.pageSize);
-    }, delay)
-  }
-
   ngAfterViewInit() {
     this.paginator.pageSize = 10;
-    // server-side search
+
     fromEvent(this.input.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
@@ -126,6 +74,52 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
 
     this.scheduleEventsDatasource.scheduleEvents$.subscribe(scheduleEvents => this.currentScheduleEvents = scheduleEvents);
     this.scheduleEventsDatasource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
+  }
+
+  close(saveChanges?: boolean): void {
+    if (!saveChanges) {
+      this.dialogRef.close();
+      return;
+    }
+  }
+
+  addScheduleEvent() {
+    const formData = this.scheduleEventForm.value;
+    let createEventRequest: CreateScheduleEventRequest = {
+      begin: this.convertToTimestamp(formData.begin),
+      end: this.convertToTimestamp(formData.end),
+      missionNamesOrIds: this.newMissionNames
+    }
+
+    this.scheduleEventsService.createScheduleEvent(createEventRequest, this.data.schedule.id).subscribe(() => {
+        this.afterMissionsSetup("New event added.")
+      },
+        err => {
+      this.alertService.error(err);
+    });
+  }
+
+  updateScheduleEvent(updatedScheduleEvent: ScheduleEvent, updatedMissionNames?: string[]) {
+    let updateRequest: UpdateScheduleEventRequest = {
+      begin: updatedScheduleEvent.begin,
+      end: updatedScheduleEvent.end,
+      missionNamesOrIds: updatedMissionNames
+    }
+    this.scheduleEventsService.updateScheduleEvent(updateRequest, this.data.schedule.id, updatedScheduleEvent.id).subscribe(() => {
+        this.afterMissionsSetup("Event updated.")
+      },
+      err => {
+        this.alertService.error(err);
+      });
+  }
+
+  refresh(delay = 500) {
+    setTimeout(() => {
+      this.scheduleEventsDatasource.loadScheduleEvents(
+        this.data.schedule.id,
+        this.paginator.pageIndex * this.paginator.pageSize,
+        this.paginator.pageSize);
+    }, delay)
   }
 
   deleteScheduleEvent(scheduleEvent) {
@@ -180,5 +174,12 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
 
   newEventMissionsSet(): boolean {
     return this.newMissionNames && this.newMissionNames.length > 0;
+  }
+
+  afterMissionsSetup(resultMessage: string) {
+    this.refresh(0);
+    this.scheduleEventForm.reset();
+    this.newMissionNames = [];
+    this.alertService.success(resultMessage)
   }
 }

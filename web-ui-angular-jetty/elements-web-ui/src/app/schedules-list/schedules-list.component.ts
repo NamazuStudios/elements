@@ -81,7 +81,6 @@ export class SchedulesListComponent implements OnInit, AfterViewInit {
     return numSelected == numRows;
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
     this.isAllSelected() ?
       this.selection.clear() :
@@ -134,13 +133,13 @@ export class SchedulesListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  editSchedule(schedule) {
+  editSchedule(schedule: Schedule) {
     this.showDialog(false, schedule, res => {
       return this.schedulesService.updateSchedule({ identifier: schedule.id, body: res });
     });
   }
 
-  editScheduleEvents(schedule) {
+  editScheduleEvents(schedule: Schedule) {
     this.showEventsDialog(false, schedule, res => {
       return this.schedulesService.updateSchedule({ identifier: schedule.id, body: res });
     });
