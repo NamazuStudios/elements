@@ -23,7 +23,7 @@ export class SchedulesListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Schedule>;
   dataSource: SchedulesDatasource;
-  displayedColumns = ['select', 'id', 'name', 'edit-action', 'delete-action', 'events-action'];
+  displayedColumns = ['select', 'id', 'name', 'displayName', 'edit-action', 'delete-action', 'events-action'];
   currentSchedules: Schedule[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;

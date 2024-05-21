@@ -14,6 +14,7 @@ import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dia
 import {
   ScheduleEventMissionsDialogComponent
 } from "../schedule-event-missions-dialog/schedule-event-missions-dialog.component";
+import {UpdateScheduleEventRequest} from "../api/models/update-schedule-event-request";
 
 @Component({
   selector: 'schedule-events-dialog',
@@ -26,6 +27,7 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
   scheduleEventsDatasource: ScheduleEventsDatasource;
   displayedColumns = ['id', 'begin', 'end', 'delete-action', 'missions-action'];
   currentScheduleEvents: ScheduleEvent[];
+  newMissionNames: string[]
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild('input') input: ElementRef;
@@ -35,7 +37,6 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
     begin: [],
     end: [],
     scheduleId: [{value: this.data.schedule.id, disabled: true}],
-    missionNamesOrIds: []
   });
 
   constructor(
@@ -60,21 +61,38 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
 
   addScheduleEvent() {
     const formData = this.scheduleEventForm.value;
-    console.log('data: ? ', this.data)
     let createEventRequest: CreateScheduleEventRequest = {
       begin: this.convertToTimestamp(formData.begin),
       end: this.convertToTimestamp(formData.end),
-      missionNamesOrIds: formData.missionNamesOrIds
+      missionNamesOrIds: this.newMissionNames
     }
 
     this.scheduleEventsService.createScheduleEvent(createEventRequest, this.data.schedule.id).subscribe(() => {
       this.refresh(0);
       this.scheduleEventForm.reset();
+      this.newMissionNames = [];
+      this.alertService.success("New event added.")
       },
         err => {
       this.alertService.error(err);
     });
+  }
 
+  updateScheduleEvent(updatedScheduleEvent: ScheduleEvent, updatedMissionNames?: string[]) {
+    let updateRequest: UpdateScheduleEventRequest = {
+      begin: updatedScheduleEvent.begin,
+      end: updatedScheduleEvent.end,
+      missionNamesOrIds: updatedMissionNames
+    }
+    this.scheduleEventsService.updateScheduleEvent(updateRequest, this.data.schedule.id, updatedScheduleEvent.id).subscribe(() => {
+        this.refresh(0);
+        this.scheduleEventForm.reset();
+        this.newMissionNames = [];
+        this.alertService.success("Event updated.")
+      },
+      err => {
+        this.alertService.error(err);
+      });
   }
 
   refresh(delay = 500) {
@@ -125,11 +143,6 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
       error => this.alertService.error(error));
   }
 
-  newEventMissionsSet() {
-    let missionNamesOrIds = this.scheduleEventForm.value.missionNamesOrIds;
-    return missionNamesOrIds && missionNamesOrIds.length > 0;
-  }
-
   convertToTimestamp(date: string) {
     return new Date(date).getTime();
   }
@@ -138,7 +151,6 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
     if (timestamp == 0) {
       return 'not set'
     }
-
     const date = new Date(timestamp);
     let day = String(date.getDate()).padStart(2, '0');
     let month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0
@@ -147,24 +159,26 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
     return month + '/' + day + '/' + year;
   }
 
-  addScheduleEventMissions() {
-    this.showDialog(true, []);
-  }
-
-  // editScheduleEventMissions() {
-  //   this.showDialog(false, event, result => {
-  //     return this.schedulesService.createSchedule(result);
-  //   });
-  // }
-
-  showDialog(isNew: boolean, missionsNames: string[]) {
+  showMissionsDialog(isNew: boolean, scheduleEvent?: ScheduleEvent) {
+    let currentMissionNames = this.newEventMissionsSet() ? this.newMissionNames : [];
+    if (!isNew && scheduleEvent.missions) {
+      currentMissionNames = scheduleEvent.missions.map(mission => mission.name);
+    }
     this.dialog.open(ScheduleEventMissionsDialogComponent, {
-      width: '600px',
-      data: { isNew: isNew, missions: missionsNames, refresher: this }
+      width: '650px',
+      data: { isNew: isNew, missions: currentMissionNames, refresher: this,
+        next: result => {
+          if(isNew) {
+            this.newMissionNames = result;
+          } else {
+            this.updateScheduleEvent(scheduleEvent, result);
+          }
+        }
+      }
     });
   }
 
-  editScheduleEventMissions(scheduleEvent) {
-
+  newEventMissionsSet(): boolean {
+    return this.newMissionNames && this.newMissionNames.length > 0;
   }
 }

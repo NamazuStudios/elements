@@ -2,20 +2,13 @@
   <h1 mat-dialog-title>{{data.isNew ? "Add" : "Edit"}} missions for event</h1>
 
   <div mat-dialog-content>
-    <form [formGroup]="missionsForm">
-      <div class="new-mission">
-        <div class="prof-form-row">
-          <mat-form-field>
-            <input matInput placeholder="New mission name" name="name" formControlName="name">
-          </mat-form-field>
-          <button mat-raised-button color="primary" (click)="addMission()" class="prof-form-field">
-            <mat-icon>add</mat-icon>Add Mission
-          </button>
-        </div>
+      <div class="mb-20">
+        <button mat-raised-button color="primary" (click)="addMission()" class="prof-form-field">
+          <mat-icon>search</mat-icon> Add Mission
+        </button>
       </div>
-    </form>
 
-    <mat-table class="data-table mb-20 mat-elevation-z8" [dataSource]="currentMissions">
+    <mat-table class="data-table mb-20 mat-elevation-z8" [dataSource]="currentMissionNames">
 
       <ng-container matColumnDef="name">
         <mat-header-cell *matHeaderCellDef>Mission name</mat-header-cell>
@@ -38,7 +31,7 @@
   </div>
 
   <div mat-dialog-actions>
-    <button type="button" mat-raised-button (click)="close()" [disabled]="true">Done</button>
+    <button type="button" mat-raised-button (click)="close(true)" [disabled]="!this.missionsSet()">Done</button>
   </div>
 
 </div>

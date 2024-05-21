@@ -108,6 +108,9 @@ import {ScheduleEventsDialogComponent} from "./schedule-events-dialog/schedule-e
 import {
   ScheduleEventMissionsDialogComponent
 } from "./schedule-event-missions-dialog/schedule-event-missions-dialog.component";
+import {
+  MissionSelectDialogComponent
+} from "./schedule-event-missions-dialog/mission-select-dialog/mission-select-dialog.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -162,6 +165,7 @@ export function initialize(configService: ConfigService) {
     ScheduleDialogComponent,
     ScheduleEventsDialogComponent,
     ScheduleEventMissionsDialogComponent,
+    MissionSelectDialogComponent,
     MissionStepsCardComponent,
     MissionRewardsEditorComponent,
     IosApplicationConfigurationDialogComponent,

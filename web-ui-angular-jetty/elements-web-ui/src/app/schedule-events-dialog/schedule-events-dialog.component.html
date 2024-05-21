@@ -18,15 +18,12 @@
             <mat-datepicker-toggle class="datepicker-toggle" matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
             <mat-datepicker #endPicker></mat-datepicker>
           </mat-form-field>
-          <mat-checkbox [checked]="newEventMissionsSet()" [disabled]="true" class="prof-form-field">
-            Missions set
-          </mat-checkbox>
-          <button mat-raised-button color="primary" (click)="addScheduleEventMissions()" class="prof-form-field">
+          <button mat-raised-button color="primary" (click)="showMissionsDialog(true)" class="prof-form-field">
             <mat-icon>add</mat-icon>Add Mission
           </button>
         </div>
         <div class="prof-form-row mt-20">
-          <button mat-raised-button color="primary" (click)="addScheduleEvent()"><mat-icon>add</mat-icon>
+          <button mat-raised-button color="primary" (click)="addScheduleEvent()" [disabled]="!newEventMissionsSet()"><mat-icon>add</mat-icon>
             Add Event
           </button>
         </div>
@@ -60,7 +57,7 @@
       <ng-container matColumnDef="missions-action">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
         <mat-cell *matCellDef="let scheduleEvent">
-          <button mat-raised-button color="primary" (click)="editScheduleEventMissions(scheduleEvent)"><mat-icon>inventory</mat-icon> Missions</button>
+          <button mat-raised-button color="primary" (click)="showMissionsDialog(false, scheduleEvent)"><mat-icon>inventory</mat-icon> Missions</button>
         </mat-cell>
       </ng-container>
 

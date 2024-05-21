@@ -1,10 +1,9 @@
 import {Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {AlertService} from "../alert.service";
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatTable} from "@angular/material/table";
-import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
 import {Mission} from "../api/models/mission";
+import {MissionSelectDialogComponent} from "./mission-select-dialog/mission-select-dialog.component";
 
 @Component({
   selector: 'schedule-event-missions-dialog',
@@ -15,25 +14,20 @@ export class ScheduleEventMissionsDialogComponent implements OnInit {
 
   hasSelection = false;
   displayedColumns = ['name', 'delete-action'];
-  currentMissions: string[];
+  currentMissionNames: string[];
 
   @ViewChild('input') input: ElementRef;
   @ViewChild(MatTable) table: MatTable<Mission>;
 
-  missionsForm = this.formBuilder.group({
-    name: []
-  });
-
   constructor(
-    private dialogService: ConfirmationDialogService,
-    private alertService: AlertService,
+    public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private formBuilder: FormBuilder,
     public dialogRef: MatDialogRef<ScheduleEventMissionsDialogComponent>
   ) { }
 
   ngOnInit() {
-    this.currentMissions = this.data.missions;
+    this.currentMissionNames = this.data.missions;
   }
 
   close(saveChanges?: boolean): void {
@@ -41,15 +35,28 @@ export class ScheduleEventMissionsDialogComponent implements OnInit {
       this.dialogRef.close();
       return;
     }
+
+    this.data.next(this.currentMissionNames);
+    this.dialogRef.close();
   }
 
   removeMission(name) {
-    this.currentMissions = this.currentMissions.filter(mission => mission !== name);
+    this.currentMissionNames = this.currentMissionNames.filter(mission => mission !== name);
   }
 
+
   addMission() {
-    let newMission = this.missionsForm.value.name;
-    this.currentMissions = [...this.currentMissions, newMission];
-    this.missionsForm.reset();
+    this.dialog.open(MissionSelectDialogComponent, {
+      width: '500px',
+      data: {
+        next: result => {
+          this.currentMissionNames = [...this.currentMissionNames, result.name];
+        }
+      }
+    });
+  }
+
+  missionsSet() {
+    return this.currentMissionNames && this.currentMissionNames.length > 0;
   }
 }

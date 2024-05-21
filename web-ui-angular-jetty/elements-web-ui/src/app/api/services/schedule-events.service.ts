@@ -6,9 +6,8 @@ import {BaseService} from '../base-service';
 import {Observable} from 'rxjs';
 import {StrictHttpResponse} from '../strict-http-response';
 import {filter as __filter, map as __map} from 'rxjs/operators';
-import {CreateScheduleEventRequest, ScheduleEvent, UpdateScheduleRequest} from '../models';
+import {CreateScheduleEventRequest, ScheduleEvent, UpdateScheduleEventRequest} from '../models';
 import {Pagination} from "../models/pagination";
-import GetScheduleEventParams = ScheduleEventsService.GetScheduleEventParams;
 
 @Injectable({
   providedIn: 'root'
@@ -88,11 +87,8 @@ export class ScheduleEventsService extends BaseService {
   }
 
   /**
-   * Supplying a schedule object, this will create a new schedule with a newly assigned unique id.
-   * The Schedule representation returned in the response body is a representation of the Schedule as persisted with a unique identifier
-   * signed and with its fields properly normalized.  The supplied schedule object submitted with the request must have a name property
-   * that is unique across all schedules.
-   * @param body undefined
+   * Supplying a scheduleEvent object, this will create a new scheduleEvent with a newly assigned unique id.
+   * @param body CreateScheduleEventRequest
    * @param scheduleId
    * @return successful operation
    */
@@ -126,11 +122,8 @@ export class ScheduleEventsService extends BaseService {
   }
 
   /**
-   * Supplying a schedule object, this will create a new schedule with a newly assigned unique id.
-   * The Schedule representation returned in the response body is a representation of the Schedule as persisted with a unique identifier
-   * signed and with its fields properly normalized.  The supplied schedule object submitted with the request must have a name property
-   * that is unique across all schedules.
-   * @param body undefined
+   * Supplying a scheduleEvent object, this will create a new scheduleEvent with a newly assigned unique id.
+   * @param body CreateScheduleEventRequest
    * @param scheduleId
    * @return successful operation
    */
@@ -141,69 +134,23 @@ export class ScheduleEventsService extends BaseService {
   }
 
   /**
-   * Looks up a schedule by the passed in identifier
-   * @param identifier undefined
+   * Supplying a scheduleEvent, this will update the ScheduleEvent identified by the identifier in the path with contents from the passed in request body.
    * @return successful operation
+   * @param body
+   * @param scheduleId
+   * @param eventId
    */
-  getScheduleByIdentifierResponse(params: GetScheduleEventParams): Observable<StrictHttpResponse<ScheduleEvent>> {
-
-    let __params = this.newParams();
+  updateScheduleEventResponse(body: UpdateScheduleEventRequest, scheduleId: string, eventId: string): Observable<StrictHttpResponse<ScheduleEvent>> {
     let __headers = new HttpHeaders();
     let __body: any = null;
 
-    let req = new HttpRequest<any>(
-      'GET',
-      this.rootUrl + `/schedule/${params.scheduleNameOrId}/event/${params.scheduleEventId}`,
-      __body,
-      {
-        headers: __headers,
-        params: __params,
-        responseType: 'json'
-      });
-
-    return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
-      __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<ScheduleEvent>;
-      })
-    );
-  }
-
-  /**
-   * Looks up a schedule by the passed in identifier
-   * @param identifier undefined
-   * @return successful operation
-   */
-  getScheduleByIdentifier(params: GetScheduleEventParams): Observable<ScheduleEvent> {
-    return this.getScheduleByIdentifierResponse(params).pipe(
-      __map(_r => _r.body)
-    );
-  }
-
-  /**
-   * Supplying a schedule, this will update the Schedule identified by the identifier in the path with contents from the passed in request body.
-   * @param params The `ScheduleEventsService.UpdateScheduleParams` containing the following parameters:
-   *
-   * - `identifier`:
-   *
-   * - `body`:
-   *
-   * @return successful operation
-   */
-  updateScheduleResponse(params: ScheduleEventsService.UpdateScheduleParams): Observable<StrictHttpResponse<ScheduleEvent>> {
-    let __params = this.newParams();
-    let __headers = new HttpHeaders();
-    let __body: any = null;
-
-    __body = params.body;
-    __body.id = params.identifier;
+    __body = body;
     let req = new HttpRequest<any>(
       'PUT',
-      this.rootUrl + `/schedule/${params.identifier}`,
+      this.rootUrl + '/schedule/' + scheduleId + '/event/' + eventId,
        __body,
       {
         headers: __headers,
-        params: __params,
         responseType: 'json'
       }
     );
@@ -216,17 +163,14 @@ export class ScheduleEventsService extends BaseService {
   }
 
   /**
-   * Supplying a schedule, this will update the Schedule identified by the identifier in the path with contents from the passed in request body.
-   * @param params The `ScheduleEventsService.UpdateScheduleParams` containing the following parameters:
-   *
-   * - `identifier`:
-   *
-   * - `body`:
-   *
+   * Supplying a scheduleEvent, this will update the Schedule event identified by the identifier in the path with contents from the passed in request body.
    * @return successful operation
+   * @param body
+   * @param shceduleId
+   * @param eventId
    */
-  updateSchedule(params: ScheduleEventsService.UpdateScheduleParams): Observable<ScheduleEvent> {
-    return this.updateScheduleResponse(params).pipe(
+  updateScheduleEvent(body: UpdateScheduleEventRequest, shceduleId: string, eventId: string): Observable<ScheduleEvent> {
+    return this.updateScheduleEventResponse(body, shceduleId, eventId).pipe(
       __map(_r => _r.body)
     );
   }
@@ -289,15 +233,6 @@ module ScheduleEventsService {
     search?: string;
     offset?: number;
     count?: number;
-  }
-
-  /**
-   * Parameters for updateSchedule
-   */
-  export interface UpdateScheduleParams {
-    identifier: string;
-    scheduleNameOrId: string;
-    body?: UpdateScheduleRequest;
   }
 
 }
