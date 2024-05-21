@@ -7,8 +7,7 @@ import {AlertService} from "../alert.service";
 import {MatPaginator} from "@angular/material/paginator";
 import {MatTable} from "@angular/material/table";
 import {ScheduleEventsDatasource} from "../schedule.events.datasource";
-import {fromEvent} from "rxjs";
-import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
+import {filter, tap} from "rxjs/operators";
 import {ScheduleEvent} from "../api/models/schedule-event";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
 import {
@@ -54,17 +53,6 @@ export class ScheduleEventsDialogComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.paginator.pageSize = 10;
-
-    fromEvent(this.input.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        distinctUntilChanged(),
-        tap(() => {
-          this.paginator.pageIndex = 0;
-          this.refresh();
-        })
-      )
-      .subscribe();
 
     this.paginator.page
       .pipe(
