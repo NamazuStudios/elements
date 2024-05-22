@@ -36,6 +36,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!missionForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!missionValid()">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
