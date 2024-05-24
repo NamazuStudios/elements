@@ -31,8 +31,7 @@ import dev.getelements.elements.service.leaderboard.RankServiceProvider;
 import dev.getelements.elements.service.leaderboard.ScoreServiceProvider;
 import dev.getelements.elements.service.manifest.ManifestServiceProvider;
 import dev.getelements.elements.service.match.MatchServiceProvider;
-import dev.getelements.elements.service.mission.MissionService;
-import dev.getelements.elements.service.mission.MissionServiceProvider;
+import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.notification.FCMRegistrationServiceProvider;
 import dev.getelements.elements.service.profile.ProfileOverrideServiceProvider;
 import dev.getelements.elements.service.profile.ProfileServiceProvider;
@@ -259,6 +258,18 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(InviteService.class)
                 .toProvider(InviteServiceProvider.class)
+                .in(scope);
+
+        bind(ScheduleService.class)
+                .toProvider(ScheduleServiceProvider.class)
+                .in(scope);
+
+        bind(ScheduleEventService.class)
+                .toProvider(ScheduleEventServiceProvider.class)
+                .in(scope);
+
+        bind(ScheduleProgressService.class)
+                .toProvider(ScheduleProgressServiceProvider.class)
                 .in(scope);
 
     }

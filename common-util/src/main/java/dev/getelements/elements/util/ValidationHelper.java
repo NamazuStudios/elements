@@ -26,7 +26,7 @@ public class ValidationHelper {
      * @param model the model
      * @throws ValidationFailureException if validation fails.
      */
-    public void validateModel(final Object model) throws ValidationFailureException {
+    public <T> T validateModel(final T model) throws ValidationFailureException {
 
         if (model == null) {
             throw new InvalidDataException("Received null instance.");
@@ -37,6 +37,8 @@ public class ValidationHelper {
         if (!violationSet.isEmpty()) {
             throw new ValidationFailureException(violationSet, model);
         }
+
+        return model;
 
     }
 
@@ -50,9 +52,9 @@ public class ValidationHelper {
      * @param remaining the remaining n groups
      * @throws ValidationFailureException if validation fails.
      */
-    public void validateModel(final Object model,
-                              final Class<?> first,
-                              final Class<?> ... remaining) throws ValidationFailureException {
+    public <T> T validateModel(final T model,
+                               final Class<?> first,
+                               final Class<?> ... remaining) throws ValidationFailureException {
 
         if (model == null) {
             throw new InvalidDataException("Received null instance.");
@@ -68,6 +70,8 @@ public class ValidationHelper {
         if (!violationSet.isEmpty()) {
             throw new ValidationFailureException(violationSet, model);
         }
+
+        return model;
 
     }
 

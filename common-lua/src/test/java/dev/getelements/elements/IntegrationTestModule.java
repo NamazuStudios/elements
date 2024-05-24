@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import dev.getelements.elements.model.application.Application;
-import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
+import dev.getelements.elements.dao.mongo.test.MongoTestInstanceModule;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.rt.annotation.ExposedBindingAnnotation;
 import dev.getelements.elements.rt.annotation.ModuleDefinition;

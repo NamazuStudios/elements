@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.model.mission;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.morphia.annotations.*;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,7 +14,6 @@ import static java.util.stream.Collectors.toList;
  *
  * Created by davidjbrooks on 12/04/2018.
  */
-
 @Entity(value = "progress", useDiscriminator = false)
 public class MongoProgress {
 
@@ -28,13 +28,29 @@ public class MongoProgress {
     @Reference
     private MongoProfile profile;
 
-    private MongoProgressMissionInfo mission;
+    @Indexed
+    @Reference
+    private MongoMission mission;
+
+    @Indexed
+    private List<String> missionTags;
 
     @Property
     private int sequence;
 
     @Property
     private int remaining;
+
+    @Property
+    private boolean managedBySchedule;
+
+    @Indexed
+    @Reference
+    private List<MongoSchedule> schedules;
+
+    @Indexed
+    @Reference
+    private List<MongoScheduleEvent> scheduleEvents;
 
     @Reference(ignoreMissing = true)
     private List<MongoRewardIssuance> rewardIssuances;
@@ -70,12 +86,13 @@ public class MongoProgress {
 
     public MongoStep getStepForSequence(final int sequence) {
 
-        final MongoProgressMissionInfo mission = getMission();
-        final List<MongoStep> mongoSteps = mission.getSteps();
+        final var mission = getMission();
+        final var mongoSteps = mission == null ? null : mission.getSteps();
+        final var finalRepeatStep = mission == null ? null : mission.getFinalRepeatStep();
 
-        return (mongoSteps == null || sequence >= mongoSteps.size()) ?
-                mission.getFinalRepeatStep() :
-                mongoSteps.get(sequence);
+        return (mongoSteps == null || sequence >= mongoSteps.size())
+                ? finalRepeatStep
+                : mongoSteps.get(sequence);
 
     }
 
@@ -87,12 +104,20 @@ public class MongoProgress {
         this.remaining = remaining;
     }
 
-    public MongoProgressMissionInfo getMission() {
+    public MongoMission getMission() {
         return mission;
     }
 
-    public void setMission(MongoProgressMissionInfo mission) {
+    public void setMission(MongoMission mission) {
         this.mission = mission;
+    }
+
+    public List<String> getMissionTags() {
+        return missionTags;
+    }
+
+    public void setMissionTags(List<String> missionTags) {
+        this.missionTags = missionTags;
     }
 
     public int getSequence() {
@@ -111,44 +136,34 @@ public class MongoProgress {
         this.rewardIssuances = rewardIssuances;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof MongoProgress)) return false;
-        MongoProgress that = (MongoProgress) object;
-        return getRemaining() == that.getRemaining() &&
-                getSequence() == that.getSequence() &&
-                Objects.equals(getObjectId(), that.getObjectId()) &&
-                Objects.equals(getVersion(), that.getVersion()) &&
-                Objects.equals(getProfile(), that.getProfile()) &&
-                Objects.equals(getMission(), that.getMission()) &&
-                Objects.equals(getCurrentStep(), that.getCurrentStep()) &&
-                Objects.equals(getRewardIssuances(), that.getRewardIssuances());
+    public boolean isManagedBySchedule() {
+        return managedBySchedule;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getObjectId(), getProfile(), getMission(), getCurrentStep(), getRemaining(), getSequence(), getRewardIssuances());
+    public void setManagedBySchedule(boolean managedBySchedule) {
+        this.managedBySchedule = managedBySchedule;
     }
 
-    @Override
-    public String toString() {
-        return "MongoProgress{" +
-                "objectId=" + objectId +
-                ", version='" + version + '\'' +
-                ", profile=" + profile +
-                ", mission=" + mission +
-                ", currentStep=" + getCurrentStep() +
-                ", remaining=" + remaining +
-                ", sequence=" + sequence +
-                ", rewardIssuances=" + rewardIssuances +
-                '}';
+    public List<MongoSchedule> getSchedules() {
+        return schedules;
+    }
+
+    public void setSchedules(List<MongoSchedule> schedules) {
+        this.schedules = schedules;
+    }
+
+    public List<MongoScheduleEvent> getScheduleEvents() {
+        return scheduleEvents;
+    }
+
+    public void setScheduleEvents(List<MongoScheduleEvent> scheduleEvents) {
+        this.scheduleEvents = scheduleEvents;
     }
 
     @PostLoad
     public void clearNulls() {
         if (rewardIssuances != null) {
-            rewardIssuances = rewardIssuances.stream().filter(p -> p != null).collect(toList());
+            rewardIssuances = rewardIssuances.stream().filter(Objects::nonNull).collect(toList());
         }
     }
 

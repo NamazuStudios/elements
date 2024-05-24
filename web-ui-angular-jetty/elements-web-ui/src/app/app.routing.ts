@@ -14,6 +14,7 @@ import { AuthSchemesListComponent } from "./auth-schemes-list/auth-schemes-list.
 import { NeoSmartContractsListComponent } from "./neo-smart-contracts-list/neo-smart-contracts-list.component";
 import { CustomizationMenuComponent } from "./customization-menu/customization-menu.component";
 import { OmniChainComponent } from "./omni-chain/omni-chain.component";
+import {SchedulesListComponent} from "./schedules-list/schedules-list.component";
 
 const appRoutes: Routes = [
   { path: "login", component: LoginComponent },
@@ -23,7 +24,6 @@ const appRoutes: Routes = [
     component: UsersListComponent,
     canActivate: [AuthenticationGuard],
   },
-  // { path: 'users/:id', component: UserDetailComponent, canActivate: [AuthenticationGuard] },
   {
     path: "applications",
     component: ApplicationsListComponent,
@@ -37,6 +37,11 @@ const appRoutes: Routes = [
   {
     path: "missions",
     component: MissionsListComponent,
+    canActivate: [AuthenticationGuard],
+  },
+  {
+    path: "schedules",
+    component: SchedulesListComponent,
     canActivate: [AuthenticationGuard],
   },
   {
@@ -74,8 +79,6 @@ const appRoutes: Routes = [
     component: NeoSmartContractsListComponent,
     canActivate: [AuthenticationGuard],
   },
-  // { path: 'applications/:id', component: ApplicationDetailComponent, canActivate: [AuthenticationGuard] },
-  // { path: 'applications/:applicationId/configurations/:id', component: ApplicationConfigurationDetailComponent, canActivate: [AuthenticationGuard] },
   { path: "**", redirectTo: "" },
 ];
 

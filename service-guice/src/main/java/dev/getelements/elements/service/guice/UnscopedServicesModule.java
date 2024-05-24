@@ -21,8 +21,7 @@ import dev.getelements.elements.service.inventory.*;
 import dev.getelements.elements.service.invite.SuperUserInviteService;
 import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.SuperUserLeaderboardService;
-import dev.getelements.elements.service.mission.MissionService;
-import dev.getelements.elements.service.mission.SuperUserMissionService;
+import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
 import dev.getelements.elements.service.notification.SuperUserFCMRegistrationService;
 import dev.getelements.elements.service.profile.SuperUserProfileOverrideService;
@@ -221,6 +220,14 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(InviteService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserInviteService.class);
+
+        bind(ScheduleService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserScheduleService.class);
+
+        bind(ScheduleEventService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserScheduleEventService.class);
 
     }
 

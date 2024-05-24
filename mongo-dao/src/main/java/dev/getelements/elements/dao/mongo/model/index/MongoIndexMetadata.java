@@ -1,11 +1,13 @@
 package dev.getelements.elements.dao.mongo.model.index;
 
 import dev.getelements.elements.model.index.IndexMetadata;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 import org.bson.Document;
 
 import java.util.Objects;
 
+@Entity
 public class MongoIndexMetadata implements IndexMetadata<Document> {
 
     @Property

@@ -7,14 +7,15 @@ import dev.morphia.annotations.*;
 import java.util.Map;
 import java.util.Objects;
 
-/**
+/**MongoDOzer
  * Mongo DTO for a mission step reward.
  *
  * Created by davidjbrooks on 11/27/2018.
  */
 
-@Embedded
+@Entity
 public class MongoReward {
+
     @Reference
     private MongoItem item;
 

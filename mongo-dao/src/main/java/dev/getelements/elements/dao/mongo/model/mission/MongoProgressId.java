@@ -3,8 +3,10 @@ package dev.getelements.elements.dao.mongo.model.mission;
 import dev.getelements.elements.dao.mongo.HexableId;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.exception.NotFoundException;
+import dev.getelements.elements.exception.mission.ProgressNotFoundException;
 import dev.getelements.elements.rt.util.Hex;
 import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
 import org.bson.types.ObjectId;
@@ -14,7 +16,7 @@ import java.util.Objects;
 
 import static java.lang.System.arraycopy;
 
-@Embedded
+@Entity(useDiscriminator = false)
 public class MongoProgressId implements HexableId {
 
     private static final int PROFILE_ID_INDEX = 0;
@@ -119,7 +121,7 @@ public class MongoProgressId implements HexableId {
         try {
             return new MongoProgressId(inventoryItemId);
         } catch (IllegalArgumentException ex) {
-            throw new NotFoundException(ex);
+            throw new ProgressNotFoundException(ex);
         }
     }
 
