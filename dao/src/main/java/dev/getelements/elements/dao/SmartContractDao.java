@@ -36,10 +36,12 @@ public interface SmartContractDao {
      * @param blockchainNetwork the network associated, or null
      * @return a {@link Pagination<SmartContract>}
      */
-    default Pagination<SmartContract> getSmartContract(
+    default Pagination<SmartContract> getSmartContractsForSingleNetwork(
             int offset, int count,
             BlockchainApi blockchainApi, BlockchainNetwork blockchainNetwork) {
-        return getSmartContracts(offset, count, blockchainApi, List.of(blockchainNetwork));
+        return blockchainNetwork == null ?
+                getSmartContracts(offset, count, blockchainApi, null) :
+                getSmartContracts(offset, count, blockchainApi, List.of(blockchainNetwork));
     }
 
 
