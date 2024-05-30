@@ -2,14 +2,12 @@ package dev.getelements.elements.rest.mission;
 
 import dev.getelements.elements.model.Pagination;
 import dev.getelements.elements.model.Tabulation;
-import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.mission.Progress;
 import dev.getelements.elements.model.mission.ProgressRow;
 import dev.getelements.elements.rest.AuthSchemes;
 import dev.getelements.elements.service.progress.ProgressService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
@@ -17,14 +15,15 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
+@Path("progress")
 @Api(value = "Progress",
         description = "Manages progress",
         authorizations = {
                 @Authorization(AuthSchemes.AUTH_BEARER),
                 @Authorization(AuthSchemes.SESSION_SECRET),
-                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)
-})
-@Path("progress")
+                @Authorization(AuthSchemes.SOCIALENGINE_SESSION_SECRET)}
+)
+@Produces(MediaType.APPLICATION_JSON)
 public class ProgressResource {
 
     private ProgressService progressService;

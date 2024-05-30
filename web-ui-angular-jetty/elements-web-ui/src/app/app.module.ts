@@ -102,6 +102,15 @@ import { OmniChainUserSearchDialogComponent } from './omni-chain-user-search-dia
 import { OmniChainWalletsAccountsDialogComponent } from './omni-chain-wallets-accounts-dialog/omni-chain-wallets-accounts-dialog.component';
 import { ApplicationAttributesComponent } from './application-attributes/application-attributes.component';
 import {MetadataspecSelectDialogComponent} from "./metadataspec-select-dialog/metadataspec-select-dialog.component";
+import {SchedulesListComponent} from "./schedules-list/schedules-list.component";
+import {ScheduleDialogComponent} from "./schedule-dialog/schedule-dialog.component";
+import {ScheduleEventsDialogComponent} from "./schedule-events-dialog/schedule-events-dialog.component";
+import {
+  ScheduleEventMissionsDialogComponent
+} from "./schedule-event-missions-dialog/schedule-event-missions-dialog.component";
+import {
+  MissionSelectDialogComponent
+} from "./schedule-event-missions-dialog/mission-select-dialog/mission-select-dialog.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -114,6 +123,9 @@ export function initialize(configService: ConfigService) {
     UserDialogComponent,
     ItemDialogComponent,
     MissionDialogComponent,
+    ScheduleDialogComponent,
+    ScheduleEventsDialogComponent,
+    ScheduleEventMissionsDialogComponent,
     FacebookApplicationConfigurationDialogComponent,
     FirebaseApplicationConfigurationDialogComponent,
     MatchmakingApplicationConfigurationDialogComponent,
@@ -148,7 +160,12 @@ export function initialize(configService: ConfigService) {
     SimpleJsonEditorComponent,
     JsonEditorCardComponent,
     MissionsListComponent,
+    SchedulesListComponent,
     MissionDialogComponent,
+    ScheduleDialogComponent,
+    ScheduleEventsDialogComponent,
+    ScheduleEventMissionsDialogComponent,
+    MissionSelectDialogComponent,
     MissionStepsCardComponent,
     MissionRewardsEditorComponent,
     IosApplicationConfigurationDialogComponent,

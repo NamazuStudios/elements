@@ -122,6 +122,9 @@ public class MockServiceTestModule extends AbstractModule {
         bind(VaultDao.class).toInstance(mock(VaultDao.class));
         bind(LargeObjectDao.class).toInstance(mock(LargeObjectDao.class));
         bind(IndexDao.class).toInstance(mock(IndexDao.class));
+        bind(ScheduleDao.class).toInstance(mock(ScheduleDao.class));
+        bind(ScheduleEventDao.class).toInstance(mock(ScheduleEventDao.class));
+        bind(ScheduleProgressDao.class).toInstance(mock(ScheduleProgressDao.class));
 
         final var databaseHealthStatusDaos = newSetBinder(binder(), DatabaseHealthStatusDao.class);
         databaseHealthStatusDaos.addBinding().toInstance(mock(DatabaseHealthStatusDao.class));
@@ -135,6 +138,7 @@ public class MockServiceTestModule extends AbstractModule {
 
         bind(new TypeLiteral<Supplier<List<FacebookPermission>>>(){}).to(FacebookBuiltinPermissionsSupplier.class);
 
+        bind(Transaction.class).toProvider(() -> mock(Transaction.class));
     }
 
     private static final ThreadLocal<Boolean> in = new ThreadLocal<>();
@@ -167,10 +171,4 @@ public class MockServiceTestModule extends AbstractModule {
 
     };
 
-    public static class EmptyAttributesProvider implements javax.inject.Provider<Attributes> {
-        @Override
-        public Attributes get() {
-            return Attributes.emptyAttributes();
-        }
-    }
 }

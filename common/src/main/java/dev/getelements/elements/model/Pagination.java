@@ -96,6 +96,12 @@ public class Pagination<T> implements Iterable<T>, Serializable {
 
     }
 
+    public Stream<T> stream() {
+        return getObjects() == null
+                ? Stream.empty()
+                : getObjects().stream();
+    }
+
     @Override
     public Iterator<T> iterator() {
         return getObjects().iterator();

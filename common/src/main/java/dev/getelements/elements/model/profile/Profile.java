@@ -1,7 +1,9 @@
 package dev.getelements.elements.model.profile;
 
+import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
+import dev.getelements.elements.model.ValidationGroups.Read;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import dev.getelements.elements.model.application.Application;
 import dev.getelements.elements.model.largeobject.LargeObjectReference;
@@ -37,7 +39,7 @@ public class Profile implements Serializable {
      */
     public static final String PROFILE_ATTRIBUTE = Profile.class.getName();
 
-    @NotNull(groups = Update.class)
+    @NotNull(groups = {Update.class, Read.class})
     @Null(groups = {Insert.class, Create.class})
     @ApiModelProperty("The unique ID of the profile itself.")
     protected String id;

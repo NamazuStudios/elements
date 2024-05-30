@@ -3,7 +3,7 @@ package dev.getelements.elements.service;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
-import dev.getelements.elements.dao.mongo.MongoTestInstanceModule;
+import dev.getelements.elements.dao.mongo.test.MongoTestInstanceModule;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;

@@ -46,7 +46,9 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
         final var registry = fromRegistries(
             fromCodecs(new TimestampCodec()),
-            fromRegistries(getDefaultCodecRegistry(), fromProviders(PojoCodecProvider.builder().automatic(true).build()))
+            fromRegistries(
+                    getDefaultCodecRegistry(),
+                    fromProviders(PojoCodecProvider.builder().automatic(true).build()))
         );
 
         final var connectionString = new ConnectionString(getMongoDbUri());

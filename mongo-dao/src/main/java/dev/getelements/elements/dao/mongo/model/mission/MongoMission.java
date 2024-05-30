@@ -20,21 +20,26 @@ public class MongoMission {
     private ObjectId objectId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String name;
 
+    @Text
     @Property
     private String displayName;
 
     @Property
     private String description;
 
+    @Property
     private List<String> tags;
 
+    @Property
     private List<MongoStep> steps;
 
+    @Property
     private MongoStep finalRepeatStep;
 
+    @Property
     private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {

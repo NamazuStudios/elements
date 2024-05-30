@@ -1,8 +1,10 @@
 package dev.getelements.elements.model.mission;
 
 import dev.getelements.elements.model.Taggable;
+import dev.getelements.elements.model.ValidationGroups;
 import dev.getelements.elements.model.ValidationGroups.Create;
 import dev.getelements.elements.model.ValidationGroups.Insert;
+import dev.getelements.elements.model.ValidationGroups.Read;
 import dev.getelements.elements.model.ValidationGroups.Update;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -25,7 +27,7 @@ public class Mission implements Serializable, Taggable {
 
     @ApiModelProperty("The unique ID of the mission")
     @Null(groups={Create.class, Insert.class})
-    @NotNull(groups={Update.class})
+    @NotNull(groups={Update.class, Read.class})
     private String id;
 
     @ApiModelProperty("The name of the mission")
