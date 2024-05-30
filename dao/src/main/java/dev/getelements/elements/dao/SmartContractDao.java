@@ -28,6 +28,24 @@ public interface SmartContractDao {
             BlockchainApi blockchainApi, List<BlockchainNetwork> blockchainNetworks);
 
     /**
+     * Gets the smart contracts in the database.
+     *
+     * @param offset the offset
+     * @param count the count
+     * @param blockchainApi the blockchain API, or null
+     * @param blockchainNetwork the network associated, or null
+     * @return a {@link Pagination<SmartContract>}
+     */
+    default Pagination<SmartContract> getSmartContractsForSingleNetwork(
+            int offset, int count,
+            BlockchainApi blockchainApi, BlockchainNetwork blockchainNetwork) {
+        return blockchainNetwork == null ?
+                getSmartContracts(offset, count, blockchainApi, null) :
+                getSmartContracts(offset, count, blockchainApi, List.of(blockchainNetwork));
+    }
+
+
+    /**
      * Gets the specific smart contract.
      * @param contractId the contract id
      *
