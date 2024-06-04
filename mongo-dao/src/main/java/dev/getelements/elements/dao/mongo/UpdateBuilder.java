@@ -107,7 +107,7 @@ public class UpdateBuilder {
      * @return the {@link UpdateResult}
      */
     public UpdateResult execute(final Query<?> query, final UpdateOptions options) {
-        return update(query).execute(options);
+        return query.update(options, updates.toArray(UpdateOperator[]::new));
     }
 
     /**
@@ -117,7 +117,7 @@ public class UpdateBuilder {
      * @return the {@link UpdateResult}
      */
     public <ModelT> ModelT execute(final Query<ModelT> query, final ModifyOptions options) {
-        return modify(query).execute(options);
+        return query.modify(options, updates.toArray(UpdateOperator[]::new));
     }
 
 }

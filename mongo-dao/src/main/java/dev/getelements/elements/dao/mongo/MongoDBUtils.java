@@ -7,6 +7,7 @@ import dev.getelements.elements.exception.DuplicateException;
 import dev.getelements.elements.exception.InternalException;
 import dev.getelements.elements.exception.NotFoundException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.morphia.Datastore;
 import dev.morphia.aggregation.Aggregation;
 import dev.morphia.aggregation.AggregationOptions;
@@ -60,10 +61,24 @@ public class MongoDBUtils {
      *
      * @param operation the operation
      * @param <T> the expected return type
-     * @return the object retured by the supplied operation
+     * @return the object returned by the supplied operation
      */
     public <T> T perform(final Function<Datastore, T> operation) {
         return perform(operation, DuplicateException::new);
+    }
+
+    /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropriate type of exception internally.
+     *
+     * @param operation the operation
+     * @param uClass the type which to convert out of the type returned from the Datastore.
+     * @param <T> the expected return type from the datastore
+     * @param <U> the function return type
+     * @return the object returned by the supplied operation
+     */
+    public <T, U> U perform(final Function<Datastore, T> operation, final Class<U> uClass) {
+        return perform(operation.andThen(t -> getMapper().map(t, uClass)));
     }
 
     /**
@@ -246,6 +261,53 @@ public class MongoDBUtils {
     }
 
     /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param function the function to transform the values
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Tabulation<ModelT> tabulationFromQuery(
+            final Query<MongoModelT> query,
+            final Function<MongoModelT,  ModelT> function) {
+        return tabulationFromQuery(query, function, new FindOptions());
+    }
+
+    /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param function the function to transform the values
+     * @param options a {@link FindOptions} used to modify the query results
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Tabulation<ModelT> tabulationFromQuery(
+            final Query<MongoModelT> query,
+            final Function<MongoModelT,  ModelT> function,
+            final FindOptions options) {
+
+        final Tabulation<ModelT> tabulation = new Tabulation<>();
+
+        final List<ModelT> modelTList;
+
+        try (final var iterator = query.iterator(options)) {
+            modelTList = iterator
+                    .toList()
+                    .stream()
+                    .map(function)
+                    .collect(toList());
+        }
+
+        tabulation.setRows(modelTList);
+        return tabulation;
+
+    }
+
+    /**
      * Transforms an {@link Aggregation} to the resulting {@link Pagination}. This function must modify and build
      * upon the supplied {@link Aggregation}.
      *
@@ -314,6 +376,10 @@ public class MongoDBUtils {
             return pagination;
         }
 
+    }
+
+    public boolean isScanQuery(final Query<?> query) {
+        return !isIndexedQuery(query);
     }
 
     public boolean isIndexedQuery(final Query<?> query) {

@@ -9,6 +9,8 @@ import dev.getelements.elements.service.ProfileOverrideService;
 
 import javax.inject.Inject;
 
+import java.util.Optional;
+
 import static dev.getelements.elements.Headers.PROFILE_ID;
 
 public class RequestHeaderProfileIdentificationMethod implements ProfileIdentificationMethod {
@@ -18,18 +20,12 @@ public class RequestHeaderProfileIdentificationMethod implements ProfileIdentifi
     private ProfileOverrideService profileOverrideService;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
-
-        final String profileId = getRequest()
-            .getHeader()
-            .getHeader(PROFILE_ID)
-            .map(Object::toString)
-            .orElseThrow(UnidentifiedProfileException::new);
-
-        return getProfileOverrideService()
-            .findOverrideProfile(profileId)
-            .orElseThrow(UnidentifiedProfileException::new);
-
+    public Optional<Profile> attempt() {
+        return getRequest()
+                .getHeader()
+                .getHeader(PROFILE_ID)
+                .map(Object::toString)
+                .flatMap(getProfileOverrideService()::findOverrideProfile);
     }
 
     public Request getRequest() {

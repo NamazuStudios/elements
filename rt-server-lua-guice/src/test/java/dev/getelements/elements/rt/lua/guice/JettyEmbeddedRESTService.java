@@ -7,16 +7,12 @@ import dev.getelements.elements.rt.lua.guice.rest._t;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
 
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 

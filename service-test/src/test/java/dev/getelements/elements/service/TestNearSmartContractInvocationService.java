@@ -1,7 +1,7 @@
 package dev.getelements.elements.service;
 
 import com.syntifi.near.api.common.exception.NearException;
-import dev.getelements.elements.dao.mongo.UserTestFactory;
+import dev.getelements.elements.dao.mongo.test.UserTestFactory;
 import dev.getelements.elements.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.model.blockchain.contract.CreateSmartContractRequest;
 import dev.getelements.elements.model.blockchain.contract.SmartContractAddress;
@@ -19,7 +19,6 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

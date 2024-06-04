@@ -8,6 +8,7 @@ import dev.getelements.elements.service.ProfileOverrideService;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
 public class HttpRequestSessionSecretProfileIdentificationMethod implements ProfileIdentificationMethod {
 
@@ -16,16 +17,11 @@ public class HttpRequestSessionSecretProfileIdentificationMethod implements Prof
     private ProfileOverrideService profileOverrideService;
 
     @Override
-    public Profile attempt() throws UnidentifiedProfileException {
-
-        final String overrideProfileId = SessionSecretHeader.withValueSupplier(getHttpServletRequest()::getHeader)
-            .getOverrideProfileId()
-            .orElseThrow(UnidentifiedProfileException::new);
-
-        return getProfileOverrideService()
-            .findOverrideProfile(overrideProfileId)
-            .orElseThrow(UnidentifiedProfileException::new);
-
+    public Optional<Profile> attempt() {
+        return SessionSecretHeader
+                .withValueSupplier(getHttpServletRequest()::getHeader)
+                .getOverrideProfileId()
+                .flatMap(getProfileOverrideService()::findOverrideProfile);
     }
 
     public HttpServletRequest getHttpServletRequest() {

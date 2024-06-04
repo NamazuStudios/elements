@@ -1,7 +1,9 @@
 package dev.getelements.elements.service.progress;
 
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 
 import java.util.List;
 import java.util.Set;
@@ -27,6 +29,13 @@ public interface ProgressService {
      * @return the list of {@link Progress} instances
      */
     Pagination<Progress> getProgresses(int offset, int count, List<String> tags, String query);
+
+    /**
+     * Gets a {@link Tabulation<ProgressRow>} complete with the tabular data for that row.
+     *
+     * @return the progress in a tabular fashion.
+     */
+    Tabulation<ProgressRow> getProgressesTabular();
 
     /**
      * Gets a progress with specified name or ID.

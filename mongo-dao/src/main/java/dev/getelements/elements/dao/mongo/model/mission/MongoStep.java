@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.model.mission;
 
 import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Reference;
 
@@ -18,7 +19,7 @@ import java.util.Objects;
  *
  * Created by davidjbrooks on 11/27/2018.
  */
-@Embedded
+@Entity
 public class MongoStep {
 
     @Property
@@ -30,6 +31,7 @@ public class MongoStep {
     @Property
     private int count;
 
+    @Property
     private List<MongoReward> rewards;
 
     @Property

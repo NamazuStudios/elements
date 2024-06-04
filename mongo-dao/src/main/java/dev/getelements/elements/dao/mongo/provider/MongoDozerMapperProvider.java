@@ -27,12 +27,11 @@ import dev.getelements.elements.model.goods.Item;
 import dev.getelements.elements.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.model.inventory.InventoryItem;
 import dev.getelements.elements.model.leaderboard.Leaderboard;
+import dev.getelements.elements.model.leaderboard.Rank;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.leaderboard.Score;
 import dev.getelements.elements.model.match.Match;
-import dev.getelements.elements.model.mission.Mission;
-import dev.getelements.elements.model.mission.Progress;
-import dev.getelements.elements.model.mission.ProgressMissionInfo;
-import dev.getelements.elements.model.mission.Step;
+import dev.getelements.elements.model.mission.*;
 import dev.getelements.elements.model.notification.FCMRegistration;
 import dev.getelements.elements.model.profile.Profile;
 import dev.getelements.elements.model.reward.Reward;
@@ -120,6 +119,17 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(MongoScoreIdConverter.class))
                 .fields("scoreUnits", "leaderboard.scoreUnits");
 
+            mapping(RankRow.class, Rank.class)
+                .fields("id", "score.id")
+                .fields("pointValue", "score.pointValue")
+                .fields("scoreUnits", "score.scoreUnits")
+                .fields("creationTimestamp", "score.creationTimestamp")
+                .fields("leaderboardEpoch", "score.leaderboardEpoch")
+                .fields("profileId", "score.profile.id")
+                .fields("profileDisplayName", "score.profile.displayName")
+                .fields("profileImageUrl", "score.profile.imageUrl")
+                .fields("lastLogin", "score.profile.lastLogin");
+
             mapping(Friend.class, MongoFriendship.class)
                 .fields("id", "objectId", customConverter(MongoFriendIdConverter.class));
 
@@ -138,28 +148,50 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Progress.class, MongoProgress.class)
-                    .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
-                    .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
-                    .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
+                .fields("id","objectId", customConverter(MongoProgressIdConverter.class))
+                .fields("profile.id", "objectId.profileId", customConverter(ObjectIdConverter.class))
+                .fields("mission.id", "objectId.missionId", customConverter(ObjectIdConverter.class));
+
+            mapping(ProgressRow.class, MongoProgress.class)
+                .fields("id", "objectId", customConverter(MongoHexableIdConverter.class))
+                .fields("profileId", "profile.objectId", customConverter(ObjectIdConverter.class))
+                .fields("profileImageUrl", "profile.imageUrl")
+                .fields("profileDisplayName", "profile.displayName")
+                .fields("stepDisplayName", "currentStep.displayName")
+                .fields("stepDescription", "currentStep.description")
+                .fields("remaining", "remaining")
+                .fields("stepCount", "currentStep.count");
 
             mapping(RewardIssuance.class, MongoRewardIssuance.class)
-                    .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                .fields("id","objectId", customConverter(MongoRewardIssuanceIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Reward.class, MongoReward.class)
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(MongoMission.class, MongoProgressMissionInfo.class)
                     .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(ProgressMissionInfo.class, MongoProgressMissionInfo.class)
                     .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(Step.class, MongoStep.class)
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(MongoItem.class, MongoItem.class)
+                    .fields("objectId","objectId", customConverter(IdentityConverter.class));
 
             mapping(ProductBundle.class, MongoProductBundle.class)
-                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));
+
+            mapping(Schedule.class, MongoSchedule.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(ScheduleEvent.class, MongoScheduleEvent.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(Deployment.class, MongoDeployment.class)
-                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(ElementsSmartContract.class, MongoNeoSmartContract.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class));

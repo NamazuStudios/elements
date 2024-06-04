@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SSHD_CONFIG_DIR="${SSHD_CONFIG_DIR:-${ELEMENTS_CONF}}"
+SSHD_CONFIG_DIR="${SSHD_CONFIG_DIR:-${ELEMENTS_CONF}/sshd}"
 
 echo 'y' | ssh-keygen -f "${SSHD_CONFIG_DIR}/ssh_host_rsa_key" -N '' -t rsa
 echo 'y' | ssh-keygen -f "${SSHD_CONFIG_DIR}/ssh_host_dsa_key" -N '' -t dsa

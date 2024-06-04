@@ -26,7 +26,6 @@ export class MissionDialogComponent implements OnInit {
   originalSteps = JSON.parse(JSON.stringify(this.data.mission.steps || []));
   originalFinalStep = JSON.parse(JSON.stringify(this.data.mission.finalRepeatStep || null));
 
-  okButtonEnabled = false;
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -35,7 +34,7 @@ export class MissionDialogComponent implements OnInit {
   missionForm = this.formBuilder.group({
     name: [ this.data.mission.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$') ]],
     displayName: [ this.data.mission.displayName, [Validators.required]],
-    description: [ this.data.mission.description ],
+    description: [ this.data.mission.description, [Validators.required]],
     tags: []
   });
 
@@ -76,20 +75,12 @@ export class MissionDialogComponent implements OnInit {
       return;
     }
 
-    if (!this.stepsCard.stepsValid()) {
-      // this.stepsCard.stepForm.get("displayName0").setErrors({ 'required': true })
-      return;
-    }
-
-    // basic text attributes from form; used as foundation to which all other data is attached
     const formData = this.missionForm.value;
     if (this.data.mission.tags !== undefined) {
       formData.tags = this.data.mission.tags;
     }
 
-    // validates metadata and attaches it to this.data.mission
     this.editorCard.validateMetadata(true);
-    // if metadata exists, retrieve it from the metadata editor and attach to form data
     if (this.data.mission.metadata !== undefined) {
       formData.metadata = this.data.mission.metadata;
     }
@@ -98,7 +89,6 @@ export class MissionDialogComponent implements OnInit {
     // mission card has reference to this.data.mission, can attach steps to it if told to
     if (this.data.mission.steps) {
       formData.steps = this.data.mission.steps;
-
       for(let i = 0; i < formData.steps.length; i++) {
         delete formData.steps[i].isNew;
       }
@@ -108,10 +98,14 @@ export class MissionDialogComponent implements OnInit {
       delete formData.finalRepeatStep.isNew;
     }
 
-    // closes the dialog and passes the complete formData to the callback
-    this.data.next(formData).subscribe(res => {
+    if (!this.stepsCard.stepsValid()) {
+      return;
+    }
+
+    this.data.next(formData).subscribe(() => {
       this.dialogRef.close();
       this.data.refresher.refresh();
+      this.data.mission.steps = [];
     }, err => {
       this.alertService.error(err);
     });
@@ -123,6 +117,13 @@ export class MissionDialogComponent implements OnInit {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
+  }
+
+  missionValid() {
+    return this.missionForm.valid &&
+      (this.data.mission.finalRepeatStep ||
+        (this.data.mission.steps && this.data.mission.steps.length > 0 &&
+          (this.stepsCard && this.stepsCard.stepsValid())));
   }
 
 }

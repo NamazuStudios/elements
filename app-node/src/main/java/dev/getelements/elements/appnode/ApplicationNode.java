@@ -15,7 +15,7 @@ import dev.getelements.elements.rt.fst.FSTPayloadReaderWriterModule;
 import dev.getelements.elements.rt.git.FilesystemScriptStorageGitLoaderModule;
 import dev.getelements.elements.rt.guice.ResourceScope;
 import dev.getelements.elements.rt.guice.SimpleExecutorsModule;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.SimpleWatchdogServiceModule;
 import dev.getelements.elements.rt.remote.Worker;

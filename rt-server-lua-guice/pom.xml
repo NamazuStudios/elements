@@ -123,7 +123,6 @@
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
             <version>${jersey.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.spotify</groupId>

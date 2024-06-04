@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.Constants;
@@ -26,6 +25,7 @@ import dev.getelements.elements.dao.mongo.googlesignin.MongoGoogleSignInUserDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
+import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
@@ -52,6 +52,10 @@ public class MongoDaoModule extends PrivateModule {
 
     @Override
     protected void configure() {
+
+        bindMapper();
+        bindDatastore();
+        bindTransaction();
 
         bind(UserDao.class).to(MongoUserDao.class);
         bind(ProfileDao.class).to(MongoProfileDao.class);
@@ -98,18 +102,13 @@ public class MongoDaoModule extends PrivateModule {
         bind(SmartContractDao.class).to(MongoSmartContractDao.class);
         bind(VaultDao.class).to(MongoVaultDao.class);
         bind(LargeObjectDao.class).to(MongoLargeObjectDao.class);
-
-        bind(Datastore.class)
-                .toProvider(MongoDatastoreProvider.class)
-                .asEagerSingleton();
+        bind(ScheduleDao.class).to(MongoScheduleDao.class);
+        bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
+        bind(ScheduleProgressDao.class).to(MongoScheduleProgressDao.class);
 
         bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
-
-        bind(Mapper.class)
-                .toProvider(MongoDozerMapperProvider.class)
-                .asEagerSingleton();
 
         bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
                 .toProvider(MongoMatchmakerFunctionProvider.class);
@@ -129,6 +128,9 @@ public class MongoDaoModule extends PrivateModule {
 
         final var indexableByType = newMapBinder(binder(), IndexableType.class, Indexable.class);
         indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoDistinctInventoryItemIndexable.class);
+
+        expose(Datastore.class);
+        expose(Transaction.class);
 
         expose(IndexDao.class);
         expose(UserDao.class);
@@ -176,7 +178,26 @@ public class MongoDaoModule extends PrivateModule {
         expose(SmartContractDao.class);
         expose(VaultDao.class);
         expose(LargeObjectDao.class);
+        expose(ScheduleDao.class);
+        expose(ScheduleEventDao.class);
+        expose(ScheduleProgressDao.class);
 
+    }
+
+    protected void bindMapper() {
+        bind(Mapper.class)
+                .toProvider(MongoDozerMapperProvider.class)
+                .asEagerSingleton();
+    }
+
+    protected void bindDatastore() {
+        bind(Datastore.class)
+                .toProvider(MongoDatastoreProvider.class)
+                .asEagerSingleton();
+    }
+
+    protected void bindTransaction() {
+        bind(Transaction.class).toProvider(MongoTransactionProvider.class);
     }
 
 }

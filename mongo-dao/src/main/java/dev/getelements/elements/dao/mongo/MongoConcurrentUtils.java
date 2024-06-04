@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
+import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.morphia.Datastore;
 
@@ -8,6 +9,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 import static java.lang.Thread.sleep;
 
@@ -56,6 +58,21 @@ public class MongoConcurrentUtils {
      *
      */
     public <ReturnT> ReturnT performOptimistic(final CriticalOperation<ReturnT> criticalOperation) throws ConflictException {
+        return performOptimistic(criticalOperation, () -> new ConflictException("Exceeded number of retries."));
+    }
+
+    /**
+     * Attempts to complete the given criticalOperation and, in the event of a failure, attempts to retry the
+     * criticalOperation several times until giving up.
+     *
+     * @param criticalOperation the criticalOperation to attempt
+     * @param <ReturnT> the type to return
+     * @return the return fields from the HttpOperation
+     *
+     */
+    public <ReturnT, ExceptionT extends Throwable>
+    ReturnT performOptimistic(final CriticalOperation<ReturnT> criticalOperation,
+                              final Supplier<ExceptionT> exceptionTSupplier) throws ExceptionT {
 
         int attempts = 0;
         int falloff = 0;
@@ -66,7 +83,7 @@ public class MongoConcurrentUtils {
 
             try {
                 return criticalOperation.attempt(datastore);
-            } catch (ContentionException e) {
+            } catch (DuplicateKeyException | ContentionException e) {
                 try {
                     // Random spread helps ensure that we don't get repeat contention among the operations.
                     final Random random = ThreadLocalRandom.current();
@@ -80,7 +97,7 @@ public class MongoConcurrentUtils {
 
         } while (attempts < numberOfRetries);
 
-        throw new ConflictException("Exceeded number of retries " + numberOfRetries);
+        throw exceptionTSupplier.get();
 
     }
 

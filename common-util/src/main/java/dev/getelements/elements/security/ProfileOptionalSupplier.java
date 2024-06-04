@@ -2,6 +2,7 @@ package dev.getelements.elements.security;
 
 import dev.getelements.elements.exception.profile.UnidentifiedProfileException;
 import dev.getelements.elements.model.profile.Profile;
+import org.checkerframework.checker.nullness.Opt;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -14,17 +15,12 @@ public class ProfileOptionalSupplier implements Provider<Optional<Profile>> {
 
     @Override
     public Optional<Profile> get() {
-
-        for(final ProfileIdentificationMethod method : getProfileIdentificationMethodSet()) {
-            try {
-                return Optional.of(method.attempt());
-            } catch (UnidentifiedProfileException ex) {
-                continue;
-            }
-        }
-
-        return Optional.empty();
-
+        return getProfileIdentificationMethodSet()
+                .stream()
+                .map(ProfileIdentificationMethod::attempt)
+                .filter(Optional::isPresent)
+                .findFirst()
+                .orElseGet(Optional::empty);
     }
 
     public Set<ProfileIdentificationMethod> getProfileIdentificationMethodSet() {

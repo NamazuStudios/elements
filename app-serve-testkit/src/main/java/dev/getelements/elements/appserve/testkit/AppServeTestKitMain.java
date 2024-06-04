@@ -7,7 +7,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.rt.guice.GuiceIoCResolverModule;
-import dev.getelements.elements.rt.jersey.JerseyHttpClientModule;
+import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.lua.guice.LuaModule;
 import dev.getelements.elements.rt.testkit.TestKit;
 import dev.getelements.elements.rt.testkit.UnitTestModule;

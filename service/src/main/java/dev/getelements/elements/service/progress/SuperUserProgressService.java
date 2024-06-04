@@ -2,7 +2,9 @@ package dev.getelements.elements.service.progress;
 
 import dev.getelements.elements.dao.ProgressDao;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
 import dev.getelements.elements.model.mission.Progress;
+import dev.getelements.elements.model.mission.ProgressRow;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -26,6 +28,11 @@ public class SuperUserProgressService implements ProgressService {
     public Pagination<Progress> getProgresses(final int offset, final int count,
                                               final List<String> tags, final String query) {
         return getProgressDao().getProgresses(offset, count, tags, query);
+    }
+
+    @Override
+    public Tabulation<ProgressRow> getProgressesTabular() {
+        return getProgressDao().getProgressesTabular();
     }
 
     @Override

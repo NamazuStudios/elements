@@ -1,7 +1,10 @@
 package dev.getelements.elements.service.leaderboard;
 
 import dev.getelements.elements.dao.RankDao;
+import dev.getelements.elements.exception.ForbiddenException;
 import dev.getelements.elements.model.Pagination;
+import dev.getelements.elements.model.Tabulation;
+import dev.getelements.elements.model.leaderboard.RankRow;
 import dev.getelements.elements.model.user.User;
 import dev.getelements.elements.model.leaderboard.Rank;
 import dev.getelements.elements.model.profile.Profile;
@@ -98,6 +101,11 @@ public class UserRankService implements RankService {
         getCdnUtils().setProfileCdnUrl(rank.getScore().getProfile());
         return rank;
 
+    }
+
+    @Override
+    public Tabulation<RankRow> getRanksForGlobalTabular(final String leaderboardNameOrId, final long leaderboardEpoch) {
+        throw new ForbiddenException();
     }
 
     public User getUser() {

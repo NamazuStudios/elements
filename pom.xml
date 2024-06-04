@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
@@ -69,6 +66,7 @@
         <module>rt-jackson</module>
         <module>rt-jackson-guice</module>
         <module>rt-server-guice</module>
+        <module>rt-jersey</module>
         <module>rt-jersey-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>docker-config</module>
@@ -112,7 +110,7 @@
         <slf4j.version>1.7.32</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <guava.version>21.0</guava.version>
-        <commons.lang.version>3.3.2</commons.lang.version>
+        <commons.lang.version>3.12.0</commons.lang.version>
         <jaxrs.api.version>2.1</jaxrs.api.version>
         <jersey.version>2.32</jersey.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
@@ -150,7 +148,7 @@
         <neow3j.version>3.14.0</neow3j.version>
         <web3j.version>4.9.4</web3j.version>
         <solanaj.version>0.0.7</solanaj.version>
-        <morphia.version>2.4.6</morphia.version>
+        <morphia.version>2.4.13</morphia.version>
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.5.10</kotlin.version>
@@ -164,6 +162,7 @@
         <jsr.305.artifactId>jsr305</jsr.305.artifactId>
         <jsr.305.version>3.0.2</jsr.305.version>
         <mailjet.client.version>5.2.5</mailjet.client.version>
+        <opencsv.version>5.7.1</opencsv.version>
     </properties>
 
     <dependencies>
@@ -298,6 +297,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-jeromq-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>rt-jersey</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -601,6 +605,11 @@
                 <version>${hibernate.validator.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate.validator.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>javax.el</artifactId>
                 <version>${javax.el.version}</version>
@@ -644,7 +653,6 @@
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-multipart</artifactId>
                 <version>${jersey.version}</version>
-                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.github.kstyrc</groupId>
@@ -675,6 +683,11 @@
                 <groupId>com.googlecode.libphonenumber</groupId>
                 <artifactId>libphonenumber</artifactId>
                 <version>${libphonenumber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.opencsv</groupId>
+                <artifactId>opencsv</artifactId>
+                <version>${opencsv.version}</version>
             </dependency>
 
             <!-- Third Party Dependencies (With Specific Exclusions) -->
