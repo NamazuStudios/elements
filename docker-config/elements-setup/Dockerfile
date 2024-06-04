@@ -4,19 +4,19 @@ FROM distribution.getelements.dev/elements-base:$BASE_TAG
 
 USER root:root
 
+RUN mkdir -p "$ELEMENTS_CONF/sshd"
+
 COPY --chown=elements:elements target/lib/*.jar $ELEMENTS_LIB/
+COPY bin/sshd.sh $ELEMENTS_BIN
+COPY bin/hostkeys.sh $ELEMENTS_BIN
+COPY conf/sshd_config $ELEMENTS_CONF/sshd
 
 RUN apt-get update && \
     apt-get install -y ssh && \
-    mkdir -p "$ELEMENTS_CONF/sshd" && \
     touch "$ELEMENTS_CONF/sshd/authorized_keys" && \
     chmod u+x "$ELEMENTS_BIN/sshd.sh" && \
     chmod u+x "$ELEMENTS_BIN/hostkeys.sh" && \
     "$ELEMENTS_BIN/hostkeys.sh"
-
-COPY bin/sshd.sh $ELEMENTS_BIN
-COPY bin/hostkeys.sh $ELEMENTS_BIN
-COPY conf/sshd_config $ELEMENTS_CONF/sshd
 
 EXPOSE 2022
 
