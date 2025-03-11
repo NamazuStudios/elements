@@ -57,6 +57,7 @@ pipelines:
             - make setup
             - make release
             - make COMMIT_MSG="Release:" detach commit tag push_tags
+            - make publish_github
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -77,6 +78,28 @@ pipelines:
             - make patch
             - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
             - make push push_tags
+            - make publish_github
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
+    main:
+      - step:
+          size: 4x
+          name: Build and Test - Development
+          services: docker
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - pipe: jfrog/jfrog-setup-cli:2.0.0
+            - source ./jfrog-setup-cli.sh
+            - make setup
+            - make COMMIT_MSG="Snapshot:" detach commit tag
+            - make BRANCH=$BITBUCKET_BRANCH checkout
+            - make patch
+            - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
+            - make push push_tags
+            - make publish_github
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
