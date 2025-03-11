@@ -78,7 +78,6 @@ pipelines:
             - make patch
             - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
             - make push push_tags
-            - make publish_github
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
