@@ -46,19 +46,132 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!-- Relocate all dependencies in the artifact -->
                             <relocations>
                                 <relocation>
-                                    <pattern>.*</pattern>
-                                    <shadedPattern>dep</shadedPattern>
+                                    <pattern>ch.</pattern>
+                                    <shadedPattern>_internal.ch.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>io.</pattern>
+                                    <shadedPattern>_internal.io.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>ru.</pattern>
+                                    <shadedPattern>_internal.ru.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>dev.</pattern>
+                                    <shadedPattern>_internal.dev.</shadedPattern>
                                     <excludes>
-                                        <exclude>jakarta.ws.rs.**</exclude>
-                                        <exclude>jakarta.servlet.**</exclude>
-                                        <exclude>jakarta.websocket.**</exclude>
-                                        <exclude>org.slf4j.**</exclude>
-                                        <exclude>dev.getelements.elements.sdk.**</exclude>
+                                        <exclude>dev.getelements.elements.sdk.local.*</exclude>
                                     </excludes>
                                 </relocation>
+                                <relocation>
+                                    <pattern>edu.</pattern>
+                                    <shadedPattern>_internal.edu.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.</pattern>
+                                    <shadedPattern>_internal.org.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.</pattern>
+                                    <shadedPattern>_internal.javax.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.</pattern>
+                                    <shadedPattern>_internal.com.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.</pattern>
+                                    <shadedPattern>_internal.net.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>nonapi.</pattern>
+                                    <shadedPattern>_internal.nonapi.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>grpc.</pattern>
+                                    <shadedPattern>_internal.grpc.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>google.</pattern>
+                                    <shadedPattern>_internal.google.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>jnr.</pattern>
+                                    <shadedPattern>_internal.jnr.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>jni.</pattern>
+                                    <shadedPattern>_internal.jni.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>java8.</pattern>
+                                    <shadedPattern>_internal.java8.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>jersey.</pattern>
+                                    <shadedPattern>_internal.jersey.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javassist.</pattern>
+                                    <shadedPattern>_internal.javassist.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javolution.</pattern>
+                                    <shadedPattern>_internal.javolution.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>okio.</pattern>
+                                    <shadedPattern>_internal.okio.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>okhttp3.</pattern>
+                                    <shadedPattern>_internal.okhttp3.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>OSGI-OPT.</pattern>
+                                    <shadedPattern>_internal.OSGI-OPT.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>kotlin.</pattern>
+                                    <shadedPattern>_internal.kotlin.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>swagger.</pattern>
+                                    <shadedPattern>_internal.swagger.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>joptsimple.</pattern>
+                                    <shadedPattern>_internal.joptsimple.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>zmq.</pattern>
+                                    <shadedPattern>_internal.zmq.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>jakarta.</pattern>
+                                    <shadedPattern>_internal.jakarta.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>flow.</pattern>
+                                    <shadedPattern>_internal.flow.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>solidity.</pattern>
+                                    <shadedPattern>_internal.solidity.</shadedPattern>
+                                </relocation>
                             </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>dev.getelements.elements:*</artifact>
+                                    <includes>
+                                        <include>dev/getelements/elements/sdk/local/**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
