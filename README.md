@@ -353,3 +353,9 @@ If successful, this will tag a public release in Docker.
 
 Other branches (eg bugfix and feature) will build and, if the build passes,
 Bitbucket will create tags in the Docker registry for the specific tag.
+
+# Need Help?
+
+Community support is available in Discord.
+
+[![Join our Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue?logo=discord&logoColor=white)](https://bit.ly/eci-discord)
