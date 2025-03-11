@@ -48,14 +48,14 @@
                         <configuration>
                             <relocations>
                                 <relocation>
-                                    <pattern>.*</pattern>  <!-- Shades everything -->
-                                    <shadedPattern>dev.getelements.dep</shadedPattern>
+                                    <pattern>.*</pattern>
+                                    <shadedPattern>dep</shadedPattern>
                                     <excludes>
                                         <exclude>jakarta.ws.rs.**</exclude>
                                         <exclude>jakarta.servlet.**</exclude>
                                         <exclude>jakarta.websocket.**</exclude>
                                         <exclude>org.slf4j.**</exclude>
-                                        <exclude>dev.getelements.elements.sdk.**</exclude> <!-- Keeps com.example.foo unshaded -->
+                                        <exclude>dev.getelements.elements.sdk.**</exclude>
                                     </excludes>
                                 </relocation>
                             </relocations>
