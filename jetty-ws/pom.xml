@@ -110,10 +110,6 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>code-serve-jetty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
             <artifactId>code-serve-guice</artifactId>
         </dependency>
         <dependency>

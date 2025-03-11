@@ -1,7 +1,6 @@
 package dev.getelements.elements.jetty;
 
 import com.google.inject.AbstractModule;
-import dev.getelements.elements.sdk.model.annotation.FacebookPermission;
 import dev.getelements.elements.cdnserve.guice.FileSystemCdnGitLoaderModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
@@ -10,12 +9,12 @@ import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
-import dev.getelements.elements.rt.git.FileSystemElementStorageGitLoaderModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.guice.*;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
+import dev.getelements.elements.sdk.model.annotation.FacebookPermission;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import ru.vyarus.guice.validator.ValidationModule;
 

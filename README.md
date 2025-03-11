@@ -104,8 +104,6 @@ The following are internal libraries which make up the implementation of Element
 - **code-serve** - A library that supports the git code loader.  This contains
   some service logic to handle HTTP requests through git to deploy code.
 - **code-serve-guice** - A library of guice bindings specific to code-serve
-- **code-serve-jetty** - A war file artifact which runs a servlet that drives the
-  code-serve process.  This is a standalone microservice.
 - **common-app** - A common library used by application loading code.
 - **common-git** - A common library used for processing git repositories.
 - **common-git-guice** - Common git guice bindings.
