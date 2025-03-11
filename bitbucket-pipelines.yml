@@ -28,7 +28,6 @@ pipelines:
       - step:
           size: 4x
           name: Build Tags
-          services: docker
           runs-on:
             - "linux"
             - "self.hosted"
@@ -47,7 +46,6 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Release
-          services: docker
           runs-on:
             - "linux"
             - "self.hosted"
@@ -65,7 +63,6 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Development
-          services: docker
           runs-on:
             - "linux"
             - "self.hosted"
@@ -86,7 +83,6 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Development
-          services: docker
           runs-on:
             - "linux"
             - "self.hosted"
