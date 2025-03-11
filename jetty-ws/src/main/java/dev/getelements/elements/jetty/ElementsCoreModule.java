@@ -9,7 +9,6 @@ import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
-import dev.getelements.elements.rt.git.FileSystemElementStorageGitLoaderModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.guice.*;
@@ -58,7 +57,6 @@ public class ElementsCoreModule extends AbstractModule {
         install(new AppleIapReceiptInvokerModule());
         install(new JerseyHttpClientModule());
         install(new FileSystemCdnGitLoaderModule());
-        install(new FileSystemElementStorageGitLoaderModule());
 
         // Old cluster code which needs to be replaced
         install(new RandomInstanceIdModule());
