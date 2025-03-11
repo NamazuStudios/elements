@@ -1,0 +1,62 @@
+package dev.getelements.elements.service.inventory;
+
+import dev.getelements.elements.sdk.model.user.User;
+
+import dev.getelements.elements.sdk.service.inventory.SimpleInventoryItemService;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+
+import static dev.getelements.elements.service.util.Services.forbidden;
+
+/**
+ * Created by davidjbrooks on 11/14/2018.
+ */
+public class SimpleInventoryItemServiceProvider implements Provider<SimpleInventoryItemService> {
+
+    private User user;
+
+    private Provider<UserSimpleInventoryItemService> userSimpleInventoryItemServiceProvider;
+
+    private Provider<SuperUserSimpleInventoryItemService> superSimpleInventoryItemServiceProvider;
+
+    @Override
+    public SimpleInventoryItemService get() {
+        switch (getUser().getLevel()) {
+            case SUPERUSER:
+                return getSuperUserSimpleInventoryItemServiceProvider().get();
+            case USER:
+                return getUserSimpleInventoryItemServiceProvider().get();
+            default:
+                return forbidden(SimpleInventoryItemService.class);
+
+        }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Provider<UserSimpleInventoryItemService> getUserSimpleInventoryItemServiceProvider() {
+        return userSimpleInventoryItemServiceProvider;
+    }
+
+    @Inject
+    public void setUserSimpleInventoryItemServiceProvider(Provider<UserSimpleInventoryItemService> anonApplicationServiceProvider) {
+        this.userSimpleInventoryItemServiceProvider = anonApplicationServiceProvider;
+    }
+
+    public Provider<SuperUserSimpleInventoryItemService> getSuperUserSimpleInventoryItemServiceProvider() {
+        return superSimpleInventoryItemServiceProvider;
+    }
+
+    @Inject
+    public void setSuperUserSimpleInventoryItemServiceProvider(Provider<SuperUserSimpleInventoryItemService> superUserApplicationServiceProvider) {
+        this.superSimpleInventoryItemServiceProvider = superUserApplicationServiceProvider;
+    }
+
+}

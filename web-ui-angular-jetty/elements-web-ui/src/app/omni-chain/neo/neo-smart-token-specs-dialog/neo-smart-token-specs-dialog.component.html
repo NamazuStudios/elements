@@ -1,0 +1,147 @@
+<div class="head-title">
+  <h1 mat-dialog-title>Edit Metadata Spec</h1>
+</div>
+
+<div class="head-controls">
+  <div>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        placeholder="SpecName"
+        name="specname"
+        type="text"
+        [value]="specName"
+        (input)="changeTokenName($event.target.value)"
+      >
+    </mat-form-field>
+  </div>
+
+</div>
+
+<div>
+    <div class="fields-header">
+      <div>Properties:</div>
+    </div>
+    <mat-card [@.disabled]="disableAnimation">
+      <mat-accordion cdkDropList (cdkDropListDropped)="drop($event)">
+        <mat-expansion-panel
+          *ngFor="let property of properties; let fieldIndex = index;"
+          (opened)="handleFieldPanelStateChange(fieldIndex)"
+          [expanded]="expandedField === fieldIndex"
+          cdkDrag
+        >
+          <div class="custom-placeholder" *cdkDragPlaceholder></div>
+          <mat-expansion-panel-header>
+            <div class="menu-panel-header">
+              <div class="menu-index-keyname">
+                <mat-icon>menu</mat-icon>
+                <div>
+                  <span>{{fieldIndex+1}}: </span>
+                  <span *ngIf="property.name" class="menu-keyname" style="color: #333333">{{property.name}}</span>
+                  <span *ngIf="!property.name" class="menu-keyname-empty">KeyName</span>
+                </div>
+              </div>
+              <div>{{property.type || 'Type'}}</div>
+            </div>
+          </mat-expansion-panel-header>
+          <div class="sharp-panel">
+            <div class="field-name-type">
+              <mat-form-field>
+                <mat-label>Name</mat-label>
+                <input
+                  matInput
+                  placeholder="KeyName"
+                  name="keyname"
+                  type="text"
+                  [value]="property.name"
+                  (change)="changeFieldName($event.target, fieldIndex)"
+                >
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Type</mat-label>
+                <mat-select
+                  name="type"
+                  placeholder="Type"
+                  [value]="property.type"
+                  (selectionChange)="changePropertyType($event.value, fieldIndex)"
+                >
+                  <mat-option
+                    *ngFor="let tabType of propertiesTypes"
+                    [value]="tabType.key"
+                    [matTooltip]="tabType.value"
+                    matTooltipPosition="left"
+                  >
+                    {{tabType.value}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div [ngClass]="{'menu-panel-footer-column': property?.type === 'ENUM', 'menu-panel-footer': true}">
+              <app-neo-smart-token-specs-dialog-field-type
+                [type]="property.type"
+                [index]="fieldIndex"
+                [field]="property"
+                (onContentTypeUpdate)="changePropertyType($event, fieldIndex)"
+                (onDefaultValueUpdate)="changeDefaultValue($event, fieldIndex)"
+                (onPlaceholderUpdate)="changePlaceholder($event, fieldIndex)"
+                (openDefineObjectModal)="openDefineObjectModal($event)"
+              >
+              </app-neo-smart-token-specs-dialog-field-type>
+              <div class="field-buttons">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  matTooltip="Duplicate Field"
+                  matTooltipPosition="above"
+                  (click)="duplicateProperty(fieldIndex)"
+                >
+                  <mat-icon>file_copy</mat-icon>
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  matTooltip="Remove"
+                  matTooltipPosition="above"
+                  (click)="removeField(fieldIndex)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+        <button
+          mat-raised-button
+          color="primary" class="mt-20"
+          matTooltip="Add Field"
+          matTooltipPosition="above"
+          (click)="addNewField()">
+          Add Field
+        </button>
+      </mat-accordion>
+    </mat-card>
+</div>
+
+<div class="mt-20">
+  <div class="mat-error mb-20" *ngIf="showError">Fill all required fields.</div>
+  <button
+    mat-raised-button
+    color="primary"
+    matTooltip="Ok"
+    matTooltipPosition="above"
+    [disabled]="!isValid()"
+    (click)="submit()"
+  >
+    OK
+  </button>
+  <button
+    mat-raised-button
+    matTooltip="Cancel"
+    matTooltipPosition="above"
+    style="margin-left: 10px"
+    (click)="close()"
+  >
+    Cancel
+  </button>
+</div>

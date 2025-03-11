@@ -1,0 +1,100 @@
+#  Template maven-build
+
+#  This template allows you to test and build your Java project with Maven.
+#  The workflow allows running tests, code checkstyle and security scans on the default branch.
+
+# Prerequisites: pom.xml and appropriate project structure should exist in the repository.
+
+image:
+  name: getelements.jfrog.io/elements-ci-docker/elements-deployment-web-services-ci:8017d18690372f46c808e7d09cf396fbef559fee
+  username: $JF_USER
+  password: $JF_ACCESS_TOKEN
+
+definitions:
+  services:
+    docker:
+      # In spite of what IntelliJ says, this must be here to support
+      # the buildx commands properly
+      image: docker:dind
+
+options:
+  max-time: 60
+  docker: true
+  size: 2x
+
+pipelines:
+  tags:
+    "*":
+      - step:
+          size: 4x
+          name: Build Tags
+          services: docker
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - pipe: jfrog/jfrog-setup-cli:2.0.0
+            - source ./jfrog-setup-cli.sh
+            - make setup
+            - make git
+            - make build
+            - make docker
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
+  branches:
+    "release/*":
+      - step:
+          size: 4x
+          name: Build and Test - Release
+          services: docker
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - pipe: jfrog/jfrog-setup-cli:2.0.0
+            - source ./jfrog-setup-cli.sh
+            - make setup
+            - make release
+            - make COMMIT_MSG="Release:" detach commit tag push_tags
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
+    "development/*":
+      - step:
+          size: 4x
+          name: Build and Test - Development
+          services: docker
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - pipe: jfrog/jfrog-setup-cli:2.0.0
+            - source ./jfrog-setup-cli.sh
+            - make setup
+            - make COMMIT_MSG="Snapshot:" detach commit tag
+            - make BRANCH=$BITBUCKET_BRANCH checkout
+            - make patch
+            - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
+            - make push push_tags
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
+  default:
+    - step:
+        size: 4x
+        name: Build and Test
+        runs-on:
+          - "linux"
+          - "self.hosted"
+        caches:
+          - maven
+        script:
+          - pipe: jfrog/jfrog-setup-cli:2.0.0
+          - source ./jfrog-setup-cli.sh
+          - make setup
+          - make build
+          - make docker
+        after-script:
+          # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+          - pipe: atlassian/checkstyle-report:0.3.0

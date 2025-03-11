@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="web-ui-angular" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/web-ui-angular-jetty/elements-web-ui/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="start" />
+    </scripts>
+    <node-interpreter value="project" />
+    <package-manager value="npm" />
+    <envs>
+      <env name="NODE_OPTIONS" value="--openssl-legacy-provider" />
+    </envs>
+    <method v="2">
+      <option name="LaunchBrowser.Before.Run" url="http://localhost:4200" />
+    </method>
+  </configuration>
+</component>
