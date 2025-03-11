@@ -24,9 +24,46 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>jetty-ws</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-spi-guice</artifactId>
             <optional>true</optional>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>.*</pattern>  <!-- Shades everything -->
+                                    <shadedPattern>dev.getelements.dep</shadedPattern>
+                                    <excludes>
+                                        <exclude>jakarta.ws.rs.**</exclude>
+                                        <exclude>jakarta.servlet.**</exclude>
+                                        <exclude>jakarta.websocket.**</exclude>
+                                        <exclude>org.slf4j.**</exclude>
+                                        <exclude>dev.getelements.elements.sdk.**</exclude> <!-- Keeps com.example.foo unshaded -->
+                                    </excludes>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
