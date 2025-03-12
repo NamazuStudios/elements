@@ -16,6 +16,7 @@ import java.util.Properties;
 import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CA;
 import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CLIENT_CERTIFICATE;
+import static dev.getelements.elements.dao.mongo.test.MongoTestInstance.ELEMENTS_TESTED_VERSION;
 import static java.lang.String.format;
 import static org.testng.AssertJUnit.assertNotNull;
 
@@ -24,7 +25,7 @@ public class MongoTestSslClientConnects {
 
     private static final int MONGO_PORT = 48000;
 
-    private static final String MONGO_TEST_VERSION = "6.0.9";
+    private static final String MONGO_TEST_VERSION = ELEMENTS_TESTED_VERSION;
 
     private MongoClient mongoClient;
 

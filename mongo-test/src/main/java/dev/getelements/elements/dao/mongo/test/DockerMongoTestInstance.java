@@ -11,6 +11,10 @@ public class DockerMongoTestInstance extends CliMongoTestInstance {
 
     private static final Logger logger = LoggerFactory.getLogger(DockerMongoTestInstance.class);
 
+    public DockerMongoTestInstance(final int port) {
+        super(port, ELEMENTS_TESTED_VERSION);
+    }
+
     public DockerMongoTestInstance(final int port, final String version) {
         super(port, version);
     }
