@@ -35,7 +35,11 @@ public class RootElementRegistryModule extends PrivateModule {
                 .toProvider(ElementRegistry::newDefaultInstance)
                 .asEagerSingleton();
 
-        final Key<ElementRegistry> rootElementRegistryKey = Key.get(ElementRegistry.class, named(ElementRegistry.ROOT));
+        final Key<ElementRegistry> rootElementRegistryKey = Key.get(
+                ElementRegistry.class,
+                named(ElementRegistry.ROOT)
+        );
+
         expose(rootElementRegistryKey);
 
         final var key = Key.get(ElementRegistry.class);

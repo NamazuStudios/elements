@@ -5,14 +5,19 @@ import dev.getelements.elements.dao.mongo.test.DockerMongoTestInstance;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.util.ShutdownHooks;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.Response;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.util.Properties;
 
 import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.sdk.model.Constants.HTTP_PORT;
 import static java.lang.String.format;
+import static org.testng.Assert.assertEquals;
 
 public class TestLocalSDK {
 
@@ -22,12 +27,15 @@ public class TestLocalSDK {
 
     private MongoTestInstance mongoTestInstance;
 
+    private static final ShutdownHooks shutdownHooks = new ShutdownHooks(TestLocalSDK.class);
+
     private static final int TEST_MONGO_PORT = 47000;
 
     @BeforeClass
     public void setupMongoDb() {
         mongoTestInstance = new DockerMongoTestInstance(47000);
         mongoTestInstance.start();
+        shutdownHooks.add(mongoTestInstance::stop);
     }
 
     @BeforeClass(dependsOnMethods = "setupMongoDb")
@@ -48,6 +56,8 @@ public class TestLocalSDK {
                 .withElementFromPacakge("MYAPP", "dev.getelements.elements.sdk.test.element.rs")
                 .withElementFromPacakge("MYAPP", "dev.getelements.elements.sdk.test.element.ws")
                 .build();
+
+        shutdownHooks.add(elementsLocal::close);
 
     }
 
@@ -78,8 +88,42 @@ public class TestLocalSDK {
     }
 
     @AfterClass
-    public void tearDownMongoDb() {
-        mongoTestInstance.stop();
+    public void tearDownInstance() {
+        elementsLocal.close();
     }
+
+    @AfterClass
+    public void tearDownMongoDb() {
+        mongoTestInstance.close();
+    }
+
+    @Test
+    public void testCallVersionEndpoint() {
+        try (final var client = ClientBuilder.newClient()) {
+
+            final var response = client.target("http://localhost:8181/api/rest/version")
+                    .request()
+                    .get();
+
+            final var status = response.getStatus();
+            assertEquals(status, Response.Status.OK.getStatusCode());
+
+        }
+    }
+
+    @Test
+    public void testGetMessages() {
+        try (final var client = ClientBuilder.newClient()) {
+
+            final var response = client.target("http://localhost:8181/api/myapp/message")
+                    .request()
+                    .get();
+
+            final var status = response.getStatus();
+            assertEquals(status, Response.Status.OK.getStatusCode());
+
+        }
+    }
+
 
 }

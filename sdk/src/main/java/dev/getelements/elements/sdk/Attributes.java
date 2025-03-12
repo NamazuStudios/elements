@@ -79,6 +79,18 @@ public interface Attributes {
     }
 
     /**
+     * Returns this {@link Attributes} as a {@link Properties} instance.
+     *
+     * @param defaults the default properties to use
+     * @return the {@link Properties}
+     */
+    default Properties asProperties(final Properties defaults) {
+        final var properties = new Properties(defaults);
+        getAttributeNames().forEach(name -> properties.put(name, getAttribute(name)));
+        return properties;
+    }
+
+    /**
      * The empty {@link Attributes} implementation.  This returns an empty list of attribute names, and will return null
      * for any requested attribute.
      */
