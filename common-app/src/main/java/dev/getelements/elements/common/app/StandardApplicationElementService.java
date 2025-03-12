@@ -1,9 +1,9 @@
 package dev.getelements.elements.common.app;
 
-import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.rt.ApplicationAssetLoader;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import jakarta.inject.Inject;
