@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.jetty.ElementsWebServices;
+import dev.getelements.elements.sdk.ServiceLocator;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
 
@@ -32,6 +33,11 @@ class StandardElementsLocal implements ElementsLocal {
 
         elementsWebServices.run();
 
+    }
+
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return null;
     }
 
     @Override

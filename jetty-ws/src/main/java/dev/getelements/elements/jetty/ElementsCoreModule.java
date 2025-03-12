@@ -5,6 +5,7 @@ import dev.getelements.elements.cdnserve.guice.FileSystemCdnGitLoaderModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
+import dev.getelements.elements.dao.mongo.guice.MongoDaoElementModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
@@ -50,9 +51,8 @@ public class ElementsCoreModule extends AbstractModule {
         install(new RootElementRegistryModule());
         install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
-        install(new MongoDaoModule());
         install(new MongoCoreModule());
-        install(new MongoGridFSLargeObjectBucketModule());
+        install(new MongoDaoElementModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
         install(new JerseyHttpClientModule());

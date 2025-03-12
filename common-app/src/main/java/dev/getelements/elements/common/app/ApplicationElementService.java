@@ -38,6 +38,11 @@ public interface ApplicationElementService {
     record ApplicationElementRecord(
             ApplicationId applicationId,
             ElementRegistry registry,
-            List<Element> elements) {}
+            List<Element> elements) {
+
+        public ApplicationElementRecord {
+            elements = List.copyOf(elements);
+        }
+    }
 
 }

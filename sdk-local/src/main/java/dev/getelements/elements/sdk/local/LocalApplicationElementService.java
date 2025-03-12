@@ -68,14 +68,15 @@ class LocalApplicationElementService implements ApplicationElementService {
             combined.addAll(local.elements());
             combined.addAll(standard.elements());
 
-            return new ApplicationElementRecord(applicationId, registry, copyOf(combined));
+            return new ApplicationElementRecord(applicationId, registry, combined);
 
         }
 
     }
 
     private ElementLoader doLoadElement(final LocalApplicationElementRecord lar) {
-        return ElementLoaderFactory.getDefault()
+        return ElementLoaderFactory
+                .getDefault()
                 .getIsolatedLoader(
                         lar.attributes(),
                         ClassLoader.getSystemClassLoader(),

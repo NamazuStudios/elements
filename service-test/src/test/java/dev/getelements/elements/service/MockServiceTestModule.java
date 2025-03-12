@@ -94,7 +94,6 @@ public class MockServiceTestModule extends AbstractModule {
         bind(RewardIssuanceDao.class).toInstance(mock(RewardIssuanceDao.class));
         bind(AppleIapReceiptDao.class).toInstance(mock(AppleIapReceiptDao.class));
         bind(GooglePlayIapReceiptDao.class).toInstance(mock(GooglePlayIapReceiptDao.class));
-        bind(FirebaseUserDao.class).toInstance(mock(FirebaseUserDao.class));
         bind(FollowerDao.class).toInstance(mock(FollowerDao.class));
         bind(DeploymentDao.class).toInstance(mock(DeploymentDao.class));
         bind(DatabaseHealthStatusDao.class).toInstance(mock(DatabaseHealthStatusDao.class));
