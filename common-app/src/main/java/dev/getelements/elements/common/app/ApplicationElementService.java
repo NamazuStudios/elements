@@ -13,6 +13,13 @@ import java.util.List;
 public interface ApplicationElementService {
 
     /**
+     * Gets the {@link ElementRegistry} for the {@link Application}, loading it if it has not previously been loaded.
+     * @param application the {@link Application}
+     * @return the {@link ElementRegistry}
+     */
+    ElementRegistry getElementRegistry(Application application);
+
+    /**
      * Loads all {@link Element}s defined by the {@link Application}'s code registry. If the {@link Application} has
      * already loaded then this returns the existing collection.
      *
