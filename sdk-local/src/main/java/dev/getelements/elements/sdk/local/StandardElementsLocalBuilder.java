@@ -8,6 +8,7 @@ import dev.getelements.elements.jetty.ElementsWebServiceComponentModule;
 import dev.getelements.elements.jetty.JettyServerModule;
 import dev.getelements.elements.rt.git.FileSystemElementStorageGitLoaderModule;
 import dev.getelements.elements.sdk.Attributes;
+import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,8 @@ public class StandardElementsLocalBuilder implements ElementsLocalBuilder {
 
     private Attributes attributes = emptyAttributes();
 
+    private ClassLoaderConstructor classLoaderConstructor = DelegatingLocalClassLoader::new;
+
     private final List<LocalApplicationElementRecord> localElements = new ArrayList<>();
 
     @Override
@@ -29,14 +32,20 @@ public class StandardElementsLocalBuilder implements ElementsLocalBuilder {
     }
 
     @Override
+    public ElementsLocalBuilder withClassLoaderConstructor(final ClassLoaderConstructor constructor) {
+        this.classLoaderConstructor = constructor == null ? DelegatingLocalClassLoader::new : constructor;
+        return this;
+    }
+
+    @Override
     public ElementsLocalBuilder withElementFromPacakge(
             final String applicationNameOrId,
-            final String aPacakge,
+            final String elementName,
             final Attributes attributes) {
         requireNonNull(applicationNameOrId, "applicationNameOrId");
-        requireNonNull(aPacakge, "aPacakge");
+        requireNonNull(elementName, "aPacakge");
         requireNonNull(attributes, "attributes");
-        localElements.add(new LocalApplicationElementRecord(applicationNameOrId, aPacakge, attributes));
+        localElements.add(new LocalApplicationElementRecord(applicationNameOrId, elementName, attributes));
         return this;
     }
 
@@ -55,6 +64,7 @@ public class StandardElementsLocalBuilder implements ElementsLocalBuilder {
                     @Override
                     protected void configure() {
                         bind(ElementsLocal.class).to(StandardElementsLocal.class).asEagerSingleton();
+                        bind(ClassLoaderConstructor.class).toInstance(classLoaderConstructor);
                     }
                 }
         );

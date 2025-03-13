@@ -2,12 +2,15 @@ package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.ElementLoaderFactory;
+import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.function.Predicate;
 
 import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 
@@ -52,15 +55,33 @@ public interface ElementsLocalBuilder {
      * Specifies an {@link Element} to load associated with the supplied package.
      *
      * @param applicationNameOrId the name or id of the {@link Application}
-     * @param aPacakge            the name of the Java package for the Element\
+     * @param elementName            the name of the Element
      * @param attributes the {@link Attributes} to use when loading the package
      * @return this instance
      */
     ElementsLocalBuilder withElementFromPacakge(
             String applicationNameOrId,
-            String aPacakge,
+            String elementName,
             Attributes attributes);
-    
+
+    /**
+     * Delegates to the system classloader to load elements. This is the default behavior.
+     *
+     * @return this instance
+     */
+    default ElementsLocalBuilder withDelegatingClassLoader() {
+        return withClassLoaderConstructor(DelegatingLocalClassLoader::new);
+    }
+
+    /**
+     * Specifies the classloader constructor to use for loading the {@link Element}. This is passed to
+     * {@link ElementLoaderFactory#getIsolatedLoader(Attributes, ClassLoader, ClassLoaderConstructor, Predicate)}
+     *
+     * @param constructor the constructor
+     * @return this instance
+     */
+    ElementsLocalBuilder withClassLoaderConstructor(ClassLoaderConstructor constructor);
+
     /**
      * Builds the {@link ElementsLocal} instance
      *

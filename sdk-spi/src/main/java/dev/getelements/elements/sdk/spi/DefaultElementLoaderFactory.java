@@ -49,7 +49,6 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementClassLoader = classLoaderCtor.apply(isolatedElementClassLoader);
 
         // The Module Definition Records and Services
-
         final var elementDefinitionRecord = scanForModuleDefinition(elementClassLoader, selector);
         final var elementServices = scanForElementServices(elementClassLoader, elementDefinitionRecord);
         final var elementProducedEvents = scanForProducedEvents(elementClassLoader, elementDefinitionRecord);
@@ -76,6 +75,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         // Finally, initializes the isolated classloader with the ElementRecord
         isolatedElementClassLoader.init(elementRecord);
+        inject(elementClassLoader, elementRecord, null);
 
         return elementRecord;
 
@@ -379,22 +379,22 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
     }
 
-    private ElementLoader inject(final ElementLoader elementLoader,
-                                 final ElementRecord elementRecord,
-                                 final ServiceLocator serviceLocator) {
+    private <T> T inject(final T target,
+                         final ElementRecord elementRecord,
+                         final ServiceLocator serviceLocator) {
 
         try {
 
-            final var info = Introspector.getBeanInfo(elementLoader.getClass());
+            final var info = Introspector.getBeanInfo(target.getClass());
 
             for (var descriptor : info.getPropertyDescriptors()) {
 
                 if (descriptor.getName().equals(ELEMENT_RECORD)) {
-                    descriptor.getWriteMethod().invoke(elementLoader, elementRecord);
+                    descriptor.getWriteMethod().invoke(target, elementRecord);
                 }
 
                 if (descriptor.getName().equals(SERVICE_LOCATOR)) {
-                    descriptor.getWriteMethod().invoke(elementLoader, serviceLocator);
+                    descriptor.getWriteMethod().invoke(target, serviceLocator);
                 }
 
             }
@@ -403,7 +403,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             throw new SdkException(ex);
         }
 
-        return elementLoader;
+        return target;
 
     }
 

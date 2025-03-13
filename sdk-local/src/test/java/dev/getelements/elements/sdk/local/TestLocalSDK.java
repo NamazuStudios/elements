@@ -115,7 +115,7 @@ public class TestLocalSDK {
     public void testGetMessages() {
         try (final var client = ClientBuilder.newClient()) {
 
-            final var response = client.target("http://localhost:8181/api/myapp/message")
+            final var response = client.target("http://localhost:8181/app/rest/myapp/message")
                     .request()
                     .get();
 

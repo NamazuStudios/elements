@@ -1,23 +1,20 @@
 package dev.getelements.elements.sdk.local;
 
-import com.restfb.types.Url;
 import dev.getelements.elements.common.app.ApplicationElementService;
 import dev.getelements.elements.common.app.StandardApplicationElementService;
-import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementLoaderFactory;
+import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
 import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
-import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,14 +24,19 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.cluster.id.ApplicationId.forUniqueName;
+import static java.lang.ClassLoader.getSystemClassLoader;
 
 class LocalApplicationElementService implements ApplicationElementService {
+
+    private static final Logger logger = LoggerFactory.getLogger(LocalApplicationElementService.class);
 
     private final Lock lock = new ReentrantLock();
 
     private List<LocalApplicationElementRecord> localElements;
 
     private ElementRegistry rootElementRegistry;
+
+    private ClassLoaderConstructor classLoaderConstructor;
 
     private StandardApplicationElementService standardApplicationElementService;
 
@@ -65,11 +67,14 @@ class LocalApplicationElementService implements ApplicationElementService {
 
             });
 
-            final var standard = standardApplicationElementService.getOrLoadApplication(application);
+            final var combined = new ArrayList<>(local.elements());
 
-            final var combined = new ArrayList<Element>();
-            combined.addAll(local.elements());
-            combined.addAll(standard.elements());
+            try {
+                final var standard = standardApplicationElementService.getOrLoadApplication(application);
+                combined.addAll(standard.elements());
+            } catch (ApplicationCodeNotFoundException ex) {
+                logger.trace("Standard application code not found. Skipping {}", applicationId, ex);
+            }
 
             return new ApplicationElementRecord(applicationId, registry, combined);
 
@@ -78,13 +83,16 @@ class LocalApplicationElementService implements ApplicationElementService {
     }
 
     private ElementLoader doLoadElement(final LocalApplicationElementRecord lar) {
+
+        final var systemClassLoader = getSystemClassLoader();
+
         return ElementLoaderFactory
                 .getDefault()
                 .getIsolatedLoader(
                         lar.attributes(),
-                        getClass().getClassLoader(),
-                        cl -> new SecureClassLoader(cl){},
-                        edr -> edr.pkgName().equals(lar.packageName())
+                        systemClassLoader,
+                        getClassLoaderConstructor(),
+                        edr -> edr.pkgName().equals(lar.elementName())
                 );
     }
 
@@ -104,6 +112,15 @@ class LocalApplicationElementService implements ApplicationElementService {
     @Inject
     public void setRootElementRegistry(@Named(ROOT) ElementRegistry rootElementRegistry) {
         this.rootElementRegistry = rootElementRegistry;
+    }
+
+    public ClassLoaderConstructor getClassLoaderConstructor() {
+        return classLoaderConstructor;
+    }
+
+    @Inject
+    public void setClassLoaderConstructor(ClassLoaderConstructor classLoaderConstructor) {
+        this.classLoaderConstructor = classLoaderConstructor;
     }
 
     public StandardApplicationElementService getStandardApplicationElementService() {
