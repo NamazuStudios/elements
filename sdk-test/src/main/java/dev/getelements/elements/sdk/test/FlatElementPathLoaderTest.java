@@ -14,6 +14,7 @@ import java.util.List;
 import static dev.getelements.elements.sdk.ElementPathLoader.CLASSPATH_DIR;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
+import static java.lang.ClassLoader.getSystemClassLoader;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -47,7 +48,7 @@ public class FlatElementPathLoaderTest {
         final var loadedElements = elementPathLoader.load(
                 elementRegistry,
                 baseDirectory,
-                getClass().getClassLoader()
+                getSystemClassLoader()
         ).toList();
 
         final var inRegistry = elementRegistry.stream().toList();

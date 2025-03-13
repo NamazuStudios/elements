@@ -20,8 +20,8 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
     private ApplicationDao applicationDao;
 
     @Override
-    public void start() {
-        getApplicationDao()
+    public void deployAvailableApplications() {
+            getApplicationDao()
                 .getActiveApplications()
                 .stream()
                 .forEach(this::tryDeployApplication);

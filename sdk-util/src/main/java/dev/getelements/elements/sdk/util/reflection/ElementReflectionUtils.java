@@ -21,6 +21,32 @@ public class ElementReflectionUtils {
     }
 
     /**
+     * Gets the package-info {@link Class} for the supplied package name.
+     *
+     * @param name the package name
+     * @return the {@link Package}
+     */
+    public Class<?> getPackageInfo(final String name) {
+        return getPackageInfo(name, getClass().getClassLoader());
+    }
+
+    /**
+     * Gets the package-info {@link Class} for the supplied package name.
+     *
+     * @param name the package name
+     * @param classLoader the {@link ClassLoader} to use
+     * @return the {@link Package}
+     */
+    public Class<?> getPackageInfo(final String name, final ClassLoader classLoader) {
+        try {
+            final var fqn = format("%s.package-info", name);
+            return classLoader.loadClass(fqn);
+        } catch (ClassNotFoundException ex) {
+            throw new SdkException(ex);
+        }
+    }
+
+    /**
      * Gets the {@link Package} from the package-info class.
      *
      * @param name the package name
@@ -38,12 +64,7 @@ public class ElementReflectionUtils {
      * @return the {@link Package}
      */
     public Package getPackageForElementsAnnotations(final String name, final ClassLoader classLoader) {
-        try {
-            final var fqn = format("%s.package-info", name);
-            return classLoader.loadClass(fqn).getPackage();
-        } catch (ClassNotFoundException ex) {
-            throw new SdkException(ex);
-        }
+        return getPackageInfo(name, classLoader).getPackage();
     }
 
 }

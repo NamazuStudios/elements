@@ -1,19 +1,23 @@
 package dev.getelements.elements.sdk.local;
 
+import com.restfb.types.Url;
 import dev.getelements.elements.common.app.ApplicationElementService;
 import dev.getelements.elements.common.app.StandardApplicationElementService;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementLoaderFactory;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
+import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +27,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.cluster.id.ApplicationId.forUniqueName;
-import static java.util.List.copyOf;
 
 class LocalApplicationElementService implements ApplicationElementService {
 
@@ -79,8 +82,8 @@ class LocalApplicationElementService implements ApplicationElementService {
                 .getDefault()
                 .getIsolatedLoader(
                         lar.attributes(),
-                        ClassLoader.getSystemClassLoader(),
-                        cl -> new URLClassLoader(new URL[0], cl),
+                        getClass().getClassLoader(),
+                        cl -> new SecureClassLoader(cl){},
                         edr -> edr.pkgName().equals(lar.packageName())
                 );
     }
