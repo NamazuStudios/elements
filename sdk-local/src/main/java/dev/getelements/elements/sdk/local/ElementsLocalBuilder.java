@@ -45,10 +45,10 @@ public interface ElementsLocalBuilder {
      * @param aPacakge            the name of the Java package for the Element
      * @return this instance
      */
-    default ElementsLocalBuilder withElementFromPacakge(
+    default ElementsLocalBuilder withElementNamed(
             final String applicationNameOrId,
             final String aPacakge) {
-        return withElementFromPacakge(applicationNameOrId, aPacakge, emptyAttributes());
+        return withElementNamed(applicationNameOrId, aPacakge, emptyAttributes());
     }
 
     /**
@@ -59,7 +59,7 @@ public interface ElementsLocalBuilder {
      * @param attributes the {@link Attributes} to use when loading the package
      * @return this instance
      */
-    ElementsLocalBuilder withElementFromPacakge(
+    ElementsLocalBuilder withElementNamed(
             String applicationNameOrId,
             String elementName,
             Attributes attributes);

@@ -53,8 +53,8 @@ public class TestLocalSDK {
 
         elementsLocal = ElementsLocalBuilder.getDefault()
                 .withProperties(configurationSupplier.get())
-                .withElementFromPacakge("MYAPP", "dev.getelements.elements.sdk.test.element.rs")
-                .withElementFromPacakge("MYAPP", "dev.getelements.elements.sdk.test.element.ws")
+                .withElementNamed("MYAPP", "dev.getelements.elements.sdk.test.element.rs")
+                .withElementNamed("MYAPP", "dev.getelements.elements.sdk.test.element.ws")
                 .build();
 
         shutdownHooks.add(elementsLocal::close);

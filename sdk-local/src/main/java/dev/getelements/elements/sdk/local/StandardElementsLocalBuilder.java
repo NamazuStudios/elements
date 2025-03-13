@@ -38,7 +38,7 @@ public class StandardElementsLocalBuilder implements ElementsLocalBuilder {
     }
 
     @Override
-    public ElementsLocalBuilder withElementFromPacakge(
+    public ElementsLocalBuilder withElementNamed(
             final String applicationNameOrId,
             final String elementName,
             final Attributes attributes) {

@@ -10,7 +10,8 @@ import java.util.stream.Stream;
 import static dev.getelements.elements.sdk.local.SystemClasspathUtils.getSystemClasspath;
 
 /**
- * Delegates to the {@link #getSystemClassLoader()} using it for all loading.
+ * Delegates to the {@link #getSystemClassLoader()} using it for all loading and reads the system classpath for
+ * locating all resources.
  */
 public class DelegatingLocalClassLoader extends ClassLoader {
 
@@ -19,7 +20,7 @@ public class DelegatingLocalClassLoader extends ClassLoader {
     public DelegatingLocalClassLoader(ClassLoader parent) {
         super(parent);
     }
-    
+
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         return delegate.loadClass(name);
@@ -41,6 +42,12 @@ public class DelegatingLocalClassLoader extends ClassLoader {
         return delegate.resources(name);
     }
 
+    /**
+     * This is here to hint Classgraph of the URLs for all classes. This is called, reflectively, by the "Fallback"
+     * classloader handler within Classgraph.
+     *
+     * @return an array of {@link URL}s making up the system classpath.
+     */
     public URL[] getURLs() {
         return getSystemClasspath();
     }
