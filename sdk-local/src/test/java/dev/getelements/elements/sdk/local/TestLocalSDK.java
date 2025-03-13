@@ -32,10 +32,11 @@ public class TestLocalSDK {
     private static final int TEST_MONGO_PORT = 47000;
 
     @BeforeClass
-    public void setupMongoDb() {
+    public void setupMongoDb() throws InterruptedException {
         mongoTestInstance = new DockerMongoTestInstance(47000);
         mongoTestInstance.start();
         shutdownHooks.add(mongoTestInstance::stop);
+        Thread.sleep(1000);
     }
 
     @BeforeClass(dependsOnMethods = "setupMongoDb")

@@ -14,54 +14,63 @@
     <version>3.0.0-SNAPSHOT</version>
 
     <dependencies>
+
+        <!-- SDK Dependencies -->
+        <!-- These are all flagged as provided and must be included in client projects, explicitly -->
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-spi</artifactId>
+            <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-util</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-spi-guice</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Other third-party dependencies -->
+        <!-- These are all flagged as provided and must be included in client projects, explicitly -->
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>jetty-ws</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>mongo-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-spi-guice</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
-            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.websocket</groupId>
             <artifactId>jakarta.websocket-api</artifactId>
-            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
+
+        <!-- Test Dependencies -->
+        <!-- These should never be included in the final build -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-test</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-util</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
@@ -73,6 +82,12 @@
             <artifactId>sdk-test-element-ws</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>mongo-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -106,7 +121,7 @@
                                     <pattern>dev.</pattern>
                                     <shadedPattern>_internal.dev.</shadedPattern>
                                     <excludes>
-                                        <exclude>dev.getelements.elements.sdk.local.*</exclude>
+                                        <exclude>dev.getelements.elements.sdk.**</exclude>
                                     </excludes>
                                 </relocation>
                                 <relocation>
