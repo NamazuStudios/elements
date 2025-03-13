@@ -20,16 +20,19 @@ public class StandardElementsLocal implements ElementsLocal {
     private ElementsWebServices elementsWebServices;
 
     @Override
-    public void start() {
+    public StandardElementsLocal start() {
+
         try (var mon = Monitor.enter(lock)){
             getElementsWebServices().start();
-        } finally {
-            elementsWebServices = null;
         }
+
+        return this;
+
     }
 
     @Override
-    public void run() {
+    public StandardElementsLocal run() {
+
         final ElementsWebServices elementsWebServices;
 
         try (var mon = Monitor.enter(lock)){
@@ -37,6 +40,7 @@ public class StandardElementsLocal implements ElementsLocal {
         }
 
         elementsWebServices.run();
+        return this;
 
     }
 
@@ -45,9 +49,8 @@ public class StandardElementsLocal implements ElementsLocal {
         try (var mon = Monitor.enter(lock)){
             if (getElementsWebServices() != null) {
                 getElementsWebServices().stop();
+                setElementsWebServices(null);
             }
-        } finally {
-            elementsWebServices = null;
         }
     }
 

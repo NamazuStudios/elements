@@ -4,7 +4,6 @@ import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.guice.ServletBindings;
 import dev.getelements.elements.jetty.StaticContentServlet;
-import org.eclipse.jetty.ee10.servlet.DefaultServlet;
 
 import java.util.Map;
 

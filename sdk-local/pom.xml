@@ -142,6 +142,7 @@
                                     <excludes>
                                         <exclude>javax.xml.**</exclude>
                                         <exclude>javax.net.**</exclude>
+                                        <exclude>javax.naming.**</exclude>
                                         <exclude>javax.crypto.**</exclude>
                                         <exclude>javax.security.**</exclude>
                                     </excludes>
@@ -208,10 +209,6 @@
                                 <relocation>
                                     <pattern>kotlin.</pattern>
                                     <shadedPattern>_internal.kotlin.</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>swagger.</pattern>
-                                    <shadedPattern>_internal.swagger.</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>joptsimple.</pattern>

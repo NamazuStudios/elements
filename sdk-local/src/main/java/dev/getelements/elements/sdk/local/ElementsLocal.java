@@ -9,13 +9,17 @@ public interface ElementsLocal extends AutoCloseable {
 
     /**
      * Starts this {@link ElementsLocal}.
+     *
+     * @return this instance
      */
-    void start();
+    ElementsLocal start();
 
     /**
      * Runs the instance and will block until shutdown.
+     *
+     * @return this instance
      */
-    void run();
+    ElementsLocal run();
 
     /**
      * Gets the root {@link ElementRegistry} used by the local runner.
