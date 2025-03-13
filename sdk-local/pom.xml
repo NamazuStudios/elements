@@ -16,26 +16,21 @@
     <dependencies>
 
         <!-- SDK Dependencies -->
-        <!-- These are all flagged as provided and must be included in client projects, explicitly -->
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-spi</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-util</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-spi-guice</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Other third-party dependencies -->
@@ -121,7 +116,7 @@
                                     <pattern>dev.</pattern>
                                     <shadedPattern>_internal.dev.</shadedPattern>
                                     <excludes>
-                                        <exclude>dev.getelements.elements.sdk.**</exclude>
+                                        <exclude>dev.getelements.elements.**</exclude>
                                     </excludes>
                                 </relocation>
                                 <relocation>
@@ -249,7 +244,7 @@
                                 <filter>
                                     <artifact>dev.getelements.elements:*</artifact>
                                     <includes>
-                                        <include>dev/getelements/elements/sdk/local/**</include>
+                                        <include>*/**</include>
                                     </includes>
                                 </filter>
                                 <filter>
@@ -261,6 +256,9 @@
                                     </excludes>
                                 </filter>
                             </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
