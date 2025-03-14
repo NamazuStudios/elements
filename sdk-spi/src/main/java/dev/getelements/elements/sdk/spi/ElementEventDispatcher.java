@@ -103,7 +103,7 @@ public class ElementEventDispatcher implements AutoCloseable {
                 .filter(Predicate.not(ElementEventConsumerRecord::isDirectDispatch))
                 .forEach(consumer -> {
 
-                    final var key = ParameterKey.from(consumer.method());
+                    final var key = ParameterKey.from(consumer);
                     final Consumer<Event> dispatcher = Modifier.isStatic(consumer.method().getModifiers())
                             ? event -> dispatchMatchedStatic(consumer, event)
                             : event -> dispatchMatchedInstance(consumer, event);
@@ -164,11 +164,31 @@ public class ElementEventDispatcher implements AutoCloseable {
         return elementRecord;
     }
 
-    private record ParameterKey(List<Class<?>> cls) {
+    private record DirectKey(String name) {
 
-        public static ParameterKey from(final Method method) {
-            final var list = List.of(method.getParameterTypes());
-            return new ParameterKey(list);
+        public static DirectKey from(ElementEventConsumerRecord<?> record) {
+            return new DirectKey(record.eventKey().eventName());
+        }
+
+        public static DirectKey from(final Event event) {
+
+            final List<Class<?>> list = event
+                    .getEventArguments()
+                    .stream()
+                    .map(Object::getClass)
+                    .collect(toUnmodifiableList());
+
+            return new DirectKey(event.getEventName());
+
+        }
+
+    }
+
+    private record ParameterKey(String name, List<Class<?>> cls) {
+
+        public static ParameterKey from(ElementEventConsumerRecord<?> record) {
+            final var list = List.of(record.method().getParameterTypes());
+            return new ParameterKey(record.eventKey().eventName(), list);
         }
 
         public static ParameterKey from(final Event event) {
@@ -179,7 +199,7 @@ public class ElementEventDispatcher implements AutoCloseable {
                     .map(Object::getClass)
                     .collect(toUnmodifiableList());
 
-            return new ParameterKey(list);
+            return new ParameterKey(event.getEventName(), list);
 
         }
 
