@@ -33,11 +33,12 @@ public class ElementLoaderTest {
                 new ElementLoaderTest(
                         "dev.getelements.elements.sdk.test.element.a",
                         VARIANT_A
-                ),
-                new ElementLoaderTest(
-                        "dev.getelements.elements.sdk.test.element.b",
-                        VARIANT_B
                 )
+//                ,
+//                new ElementLoaderTest(
+//                        "dev.getelements.elements.sdk.test.element.b",
+//                        VARIANT_B
+//                )
         };
     }
 

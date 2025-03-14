@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.ElementLoader.ELEMENT_RECORD;
 import static dev.getelements.elements.sdk.ElementLoader.SERVICE_LOCATOR;
+import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -102,7 +103,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
     private ElementRecord loadElementRecord(final Attributes attributes, final Package aPackage) {
 
-        final var localClassLoader = getClass().getClassLoader();
+        final var localClassLoader = getSystemClassLoader();
         final var elementDefinitionRecord = ElementDefinitionRecord.fromPackage(aPackage);
         final var elementServices = scanForElementServices(localClassLoader, elementDefinitionRecord);
         final var elementProducedEvents = scanForProducedEvents(localClassLoader, elementDefinitionRecord);
@@ -139,11 +140,10 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .enableAnnotationInfo()
                 .overrideClassLoaders(classLoader);
 
-        if (elementDefinitionRecord.recursive()) {
-            cg.acceptPackages(elementDefinitionRecord.pkgName());
-        } else {
-            cg.acceptPackagesNonRecursive(elementDefinitionRecord.pkgName());
-        }
+        elementDefinitionRecord.acceptPackages(
+                cg::acceptPackages,
+                cg::acceptPackagesNonRecursive
+        );
 
         try (final var result = cg.scan()) {
 
@@ -224,11 +224,10 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .enableClassInfo()
                 .enableAnnotationInfo();
 
-        if (elementDefinitionRecord.recursive()) {
-            classGraph.acceptPackages(elementDefinitionRecord.pkgName());
-        } else {
-            classGraph.acceptPackagesNonRecursive(elementDefinitionRecord.pkgName());
-        }
+        elementDefinitionRecord.acceptPackages(
+                classGraph::acceptPackages,
+                classGraph::acceptPackagesNonRecursive
+        );
 
         try (final var result = classGraph.scan()) {
 
@@ -289,19 +288,19 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .enableAnnotationInfo()
                 .acceptClasses(serviceInterfaces
                         .stream()
-                        .map(c -> c.getName())
+                        .map(Class::getName)
                         .toArray(String[]::new)
                 );
 
-        if (elementDefinitionRecord.recursive()) {
-            classGraph.acceptPackages(elementDefinitionRecord.pkgName());
-        } else {
-            classGraph.acceptPackagesNonRecursive(elementDefinitionRecord.pkgName());
-        }
+        elementDefinitionRecord.acceptPackages(
+                classGraph::acceptPackages,
+                classGraph::acceptPackagesNonRecursive
+        );
 
         try (var result = classGraph.scan()) {
 
-            final var methods = result.getClassesWithMethodAnnotation(ElementEventConsumer.class)
+            final var methods = result
+                    .getClassesWithMethodAnnotation(ElementEventConsumer.class)
                     .stream()
                     .collect(toMap(ClassInfo::loadClass, classInfo -> classInfo
                             .getMethodInfo()

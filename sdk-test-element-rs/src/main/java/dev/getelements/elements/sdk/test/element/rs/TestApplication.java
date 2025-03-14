@@ -28,9 +28,4 @@ public class TestApplication extends Application {
         );
     }
 
-    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
-    public void onEvent(Event event) {
-        System.out.println(event);
-    }
-
 }

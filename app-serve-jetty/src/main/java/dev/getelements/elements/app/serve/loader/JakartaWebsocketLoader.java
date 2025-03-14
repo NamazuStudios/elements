@@ -73,9 +73,12 @@ public class JakartaWebsocketLoader implements Loader {
 
         final var definition = element.getElementRecord().definition();
 
-        return definition.recursive()
-                ? classgraph.acceptPackages(definition.pkgName())
-                : classgraph.acceptPackagesNonRecursive(definition.pkgName());
+        definition.acceptPackages(
+                classgraph::acceptPackages,
+                classgraph::acceptPackagesNonRecursive
+        );
+
+        return classgraph;
 
     }
 

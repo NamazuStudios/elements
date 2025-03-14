@@ -3,6 +3,11 @@ package dev.getelements.elements.sdk.record;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
 
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * Represents the record pertaining to the {@link ElementDefinition} annotation.
  *
@@ -14,6 +19,7 @@ public record ElementDefinitionRecord(
         Package pkg,
         String name,
         boolean recursive,
+        List<ElementPackageRecord> additionalPackages,
         Class<? extends ElementLoader> loader) {
 
     /**
@@ -22,6 +28,31 @@ public record ElementDefinitionRecord(
      */
     public String pkgName() {
         return pkg.getName();
+    }
+
+    /**
+     * Iterates over all defined packages in this {@link ElementDefinition}, calling the {@link Consumer} for each
+     * defined (including the defining package).
+     *
+     * @param recursive called for package defined as recursive
+     * @param nonRecursive called for a pakage defined as non-recursive
+     */
+    public void acceptPackages(
+            final Consumer<String> recursive,
+            final Consumer<String> nonRecursive) {
+
+        if (recursive())
+            recursive.accept(pkgName());
+        else
+            nonRecursive.accept(pkgName());
+
+        additionalPackages.forEach(p -> {
+            if (p.recursive())
+                recursive.accept(p.name());
+            else
+                nonRecursive.accept(p.name());
+        });
+
     }
 
     /**
@@ -41,10 +72,15 @@ public record ElementDefinitionRecord(
                 ? aPackage.getName()
                 : anElementDefinition.value();
 
+        final var additionalPackages = Stream.of(anElementDefinition.additionalPackages())
+                .map(ElementPackageRecord::from)
+                .toList();
+
         return new ElementDefinitionRecord(
                 aPackage,
                 name,
                 anElementDefinition.recursive(),
+                additionalPackages,
                 anElementDefinition.loader()
         );
 
