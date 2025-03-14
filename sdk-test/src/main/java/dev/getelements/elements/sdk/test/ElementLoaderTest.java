@@ -114,6 +114,7 @@ public class ElementLoaderTest {
         Assert.assertEquals(testService.getConsumedEvents().size(), 2);
         Assert.assertEquals(testService.getConsumedEventObjects().size(), 2);
         Assert.assertEquals(testService.getConsumedEventObjects().get(1), eventObject);
+
     }
 
 }

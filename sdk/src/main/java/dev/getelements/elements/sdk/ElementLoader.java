@@ -31,6 +31,7 @@ public interface ElementLoader {
      * The {@link ElementRecord} bean property.
      */
     String SERVICE_LOCATOR = "serviceLocator";
+
     /**
      * Called after the Element is loaded.
      */
