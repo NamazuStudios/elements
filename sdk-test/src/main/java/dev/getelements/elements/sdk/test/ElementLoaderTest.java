@@ -1,9 +1,7 @@
 package dev.getelements.elements.sdk.test;
 
-import dev.getelements.elements.sdk.Attributes;
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementLoaderFactory;
-import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.*;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.test.element.TestService;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -97,6 +95,25 @@ public class ElementLoaderTest {
     public void testUseElementRegistrySupplierSpi() {
         final var testService = element.getServiceLocator().getInstance(TestService.class);
         testService.testElementRegistrySpi();
+    }
+
+    @Test(dependsOnMethods = "testUseElementRegistrySupplierSpi")
+    public void testElementEvents() {
+
+        final var testService = element.getServiceLocator().getInstance(TestService.class);
+        final var eventObject = "testValue";
+        final var event = Event.builder()
+                .named(TestService.TEST_ELEMENT_EVENT)
+                .argument(eventObject)
+                .argument(eventObject)
+                .build();
+
+        elementRegistry.publish(event);
+
+        //Includes the startup event and the event published above
+        Assert.assertEquals(testService.getConsumedEvents().size(), 2);
+        Assert.assertEquals(testService.getConsumedEventObjects().size(), 2);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(1), eventObject);
     }
 
 }

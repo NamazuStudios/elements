@@ -1,12 +1,17 @@
 package dev.getelements.elements.sdk.test.element;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
+
+import java.util.List;
 
 /**
  * A test service.
  */
 @ElementPublic
 public interface TestService {
+
+    String TEST_ELEMENT_EVENT = "dev.getelements.elements.element.test.event";
 
     /**
      * Returns the implementation's package.
@@ -25,4 +30,15 @@ public interface TestService {
      */
     void testElementRegistrySpi();
 
+    /**
+     * Gets the events registered for consumption and consumed
+     * @return A list of consumed events
+     */
+    List<Event> getConsumedEvents();
+
+    /**
+     * Gets the objects passed into the consumed events
+     * @return the event objects
+     */
+    List<Object> getConsumedEventObjects();
 }
