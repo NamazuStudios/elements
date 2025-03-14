@@ -3,6 +3,7 @@ package dev.getelements.elements.app.serve;
 import dev.getelements.elements.app.serve.loader.Loader;
 import dev.getelements.elements.common.app.AbstractApplicationDeploymentService;
 import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
+import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import jakarta.inject.Inject;
@@ -30,8 +31,10 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
     private void tryDeployApplication(final Application application) {
         try {
             deployApplication(application);
+        } catch (ApplicationCodeNotFoundException ex) {
+            logger.info("No code for application {} ({}).", application.getName(), application.getId());
         } catch (Exception ex) {
-            logger.info("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
+            logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
         }
     }
 

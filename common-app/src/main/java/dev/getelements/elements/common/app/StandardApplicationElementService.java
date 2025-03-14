@@ -1,6 +1,7 @@
 package dev.getelements.elements.common.app;
 
 import dev.getelements.elements.rt.ApplicationAssetLoader;
+import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -57,33 +58,13 @@ public class StandardApplicationElementService implements ApplicationElementServ
 
         final var applicationId = forUniqueName(application.getId());
 
-        final Path path;
-
-        try {
-            path = getApplicationAssetLoader().getAssetPath(applicationId);
-        } catch (UncheckedIOException ex) {
-            if (ex.getCause() instanceof FileNotFoundException) {
-                final var registry = getRootElementRegistry().newSubordinateRegistry();
-                return new ApplicationElementRecord(applicationId, registry, List.of());
-            } else {
-                throw ex;
-            }
-        }
-
         try (final var monitor = Monitor.enter(lock)) {
             return records.computeIfAbsent(applicationId, aid -> {
-
                 final var registry = doGetOrLoadElementRegistry(applicationId);
-
-                try {
-                    final var loader = newDefaultInstance();
-                    final var elements = loader.load(registry, path).toList();
-                    return new ApplicationElementRecord(applicationId, registry, elements);
-                } catch (Exception ex) {
-                    registry.close();
-                    throw ex;
-                }
-
+                final var loader = newDefaultInstance();
+                final var path = getApplicationAssetLoader().getAssetPath(applicationId);
+                final var elements = loader.load(registry, path).toList();
+                return new ApplicationElementRecord(applicationId, registry, elements);
             });
         }
 
