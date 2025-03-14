@@ -4,6 +4,8 @@ import dev.getelements.elements.sdk.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
@@ -17,9 +19,12 @@ import static java.util.Objects.requireNonNull;
  * supplied {@link Lock} will be acquired and then released when all associated {@link Subscription}s have been
  * notified.
  *
+ * This implements {@link Iterable} for debugging only. This locks and copies the list of {@link Subscription}s
+ * to perform the operation.
+ *
  * @param <T> the type of event to publish
  */
-public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T> {
+public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T>, Iterable<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(ConcurrentLockedPublisher.class);
 
@@ -121,6 +126,26 @@ public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T> {
     @Override
     public void publishAsync(final T t, final Consumer<T> onFinish, final Consumer<Throwable> onException) {
         doDispatch.accept(() -> publish(t, onFinish, onException));
+    }
+
+    @Override
+    public Iterator<Object> iterator() {
+
+        final var copy = new ArrayList<>();
+
+        try {
+            lock.lock();
+            final var iterator = publisher.iterator();
+
+            while (iterator.hasNext()) {
+                copy.add(iterator.next());
+            }
+
+            return copy.iterator();
+        } finally {
+            lock.unlock();
+        }
+
     }
 
 }
