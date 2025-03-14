@@ -1,9 +1,9 @@
 package dev.getelements.elements.service.defaults;
 
+import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.model.auth.JWK;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
-import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import jakarta.inject.Inject;
@@ -19,7 +19,7 @@ public class DefaultOidcSchemeConfiguration {
 
     private OidcAuthSchemeDao authSchemeDao;
 
-    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
     public void init() {
         createGoogleScheme();
         createAppleScheme();

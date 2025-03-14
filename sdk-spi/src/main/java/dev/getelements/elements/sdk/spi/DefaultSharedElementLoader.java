@@ -3,8 +3,6 @@ package dev.getelements.elements.sdk.spi;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementRecord;
 
-import static dev.getelements.elements.sdk.Event.SYSTEM_EVENT_ELEMENT_LOADED;
-
 public class DefaultSharedElementLoader implements ElementLoader {
 
     private ElementRecord elementRecord;

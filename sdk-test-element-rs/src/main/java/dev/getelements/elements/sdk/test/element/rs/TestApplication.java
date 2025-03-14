@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
+import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
@@ -27,7 +28,7 @@ public class TestApplication extends Application {
         );
     }
 
-    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
     public void onEvent(Event event) {
         System.out.println(event);
     }

@@ -17,7 +17,6 @@ import dev.getelements.elements.sdk.spi.ElementScopedElementSupplier;
 import dev.getelements.elements.sdk.spi.SpiUtilities;
 
 import static dev.getelements.elements.sdk.ElementType.ISOLATED_CLASSPATH;
-import static dev.getelements.elements.sdk.Event.SYSTEM_EVENT_ELEMENT_LOADED;
 
 /**
  * The {@link GuiceElementLoader} uses Guice to scan and instantiate an SDK element using a guice element with the

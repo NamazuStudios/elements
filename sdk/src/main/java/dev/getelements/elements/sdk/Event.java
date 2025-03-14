@@ -15,11 +15,6 @@ public interface Event {
     String SYSTEM_EVENT_PREFIX = "dev.getelements";
 
     /**
-     * Called after the Element is loaded.
-     */
-    String SYSTEM_EVENT_ELEMENT_LOADED = "dev.getelements.element.loaded";
-
-    /**
      * True if the event is a system event.
      *
      * @return true if system event, false otherwise.

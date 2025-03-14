@@ -1,8 +1,8 @@
 package dev.getelements.elements.service.defaults;
 
+import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -41,7 +41,7 @@ public class DefaultUserConfiguration {
 
     private String defaultUserPassword;
 
-    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
     public void init() {
 
         final var users = getUserDao().getUsers(0,1);

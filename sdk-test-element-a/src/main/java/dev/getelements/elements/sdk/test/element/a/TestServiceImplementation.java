@@ -1,11 +1,11 @@
 package dev.getelements.elements.sdk.test.element.a;
 
+import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;
 import dev.getelements.elements.sdk.ElementSupplier;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
-import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.test.element.TestService;
 
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ public class TestServiceImplementation implements TestService {
         return eventObjects;
     }
 
-    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
     public void elementLoaded(Event event) {
         events.add(event);
     }

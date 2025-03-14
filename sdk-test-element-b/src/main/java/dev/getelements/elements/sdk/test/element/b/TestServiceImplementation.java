@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.test.element.b;
 
+import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;
 import dev.getelements.elements.sdk.ElementSupplier;
 import dev.getelements.elements.sdk.Event;
@@ -50,7 +51,7 @@ public class TestServiceImplementation implements TestService {
         return eventObjects;
     }
 
-    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
     public void elementLoaded(Event event) {
         events.add(event);
     }
