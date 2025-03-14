@@ -1,10 +1,9 @@
 package dev.getelements.elements.sdk.spi;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementLoader;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementRecord;
+
+import static dev.getelements.elements.sdk.Event.SYSTEM_EVENT_ELEMENT_LOADED;
 
 public class DefaultSharedElementLoader implements ElementLoader {
 
@@ -23,7 +22,15 @@ public class DefaultSharedElementLoader implements ElementLoader {
             throw new IllegalStateException("No ServiceLocator set.");
         }
 
-        return new SharedElement(getElementRecord(), getServiceLocator(), parent);
+        final var element = new  SharedElement(getElementRecord(), getServiceLocator(), parent);
+
+        final var event = Event.builder()
+                .named(SYSTEM_EVENT_ELEMENT_LOADED)
+                .build();
+
+        element.publish(event);
+
+        return element;
 
     }
 

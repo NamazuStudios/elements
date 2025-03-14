@@ -1,7 +1,9 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation;
 import jakarta.ws.rs.ApplicationPath;
@@ -23,6 +25,11 @@ public class TestApplication extends Application {
                 MessageEndpoint.class,
                 JacksonJsonProvider.class
         );
+    }
+
+    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    public void onEvent(Event event) {
+        System.out.println(event);
     }
 
 }

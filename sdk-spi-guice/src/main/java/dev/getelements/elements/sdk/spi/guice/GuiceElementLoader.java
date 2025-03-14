@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementService;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.exception.SdkException;
@@ -16,6 +17,7 @@ import dev.getelements.elements.sdk.spi.ElementScopedElementSupplier;
 import dev.getelements.elements.sdk.spi.SpiUtilities;
 
 import static dev.getelements.elements.sdk.ElementType.ISOLATED_CLASSPATH;
+import static dev.getelements.elements.sdk.Event.SYSTEM_EVENT_ELEMENT_LOADED;
 
 /**
  * The {@link GuiceElementLoader} uses Guice to scan and instantiate an SDK element using a guice element with the
@@ -33,8 +35,6 @@ public class GuiceElementLoader implements ElementLoader {
 
     @Override
     public Element load(final ElementRegistry parent) {
-
-
 
         final var injector = Guice.createInjector(
                 newCoreModule(),
@@ -80,6 +80,12 @@ public class GuiceElementLoader implements ElementLoader {
                     ElementRegistry.class);
 
         }
+
+        final var event = Event.builder()
+                .named(SYSTEM_EVENT_ELEMENT_LOADED)
+                .build();
+
+        element.publish(event);
 
         return element;
 
