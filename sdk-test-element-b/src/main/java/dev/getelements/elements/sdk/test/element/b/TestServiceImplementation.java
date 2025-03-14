@@ -11,14 +11,15 @@ import dev.getelements.elements.sdk.test.element.TestService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @ElementServiceImplementation
 @ElementServiceExport(TestService.class)
 public class TestServiceImplementation implements TestService {
 
-    private final List<Event> events = new ArrayList<>();
+    private static final List<Event> events = new CopyOnWriteArrayList<>();
 
-    private final List<Object> eventObjects = new ArrayList<>();
+    private static final List<MethodEventRecord> eventObjects = new CopyOnWriteArrayList<>();
 
     @Override
     public String getImplementationPackage() {
@@ -47,7 +48,7 @@ public class TestServiceImplementation implements TestService {
     }
 
     @Override
-    public List<Object> getConsumedEventObjects() {
+    public List<MethodEventRecord> getConsumedEventObjects() {
         return eventObjects;
     }
 
@@ -58,7 +59,8 @@ public class TestServiceImplementation implements TestService {
 
     @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT)
     public void testEventConsumerWithObject(String value1, String value2) {
-        eventObjects.add(value1);
-        eventObjects.add(value2);
+        final var record = new MethodEventRecord(TEST_ELEMENT_EVENT, List.of(value1, value2));
+        eventObjects.add(record);
     }
+
 }

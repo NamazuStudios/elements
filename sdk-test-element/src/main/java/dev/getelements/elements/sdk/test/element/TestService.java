@@ -40,5 +40,14 @@ public interface TestService {
      * Gets the objects passed into the consumed events
      * @return the event objects
      */
-    List<Object> getConsumedEventObjects();
+    List<MethodEventRecord> getConsumedEventObjects();
+
+    /**
+     * Represents an event record, capturing name and arguments.
+     *
+     * @param name the event name
+     * @param arguments the arguments
+     */
+    record MethodEventRecord(String name, List<Object> arguments) {}
+
 }

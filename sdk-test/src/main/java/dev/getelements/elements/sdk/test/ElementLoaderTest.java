@@ -13,6 +13,7 @@ import java.net.URLClassLoader;
 
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_A;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_B;
+import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT;
 
 public class ElementLoaderTest {
 
@@ -102,8 +103,9 @@ public class ElementLoaderTest {
 
         final var testService = element.getServiceLocator().getInstance(TestService.class);
         final var eventObject = "testValue";
+
         final var event = Event.builder()
-                .named(TestService.TEST_ELEMENT_EVENT)
+                .named(TEST_ELEMENT_EVENT)
                 .argument(eventObject)
                 .argument(eventObject)
                 .build();
