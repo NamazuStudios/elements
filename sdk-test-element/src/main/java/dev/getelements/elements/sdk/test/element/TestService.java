@@ -48,6 +48,7 @@ public interface TestService {
      * @param name the event name
      * @param arguments the arguments
      */
+    @ElementPublic
     record MethodEventRecord(String name, List<Object> arguments) {}
 
 }
