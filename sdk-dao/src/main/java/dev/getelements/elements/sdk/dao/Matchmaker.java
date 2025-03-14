@@ -6,12 +6,12 @@ import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
  * Created by patricktwohig on 7/27/17.
  */
-@ElementServiceExport
 public interface Matchmaker {
 
     int DEFAULT_MAX_CANDIDATES = 100;
@@ -94,5 +94,12 @@ public interface Matchmaker {
         Match getOpponentMatch();
 
     }
+
+    /**
+     * Supplies a {@link Matchmaker} based on the algorithm.
+     */
+    @FunctionalInterface
+    @ElementServiceExport
+    interface Factory extends Function<MatchingAlgorithm, Matchmaker> {}
 
 }

@@ -4,6 +4,10 @@ import com.google.inject.PrivateModule;
 import dev.getelements.elements.common.app.ApplicationElementService;
 import dev.getelements.elements.common.app.StandardApplicationElementService;
 
+import java.util.List;
+
+import static java.util.List.copyOf;
+
 public class ApplicationElementServiceModule extends PrivateModule {
 
     @Override
@@ -14,7 +18,6 @@ public class ApplicationElementServiceModule extends PrivateModule {
         bind(ApplicationElementService.class)
                 .to(StandardApplicationElementService.class)
                 .asEagerSingleton();
-
 
     }
 

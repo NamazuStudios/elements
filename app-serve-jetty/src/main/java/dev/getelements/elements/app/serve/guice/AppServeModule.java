@@ -2,7 +2,6 @@ package dev.getelements.elements.app.serve.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
-import com.google.inject.PrivateModule;
 import com.google.inject.spi.ProvisionListener;
 import dev.getelements.elements.app.serve.JettyApplicationDeploymentService;
 import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
@@ -27,18 +26,6 @@ public class AppServeModule extends AbstractModule {
         final var loaders = newSetBinder(binder(), Loader.class);
         loaders.addBinding().to(JakartaRsLoader.class);
         loaders.addBinding().to(JakartaWebsocketLoader.class);
-
-        final var serviceKey = Key.get(JettyApplicationDeploymentService.class);
-
-        bindListener(
-                b -> b.getKey().equals(serviceKey),
-                new ProvisionListener() {
-                    @Override
-                    public <T> void onProvision(final ProvisionInvocation<T> provision) {
-                        final var service = (ApplicationDeploymentService) provision.provision();
-                        service.start();
-                    }
-                });
 
     }
 

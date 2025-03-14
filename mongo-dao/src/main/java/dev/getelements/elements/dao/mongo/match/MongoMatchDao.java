@@ -47,7 +47,7 @@ public class MongoMatchDao implements MatchDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
-    private Function<MatchingAlgorithm, Matchmaker> matchmakerSupplierFunction;
+    private Matchmaker.Factory matchmakerSupplierFunction;
 
     private MongoMatchUtils mongoMatchUtils;
 
@@ -222,12 +222,12 @@ public class MongoMatchDao implements MatchDao {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
-    public Function<MatchingAlgorithm, Matchmaker> getMatchmakerSupplierFunction() {
+    public Matchmaker.Factory getMatchmakerSupplierFunction() {
         return matchmakerSupplierFunction;
     }
 
     @Inject
-    public void setMatchmakerSupplierFunction(Function<MatchingAlgorithm, Matchmaker> matchmakerSupplierFunction) {
+    public void setMatchmakerSupplierFunction(Matchmaker.Factory matchmakerSupplierFunction) {
         this.matchmakerSupplierFunction = matchmakerSupplierFunction;
     }
 

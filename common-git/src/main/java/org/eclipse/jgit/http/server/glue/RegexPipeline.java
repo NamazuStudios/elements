@@ -41,7 +41,7 @@ import static org.eclipse.jgit.http.server.glue.MetaFilter.REGEX_GROUPS;
  * current HttpServletRequest to reference a different capture group before
  * running additional filters, or the final servlet.
  * <p>
- * Note that for {@code getPathInfo()} to start with a leading "/" as described
+ * Note that for {@code getPathInfo()} to deployAvailableApplications with a leading "/" as described
  * in the servlet documentation, capture groups must actually capture the
  * leading "/".
  * <p>

@@ -35,6 +35,7 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
 
     @Override
     protected void configure() {
+
         expose(Handler.class);
 
         install(new ElementsServletContextModule());
@@ -42,15 +43,9 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
         install(new StandardServletSecurityModule());
         install(new ElementsServletModule(this.elementsWebServiceComponents));
 
-        if (elementsWebServiceComponents.contains(app_serve) || elementsWebServiceComponents.contains(app_node)) {
-
-            install(new ApplicationElementServiceModule());
-
-            if (elementsWebServiceComponents.contains(app_serve)) {
-                install(new AppServeModule());
-                expose(ApplicationDeploymentService.class).annotatedWith(named(APP_SERVE));
-            }
-
+        if (elementsWebServiceComponents.contains(app_serve)) {
+            install(new AppServeModule());
+            expose(ApplicationDeploymentService.class).annotatedWith(named(APP_SERVE));
         }
 
     }

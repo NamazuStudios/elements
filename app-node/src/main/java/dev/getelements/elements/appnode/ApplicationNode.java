@@ -121,7 +121,7 @@ public class ApplicationNode {
                 worker = null;
                 instance = null;
                 watchdogService.stop();
-                logger.error("Could not start ApplicationNode", ex);
+                logger.error("Could not deployAvailableApplications ApplicationNode", ex);
                 throw ex;
             }
 
@@ -142,7 +142,7 @@ public class ApplicationNode {
                 instance.close();
                 logger.info("Instance started.");
             } catch (Exception ex) {
-                logger.error("Could not start ApplicationNode", ex);
+                logger.error("Could not deployAvailableApplications ApplicationNode", ex);
                 throw ex;
             } finally {
                 worker = null;

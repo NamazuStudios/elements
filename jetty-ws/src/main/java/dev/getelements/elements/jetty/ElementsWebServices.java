@@ -1,12 +1,15 @@
 package dev.getelements.elements.jetty;
 
-import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.common.app.ApplicationDeploymentService;
 import dev.getelements.elements.rt.remote.Instance;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
+import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
 
 public class ElementsWebServices implements Runnable {
 
@@ -17,6 +20,8 @@ public class ElementsWebServices implements Runnable {
 
     private Instance instance;
 
+    private ApplicationDeploymentService appServeApplicationDeploymentService;
+
     public void start() {
 
         getInstance().start();
@@ -24,8 +29,10 @@ public class ElementsWebServices implements Runnable {
         try {
             getServer().start();
         } catch (Exception ex) {
-            throw new InternalException("Could not start Jetty server.", ex);
+            throw new InternalException("Could not deployAvailableApplications Jetty server.", ex);
         }
+
+        getAppServeApplicationDeploymentService().deployAvailableApplications();
 
     }
 
@@ -69,6 +76,15 @@ public class ElementsWebServices implements Runnable {
     @Inject
     public void setInstance(Instance instance) {
         this.instance = instance;
+    }
+
+    public ApplicationDeploymentService getAppServeApplicationDeploymentService() {
+        return appServeApplicationDeploymentService;
+    }
+
+    @Inject
+    public void setAppServeApplicationDeploymentService(@Named(APP_SERVE) ApplicationDeploymentService appServeApplicationDeploymentService) {
+        this.appServeApplicationDeploymentService = appServeApplicationDeploymentService;
     }
 
 }

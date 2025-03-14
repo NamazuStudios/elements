@@ -2,9 +2,9 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.PrivateModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoAuthSchemeDao;
@@ -23,20 +23,17 @@ import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
-import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFunctionProvider;
+import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFactoryProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
-import dev.getelements.elements.sdk.model.Constants;
-import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.index.IndexableType;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.morphia.Datastore;
 
 import java.security.MessageDigest;
-import java.util.function.Function;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
 import static dev.getelements.elements.sdk.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
@@ -98,8 +95,8 @@ public class MongoDaoModule extends PrivateModule {
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
 
-        bind(new TypeLiteral<Function<MatchingAlgorithm, Matchmaker>>(){})
-                .toProvider(MongoMatchmakerFunctionProvider.class);
+        bind(Matchmaker.Factory.class)
+                .toProvider(MongoMatchmakerFactoryProvider.class);
 
         bind(BooleanQueryParser.class)
                 .to(SidhantAggarwalBooleanQueryParser.class);
@@ -119,6 +116,7 @@ public class MongoDaoModule extends PrivateModule {
 
         expose(Datastore.class);
         expose(Transaction.class);
+        expose(Matchmaker.Factory.class);
 
         expose(IndexDao.class);
         expose(UserDao.class);

@@ -21,7 +21,7 @@ import java.text.MessageFormat;
  * <p>
  * This filter is meant to be installed in the middle of a pipeline created by
  * {@link org.eclipse.jgit.http.server.glue.MetaServlet#serveRegex(String)}. The
- * passed request's servlet path is updated to be all text up to the start of
+ * passed request's servlet path is updated to be all text up to the deployAvailableApplications of
  * the designated capture group, and the path info is changed to the contents of
  * the capture group.
  */

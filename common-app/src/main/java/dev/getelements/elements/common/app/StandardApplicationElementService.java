@@ -1,14 +1,20 @@
 package dev.getelements.elements.common.app;
 
-import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.rt.ApplicationAssetLoader;
+import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
-import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
+import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
@@ -24,13 +30,27 @@ public class StandardApplicationElementService implements ApplicationElementServ
 
     private ApplicationAssetLoader applicationAssetLoader;
 
+    private final Lock lock = new ReentrantLock();
+
     private final ConcurrentMap<ApplicationId, Lock> locks = new ConcurrentHashMap<>();
 
-    private final ConcurrentMap<ApplicationId, ApplicationElementRecord> records = new ConcurrentHashMap<>();
+    private final Map<ApplicationId, ElementRegistry> registries = new HashMap<>();
 
-    private Monitor lock(ApplicationId applicationId) {
-        final var lock = locks.computeIfAbsent(applicationId, id -> new ReentrantLock());
-        return Monitor.enter(lock);
+    private final Map<ApplicationId, ApplicationElementRecord> records = new HashMap<>();
+
+    @Override
+    public ElementRegistry getElementRegistry(final Application application) {
+        try (var mon = Monitor.enter(lock)) {
+            final var applicationId = forUniqueName(application.getId());
+            return doGetOrLoadElementRegistry(applicationId);
+        }
+    }
+
+    private ElementRegistry doGetOrLoadElementRegistry(final ApplicationId applicationId) {
+        return registries.computeIfAbsent(
+                applicationId,
+                id -> rootElementRegistry.newSubordinateRegistry()
+        );
     }
 
     @Override
@@ -38,16 +58,14 @@ public class StandardApplicationElementService implements ApplicationElementServ
 
         final var applicationId = forUniqueName(application.getId());
 
-        final var lazyValue = new SimpleLazyValue<>(() -> {
-            final var path = getApplicationAssetLoader().getAssetPath(applicationId);
-            final var registry = getRootElementRegistry().newSubordinateRegistry();
-            final var loader = newDefaultInstance();
-            final var elements = loader.load(registry, path).toList();
-            return new ApplicationElementRecord(applicationId, registry, elements);
-        });
-
-        try (final var monitor = lock(applicationId)) {
-            return records.computeIfAbsent(applicationId, aid -> lazyValue.get());
+        try (final var monitor = Monitor.enter(lock)) {
+            return records.computeIfAbsent(applicationId, aid -> {
+                final var registry = doGetOrLoadElementRegistry(applicationId);
+                final var loader = newDefaultInstance();
+                final var path = getApplicationAssetLoader().getAssetPath(applicationId);
+                final var elements = loader.load(registry, path).toList();
+                return new ApplicationElementRecord(applicationId, registry, elements);
+            });
         }
 
     }

@@ -22,7 +22,7 @@ public interface ApplicationDeploymentService {
      * Starts the {@link ApplicationDeploymentService}, deploying all {@link Application}s and loading them into
      * the service.
      */
-    void start();
+    void deployAvailableApplications();
 
     /**
      * Deploys the {@link Application}.

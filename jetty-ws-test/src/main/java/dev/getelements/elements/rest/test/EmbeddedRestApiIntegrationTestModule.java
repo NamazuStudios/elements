@@ -5,10 +5,7 @@ import com.google.inject.Binding;
 import com.google.inject.spi.ProvisionListener;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstanceModule;
-import dev.getelements.elements.jetty.ElementsCoreModule;
-import dev.getelements.elements.jetty.ElementsWebServiceComponentModule;
-import dev.getelements.elements.jetty.ElementsWebServices;
-import dev.getelements.elements.jetty.JettyServerModule;
+import dev.getelements.elements.jetty.*;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
 
@@ -45,6 +42,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         install(new TestVersionServiceModule());
         install(new MongoTestInstanceModule(TEST_MONGO_PORT));
+        install(new ApplicationElementServiceModule());
 
         install(new JettyServerModule());
         install(new ElementsCoreModule(configurationSupplier));

@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.CLASSPATH_DIR;
 import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
@@ -54,7 +55,7 @@ public class NestedElementPathLoaderTest {
 
         assertEquals(loadedElements.size(), 3);
 
-        for (final var artifact : TestElementArtifact.values()) {
+        for (final var artifact : List.of(VARIANT_A, VARIANT_B)) {
 
             final var element = loadedElements.stream()
                     .filter(e -> e.getElementRecord().definition().name().equals(artifact.getElementName()))

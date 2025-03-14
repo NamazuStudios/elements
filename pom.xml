@@ -463,6 +463,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
+                <artifactId>jetty-ws-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-git</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -569,6 +574,16 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test-element-b</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-ws</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-rs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
