@@ -4,12 +4,19 @@ import dev.getelements.elements.sdk.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static java.lang.System.identityHashCode;
 
-public class LinkedPublisher<T> extends AbstractPublisher<T> {
+/**
+ * A non-threadsafe publisher which tracks subscribers in a linked list. For the purposes of debugging this implements
+ * {@link Iterable} which most IDEs will recognize and render as sequence in the debugger.
+ *
+ * @param <T> the type of event to publish
+ */
+public class LinkedPublisher<T> extends AbstractPublisher<T> implements Iterable<Object> {
 
     private final LinkedConsumer<T> first = new LinkedConsumer<T>() {
         @Override
@@ -51,6 +58,33 @@ public class LinkedPublisher<T> extends AbstractPublisher<T> {
             handleException(onException, ex);
         }
 
+    }
+
+    /**
+     * Used only to facilitate debugging. The returned Objects are internal implementation details and not intended
+     * to be used to execute business logic of the application.
+     *
+     * @return an {@link Iterator} over the subscribers.
+     */
+    @Override
+    public Iterator<Object> iterator() {
+        return new Iterator<>() {
+
+            LinkedConsumer<?> current = first.next;
+
+            @Override
+            public boolean hasNext() {
+                return current != null;
+            }
+
+            @Override
+            public Object next() {
+                final var result = current;
+                current = current.next;
+                return result.delegate;
+            }
+
+        };
     }
 
     private class LinkedConsumer<ConsumedT> {
