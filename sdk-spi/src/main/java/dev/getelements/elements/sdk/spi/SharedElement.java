@@ -4,11 +4,16 @@ import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
+import dev.getelements.elements.sdk.util.ConcurrentLinkedPublisher;
 import dev.getelements.elements.sdk.util.Publisher;
 
+import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class SharedElement implements Element {
