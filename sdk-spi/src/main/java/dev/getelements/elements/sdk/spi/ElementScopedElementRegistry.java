@@ -15,24 +15,37 @@ public final class ElementScopedElementRegistry implements ElementRegistry {
 
     private final Element element;
 
-    private ElementRegistry parent;
+    private final RootElementRegistry delegate;
 
     private final Subscription subscriptions;
 
     public ElementScopedElementRegistry(final ElementRegistry parent, final Element element) {
-        this.parent = parent;
+
+        this.delegate = new RootElementRegistry() {
+
+            @Override
+            protected Element doLoad(final ElementLoader loader) {
+                return loader.load(ElementScopedElementRegistry.this);
+            }
+
+        };
+
         this.element = element;
-        this.subscriptions = parent.onClose(p -> close());
+        this.delegate.register(element);
+        this.subscriptions = Subscription.begin()
+                .chain(parent.onClose(p -> close()))
+                .chain(parent.onEvent(delegate::publish));
+
     }
 
     @Override
     public Stream<Element> stream() {
-        return Stream.concat(Stream.of(element), parent.stream());
+        return delegate.stream();
     }
 
     @Override
     public Element register(final Element element) {
-        return parent.register(element);
+        return delegate.register(element);
     }
 
     @Override
@@ -42,32 +55,33 @@ public final class ElementScopedElementRegistry implements ElementRegistry {
             throw new IllegalArgumentException("Cannot unregister current Element.");
         }
 
-        return parent.unregister(element);
+        return delegate.unregister(element);
 
     }
 
     @Override
     public ElementRegistry newSubordinateRegistry() {
-        return parent.newSubordinateRegistry();
+        return delegate.newSubordinateRegistry();
     }
 
     @Override
     public void publish(final Event event) {
-        parent.publish(event);
+        delegate.publish(event);
     }
 
     @Override
     public Subscription onEvent(final Consumer<Event> onEvent) {
-        return parent.onEvent(onEvent);
+        return delegate.onEvent(onEvent);
     }
 
     @Override
     public Subscription onClose(final Consumer<ElementRegistry> onClose) {
-        return parent.onClose(onClose);
+        return delegate.onClose(onClose);
     }
 
     @Override
     public void close() {
+        delegate.close();
         subscriptions.unsubscribe();
     }
 
