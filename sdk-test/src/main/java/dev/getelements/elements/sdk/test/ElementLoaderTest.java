@@ -21,7 +21,7 @@ public class ElementLoaderTest {
 
     private final String elementPackage;
 
-    private final ElementRegistry elementRegistry;
+    private final MutableElementRegistry elementRegistry;
 
     private final ClassLoader  baseClassLoader = ClassLoader.getSystemClassLoader();
 
@@ -46,7 +46,7 @@ public class ElementLoaderTest {
             final String elementPackage,
             final TestElementArtifact artifact) {
         this.elementPackage = elementPackage;
-        this.elementRegistry = ElementRegistry.newDefaultInstance();
+        this.elementRegistry = MutableElementRegistry.newDefaultInstance();
         this.elementUrl = testArtifactRegistry.findJarUrl(artifact);
     }
 

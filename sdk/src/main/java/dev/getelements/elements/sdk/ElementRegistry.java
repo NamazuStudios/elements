@@ -45,46 +45,17 @@ public interface ElementRegistry extends AutoCloseable {
     }
 
     /**
-     * Using the supplied {@link ElementLoader}, registers an {@link Element} to this instance, making it available to
-     * all child and sibling {@link Element}s.
-     *
-     * @param loader the {@link ElementLoader} to supply the {@link Element}
-     */
-    default Element register(final ElementLoader loader) {
-
-        final var element = loader.load(this);
-
-        try {
-            return register(element);
-        } catch (Exception ex) {
-            element.close();
-            throw ex;
-        }
-
-    }
-
-    /**
-     * Registers an {@link Element} to this instance, making it available to all child and sibling {@link Element}s.
-     *
-     * @param loader the {@link ElementLoader} to supply the {@link Element}
-     */
-    Element register(Element loader);
-
-    /**
-     * Unregisters an {@link Element}, provided it was previously registered.
-     *
-     * @return if the Element existed, and was successfully removed.
-     */
-    boolean unregister(Element element);
-
-    /**
      * Returns a new subordinate registry. This registry will be linked to this registry and inherit all currently
      * registered {@link Element}s contained in. Searching the new subordinate registry will make all registered
-     * {@link Element}s available that are availble to this registry.
+     * {@link Element}s available that are available to this registry.
+     *
+     * The returned {@link MutableElementRegistry} will receive events from this {@link ElementRegistry} and forward
+     * them along to all {@link Element}s therein. This allows an {@link Element} to load private instances as it
+     * sees fit without affecting its parent's hierarchy and thus enforcing encapsulation.
      *
      * @return a new subordinate
      */
-    ElementRegistry newSubordinateRegistry();
+    MutableElementRegistry newSubordinateRegistry();
 
     /**
      * Publishes an {@link Event} to the {@link Element} instances within this {@link ElementRegistry}.
@@ -113,19 +84,5 @@ public interface ElementRegistry extends AutoCloseable {
      * Closes all {@link Element} instances within this {@link ElementRegistry} and closes the registry itself.
      */
     void close();
-
-    /**
-     * Creates a new instance of the {@link ElementRegistry} using the system default SPI.
-     *
-     * @return new {@link ElementRegistry}
-     */
-    static ElementRegistry newDefaultInstance() {
-        return ServiceLoader
-                .load(ElementRegistry.class)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new SdkException("No ElementRegistry SPI Available."))
-                .get();
-    }
 
 }

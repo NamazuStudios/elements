@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.jetty.ElementsWebServices;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -15,7 +16,7 @@ public class StandardElementsLocal implements ElementsLocal {
 
     private final Lock lock = new ReentrantLock();
 
-    private ElementRegistry rootElementRegistry;
+    private MutableElementRegistry rootElementRegistry;
 
     private ElementsWebServices elementsWebServices;
 
@@ -55,12 +56,12 @@ public class StandardElementsLocal implements ElementsLocal {
     }
 
     @Override
-    public ElementRegistry getRootElementRegistry() {
+    public MutableElementRegistry getRootElementRegistry() {
         return rootElementRegistry;
     }
 
     @Inject
-    public void setRootElementRegistry(@Named(ROOT) final ElementRegistry rootElementRegistry) {
+    public void setRootElementRegistry(@Named(ROOT) final MutableElementRegistry rootElementRegistry) {
         this.rootElementRegistry = rootElementRegistry;
     }
 

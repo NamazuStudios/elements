@@ -29,12 +29,11 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     @Override
     public Stream<Element> load(
-            final ElementRegistry registry,
+            final MutableElementRegistry registry,
             final Path path,
             final ClassLoader baseClassLoader) {
 
         Stream<Element> result = Stream.empty();
-        ElementRegistry subRegistry = registry;
         ClassLoader subClassLoader = baseClassLoader;
 
         try (final var directory = newDirectoryStream(path)) {
@@ -45,7 +44,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 try {
                     final var element = record.load(registry, baseClassLoader);
                     result = Stream.of(element);
-                    subRegistry = element.getElementRegistry();
                     subClassLoader = element.getElementRecord().classLoader();
                 } catch (SdkElementNotFoundException ex) {
                     logger.warn("{} has valid classpath but no elements were found.", path, ex);
@@ -53,7 +51,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
 
             for (var subDirectory : record.directories()) {
-                final var subStream = load(subRegistry, subDirectory, subClassLoader);
+                final var subStream = load(registry, subDirectory, subClassLoader);
                 result = Stream.concat(result, subStream);
             }
 
@@ -164,7 +162,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         }
 
-        public Element load(final ElementRegistry registry, final ClassLoader baseClassLoader) {
+        public Element load(final MutableElementRegistry registry, final ClassLoader baseClassLoader) {
 
             final var urls = allClasspathUrls();
             final var attributes = loadAttributes();

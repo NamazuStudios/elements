@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementLoaderFactory;
 import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -43,7 +44,7 @@ class LocalApplicationElementService implements ApplicationElementService {
     private final Map<ApplicationId, ApplicationElementRecord> records = new HashMap<>();
 
     @Override
-    public ElementRegistry getElementRegistry(final Application application) {
+    public MutableElementRegistry getElementRegistry(final Application application) {
         return getStandardApplicationElementService().getElementRegistry(application);
     }
 

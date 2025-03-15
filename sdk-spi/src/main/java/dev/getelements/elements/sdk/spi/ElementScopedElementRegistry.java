@@ -31,28 +31,7 @@ public final class ElementScopedElementRegistry implements ElementRegistry {
     }
 
     @Override
-    public Element register(final Element element) {
-
-        if (this.element == element) {
-            throw new IllegalArgumentException("Cannot register current Element.");
-        }
-
-        return parent.register(element);
-    }
-
-    @Override
-    public boolean unregister(final Element element) {
-
-        if (this.element == element) {
-            throw new IllegalArgumentException("Cannot unregister current Element.");
-        }
-
-        return parent.unregister(element);
-
-    }
-
-    @Override
-    public ElementRegistry newSubordinateRegistry() {
+    public MutableElementRegistry newSubordinateRegistry() {
         return parent.newSubordinateRegistry();
     }
 

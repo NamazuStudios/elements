@@ -2,10 +2,7 @@ package dev.getelements.elements.sdk.spi.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementLoader;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.annotation.ElementService;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.exception.SdkException;
@@ -33,7 +30,7 @@ public class GuiceElementLoader implements ElementLoader {
     private ElementRecord elementRecord;
 
     @Override
-    public Element load(final ElementRegistry parent) {
+    public Element load(final MutableElementRegistry parent) {
 
         final var injector = Guice.createInjector(
                 newCoreModule(),

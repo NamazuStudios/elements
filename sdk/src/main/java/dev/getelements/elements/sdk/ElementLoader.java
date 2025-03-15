@@ -41,7 +41,7 @@ public interface ElementLoader {
      * Loads a new instance of the {@link Element} without a parent registry.
      */
     default Element load() {
-        return load(ElementRegistry.newDefaultInstance());
+        return load(MutableElementRegistry.newDefaultInstance());
     }
 
     /**
@@ -49,11 +49,11 @@ public interface ElementLoader {
      *
      * @return the {@link Element}, loaded
      */
-    Element load(ElementRegistry parent);
+    Element load(MutableElementRegistry parent);
 
     /**
      * Gets the {@link ElementRecord}, which can be invoked before attepting a {@link #load()} or
-     * {@link #load(ElementRegistry)} operation.
+     * {@link #load(MutableElementRegistry)} operation.
      *
      * @return the {@link ElementRecord}
      */
@@ -73,7 +73,7 @@ public interface ElementLoader {
         }
 
         @Override
-        public Element load(ElementRegistry parent) {
+        public Element load(MutableElementRegistry parent) {
             throw new SdkException("Not Implemented.");
         }
 

@@ -1,9 +1,6 @@
 package dev.getelements.elements.sdk.spi;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.Subscription;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.exception.SdkMultiException;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -22,7 +19,7 @@ import java.util.stream.Stream;
  * Implements {@link ElementRegistry} at the root level with no parent. This should be used by the application at the
  * top-level. Note that when registering
  */
-public class RootElementRegistry implements ElementRegistry {
+public class RootElementRegistry implements MutableElementRegistry {
 
     private boolean open = true;
 
@@ -99,7 +96,7 @@ public class RootElementRegistry implements ElementRegistry {
     }
 
     @Override
-    public ElementRegistry newSubordinateRegistry() {
+    public MutableElementRegistry newSubordinateRegistry() {
         final var subordinate = new RootElementRegistry(this::stream);
         final var subscription = Subscription.begin()
                 .chain(onClose(p -> subordinate.close()))
