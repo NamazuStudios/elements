@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 
 /**
  * Runs a local instance of Elements suitable for debugging.
@@ -26,7 +27,7 @@ public interface ElementsLocal extends AutoCloseable {
      *
      * @return the {@link ElementRegistry}
      */
-    ElementRegistry getRootElementRegistry();
+    MutableElementRegistry getRootElementRegistry();
 
     /**
      * Closes this {@link ElementsLocal}.

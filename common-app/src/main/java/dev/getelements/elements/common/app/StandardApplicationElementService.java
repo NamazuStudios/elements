@@ -3,6 +3,7 @@ package dev.getelements.elements.common.app;
 import dev.getelements.elements.rt.ApplicationAssetLoader;
 import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -26,7 +27,7 @@ import static dev.getelements.elements.sdk.cluster.id.ApplicationId.forUniqueNam
 
 public class StandardApplicationElementService implements ApplicationElementService {
 
-    private ElementRegistry rootElementRegistry;
+    private MutableElementRegistry rootElementRegistry;
 
     private ApplicationAssetLoader applicationAssetLoader;
 
@@ -34,19 +35,19 @@ public class StandardApplicationElementService implements ApplicationElementServ
 
     private final ConcurrentMap<ApplicationId, Lock> locks = new ConcurrentHashMap<>();
 
-    private final Map<ApplicationId, ElementRegistry> registries = new HashMap<>();
+    private final Map<ApplicationId, MutableElementRegistry> registries = new HashMap<>();
 
     private final Map<ApplicationId, ApplicationElementRecord> records = new HashMap<>();
 
     @Override
-    public ElementRegistry getElementRegistry(final Application application) {
+    public MutableElementRegistry getElementRegistry(final Application application) {
         try (var mon = Monitor.enter(lock)) {
             final var applicationId = forUniqueName(application.getId());
             return doGetOrLoadElementRegistry(applicationId);
         }
     }
 
-    private ElementRegistry doGetOrLoadElementRegistry(final ApplicationId applicationId) {
+    private MutableElementRegistry doGetOrLoadElementRegistry(final ApplicationId applicationId) {
         return registries.computeIfAbsent(
                 applicationId,
                 id -> rootElementRegistry.newSubordinateRegistry()
@@ -70,12 +71,12 @@ public class StandardApplicationElementService implements ApplicationElementServ
 
     }
 
-    public ElementRegistry getRootElementRegistry() {
+    public MutableElementRegistry getRootElementRegistry() {
         return rootElementRegistry;
     }
 
     @Inject
-    public void setRootElementRegistry(@Named(ROOT) ElementRegistry rootElementRegistry) {
+    public void setRootElementRegistry(@Named(ROOT) MutableElementRegistry rootElementRegistry) {
         this.rootElementRegistry = rootElementRegistry;
     }
 

@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.test;
 
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.testng.annotations.BeforeClass;
@@ -42,7 +43,7 @@ public class FlatElementPathLoaderTest {
     @Test
     public void testLoadAll() {
 
-        final var elementRegistry = ElementRegistry.newDefaultInstance();
+        final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
         final var loadedElements = elementPathLoader.load(

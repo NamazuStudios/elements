@@ -20,10 +20,6 @@ public class TestServiceImplementation implements TestService {
     @ElementDefaultAttribute("test.value")
     public static final String TEST_CONFIGURATION_PARAMETER = "dev.getelements.elements.sdk.test.element.a.config";
 
-    static {
-        System.out.println();
-    }
-
     @Override
     public String getImplementationPackage() {
         return getClass().getPackage().getName();

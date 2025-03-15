@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.record.ElementServiceKey;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Publisher;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class SharedElement implements Element {

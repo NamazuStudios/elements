@@ -10,7 +10,7 @@ public class DefaultSharedElementLoader implements ElementLoader {
     private ServiceLocator serviceLocator;
 
     @Override
-    public Element load(final ElementRegistry parent) {
+    public Element load(final MutableElementRegistry parent) {
 
         if (getElementRecord() == null) {
             throw new IllegalStateException("No ElementRecord set.");

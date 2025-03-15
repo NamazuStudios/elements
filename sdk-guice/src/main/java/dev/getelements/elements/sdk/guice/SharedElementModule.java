@@ -64,7 +64,7 @@ public class SharedElementModule extends PrivateModule {
     protected final void configure() {
 
         final var rootElementRegistryKey = Key.get(
-                ElementRegistry.class,
+                MutableElementRegistry.class,
                 named(ElementRegistry.ROOT)
         );
 

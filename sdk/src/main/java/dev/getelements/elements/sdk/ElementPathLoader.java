@@ -90,7 +90,7 @@ public interface ElementPathLoader {
      *
      * @param registry the registry to receive the loaded {@link Element}s
      */
-    default Stream<Element> load(final ElementRegistry registry) {
+    default Stream<Element> load(final MutableElementRegistry registry) {
         final var path = Path.of(getenv(ELEMENT_PATH_ENV));
         final var systemClassLoader = ClassLoader.getSystemClassLoader();
         return load(registry, path, systemClassLoader);
@@ -103,7 +103,7 @@ public interface ElementPathLoader {
      * @param path the {@link Path}
      * @return a {@link Stream} of {@link Element} instances
      */
-    default Stream<Element> load(final ElementRegistry registry, final Path path) {
+    default Stream<Element> load(final MutableElementRegistry registry, final Path path) {
         return load(registry, path, ClassLoader.getSystemClassLoader());
     }
 
@@ -115,7 +115,7 @@ public interface ElementPathLoader {
      * @param baseClassLoader the base {@link ClassLoader} used to load the {@link Element}
      * @return a {@link Stream} of {@link Element} instances
      */
-    Stream<Element> load(ElementRegistry registry, Path path, ClassLoader baseClassLoader);
+    Stream<Element> load(MutableElementRegistry registry, Path path, ClassLoader baseClassLoader);
 
     /**
      * Creates a new instance of the {@link ElementPathLoader} using the system default SPI.

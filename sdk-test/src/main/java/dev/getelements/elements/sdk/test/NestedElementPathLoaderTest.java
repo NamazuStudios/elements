@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.test;
 
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.testng.annotations.BeforeClass;
@@ -44,7 +45,7 @@ public class NestedElementPathLoaderTest {
     @Test
     public void testLoadAll() throws ClassNotFoundException {
 
-        final var elementRegistry = ElementRegistry.newDefaultInstance();
+        final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
         final var loadedElements = elementPathLoader.load(
@@ -84,7 +85,7 @@ public class NestedElementPathLoaderTest {
         }
 
         final var inRegistry = elementRegistry.stream().toList();
-        assertEquals(inRegistry.size(), 1);
+        assertEquals(inRegistry.size(), 3);
         elementRegistry.find(BASE.getElementName()).findFirst().orElseThrow();
 
     }

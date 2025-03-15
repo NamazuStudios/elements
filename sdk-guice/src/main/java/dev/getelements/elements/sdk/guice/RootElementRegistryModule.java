@@ -3,16 +3,14 @@ package dev.getelements.elements.sdk.guice;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.spi.ProvisionListener;
-import dev.getelements.elements.sdk.Attributes;
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementLoader;
-import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 
 /**
  * Specifies a singleton {@link ElementRegistry} instance scoped with the name specified in {@link ElementRegistry#ROOT}
@@ -26,37 +24,41 @@ public class RootElementRegistryModule extends PrivateModule {
     @Override
     protected void configure() {
 
+        final Key<ElementRegistry> rootElementRegistryKey = Key.get(
+                ElementRegistry.class,
+                named(ROOT)
+        );
+
+        final Key<MutableElementRegistry> rootMutableElementRegistryKey = Key.get(
+                MutableElementRegistry.class,
+                named(ROOT)
+        );
+
+        expose(Attributes.class);
+        expose(rootElementRegistryKey);
+        expose(rootMutableElementRegistryKey);
+
         bind(Attributes.class)
                 .to(GuiceAttributes.class)
                 .asEagerSingleton();
 
-        bind(ElementRegistry.class)
-                .annotatedWith(named(ElementRegistry.ROOT))
-                .toProvider(ElementRegistry::newDefaultInstance)
+        bind(rootElementRegistryKey)
+                .to(rootMutableElementRegistryKey);
+
+        bind(rootMutableElementRegistryKey)
+                .toProvider(MutableElementRegistry::newDefaultInstance)
                 .asEagerSingleton();
 
-        final Key<ElementRegistry> rootElementRegistryKey = Key.get(
-                ElementRegistry.class,
-                named(ElementRegistry.ROOT)
-        );
-
-        expose(rootElementRegistryKey);
-
-        final var key = Key.get(ElementRegistry.class);
-
         bindListener(
-                binding -> key.equals(binding.getKey()),
+                binding -> binding.getKey().equals(rootMutableElementRegistryKey),
                 new ProvisionListener() {
                     @Override
                     public <T> void onProvision(final ProvisionInvocation<T> provision) {
-                        final var root = (ElementRegistry) provision.provision();
+                        final var root = (MutableElementRegistry) provision.provision();
                         loaders.stream().map(Supplier::get).forEach(root::register);
                     }
 
                 });
-
-        expose(Attributes.class);
-        expose(rootElementRegistryKey);
 
     }
 
