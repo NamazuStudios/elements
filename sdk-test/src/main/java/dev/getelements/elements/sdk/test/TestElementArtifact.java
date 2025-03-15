@@ -18,10 +18,10 @@ public enum TestElementArtifact {
     VARIANT_B("sdk-test-element-b",
             "dev.getelements.elements.sdk.test.element.b"
     ),
-    JAKARTA_RS("sdk-test-element-rs.jar",
+    JAKARTA_RS("sdk-test-element-rs",
             "dev.getelements.elements.sdk.test.element.rs"
     ),
-    JAKARTA_WS("sdk-test-element-ws.jar",
+    JAKARTA_WS("sdk-test-element-ws",
             "dev.getelements.elements.sdk.test.element.ws"
     );
 
