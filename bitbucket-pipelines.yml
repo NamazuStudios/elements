@@ -70,7 +70,7 @@ pipelines:
             - pipe: jfrog/jfrog-setup-cli:2.0.0
             - source ./jfrog-setup-cli.sh
             - make setup
-            - make make detach tag
+            - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch
             - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
