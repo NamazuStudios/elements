@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.exception.SdkMultiException;
+import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.ConcurrentLinkedPublisher;
 import dev.getelements.elements.sdk.util.Publisher;
 
@@ -28,9 +29,9 @@ public class RootElementRegistry implements ElementRegistry {
 
     private final List<LoadedElement> loaded = new CopyOnWriteArrayList<>();
 
-    private final Publisher<Event> onEventPublisher = new ConcurrentLinkedPublisher<>(RootElementRegistry.class);
+    private final Publisher<Event> onEventPublisher = new ConcurrentDequePublisher<>(RootElementRegistry.class);
 
-    private final Publisher<ElementRegistry> onClosePublisher = new ConcurrentLinkedPublisher<>(RootElementRegistry.class);
+    private final Publisher<ElementRegistry> onClosePublisher = new ConcurrentDequePublisher<>(RootElementRegistry.class);
 
     @Override
     public Stream<Element> stream() {
