@@ -36,7 +36,7 @@ pipelines:
             - source ./jfrog-setup-cli.sh
             - make setup
             - make build
-            - make docker
+            - make docker docker_hub
             - make publish_github publish_github_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.

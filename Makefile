@@ -20,7 +20,10 @@ build:
 	jf mvn --no-transfer-progress -B clean deploy
 
 docker:
-	make -C docker-config
+	make -C docker-config internal
+
+docker_hub:
+	make -C docker-config hub
 
 patch:
 	jf mvn versions:set -DprocessAllModules=true -DnextSnapshot=true
@@ -65,6 +68,7 @@ setup: git jfrog
 	ng
 	docker buildx create --use
 	echo $(JF_ACCESS_TOKEN) | docker login --username $(JF_USER) --password-stdin $(JF_URL)
+	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
