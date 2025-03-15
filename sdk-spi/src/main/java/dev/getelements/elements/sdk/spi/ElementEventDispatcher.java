@@ -59,14 +59,30 @@ public class ElementEventDispatcher implements AutoCloseable {
     }
 
     private Subscription buildDirectSubscriptions(final Publisher<Event> eventPublisher) {
-        return elementRecord
+
+        final Map<DirectKey, Publisher<Event>> directDispatchers = new HashMap<>();
+
+        elementRecord
                 .consumedEvents()
                 .stream()
                 .filter(ElementEventConsumerRecord::isDirectDispatch)
-                .map(consumer -> Modifier.isStatic(consumer.method().getModifiers())
-                        ? eventPublisher.subscribe(event -> dispatchDirectStatic(consumer, event))
-                        : eventPublisher.subscribe(event -> dispatchDirectInstance(consumer, event))
-                ).reduce(Subscription.begin(), Subscription::chain);
+                .forEach(consumer -> {
+
+                    final var key = DirectKey.from(consumer);
+                    final Consumer<Event> dispatcher = Modifier.isStatic(consumer.method().getModifiers())
+                            ? event -> dispatchDirectStatic(consumer, event)
+                            : event -> dispatchDirectInstance(consumer, event);
+
+                    directDispatchers
+                            .computeIfAbsent(key, k -> new LinkedPublisher<>())
+                            .subscribe(dispatcher);
+
+                });
+
+        return eventPublisher.subscribe(event -> {
+            final var key = DirectKey.from(event);
+            directDispatchers.getOrDefault(key, noop).publish(event);
+        });
     }
 
     private void dispatchDirectStatic(final ElementEventConsumerRecord<?> consumer, final Event event) {

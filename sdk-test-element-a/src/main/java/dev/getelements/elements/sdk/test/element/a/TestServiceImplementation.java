@@ -8,7 +8,6 @@ import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.test.element.TestService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -60,9 +59,15 @@ public class TestServiceImplementation implements TestService {
         events.add(event);
     }
 
-    @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT)
-    public void testEventConsumerWithObject(String value1, String value2) {
-        final var record = new MethodEventRecord(TEST_ELEMENT_EVENT, List.of(value1, value2));
+    @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT_1)
+    public void testEvent1ConsumerWithObject(String value1, String value2) {
+        final var record = new MethodEventRecord(TEST_ELEMENT_EVENT_1, List.of(value1, value2));
+        eventObjects.add(record);
+    }
+
+    @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT_2)
+    public void testEvent2ConsumerWithObject(String value1, String value2) {
+        final var record = new MethodEventRecord(TEST_ELEMENT_EVENT_2, List.of(value1, value2));
         eventObjects.add(record);
     }
 

@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.test;
 
 import dev.getelements.elements.sdk.*;
-import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.test.element.TestService;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -13,7 +12,8 @@ import java.net.URLClassLoader;
 
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_A;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_B;
-import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT;
+import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_1;
+import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_2;
 
 public class ElementLoaderTest {
 
@@ -103,21 +103,34 @@ public class ElementLoaderTest {
     public void testElementEvents() {
 
         final var testService = element.getServiceLocator().getInstance(TestService.class);
-        final var eventObject = "testValue";
+        final var eventObject1 = "testValue1";
+        final var eventObject2 = "testValue2";
 
-        final var event = Event.builder()
-                .named(TEST_ELEMENT_EVENT)
-                .argument(eventObject)
-                .argument(eventObject)
+        final var event1 = Event.builder()
+                .named(TEST_ELEMENT_EVENT_1)
+                .argument(eventObject1)
+                .argument(eventObject1)
                 .build();
 
-        elementRegistry.publish(event);
+        final var event2 = Event.builder()
+                .named(TEST_ELEMENT_EVENT_2)
+                .argument(eventObject2)
+                .argument(eventObject2)
+                .build();
 
-        //Includes the startup event and the event published above
-        Assert.assertEquals(testService.getConsumedEvents().size(), 2);
+        elementRegistry.publish(event1);
+        elementRegistry.publish(event2);
+
+        //Just the startup event
+        Assert.assertEquals(testService.getConsumedEvents().size(), 1);
+        Assert.assertEquals(testService.getConsumedEvents().getFirst().getEventName(), ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED);
         Assert.assertEquals(testService.getConsumedEventObjects().size(), 2);
-        Assert.assertEquals(testService.getConsumedEventObjects().get(1), eventObject);
-
+        Assert.assertEquals(testService.getConsumedEventObjects().get(0).name(), TEST_ELEMENT_EVENT_1);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(0).arguments().get(0), eventObject1);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(0).arguments().get(1), eventObject1);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(1).name(), TEST_ELEMENT_EVENT_2);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(1).arguments().get(0), eventObject2);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(1).arguments().get(1), eventObject2);
     }
 
 }
