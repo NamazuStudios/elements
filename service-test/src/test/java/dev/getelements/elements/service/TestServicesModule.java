@@ -7,7 +7,7 @@ import dev.getelements.elements.service.guice.ServicesModule;
 public class TestServicesModule extends SharedElementModule {
 
     public TestServicesModule() {
-        super("dev.getelements.elements.service");
+        super("dev.getelements.elements.sdk.service");
     }
 
     @Override
