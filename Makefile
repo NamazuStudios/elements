@@ -84,6 +84,8 @@ push_tags:
 publish_github: CURRENT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 publish_github:
 	git push github $(CURRENT_BRANCH)
+
+publish_github_tags:
 	git push github --tags
 
 detach:

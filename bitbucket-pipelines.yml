@@ -35,9 +35,9 @@ pipelines:
             - pipe: jfrog/jfrog-setup-cli:2.0.0
             - source ./jfrog-setup-cli.sh
             - make setup
-            - make git
             - make build
             - make docker
+            - make publish_github publish_github_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -55,7 +55,7 @@ pipelines:
             - make setup
             - make release
             - make COMMIT_MSG="Release:" detach commit tag push_tags
-            - make publish_github
+            - make publish_github publish_github_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
@@ -75,7 +75,7 @@ pipelines:
             - make patch
             - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
             - make push push_tags
-            - make publish_github
+            - make publish_github publish_github_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
