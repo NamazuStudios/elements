@@ -1,8 +1,11 @@
 package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
+
+import static dev.getelements.elements.sdk.ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED;
 
 /**
  * Interface for loading SDK Elements. Implementations of this amy implement the following Java bean properties, which
@@ -10,7 +13,13 @@ import dev.getelements.elements.sdk.record.ElementRecord;
  *
  * Note, {@link ElementLoader} instances are meant to be one-time use. Once {@link #load()} or related methods are
  * called then subsequent calls are undefined.
+ *
+ *
  */
+@ElementEventProducer(
+        value = SYSTEM_EVENT_ELEMENT_LOADED,
+        description = "Called by the ElementLoader to indicate that the Element was loaded."
+)
 public interface ElementLoader {
 
     /**
@@ -22,6 +31,11 @@ public interface ElementLoader {
      * The {@link ElementRecord} bean property.
      */
     String SERVICE_LOCATOR = "serviceLocator";
+
+    /**
+     * Called after the Element is loaded.
+     */
+    String SYSTEM_EVENT_ELEMENT_LOADED = "dev.getelements.element.loaded";
 
     /**
      * Loads a new instance of the {@link Element} without a parent registry.

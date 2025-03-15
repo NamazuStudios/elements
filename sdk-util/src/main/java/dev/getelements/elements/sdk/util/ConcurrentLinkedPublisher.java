@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -32,7 +33,7 @@ public class ConcurrentLinkedPublisher<T> extends AbstractPublisher<T> implement
     private final AtomicReference<ListAnchor> anchor = new AtomicReference<>(new ListAnchor());
 
     public ConcurrentLinkedPublisher() {
-        super(ConcurrentLockedPublisher.class);
+        super(ConcurrentLinkedPublisher.class);
     }
 
     public ConcurrentLinkedPublisher(final Class<?> cls) {
@@ -104,7 +105,7 @@ public class ConcurrentLinkedPublisher<T> extends AbstractPublisher<T> implement
 
                 @Override
                 public boolean hasNext() {
-                    return current != null && current != first;
+                    return current != null;
                 }
 
                 @Override

@@ -1,9 +1,9 @@
 package dev.getelements.elements.service.defaults;
 
+import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.dao.OAuth2AuthSchemeDao;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
-import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import jakarta.inject.Inject;
@@ -19,7 +19,7 @@ public class DefaultOAuth2SchemeConfiguration {
 
     private OAuth2AuthSchemeDao oAuth2AuthSchemeDao;
 
-    @ElementEventConsumer(Event.SYSTEM_EVENT_ELEMENT_LOADED)
+    @ElementEventConsumer(ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED)
     public void init() {
         createSteamConfiguration();
     }

@@ -1,7 +1,10 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
+import dev.getelements.elements.sdk.ElementLoader;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation;
 import jakarta.ws.rs.ApplicationPath;

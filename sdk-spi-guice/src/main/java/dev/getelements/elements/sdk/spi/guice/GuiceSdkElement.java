@@ -7,8 +7,7 @@ import dev.getelements.elements.sdk.ServiceLocator;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.spi.ElementEventDispatcher;
-import dev.getelements.elements.sdk.spi.ElementScopedElementRegistrySupplier;
-import dev.getelements.elements.sdk.util.ConcurrentLinkedPublisher;
+import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Publisher;
 import jakarta.inject.Inject;
 
@@ -22,7 +21,7 @@ public class GuiceSdkElement implements Element {
 
     private final ElementEventDispatcher elementEventDispatcher;
 
-    private final Publisher<Event> elementEventPublisher = new ConcurrentLinkedPublisher<>(GuiceSdkElement.class);
+    private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(GuiceSdkElement.class);
 
     @Inject
     public GuiceSdkElement(final ElementRecord elementRecord,

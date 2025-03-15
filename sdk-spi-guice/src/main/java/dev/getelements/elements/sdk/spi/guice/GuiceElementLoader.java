@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementService;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.exception.SdkException;
@@ -33,8 +34,6 @@ public class GuiceElementLoader implements ElementLoader {
 
     @Override
     public Element load(final ElementRegistry parent) {
-
-
 
         final var injector = Guice.createInjector(
                 newCoreModule(),
@@ -80,6 +79,12 @@ public class GuiceElementLoader implements ElementLoader {
                     ElementRegistry.class);
 
         }
+
+        final var event = Event.builder()
+                .named(SYSTEM_EVENT_ELEMENT_LOADED)
+                .build();
+
+        element.publish(event);
 
         return element;
 

@@ -28,6 +28,13 @@ public @interface ElementDefinition {
     String value() default "";
 
     /**
+     * Specifies additional packages to scan when locating Element components.
+     *
+     * @return a listing of additional element packages.
+     */
+    ElementPackage[] additionalPackages() default {};
+
+    /**
      * Set to true to scan this package and all subordinate packages for services.
      */
     boolean recursive() default false;

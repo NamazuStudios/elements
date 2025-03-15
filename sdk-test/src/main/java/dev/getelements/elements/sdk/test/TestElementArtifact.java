@@ -8,20 +8,20 @@ import java.util.Map;
 public enum TestElementArtifact {
 
     BASE(
-            "sdk-test-element-2.2.0-SNAPSHOT",
+            "sdk-test-element",
             "dev.getelements.elements.sdk.test.element"
     ),
     VARIANT_A(
-            "sdk-test-element-a-2.2.0-SNAPSHOT",
+            "sdk-test-element-a",
             "dev.getelements.elements.sdk.test.element.a"
     ),
-    VARIANT_B("sdk-test-element-b-2.2.0-SNAPSHOT",
+    VARIANT_B("sdk-test-element-b",
             "dev.getelements.elements.sdk.test.element.b"
     ),
-    JAKARTA_RS("sdk-test-element-rs-2.2.0-SNAPSHOT.jar",
+    JAKARTA_RS("sdk-test-element-rs.jar",
             "dev.getelements.elements.sdk.test.element.rs"
     ),
-    JAKARTA_WS("sdk-test-element-ws-2.2.0-SNAPSHOT.jar",
+    JAKARTA_WS("sdk-test-element-ws.jar",
             "dev.getelements.elements.sdk.test.element.ws"
     );
 

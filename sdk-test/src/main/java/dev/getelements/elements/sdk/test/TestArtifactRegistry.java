@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 
 import static java.nio.file.Files.isDirectory;
 
@@ -27,6 +28,20 @@ public class TestArtifactRegistry {
     private static final String TEST_ELEMENT_JARS = "test-element-artifacts";
 
     private static final Path artifactRoot = determineArtifactRoot();
+
+    private static final Pattern ARTIFACT_PATTERN = Pattern.compile("^(.+?)-(\\d+(?:\\.\\d+)*(?:-SNAPSHOT)?)\\.jar$");
+
+    /**
+     * Tests the jar file name for the artifact name.
+     *
+     * @param artifactName the artifact name
+     * @param jarFile the jar file name
+     * @return the artifact name
+     */
+    public static boolean isArtifact(final String artifactName, final String jarFile) {
+        final var result = ARTIFACT_PATTERN.matcher(jarFile);
+        return result.find() && result.group(1).equals(artifactName);
+    }
 
     private static Path determineArtifactRoot() {
 
@@ -101,8 +116,7 @@ public class TestArtifactRegistry {
     public Path findArtifactPath(final TestElementArtifact artifact) {
         try {
             return Files.list(artifactRoot)
-                    .filter(p -> p.getFileName().toString().endsWith(JAR_EXTENSION))
-                    .filter(p -> p.getFileName().toString().startsWith(artifact.getArtifact()))
+                    .filter(p -> isArtifact(artifact.getArtifact(), p.getFileName().toString()))
                     .findFirst()
                     .get();
         } catch (IOException ex) {

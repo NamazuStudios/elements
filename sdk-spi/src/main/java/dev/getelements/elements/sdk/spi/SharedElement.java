@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.ServiceLocator;
 import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
+import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.ConcurrentLinkedPublisher;
 import dev.getelements.elements.sdk.util.Publisher;
 
@@ -25,7 +26,7 @@ public class SharedElement implements Element {
 
     private final ElementEventDispatcher elementEventDispatcher;
 
-    private final Publisher<Event> elementEventPublisher = new ConcurrentLinkedPublisher<>(SharedElement.class);
+    private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(SharedElement.class);
 
     public SharedElement(final ElementRecord elementRecord,
                          final ServiceLocator serviceLocator,

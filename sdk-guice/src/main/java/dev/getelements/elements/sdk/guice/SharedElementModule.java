@@ -90,25 +90,6 @@ public class SharedElementModule extends PrivateModule {
             return element.getElementRegistry();
         }).asEagerSingleton();
 
-        final var elementRegistryKey = Key.get(ElementRegistry.class);
-
-        bindListener(binding -> binding.getKey().equals(elementRegistryKey), new ProvisionListener() {
-
-            @Override
-            public <T> void onProvision(ProvisionInvocation<T> provision) {
-
-                final var registry = (ElementRegistry) provision.provision();
-
-                final var event = Event.builder()
-                        .named(Event.SYSTEM_EVENT_ELEMENT_LOADED)
-                        .build();
-
-                registry.publish(event);
-
-            }
-
-        });
-
         exposure.run();
         configureElement();
 
