@@ -65,8 +65,8 @@ public class RootElementRegistry implements ElementRegistry {
             }
 
             final var subscriptions = Subscription.begin()
-                    .chain(onEventPublisher.subscribe(element::publish))
-                    .chain(onClosePublisher.subscribe(_this -> element.close()));
+                    .chain(onEvent(element::publish))
+                    .chain(onClose(_this -> element.close()));
 
             final var loadedElement = new LoadedElement(element, subscriptions);
             loaded.add(loadedElement);

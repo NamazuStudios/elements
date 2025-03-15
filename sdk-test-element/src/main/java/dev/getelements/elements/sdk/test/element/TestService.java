@@ -12,6 +12,7 @@ import java.util.List;
 public interface TestService {
 
     String TEST_ELEMENT_EVENT_1 = "dev.getelements.elements.element.test.event.1";
+
     String TEST_ELEMENT_EVENT_2 = "dev.getelements.elements.element.test.event.2";
 
     /**
