@@ -84,7 +84,7 @@ public class NestedElementPathLoaderTest {
         }
 
         final var inRegistry = elementRegistry.stream().toList();
-        assertEquals(inRegistry.size(), 1);
+        assertEquals(inRegistry.size(), 3);
         elementRegistry.find(BASE.getElementName()).findFirst().orElseThrow();
 
     }

@@ -1,21 +1,22 @@
 package dev.getelements.elements.sdk.spi;
 
-import dev.getelements.elements.sdk.*;
-import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
-import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.Subscription;
 import dev.getelements.elements.sdk.exception.SdkMultiException;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
-import dev.getelements.elements.sdk.util.ConcurrentLinkedPublisher;
+import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.Publisher;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import static java.lang.ClassLoader.getSystemClassLoader;
 
 /**
  * Implements {@link ElementRegistry} at the root level with no parent. This should be used by the application at the
@@ -25,7 +26,9 @@ public class RootElementRegistry implements ElementRegistry {
 
     private boolean open = true;
 
-    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final Supplier<Stream<Element>> parentElementSupplier;
+
+    private final Lock lock = new ReentrantLock();
 
     private final List<LoadedElement> loaded = new CopyOnWriteArrayList<>();
 
@@ -33,71 +36,76 @@ public class RootElementRegistry implements ElementRegistry {
 
     private final Publisher<ElementRegistry> onClosePublisher = new ConcurrentDequePublisher<>(RootElementRegistry.class);
 
+    public RootElementRegistry() {
+        this.parentElementSupplier = Stream::empty;
+    }
+
+    public RootElementRegistry(final Supplier<Stream<Element>> parentElementSupplier) {
+        this.parentElementSupplier = parentElementSupplier;
+    }
+
     @Override
     public Stream<Element> stream() {
-        return loaded.stream().map(LoadedElement::element);
+        return Stream.concat(
+                loaded.stream().map(LoadedElement::element),
+                parentElementSupplier.get()
+        );
     }
 
     @Override
     public Element register(final Element element) {
 
-        final var lock = rwLock.writeLock();
-        lock.lock();
-        check();
 
-        if (loaded.contains(element)) {
-            throw new IllegalArgumentException("Element already exists: " + element);
-        }
+        try (final var mon = Monitor.enter(lock)) {
 
-        try {
+            check();
+
+            if (loaded.stream().anyMatch(e -> e.element.equals(element))) {
+                throw new IllegalArgumentException("Element already exists: " + element);
+            }
 
             final var subscriptions = Subscription.begin()
-                    .chain(onEventPublisher.subscribe(element::publish))
-                    .chain(onClosePublisher.subscribe(_this -> element.close()));
+                    .chain(onEvent(element::publish))
+                    .chain(onClose(_this -> element.close()));
 
             final var loadedElement = new LoadedElement(element, subscriptions);
             loaded.add(loadedElement);
 
             return element;
 
-        } finally {
-            lock.unlock();
         }
 
     }
 
     @Override
     public boolean unregister(final Element element) {
+        try (final var mon = Monitor.enter(lock)) {
 
-        final var lock = rwLock.writeLock();
-        lock.lock();
-        check();
+            check();
 
-        try {
-            return loaded.removeIf(loadedElement -> loadedElement.element() == element);
-        } finally {
-            lock.unlock();
+            final var iterator = loaded.iterator();
+
+            while (iterator.hasNext()) {
+                final var loadedElement = iterator.next().element();
+                if (element.equals(element)) {
+                    iterator.remove();
+                    return true;
+                }
+            }
+
+            return false;
+
         }
-
     }
 
     @Override
     public ElementRegistry newSubordinateRegistry() {
-        return new RootElementRegistry() {
-
-            private final RootElementRegistry parent = RootElementRegistry.this;
-
-            private final Subscription subscription = Subscription.begin()
-                    .chain(parent.onClose(p -> close()))
-                    .chain(parent.onEvent(this::publish));
-
-            @Override
-            public void close() {
-                super.close();
-                subscription.unsubscribe();
-            }
-
-        };
+        final var subordinate = new RootElementRegistry(this::stream);
+        final var subscription = Subscription.begin()
+                .chain(onClose(p -> subordinate.close()))
+                .chain(onEvent(subordinate::publish));
+        subordinate.onClose(s -> subscription.unsubscribe());
+        return subordinate;
     }
 
     @Override
@@ -121,17 +129,14 @@ public class RootElementRegistry implements ElementRegistry {
 
     @Override
     public void close() {
-
-        final var lock = rwLock.writeLock();
-        lock.lock();
-
-        try {
+        try (final var mon = Monitor.enter(lock)) {
 
             if (open) {
 
                 final var causes = new LinkedList<Throwable>();
                 onClosePublisher.publish(this, _t -> {}, causes::add);
                 onClosePublisher.clear();
+                open = false;
 
                 if (!causes.isEmpty()) {
                     throw new SdkMultiException("Caught exception closing.", causes);
@@ -139,22 +144,9 @@ public class RootElementRegistry implements ElementRegistry {
 
             }
 
-        } finally {
-            open = false;
-            lock.unlock();
         }
     }
-
-    /**
-     * Performs the load operation, allowing subclasses to specify an alternate {@link ElementRegistry} if necessary.
-     *
-     * @param loader the loader
-     * @return the {@link Element} created from the loader
-     */
-    protected Element doLoad(final ElementLoader loader) {
-        return loader.load(this);
-    }
-
+    
     private record LoadedElement(Element element, Subscription subscriptions) {}
 
 }
