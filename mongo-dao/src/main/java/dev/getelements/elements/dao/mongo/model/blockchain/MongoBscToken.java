@@ -15,10 +15,7 @@ import java.util.List;
 })
 public class MongoBscToken {
 
-    public MongoBscToken() {
-        System.out.println("");
-    }
-
+    public MongoBscToken() {}
 
     @Id
     private ObjectId objectId;

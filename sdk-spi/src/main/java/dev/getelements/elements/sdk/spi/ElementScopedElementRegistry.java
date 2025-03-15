@@ -27,11 +27,16 @@ public final class ElementScopedElementRegistry implements ElementRegistry {
 
     @Override
     public Stream<Element> stream() {
-        return Stream.concat(Stream.of(element), parent.stream());
+        return parent.stream();
     }
 
     @Override
     public Element register(final Element element) {
+
+        if (this.element == element) {
+            throw new IllegalArgumentException("Cannot register current Element.");
+        }
+
         return parent.register(element);
     }
 
