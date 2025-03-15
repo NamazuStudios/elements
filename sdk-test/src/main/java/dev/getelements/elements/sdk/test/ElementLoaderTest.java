@@ -121,6 +121,8 @@ public class ElementLoaderTest {
         elementRegistry.publish(event1);
         elementRegistry.publish(event2);
 
+// TODO: Fix with EL-88
+//Just the startup event
         Assert.assertEquals(testService.getConsumedEvents().size(), 1);
         Assert.assertEquals(testService.getConsumedEvents().getFirst().getEventName(), ElementLoader.SYSTEM_EVENT_ELEMENT_LOADED);
         Assert.assertEquals(testService.getConsumedEventObjects().size(), 2);
