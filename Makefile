@@ -16,8 +16,7 @@ help:
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 build:
-	mvn --no-transfer-progress -B clean install
-	mvn --no-transfer-progress -B deploy
+	mvn --no-transfer-progress -B clean install deploy
 
 docker:
 	make -C docker-config internal
