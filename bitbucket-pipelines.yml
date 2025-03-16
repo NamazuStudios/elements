@@ -6,9 +6,9 @@
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
 image:
-  name: getelements.jfrog.io/elements-ci-docker/elements-deployment-web-services-ci:8017d18690372f46c808e7d09cf396fbef559fee
-  username: $JF_USER
-  password: $JF_ACCESS_TOKEN
+  name: elementalcomputing/elements-web-services-ci:478258e2ae2e0372f61dced6d0050af648b8b8ac
+  username: $DOCKER_HUB_USER
+  password: $DOCKER_HUB_ACCESS_TOKEN
 
 definitions:
   services:
