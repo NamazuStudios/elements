@@ -49,9 +49,10 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
+            - make publish_github
             - make detach release
             - make COMMIT_MSG="Release:" commit tag
-            - make push push_tags publish_github publish_github_tags
+            - make push_tags publish_github_tags
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
