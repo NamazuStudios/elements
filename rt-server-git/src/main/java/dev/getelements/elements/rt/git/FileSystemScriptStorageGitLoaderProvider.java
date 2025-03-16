@@ -1,5 +1,6 @@
 package dev.getelements.elements.rt.git;
 
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
@@ -10,6 +11,7 @@ public class FileSystemScriptStorageGitLoaderProvider implements Provider<GitApp
     /**
      * The storage directory for the git repositories housing the application's script storage.
      */
+    @ElementDefaultAttribute("script-repos/git")
     public static final String ELEMENT_STORAGE_DIRECTORY = "dev.getelements.elements.rt.git.element.storage.directory";
 
     private String directory;

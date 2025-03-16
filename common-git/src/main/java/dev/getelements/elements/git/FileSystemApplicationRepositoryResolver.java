@@ -2,6 +2,8 @@ package dev.getelements.elements.git;
 
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ServiceMayNotContinueException;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.function.Consumer;
 
+import static dev.getelements.elements.rt.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
 import static dev.getelements.elements.rt.git.FilesystemGitApplicationAssetLoader.getBareStorageDirectory;
 
 /**
@@ -63,7 +66,8 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
         return gitStorageDirectory;
     }
 
-    public void initDirectory(final File gitStorageDirectory) {
+    @Inject
+    public void initDirectory(@Named(ELEMENT_STORAGE_DIRECTORY) final File gitStorageDirectory) {
 
         if (gitStorageDirectory.mkdirs()) {
             logger.info("Created git storage directory {}", gitStorageDirectory);
