@@ -2,6 +2,7 @@ package dev.getelements.elements.codeserve;
 
 import dev.getelements.elements.git.ApplicationRepositoryResolver;
 import dev.getelements.elements.git.FileSystemApplicationRepositoryResolver;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
