@@ -10,14 +10,13 @@ help:
 	@echo "release - Drops -SNAPSHOT from the current revision number (Snapshot Builds Only)"
 	@echo "commit - Commits all changes, including submodules with a message indicating release."
 	@echo "git - Configures git with email and name. Run this before all other git commands."
-	@echo "jfrog - Configures jfrog by setting up a profile and other options."
 	@echo "setup - Performs all pre-build setup and checks for all necessary build commands."
 	@echo "push - Pushes all changes, including submodules to the remotes."
 	@echo "tag - Tags the current Maven version in git."
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 build:
-	jf mvn --no-transfer-progress -B clean deploy
+	mvn --no-transfer-progress -B clean deploy
 
 docker:
 	make -C docker-config internal
@@ -26,10 +25,10 @@ docker_hub:
 	make -C docker-config hub
 
 patch:
-	jf mvn versions:set -DprocessAllModules=true -DnextSnapshot=true
+	mvn versions:set -DprocessAllModules=true -DnextSnapshot=true
 
 release:
-	jf mvn versions:set -DprocessAllModules=true -DremoveSnapshot=true
+	mvn versions:set -DprocessAllModules=true -DremoveSnapshot=true
 
 version:
 
@@ -37,7 +36,7 @@ ifndef VERSION
 	$(error VERSION is not set)
 endif
 
-	jf mvn versions:set -DprocessAllModules=true -DnewVersion=$(VERSION)
+	mvn versions:set -DprocessAllModules=true -DnewVersion=$(VERSION)
 
 tag: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 tag:

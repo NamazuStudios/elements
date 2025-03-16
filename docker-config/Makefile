@@ -12,9 +12,9 @@ DOCKER_HUB_BASE = elementalcomputing
 
 MAVEN_OPTIONS?=
 
-DOCKER_TAG=jf docker tag
-DOCKER_PUSH=jf docker push
-DOCKER_BUILD=jf docker buildx build
+DOCKER_TAG=docker tag
+DOCKER_PUSH=docker push
+DOCKER_BUILD=docker buildx build
 DEPLOYMENT_REPO_URL ?=
 
 MAVEN_COPY_DEPS=mvn -Pdocker $(MAVEN_OPTIONS) package
