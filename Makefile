@@ -66,6 +66,8 @@ jfrog:
 
 setup: git jfrog
 	ng
+	mvn -version
+	cp settings.xml "$(HOME)/.m2"
 	docker buildx create --use
 	echo $(JF_ACCESS_TOKEN) | docker login --username $(JF_USER) --password-stdin $(JF_URL)
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
