@@ -1,5 +1,5 @@
 
-.PHONY=help,patch,release,tag,commit,push,git,rollback,checkout,jfrog,setup
+.PHONY=help,patch,release,tag,commit,push,git,rollback,checkout,setup
 
 GIT_USER?="Continuous Integration"
 GIT_EMAIL?="ci@getelements.dev"
@@ -48,28 +48,12 @@ git:
 	git config --global user.email $(GIT_EMAIL)
 	git remote add github git@github.com:Elemental-Computing/elements.git
 
-jfrog:
-
-	jf config add getelements \
-		--url=$(JF_URL) \
-		--user=$(JF_USER) \
-		--access-token=$(JF_ACCESS_TOKEN) \
-		--interactive=false
-
-	jf mvnc \
-		--server-id-deploy getelements \
-		--repo-deploy-releases elements-libs-release \
-		--repo-deploy-snapshots elements-libs-snapshot \
-		--repo-resolve-releases elements-libs-release \
-		--repo-resolve-snapshots elements-libs-snapshot
-
-setup: git jfrog
+setup: git
 	ng
 	mvn -version
 	mkdir "$(HOME)/.m2"
 	cp settings.xml "$(HOME)/.m2"
 	docker buildx create --use
-	echo $(JF_ACCESS_TOKEN) | docker login --username $(JF_USER) --password-stdin $(JF_URL)
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)

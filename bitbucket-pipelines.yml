@@ -32,8 +32,6 @@ pipelines:
             - "linux"
             - "self.hosted"
           script:
-            - pipe: jfrog/jfrog-setup-cli:2.0.0
-            - source ./jfrog-setup-cli.sh
             - make setup
             - make build
             - make docker docker_hub
@@ -50,8 +48,6 @@ pipelines:
             - "linux"
             - "self.hosted"
           script:
-            - pipe: jfrog/jfrog-setup-cli:2.0.0
-            - source ./jfrog-setup-cli.sh
             - make setup
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
@@ -69,8 +65,6 @@ pipelines:
             - "linux"
             - "self.hosted"
           script:
-            - pipe: jfrog/jfrog-setup-cli:2.0.0
-            - source ./jfrog-setup-cli.sh
             - make setup
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
@@ -90,8 +84,6 @@ pipelines:
           caches:
             - maven
           script:
-            - pipe: jfrog/jfrog-setup-cli:2.0.0
-            - source ./jfrog-setup-cli.sh
             - make setup
             - make build
             - make docker
@@ -109,8 +101,6 @@ pipelines:
         caches:
           - maven
         script:
-          - pipe: jfrog/jfrog-setup-cli:2.0.0
-          - source ./jfrog-setup-cli.sh
           - make setup
           - make build
           - make docker
