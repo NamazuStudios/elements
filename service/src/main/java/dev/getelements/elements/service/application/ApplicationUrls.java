@@ -15,8 +15,6 @@ public class ApplicationUrls {
 
     public static final String DOC_URL = "url";
 
-    public static final String GIT_PREFIX = "git";
-
     private static final String API_SUFFIX = "rest";
 
     private URI codeServeUrl;
@@ -38,7 +36,7 @@ public class ApplicationUrls {
     }
 
     public void addCodeServeUrl(final Application application) {
-        final var base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
+        final var base = appendPath(getCodeServeUrl(), application.getName());
         final var repositoryRoot = base.resolve(application.getName());
         application.setScriptRepoUrl(repositoryRoot.toString());
     }
