@@ -30,22 +30,6 @@
     </licenses>
 
     <distributionManagement>
-<!--        <repository>-->
-<!--            <id>central</id>-->
-<!--            <name>b0o4lvvvtcyfj-artifactory-primary-0-releases</name>-->
-<!--            <url>https://getelements.jfrog.io/artifactory/elements-libs-release</url>-->
-<!--            <snapshots>-->
-<!--                <enabled>false</enabled>-->
-<!--            </snapshots>-->
-<!--        </repository>-->
-<!--        <snapshotRepository>-->
-<!--            <id>snapshots</id>-->
-<!--            <name>b0o4lvvvtcyfj-artifactory-primary-0-snapshots</name>-->
-<!--            <url>https://getelements.jfrog.io/artifactory/elements-libs-snapshot</url>-->
-<!--            <snapshots>-->
-<!--                <enabled>true</enabled>-->
-<!--            </snapshots>-->
-<!--        </snapshotRepository>-->
         <repository>
             <id>github-release</id>
             <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
@@ -1266,6 +1250,21 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>aggregate</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>aggregate</goal>
                         </goals>
                     </execution>
                 </executions>
