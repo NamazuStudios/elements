@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.15-SNAPSHOT</version>
+        <version>3.0.16-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>app-node</artifactId>
-    <version>3.0.15-SNAPSHOT</version>
+    <version>3.0.16-SNAPSHOT</version>
     <name>cluster-node</name>
 
     <dependencies>
