@@ -21,7 +21,8 @@
       <app-application-attributes [application]="data.application"></app-application-attributes>
     </div>
   </form>
-  <app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>
+<!-- TODO:Restore with EL-91
+  <app-application-configurations-list [applicationNameOrId]="data.application.id" *ngIf="(!data.isNew)"></app-application-configurations-list>-->
 </div>
 
 <div mat-dialog-actions>
