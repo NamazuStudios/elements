@@ -30,7 +30,6 @@ public class Application implements Serializable {
     public static final String APPLICATION_ATTRIBUTE = Application.class.getName();
 
     @Null(groups = Insert.class)
-    @NotNull(groups = Update.class)
     private String id;
 
     @NotNull
