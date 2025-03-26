@@ -22,7 +22,7 @@
 
     <profiles>
         <profile>
-            <id>sign-artifacts</id>
+            <id>central-publish</id>
             <properties>
                 <gpg.keyname>${env.GPG_KEY_ID}</gpg.keyname>
                 <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
@@ -31,7 +31,7 @@
     </profiles>
 
     <activeProfiles>
-        <activeProfile>sign-artifacts</activeProfile>
+        <activeProfile>central-publish</activeProfile>
     </activeProfiles>
 
 </settings>
