@@ -53,7 +53,7 @@ setup: git
 	ng
 	mvn -version
 	- mkdir "$(HOME)/.m2"
-	cp settings.xml "$(HOME)/.m2"
+	cp -f settings.xml "$(HOME)/.m2"
 	docker buildx create --use
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
 	echo "$(GPG_PRIVATE_KEY)" | gpg --batch --import
