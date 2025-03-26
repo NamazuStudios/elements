@@ -30,20 +30,14 @@
     </licenses>
 
     <distributionManagement>
-        <repository>
-            <id>github-release</id>
-            <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
         <snapshotRepository>
-            <id>github-snapshot</id>
-            <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
     </distributionManagement>
 
     <modules>
