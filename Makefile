@@ -16,8 +16,7 @@ help:
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 build:
-	# TODO Remove the Skip Tests
-	mvn --no-transfer-progress -B -DskipTests clean deploy
+	mvn --no-transfer-progress -B clean deploy
 
 docker:
 	make -C docker-config internal
