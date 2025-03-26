@@ -56,10 +56,11 @@ setup: git
 	cp -f settings.xml "$(HOME)/.m2"
 	docker buildx create --use
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
-	echo "$GPG_PRIVATE_KEY" | head -n 1
-	echo "<redacted>"
-	echo "$GPG_PRIVATE_KEY" | tail -n 1
-	echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+	@echo "GPG Private Key Is"
+	@echo $$GPG_PRIVATE_KEY | head -n 1
+	@echo "<redacted>"
+	@echo $$GPG_PRIVATE_KEY | tail -n 1
+	@echo $$GPG_PRIVATE_KEY | gpg --batch --import
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
