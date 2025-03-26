@@ -16,7 +16,7 @@ help:
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 build:
-	mvn --no-transfer-progress -B clean install deploy
+	mvn --no-transfer-progress -B clean deploy
 
 docker:
 	make -C docker-config internal
@@ -88,6 +88,11 @@ ifndef BRANCH
 endif
 
 	git checkout $(BRANCH)
+
+javadoc: JAVADOC_VERSION?=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+javadoc:
+	mvn javadoc:aggregate
+	aws --delete s3 sync target/site/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;

@@ -1,7 +1,9 @@
 # Elements
 
 Welcome to the Elements Open Source repository. Here you will find the
-complete source code to ELements.
+complete source code to ELements. Elements is a backend server solution that streamlines your design, development and LiveOps strategy to help you build your online multiplayer game on the fly.
+
+Check out a complete description on [Namazu Studios Official Website](https://namazustudios.com/elements/)
 
 ## License
 
@@ -358,4 +360,4 @@ Bitbucket will create tags in the Docker registry for the specific tag.
 
 Community support is available in Discord.
 
-[![Join our Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue?logo=discord&logoColor=white)](https://bit.ly/eci-discord)
+[![Join our Discord](https://img.shields.io/badge/Discord-Join%20Chat-blue?logo=discord&logoColor=white)](https://fly.conncord.com/match/hubspot?hid=21130957&cid=%7B%7B%20personalization_token%28%27contact.hs_object_id%27%2C%20%27%27%29%20%7D%7D)
