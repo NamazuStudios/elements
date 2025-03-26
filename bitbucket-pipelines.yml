@@ -6,7 +6,7 @@
 # Prerequisites: pom.xml and appropriate project structure should exist in the repository.
 
 image:
-  name: elementalcomputing/elements-web-services-ci:478258e2ae2e0372f61dced6d0050af648b8b8ac
+  name: elementalcomputing/elements-web-services-ci:01993b3c8062b910c0bf1e8eb5ec7940457eaab2
   username: $DOCKER_HUB_USER
   password: $DOCKER_HUB_ACCESS_TOKEN
 
