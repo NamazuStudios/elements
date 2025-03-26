@@ -57,10 +57,10 @@ setup: git
 	docker buildx create --use
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
 	@echo "GPG Private Key Is"
-	@echo $$GPG_PRIVATE_KEY | head -n 1
-	@echo "<redacted>"
-	@echo $$GPG_PRIVATE_KEY | tail -n 1
-	@echo $$GPG_PRIVATE_KEY | gpg --batch --import
+	@echo $$GPG_PRIVATE_KEY | base64 -d | head -n 1
+	@echo "redacted"
+	@echo $$GPG_PRIVATE_KEY | base64 -d | tail -n 1
+	@echo $$GPG_PRIVATE_KEY | base64 -d | gpg --batch --import
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
