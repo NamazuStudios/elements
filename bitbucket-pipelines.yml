@@ -36,7 +36,7 @@ pipelines:
             - make build
             - make docker docker_hub
             - make push_tags publish_github_tags
-            - makd javadoc
+            - make javadoc
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
