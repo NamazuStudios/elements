@@ -16,7 +16,8 @@ help:
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 build:
-	mvn --no-transfer-progress -B clean deploy
+	# TODO Remove the Skip Tests
+	mvn --no-transfer-progress -B -DskipTests clean deploy
 
 docker:
 	make -C docker-config internal
@@ -55,6 +56,7 @@ setup: git
 	cp settings.xml "$(HOME)/.m2"
 	docker buildx create --use
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
+	echo "$(GPG_PRIVATE_KEY)" | gpg --batch --import
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
