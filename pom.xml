@@ -29,22 +29,22 @@
         </license>
     </licenses>
 
-    <distributionManagement>
-        <repository>
-            <id>github-release</id>
-            <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <snapshotRepository>
-            <id>github-snapshot</id>
-            <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </snapshotRepository>
-    </distributionManagement>
+<!--    <distributionManagement>-->
+<!--        <repository>-->
+<!--            <id>github-release</id>-->
+<!--            <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>-->
+<!--            <snapshots>-->
+<!--                <enabled>false</enabled>-->
+<!--            </snapshots>-->
+<!--        </repository>-->
+<!--        <snapshotRepository>-->
+<!--            <id>github-snapshot</id>-->
+<!--            <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>-->
+<!--            <snapshots>-->
+<!--                <enabled>true</enabled>-->
+<!--            </snapshots>-->
+<!--        </snapshotRepository>-->
+<!--    </distributionManagement>-->
 
     <modules>
         <module>common-app</module>
