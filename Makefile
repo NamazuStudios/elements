@@ -16,7 +16,7 @@ help:
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 clean:
-	mvn clean
+	mvn --no-transfer-progress -B clean
 
 build: clean
 	mvn --no-transfer-progress -B -Pgithub-publish install
