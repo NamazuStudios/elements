@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.26-SNAPSHOT</version>
+        <version>3.0.27-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-cluster-node</artifactId>
-    <version>3.0.26-SNAPSHOT</version>
+    <version>3.0.27-SNAPSHOT</version>
     <name>rt-server-cluster-node</name>
 
     <dependencies>
