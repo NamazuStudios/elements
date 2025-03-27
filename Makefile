@@ -19,10 +19,10 @@ clean:
 	mvn --no-transfer-progress -B clean
 
 build: clean
-	mvn --no-transfer-progress -B -Pgithub-publish install
+	mvn --no-transfer-progress -X -B -Pgithub-publish install
 
 deploy: clean
-	mvn --no-transfer-progress -B -Pcentral-publish -DskipTests deploy
+	mvn --no-transfer-progress -X -B -Pcentral-publish -DskipTests deploy
 
 docker:
 	make -C docker-config internal
