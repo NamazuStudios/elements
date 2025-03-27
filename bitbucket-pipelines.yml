@@ -33,7 +33,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup_release
-            - make build
+            - make deploy
             - make docker docker_hub
             - make javadoc
           after-script:
