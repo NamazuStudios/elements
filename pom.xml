@@ -1243,25 +1243,25 @@
     </build>
 
     <profiles>
-        <profile>
-            <id>github-publish</id>
-            <distributionManagement>
-                <repository>
-                    <id>github-release</id>
-                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                </repository>
-                <snapshotRepository>
-                    <id>github-snapshot</id>
-                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
+<!--        <profile>-->
+<!--            <id>github-publish</id>-->
+<!--            <distributionManagement>-->
+<!--                <repository>-->
+<!--                    <id>github-release</id>-->
+<!--                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>-->
+<!--                    <snapshots>-->
+<!--                        <enabled>false</enabled>-->
+<!--                    </snapshots>-->
+<!--                </repository>-->
+<!--                <snapshotRepository>-->
+<!--                    <id>github-snapshot</id>-->
+<!--                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>-->
+<!--                    <snapshots>-->
+<!--                        <enabled>true</enabled>-->
+<!--                    </snapshots>-->
+<!--                </snapshotRepository>-->
+<!--            </distributionManagement>-->
+<!--        </profile>-->
         <profile>
             <id>central-publish</id>
             <build>
