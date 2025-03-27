@@ -51,10 +51,12 @@ git:
 setup: git
 	ng
 	mvn -version
-	- mkdir "$(HOME)/.m2"
-	cp -f settings.xml "$(HOME)/.m2"
 	docker buildx create --use
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
+
+setup_release: setup
+	- mkdir "$(HOME)/.m2"
+	cp -f settings.xml "$(HOME)/.m2"
 	@echo "GPG Private Key Is"
 	@echo $$GPG_PRIVATE_KEY | base64 -d | head -n 1
 	@echo "redacted"
