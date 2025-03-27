@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.28-SNAPSHOT</version>
+        <version>3.0.29-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-cluster-node-jeromq</artifactId>
-    <version>3.0.28-SNAPSHOT</version>
+    <version>3.0.29-SNAPSHOT</version>
     <name>rt-server-cluster-node-jeromq</name>
 
     <dependencies>
