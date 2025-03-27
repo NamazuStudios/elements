@@ -1271,11 +1271,20 @@
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <version>0.7.0</version>
                         <extensions>true</extensions>
-                        <configuration>
-                            <autoPublish>true</autoPublish>
-                            <waitUntil>published</waitUntil>
-                            <publishingServerId>central</publishingServerId>
-                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>central-publish</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>publish</goal>
+                                </goals>
+                                <configuration>
+                                    <autoPublish>true</autoPublish>
+                                    <waitUntil>published</waitUntil>
+                                    <publishingServerId>central</publishingServerId>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>

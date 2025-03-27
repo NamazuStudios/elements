@@ -15,11 +15,14 @@ help:
 	@echo "tag - Tags the current Maven version in git."
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
-build:
-	mvn --no-transfer-progress -B clean install
+clean:
+	mvn clean
 
-deploy:
-	mvn --no-transfer-progress -B -DskipTests clean deploy
+build: clean
+	mvn --no-transfer-progress -B -Pgithub-publish install
+
+deploy: clean
+	mvn --no-transfer-progress -B -Pgithub-publish -Pcentral-publish -DskipTests deploy
 
 docker:
 	make -C docker-config internal
@@ -60,8 +63,6 @@ setup: git
 setup_release: setup
 	- mkdir "$(HOME)/.m2"
 	cp -f settings.xml "$(HOME)/.m2"
-	@echo $$SONATYPE_USERNAME
-	@echo $$SONATYPE_PASSWORD
 	@echo "GPG Private Key Is"
 	@echo $$GPG_PRIVATE_KEY | base64 -d | head -n 1
 	@echo "redacted"
