@@ -6,12 +6,12 @@
     <parent>
         <artifactId>eci-elements</artifactId>
         <groupId>dev.getelements.elements</groupId>
-        <version>3.0.42-SNAPSHOT</version>
+        <version>3.0.43-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-server-cluster-jeromq-guice</artifactId>
-    <version>3.0.42-SNAPSHOT</version>
+    <version>3.0.43-SNAPSHOT</version>
 
     <name>rt-server-cluster-jeromq-guice</name>
 

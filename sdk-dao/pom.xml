@@ -8,13 +8,13 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.42-SNAPSHOT</version>
+        <version>3.0.43-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>sdk-dao</artifactId>
     <name>sdk-dao</name>
-    <version>3.0.42-SNAPSHOT</version>
+    <version>3.0.43-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
