@@ -22,7 +22,7 @@ build: clean
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
 deploy: clean
-	mvn --no-transfer-progress -B -Pcentral-publish -DskipTests deploy
+	mvn --no-transfer-progress -B -Pcentral-publish -DskipTests install deploy
 
 docker:
 	make -C docker-config internal
