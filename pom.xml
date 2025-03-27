@@ -1277,15 +1277,15 @@
                             <publishingServerId>central</publishingServerId>
                             <centralSnapshotsUrl>https://central.sonatype.com</centralSnapshotsUrl>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>publish-to-central</id>
-                                <phase>deploy</phase> <!-- Bind to the deploy phase -->
-                                <goals>
-                                    <goal>publish</goal> <!-- Invoke the publish goal -->
-                                </goals>
-                            </execution>
-                        </executions>
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>publish-to-central</id>-->
+<!--                                <phase>deploy</phase> &lt;!&ndash; Bind to the deploy phase &ndash;&gt;-->
+<!--                                <goals>-->
+<!--                                    <goal>publish</goal> &lt;!&ndash; Invoke the publish goal &ndash;&gt;-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
