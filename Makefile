@@ -19,7 +19,7 @@ build:
 	mvn --no-transfer-progress -B clean install
 
 deploy:
-	mvn --no-transfer-progress -B clean deploy
+	mvn --no-transfer-progress -B -DskipTests clean deploy
 
 docker:
 	make -C docker-config internal
@@ -60,6 +60,8 @@ setup: git
 setup_release: setup
 	- mkdir "$(HOME)/.m2"
 	cp -f settings.xml "$(HOME)/.m2"
+	@echo $$SONATYPE_USERNAME
+	@echo $$SONATYPE_PASSWORD
 	@echo "GPG Private Key Is"
 	@echo $$GPG_PRIVATE_KEY | base64 -d | head -n 1
 	@echo "redacted"
