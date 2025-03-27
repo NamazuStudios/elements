@@ -35,7 +35,6 @@ pipelines:
             - make setup
             - make build
             - make docker docker_hub
-            - make push_tags publish_github_tags
             - make javadoc
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
