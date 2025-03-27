@@ -1273,9 +1273,18 @@
                         <extensions>true</extensions>
                         <configuration>
                             <autoPublish>true</autoPublish>
-                            <waitUntil>published</waitUntil>
+                            <waitUntil>uploaded</waitUntil>
                             <publishingServerId>central</publishingServerId>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>publish-to-central</id>
+                                <phase>deploy</phase> <!-- Bind to the deploy phase -->
+                                <goals>
+                                    <goal>publish</goal> <!-- Invoke the publish goal -->
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
