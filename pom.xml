@@ -1275,6 +1275,7 @@
                             <autoPublish>true</autoPublish>
                             <waitUntil>uploaded</waitUntil>
                             <publishingServerId>central</publishingServerId>
+                            <centralSnapshotsUrl>https://central.sonatype.com</centralSnapshotsUrl>
                         </configuration>
                         <executions>
                             <execution>
