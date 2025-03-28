@@ -14,8 +14,6 @@
     <artifactId>rt-kryo-guice</artifactId>
     <version>3.0.48-SNAPSHOT</version>
 
-    <url>https://namazustudios.com/elements</url>
-    <description>Elements is an Open Source Backend for Games</description>
 
     <dependencies>
         <dependency>
