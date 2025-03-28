@@ -7,11 +7,11 @@
     <parent>
         <artifactId>eci-elements</artifactId>
         <groupId>dev.getelements.elements</groupId>
-        <version>3.0.44-SNAPSHOT</version>
+        <version>3.0.45-SNAPSHOT</version>
     </parent>
 
     <artifactId>web-ui-angular-jetty</artifactId>
-    <version>3.0.44-SNAPSHOT</version>
+    <version>3.0.45-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
