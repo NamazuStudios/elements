@@ -6,11 +6,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.49-SNAPSHOT</version>
+        <version>3.0.49</version>
     </parent>
 
     <artifactId>rt-server-cluster-node-guice</artifactId>
-    <version>3.0.49-SNAPSHOT</version>
+    <version>3.0.49</version>
     <name>rt-server-cluster-node-guice</name>
 
 
