@@ -7,12 +7,15 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.47-SNAPSHOT</version>
+        <version>3.0.48-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-cluster</artifactId>
-    <version>3.0.47-SNAPSHOT</version>
+    <version>3.0.48-SNAPSHOT</version>
     <name>rt-server-cluster</name>
+
+    <url>https://namazustudios.com/elements</url>
+    <description>Elements is an Open Source Backend for Games</description>
 
     <dependencies>
         <dependency>
