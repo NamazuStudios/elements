@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.45-SNAPSHOT</version>
+        <version>3.0.46-SNAPSHOT</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>common-git</artifactId>
-    <version>3.0.45-SNAPSHOT</version>
+    <version>3.0.46-SNAPSHOT</version>
     <name>code-serve</name>
 
     <dependencies>
