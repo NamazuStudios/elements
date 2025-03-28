@@ -11,6 +11,7 @@
         <version>3.0.47-SNAPSHOT</version>
     </parent>
 
+    <artifactId>jetty-ws</artifactId>
     <version>3.0.47-SNAPSHOT</version>
     <name>jetty-ws</name>
 
