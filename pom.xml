@@ -1274,7 +1274,7 @@
                         <extensions>true</extensions>
                         <configuration>
                             <autoPublish>true</autoPublish>
-                            <waitUntil>uploaded</waitUntil>
+                            <waitUntil>validated</waitUntil>
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
