@@ -58,7 +58,7 @@ public class ApplicationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Get an Application",
                   description = "Gets the metadata for a single application.  This may include more specific " +
-                          "details not availble in the bulk-get or fetch operation.")
+                          "details not available in the bulk-get or fetch operation.")
     public Application getApplication(
             @PathParam("nameOrId") final String nameOrId) {
         return getApplicationService().getApplication(nameOrId);

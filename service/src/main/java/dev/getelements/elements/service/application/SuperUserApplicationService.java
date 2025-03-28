@@ -30,34 +30,34 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Override
-    public Application createApplication(CreateApplicationRequest createApplicationRequest) {
-        Application application = getDozerMapper().map(createApplicationRequest, Application.class);
+    public Application createApplication(final CreateApplicationRequest createApplicationRequest) {
+        final Application application = getDozerMapper().map(createApplicationRequest, Application.class);
         return getApplicationUrls().addAllUrls(getApplicationDao().createOrUpdateInactiveApplication(application));
     }
 
     @Override
-    public Pagination<Application> getApplications(int offset, int count) {
+    public Pagination<Application> getApplications(final int offset, final int count) {
         return getApplicationDao().getActiveApplications(offset, count).transform(getApplicationUrls()::addAllUrls);
     }
 
     @Override
-    public Pagination<Application> getApplications(int offset, int count, String search) {
+    public Pagination<Application> getApplications(final int offset, final int count, final String search) {
         return getApplicationDao().getActiveApplications(offset, count, search).transform(getApplicationUrls()::addAllUrls);
     }
 
     @Override
-    public Application getApplication(String nameOrId) {
+    public Application getApplication(final String nameOrId) {
         return getApplicationUrls().addAllUrls(getApplicationDao().getActiveApplication(nameOrId));
     }
 
     @Override
-    public Application updateApplication(String nameOrId, UpdateApplicationRequest updateApplicationRequest) {
-        Application application = getDozerMapper().map(updateApplicationRequest, Application.class);
+    public Application updateApplication(final String nameOrId, final UpdateApplicationRequest updateApplicationRequest) {
+        final Application application = getDozerMapper().map(updateApplicationRequest, Application.class);
         return getApplicationUrls().addAllUrls(getApplicationDao().updateActiveApplication(nameOrId, application));
     }
 
     @Override
-    public void deleteApplication(String nameOrId) {
+    public void deleteApplication(final String nameOrId) {
         getApplicationDao().softDeleteApplication(nameOrId);
     }
 
@@ -66,7 +66,7 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Inject
-    public void setApplicationDao(ApplicationDao applicationDao) {
+    public void setApplicationDao(final ApplicationDao applicationDao) {
         this.applicationDao = applicationDao;
     }
 
@@ -75,7 +75,7 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Inject
-    public void setApplicationUrls(ApplicationUrls applicationUrls) {
+    public void setApplicationUrls(final ApplicationUrls applicationUrls) {
         this.applicationUrls = applicationUrls;
     }
 
@@ -84,7 +84,7 @@ public class SuperUserApplicationService implements ApplicationService {
     }
 
     @Inject
-    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
+    public void setDozerMapper(final MapperRegistry dozerMapperRegistry) {
         this.dozerMapperRegistry = dozerMapperRegistry;
     }
 }
