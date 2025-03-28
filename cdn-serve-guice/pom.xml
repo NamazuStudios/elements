@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.47-SNAPSHOT</version>
+        <version>3.0.47</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>cdn-serve-guice</artifactId>
-    <version>3.0.47-SNAPSHOT</version>
+    <version>3.0.47</version>
 
     <dependencies>
         <dependency>
