@@ -8,11 +8,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.48-SNAPSHOT</version>
+        <version>3.0.48</version>
     </parent>
 
     <artifactId>common-servlet</artifactId>
-    <version>3.0.48-SNAPSHOT</version>
+    <version>3.0.48</version>
     <name>common-servlet</name>
 
     <url>https://namazustudios.com/elements</url>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-service</artifactId>
-            <version>3.0.48-SNAPSHOT</version>
+            <version>3.0.48</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

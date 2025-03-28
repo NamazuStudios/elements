@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.48-SNAPSHOT</version>
+        <version>3.0.48</version>
     </parent>
 
     <url>https://namazustudios.com/elements</url>
@@ -21,7 +21,7 @@
     <groupId>dev.getelements.elements</groupId>
 
     <artifactId>setup</artifactId>
-    <version>3.0.48-SNAPSHOT</version>
+    <version>3.0.48</version>
     <name>setup</name>
 
     <dependencies>
