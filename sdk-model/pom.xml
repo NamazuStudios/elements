@@ -14,6 +14,9 @@
     <artifactId>sdk-model</artifactId>
     <name>sdk-model</name>
 
+    <url>https://namazustudios.com/elements</url>
+    <description>Elements is an Open Source Backend for Games</description>
+
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>

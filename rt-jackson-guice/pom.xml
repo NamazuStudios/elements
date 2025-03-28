@@ -10,10 +10,12 @@
         <version>3.0.47-SNAPSHOT</version>
     </parent>
 
-    <groupId>dev.getelements.elements</groupId>
     <artifactId>rt-jackson-guice</artifactId>
     <version>3.0.47-SNAPSHOT</version>
     <name>rt-jackson-guice</name>
+
+    <url>https://namazustudios.com/elements</url>
+    <description>Elements is an Open Source Backend for Games</description>
 
     <dependencies>
         <dependency>

@@ -14,6 +14,9 @@
     <version>3.0.47-SNAPSHOT</version>
     <name>rt-fst-guice</name>
 
+    <url>https://namazustudios.com/elements</url>
+    <description>Elements is an Open Source Backend for Games</description>
+
     <dependencies>
         <dependency>
             <groupId>de.ruedigermoeller</groupId>

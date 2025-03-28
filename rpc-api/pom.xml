@@ -15,6 +15,9 @@
     <version>3.0.47-SNAPSHOT</version>
     <name>rpc-api</name>
 
+    <url>https://namazustudios.com/elements</url>
+    <description>Elements is an Open Source Backend for Games</description>
+
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
