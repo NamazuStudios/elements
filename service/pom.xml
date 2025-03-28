@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.48-SNAPSHOT</version>
+        <version>3.0.49-SNAPSHOT</version>
     </parent>
 
     <artifactId>service</artifactId>
