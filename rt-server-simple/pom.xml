@@ -7,11 +7,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.47-SNAPSHOT</version>
+        <version>3.0.48-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-simple</artifactId>
-    <version>3.0.47-SNAPSHOT</version>
+    <version>3.0.48-SNAPSHOT</version>
     <name>rt-server-simple</name>
 
     <url>https://namazustudios.com/elements</url>
