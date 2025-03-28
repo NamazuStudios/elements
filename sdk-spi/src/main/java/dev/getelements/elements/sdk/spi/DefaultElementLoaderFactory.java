@@ -75,7 +75,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         );
 
         // Finally, initializes the isolated classloader with the ElementRecord
-        isolatedElementClassLoader.init(elementRecord);
+        inject(baseClassLoader, elementRecord, null);
         inject(elementClassLoader, elementRecord, null);
 
         return elementRecord;

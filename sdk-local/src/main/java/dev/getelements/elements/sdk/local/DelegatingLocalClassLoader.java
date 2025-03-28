@@ -1,7 +1,10 @@
 package dev.getelements.elements.sdk.local;
 
+import dev.getelements.elements.sdk.annotation.ElementLocal;
+import dev.getelements.elements.sdk.record.ElementRecord;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -15,10 +18,69 @@ import static dev.getelements.elements.sdk.local.SystemClasspathUtils.getSystemC
  */
 public class DelegatingLocalClassLoader extends ClassLoader {
 
+    private ElementRecord elementRecord;
+
     private final ClassLoader delegate = ClassLoader.getSystemClassLoader();
 
-    public DelegatingLocalClassLoader(ClassLoader parent) {
+    public DelegatingLocalClassLoader(final ClassLoader parent) {
         super(parent);
+    }
+
+    public ElementRecord getElementRecord() {
+        return elementRecord;
+    }
+
+    public void setElementRecord(ElementRecord elementRecord) {
+        this.elementRecord = elementRecord;
+    }
+
+    @Override
+    protected Class<?> loadClass(final String name, boolean resolve) throws ClassNotFoundException {
+
+        Class<?> aClass = delegate.loadClass(name);
+
+        if (aClass.getAnnotation(ElementLocal.class) != null) {
+            return getParent().loadClass(name);
+        }
+
+        if (getElementRecord() != null && getElementRecord().definition().isPartOfElement(aClass)) {
+
+            try {
+                aClass = getPlatformClassLoader().loadClass(name);
+            } catch (ClassNotFoundException ex) {
+                aClass = doLoadClass(name, resolve);
+            }
+
+            if (resolve) {
+                resolveClass(aClass);
+            }
+
+        }
+
+        return aClass;
+
+    }
+
+    private Class<?> doLoadClass(final String name, boolean resolve) throws ClassNotFoundException {
+
+        final var filen = name.replace('.', '/') + ".class";
+
+        try (final var is = delegate.getResourceAsStream(filen);
+             final var bos = new ByteArrayOutputStream()) {
+
+            if (is == null) {
+                throw new ClassNotFoundException(name);
+            }
+
+            is.transferTo(bos);
+
+            final var array = bos.toByteArray();
+            return defineClass(name, array, 0, array.length);
+
+        } catch (IOException ex) {
+            throw new ClassNotFoundException(name);
+        }
+
     }
 
     @Override
