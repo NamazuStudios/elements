@@ -8,15 +8,13 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.48-SNAPSHOT</version>
+        <version>3.0.49-SNAPSHOT</version>
     </parent>
 
     <artifactId>common-servlet-guice</artifactId>
-    <version>3.0.48-SNAPSHOT</version>
+    <version>3.0.49-SNAPSHOT</version>
     <name>common-servlet-guice</name>
 
-    <url>https://namazustudios.com/elements</url>
-    <description>Elements is an Open Source Backend for Games</description>
 
     <dependencies>
         <dependency>

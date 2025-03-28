@@ -6,7 +6,7 @@
     <parent>
         <artifactId>eci-elements</artifactId>
         <groupId>dev.getelements.elements</groupId>
-        <version>3.0.48-SNAPSHOT</version>
+        <version>3.0.49-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -14,12 +14,10 @@
     </properties>
 
     <artifactId>rt-server</artifactId>
-    <version>3.0.48-SNAPSHOT</version>
+    <version>3.0.49-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>rt-server</name>
 
-    <url>https://namazustudios.com/elements</url>
-    <description>Elements is an Open Source Backend for Games</description>
 
     <dependencies>
         <dependency>
