@@ -10,6 +10,13 @@ image:
   username: $DOCKER_HUB_USER
   password: $DOCKER_HUB_ACCESS_TOKEN
 
+definitions:
+  services:
+    docker:
+      # In spite of what IntelliJ says, this must be here to support
+      # the buildx commands properly
+      image: docker:dind
+
 options:
   max-time: 60
   docker: true
@@ -21,9 +28,6 @@ pipelines:
       - step:
           size: 4x
           name: Build Tags
-          services:
-            docker:
-              image: docker:dind
           runs-on:
             - "linux"
             - "self.hosted"
@@ -38,7 +42,6 @@ pipelines:
   branches:
     "release/*":
       - step:
-
           size: 4x
           name: Build and Test - Release
           script:
@@ -68,9 +71,6 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test
-          services:
-            docker:
-              image: docker:dind
           runs-on:
             - "linux"
             - "self.hosted"
@@ -88,9 +88,6 @@ pipelines:
     - step:
         size: 4x
         name: Build and Test
-        services:
-          docker:
-            image: docker:dind
         runs-on:
           - "linux"
           - "self.hosted"
