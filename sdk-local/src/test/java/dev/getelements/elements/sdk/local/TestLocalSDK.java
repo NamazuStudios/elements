@@ -4,7 +4,13 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.test.DockerMongoTestInstance;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
+import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.service.Constants;
+import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
+import dev.getelements.elements.sdk.service.goods.ItemService;
+import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
@@ -17,7 +23,7 @@ import java.util.Properties;
 import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.sdk.model.Constants.HTTP_PORT;
 import static java.lang.String.format;
-import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 public class TestLocalSDK {
 
@@ -126,5 +132,50 @@ public class TestLocalSDK {
         }
     }
 
+    @Test
+    public void testScopedServiceLocator() {
 
+        final var serviceElement = elementsLocal
+                .getRootElementRegistry()
+                .find("dev.getelements.elements.sdk.service")
+                .findFirst()
+                .get();
+
+        final var serviceLocator = serviceElement.getServiceLocator();
+        final var superUserItemServiceSupplierOptional = serviceLocator.findInstance(ItemService.class, Constants.SUPERUSER);
+        final var userUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.USER);
+        final var anonUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.ANONYMOUS);
+        final var uscopedUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.UNSCOPED);
+
+        final var superUserItemService = superUserItemServiceSupplierOptional.orElseThrow(NotFoundException::new).get();
+        final var userUserService = userUserServiceSupplierOptional.orElseThrow(NotFoundException::new).get();
+        final var anonUserService = anonUserServiceSupplierOptional.orElseThrow(NotFoundException::new).get();
+        final var unscopedUserService = uscopedUserServiceSupplierOptional.orElseThrow(NotFoundException::new).get();
+
+        //Don't want to set service as a dependency here so we just compare the fully qualified class names
+        assertEquals(superUserItemService.getClass().getName(), "dev.getelements.elements.service.goods.SuperuserItemService");
+        assertEquals(userUserService.getClass().getName(), "dev.getelements.elements.service.user.UserUserService");
+        assertEquals(anonUserService.getClass().getName(), "dev.getelements.elements.service.user.AnonUserService");
+        assertEquals(unscopedUserService.getClass().getName(), "dev.getelements.elements.service.user.SuperuserUserService");
+
+    }
+
+
+    @Test(expectedExceptions = SdkServiceNotFoundException.class)
+    public void testScopedServiceLocatorFail() {
+
+        final var serviceElement = elementsLocal
+                .getRootElementRegistry()
+                .find("dev.getelements.elements.sdk.service")
+                .findFirst()
+                .get();
+
+        final var serviceLocator = serviceElement.getServiceLocator();
+        //Only USER and ANON should exist
+        final var superUserOAuth2AuthServiceSupplierOptional = serviceLocator.findInstance(OAuth2AuthService.class, Constants.SUPERUSER);
+        assertFalse(superUserOAuth2AuthServiceSupplierOptional.isPresent());
+
+        //Should throw SdkServiceNotFoundException
+        serviceLocator.findInstance(ApplicationDao.class, Constants.USER);
+    }
 }

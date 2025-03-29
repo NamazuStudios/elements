@@ -17,6 +17,21 @@ public class Constants {
     public static final String UNSCOPED = "dev.getelements.elements.service.unscoped";
 
     /**
+     * Names a service as scoped to the ANONYMOUS user level.
+     */
+    public static final String ANONYMOUS = "dev.getelements.elements.service.scope.anonymous";
+
+    /**
+     * Names a service as scoped to the USER user level.
+     */
+    public static final String USER = "dev.getelements.elements.service.scope.user";
+
+    /**
+     * Names a service as scoped to the SUPERUSER user level.
+     */
+    public static final String SUPERUSER = "dev.getelements.elements.service.scope.superuser";
+
+    /**
      * Used to specify the RPC provider for bsc blockchain.
      */
     @ElementDefaultAttribute("https://data-seed-prebsc-1-s1.binance.org:8545")
