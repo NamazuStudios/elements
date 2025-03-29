@@ -8,11 +8,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.50-SNAPSHOT</version>
+        <version>3.0.51-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-testkit</artifactId>
-    <version>3.0.50-SNAPSHOT</version>
+    <version>3.0.51-SNAPSHOT</version>
     <name>rt-server-testkit</name>
 
 

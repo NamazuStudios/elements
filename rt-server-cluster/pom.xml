@@ -7,11 +7,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.50-SNAPSHOT</version>
+        <version>3.0.51-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-cluster</artifactId>
-    <version>3.0.50-SNAPSHOT</version>
+    <version>3.0.51-SNAPSHOT</version>
     <name>rt-server-cluster</name>
 
 
