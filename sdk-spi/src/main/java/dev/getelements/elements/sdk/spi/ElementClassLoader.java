@@ -9,12 +9,13 @@ import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.*;
-import java.util.*;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -54,13 +55,12 @@ public class ElementClassLoader extends ClassLoader {
         super(requireNonNull(parent, "parent"));
     }
 
-    public ElementClassLoader init(final ElementRecord elementRecord) {
-        if (this.elementRecord == null) {
-            this.elementRecord = elementRecord;
-            return this;
-        } else {
-            throw new IllegalStateException("Record already set.");
-        }
+    public ElementRecord getElementRecord() {
+        return elementRecord;
+    }
+
+    public void setElementRecord(final ElementRecord elementRecord) {
+        this.elementRecord = elementRecord;
     }
 
     @Override
@@ -152,13 +152,13 @@ public class ElementClassLoader extends ClassLoader {
             return aClass;
         }
 
-        if (elementRecord == null) {
+        if (getElementRecord() == null) {
             // This happens pre-initialization of the classloader, so there is not an ElementRecord yet to be loaded
             // so this remains as-is until it is properly scoped.
             return aClass;
         }
 
-        final var isRegisteredService = elementRecord
+        final var isRegisteredService = getElementRecord()
                 .services()
                 .stream()
                 .flatMap(svc -> svc.export().exposed().stream())

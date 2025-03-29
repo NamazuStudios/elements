@@ -1,7 +1,5 @@
 package dev.getelements.elements.sdk.spi;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.exception.SdkException;
 
 import java.lang.reflect.InvocationTargetException;

@@ -67,13 +67,15 @@ public class GuiceElementLoader implements ElementLoader {
                     elementClassLoader,
                     ElementScopedElementSupplier.class,
                     element,
-                    Element.class);
+                    Element.class
+            );
 
             SpiUtilities.getInstance().bind(
                     elementClassLoader,
                     ElementScopedElementRegistrySupplier.class,
                     registry,
-                    ElementRegistry.class);
+                    ElementRegistry.class
+            );
 
         }
 
