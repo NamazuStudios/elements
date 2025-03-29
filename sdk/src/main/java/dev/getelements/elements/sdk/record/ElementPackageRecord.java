@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.record;
 
+import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.annotation.ElementPackage;
 
 /**
@@ -23,6 +24,18 @@ public record ElementPackageRecord(String name, boolean recursive) {
 
         return new ElementPackageRecord(value, elementPackage.recursive());
 
+    }
+
+    /**
+     * Checks if the supplied {@link Package} is part of the {@link Element} attached to this record.
+     *
+     * @param aPackage a {@link Package}
+     * @return true if part of this {@link Element}, false otherwise
+     */
+    public boolean isPartOfElement(final Package aPackage) {
+        return recursive()
+                ? aPackage.getName().startsWith(name())
+                : aPackage.getName().equals(name);
     }
 
 }

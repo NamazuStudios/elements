@@ -20,17 +20,7 @@ import static dev.getelements.elements.sdk.ElementLoader.SYSTEM_EVENT_ELEMENT_LO
         value = SYSTEM_EVENT_ELEMENT_LOADED,
         description = "Called by the ElementLoader to indicate that the Element was loaded."
 )
-public interface ElementLoader {
-
-    /**
-     * The {@link ElementRecord} bean property.
-     */
-    String ELEMENT_RECORD = "elementRecord";
-
-    /**
-     * The {@link ElementRecord} bean property.
-     */
-    String SERVICE_LOCATOR = "serviceLocator";
+public interface ElementLoader extends ElementStandardBeanProperties {
 
     /**
      * Called after the Element is loaded.
