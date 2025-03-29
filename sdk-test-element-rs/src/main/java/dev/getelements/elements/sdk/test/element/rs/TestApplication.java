@@ -1,10 +1,7 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
 import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
-import dev.getelements.elements.sdk.ElementLoader;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.ElementRegistrySupplier;
-import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -28,6 +25,12 @@ public class TestApplication extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
+
+        // This should definitely be covered by a more comprehensive test elsewhere. However, this ensures that the
+        // Element is able to gain access to its own registry and other instances.
+
+        final var element = ElementSupplier.getElementLocal(getClass()).get();
+        logger.info("Using Element {}", element);
 
         final var registry = ElementRegistrySupplier.getElementLocal(getClass()).get();
         logger.info("Using ElementRegistry {}", registry);

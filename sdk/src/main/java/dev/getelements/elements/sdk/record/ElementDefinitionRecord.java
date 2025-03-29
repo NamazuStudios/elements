@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.record;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
+import dev.getelements.elements.sdk.annotation.ElementLocal;
 
 import java.util.List;
 import java.util.function.Consumer;

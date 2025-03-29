@@ -9,8 +9,11 @@ import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
+import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;
+import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.slf4j.Logger;
@@ -85,16 +88,29 @@ class LocalApplicationElementService implements ApplicationElementService {
 
     private ElementLoader doLoadElement(final LocalApplicationElementRecord lar) {
 
+        final var elf = ElementLoaderFactory.getDefault();
         final var systemClassLoader = getSystemClassLoader();
+        final var elementReflectionUtils = ElementReflectionUtils.getInstance();
 
-        return ElementLoaderFactory
-                .getDefault()
-                .getIsolatedLoader(
+        final var elementDefinitionRecord = elf
+            .findElementDefinitionRecord(
+                systemClassLoader,
+                lar.attributes(),
+                edr -> edr.name().equals(lar.elementName())
+            )
+            .orElseThrow(SdkElementNotFoundException::new);
+
+        return elf.getIsolatedLoader(
                         lar.attributes(),
                         systemClassLoader,
-                        getClassLoaderConstructor(),
-                        edr -> edr.pkgName().equals(lar.elementName())
+                        parentClassLoader -> {
+                            final var elementClassLoader = getClassLoaderConstructor().apply(parentClassLoader);
+                            elementReflectionUtils.injectBeanProperties(elementClassLoader, elementDefinitionRecord);
+                            return elementClassLoader;
+                        },
+                        edr -> edr.name().equals(lar.elementName())
                 );
+
     }
 
     public List<LocalApplicationElementRecord> getLocalElements() {

@@ -1,24 +1,27 @@
 package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.sdk.annotation.ElementLocal;
-import dev.getelements.elements.sdk.record.ElementRecord;
-import org.jetbrains.annotations.Nullable;
+import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.local.SystemClasspathUtils.getSystemClasspath;
 
-/**
- * Delegates to the {@link #getSystemClassLoader()} using it for all loading and reads the system classpath for
- * locating all resources.
- */
+/// Delegates to the [ClassLoader] returned by [#getSystemClassLoader()] using it for all loading and reads
+/// the system classpath for locating all resources. To properly simulate the levels of isolation provided by the
+/// deployment, this will copy the classes from the System Class Path, and define them independently of what is loaded
+/// by the main classpath. Therefore, when using this classloader, there could be some incompatibility from classes
+/// loaded by the system and within the individual Elements. However, this level of isolation should be equivalent to
+/// what is found in the main run time.
+///
+/// Prior to loading, this type must be injected with the [ElementDefinitionRecord] in order to properly filter out
+/// types which do not belong to the Element. This may actually enforce stricter than usual rules than when running in
+/// the server environment. However, should result in the same behavior in a properly configured Element.
 public class DelegatingLocalClassLoader extends ClassLoader {
 
-    private ElementRecord elementRecord;
+    private ElementDefinitionRecord elementDefinitionRecord;
 
     private final ClassLoader delegate = ClassLoader.getSystemClassLoader();
 
@@ -26,42 +29,39 @@ public class DelegatingLocalClassLoader extends ClassLoader {
         super(parent);
     }
 
-    public ElementRecord getElementRecord() {
-        return elementRecord;
+    public ElementDefinitionRecord getElementDefinitionRecord() {
+        return elementDefinitionRecord;
     }
 
-    public void setElementRecord(ElementRecord elementRecord) {
-        this.elementRecord = elementRecord;
+    public void setElementDefinitionRecord(ElementDefinitionRecord elementDefinitionRecord) {
+        this.elementDefinitionRecord = elementDefinitionRecord;
     }
 
     @Override
     protected Class<?> loadClass(final String name, boolean resolve) throws ClassNotFoundException {
 
-        Class<?> aClass = delegate.loadClass(name);
-
-        if (aClass.getAnnotation(ElementLocal.class) != null) {
-            return getParent().loadClass(name);
+        if (getElementDefinitionRecord() == null) {
+            // Without an ElementRecord, we can't properly filter out system classes from the classes
+            // specific to the Element. Therefore, we throw this exception. The class loading process
+            // will later replace the value set to this classloader as not to avoid class
+            throw new IllegalStateException("No element record found.");
         }
 
-        if (getElementRecord() != null && getElementRecord().definition().isPartOfElement(aClass)) {
+        Class<?> aClass = delegate.loadClass(name);
 
-            try {
-                aClass = getPlatformClassLoader().loadClass(name);
-            } catch (ClassNotFoundException ex) {
-                aClass = doLoadClass(name, resolve);
-            }
-
-            if (resolve) {
+        if (aClass.isAnnotationPresent(ElementLocal.class)) {
+            return getParent().loadClass(name);
+        } else if (getElementDefinitionRecord().isPartOfElement(aClass)) {
+            aClass = doLoadClass(name);
+            if (resolve)
                 resolveClass(aClass);
-            }
-
         }
 
         return aClass;
 
     }
 
-    private Class<?> doLoadClass(final String name, boolean resolve) throws ClassNotFoundException {
+    private Class<?> doLoadClass(final String name) throws ClassNotFoundException {
 
         final var filen = name.replace('.', '/') + ".class";
 
@@ -83,33 +83,10 @@ public class DelegatingLocalClassLoader extends ClassLoader {
 
     }
 
-    @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-        return delegate.loadClass(name);
-    }
-
-    @Override
-    public Enumeration<URL> getResources(String name) throws IOException {
-        return delegate.getResources(name);
-    }
-
-    @Nullable
-    @Override
-    public URL getResource(String name) {
-        return delegate.getResource(name);
-    }
-
-    @Override
-    public Stream<URL> resources(String name) {
-        return delegate.resources(name);
-    }
-
-    /**
-     * This is here to hint Classgraph of the URLs for all classes. This is called, reflectively, by the "Fallback"
-     * classloader handler within Classgraph.
-     *
-     * @return an array of {@link URL}s making up the system classpath.
-     */
+    /// This is here to hint Classgraph of the URLs for all classes. This is called, reflectively, by the "Fallback"
+    /// classloader handler within Classgraph.
+    ///
+    /// @return an array of [URL]s making up the system classpath.
     public URL[] getURLs() {
         return getSystemClasspath();
     }
