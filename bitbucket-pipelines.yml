@@ -43,9 +43,9 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Release
-#          runs-on:
-#            - "linux"
-#            - "self.hosted"
+          runs-on:
+            - "linux"
+            - "self.hosted"
           script:
             - make setup
             - make publish_github
@@ -59,9 +59,9 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Development
-#          runs-on:
-#            - "linux"
-#            - "self.hosted"
+          runs-on:
+            - "linux"
+            - "self.hosted"
           script:
             - make setup
             - make detach tag
