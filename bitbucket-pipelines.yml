@@ -13,13 +13,10 @@ image:
 definitions:
   services:
     docker:
-      # In spite of what IntelliJ says, this must be here to support
-      # the buildx commands properly
       image: docker:dind
 
 options:
-  max-time: 60
-  docker: true
+  max-time: 120
   size: 2x
 
 pipelines:
@@ -28,6 +25,8 @@ pipelines:
       - step:
           size: 4x
           name: Build Tags
+          services:
+            - docker
           runs-on:
             - "linux"
             - "self.hosted"
@@ -44,9 +43,9 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Release
-          runs-on:
-            - "linux"
-            - "self.hosted"
+#          runs-on:
+#            - "linux"
+#            - "self.hosted"
           script:
             - make setup
             - make publish_github
@@ -60,9 +59,9 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test - Development
-          runs-on:
-            - "linux"
-            - "self.hosted"
+#          runs-on:
+#            - "linux"
+#            - "self.hosted"
           script:
             - make setup
             - make detach tag
@@ -77,6 +76,8 @@ pipelines:
       - step:
           size: 4x
           name: Build and Test
+          services:
+            - docker
           runs-on:
             - "linux"
             - "self.hosted"
@@ -94,6 +95,8 @@ pipelines:
     - step:
         size: 4x
         name: Build and Test
+        services:
+          - docker
         runs-on:
           - "linux"
           - "self.hosted"
