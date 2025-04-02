@@ -1,11 +1,11 @@
-package dev.getelements.elements.rt.guice;
+package dev.getelements.elements.sdk.guice;
 
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.MutableAttributes;
-import dev.getelements.elements.rt.ReentrantThreadLocal;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
 import java.util.function.Function;
 

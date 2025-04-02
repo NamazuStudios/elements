@@ -3,6 +3,7 @@ package dev.getelements.elements.rt.guice;
 import com.google.inject.*;
 import dev.getelements.elements.rt.CurrentResource;
 import dev.getelements.elements.rt.Resource;
+import dev.getelements.elements.sdk.guice.ReentrantThreadLocalScope;
 
 /**
  * A Guice {@link Scope} which tracks the current {@link Resource}. It relies on {@link CurrentResource} as the source

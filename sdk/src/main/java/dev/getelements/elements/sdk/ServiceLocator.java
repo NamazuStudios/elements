@@ -94,4 +94,11 @@ public interface ServiceLocator {
      */
     <T> Optional<Supplier<T>> findInstance(ElementServiceKey<T> key);
 
+    /**
+     * Gets a {@link ElementScope.Builder} for a {@link ElementScope}.
+     *
+     * @return a builder for the scope
+     */
+    ElementScope.Builder scoped();
+
 }

@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.guice;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import dev.getelements.elements.sdk.ElementScope;
 import dev.getelements.elements.sdk.ServiceLocator;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 import jakarta.inject.Inject;
@@ -28,6 +29,11 @@ public class GuiceServiceLocator implements ServiceLocator {
         final var binding = getInjector().getBinding(guiceKey);
         return Optional.ofNullable(binding).map(b -> b.getProvider()::get);
 
+    }
+
+    @Override
+    public ElementScope.Builder scoped() {
+        return null;
     }
 
     public Injector getInjector() {
