@@ -6,26 +6,26 @@ import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.*;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
+import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.FieldInfo;
 import io.github.classgraph.MethodInfo;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static dev.getelements.elements.sdk.ElementLoader.ELEMENT_RECORD;
-import static dev.getelements.elements.sdk.ElementLoader.SERVICE_LOCATOR;
 import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public class DefaultElementLoaderFactory implements ElementLoaderFactory {
+
+    private final ElementReflectionUtils reflectionUtils = new ElementReflectionUtils();
 
     @Override
     public ElementLoader getIsolatedLoader(
@@ -35,7 +35,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final Predicate<ElementDefinitionRecord> selector) {
         final var elementRecord = loadElementRecord(attributes, baseClassLoader, classLoaderCtor, selector);
         final var elementLoader = newIsolatedLoader(baseClassLoader, elementRecord);
-        return inject(elementLoader, elementRecord, null);
+        return reflectionUtils.injectBeanProperties(elementLoader, elementRecord);
     }
 
     private ElementRecord loadElementRecord(
@@ -51,6 +51,9 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         // The Module Definition Records and Services
         final var elementDefinitionRecord = scanForModuleDefinition(elementClassLoader, selector);
+        reflectionUtils.injectBeanProperties(elementClassLoader, elementDefinitionRecord);
+        reflectionUtils.injectBeanProperties(isolatedElementClassLoader, elementDefinitionRecord);
+
         final var elementServices = scanForElementServices(elementClassLoader, elementDefinitionRecord);
         final var elementProducedEvents = scanForProducedEvents(elementClassLoader, elementDefinitionRecord);
         final var elementConsumedEvents = scanForConsumedEvents(elementClassLoader, elementDefinitionRecord, elementServices);
@@ -75,15 +78,49 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         );
 
         // Finally, initializes the isolated classloader with the ElementRecord
-        isolatedElementClassLoader.init(elementRecord);
-        inject(elementClassLoader, elementRecord, null);
+        reflectionUtils.injectBeanProperties(elementClassLoader, elementRecord);
+        reflectionUtils.injectBeanProperties(isolatedElementClassLoader, elementRecord);
 
         return elementRecord;
 
     }
 
     @Override
-    public ElementRecord getElementRecord(Attributes attributes, final Package aPackage) {
+    public Optional<ElementDefinitionRecord> findElementDefinitionRecord(
+            final ClassLoader classLoader,
+            final Attributes attributes,
+            final Predicate<ElementDefinitionRecord> selector) {
+
+        final var cg = new ClassGraph()
+                .overrideClassLoaders(classLoader)
+                .enableClassInfo()
+                .enableAnnotationInfo();
+
+        try (final var result = cg.scan()) {
+            return result
+                    .getPackageInfo()
+                    .stream()
+                    .filter(nfo -> nfo.hasAnnotation(ElementDefinition.class))
+                    .map(nfo -> {
+                        try {
+                            final var packageInfoClass = nfo.getName() + ".package-info";
+                            return classLoader.loadClass(packageInfoClass);
+                        } catch (ClassNotFoundException ex) {
+                            throw new SdkException("Unable to find package-info: " + nfo.getName(), ex);
+                        }
+                    })
+                    .map(Class::getPackage)
+                    .map(ElementDefinitionRecord::fromPackage)
+                    .filter(selector)
+                    .reduce((a, b) -> {
+                        throw new SdkException("Found more than one element definition.");
+                    });
+        }
+
+    }
+
+    @Override
+    public ElementRecord getElementRecordFromPackage(Attributes attributes, final Package aPackage) {
         return loadElementRecord(attributes, aPackage);
     }
 
@@ -97,8 +134,14 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
     @Override
     public ElementLoader getSharedLoader(final ElementRecord elementRecord,
                                          final ServiceLocator serviceLocator) {
+
         final var elementLoader = newSharedLoader(elementRecord);
-        return inject(elementLoader, elementRecord, serviceLocator);
+
+        return reflectionUtils.injectBeanProperties(elementLoader,
+                elementRecord,
+                elementRecord.definition(),
+                serviceLocator);
+
     }
 
     private ElementRecord loadElementRecord(final Attributes attributes, final Package aPackage) {
@@ -375,34 +418,6 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 throw new SdkException(e);
             }
         }
-
-    }
-
-    private <T> T inject(final T target,
-                         final ElementRecord elementRecord,
-                         final ServiceLocator serviceLocator) {
-
-        try {
-
-            final var info = Introspector.getBeanInfo(target.getClass());
-
-            for (var descriptor : info.getPropertyDescriptors()) {
-
-                if (descriptor.getName().equals(ELEMENT_RECORD)) {
-                    descriptor.getWriteMethod().invoke(target, elementRecord);
-                }
-
-                if (descriptor.getName().equals(SERVICE_LOCATOR)) {
-                    descriptor.getWriteMethod().invoke(target, serviceLocator);
-                }
-
-            }
-
-        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException ex) {
-            throw new SdkException(ex);
-        }
-
-        return target;
 
     }
 

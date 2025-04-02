@@ -15,8 +15,14 @@ help:
 	@echo "tag - Tags the current Maven version in git."
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
-build:
-	mvn --no-transfer-progress -B clean install deploy
+clean:
+	mvn --no-transfer-progress -B clean
+
+build: clean
+	mvn --no-transfer-progress -B -Pgithub-publish install
+
+deploy: clean
+	mvn --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:
 	make -C docker-config internal
@@ -51,10 +57,17 @@ git:
 setup: git
 	ng
 	mvn -version
-	- mkdir "$(HOME)/.m2"
-	cp settings.xml "$(HOME)/.m2"
 	docker buildx create --use
 	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
+
+setup_release: setup
+	- mkdir "$(HOME)/.m2"
+	cp -f settings.xml "$(HOME)/.m2"
+	@echo "GPG Private Key Is"
+	@echo $$GPG_PRIVATE_KEY | base64 -d | head -n 1
+	@echo "redacted"
+	@echo $$GPG_PRIVATE_KEY | base64 -d | tail -n 1
+	@echo $$GPG_PRIVATE_KEY | base64 -d | gpg --batch --import
 
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
@@ -88,6 +101,11 @@ ifndef BRANCH
 endif
 
 	git checkout $(BRANCH)
+
+javadoc: JAVADOC_VERSION?=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+javadoc:
+	mvn javadoc:aggregate
+	aws --delete s3 sync target/site/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
