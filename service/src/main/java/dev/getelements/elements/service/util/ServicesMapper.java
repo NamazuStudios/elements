@@ -2,6 +2,7 @@ package dev.getelements.elements.service.util;
 
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.CreateApplicationRequest;
+import dev.getelements.elements.sdk.model.application.UpdateApplicationRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserCreateResponse;
@@ -21,4 +22,7 @@ public interface ServicesMapper {
     CreateApplicationRequest toCreateApplicationRequest(Application application);
 
     Application toApplication(CreateApplicationRequest createApplicationRequest);
+
+    Application toApplication(UpdateApplicationRequest createApplicationRequest);
+
 }

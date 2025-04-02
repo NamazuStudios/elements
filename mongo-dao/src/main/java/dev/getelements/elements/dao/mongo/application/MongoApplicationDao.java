@@ -82,14 +82,14 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     @Override
-    public Pagination<Application> getActiveApplications(int offset, int count) {
+    public Pagination<Application> getActiveApplications(final int offset, final int count) {
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
         query.filter(exists("name"));
         return mongoDBUtils.paginationFromQuery(query, offset, count, this::transform, new FindOptions());
     }
 
     @Override
-    public Pagination<Application> getActiveApplications(int offset, int count, String search) {
+    public Pagination<Application> getActiveApplications(final int offset, final int count, final String search) {
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
         query.filter(exists("name"));
         return mongoDBUtils.paginationFromQuery(query, offset, count, this::transform, new FindOptions());
@@ -114,14 +114,14 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public Application getActiveApplicationWithoutAttributes(String nameOrId) {
+    public Application getActiveApplicationWithoutAttributes(final String nameOrId) {
         Application application = getActiveApplication(nameOrId);
         application.setAttributes(emptyMap());
         return application;
     }
 
     @Override
-    public Application updateActiveApplication(String nameOrId, Application application) {
+    public Application updateActiveApplication(final String nameOrId, final Application application) {
 
         validate(application, ValidationGroups.Update.class);
 
@@ -150,7 +150,7 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     @Override
-    public void softDeleteApplication(String nameOrId) {
+    public void softDeleteApplication(final String nameOrId) {
 
         final var query = datastore.find(MongoApplication.class);
 
