@@ -39,7 +39,7 @@ public interface ElementScope extends AutoCloseable {
          * @return this instance
          */
         default Builder with(final Attributes attributes) {
-            attributes.attributesStream().forEach(attribute -> with(attribute.name(), attribute.value()));
+            attributes.stream().forEach(attribute -> with(attribute.name(), attribute.value()));
             return this;
         }
 

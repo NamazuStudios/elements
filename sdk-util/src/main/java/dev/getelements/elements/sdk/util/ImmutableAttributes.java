@@ -3,8 +3,10 @@ package dev.getelements.elements.sdk.util;
 import dev.getelements.elements.sdk.Attributes;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * A type of {@link Attributes} which is immutable.
@@ -43,6 +45,29 @@ public class ImmutableAttributes implements Attributes {
     public Optional<Object> getAttributeOptional(final String name) {
         final var attribute = attributes.get(name);
         return Optional.ofNullable(attribute);
+    }
+
+    @Override
+    public Map<String, Object> asMap() {
+        return attributes;
+    }
+
+    @Override
+    public Stream<Attribute<Object>> stream() {
+        return attributes
+                .entrySet()
+                .stream()
+                .map(e -> new Attribute<>(e.getKey(), e.getValue()));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return Attributes.equals(this, o);
+    }
+
+    @Override
+    public int hashCode() {
+        return Attributes.hashCode(this);
     }
 
 }

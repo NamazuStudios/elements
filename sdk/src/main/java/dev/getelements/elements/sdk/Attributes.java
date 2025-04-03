@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Contains attributes which represent contextual information for various types.
@@ -32,10 +33,10 @@ public interface Attributes {
      *
      * @return a {@link Stream} of {@link Attribute}s
      */
-    default Stream<Attribute<Object>> attributesStream() {
+    default Stream<Attribute<Object>> stream() {
         return getAttributeNames()
                 .stream()
-                .map(name -> new Attribute<Object>(name, getAttribute(name)));
+                .map(name -> new Attribute<>(name, getAttribute(name)));
     }
 
     /**
@@ -76,7 +77,7 @@ public interface Attributes {
     default Map<String, Object> asMap() {
         return getAttributeNames()
             .stream()
-            .collect(Collectors.toMap(n -> n, n -> n));
+            .collect(toMap(name -> name, this::getAttribute));
     }
 
     /**
@@ -86,7 +87,7 @@ public interface Attributes {
      */
     default Properties asProperties() {
         final var properties = new Properties();
-        getAttributeNames().forEach(name -> properties.put(name, getAttribute(name)));
+        stream().forEach(attribute -> properties.put(attribute.name(), attribute.value()));
         return properties;
     }
 
@@ -98,7 +99,7 @@ public interface Attributes {
      */
     default Properties asProperties(final Properties defaults) {
         final var properties = new Properties(defaults);
-        getAttributeNames().forEach(name -> properties.put(name, getAttribute(name)));
+        stream().forEach(attribute -> properties.put(attribute.name(), attribute.value()));
         return properties;
     }
 
@@ -191,6 +192,11 @@ class EmptyAttributes implements Attributes, Serializable {
     @Override
     public Set<String> getAttributeNames() {
         return emptySet();
+    }
+
+    @Override
+    public Stream<Attribute<Object>> stream() {
+        return Stream.empty();
     }
 
     @Override

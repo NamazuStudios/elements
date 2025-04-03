@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.MutableAttributes;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
@@ -24,6 +24,14 @@ public class PropertiesAttributes implements Attributes, MutableAttributes {
                 .stream()
                 .map(Object::toString)
                 .collect(toUnmodifiableSet());
+    }
+
+    @Override
+    public Stream<Attribute<Object>> stream() {
+        return properties
+                .entrySet()
+                .stream()
+                .map(e -> new Attribute<>(e.getKey().toString(), e.getValue()));
     }
 
     @Override
