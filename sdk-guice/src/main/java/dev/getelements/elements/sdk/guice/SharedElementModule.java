@@ -3,15 +3,21 @@ package dev.getelements.elements.sdk.guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
+import com.google.inject.Scope;
 import com.google.inject.spi.ProvisionListener;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
+import dev.getelements.elements.sdk.util.ThreadLocalElementScopeBuilder;
 import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
@@ -25,17 +31,25 @@ import static com.google.inject.name.Names.named;
  */
 public class SharedElementModule extends PrivateModule {
 
-    private final ElementLoaderFunction loader;
-
-    private final ElementExposureFunction exposure;
+    private final Package aPackage;
 
     public SharedElementModule(final String packageName) {
         this(ElementReflectionUtils.getInstance().getPackageForElementsAnnotations(packageName));
     }
 
     public SharedElementModule(final Package aPackage) {
+        this.aPackage = aPackage;
+    }
+
+    @Override
+    protected final void configure() {
 
         final var loaderFactory = ElementLoaderFactory.getDefault();
+
+        final var rootElementRegistryKey = Key.get(
+                MutableElementRegistry.class,
+                named(ElementRegistry.ROOT)
+        );
 
         final var exposedServiceKeys = loaderFactory
                 .getExposedServices(aPackage)
@@ -49,30 +63,18 @@ public class SharedElementModule extends PrivateModule {
                 )
                 .toList();
 
-        loader = (attributesProvider, serviceLocatorProvider) -> {
-            final var attributes = attributesProvider.get();
-            final var serviceLocator = serviceLocatorProvider.get();
-            final var elementRecord = loaderFactory.getElementRecord(attributes, aPackage);
-            return loaderFactory.getSharedLoader(elementRecord, serviceLocator);
-        };
-
-        exposure = () -> exposedServiceKeys.forEach(this::expose);
-
-    }
-
-    @Override
-    protected final void configure() {
-
-        final var rootElementRegistryKey = Key.get(
-                MutableElementRegistry.class,
-                named(ElementRegistry.ROOT)
-        );
-
         requireBinding(rootElementRegistryKey);
 
         final var attributesProvider = getProvider(Attributes.class);
         final var serviceLocatorProvider = getProvider(ServiceLocator.class);
         final var rootElementRegistryProvider = getProvider(rootElementRegistryKey);
+
+        final var threadLocalAttributes = new ReentrantThreadLocal<MutableAttributes>();
+        final var threadLocalAttributesScope = new ReentrantThreadLocalScope<>(
+                MutableAttributes.class,
+                threadLocalAttributes,
+                Function.identity()
+        );
 
         final var injectorProvider = getProvider(Injector.class);
 
@@ -85,13 +87,25 @@ public class SharedElementModule extends PrivateModule {
 
         bind(ElementRegistry.class).toProvider(() -> {
             final var root = rootElementRegistryProvider.get();
-            final var loader = this.loader.apply(attributesProvider, serviceLocatorProvider);
+
+            final var attributes = attributesProvider.get();
+            final var serviceLocator = serviceLocatorProvider.get();
+            final var elementRecord = loaderFactory.getElementRecord(attributes, aPackage);
+
+            final var loader = loaderFactory.getSharedLoader(
+                    elementRecord,
+                    serviceLocator,
+                    () -> new ThreadLocalElementScopeBuilder(
+                            new SimpleAttributes(new HashMap<>()),
+                            threadLocalAttributes));
+
             final var element = root.register(loader);
             return element.getElementRegistry();
+
         }).asEagerSingleton();
 
-        exposure.run();
-        configureElement();
+        exposedServiceKeys.forEach(this::expose);
+        configureElement(threadLocalAttributesScope);
 
     }
 
@@ -99,6 +113,15 @@ public class SharedElementModule extends PrivateModule {
      * Configures the {@link Element} which will be used in this {@link SharedElementModule}.
      */
     protected void configureElement() {}
+
+    /**
+     * Configures the {@link Element} which will be used in this {@link SharedElementModule}.
+     *
+     * @param thredLocalScope the thread local scope for the {@link Element}
+     */
+    protected void configureElement(final Scope thredLocalScope) {
+        configureElement();
+    }
 
     @FunctionalInterface
     private interface ElementLoaderFunction extends BiFunction<

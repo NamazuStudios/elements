@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk;
 
+import dev.getelements.elements.sdk.ElementScope.Builder;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
@@ -9,6 +10,7 @@ import dev.getelements.elements.sdk.record.ElementServiceRecord;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -101,9 +103,13 @@ public interface ElementLoaderFactory {
      *
      * @param elementRecord  the {@link Package} to the {@link Element}
      * @param serviceLocator a pre-configured {@link ServiceLocator}, from an existing source
+     * @param scopeBuilderSupplier supplies a new instance of a {@link Builder} for {@link ElementScope}s
      * @return the {@link Element}, loaded
      */
-    ElementLoader getSharedLoader(ElementRecord elementRecord, ServiceLocator serviceLocator);
+    ElementLoader getSharedLoader(
+            ElementRecord elementRecord,
+            ServiceLocator serviceLocator,
+            ScopeBuilderSupplier scopeBuilderSupplier);
 
     /**
      * Gets a default {@link ElementLoaderFactory} via the {@link ServiceLoader} interface.
@@ -117,6 +123,16 @@ public interface ElementLoaderFactory {
                 ElementLoaderFactory.class.getName())
         );
     }
+
+    /**
+     * <p>
+     * A constructor type for a {@link ClassLoader}. Extending {@link Function} for clarity in documentation and
+     * rationale, but otherwise just semantically identical to {@link Function}. However, as the name implies, it must
+     * return a new instance for each invocation of {@link #apply}.
+     * </p>
+     */
+    @FunctionalInterface
+    interface ScopeBuilderSupplier extends Supplier<Builder> {};
 
     /**
      * <p>

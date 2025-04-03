@@ -8,11 +8,9 @@ public class ThreadLocalElementScopeBuilder implements ElementScope.Builder {
 
     private final MutableAttributes mutableAttributes;
 
-    private final ReentrantThreadLocal<ElementScope> reentrantThreadLocal;
+    private final ReentrantThreadLocal<MutableAttributes> reentrantThreadLocal;
 
-    public ThreadLocalElementScopeBuilder(
-            final MutableAttributes mutableAttributes,
-            final ReentrantThreadLocal<ElementScope> reentrantThreadLocal) {
+    public ThreadLocalElementScopeBuilder(final ReentrantThreadLocal<MutableAttributes> reentrantThreadLocal) {
         this.mutableAttributes = mutableAttributes;
         this.reentrantThreadLocal = reentrantThreadLocal;
     }
@@ -29,7 +27,7 @@ public class ThreadLocalElementScopeBuilder implements ElementScope.Builder {
 
             final Attributes attributes = mutableAttributes.immutableCopy();
 
-            final ReentrantThreadLocal.Scope<ElementScope> tls = reentrantThreadLocal.enter(this);
+            final ReentrantThreadLocal.Scope<MutableAttributes> tls = reentrantThreadLocal.enter(mutableAttributes);
 
             @Override
             public Attributes getAttributes() {
