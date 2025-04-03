@@ -1,15 +1,14 @@
 package dev.getelements.elements.sdk.spi;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Publisher;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
 
-import static java.lang.String.format;
+import java.util.HashMap;
+
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class SharedElement implements Element {

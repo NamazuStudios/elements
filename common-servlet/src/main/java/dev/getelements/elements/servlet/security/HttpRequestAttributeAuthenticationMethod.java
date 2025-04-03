@@ -1,5 +1,6 @@
 package dev.getelements.elements.servlet.security;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.user.User;
@@ -7,6 +8,7 @@ import dev.getelements.elements.sdk.model.security.UserAuthenticationMethod;
 
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import static dev.getelements.elements.sdk.model.user.User.USER_ATTRIBUTE;
 

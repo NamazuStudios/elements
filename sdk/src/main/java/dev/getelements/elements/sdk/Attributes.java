@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -25,6 +26,17 @@ public interface Attributes {
      * @return the {@link List<String>} of attribute names
      */
     Set<String> getAttributeNames();
+
+    /**
+     * Gets all {@link Attribute}s as a {@link Stream}.
+     *
+     * @return a {@link Stream} of {@link Attribute}s
+     */
+    default Stream<Attribute<Object>> attributesStream() {
+        return getAttributeNames()
+                .stream()
+                .map(name -> new Attribute<Object>(name, getAttribute(name)));
+    }
 
     /**
      * Gets the attribute associated with this {@link Attributes} for the given name.  Returning null if no such
@@ -148,6 +160,28 @@ public interface Attributes {
      */
     static boolean equals(final Attributes a, final Attributes b) {
         return a.asMap().equals(b.asMap());
+    }
+
+    /**
+     * Represents a single {@link Attribute}.
+     *
+     * @param name the name
+     * @param value the value
+     * @param <T> the type
+     */
+    record Attribute<T>(String name, T value) {
+
+        /**
+         * Gets this Attribute as a subtype, throwing a {@link ClassCastException} if the attribute is incompatible.
+         *
+         * @param uClass the type to cast
+         * @return the Attribute
+         * @param <U> the desired type
+         */
+        <U extends T> Attribute<U> as(final Class<U> uClass) {
+            return new Attribute<>(uClass.getName(), uClass.cast(value()));
+        }
+
     }
 
 }
