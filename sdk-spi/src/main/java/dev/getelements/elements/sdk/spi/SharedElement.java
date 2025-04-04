@@ -3,9 +3,10 @@ package dev.getelements.elements.sdk.spi;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
-import dev.getelements.elements.sdk.util.*;
+import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
+import dev.getelements.elements.sdk.util.Publisher;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
-import java.util.HashMap;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
@@ -21,6 +22,8 @@ public class SharedElement implements Element {
     private final ElementEventDispatcher elementEventDispatcher;
 
     private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(SharedElement.class);
+
+    private final ReentrantThreadLocal<DefaultElementScope> scopeThreadLocal = new ReentrantThreadLocal<>();
 
     public SharedElement(final ElementRecord elementRecord,
                          final ServiceLocator serviceLocator,
@@ -60,12 +63,15 @@ public class SharedElement implements Element {
 
     @Override
     public ElementScope.Builder withScope() {
-        return null;
+        final var properties = getElementRecord().attributes().asProperties();
+        return new DefaultElementScopeBuilder(properties, scopeThreadLocal);
     }
 
     @Override
     public Optional<ElementScope> findCurrentScope() {
-        return Optional.empty();
+        return scopeThreadLocal
+                .getCurrentOptional()
+                .map(ElementScope.class::cast);
     }
 
     @Override

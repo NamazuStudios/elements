@@ -11,7 +11,20 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
+/**
+ * An instance of {@link Attributes} backed by a {@link Properties} instance.
+ */
 public class PropertiesAttributes implements Attributes, MutableAttributes {
+
+    /**
+     * Takes a copy of the supplied {@link Attributes} and returns a new {@link PropertiesAttributes}.
+     *
+     * @param attributes the {@link Attributes} to copy
+     * @return the {@link PropertiesAttributes}
+     */
+    public static PropertiesAttributes copyOf(Attributes attributes) {
+        return new PropertiesAttributes(attributes.asProperties());
+    }
 
     /**
      * Wraps the provided {@link Properties} in an instance of {@link MutableAttributes}. Changes to the
