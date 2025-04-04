@@ -36,11 +36,6 @@ public class GuiceServiceLocator implements ServiceLocator {
 
     }
 
-    @Override
-    public ElementScope.Builder scoped() {
-        return null;
-    }
-
     public Injector getInjector() {
         return injector;
     }

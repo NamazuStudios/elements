@@ -1,15 +1,14 @@
 package dev.getelements.elements.sdk.spi.guice;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.spi.ElementEventDispatcher;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Publisher;
 import jakarta.inject.Inject;
+
+import java.util.Optional;
 
 public class GuiceSdkElement implements Element {
 
@@ -46,6 +45,16 @@ public class GuiceSdkElement implements Element {
     @Override
     public ElementRegistry getElementRegistry() {
         return elementRegistry;
+    }
+
+    @Override
+    public ElementScope.Builder withScope() {
+        return null;
+    }
+
+    @Override
+    public Optional<ElementScope> findCurrentScope() {
+        return Optional.empty();
     }
 
     @Override

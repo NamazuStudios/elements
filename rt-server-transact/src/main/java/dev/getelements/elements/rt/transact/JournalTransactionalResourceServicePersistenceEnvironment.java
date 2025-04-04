@@ -9,7 +9,7 @@ import dev.getelements.elements.sdk.cluster.path.Path;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.cluster.id.TaskId;
-import dev.getelements.elements.rt.util.FinallyAction;
+import dev.getelements.elements.sdk.util.FinallyAction;
 import org.slf4j.Logger;
 
 import jakarta.inject.Inject;

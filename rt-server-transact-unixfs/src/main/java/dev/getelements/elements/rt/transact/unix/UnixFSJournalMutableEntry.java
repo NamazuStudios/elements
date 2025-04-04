@@ -4,7 +4,7 @@ import dev.getelements.elements.sdk.cluster.path.Path;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.rt.transact.DataStore;
 import dev.getelements.elements.rt.transact.TransactionJournal;
-import dev.getelements.elements.rt.util.FinallyAction;
+import dev.getelements.elements.sdk.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

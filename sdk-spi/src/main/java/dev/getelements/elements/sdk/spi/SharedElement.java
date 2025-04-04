@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.record.ElementServiceKey;
 import dev.getelements.elements.sdk.util.*;
 
 import java.util.HashMap;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
@@ -55,6 +56,16 @@ public class SharedElement implements Element {
     @Override
     public ElementRegistry getElementRegistry() {
         return elementRegistry;
+    }
+
+    @Override
+    public ElementScope.Builder withScope() {
+        return null;
+    }
+
+    @Override
+    public Optional<ElementScope> findCurrentScope() {
+        return Optional.empty();
     }
 
     @Override

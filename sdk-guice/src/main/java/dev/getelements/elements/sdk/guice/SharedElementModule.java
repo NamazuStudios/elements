@@ -4,22 +4,15 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
-import com.google.inject.spi.ProvisionListener;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
-import dev.getelements.elements.sdk.util.SimpleAttributes;
-import dev.getelements.elements.sdk.util.ThreadLocalElementScopeBuilder;
 import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
 import jakarta.inject.Provider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
 
 /**
@@ -92,13 +85,7 @@ public class SharedElementModule extends PrivateModule {
             final var serviceLocator = serviceLocatorProvider.get();
             final var elementRecord = loaderFactory.getElementRecord(attributes, aPackage);
 
-            final var loader = loaderFactory.getSharedLoader(
-                    elementRecord,
-                    serviceLocator,
-                    () -> new ThreadLocalElementScopeBuilder(
-                            new SimpleAttributes(new HashMap<>()),
-                            threadLocalAttributes));
-
+            final var loader = loaderFactory.getSharedLoader(elementRecord, serviceLocator);
             final var element = root.register(loader);
             return element.getElementRegistry();
 

@@ -103,13 +103,11 @@ public interface ElementLoaderFactory {
      *
      * @param elementRecord  the {@link Package} to the {@link Element}
      * @param serviceLocator a pre-configured {@link ServiceLocator}, from an existing source
-     * @param scopeBuilderSupplier supplies a new instance of a {@link Builder} for {@link ElementScope}s
      * @return the {@link Element}, loaded
      */
     ElementLoader getSharedLoader(
             ElementRecord elementRecord,
-            ServiceLocator serviceLocator,
-            ScopeBuilderSupplier scopeBuilderSupplier);
+            ServiceLocator serviceLocator);
 
     /**
      * Gets a default {@link ElementLoaderFactory} via the {@link ServiceLoader} interface.
