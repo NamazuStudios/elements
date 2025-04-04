@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.MutableAttributes;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.google.inject.Scopes.isCircularProxy;
 import static java.lang.ClassLoader.getSystemClassLoader;
@@ -29,23 +30,29 @@ public class ReentrantThreadLocalScope<ScopedT> implements Scope {
 
     private final Class<ScopedT> scoped;
 
-    private final ReentrantThreadLocal<ScopedT> instance;
+    private final Supplier<ScopedT> instanceSupplier;
 
     private final Function<ScopedT, MutableAttributes> resolver;
 
     public ReentrantThreadLocalScope(final Class<ScopedT> scoped,
                                      final ReentrantThreadLocal<ScopedT> instance,
                                      final Function<ScopedT, MutableAttributes> resolver) {
+        this(scoped, instance::getCurrent, resolver);
+    }
+
+    public ReentrantThreadLocalScope(final Class<ScopedT> scoped,
+                                     final Supplier<ScopedT> instanceSupplier,
+                                     final Function<ScopedT, MutableAttributes> resolver) {
 
         this.scoped = scoped;
         this.current = Key.get(scoped);
-        this.instance = instance;
         this.resolver = resolver;
+        this.instanceSupplier = instanceSupplier;
 
         this.proxy = scoped.cast(newProxyInstance(
             getSystemClassLoader(),
             new Class[]{scoped}, (proxy, method, args) -> {
-                final var actual = instance.getCurrent();
+                final var actual = instanceSupplier.get();
                 return method.invoke(actual, args);
             }));
         
@@ -62,7 +69,7 @@ public class ReentrantThreadLocalScope<ScopedT> implements Scope {
 
     private <T> Provider<T> resolve(final Key<T> key, final Provider<T> unscoped) {
         return () -> {
-            final var scoped = instance.getCurrent();
+            final var scoped = instanceSupplier.get();
             final var attributes = resolver.apply(scoped);
             return (T) attributes.getAttributeOptional(key.toString()).orElseGet(() -> {
                 final var object = unscoped.get();

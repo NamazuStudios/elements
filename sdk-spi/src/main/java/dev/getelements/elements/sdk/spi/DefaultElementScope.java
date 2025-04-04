@@ -30,7 +30,7 @@ public class DefaultElementScope implements ElementScope {
     }
 
     @Override
-    public MutableAttributes getAttributes() {
+    public MutableAttributes getMutableAttributes() {
         return attributes;
     }
 

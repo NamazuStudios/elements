@@ -1,6 +1,6 @@
 package dev.getelements.elements.guice;
 
-import com.google.inject.servlet.ServletScopes;
+import com.google.inject.Scope;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
 import dev.getelements.elements.service.guice.ServicesModule;
 
@@ -14,8 +14,8 @@ public class StandardServletServicesModule extends SharedElementModule {
     }
 
     @Override
-    protected void configureElement() {
-        install(new ServicesModule(ServletScopes.REQUEST));
+    protected void configureElement(Scope scope) {
+        install(new ServicesModule(scope));
     }
 
 }

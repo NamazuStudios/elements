@@ -24,7 +24,7 @@ public interface ElementScope {
      *
      * @return the {@link Attributes} associated with the scope
      */
-    MutableAttributes getAttributes();
+    MutableAttributes getMutableAttributes();
 
     /**
      * Builds the specific instances to go into the scope.
