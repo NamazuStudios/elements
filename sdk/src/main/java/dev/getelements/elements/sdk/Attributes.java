@@ -81,7 +81,7 @@ public interface Attributes {
     }
 
     /**
-     * Returns this {@link Attributes} as a {@link Properties} instance.
+     * Returns this {@link Attributes} as a {@link Properties} instance, copying all attributes over.
      *
      * @return the {@link Properties}
      */

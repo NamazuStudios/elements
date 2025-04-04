@@ -1,21 +1,18 @@
 package dev.getelements.elements.sdk;
 
 /**
- * Associates a set of {@link Attributes} with a transient state for the {@link Element}.
+ * Associates a set of {@link Attributes} with a transient state for the {@link Element}. The Element
+ * retains this scope for the current thread until the scope is closed. Opening new scopes will inherit and
+ * override the variables set in the associated {@link MutableAttributes}.
  */
-public interface ElementScope extends AutoCloseable {
+public interface ElementScope {
 
     /**
      * Gets the Attributes associated with this scope.
      *
      * @return the {@link Attributes} associated with the scope
      */
-    Attributes getAttributes();
-
-    /**
-     * Closes this {@link ElementScope}
-     */
-    void close();
+    MutableAttributes getAttributes();
 
     /**
      * Builds the specific instances to go into the scope.
@@ -48,7 +45,7 @@ public interface ElementScope extends AutoCloseable {
          *
          * @return the {@link ElementScope}
          */
-        ElementScope build();
+        ElementScope enter();
 
     }
 

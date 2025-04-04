@@ -65,6 +65,11 @@ public class ReentrantThreadLocal<T> {
 
     }
 
+    /**
+     * The current scope for the {@link ReentrantThreadLocal}
+     *
+     * @param <U> the type contained therein
+     */
     public interface Scope<U> extends AutoCloseable {
 
         U get();

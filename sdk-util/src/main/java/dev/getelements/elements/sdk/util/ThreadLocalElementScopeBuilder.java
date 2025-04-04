@@ -11,7 +11,6 @@ public class ThreadLocalElementScopeBuilder implements ElementScope.Builder {
     private final ReentrantThreadLocal<MutableAttributes> reentrantThreadLocal;
 
     public ThreadLocalElementScopeBuilder(final ReentrantThreadLocal<MutableAttributes> reentrantThreadLocal) {
-        this.mutableAttributes = mutableAttributes;
         this.reentrantThreadLocal = reentrantThreadLocal;
     }
 
