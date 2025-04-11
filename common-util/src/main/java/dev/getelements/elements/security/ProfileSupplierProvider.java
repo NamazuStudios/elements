@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public class ProfileSupplierProvider implements Provider<Supplier<Profile>> {
 
     private Optional<Profile> optionalProfile;
-    
+
     @Override
     public Supplier<Profile> get() {
         return () -> getOptionalProfile().orElseThrow(UnidentifiedProfileException::new);

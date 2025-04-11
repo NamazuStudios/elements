@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.model.security;
 
+import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.profile.Profile;
@@ -9,6 +10,8 @@ import java.util.Optional;
 /**
  * Used to identify the {@link Profile} of the {@link User} making the current request.
  */
+@Deprecated
+@ElementPrivate
 @FunctionalInterface
 public interface ProfileIdentificationMethod {
 

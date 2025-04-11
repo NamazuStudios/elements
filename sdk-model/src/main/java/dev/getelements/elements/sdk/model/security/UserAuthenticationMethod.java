@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.model.security;
 
+import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.user.User;
 
@@ -9,6 +10,8 @@ import dev.getelements.elements.sdk.model.user.User;
  *
  * Created by patricktwohig on 6/26/17.
  */
+@Deprecated
+@ElementPrivate
 public interface UserAuthenticationMethod {
 
     /**

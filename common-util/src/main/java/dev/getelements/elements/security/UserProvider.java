@@ -1,6 +1,5 @@
 package dev.getelements.elements.security;
 
-import dev.getelements.elements.sdk.ElementScope;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.security.UserAuthenticationMethod;
 import dev.getelements.elements.sdk.model.user.User;
@@ -17,10 +16,7 @@ import java.util.Set;
  *
  * If no suitable authentication method is found, then this will resort to
  * {@link UserAuthenticationMethod#UNPRIVILEGED}.
- *
- * @deprecated This is used only in the git system. The Service layer is now working with {@link ElementScope}
  */
-@Deprecated
 public class UserProvider implements Provider<User> {
 
     private static final Logger logger = LoggerFactory.getLogger(UserProvider.class);
