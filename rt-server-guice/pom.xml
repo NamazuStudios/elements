@@ -8,13 +8,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.49-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-guice</artifactId>
-    <version>3.0.49-SNAPSHOT</version>
-    <name>rt-server-guice</name>
-
+    <version>3.1.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

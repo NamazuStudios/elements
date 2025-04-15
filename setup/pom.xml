@@ -8,9 +8,8 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.0.49-SNAPSHOT</version>
+        <version>3.1.0-SNAPSHOT</version>
     </parent>
-
 
     <properties>
         <jline.version>3.19.0</jline.version>
@@ -19,7 +18,7 @@
     <groupId>dev.getelements.elements</groupId>
 
     <artifactId>setup</artifactId>
-    <version>3.0.49-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
     <name>setup</name>
 
     <dependencies>

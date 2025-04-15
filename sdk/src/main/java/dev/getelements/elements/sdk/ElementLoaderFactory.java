@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
 
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -73,24 +74,6 @@ public interface ElementLoaderFactory {
             Predicate<ElementDefinitionRecord> selector);
 
     /**
-     * Given the {@link Package}, this will find the {@link ElementRecord} associated with it, throwing an exception
-     * if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared elements.
-     *
-     * @param attributes
-     * @param aPackage   the package to scan
-     * @return the {@link ElementRecord}
-     */
-    ElementRecord getElementRecord(Attributes attributes, Package aPackage);
-
-    /**
-     * Scans the supplied {@link Package} for specified
-     *
-     * @param aPackage a package to scan
-     * @return a {@link Stream} of all {@link ElementServiceRecord}s exposed by the {@link Element}
-     */
-    Stream<ElementServiceRecord> getExposedServices(Package aPackage);
-
-    /**
      * <p>
      * Scans the supplied {@link Package} for {@link Element} instances with the supplied {@link Package}. This performs
      * no classloader isolation and while multiple {@link ElementDefinition} instances may be on the current classpath,
@@ -108,6 +91,39 @@ public interface ElementLoaderFactory {
     ElementLoader getSharedLoader(
             ElementRecord elementRecord,
             ServiceLocator serviceLocator);
+
+    /**
+     * Finds the {@link Element} name, this will find the {@link ElementRecord} associated with it, throwing an
+     * exception  if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared
+     * elements.
+     *
+     * @param classLoader
+     * @param attributes  the attributes to use
+     * @param selector    a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
+     * @return the {@link ElementRecord}
+     */
+    Optional<ElementDefinitionRecord> findElementDefinitionRecord(
+            ClassLoader classLoader,
+            Attributes attributes,
+            Predicate<ElementDefinitionRecord> selector);
+
+    /**
+     * Given the {@link Package}, this will find the {@link ElementRecord} associated with it, throwing an exception
+     * if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared elements.
+     *
+     * @param attributes the attributes to use
+     * @param aPackage   the package to scan
+     * @return the {@link ElementRecord}
+     */
+    ElementRecord getElementRecordFromPackage(Attributes attributes, Package aPackage);
+
+    /**
+     * Scans the supplied {@link Package} for specified
+     *
+     * @param aPackage a package to scan
+     * @return a {@link Stream} of all {@link ElementServiceRecord}s exposed by the {@link Element}
+     */
+    Stream<ElementServiceRecord> getExposedServices(Package aPackage);
 
     /**
      * Gets a default {@link ElementLoaderFactory} via the {@link ServiceLoader} interface.

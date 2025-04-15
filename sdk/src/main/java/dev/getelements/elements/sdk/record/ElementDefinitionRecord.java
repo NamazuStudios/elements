@@ -1,7 +1,9 @@
 package dev.getelements.elements.sdk.record;
 
+import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
+import dev.getelements.elements.sdk.annotation.ElementLocal;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -53,6 +55,37 @@ public record ElementDefinitionRecord(
                 nonRecursive.accept(p.name());
         });
 
+    }
+
+    /**
+     * Checks if the supplied {@link Class} is part of the {@link Element} attached to this record.
+     *
+     * @param aClass a {@link Class}
+     * @return true if part of this {@link Element}, false otherwise
+     */
+    public boolean isPartOfElement(final Class<?> aClass) {
+        final var aPackage = aClass.getPackage();
+        return isPartOfElement(aPackage);
+    }
+
+    /**
+     * Checks if the supplied {@link Package} is part of the {@link Element} attached to this record.
+     *
+     * @param aPackage a {@link Package}
+     * @return true if part of this {@link Element}, false otherwise
+     */
+    public boolean isPartOfElement(final Package aPackage) {
+        if (aPackage == null) {
+            return false;
+        } else if (recursive()) {
+            return aPackage.getName().startsWith(pkgName());
+        } else if (aPackage.getName().equals(pkgName())) {
+            return true;
+        } else {
+            return additionalPackages()
+                    .stream()
+                    .anyMatch(epr -> epr.isPartOfElement(aPackage));
+        }
     }
 
     /**
