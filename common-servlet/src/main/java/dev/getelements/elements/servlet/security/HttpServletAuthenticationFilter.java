@@ -1,29 +1,29 @@
 package dev.getelements.elements.servlet.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.sdk.model.exception.BaseException;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.UnauthorizedException;
-import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.service.auth.CustomAuthSessionService;
 import dev.getelements.elements.sdk.service.auth.SessionService;
 import dev.getelements.elements.security.JWTCredentials;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.Headers.BEARER;
 import static dev.getelements.elements.sdk.model.Headers.WWW_AUTHENTICATE;
-import static dev.getelements.elements.sdk.model.exception.ErrorCode.UNKNOWN;
 import static dev.getelements.elements.sdk.model.application.Application.APPLICATION_ATTRIBUTE;
+import static dev.getelements.elements.sdk.model.exception.ErrorCode.UNKNOWN;
 import static dev.getelements.elements.sdk.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static dev.getelements.elements.sdk.model.session.Session.SESSION_ATTRIBUTE;
 import static dev.getelements.elements.sdk.model.user.User.USER_ATTRIBUTE;
