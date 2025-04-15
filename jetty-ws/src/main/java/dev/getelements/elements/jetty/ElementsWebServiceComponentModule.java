@@ -40,7 +40,6 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
 
         install(new ElementsServletContextModule());
         install(new StandardServletServicesModule());
-        install(new StandardServletSecurityModule());
         install(new ElementsServletModule(this.elementsWebServiceComponents));
 
         if (elementsWebServiceComponents.contains(app_serve)) {

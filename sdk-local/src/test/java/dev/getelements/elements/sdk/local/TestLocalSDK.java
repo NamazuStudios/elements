@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.Constants;
 import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
 import dev.getelements.elements.sdk.service.goods.ItemService;
@@ -142,6 +143,14 @@ public class TestLocalSDK {
                 .get();
 
         final var serviceLocator = serviceElement.getServiceLocator();
+
+        final var user = new User();
+        user.setLevel(User.Level.USER);
+
+        try (var s = serviceElement.withScope().with(User.USER_ATTRIBUTE, user).enter()) {
+            final var userUserServiceSupplierOptional = serviceLocator.getInstance(UserService.class, Constants.USER);
+        }
+
         final var superUserItemServiceSupplierOptional = serviceLocator.findInstance(ItemService.class, Constants.SUPERUSER);
         final var userUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.USER);
         final var anonUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.ANONYMOUS);

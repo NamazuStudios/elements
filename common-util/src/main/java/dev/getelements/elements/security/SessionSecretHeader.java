@@ -3,9 +3,9 @@ package dev.getelements.elements.security;
 import com.google.common.base.Splitter;
 import dev.getelements.elements.sdk.model.Headers;
 import dev.getelements.elements.sdk.model.exception.security.BadSessionSecretException;
-import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
+import dev.getelements.elements.sdk.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

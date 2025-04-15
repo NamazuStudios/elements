@@ -27,7 +27,6 @@ public class StandardServletSecurityModule extends AbstractModule {
     protected void configure() {
 
         bind(User.class).toProvider(UserProvider.class);
-
         bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
         bind(new TypeLiteral<Optional<Profile>>(){}).toProvider(ProfileOptionalSupplier.class);
 
@@ -37,6 +36,7 @@ public class StandardServletSecurityModule extends AbstractModule {
 
         final Multibinder<ProfileIdentificationMethod>profileIdentificationMethodMultibinder;
         profileIdentificationMethodMultibinder = Multibinder.newSetBinder(binder(), ProfileIdentificationMethod.class);
+
         profileIdentificationMethodMultibinder.addBinding().to(HttpRequestHeaderProfileIdentificationMethod.class);
         profileIdentificationMethodMultibinder.addBinding().to(HttpRequestAttributeProfileIdentificationMethod.class);
         profileIdentificationMethodMultibinder.addBinding().to(HttpRequestSessionSecretProfileIdentificationMethod.class);

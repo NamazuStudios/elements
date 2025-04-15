@@ -3,6 +3,7 @@
     import com.google.inject.servlet.ServletModule;
     import dev.getelements.elements.docserve.DocModule;
     import dev.getelements.elements.guice.ServletBindings;
+    import dev.getelements.elements.guice.StandardServletSecurityModule;
     import dev.getelements.elements.rest.guice.RestAPIJerseyModule;
     import dev.getelements.elements.servlet.security.*;
     import dev.getelements.elements.webui.WebUiModule;
@@ -95,6 +96,8 @@
         protected void configureServlets() {
 
             install(new ElementsCoreFilterModule());
+            install(new StandardServletSecurityModule());
+
             filter("/*").through(HttpServletCORSFilter.class);
             filter("/*").through(HttpServletServicesScopeFilter.class);
 
