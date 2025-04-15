@@ -39,7 +39,7 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
 
     private CustomAuthSessionService customAuthSessionService;
 
-    private Provider<Optional<Profile>> optionalProfileProvider;
+//    private Provider<Optional<Profile>> optionalProfileProvider;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -100,6 +100,8 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
                 getCustomAuthSessionService().getSession(sessionId) :
                 getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
 
+
+
         final var user = session.getUser();
         final var profile = session.getProfile();
         final var application = session.getApplication();
@@ -109,9 +111,9 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
         if (application != null) request.setAttribute(APPLICATION_ATTRIBUTE, application);
 
-        getOptionalProfileProvider()
-                .get()
-                .ifPresent(p -> request.setAttribute(PROFILE_ATTRIBUTE, p));
+//        getOptionalProfileProvider()
+//                .get()
+//                .ifPresent(p -> request.setAttribute(PROFILE_ATTRIBUTE, p));
 
     }
 
@@ -142,13 +144,13 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         this.customAuthSessionService = customAuthSessionService;
     }
 
-    public Provider<Optional<Profile>> getOptionalProfileProvider() {
-        return optionalProfileProvider;
-    }
-
-    @Inject
-    public void setOptionalProfileProvider(Provider<Optional<Profile>> optionalProfileProvider) {
-        this.optionalProfileProvider = optionalProfileProvider;
-    }
+//    public Provider<Optional<Profile>> getOptionalProfileProvider() {
+//        return optionalProfileProvider;
+//    }
+//
+//    @Inject
+//    public void setOptionalProfileProvider(Provider<Optional<Profile>> optionalProfileProvider) {
+//        this.optionalProfileProvider = optionalProfileProvider;
+//    }
 
 }

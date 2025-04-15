@@ -6,9 +6,9 @@ import dev.getelements.elements.sdk.guice.SharedElementModule;
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public class ServicesSharedElementModule extends SharedElementModule {
+public class ServicesElementModule extends SharedElementModule {
 
-    public ServicesSharedElementModule() {
+    public ServicesElementModule() {
         super("dev.getelements.elements.sdk.service");
     }
 
