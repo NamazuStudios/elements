@@ -38,7 +38,6 @@
             public void useStandardAuthFor(final String urlPattern) {
                 ElementsServletModule.this.filter(urlPattern).through(HttpServletBearerAuthenticationFilter.class);
                 ElementsServletModule.this.filter(urlPattern).through(HttpServletSessionIdAuthenticationFilter.class);
-                ElementsServletModule.this.filter(urlPattern).through(HttpServletServicesScopeFilter.class);
             }
 
             @Override
@@ -97,6 +96,7 @@
 
             install(new ElementsCoreFilterModule());
             filter("/*").through(HttpServletCORSFilter.class);
+            filter("/*").through(HttpServletServicesScopeFilter.class);
 
             final var components = EnumSet.copyOf(this.components);
             components.remove(app_node);
