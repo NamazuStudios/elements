@@ -144,13 +144,6 @@ public class TestLocalSDK {
 
         final var serviceLocator = serviceElement.getServiceLocator();
 
-        final var user = new User();
-        user.setLevel(User.Level.USER);
-
-        try (var s = serviceElement.withScope().with(User.USER_ATTRIBUTE, user).enter()) {
-            final var userUserServiceSupplierOptional = serviceLocator.getInstance(UserService.class, Constants.USER);
-        }
-
         final var superUserItemServiceSupplierOptional = serviceLocator.findInstance(ItemService.class, Constants.SUPERUSER);
         final var userUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.USER);
         final var anonUserServiceSupplierOptional = serviceLocator.findInstance(UserService.class, Constants.ANONYMOUS);

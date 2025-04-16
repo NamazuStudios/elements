@@ -40,25 +40,12 @@ public interface ElementScope {
         Builder named(String name);
 
         /**
-         * Adds an object to the {@link Attributes} attached to the {@link ElementScope}.
+         * Sets the {@link Attributes} to the scope.
          *
-         * @param object the object to bind
-         * @param name the name of the object to bin d
-         * @return this instance
-         * @param <T>
-         */
-        <T> Builder with(String name, T object);
-
-        /**
-         * Copies the {@link Attributes} to the {@link ElementScope}.
-         *
-         * @param attributes the attributes
+         * @param attributes the attributes to set
          * @return this instance
          */
-        default Builder with(final Attributes attributes) {
-            attributes.stream().forEach(attribute -> with(attribute.name(), attribute.value()));
-            return this;
-        }
+        Builder with(final Attributes attributes);
 
         /**
          * Builds the {@link ElementScope}.

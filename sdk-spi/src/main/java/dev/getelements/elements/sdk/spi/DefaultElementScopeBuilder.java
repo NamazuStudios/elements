@@ -1,22 +1,30 @@
 package dev.getelements.elements.sdk.spi;
 
+import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.ElementScope;
+import dev.getelements.elements.sdk.MutableAttributes;
+import dev.getelements.elements.sdk.util.InheritedAttributes;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
 
 import java.util.Properties;
+
+import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 
 public class DefaultElementScopeBuilder implements ElementScope.Builder {
 
     private String name = ElementScope.ANONYMOUS;
 
-    private final Properties properties;
+    private Attributes attributes = emptyAttributes();
+
+    private final Attributes base;
 
     private final ReentrantThreadLocal<DefaultElementScope> reentrantThreadLocal;
 
     public DefaultElementScopeBuilder(
-            final Properties properties,
+            final Attributes base,
             final ReentrantThreadLocal<DefaultElementScope> reentrantThreadLocal) {
-        this.properties = new Properties(properties);
+        this.base = base;
         this.reentrantThreadLocal = reentrantThreadLocal;
     }
 
@@ -27,21 +35,21 @@ public class DefaultElementScopeBuilder implements ElementScope.Builder {
     }
 
     @Override
+    public ElementScope.Builder with(final Attributes attributes) {
+        this.attributes = attributes == null ? emptyAttributes() : attributes;
+        return this;
+    }
+
+    @Override
     public ElementScope.Handle enter() {
 
         final var newScope = reentrantThreadLocal
                 .getCurrentOptional()
-                .map(des -> des.newInheritedScope(name, properties))
-                .orElseGet(() -> DefaultElementScope.wrap(name, properties));
+                .map(des -> des.newInheritedScope(name, attributes))
+                .orElseGet(() -> new DefaultElementScope(name, attributes));
 
         return reentrantThreadLocal.enter(newScope)::close;
 
-    }
-
-    @Override
-    public <T> ElementScope.Builder with(final String name, final T object) {
-        properties.put(name, object);
-        return this;
     }
 
 }

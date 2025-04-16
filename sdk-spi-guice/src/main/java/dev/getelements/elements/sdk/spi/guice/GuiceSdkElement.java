@@ -54,8 +54,8 @@ public class GuiceSdkElement implements Element {
 
     @Override
     public ElementScope.Builder withScope() {
-        final var properties = getElementRecord().attributes().asProperties();
-        return new DefaultElementScopeBuilder(properties, scopeThreadLocal);
+        final var attributes = getElementRecord().attributes();
+        return new DefaultElementScopeBuilder(attributes, scopeThreadLocal);
     }
 
     @Override
