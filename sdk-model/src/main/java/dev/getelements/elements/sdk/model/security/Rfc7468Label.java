@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.util;
+package dev.getelements.elements.sdk.model.security;
 
 import java.util.Optional;
 import java.util.stream.Stream;

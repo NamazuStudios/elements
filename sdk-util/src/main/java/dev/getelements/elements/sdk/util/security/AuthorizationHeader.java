@@ -1,13 +1,13 @@
-package dev.getelements.elements.security;
+package dev.getelements.elements.sdk.util.security;
 
-import com.google.common.base.Splitter;
 import dev.getelements.elements.sdk.model.exception.security.AuthorizationHeaderParseException;
-import dev.getelements.elements.sdk.model.http.BasicAuthorizationHeader;
 
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
+import static java.util.function.Predicate.not;
 import static java.util.regex.Pattern.compile;
 
 /**
@@ -62,11 +62,10 @@ public class AuthorizationHeader {
      */
     public AuthorizationHeader(final String header) {
 
-        final var headerComponents = Splitter.on(WHITESPACE)
-            .trimResults()
-            .omitEmptyStrings()
-            .split(header)
-            .iterator();
+        final var headerComponents = Stream.of(WHITESPACE.split(header))
+                .filter(not(String::isBlank))
+                .map(String::trim)
+                .iterator();
 
         if (!headerComponents.hasNext()) {
             throw new AuthorizationHeaderParseException("Unable to determine auth type.");

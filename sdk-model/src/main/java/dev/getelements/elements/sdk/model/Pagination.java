@@ -1,7 +1,5 @@
 package dev.getelements.elements.sdk.model;
 
-import dev.getelements.elements.rt.annotation.RemoteModel;
-import dev.getelements.elements.rt.annotation.RemoteScope;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
@@ -12,18 +10,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static dev.getelements.elements.rt.annotation.RemoteScope.API_SCOPE;
-import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
-
 /**
  * Created by patricktwohig on 3/25/15.
  */
 @Schema
-@RemoteModel(
-        scopes = {
-                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
-        }
-)
 public class Pagination<T> implements Iterable<T>, Serializable {
 
     public static <T> Pagination<T> empty() {

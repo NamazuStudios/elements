@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.exception;
+package dev.getelements.elements.sdk.model.security;
 
 public class InvalidPemException extends Exception {
 

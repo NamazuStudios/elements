@@ -1,4 +1,4 @@
-package dev.getelements.elements.security;
+package dev.getelements.elements.sdk.util.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

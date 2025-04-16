@@ -1,6 +1,5 @@
-package dev.getelements.elements.sdk.model.http;
+package dev.getelements.elements.sdk.util.security;
 
-import com.google.common.base.Splitter;
 import dev.getelements.elements.sdk.model.exception.security.AuthorizationHeaderParseException;
 
 import java.io.UnsupportedEncodingException;
@@ -8,7 +7,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static java.util.Base64.getDecoder;
 import static java.util.regex.Pattern.compile;

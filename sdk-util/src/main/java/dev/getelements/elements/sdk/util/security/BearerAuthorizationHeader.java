@@ -1,4 +1,4 @@
-package dev.getelements.elements.security;
+package dev.getelements.elements.sdk.util.security;
 
 /**
  * Simplest type of Auth header, the bearer header.
@@ -22,15 +22,6 @@ public class BearerAuthorizationHeader {
      */
     public String getCredentials() {
         return credentials;
-    }
-
-    /**
-     * Gets the credentials as JWT Credentials.
-     *
-     * @return the credentials as JWT Credentials.
-     */
-    public JWTCredentials asJWTCredentials() {
-        return new JWTCredentials(getCredentials());
     }
 
 }

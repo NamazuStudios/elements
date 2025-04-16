@@ -2,6 +2,7 @@ package dev.getelements.elements.app.serve.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import com.google.inject.PrivateModule;
 import com.google.inject.spi.ProvisionListener;
 import dev.getelements.elements.app.serve.JettyApplicationDeploymentService;
 import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
@@ -13,7 +14,7 @@ import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
 
-public class AppServeModule extends AbstractModule {
+public class AppServeModule extends PrivateModule {
 
     @Override
     protected void configure() {
@@ -26,6 +27,8 @@ public class AppServeModule extends AbstractModule {
         final var loaders = newSetBinder(binder(), Loader.class);
         loaders.addBinding().to(JakartaRsLoader.class);
         loaders.addBinding().to(JakartaWebsocketLoader.class);
+
+        expose(ApplicationDeploymentService.class).annotatedWith(named(APP_SERVE));
 
     }
 

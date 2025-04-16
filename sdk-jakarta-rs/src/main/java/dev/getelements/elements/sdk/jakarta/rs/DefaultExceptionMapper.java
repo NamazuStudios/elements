@@ -1,4 +1,4 @@
-package dev.getelements.elements.rest.support;
+package dev.getelements.elements.sdk.jakarta.rs;
 
 import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.sdk.model.ValidationErrorResponse;

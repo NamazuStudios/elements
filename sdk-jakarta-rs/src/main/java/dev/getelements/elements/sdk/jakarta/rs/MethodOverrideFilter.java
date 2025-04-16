@@ -1,5 +1,5 @@
 
-package dev.getelements.elements.rest;
+package dev.getelements.elements.sdk.jakarta.rs;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;

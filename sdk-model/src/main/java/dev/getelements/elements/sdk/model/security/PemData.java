@@ -1,6 +1,4 @@
-package dev.getelements.elements.rt.util;
-
-import dev.getelements.elements.rt.exception.InvalidPemException;
+package dev.getelements.elements.sdk.model.security;
 
 import java.io.*;
 import java.util.Base64;

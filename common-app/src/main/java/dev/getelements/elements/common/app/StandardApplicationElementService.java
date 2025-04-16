@@ -1,8 +1,6 @@
 package dev.getelements.elements.common.app;
 
 import dev.getelements.elements.rt.ApplicationAssetLoader;
-import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -10,11 +8,7 @@ import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
-import java.io.FileNotFoundException;
-import java.io.UncheckedIOException;
-import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

@@ -1,13 +1,13 @@
 package dev.getelements.elements.rt;
 
-import dev.getelements.elements.rt.exception.InvalidPemException;
-import dev.getelements.elements.rt.util.PemData;
+import dev.getelements.elements.sdk.model.security.InvalidPemException;
+import dev.getelements.elements.sdk.model.security.PemData;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 
-import static dev.getelements.elements.rt.util.Rfc7468Label.PRIVATE_KEY;
-import static dev.getelements.elements.rt.util.Rfc7468Label.PUBLIC_KEY;
+import static dev.getelements.elements.sdk.model.security.Rfc7468Label.PRIVATE_KEY;
+import static dev.getelements.elements.sdk.model.security.Rfc7468Label.PUBLIC_KEY;
 import static org.testng.Assert.assertEquals;
 
 public class PemDataTest {

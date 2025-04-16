@@ -1,12 +1,13 @@
 package dev.getelements.elements.rest;
 
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import dev.getelements.elements.sdk.model.Constants;
-import dev.getelements.elements.sdk.model.Headers;
-import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.sdk.jakarta.rs.AuthSchemes;
+import dev.getelements.elements.sdk.model.Constants;
+import dev.getelements.elements.sdk.model.ErrorResponse;
+import dev.getelements.elements.sdk.model.Headers;
 import dev.getelements.elements.sdk.service.version.VersionService;
-import dev.getelements.elements.security.AuthorizationHeader;
+import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
@@ -24,9 +25,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.SpecVersion;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
@@ -44,12 +46,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
-import static dev.getelements.elements.rest.AuthSchemes.AUTH_BEARER;
-import static dev.getelements.elements.rest.AuthSchemes.SESSION_SECRET;
-import static dev.getelements.elements.rest.support.DefaultExceptionMapper.HTTP_STATUS_MAP;
+import static dev.getelements.elements.sdk.jakarta.rs.DefaultExceptionMapper.HTTP_STATUS_MAP;
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeIn.HEADER;
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.APIKEY;
-import static io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
 
@@ -69,20 +68,20 @@ import static java.lang.String.format;
                 description = "Please see the ECI Elements Manual for more information."
         ),
         security = {
-                @SecurityRequirement(name = AUTH_BEARER),
-                @SecurityRequirement(name = SESSION_SECRET)
+                @SecurityRequirement(name = AuthSchemes.AUTH_BEARER),
+                @SecurityRequirement(name = AuthSchemes.SESSION_SECRET)
         }
 )
 @SecuritySchemes({
         @SecurityScheme(
                 type = APIKEY,
                 in = HEADER,
-                name = AUTH_BEARER,
+                name = AuthSchemes.AUTH_BEARER,
                 paramName = AuthorizationHeader.AUTH_HEADER),
         @SecurityScheme(
                 type = APIKEY,
                 in = HEADER,
-                name = SESSION_SECRET,
+                name = AuthSchemes.SESSION_SECRET,
                 paramName = Headers.SESSION_SECRET)
 })
 @Path("openapi.{type:json|yaml}")
@@ -149,14 +148,11 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 "dev.getelements.elements.model"
         );
 
-        final var configuration = new SwaggerConfiguration();
-        configuration.readAllResources(false).setOpenAPI31(true);
 
         final var context = new JaxrsOpenApiContextBuilder()
                 .application(application)
                 .servletConfig(servletConfig)
                 .resourcePackages(resourcePackages)
-                .openApiConfiguration(configuration)
                 .ctxId(getContextId(servletConfig))
                 .buildContext(true);
 
@@ -166,10 +162,10 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
         final OpenAPISpecFilter filter;
 
         switch (oas.getSpecVersion()) {
-            case V30:
+            case SpecVersion.V30:
                 filter = new EnhancedSpecFilter(ERROR_RESPONSE_SCHEMA_3_0);
                 break;
-            case V31:
+            case SpecVersion.V31:
                 filter = new EnhancedSpecFilter(ERROR_RESPONSE_SCHEMA_3_1);
                 break;
             default:
@@ -298,7 +294,7 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
 
             HTTP_STATUS_MAP.values().forEach(code -> {
 
-                var $ref = format("%s%s",COMPONENTS_SCHEMAS_REF, errorResponseSchema.schema.getName());
+                var $ref = String.format("%s%s", Components.COMPONENTS_SCHEMAS_REF, errorResponseSchema.schema.getName());
 
                 var schema = new io.swagger.v3.oas.models.media.Schema<>().$ref($ref);
 
