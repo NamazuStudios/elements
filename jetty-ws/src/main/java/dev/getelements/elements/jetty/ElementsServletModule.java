@@ -39,7 +39,7 @@
             public void useStandardAuthFor(final String urlPattern) {
                 ElementsServletModule.this.filter(urlPattern).through(HttpServletBearerAuthenticationFilter.class);
                 ElementsServletModule.this.filter(urlPattern).through(HttpServletSessionIdAuthenticationFilter.class);
-                ElementsServletModule.this.filter(urlPattern).through(HttpServletProfileOverrideFilter.class);
+                ElementsServletModule.this.filter(urlPattern).through(HttpServletHeaderProfileOverrideFilter.class);
             }
 
             @Override

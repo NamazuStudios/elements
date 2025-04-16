@@ -19,9 +19,9 @@ import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.model.Headers.PROFILE_ID;
 import static dev.getelements.elements.sdk.model.profile.Profile.PROFILE_ATTRIBUTE;
 
-public class HttpServletProfileOverrideFilter implements Filter {
+public class HttpServletHeaderProfileOverrideFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(HttpServletProfileOverrideFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpServletHeaderProfileOverrideFilter.class);
 
     private ElementRegistry registry;
 
@@ -39,7 +39,7 @@ public class HttpServletProfileOverrideFilter implements Filter {
 
         final var override = Optional
                 .ofNullable(request.getHeader(PROFILE_ID))
-                .map(profileOverrideService::findOverrideProfile);
+                .flatMap(profileOverrideService::findOverrideProfile);
 
         if (override.isPresent()) {
 
@@ -50,6 +50,7 @@ public class HttpServletProfileOverrideFilter implements Filter {
             final var scopes = ElementScopes.builder()
                     .withLogger(logger)
                     .withRegistry(getRegistry())
+                    .withNameFrom(HttpServletHeaderProfileOverrideFilter.class)
                     .withAttributes(scopeAttributes)
                     .withElementsNamed("dev.getelements.elements.sdk.service")
                     .build();

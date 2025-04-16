@@ -29,6 +29,7 @@ public class HttpServletElementScopeFilter implements Filter {
 
         final var scopes = ElementScopes.builder()
                 .withLogger(logger)
+                .withNameFrom(HttpServletElementScopeFilter.class)
                 .withRegistry(getRegistry())
                 .withAttributes(httpServletRequestAttributes)
                 .build();

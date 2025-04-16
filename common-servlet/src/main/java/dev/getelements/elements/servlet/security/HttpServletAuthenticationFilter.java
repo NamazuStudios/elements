@@ -114,6 +114,7 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
                 .withLogger(logger)
                 .withRegistry(getRegistry())
                 .withAttributes(scopeAttributes)
+                .withNameFrom(HttpServletAuthenticationFilter.class)
                 .withElementsNamed("dev.getelements.elements.sdk.service")
                 .build();
 

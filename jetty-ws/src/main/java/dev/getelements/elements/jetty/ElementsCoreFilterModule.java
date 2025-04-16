@@ -29,7 +29,7 @@ public class ElementsCoreFilterModule extends PrivateModule {
         bind(HttpServletBearerAuthenticationFilter.class).asEagerSingleton();
         bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
         bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
-        bind(HttpServletProfileOverrideFilter.class).asEagerSingleton();
+        bind(HttpServletHeaderProfileOverrideFilter.class).asEagerSingleton();
 
         expose(HttpServletCORSFilter.class);
         expose(HttpServletBasicAuthFilter.class);
@@ -37,7 +37,7 @@ public class ElementsCoreFilterModule extends PrivateModule {
         expose(HttpServletBearerAuthenticationFilter.class);
         expose(HttpServletGlobalSecretHeaderFilter.class);
         expose(HttpServletSessionIdAuthenticationFilter.class);
-        expose(HttpServletProfileOverrideFilter.class);
+        expose(HttpServletHeaderProfileOverrideFilter.class);
 
     }
 

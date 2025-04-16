@@ -7,18 +7,20 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * A type of {@link Attributes} that inherits from a base set of attributes.
- *
- * @param base the base attributes, may be null and will be replaced with {@link Attributes#emptyAttributes()}
- * @param current the current attributes that are inherited from the base attributes
- */
-public record InheritedAttributes(Attributes base, Attributes current) implements Attributes {
+import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 
-    public InheritedAttributes {
+/**
+ * A set of attributes that inherits from a base set of attributes.
+ *
+ * @param base the base {@link Attributes} object
+ * @param current the current {@link MutableAttributes} object
+ */
+public record InheritedMutableAttributes(Attributes base, MutableAttributes current) implements MutableAttributes {
+
+    public InheritedMutableAttributes {
 
         if (base == null) {
-            base = Attributes.emptyAttributes();
+            base = emptyAttributes();
         }
 
         if (current == null) {
@@ -27,32 +29,29 @@ public record InheritedAttributes(Attributes base, Attributes current) implement
 
     }
 
-    /**
-     * Creates an {@link InheritedAttributes} object that inherits from the given attributes.
-     *
-     * @param current the attributes to inherit from
-     * @return the new {@link InheritedAttributes}
-     */
-    public static InheritedAttributes withAttributes(Attributes current) {
-        return new InheritedAttributes(null, current);
+    @Override
+    public void setAttribute(final String name, final Object obj) {
+        current().setAttribute(name, obj);
     }
 
     @Override
     public Set<String> getAttributeNames() {
-        final Set<String> result = new TreeSet<>();
+        final var result = new TreeSet<String>();
         result.addAll(base().getAttributeNames());
         result.addAll(current().getAttributeNames());
         return result;
     }
 
     @Override
-    public Optional<Object> getAttributeOptional(String name) {
-        return current().getAttributeOptional(name).or(() -> base().getAttributeOptional(name));
+    public Optional<Object> getAttributeOptional(final String name) {
+        return current()
+                .getAttributeOptional(name)
+                .or(() -> base().getAttributeOptional(name));
     }
 
     @Override
     public Attributes immutableCopy() {
-        return ImmutableAttributes.copyOf(this);
+        return ImmutableAttributes.copyOf(current());
     }
 
     /**

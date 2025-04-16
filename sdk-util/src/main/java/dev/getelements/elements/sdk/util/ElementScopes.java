@@ -20,6 +20,8 @@ public class ElementScopes {
 
     private static final Logger defaultLogger = LoggerFactory.getLogger(ElementScopes.class);
 
+    private final String name;
+
     private final Logger logger;
 
     private final ElementRegistry registry;
@@ -29,6 +31,7 @@ public class ElementScopes {
     private final Supplier<Attributes> attributesSupplier;
 
     private ElementScopes(Builder builder) {
+        this.name = builder.name;
         this.logger = builder.logger;
         this.registry = builder.registry;
         this.selector = builder.selector;
@@ -45,8 +48,15 @@ public class ElementScopes {
         final var aggregate = registry
                 .stream()
                 .filter(selector)
-                .map(element -> element.withScope().with(attributesSupplier.get()).enter())
-                .map(handle -> FinallyAction.begin(logger).thenClose(handle))
+
+                .map(element -> element
+                        .withScope()
+                        .named(name)
+                        .with(attributesSupplier.get())
+                        .enter()
+                )
+                .map(handle -> FinallyAction
+                        .begin(logger).thenClose(handle))
                 .reduce(FinallyAction.begin(logger), (a, b) -> a.then(b));
 
         return aggregate::close;
@@ -68,11 +78,31 @@ public class ElementScopes {
 
         private Logger logger = defaultLogger;
 
+        private String name;
+
         private ElementRegistry registry;
 
         private Predicate<Element> selector = e -> true;
 
         private Supplier<Attributes> attributesSupplier = Attributes::emptyAttributes;
+
+        /**
+         * Specifies the name of the scope.
+         * @param name the name
+         * @return this builder
+         */
+        public Builder withName(final String name) {
+            this.name = name;
+            return this;
+        }
+        /**
+         * Specifies the name of the scope, using the supplied {@link Class#getName()} as the name.
+         * @param aClass name
+         * @return this builder
+         */
+        public Builder withNameFrom(final Class<?> aClass) {
+            return withName(aClass.getName());
+        }
 
         /**
          * The logger to use.

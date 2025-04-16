@@ -2,12 +2,9 @@ package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.ElementScope;
-import dev.getelements.elements.sdk.MutableAttributes;
 import dev.getelements.elements.sdk.util.InheritedAttributes;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
-
-import java.util.Properties;
 
 import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 
@@ -46,7 +43,13 @@ public class DefaultElementScopeBuilder implements ElementScope.Builder {
         final var newScope = reentrantThreadLocal
                 .getCurrentOptional()
                 .map(des -> des.newInheritedScope(name, attributes))
-                .orElseGet(() -> new DefaultElementScope(name, attributes));
+                .orElseGet(() -> new DefaultElementScope(
+                        name,
+                        InheritedAttributes
+                            .withAttributes(base)
+                            .newDerivativeFrom(attributes)
+                            .newDerivativeFrom(SimpleAttributes.newDefaultInstance()))
+                );
 
         return reentrantThreadLocal.enter(newScope)::close;
 
