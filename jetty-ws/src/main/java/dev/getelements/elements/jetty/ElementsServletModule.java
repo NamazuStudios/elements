@@ -3,8 +3,8 @@
     import com.google.inject.servlet.ServletModule;
     import dev.getelements.elements.docserve.DocModule;
     import dev.getelements.elements.guice.ServletBindings;
-    import dev.getelements.elements.guice.StandardServletSecurityModule;
     import dev.getelements.elements.rest.guice.RestAPIJerseyModule;
+    import dev.getelements.elements.sdk.model.user.User;
     import dev.getelements.elements.servlet.security.*;
     import dev.getelements.elements.webui.WebUiModule;
     import org.slf4j.Logger;
@@ -39,6 +39,7 @@
             public void useStandardAuthFor(final String urlPattern) {
                 ElementsServletModule.this.filter(urlPattern).through(HttpServletBearerAuthenticationFilter.class);
                 ElementsServletModule.this.filter(urlPattern).through(HttpServletSessionIdAuthenticationFilter.class);
+                ElementsServletModule.this.filter(urlPattern).through(HttpServletProfileOverrideFilter.class);
             }
 
             @Override
@@ -96,10 +97,11 @@
         protected void configureServlets() {
 
             install(new ElementsCoreFilterModule());
-            install(new StandardServletSecurityModule());
+
+            bind(User.class).toProvider(HttpRequestAttributeUserProvider.class);
 
             filter("/*").through(HttpServletCORSFilter.class);
-            filter("/*").through(HttpServletServicesScopeFilter.class);
+            filter("/*").through(HttpServletElementScopeFilter.class);
 
             final var components = EnumSet.copyOf(this.components);
             components.remove(app_node);

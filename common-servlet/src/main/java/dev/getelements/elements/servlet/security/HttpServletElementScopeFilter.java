@@ -1,30 +1,21 @@
 package dev.getelements.elements.servlet.security;
 
-import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.model.profile.Profile;
-import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.util.FinallyAction;
+import dev.getelements.elements.sdk.util.ElementScopes;
 import dev.getelements.elements.servlet.ServletRequestAttributes;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import jakarta.servlet.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Optional;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 
-public class HttpServletServicesScopeFilter implements Filter {
+public class HttpServletElementScopeFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(HttpServletServicesScopeFilter.class);
-
-    private Provider<User> userProvider;
-
-    private Provider<Optional<Profile>> optionalProfileProvider;
+    private static final Logger logger = LoggerFactory.getLogger(HttpServletElementScopeFilter.class);
 
     private ElementRegistry registry;
 
@@ -36,18 +27,16 @@ public class HttpServletServicesScopeFilter implements Filter {
 
         final var httpServletRequestAttributes = new ServletRequestAttributes(servletRequest);
 
-        try (final var handles = enterScope(httpServletRequestAttributes)) {
+        final var scopes = ElementScopes.builder()
+                .withLogger(logger)
+                .withRegistry(getRegistry())
+                .withAttributes(httpServletRequestAttributes)
+                .build();
+
+        try (final var handles = scopes.enter()) {
             filterChain.doFilter(servletRequest, servletResponse);
         }
 
-    }
-
-    private FinallyAction enterScope(final Attributes attributes) {
-        return getRegistry()
-                .find("dev.getelements.elements.sdk.service")
-                .map(element -> element.withScope().with(attributes).enter())
-                .map(handle -> FinallyAction.begin(logger).thenClose(handle))
-                .reduce(FinallyAction.begin(logger), (a, b) -> a.then(b));
     }
 
     public ElementRegistry getRegistry() {

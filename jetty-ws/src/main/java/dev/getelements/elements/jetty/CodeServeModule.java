@@ -7,8 +7,6 @@ import dev.getelements.elements.codeserve.guice.CodeServeStorageModule;
 import dev.getelements.elements.git.GitServletProvider;
 import dev.getelements.elements.git.HttpServletRepositoryResolver;
 import dev.getelements.elements.guice.ServletBindings;
-import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.security.UserProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
@@ -27,8 +25,6 @@ public class CodeServeModule extends PrivateModule {
     protected void configure() {
 
         install(new CodeServeStorageModule());
-
-//        bind(User.class).toProvider(UserProvider.class);
 
         bind(GIT_SERVLET_KEY)
                 .toProvider(GitServletProvider.class)

@@ -97,7 +97,6 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
-        install(new IntegrationTestSecurityModule());
         install(new FacebookBuiltinPermissionsModule(new FacebookBuiltinPermissionsSupplier()));
 
         install(new TestServicesModule());

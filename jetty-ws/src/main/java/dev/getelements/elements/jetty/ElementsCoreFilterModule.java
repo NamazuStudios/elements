@@ -11,7 +11,7 @@ import dev.getelements.elements.servlet.security.*;
     *
     * @see HttpServletCORSFilter
     * @see HttpServletBasicAuthFilter
-    * @see HttpServletServicesScopeFilter
+    * @see HttpServletElementScopeFilter
     * @see HttpServletBearerAuthenticationFilter
     * @see HttpServletGlobalSecretHeaderFilter
     * @see HttpServletSessionIdAuthenticationFilter
@@ -25,17 +25,19 @@ public class ElementsCoreFilterModule extends PrivateModule {
 
         bind(HttpServletCORSFilter.class).asEagerSingleton();
         bind(HttpServletBasicAuthFilter.class).asEagerSingleton();
-        bind(HttpServletServicesScopeFilter.class).asEagerSingleton();
+        bind(HttpServletElementScopeFilter.class).asEagerSingleton();
         bind(HttpServletBearerAuthenticationFilter.class).asEagerSingleton();
         bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
         bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
+        bind(HttpServletProfileOverrideFilter.class).asEagerSingleton();
 
         expose(HttpServletCORSFilter.class);
         expose(HttpServletBasicAuthFilter.class);
-        expose(HttpServletServicesScopeFilter.class);
+        expose(HttpServletElementScopeFilter.class);
         expose(HttpServletBearerAuthenticationFilter.class);
         expose(HttpServletGlobalSecretHeaderFilter.class);
         expose(HttpServletSessionIdAuthenticationFilter.class);
+        expose(HttpServletProfileOverrideFilter.class);
 
     }
 

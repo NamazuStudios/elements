@@ -20,7 +20,7 @@ public class ElementScopeUserProvider implements Provider<User> {
                 .getAttributeOptional(USER_ATTRIBUTE)
                 .filter(User.class::isInstance)
                 .map(User.class::cast)
-                .orElseThrow(() -> new InternalException("User attribute is not present."));
+                .orElseGet(User::getUnprivileged);
     }
 
     public Element getElement() {
