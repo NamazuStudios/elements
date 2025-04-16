@@ -20,6 +20,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
@@ -498,7 +499,7 @@ public class MongoProfileDao implements ProfileDao {
         final var builder = new UpdateBuilder().with(set("active", false));
 
         getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(false))
+                builder.execute(query, new UpdateOptions().upsert(false).multi(true))
         );
 
     }
