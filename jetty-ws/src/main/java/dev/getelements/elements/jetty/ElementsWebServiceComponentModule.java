@@ -2,6 +2,8 @@ package dev.getelements.elements.jetty;
 
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.app.serve.guice.AppServeModule;
+import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
+import dev.getelements.elements.app.serve.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.common.app.ApplicationDeploymentService;
 import org.eclipse.jetty.server.Handler;
 
@@ -34,9 +36,23 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
 
         expose(Handler.class);
 
-        install(new ElementsServletContextModule());
-        install(new ElementsServletModule(elementsWebServiceComponents));
+        install(new PrivateModule() {
+            @Override
+            protected void configure() {
 
+                // Installs all the components for the core system.
+                install(new ElementsServletContextModule());
+                install(new ElementsServletModule(elementsWebServiceComponents));
+
+                // Exposes all the handlers for the core system.
+                expose(Handler.class);
+                expose(Handler.Sequence.class).annotatedWith(named(JakartaRsLoader.HANDLER_SEQUENCE));
+                expose(Handler.Sequence.class).annotatedWith(named(JakartaWebsocketLoader.HANDLER_SEQUENCE));
+
+            }
+        });
+
+        // If we specify app_serve, then we install an run the components.
         if (elementsWebServiceComponents.contains(app_serve)) {
             install(new AppServeModule());
             expose(ApplicationDeploymentService.class).annotatedWith(named(APP_SERVE));

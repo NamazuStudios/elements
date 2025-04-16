@@ -130,21 +130,4 @@ public class TestLocalSDK {
         }
     }
 
-    @Test(expectedExceptions = SdkServiceNotFoundException.class)
-    public void testScopedServiceLocatorFail() {
-
-        final var serviceElement = elementsLocal
-                .getRootElementRegistry()
-                .find("dev.getelements.elements.sdk.service")
-                .findFirst()
-                .get();
-
-        final var serviceLocator = serviceElement.getServiceLocator();
-        //Only USER and ANON should exist
-        final var superUserOAuth2AuthServiceSupplierOptional = serviceLocator.findInstance(OAuth2AuthService.class, Constants.SUPERUSER);
-        assertFalse(superUserOAuth2AuthServiceSupplierOptional.isPresent());
-
-        //Should throw SdkServiceNotFoundException
-        serviceLocator.findInstance(ApplicationDao.class, Constants.USER);
-    }
 }

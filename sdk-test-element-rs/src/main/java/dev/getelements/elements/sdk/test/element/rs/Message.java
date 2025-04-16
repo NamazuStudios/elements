@@ -6,13 +6,13 @@ public class Message {
 
     private int id;
 
+    private User user;
+
     private long created;
 
     private long updated;
 
     private String message;
-
-    private User user;
 
     public int getId() {
         return id;
