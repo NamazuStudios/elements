@@ -73,7 +73,7 @@ public interface UserUidDao {
 
     /**
      * This will scrub all scheme ids for all UserUids referencing the user with the given id.
-     * @param userId - the id of the user to search for
+     * @param user - the id of the user to search for
      */
-    void softDeleteUserUidsForUserId(String userId);
+    void softDeleteUserUidsForUserId(User user);
 }
