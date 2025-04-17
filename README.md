@@ -14,6 +14,31 @@ or modifying the Elements source code, please understand the rules and the
 terms of the AGPL license. To receive a commercial enterprise license, please
 contact bd@getelemetns.dev
 
+### Note on Commercial Code
+
+Because we fully intend and want developers to use the Elements code in their
+commercial products, we have made a few exceptions to the AGPL license when 
+developing plugin code in the Elements SDK:
+
+> Notwithstanding the requirements of Section 13, software components referred
+to as 'Elements' in the documentation are exempt from the obligation to offer
+Corresponding Source under Section 13, provided that they depend solely upon
+code located within the 'dev.getelements.sdk' package and its subpackages,
+and do not themselves modify or include any other part of the Program covered
+under this license. This permission applies only to use and interaction over a
+network, and does not affect any other rights or obligations under this License.
+
+There is some ambiguity in the AGPL license about whether or not plugin code 
+is considered a derivative work. We have made this exception to clarify that
+plugin code is not considered a derivative work.
+
+### Contributing
+
+We welcome contributions to Elements. Before you start, please review the 
+[Contributing Agreement](CONTRIBUTING.md). We will not accept any pull requests
+or contributions to the project until we recieve a signed CLA. Once complete, 
+please email a signed copy to bd@namazustudios.com.
+
 # Building and Setup
 
 ## 1) Install Prerequisite Software
