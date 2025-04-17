@@ -545,9 +545,18 @@ public class MongoUserDao implements UserDao {
             eq("_id", objectId)
         ));
 
-        final var mongoUser = getMongoDBUtils().perform(ds -> new UpdateBuilder()
-                .with(getMongoPasswordUtils()::scramblePassword)
-            .execute(query, new ModifyOptions().returnDocument(AFTER))
+        final var builder = new UpdateBuilder()
+                .with(
+                        set("name", ""),
+                        set("email", ""),
+                        set("primaryPhoneNb", ""),
+                        set("firstName", ""),
+                        set("lastName", "")
+                )
+                .with(getMongoPasswordUtils()::scramblePassword);
+
+        final var mongoUser = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().returnDocument(AFTER))
         );
 
         if (mongoUser == null) {
@@ -555,7 +564,7 @@ public class MongoUserDao implements UserDao {
         }
 
         getMongoProfileDao().softDeleteProfilesForUser(mongoUser);
-        getMongoUserUidDao().softDeleteUserUidsForUserId(userId);
+        getMongoUserUidDao().softDeleteUserUidsForUserId(getDozerMapper().map(mongoUser, User.class));
     }
 
     private void updateBuilderWithOptionalData(User user, UpdateBuilder builder) {

@@ -11,10 +11,10 @@
         <version>3.1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>dev.getelements.elements</groupId>
     <artifactId>app-node</artifactId>
     <version>3.1.0-SNAPSHOT</version>
     <name>cluster-node</name>
+
 
     <dependencies>
         <dependency>
