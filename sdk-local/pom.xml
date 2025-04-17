@@ -13,7 +13,6 @@
     <artifactId>sdk-local</artifactId>
     <version>3.1.0-SNAPSHOT</version>
 
-
     <dependencies>
 
         <!-- SDK Dependencies -->

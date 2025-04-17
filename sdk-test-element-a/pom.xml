@@ -13,8 +13,6 @@
 
     <artifactId>sdk-test-element-a</artifactId>
     <version>3.1.0-SNAPSHOT</version>
-    <name>sdk-test-element-a</name>
-
 
     <dependencies>
         <dependency>

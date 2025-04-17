@@ -14,7 +14,6 @@
     <artifactId>rpc-api-guice</artifactId>
     <version>3.1.0-SNAPSHOT</version>
 
-
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
