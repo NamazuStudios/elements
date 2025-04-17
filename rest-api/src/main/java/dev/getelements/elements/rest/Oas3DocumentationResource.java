@@ -57,11 +57,10 @@ import static java.lang.String.format;
         info = @Info(
                 title = "ECI Elements",
                 description = "ECI Elements Core APIs",
-                termsOfService = "https://www.getelements.dev/terms-of-service-and-use",
                 contact = @Contact(
-                        url = "https://getelements.dev",
-                        email = "info@getelements.dev",
-                        name = "Elemental Computing Inc."
+                        url = "https://namazustudios.com",
+                        email = "info@namazustudios.com",
+                        name = "Namazu Studios / Elemental Computing Inc."
                 )
         ),
         externalDocs = @ExternalDocumentation(
@@ -149,14 +148,11 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 "dev.getelements.elements.model"
         );
 
-        final var configuration = new SwaggerConfiguration();
-        configuration.readAllResources(false).setOpenAPI31(true);
-
         final var context = new JaxrsOpenApiContextBuilder()
                 .application(application)
                 .servletConfig(servletConfig)
                 .resourcePackages(resourcePackages)
-                .openApiConfiguration(configuration)
+                .openApiConfiguration(null)
                 .ctxId(getContextId(servletConfig))
                 .buildContext(true);
 
@@ -270,8 +266,6 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
 
             final var components = openAPI.getComponents();
             components.addSchemas(errorResponseSchema.schema.getName(), errorResponseSchema.schema);
-
-            final var securityScheme = new io.swagger.v3.oas.models.security.SecurityScheme();
 
             final var info = openAPI.getInfo();
             info.setVersion(getVersionService().getVersion().toString());
