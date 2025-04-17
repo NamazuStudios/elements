@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
-    <version>3.0.53-SNAPSHOT</version>
+    <version>3.0.54-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <url>https://namazustudios.com/elements</url>
