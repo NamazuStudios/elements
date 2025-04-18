@@ -6,6 +6,7 @@ import com.google.inject.Scope;
 import dev.getelements.elements.sdk.service.auth.*;
 import dev.getelements.elements.sdk.service.application.*;
 import dev.getelements.elements.sdk.service.blockchain.*;
+import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.inventory.*;
 import dev.getelements.elements.sdk.service.invite.InviteService;
 import dev.getelements.elements.sdk.service.user.*;
@@ -45,6 +46,7 @@ import dev.getelements.elements.service.blockchain.omni.SmartContractServiceProv
 import dev.getelements.elements.service.blockchain.omni.VaultServiceProvider;
 import dev.getelements.elements.service.blockchain.omni.WalletServiceProvider;
 import dev.getelements.elements.service.cdn.CdnDeploymentServiceProvider;
+import dev.getelements.elements.service.codegen.OpenApiCodegenServiceProvider;
 import dev.getelements.elements.service.follower.FollowerServiceProvider;
 import dev.getelements.elements.service.friend.FriendServiceProvider;
 import dev.getelements.elements.service.goods.ItemServiceProvider;
@@ -288,7 +290,9 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(CdnDeploymentServiceProvider.class)
                 .in(scope);
 
-
+        bind(CodegenService.class)
+                .toProvider(OpenApiCodegenServiceProvider.class)
+                .in(scope);
     }
 
 }

@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import dev.getelements.elements.sdk.service.advancement.AdvancementService;
 import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
+import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.firebase.FCMRegistrationService;
 import dev.getelements.elements.sdk.service.follower.FollowerService;
 import dev.getelements.elements.sdk.service.goods.ItemService;
@@ -40,6 +41,7 @@ import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
 import dev.getelements.elements.service.cdn.SuperuserDeploymentService;
+import dev.getelements.elements.service.codegen.SuperUserOpenApiCodegenService;
 import dev.getelements.elements.service.defaults.DefaultOAuth2SchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultOidcSchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultUserConfiguration;
@@ -277,7 +279,9 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardNotificationService.class);
 
-
+        bind(CodegenService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserOpenApiCodegenService.class);
 
         bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultUserConfiguration.class).asEagerSingleton();
