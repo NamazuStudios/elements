@@ -51,7 +51,10 @@ This Contributor License Agreement ("Agreement") is entered into by and between 
 
 **8. Contributor Information**
 
-Name: ________________________________  
+Name: _________________________________ 
+
 Email: ________________________________  
-Date: ________________________________  
+
+Date: _________________________________
+
 Signature: ____________________________
