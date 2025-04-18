@@ -57,7 +57,7 @@ We gladly accept:
 - Documentation updates
 
 Before submitting a pull request, please sign our 
-[Contributor License Agreement](CONTRIBUTING.md). Simply fill it 
+[Contributor License Agreement](CONTRIBUTING.pdf). Simply fill it 
 out [submit it to this form](https://share.hsforms.com/2-N76EKCiRBaYb1w2UwtxyAckwr1)
 
 # Building and Setup
