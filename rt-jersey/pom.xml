@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.1.1-SNAPSHOT</version>
+        <version>3.1.1</version>
     </parent>
 
 
     <artifactId>rt-jersey</artifactId>
-    <version>3.1.1-SNAPSHOT</version>
+    <version>3.1.1</version>
 
     <dependencies>
 
