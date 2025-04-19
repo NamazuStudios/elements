@@ -28,7 +28,9 @@
             <url>https://raw.githubusercontent.com/Elemental-Computing/elements/refs/heads/main/LICENSE.txt</url>
         </license>
     </licenses>
-    
+
+    <url>https://namazustudios.com</url>
+
     <developers>
         <developer>
             <name>Keith Hudnall</name>
