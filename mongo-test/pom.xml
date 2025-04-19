@@ -9,10 +9,9 @@
         <version>3.1.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>dev.getelements.elements</groupId>
     <artifactId>mongo-test</artifactId>
     <version>3.1.2-SNAPSHOT</version>
-    <name>mongo-test</name>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>

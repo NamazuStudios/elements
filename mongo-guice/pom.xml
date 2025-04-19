@@ -10,6 +10,7 @@
 
     <artifactId>mongo-guice</artifactId>
     <version>3.1.2-SNAPSHOT</version>
+    <url>https://namazustudios.com</url>
 
     <name>mongo-guice</name>
     <dependencies>

@@ -13,7 +13,7 @@
 
     <artifactId>rpc-api</artifactId>
     <version>3.1.2-SNAPSHOT</version>
-    <name>rpc-api</name>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>

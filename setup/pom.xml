@@ -15,11 +15,9 @@
         <jline.version>3.19.0</jline.version>
     </properties>
 
-    <groupId>dev.getelements.elements</groupId>
-
     <artifactId>setup</artifactId>
     <version>3.1.2-SNAPSHOT</version>
-    <name>setup</name>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>
