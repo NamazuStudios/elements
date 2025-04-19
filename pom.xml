@@ -28,6 +28,19 @@
             <url>https://www.gnu.org/licenses/agpl-3.0.en.html#license-text</url>
         </license>
     </licenses>
+    
+    <developers>
+        <developer>
+            <name>Keith Hudnall</name>
+            <email>keithh+oss@getelements.dev</email>
+            <organization>Elemental Computing Inc.</organization>
+        </developer>
+        <developer>
+            <name>Patrick Twohig</name>
+            <email>patrickt+oss@getelements.dev</email>
+            <organization>Elemental Computing Inc.</organization>
+        </developer>
+    </developers>
 
     <modules>
         <module>common-app</module>
