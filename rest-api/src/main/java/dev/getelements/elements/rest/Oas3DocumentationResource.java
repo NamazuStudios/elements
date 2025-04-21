@@ -172,7 +172,7 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 throw new IllegalArgumentException("Unsupported spec version: " + oas.getPaths());
         }
 
-        return new SpecFilter().filter(
+        final var spec = new SpecFilter().filter(
                 clone,
                 filter,
                 getQueryParams(uriInfo.getQueryParameters()),
@@ -180,6 +180,7 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 getHeaders(headers)
         );
 
+        return spec;
     }
 
     private OpenAPI cloneOas3Spec(final String type, final OpenApiContext context, final OpenAPI oas) {

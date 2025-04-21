@@ -17,15 +17,20 @@ public interface CodegenService {
 
     /**
      * Generates the Elements Core APIs and returns a zip file containing the generated code
+     * @param from The file containing the generated OpenAPI spec
+     * @param to The file that will contain the compressed contents after code generation
      * @param language The language to generate
      * @param options Any options to pass to the generator
      */
-    File generateCore(String language, String options);
+    File generateCore(File spec, String language, String options);
 
     /**
      * Generates the code for a specific application and returns a zip file containing the generated code
+     * @param from The file containing the generated OpenAPI spec
+     * @param to The file that will contain the compressed contents after code generation
+     * @param applicationNameOrId The name or id of the application to generate code for
      * @param language The language to generate
      * @param options Any options to pass to the generator
      */
-    File generateApplication(String applicationNameOrId, String language, String options);
+    File generateApplication(File spec, String applicationNameOrId, String language, String options);
 }
