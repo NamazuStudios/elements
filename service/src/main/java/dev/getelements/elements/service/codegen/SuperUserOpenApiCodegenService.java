@@ -21,34 +21,17 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
     private static final Logger logger = LoggerFactory.getLogger(SuperUserOpenApiCodegenService.class);
 
     @Override
-    public File generateCore(File spec, String language, String options) {
-        //generate code to temp folder
-        //zip code
-        //clean up temp
-        //return zip file
+    public File generateCore(final File spec, final String language, final String options) {
 
         final var tempFolderName = "codegen-" + UUID.randomUUID();
         final var temporaryFiles = new TemporaryFiles(tempFolderName);
         final var path = temporaryFiles.createTempDirectory();
-        final var args = new ArrayList<String>();
-
-        args.add("generate");
-        args.add("-g");
-        args.add(language);
-        args.add("-i");
-        args.add(spec.getAbsolutePath());
-        args.add("-o");
-        args.add(path.toString());
-        args.add("--skip-validate-spec");
-
-        if(options != null && !options.isEmpty()) {
-            args.add("--additional-properties=" + options);
-        }
+        final var args = getArgs(spec, language, options, path.toString());
 
         try {
             //TODO:Figure out a more stable way to do this
             //Throws System.exit(1) internally if the args are malformed, so try/catch sometimes doesn't do anything for us here
-            OpenAPIGenerator.main(args.toArray(String[]::new));
+            OpenAPIGenerator.main(args);
         } catch (Exception e) {
             logger.error("Error generating OpenAPI", e);
         }
@@ -60,29 +43,37 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
             throw new InternalException("Could not generate code because no entries were found.");
         }
 
-        try {
+        //Place this alongside the source file so that it gets cleaned up after the generated code is cleaned up
+        final var zipFile = spec.getParentFile().toPath().resolve("ElementsCore.zip").toFile();
 
-            //Place this alongside the source file so that it gets cleaned up later
-            final var zipFile = spec.getParentFile().toPath().resolve("ElementsCore.zip").toFile();
-
-            // Create a stream to compress data and write it to the zipfile
-            final var fos = new FileOutputStream(zipFile);
-            final var zos = new ZipOutputStream(fos);
-
+        try (final var fos = new FileOutputStream(zipFile); final var zos = new ZipOutputStream(fos)) {
             addDirToZipArchive(zos, path.toFile(), null);
-
-            zos.flush();
-            fos.flush();
-            zos.close();
-            fos.close();
-
             return zipFile;
-
         } catch (Exception e) {
             throw new InternalException(e.getMessage());
         } finally {
             temporaryFiles.deleteTempFilesAndDirectories();
         }
+    }
+
+    private String[] getArgs(final File spec, final String language, final String options, final String path) {
+
+        final var args = new ArrayList<String>();
+
+        args.add("generate");
+        args.add("-g");
+        args.add(language);
+        args.add("-i");
+        args.add(spec.getAbsolutePath());
+        args.add("-o");
+        args.add(path);
+        args.add("--skip-validate-spec");
+
+        if(options != null && !options.isEmpty()) {
+            args.add("--additional-properties=" + options);
+        }
+
+        return args.toArray(String[]::new);
     }
 
     private void addDirToZipArchive(final ZipOutputStream zos,

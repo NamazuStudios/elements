@@ -1,12 +1,8 @@
 package dev.getelements.elements.rest.codegen;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.getelements.elements.rest.Oas3DocumentationResource;
-import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.codegen.CodegenRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
-import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.version.VersionService;
@@ -14,7 +10,6 @@ import dev.getelements.elements.sdk.util.TemporaryFiles;
 import io.swagger.util.Json;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.models.OpenAPI;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletConfig;
 import jakarta.ws.rs.GET;
@@ -24,10 +19,7 @@ import jakarta.ws.rs.core.*;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.UUID;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Path("codegen")
 public class CodegenResource {
@@ -42,7 +34,8 @@ public class CodegenResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(
             summary = "Generate Client API Code",
-            description = "Generates API (Elements core if no application is specified) code for use on the client.")
+            description = "Generates API code for use on the client. " +
+                    "Will generate Elements core if no application is specified in the request body.")
     public Response generateCode(
             final CodegenRequest request,
             @Context
@@ -56,17 +49,6 @@ public class CodegenResource {
     ) throws OpenApiConfigurationException, IOException {
 
         getValidationHelper().validateModel(request);
-
-        //create temp directory
-        //create temp file
-        //get json
-        //pass file ref to gen
-        //create temp directory within the file's temp directory
-        //create generated code in temp subdirectory
-        //zip up subdirectory into original file ref
-        //copy file to bytes√
-        //delete temp directories + files √
-        //return bytes in response√
 
         final var tempFolderName = "codegen-" + UUID.randomUUID();
         final var temporaryFiles = new TemporaryFiles(tempFolderName);
