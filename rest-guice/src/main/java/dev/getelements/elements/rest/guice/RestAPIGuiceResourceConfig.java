@@ -34,6 +34,7 @@ public class RestAPIGuiceResourceConfig extends ResourceConfig {
 
         packages(true, "dev.getelements.elements.rest");
         packages(true, "dev.getelements.elements.model");
+        packages(true, "dev.getelements.elements.sdk.jakarta.rs");
 
         if (!tryConfigureJackson() || !tryConfigureMoxy()) {
             logger.warn("Neither Jackson nor Moxy could be configured.  Using default media support.");

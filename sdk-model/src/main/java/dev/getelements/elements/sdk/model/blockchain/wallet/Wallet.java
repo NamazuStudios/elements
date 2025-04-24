@@ -1,31 +1,20 @@
 package dev.getelements.elements.sdk.model.blockchain.wallet;
 
 import dev.getelements.elements.sdk.model.ValidationGroups;
-import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainApi;
+import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.rt.annotation.RemoteModel;
-import dev.getelements.elements.rt.annotation.RemoteScope;
 import io.swagger.v3.oas.annotations.media.Schema;
-
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Size;
+
 import java.util.List;
 import java.util.Objects;
 
-import static dev.getelements.elements.rt.annotation.RemoteScope.API_SCOPE;
-import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
-
 @Schema
-@RemoteModel(
-        scopes = {
-            @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
-        }
-)
 public class Wallet {
 
     @NotNull(groups = ValidationGroups.Update.class)

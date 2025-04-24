@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static dev.getelements.elements.rt.util.FinallyAction.begin;
+import static dev.getelements.elements.sdk.util.FinallyAction.begin;
 import static java.util.stream.Collectors.toList;
 
 public class TransactionalResourceService implements ResourceService {

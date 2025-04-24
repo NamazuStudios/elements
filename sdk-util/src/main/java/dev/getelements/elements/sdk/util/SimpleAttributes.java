@@ -63,6 +63,14 @@ public record SimpleAttributes(Map<String, Object> attributes) implements Mutabl
     }
 
     /**
+     * Constructs a new simple attributes instance with the default backing.
+     * @return a new {@link SimpleAttributes}
+     */
+    public static SimpleAttributes newDefaultInstance() {
+        return new SimpleAttributes(new LinkedHashMap<>());
+    }
+
+    /**
      * Builder for {@link SimpleAttributes}.
      */
     public static class Builder {

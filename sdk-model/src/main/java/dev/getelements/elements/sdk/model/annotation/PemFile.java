@@ -1,12 +1,14 @@
 package dev.getelements.elements.sdk.model.annotation;
 
-import dev.getelements.elements.rt.exception.InvalidPemException;
-import dev.getelements.elements.rt.util.PemData;
+import dev.getelements.elements.sdk.model.security.InvalidPemException;
+import dev.getelements.elements.sdk.model.security.PemData;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.Payload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
-import jakarta.validation.*;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -33,7 +35,6 @@ public @interface PemFile {
     @interface List {
         PemFile[] value();
     }
-
 
     /**
      * Validates a PEM file when passed

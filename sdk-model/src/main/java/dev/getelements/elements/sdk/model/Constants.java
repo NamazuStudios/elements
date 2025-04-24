@@ -161,6 +161,12 @@ public interface Constants {
          * Checks for valid last name. Rules: only alphanumeric, length 3-30, white spaces available
          */
         String LAST_NAME = "^[A-Za-z0-9 ]{3,30}";
+
+        /**
+         * Indicates valid Hex regex.
+         */
+        String HEX_VALID_REGEX = "[0-9a-fA-F]*";
+
     }
 
 }

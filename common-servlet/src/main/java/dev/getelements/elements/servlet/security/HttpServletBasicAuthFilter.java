@@ -5,7 +5,7 @@ import dev.getelements.elements.sdk.model.exception.BaseException;
 import dev.getelements.elements.sdk.model.exception.UnauthorizedException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.security.AuthenticatedRequest;
-import dev.getelements.elements.security.AuthorizationHeader;
+import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import dev.getelements.elements.sdk.service.auth.UsernamePasswordAuthService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static dev.getelements.elements.exception.StatusMapping.map;
-import static dev.getelements.elements.security.AuthorizationHeader.AUTH_TYPE_BASIC;
+import static dev.getelements.elements.sdk.util.security.AuthorizationHeader.AUTH_TYPE_BASIC;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 
 /**

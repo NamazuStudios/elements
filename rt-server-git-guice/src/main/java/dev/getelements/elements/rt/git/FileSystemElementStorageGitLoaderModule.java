@@ -1,10 +1,10 @@
 package dev.getelements.elements.rt.git;
 
 import com.google.inject.AbstractModule;
-import dev.getelements.elements.rt.ApplicationAssetLoader;
+import dev.getelements.elements.sdk.cluster.ApplicationAssetLoader;
 
 import static com.google.inject.name.Names.named;
-import static dev.getelements.elements.rt.ApplicationAssetLoader.ELEMENT_STORAGE;
+import static dev.getelements.elements.sdk.cluster.ApplicationAssetLoader.ELEMENT_STORAGE;
 
 public class FileSystemElementStorageGitLoaderModule extends AbstractModule {
 
