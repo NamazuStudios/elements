@@ -1,7 +1,7 @@
 package dev.getelements.elements.common.app;
 
-import dev.getelements.elements.rt.ApplicationAssetLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.cluster.ApplicationAssetLoader;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.util.Monitor;

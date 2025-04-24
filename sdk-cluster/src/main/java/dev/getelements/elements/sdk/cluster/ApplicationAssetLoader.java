@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt;
+package dev.getelements.elements.sdk.cluster;
 
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 
