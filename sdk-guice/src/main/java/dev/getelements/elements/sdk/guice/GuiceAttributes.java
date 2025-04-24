@@ -66,6 +66,16 @@ public class GuiceAttributes implements Attributes {
         return ImmutableAttributes.copyOf(this);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return Attributes.equals(this, obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return Attributes.hashCode(this);
+    }
+
     public Injector getInjector() {
         return injector;
     }

@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.git;
 
-import dev.getelements.elements.rt.ApplicationAssetLoader;
+import dev.getelements.elements.sdk.cluster.ApplicationAssetLoader;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import org.eclipse.jgit.api.Git;
 

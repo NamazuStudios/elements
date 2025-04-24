@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt;
 
-import dev.getelements.elements.rt.exception.InvalidPemException;
-import dev.getelements.elements.rt.util.PemChain;
-import dev.getelements.elements.rt.util.Rfc7468Label;
+import dev.getelements.elements.sdk.model.security.InvalidPemException;
+import dev.getelements.elements.sdk.model.security.PemChain;
+import dev.getelements.elements.sdk.model.security.Rfc7468Label;
 import org.testng.annotations.Test;
 
 import java.io.IOException;

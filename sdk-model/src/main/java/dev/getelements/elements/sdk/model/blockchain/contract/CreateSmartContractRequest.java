@@ -2,8 +2,6 @@ package dev.getelements.elements.sdk.model.blockchain.contract;
 
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;
-import dev.getelements.elements.rt.annotation.RemoteModel;
-import dev.getelements.elements.rt.annotation.RemoteScope;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotNull;
@@ -11,15 +9,8 @@ import jakarta.validation.constraints.Pattern;
 import java.util.Map;
 import java.util.Objects;
 
-import static dev.getelements.elements.rt.annotation.RemoteScope.API_SCOPE;
-import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 
 @Schema(description = "Creates a smart contract.")
-@RemoteModel(
-        scopes = {
-                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
-        }
-)
 public class CreateSmartContractRequest {
 
     @NotNull

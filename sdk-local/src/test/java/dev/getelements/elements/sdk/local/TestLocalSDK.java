@@ -4,7 +4,10 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.test.DockerMongoTestInstance;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
+import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.service.Constants;
+import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
@@ -18,6 +21,7 @@ import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MO
 import static dev.getelements.elements.sdk.model.Constants.HTTP_PORT;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
 public class TestLocalSDK {
 
@@ -125,6 +129,5 @@ public class TestLocalSDK {
 
         }
     }
-
 
 }

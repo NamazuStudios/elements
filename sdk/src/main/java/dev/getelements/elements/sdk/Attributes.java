@@ -3,10 +3,12 @@ package dev.getelements.elements.sdk;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Optional.empty;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Contains attributes which represent contextual information for various types.
@@ -25,6 +27,17 @@ public interface Attributes {
      * @return the {@link List<String>} of attribute names
      */
     Set<String> getAttributeNames();
+
+    /**
+     * Gets all {@link Attribute}s as a {@link Stream}.
+     *
+     * @return a {@link Stream} of {@link Attribute}s
+     */
+    default Stream<Attribute<Object>> stream() {
+        return getAttributeNames()
+                .stream()
+                .map(name -> new Attribute<>(name, getAttribute(name)));
+    }
 
     /**
      * Gets the attribute associated with this {@link Attributes} for the given name.  Returning null if no such
@@ -64,17 +77,17 @@ public interface Attributes {
     default Map<String, Object> asMap() {
         return getAttributeNames()
             .stream()
-            .collect(Collectors.toMap(n -> n, n -> n));
+            .collect(toMap(name -> name, this::getAttribute));
     }
 
     /**
-     * Returns this {@link Attributes} as a {@link Properties} instance.
+     * Returns this {@link Attributes} as a {@link Properties} instance, copying all attributes over.
      *
      * @return the {@link Properties}
      */
     default Properties asProperties() {
         final var properties = new Properties();
-        getAttributeNames().forEach(name -> properties.put(name, getAttribute(name)));
+        stream().forEach(attribute -> properties.put(attribute.name(), attribute.value()));
         return properties;
     }
 
@@ -86,7 +99,7 @@ public interface Attributes {
      */
     default Properties asProperties(final Properties defaults) {
         final var properties = new Properties(defaults);
-        getAttributeNames().forEach(name -> properties.put(name, getAttribute(name)));
+        stream().forEach(attribute -> properties.put(attribute.name(), attribute.value()));
         return properties;
     }
 
@@ -150,6 +163,28 @@ public interface Attributes {
         return a.asMap().equals(b.asMap());
     }
 
+    /**
+     * Represents a single {@link Attribute}.
+     *
+     * @param name the name
+     * @param value the value
+     * @param <T> the type
+     */
+    record Attribute<T>(String name, T value) {
+
+        /**
+         * Gets this Attribute as a subtype, throwing a {@link ClassCastException} if the attribute is incompatible.
+         *
+         * @param uClass the type to cast
+         * @return the Attribute
+         * @param <U> the desired type
+         */
+        <U extends T> Attribute<U> as(final Class<U> uClass) {
+            return new Attribute<>(uClass.getName(), uClass.cast(value()));
+        }
+
+    }
+
 }
 
 class EmptyAttributes implements Attributes, Serializable {
@@ -157,6 +192,11 @@ class EmptyAttributes implements Attributes, Serializable {
     @Override
     public Set<String> getAttributeNames() {
         return emptySet();
+    }
+
+    @Override
+    public Stream<Attribute<Object>> stream() {
+        return Stream.empty();
     }
 
     @Override

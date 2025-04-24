@@ -4,7 +4,7 @@ import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.cluster.id.TaskId;
 import dev.getelements.elements.rt.transact.FatalException;
 import dev.getelements.elements.rt.transact.TransactionalTask;
-import dev.getelements.elements.rt.util.FinallyAction;
+import dev.getelements.elements.sdk.util.FinallyAction;
 import dev.getelements.elements.sdk.util.LazyValue;
 import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import org.slf4j.Logger;

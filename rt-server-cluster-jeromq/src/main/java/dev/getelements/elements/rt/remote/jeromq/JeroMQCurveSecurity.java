@@ -1,14 +1,14 @@
 package dev.getelements.elements.rt.remote.jeromq;
 
 import dev.getelements.elements.rt.exception.InternalException;
-import dev.getelements.elements.rt.util.PemChain;
-import dev.getelements.elements.rt.util.PemData;
+import dev.getelements.elements.sdk.model.security.PemChain;
+import dev.getelements.elements.sdk.model.security.PemData;
 import org.zeromq.ZMQ;
 
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.rt.util.Rfc7468Label.PRIVATE_KEY;
-import static dev.getelements.elements.rt.util.Rfc7468Label.PUBLIC_KEY;
+import static dev.getelements.elements.sdk.model.security.Rfc7468Label.PRIVATE_KEY;
+import static dev.getelements.elements.sdk.model.security.Rfc7468Label.PUBLIC_KEY;
 import static java.lang.String.format;
 import static org.zeromq.ZMQ.Curve.*;
 

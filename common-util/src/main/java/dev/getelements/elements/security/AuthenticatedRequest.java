@@ -2,6 +2,7 @@ package dev.getelements.elements.security;
 
 import dev.getelements.elements.sdk.model.user.User;
 
+import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.security.Principal;

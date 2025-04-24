@@ -2,10 +2,14 @@ package dev.getelements.elements.sdk.guice;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.multibindings.MapKey;
+import dev.getelements.elements.sdk.ElementScope;
 import dev.getelements.elements.sdk.ServiceLocator;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import jakarta.inject.Inject;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -17,6 +21,8 @@ import static com.google.inject.name.Names.named;
 public class GuiceServiceLocator implements ServiceLocator {
 
     private Injector injector;
+
+    private ReentrantThreadLocal<ElementScope> scopeThreadLocal;
 
     @Override
     public <T> Optional<Supplier<T>> findInstance(final ElementServiceKey<T> elementServiceKey) {
@@ -37,6 +43,15 @@ public class GuiceServiceLocator implements ServiceLocator {
     @Inject
     public void setInjector(Injector injector) {
         this.injector = injector;
+    }
+
+    public ReentrantThreadLocal<ElementScope> getScopeThreadLocal() {
+        return scopeThreadLocal;
+    }
+
+    @Inject
+    public void setScopeThreadLocal(ReentrantThreadLocal<ElementScope> scopeThreadLocal) {
+        this.scopeThreadLocal = scopeThreadLocal;
     }
 
 }

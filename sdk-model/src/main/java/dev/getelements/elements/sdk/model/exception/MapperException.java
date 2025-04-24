@@ -1,7 +1,5 @@
 package dev.getelements.elements.sdk.model.exception;
 
-import dev.getelements.elements.rt.exception.InternalException;
-
 public class MapperException extends InternalException {
 
     public MapperException() {}
