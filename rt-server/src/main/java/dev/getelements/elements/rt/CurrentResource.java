@@ -4,7 +4,7 @@ import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
 /**
- * Houses a {@link ReentrantThreadLocal < Attributes >} to represent the currently available
+ * Houses a {@link ReentrantThreadLocal} to represent the currently available
  * {@link ReentrantThreadLocal<Attributes>}
  */
 public class CurrentResource {
