@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk;
 
-import dev.getelements.elements.sdk.ElementScope.Builder;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
@@ -11,7 +10,6 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -137,22 +135,12 @@ public interface ElementLoaderFactory {
                 ElementLoaderFactory.class.getName())
         );
     }
-
+    
     /**
      * <p>
      * A constructor type for a {@link ClassLoader}. Extending {@link Function} for clarity in documentation and
      * rationale, but otherwise just semantically identical to {@link Function}. However, as the name implies, it must
-     * return a new instance for each invocation of {@link #apply}.
-     * </p>
-     */
-    @FunctionalInterface
-    interface ScopeBuilderSupplier extends Supplier<Builder> {};
-
-    /**
-     * <p>
-     * A constructor type for a {@link ClassLoader}. Extending {@link Function} for clarity in documentation and
-     * rationale, but otherwise just semantically identical to {@link Function}. However, as the name implies, it must
-     * return a new instance for each invocation of {@link #apply}.
+     * return a new instance for each invocation of {@link Function#apply}.
      * </p>
      */
     @FunctionalInterface
