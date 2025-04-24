@@ -12,6 +12,7 @@
 
     <artifactId>sdk-local</artifactId>
     <version>3.1.0-SNAPSHOT</version>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
 
@@ -60,6 +61,11 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>mongo-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

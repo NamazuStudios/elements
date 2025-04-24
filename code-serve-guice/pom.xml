@@ -11,7 +11,7 @@
 
     <artifactId>code-serve-guice</artifactId>
     <version>3.1.0-SNAPSHOT</version>
-    <name>code-serve-guice</name>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>

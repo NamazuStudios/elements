@@ -9,12 +9,17 @@ import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
+import dev.morphia.aggregation.expressions.Expressions;
+import dev.morphia.aggregation.stages.Lookup;
+import dev.morphia.aggregation.stages.Set;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
@@ -142,22 +147,14 @@ public class MongoUserUidDao implements UserUidDao {
     }
 
     @Override
-    public void softDeleteUserUidsForUserId(String userId) {
+    public void softDeleteUserUidsForUserId(User user) {
 
-        final var query = getDatastore().find(MongoUserUid.class)
+        final var mongoUser = getDozerMapperRegistry().map(user, MongoUser.class);
+
+        getDatastore().find(MongoUserUid.class)
                 .filter(
-                        eq("user.id", userId)
-                );
-
-        final var builder = new UpdateBuilder()
-                .with(
-                  set("_id.id", "")
-                );
-
-        final var opts = new UpdateOptions()
-                .multi(true);
-
-        getMongoDBUtils().perform(ds -> builder.execute(query, opts));
+                        eq("user", mongoUser)
+                ).delete(new DeleteOptions().multi(true));
     }
 
     private Pagination<UserUid> paginationFromQuery(final Query<MongoUserUid> query, final int offset, final int count) {

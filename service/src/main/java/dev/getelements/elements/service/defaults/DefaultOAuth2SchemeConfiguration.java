@@ -41,7 +41,7 @@ public class DefaultOAuth2SchemeConfiguration {
                 new OAuth2RequestKeyValue("Content-Type", "application/x-www-form-urlencoded", false)
         ));
         authScheme.setParams(List.of(
-                new OAuth2RequestKeyValue("appid", "Steam AppId (Sent from frontend)", true),
+                new OAuth2RequestKeyValue("appid", "Steam AppId", false),
                 new OAuth2RequestKeyValue("ticket", "Ticket from GetAuthSessionTicket (Sent from frontend)", true),
                 new OAuth2RequestKeyValue("identity", "You define this when requesting the ticket. Must match frontend.", false)
         ));

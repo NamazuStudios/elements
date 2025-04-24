@@ -1,31 +1,55 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <version>3.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
         <connection>scm:git:ssh://git@bitbucket.org:eci-elements/web-services.git</connection>
         <developerConnection>scm:git:git@bitbucket.org:eci-elements/web-services.git</developerConnection>
     </scm>
+
     <repositories>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
+
     <licenses>
         <license>
-            <name>GNU AGPL v3.0</name>
-            <url>https://www.gnu.org/licenses/agpl-3.0.en.html#license-text</url>
+            <name>Modified GNU AGPL v3.0</name>
+            <url>https://raw.githubusercontent.com/Elemental-Computing/OSS-Licenses/8e60b05/LICENSE.txt</url>
         </license>
     </licenses>
+
+    <url>https://namazustudios.com</url>
+    <description>Elements is an Open Source Backend for Games</description>
+
+    <developers>
+        <developer>
+            <name>Keith Hudnall</name>
+            <email>keithh+oss@getelements.dev</email>
+            <organization>Elemental Computing Inc.</organization>
+        </developer>
+        <developer>
+            <name>Patrick Twohig</name>
+            <email>patrickt+oss@getelements.dev</email>
+            <organization>Elemental Computing Inc.</organization>
+        </developer>
+    </developers>
+
     <modules>
         <module>common-app</module>
         <module>common-util</module>
         <module>common-servlet</module>
+        <module>common-rt</module>
         <module>rest-api</module>
         <module>service</module>
         <module>service-guice</module>
@@ -88,7 +112,6 @@
         <module>sdk-guice</module>
         <module>sdk-test</module>
         <module>sdk-model</module>
-        <module>sdk-jakarta-rs</module>
         <module>sdk-test-element</module>
         <module>sdk-test-element-a</module>
         <module>sdk-test-element-b</module>
@@ -452,6 +475,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
+                <artifactId>common-rt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -562,11 +590,6 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-jakarta-rs</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-cluster-node-jeromq</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -634,14 +657,12 @@
             <dependency>
                 <groupId>org.eclipse.jetty.websocket</groupId>
                 <artifactId>jetty-websocket-jetty-client</artifactId>
-                <version>${jetty.version}</version>
-                <!-- Adjust version as needed -->
+                <version>${jetty.version}</version> <!-- Adjust version as needed -->
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-client</artifactId>
-                <version>${jetty.version}</version>
-                <!-- Adjust version as needed -->
+                <version>${jetty.version}</version> <!-- Adjust version as needed -->
             </dependency>
             <dependency>
                 <groupId>net.sf.jopt-simple</groupId>
@@ -1137,6 +1158,7 @@
     </dependencyManagement>
     <build>
         <plugins>
+
             <!-- Sets Java 21 -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -1146,6 +1168,7 @@
                     <release>21</release>
                 </configuration>
             </plugin>
+
             <!-- Sets Build Number Properly -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -1166,6 +1189,7 @@
                     <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
                 </configuration>
             </plugin>
+
             <!-- Build Number / Versioning Plugin -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -1175,6 +1199,7 @@
                     <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
             </plugin>
+
             <!-- Enforcer Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -1196,8 +1221,11 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
+
     </build>
+
     <profiles>
         <profile>
             <id>github-publish</id>
@@ -1222,6 +1250,7 @@
             <id>central-publish</id>
             <build>
                 <plugins>
+
                     <!-- Source Jars -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -1230,14 +1259,14 @@
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
-                                <phase>prepare-package</phase>
-                                <!-- Correct phase -->
+                                <phase>prepare-package</phase> <!-- Correct phase -->
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
                             </execution>
                         </executions>
                     </plugin>
+
                     <!-- Javadocs -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -1246,14 +1275,14 @@
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
-                                <phase>prepare-package</phase>
-                                <!-- Change to prepare-package -->
+                                <phase>prepare-package</phase> <!-- Change to prepare-package -->
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
                             </execution>
                         </executions>
                     </plugin>
+
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
@@ -1265,6 +1294,7 @@
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
+
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -1291,4 +1321,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>

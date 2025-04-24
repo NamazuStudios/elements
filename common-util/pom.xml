@@ -13,6 +13,7 @@
 
     <artifactId>common-util</artifactId>
     <version>3.1.0-SNAPSHOT</version>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>
@@ -76,10 +77,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-model</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
         </dependency>
     </dependencies>
 

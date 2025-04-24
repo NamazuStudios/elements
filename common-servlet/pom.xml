@@ -13,7 +13,7 @@
 
     <artifactId>common-servlet</artifactId>
     <version>3.1.0-SNAPSHOT</version>
-    <name>common-servlet</name>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>
@@ -48,6 +48,11 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-service</artifactId>
+<<<<<<<<< Temporary merge branch 1
+            <version>3.0.49-SNAPSHOT</version>
+            <scope>compile</scope>
+=========
+>>>>>>>>> Temporary merge branch 2
         </dependency>
     </dependencies>
 
