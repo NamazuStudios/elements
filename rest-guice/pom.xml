@@ -49,12 +49,14 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>service-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-dao</artifactId>
-            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-jakarta-rs</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
