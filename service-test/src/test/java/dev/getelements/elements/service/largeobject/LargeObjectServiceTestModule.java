@@ -1,19 +1,14 @@
 package dev.getelements.elements.service.largeobject;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.dao.*;
-import dev.getelements.elements.sdk.model.security.ProfileIdentificationMethod;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.validation.Validator;
 import jakarta.ws.rs.client.Client;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.model.Constants.CDN_OUTSIDE_URL;
@@ -42,10 +37,6 @@ public class LargeObjectServiceTestModule extends AbstractModule {
         bind(Client.class).toInstance(mock(Client.class));
 
         bind(String.class).annotatedWith(named(CDN_OUTSIDE_URL)).toInstance("https://cdn.example.com");
-
-        bind(new TypeLiteral<Set<ProfileIdentificationMethod>>() {}).toInstance(new HashSet<>());
-//        bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
-//        bind(new TypeLiteral<Optional<Profile>>(){}).toProvider(ProfileOptionalSupplier.class);
 
     }
 }

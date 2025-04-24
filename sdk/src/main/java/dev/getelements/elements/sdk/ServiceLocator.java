@@ -81,7 +81,7 @@ public interface ServiceLocator {
      * @param <T> the type to request
      */
     default <T> Optional<Supplier<T>> findInstance(final Class<T> tClass, final String named) {
-        final var key = new ElementServiceKey<>(tClass, null);
+        final var key = new ElementServiceKey<>(tClass, named);
         return findInstance(key);
     }
 

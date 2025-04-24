@@ -1,20 +1,22 @@
 package dev.getelements.elements.security;
 
-import com.google.common.base.Splitter;
 import dev.getelements.elements.sdk.model.Headers;
 import dev.getelements.elements.sdk.model.exception.security.BadSessionSecretException;
-import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
+import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.util.security.HeaderOptionalSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
 import static dev.getelements.elements.sdk.model.Headers.SOCIALENGINE_SESSION_SECRET;
+import static java.util.function.Predicate.not;
 import static java.util.regex.Pattern.compile;
 
 /**
@@ -85,10 +87,9 @@ public class SessionSecretHeader {
             return;
         }
 
-        final var tokens = Splitter.on(SEPARATOR)
-                .trimResults()
-                .omitEmptyStrings()
-                .split(header.get())
+        final var tokens = Stream.of(SEPARATOR.split(header.get()))
+                .filter(not(String::isBlank))
+                .map(String::trim)
                 .iterator();
 
         if (!tokens.hasNext()) bail();

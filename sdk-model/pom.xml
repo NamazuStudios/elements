@@ -25,8 +25,8 @@
             <artifactId>swagger-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-common</artifactId>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

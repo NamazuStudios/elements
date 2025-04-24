@@ -26,7 +26,7 @@ public interface ElementsLocalBuilder {
      * @return this instance
      */
     default ElementsLocalBuilder withProperties(Properties properties) {
-        final var attributes = new PropertiesAttributes(properties);
+        final var attributes = PropertiesAttributes.wrap(properties);
         return withAttributes(attributes);
     }
 

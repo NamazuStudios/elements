@@ -1,9 +1,9 @@
 package dev.getelements.elements.servlet.security;
 
-import dev.getelements.elements.security.AuthorizationHeader;
-import dev.getelements.elements.security.BearerAuthorizationHeader;
-
+import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
+import dev.getelements.elements.sdk.util.security.BearerAuthorizationHeader;
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Optional;
 
 public class HttpServletBearerAuthenticationFilter extends HttpServletAuthenticationFilter {

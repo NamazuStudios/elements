@@ -1,15 +1,14 @@
 package dev.getelements.elements.sdk.spi;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Publisher;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
-import static java.lang.String.format;
+import java.util.Optional;
+
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class SharedElement implements Element {
@@ -23,6 +22,8 @@ public class SharedElement implements Element {
     private final ElementEventDispatcher elementEventDispatcher;
 
     private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(SharedElement.class);
+
+    private final ReentrantThreadLocal<DefaultElementScope> scopeThreadLocal = new ReentrantThreadLocal<>();
 
     public SharedElement(final ElementRecord elementRecord,
                          final ServiceLocator serviceLocator,
@@ -58,6 +59,19 @@ public class SharedElement implements Element {
     @Override
     public ElementRegistry getElementRegistry() {
         return elementRegistry;
+    }
+
+    @Override
+    public ElementScope.Builder withScope() {
+        final var attributes = getElementRecord().attributes();
+        return new DefaultElementScopeBuilder(attributes, scopeThreadLocal);
+    }
+
+    @Override
+    public Optional<ElementScope> findCurrentScope() {
+        return scopeThreadLocal
+                .getCurrentOptional()
+                .map(ElementScope.class::cast);
     }
 
     @Override

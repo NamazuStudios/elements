@@ -6,8 +6,13 @@ import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.servlet.HttpContextRoot;
+import dev.getelements.elements.servlet.security.HttpServletAuthenticationFilter;
+import dev.getelements.elements.servlet.security.HttpServletElementScopeFilter;
+import dev.getelements.elements.servlet.security.HttpServletHeaderProfileOverrideFilter;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
+import jakarta.servlet.DispatcherType;
 import jakarta.ws.rs.core.Application;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
@@ -17,12 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static java.util.EnumSet.allOf;
 import static org.glassfish.jersey.server.ResourceConfig.forApplication;
 
 /**
@@ -44,6 +51,8 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
     private Sequence sequence;
 
     private HttpContextRoot httpContextRoot;
+
+    private AuthFilterFeature authFilterFeature;
 
     @Override
     public void load(final ApplicationElementRecord record, final Element element) {
@@ -82,6 +91,15 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                 .filter(Predicate.not(String::isBlank))
                 .orElseGet(element.getElementRecord().definition()::name);
 
+        final var enableAuth = element
+                .getElementRecord()
+                .attributes()
+                .getAttributeOptional(ENABLE_ELEMENTS_AUTH)
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .map(Boolean::parseBoolean)
+                .orElse(false);
+
         final var contextPath = getHttpContextRoot()
                 .formatNormalized(APP_PREFIX_FORMAT, prefix);
 
@@ -92,6 +110,10 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(contextPath);
         servletContextHandler.addServlet(holder, "/*");
+
+        if (enableAuth) {
+            getAuthFilterFeature().accept(servletContextHandler);
+        }
 
         getSequence().addHandler(servletContextHandler);
 
@@ -122,6 +144,15 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
     @Inject
     public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
         this.httpContextRoot = httpContextRoot;
+    }
+
+    public AuthFilterFeature getAuthFilterFeature() {
+        return authFilterFeature;
+    }
+
+    @Inject
+    public void setAuthFilterFeature(AuthFilterFeature authFilterFeature) {
+        this.authFilterFeature = authFilterFeature;
     }
 
 }

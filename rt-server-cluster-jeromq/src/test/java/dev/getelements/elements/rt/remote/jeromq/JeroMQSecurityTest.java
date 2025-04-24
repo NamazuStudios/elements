@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt.remote.jeromq;
 
 import dev.getelements.elements.rt.exception.InternalException;
-import dev.getelements.elements.rt.exception.InvalidPemException;
-import dev.getelements.elements.rt.util.PemChain;
+import dev.getelements.elements.sdk.model.security.InvalidPemException;
+import dev.getelements.elements.sdk.model.security.PemChain;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;

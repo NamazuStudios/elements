@@ -20,7 +20,7 @@ import jakarta.ws.rs.core.Response;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
 import static dev.getelements.elements.sdk.model.Headers.SOCIALENGINE_SESSION_SECRET;
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
-import static dev.getelements.elements.security.AuthorizationHeader.AUTH_HEADER;
+import static dev.getelements.elements.sdk.util.security.AuthorizationHeader.AUTH_HEADER;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;

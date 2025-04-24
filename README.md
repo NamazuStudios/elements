@@ -188,7 +188,6 @@ The following are internal libraries which make up the implementation of Element
 The following are deprecated and slated for removal.
 
 - **app-node**
-- **common-rt**
 
 ## RT System
 

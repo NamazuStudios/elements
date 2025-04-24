@@ -4,12 +4,13 @@ import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.rt.util.Hex;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
 import jakarta.validation.constraints.*;
 import java.util.Objects;
+
+import static dev.getelements.elements.sdk.model.Constants.Regexp.HEX_VALID_REGEX;
 
 @Schema(description = "Represents an arbitrary save data document that persists on the server. The document " +
                         "saves with a version identifier such that clients may resolve conflicts between the local " +
@@ -36,7 +37,7 @@ public class SaveDataDocument {
 
     @Null(groups = Insert.class)
     @NotNull(groups = Update.class)
-    @Pattern(regexp = Hex.VALID_REGEX)
+    @Pattern(regexp = HEX_VALID_REGEX)
     @Schema(description = "The revision of the save data document.")
     private String version;
 

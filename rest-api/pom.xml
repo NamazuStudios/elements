@@ -22,6 +22,10 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-jakarta-rs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>service</artifactId>
         </dependency>
         <dependency>
