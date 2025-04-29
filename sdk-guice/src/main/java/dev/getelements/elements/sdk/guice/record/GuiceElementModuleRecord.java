@@ -42,7 +42,7 @@ public record GuiceElementModuleRecord(Class<? extends Module> moduleType) {
     public static Stream<GuiceElementModuleRecord> fromPackage(final Package aPackage) {
 
         var modules = aPackage.getAnnotation(GuiceElementModules.class);
-        var annotations = Stream.of(aPackage.getAnnotation(GuiceElementModule.class));
+        var annotations = Stream.of(aPackage.getAnnotationsByType(GuiceElementModule.class));
 
         if (modules != null) {
             annotations = Stream.concat(annotations, Stream.of(modules.value()));
