@@ -33,7 +33,7 @@ public class GuiceElementLoader implements ElementLoader {
     public Element load(final MutableElementRegistry parent) {
 
         final var injector = Guice.createInjector(
-                newCoreModule(),
+                newCoreModule(parent),
                 new GuiceServiceLocatorModule(),
                 new AbstractModule() {
                     @Override
@@ -89,27 +89,11 @@ public class GuiceElementLoader implements ElementLoader {
 
     }
 
-    private com.google.inject.Module newCoreModule() {
-        switch (getElementRecord().type()) {
-
-            case ISOLATED_CLASSPATH -> {
-
-                final var attributes = getElementRecord().attributes();
-
-                final var guiceServiceBridgeModule = new GuiceSpiModule()
-                        .attributes(attributes);
-
-                getElementRecord()
-                        .services()
-                        .forEach(guiceServiceBridgeModule::define);
-
-                return guiceServiceBridgeModule;
-
-            }
-
+    private com.google.inject.Module newCoreModule(final ElementRegistry parent) {
+        return switch (getElementRecord().type()) {
+            case ISOLATED_CLASSPATH -> new GuiceSpiModule(parent, getElementRecord());
             default -> throw new SdkException("Unsupported type : " + getElementRecord().type());
-
-        }
+        };
     }
 
     @Override

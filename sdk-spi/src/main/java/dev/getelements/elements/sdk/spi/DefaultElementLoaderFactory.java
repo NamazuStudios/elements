@@ -58,6 +58,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementProducedEvents = scanForProducedEvents(elementClassLoader, elementDefinitionRecord);
         final var elementConsumedEvents = scanForConsumedEvents(elementClassLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(elementClassLoader, elementDefinitionRecord);
+        final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
         // The Module Records and Services
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
@@ -72,6 +73,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementServices,
                 elementProducedEvents,
                 elementConsumedEvents,
+                elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
                 elementClassLoader
@@ -152,6 +154,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementProducedEvents = scanForProducedEvents(localClassLoader, elementDefinitionRecord);
         final var elementConsumedEvents = scanForConsumedEvents(localClassLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(localClassLoader, elementDefinitionRecord);
+        final var elementDependencies = ElementDependencyRecord.fromPackage(aPackage).toList();
 
         // The Module Records and Services
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
@@ -166,6 +169,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementServices,
                 elementProducedEvents,
                 elementConsumedEvents,
+                elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
                 localClassLoader

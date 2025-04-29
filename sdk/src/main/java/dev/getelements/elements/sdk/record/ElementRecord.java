@@ -24,6 +24,7 @@ public record ElementRecord(
         List<ElementServiceRecord> services,
         List<ElementEventProducerRecord> producedEvents,
         List<ElementEventConsumerRecord<?>> consumedEvents,
+        List<ElementDependencyRecord> dependencies,
         Attributes attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes,
         ClassLoader classLoader) {
@@ -32,6 +33,7 @@ public record ElementRecord(
         services = List.copyOf(services);
         consumedEvents = List.copyOf(consumedEvents);
         defaultAttributes = List.copyOf(defaultAttributes);
+        dependencies = List.copyOf(dependencies);
     }
 
     /**
