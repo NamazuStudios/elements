@@ -31,7 +31,7 @@ public record ElementDependencyRecord(
     public static Stream<ElementDependencyRecord> fromPackage(final Package aPackage) {
 
         var dependencies = aPackage.getAnnotation(ElementDependencies.class);
-        var annotations = Stream.of(aPackage.getAnnotation(ElementDependency.class));
+        var annotations = Stream.of(aPackage.getAnnotationsByType(ElementDependency.class));
 
         if (dependencies != null) {
             annotations = Stream.concat(annotations, Stream.of(dependencies.value()));
