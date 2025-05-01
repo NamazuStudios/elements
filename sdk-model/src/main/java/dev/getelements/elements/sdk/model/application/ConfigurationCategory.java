@@ -25,9 +25,9 @@ public enum ConfigurationCategory implements Serializable {
     PSN_PS4(PSNApplicationConfiguration.class),
 
     /**
-     * Represents an application profile for PlayStation(tm) Network for Vita enabled titles.
+     * Represents an application profile for PlayStation(tm) Network for PS4 enabled titles.
      */
-    PSN_VITA(PSNApplicationConfiguration.class),
+    PSN_PS5(PSNApplicationConfiguration.class),
 
     /**
      * Represents an iOS application configuration for the Apple iTunes AppStore

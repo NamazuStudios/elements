@@ -1,8 +1,13 @@
 package dev.getelements.elements.sdk.model.application;
 
+import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
+import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -16,17 +21,20 @@ import java.util.*;
 public class ApplicationConfiguration implements Serializable {
 
     @Schema(description = "The database assigned ID for the application configuration.")
+    @Null(groups = Insert.class)
+    @NotNull(groups = Update.class)
     private String id;
 
     @NotNull
     @Schema(description = "The category for the application configuration.")
     private ConfigurationCategory category;
 
+    @NotNull
     @Schema(description = "The application-configuration specific unique ID.  (Varies by ConfigurationCategory)")
     private String uniqueIdentifier;
 
-    @Schema(description = "The parent application owning this configuration.")
     @NotNull
+    @Schema(description = "The parent application owning this configuration.")
     private Application parent;
 
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
@@ -125,19 +133,6 @@ public class ApplicationConfiguration implements Serializable {
 
         return null;
     }
-//
-//    public void addProductBundle(final ProductBundle productBundle) {
-//        if (getProductBundles() == null) {
-//            setProductBundles(new ArrayList<>());
-//        }
-//
-//        if (getProductBundle(productBundle.getProductId()) != null) {
-//            throw new DuplicateException("ProductBundle with productId " + productBundle.getProductId() + " already exists " +
-//                    "in ApplicationConfiguration " + getId());
-//        }
-//
-//        getProductBundles().add(productBundle);
-//    }
 
     @Override
     public boolean equals(Object o) {
@@ -166,4 +161,5 @@ public class ApplicationConfiguration implements Serializable {
                 ", productBundles=" + productBundles +
                 '}';
     }
+
 }

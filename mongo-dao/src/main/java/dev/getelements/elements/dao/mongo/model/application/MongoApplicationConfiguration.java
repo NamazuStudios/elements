@@ -12,7 +12,10 @@ import java.util.Objects;
  * Created by patricktwohig on 7/10/15.
  */
 @Indexes({
-        @Index(fields = {@Field("category"), @Field("parent"), @Field("name") }, options = @IndexOptions(unique = true)),
+        @Index(
+                fields = {@Field("category"), @Field("parent"), @Field("name") },
+                options = @IndexOptions(unique = true)
+        ),
 })
 @Entity(value = "application_configuration")
 public class MongoApplicationConfiguration {

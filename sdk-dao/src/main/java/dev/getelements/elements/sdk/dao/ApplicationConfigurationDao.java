@@ -15,7 +15,6 @@ import java.util.Optional;
 /**
  * Created by patricktwohig on 7/13/15.
  */
-
 @ElementServiceExport
 public interface ApplicationConfigurationDao {
 

@@ -1,20 +1,21 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.dao.mongo.model.application.*;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
-import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
-import dev.getelements.elements.dao.mongo.model.application.MongoApplicationConfiguration;
-import dev.getelements.elements.dao.mongo.model.application.MongoProductBundle;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
+import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
+import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
@@ -22,11 +23,12 @@ import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 
-import java.util.List;
-import java.util.Optional;
+import javax.xml.validation.Validator;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.getelements.elements.sdk.model.application.ConfigurationCategory.*;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
@@ -35,7 +37,21 @@ import static dev.morphia.query.updates.UpdateOperators.set;
  */
 public class MongoApplicationConfigurationDao implements ApplicationConfigurationDao {
 
-    private MapperRegistry beanMapperRegistry;
+    public static final Map<ConfigurationCategory, Class<? extends MongoApplicationConfiguration>> TYPE_MAPPING;
+
+    static {
+        final Map<ConfigurationCategory, Class<? extends MongoApplicationConfiguration>> map = new EnumMap<>(ConfigurationCategory.class);
+        map.put(MATCHMAKING, MongoMatchmakingApplicationConfiguration.class);
+        map.put(PSN_PS4, MongoPSNApplicationConfiguration.class);
+        map.put(PSN_PS5, MongoPSNApplicationConfiguration.class);
+        map.put(IOS_APP_STORE, MongoPSNApplicationConfiguration.class);
+        map.put(ANDROID_GOOGLE_PLAY, MongoGooglePlayApplicationConfiguration.class);
+        map.put(FACEBOOK, MongoFacebookApplicationConfiguration.class);
+        map.put(FIREBASE, MongoFirebaseApplicationConfiguration.class);
+        TYPE_MAPPING = Collections.unmodifiableMap(map);
+    }
+
+    private ValidationHelper validationHelper;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -45,9 +61,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
     private MongoItemDao mongoItemDao;
 
-    private MapperRegistry dozerMapperRegistry;
-
-    private ObjectMapper objectMapper;
+    private MapperRegistry mapperRegistry;
 
     @Override
     public <T extends ApplicationConfiguration> List<T> getApplicationConfigurationsForApplication(
@@ -66,7 +80,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             applicationConfigurations = iterator
                     .toList()
                     .stream()
-                    .map(mac -> getDozerMapper().map(mac, (Class<T>) configurationCategory.getModelClass()))
+                    .map(mac -> getMapperRegistry().map(mac, (Class<T>) configurationCategory.getModelClass()))
                     .collect(Collectors.toList());
         }
 
@@ -88,7 +102,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
            eq("parent", mongoApplication)
         ));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class), new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getMapperRegistry().map(input, ApplicationConfiguration.class), new FindOptions());
 
     }
 
@@ -100,8 +114,9 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     }
 
     @Override
-    public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
-                                                 final List<ProductBundle> productBundles) {
+    public ApplicationConfiguration updateProductBundles(
+            final String applicationConfigurationId,
+            final List<ProductBundle> productBundles) {
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(applicationConfigurationId);
         final var query = getDatastore().find(MongoApplicationConfiguration.class);
@@ -121,7 +136,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
         final var mongoProductBundles = productBundles
             .stream()
-            .map(pb -> getDozerMapper().map(pb, MongoProductBundle.class))
+            .map(pb -> getMapperRegistry().map(pb, MongoProductBundle.class))
             .collect(Collectors.toList());
 
         final var resultMongoApplicationConfiguration = new UpdateBuilder()
@@ -137,7 +152,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             );
         }
 
-        return getDozerMapper().map(resultMongoApplicationConfiguration, ApplicationConfiguration.class);
+        return getMapperRegistry().map(resultMongoApplicationConfiguration, ApplicationConfiguration.class);
 
     }
 
@@ -145,7 +160,25 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     public <T extends ApplicationConfiguration> T createApplicationConfiguration(
             final String applicationNameOrId,
             final T applicationConfiguration) {
-        return null;
+
+        getValidationHelper().validateModel(applicationConfiguration, Insert.class);
+
+        final var category = applicationConfiguration.getCategory();
+
+        if (category == null) {
+            throw new IllegalArgumentException("Category cannot be null");
+        } else if (category.getModelClass() != applicationConfiguration.getClass()) {
+            throw new IllegalArgumentException("Category class must be of type " + applicationConfiguration
+                    .getCategory()
+                    .getModelClass());
+        }
+
+        final var mongoTClass = TYPE_MAPPING.get(applicationConfiguration.getCategory());
+        final var mongApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
+        getMongoDBUtils().performV(ds -> getDatastore().insert(mongApplicationConfiguration));
+
+        return getMapperRegistry().map(mongApplicationConfiguration, (Class<T>) category.getModelClass());
+
     }
 
     @Override
@@ -153,7 +186,25 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final String applicationNameOrId,
             final String applicationConfigurationId,
             final T applicationConfiguration) {
-        return null;
+
+        getValidationHelper().validateModel(applicationConfiguration, Update.class);
+
+        final var category = applicationConfiguration.getCategory();
+
+        if (category == null) {
+            throw new IllegalArgumentException("Category cannot be null");
+        } else if (category.getModelClass() != applicationConfiguration.getClass()) {
+            throw new IllegalArgumentException("Category class must be of type " + applicationConfiguration
+                    .getCategory()
+                    .getModelClass());
+        }
+
+        final var mongoTClass = TYPE_MAPPING.get(applicationConfiguration.getCategory());
+        final var mongApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
+        getMongoDBUtils().performV(ds -> getDatastore().save(mongApplicationConfiguration));
+
+        return getMapperRegistry().map(mongApplicationConfiguration, (Class<T>) category.getModelClass());
+
     }
 
     @Override
@@ -169,6 +220,15 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final String applicationNameOrId,
             final String applicationConfigurationId) {
         return Optional.empty();
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
     public MongoDBUtils getMongoDBUtils() {
@@ -207,31 +267,12 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         this.mongoItemDao = mongoItemDao;
     }
 
-    public MapperRegistry getBeanMapper() {
-        return beanMapperRegistry;
+    public MapperRegistry getMapperRegistry() {
+        return mapperRegistry;
     }
 
     @Inject
-    public void setBeanMapper(MapperRegistry beanMapperRegistry) {
-        this.beanMapperRegistry = beanMapperRegistry;
+    public void setMapperRegistry(MapperRegistry mapperRegistry) {
+        this.mapperRegistry = mapperRegistry;
     }
-
-    public MapperRegistry getDozerMapper() {
-        return dozerMapperRegistry;
-    }
-
-    @Inject
-    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
-        this.dozerMapperRegistry = dozerMapperRegistry;
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
-    }
-
-    @Inject
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
 }
