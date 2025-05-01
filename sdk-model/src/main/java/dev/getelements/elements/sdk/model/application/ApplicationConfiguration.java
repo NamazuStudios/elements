@@ -1,15 +1,13 @@
 package dev.getelements.elements.sdk.model.application;
 
-import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Objects;
 
 /**
  * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
@@ -36,9 +34,6 @@ public class ApplicationConfiguration implements Serializable {
     @NotNull
     @Schema(description = "The parent application owning this configuration.")
     private Application parent;
-
-    @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
-    private List<ProductBundle> productBundles;
 
     /**
      * Gets the actual profile ID.
@@ -112,28 +107,6 @@ public class ApplicationConfiguration implements Serializable {
         this.parent = parent;
     }
 
-    public List<ProductBundle> getProductBundles() {
-        return productBundles;
-    }
-
-    public void setProductBundles(List<ProductBundle> productBundles) {
-        this.productBundles = productBundles;
-    }
-
-    public ProductBundle getProductBundle(final String productId) {
-        if (getProductBundles() == null) {
-            return null;
-        }
-
-        for (final ProductBundle productBundle : getProductBundles()) {
-            if (Objects.equals(productBundle.getProductId(), productId)) {
-                return productBundle;
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -142,13 +115,12 @@ public class ApplicationConfiguration implements Serializable {
         return Objects.equals(getId(), that.getId()) &&
                 getCategory() == that.getCategory() &&
                 Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
-                Objects.equals(getParent(), that.getParent()) &&
-                Objects.equals(getProductBundles(), that.getProductBundles());
+                Objects.equals(getParent(), that.getParent());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getProductBundles());
+        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent());
     }
 
     @Override
@@ -158,7 +130,6 @@ public class ApplicationConfiguration implements Serializable {
                 ", category=" + category +
                 ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
                 ", parent=" + parent +
-                ", productBundles=" + productBundles +
                 '}';
     }
 

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -17,6 +18,9 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
 
     @NotNull
     private String applicationId;
+
+    @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
+    private List<ProductBundle> productBundles;
 
     /**
      * Gets the Application ID, as defined in the AppStore (com.mycompany.app)
@@ -34,25 +38,48 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
         this.applicationId = applicationId;
     }
 
+    public List<ProductBundle> getProductBundles() {
+        return productBundles;
+    }
+
+    public void setProductBundles(List<ProductBundle> productBundles) {
+        this.productBundles = productBundles;
+    }
+
+    public ProductBundle getProductBundle(final String productId) {
+        if (getProductBundles() == null) {
+            return null;
+        }
+
+        for (final ProductBundle productBundle : getProductBundles()) {
+            if (Objects.equals(productBundle.getProductId(), productId)) {
+                return productBundle;
+            }
+        }
+
+        return null;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        IosApplicationConfiguration that = (IosApplicationConfiguration) o;
-        return Objects.equals(getApplicationId(), that.getApplicationId());
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        if (!super.equals(object)) return false;
+        IosApplicationConfiguration that = (IosApplicationConfiguration) object;
+        return Objects.equals(getApplicationId(), that.getApplicationId()) && Objects.equals(getProductBundles(), that.getProductBundles());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getApplicationId());
+        return Objects.hash(super.hashCode(), getApplicationId(), getProductBundles());
     }
 
     @Override
     public String toString() {
-        return "IosApplicationConfiguration{" +
-                "applicationId='" + applicationId + '\'' +
-                '}';
+        final StringBuilder sb = new StringBuilder("IosApplicationConfiguration{");
+        sb.append("applicationId='").append(applicationId).append('\'');
+        sb.append(", productBundles=").append(productBundles);
+        sb.append('}');
+        return sb.toString();
     }
 
 }
