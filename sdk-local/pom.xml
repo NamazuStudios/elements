@@ -145,6 +145,7 @@
                                         <exclude>javax.net.**</exclude>
                                         <exclude>javax.naming.**</exclude>
                                         <exclude>javax.crypto.**</exclude>
+                                        <exclude>javax.inject.**</exclude>
                                         <exclude>javax.security.**</exclude>
                                     </excludes>
                                 </relocation>
