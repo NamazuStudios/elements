@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.model.application.ConfigurationCategory.*;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 /**
@@ -98,11 +99,18 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoApplicationConfiguration.class);
 
         query.filter(Filters.and(
-           eq("active", true),
+           exists("name"),
            eq("parent", mongoApplication)
         ));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getMapperRegistry().map(input, ApplicationConfiguration.class), new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(
+                query,
+                offset, count,
+                input -> getMapperRegistry().map(
+                        input,
+                        ApplicationConfiguration.class),
+                new FindOptions()
+        );
 
     }
 
@@ -275,4 +283,5 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     public void setMapperRegistry(MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
     }
+
 }

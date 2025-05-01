@@ -34,7 +34,6 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
         this.applicationId = applicationId;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
