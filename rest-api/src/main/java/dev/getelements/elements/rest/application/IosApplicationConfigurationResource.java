@@ -1,17 +1,13 @@
 package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
-
 import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;
 import dev.getelements.elements.sdk.service.application.IosApplicationConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
-
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;

@@ -13,14 +13,14 @@ import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.GooglePlayIapReceiptDao;
 import dev.getelements.elements.sdk.dao.ItemDao;
 import dev.getelements.elements.sdk.dao.RewardIssuanceDao;
-import dev.getelements.elements.sdk.model.exception.InternalException;
-import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.application.ProductBundleReward;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import dev.getelements.elements.sdk.model.profile.Profile;
@@ -28,16 +28,15 @@ import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.sdk.model.application.ConfigurationCategory.ANDROID_GOOGLE_PLAY;
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.buildRewardIssuanceTags;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.GOOGLE_PLAY_IAP_SOURCE;
@@ -46,6 +45,7 @@ import static dev.getelements.elements.sdk.model.reward.RewardIssuance.buildGoog
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptService {
+
     private static final Logger logger = LoggerFactory.getLogger(UserGooglePlayIapReceiptService.class);
 
     private User user;
@@ -289,7 +289,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         GooglePlayApplicationConfiguration googlePlayApplicationConfiguration = getApplicationConfigurationDao()
                 .getDefaultApplicationConfigurationForApplication(
                         applicationId,
-                        ANDROID_GOOGLE_PLAY
+                        GooglePlayApplicationConfiguration.class
                 );
 
         return googlePlayApplicationConfiguration;

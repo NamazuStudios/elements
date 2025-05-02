@@ -67,8 +67,11 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Interface to provide mappings.
+ * Interface to provide mappings for MongoTypes
+ *
+ * @deprecated This is a bit of a "god type" and should be broken up into smaller mappers.
  */
+@Deprecated
 @Mapper(uses = PropertyConverters.class)
 public interface MongoDBMapper {
 

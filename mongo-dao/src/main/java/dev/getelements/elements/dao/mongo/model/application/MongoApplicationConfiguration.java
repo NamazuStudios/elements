@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
@@ -16,11 +15,8 @@ import org.bson.types.ObjectId;
                 fields = @Field("parent")
         ),
         @Index(
-                fields = @Field("type")
-        ),
-        @Index(
                 fields = {
-                        @Field("type"),
+                        @Field("_t"),
                         @Field("parent"),
                         @Field("name")
                 },
@@ -40,9 +36,6 @@ public class MongoApplicationConfiguration {
     @Property
     private String description;
 
-    @Property
-    private String type;
-
     @Reference
     private MongoApplication parent;
 
@@ -60,14 +53,6 @@ public class MongoApplicationConfiguration {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getDescription() {

@@ -14,7 +14,10 @@ public class SuperUserIosApplicationConfigurationService implements IosApplicati
     @Override
     public void deleteApplicationConfiguration(final String applicationNameOrId,
                                                final String applicationProfileNameOrId) {
-        getApplicationConfigurationDao().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+        getApplicationConfigurationDao().deleteApplicationConfiguration(
+                IosApplicationConfiguration.class,
+                applicationNameOrId,
+                applicationProfileNameOrId);
     }
 
     @Override
@@ -42,7 +45,6 @@ public class SuperUserIosApplicationConfigurationService implements IosApplicati
                                                                       final IosApplicationConfiguration iosApplicationConfiguration) {
         return getApplicationConfigurationDao().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 iosApplicationConfiguration
         );
     }

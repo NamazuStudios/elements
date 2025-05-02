@@ -7,13 +7,13 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {PropertyConverters.class, MongoDBMapper.class})
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class})
 public interface MongoMatchmakingApplicationConfigurationMapper extends MapperRegistry.ReversibleMapper<
         MongoMatchmakingApplicationConfiguration,
         MatchmakingApplicationConfiguration> {
 
     @Override
-    @Mapping(target = "scheme", source = "uniqueIdentifier")
+    @Mapping(target = "id", source = "objectId")
     MatchmakingApplicationConfiguration forward(MongoMatchmakingApplicationConfiguration source);
 
     @Override

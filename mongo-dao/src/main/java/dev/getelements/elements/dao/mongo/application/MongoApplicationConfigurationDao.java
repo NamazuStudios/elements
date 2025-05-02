@@ -3,20 +3,19 @@ package dev.getelements.elements.dao.mongo.application;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
-import dev.getelements.elements.dao.mongo.model.application.*;
+import dev.getelements.elements.dao.mongo.model.application.MongoApplicationConfiguration;
+import dev.getelements.elements.dao.mongo.model.application.MongoProductBundle;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
-import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.BadQueryException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.exception.application.ApplicationNotFoundException;
+import dev.getelements.elements.sdk.model.exception.item.ItemNotFoundException;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -26,33 +25,20 @@ import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.getelements.elements.sdk.model.application.ConfigurationCategory.*;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Created by patricktwohig on 7/13/15.
  */
 public class MongoApplicationConfigurationDao implements ApplicationConfigurationDao {
-
-    public static final Map<ConfigurationCategory, Class<? extends MongoApplicationConfiguration>> TYPE_MAPPING;
-
-    static {
-        final Map<ConfigurationCategory, Class<? extends MongoApplicationConfiguration>> map = new EnumMap<>(ConfigurationCategory.class);
-        map.put(MATCHMAKING, MongoMatchmakingApplicationConfiguration.class);
-        map.put(PSN_PS4, MongoPSNApplicationConfiguration.class);
-        map.put(PSN_PS5, MongoPSNApplicationConfiguration.class);
-        map.put(IOS_APP_STORE, MongoPSNApplicationConfiguration.class);
-        map.put(ANDROID_GOOGLE_PLAY, MongoGooglePlayApplicationConfiguration.class);
-        map.put(FACEBOOK, MongoFacebookApplicationConfiguration.class);
-        map.put(FIREBASE, MongoFirebaseApplicationConfiguration.class);
-        TYPE_MAPPING = Collections.unmodifiableMap(map);
-    }
 
     private ValidationHelper validationHelper;
 
@@ -177,29 +163,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final Class<T> configurationClass,
             final List<ProductBundle> productBundles) {
 
-        final var mapper = getMapperRegistry()
-                .mappers()
-                .filter(m -> m.findSourceType().isPresent() && m.findSourceType().get().equals(configurationClass))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No mapper found for " + configurationClass));
-
-        final var mongApplicationConfigurationType = mapper
-                .findDestinationType()
-                .filter(MongoApplicationConfiguration.class::isAssignableFrom)
-                .orElseThrow(() -> new IllegalArgumentException("No destination type for  " + configurationClass));
-
-        final var mongoApplicationConfiguration = findMongoApplicationConfiguration(
-                mongApplicationConfigurationType,
-                applicationNameOrId,
-                applicationConfigurationNameOrId)
-                .orElseThrow(() -> new ApplicationNotFoundException("Application not found:" + applicationNameOrId));
+        requireNonNull(productBundles, "productBundles");
 
         for (final var productBundle : productBundles) {
             for (final var productBundleReward : productBundle.getProductBundleRewards()) {
                 final String itemNameOrId = productBundleReward.getItemId();
                 final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
                 if (mongoItem == null) {
-                    throw new NotFoundException("Item with name/id: " + itemNameOrId + " not found.");
+                    throw new ItemNotFoundException("Item with name/id: " + itemNameOrId + " not found.");
                 }
                 productBundleReward.setItemId(mongoItem.getObjectId().toHexString());
             }
@@ -210,20 +181,22 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             .map(pb -> getMapperRegistry().map(pb, MongoProductBundle.class))
             .collect(Collectors.toList());
 
+        final var query = getQueryForApplicationConfiguration(
+                configurationClass,
+                applicationNameOrId,
+                applicationConfigurationNameOrId
+        );
+
         final var resultMongoApplicationConfiguration = new UpdateBuilder()
                 .with(set("productBundles", mongoProductBundles))
                 .modify(query)
                 .execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (resultMongoApplicationConfiguration == null) {
-            throw new NotFoundException(
-                    "Application Configuration with id: " +
-                            applicationNameOrId +
-                    "not found."
-            );
+            throw new NotFoundException("Application Configuration with id: " + applicationNameOrId + "not found.");
         }
 
-        return getMapperRegistry().map(resultMongoApplicationConfiguration, ApplicationConfiguration.class);
+        return getMapperRegistry().map(resultMongoApplicationConfiguration, configurationClass);
 
     }
 
@@ -232,72 +205,142 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final String applicationNameOrId,
             final T applicationConfiguration) {
 
+        requireNonNull(applicationConfiguration, "applicationNameOrId");
         getValidationHelper().validateModel(applicationConfiguration, Insert.class);
 
-        final var category = applicationConfiguration.getCategory();
+        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
+        final var mongoApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
 
-        if (category == null) {
-            throw new IllegalArgumentException("Category cannot be null");
-        } else if (category.getModelClass() != applicationConfiguration.getClass()) {
-            throw new IllegalArgumentException("Category class must be of type " + applicationConfiguration
-                    .getCategory()
-                    .getModelClass());
-        }
+        mongoApplicationConfiguration.setParent(parent);
+        getMongoDBUtils().performV(ds -> getDatastore().insert(mongoApplicationConfiguration));
 
-        final var mongoTClass = TYPE_MAPPING.get(applicationConfiguration.getCategory());
-        final var mongApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
-        getMongoDBUtils().performV(ds -> getDatastore().insert(mongApplicationConfiguration));
-
-        return getMapperRegistry().map(mongApplicationConfiguration, (Class<T>) category.getModelClass());
+        return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
 
     }
 
     @Override
     public <T extends ApplicationConfiguration> T updateApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationConfigurationId,
             final T applicationConfiguration) {
 
-        getValidationHelper().validateModel(applicationConfiguration, Update.class);
+        requireNonNull(applicationConfiguration, "applicationNameOrId");
+        getValidationHelper().validateModel(applicationConfiguration, Insert.class);
 
-        final var category = applicationConfiguration.getCategory();
+        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
+        final var mongoApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
 
-        if (category == null) {
-            throw new IllegalArgumentException("Category cannot be null");
-        } else if (category.getModelClass() != applicationConfiguration.getClass()) {
-            throw new IllegalArgumentException("Category class must be of type " + applicationConfiguration
-                    .getCategory()
-                    .getModelClass());
-        }
+        mongoApplicationConfiguration.setParent(parent);
+        getMongoDBUtils().performV(ds -> getDatastore().replace(mongoApplicationConfiguration));
 
-        final var mongoTClass = TYPE_MAPPING.get(applicationConfiguration.getCategory());
-        final var mongApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
-        getMongoDBUtils().performV(ds -> getDatastore().save(mongApplicationConfiguration));
-
-        return getMapperRegistry().map(mongApplicationConfiguration, (Class<T>) category.getModelClass());
+        return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
 
     }
 
     @Override
     public void deleteApplicationConfiguration(
+            final Class<? extends ApplicationConfiguration> configType,
             final String applicationNameOrId,
-            final String applicationConfigurationId) {
+            final String applicationConfigurationNameOrId) {
+        final var mongoConfigType = getMongoApplicationConfigurationType(configType);
 
     }
 
     @Override
     public <T extends ApplicationConfiguration> Optional<T> findApplicationConfiguration(
-            final Class<T> configT,
+            final Class<T> configType,
             final String applicationNameOrId,
-            final String applicationConfigurationId) {
-        return Optional.empty();
+            final String applicationConfigurationNameOrId) {
+
+        final var mongoConfigType = getMongoApplicationConfigurationType(configType);
+
+        return findMongoApplicationConfiguration(
+                mongoConfigType,
+                applicationNameOrId,
+                applicationConfigurationNameOrId
+        ).map(mac -> getMapperRegistry().map(mac, configType));
+
     }
 
-    public <T extends MongoMatchmakingApplicationConfiguration> Optional<T> findMongoApplicationConfiguration(
+    public <T extends MongoApplicationConfiguration> Optional<T> findMongoApplicationConfiguration(
             final Class<T> configT,
             final String applicationNameOrId,
-            final String applicationConfigurationId) {
-        return Optional.empty();
+            final String applicationConfigurationNameOrId) {
+
+        final var query = getQueryForMongoApplicationConfiguration(
+                configT,
+                applicationNameOrId,
+                applicationConfigurationNameOrId
+        );
+
+        return Optional.ofNullable(query.first());
+
+    }
+
+    public <T extends ApplicationConfiguration>
+    Query<? extends MongoApplicationConfiguration> getQueryForApplicationConfiguration(
+            final Class<T> configType,
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId) {
+
+        final var mongoConfigType = getMongoApplicationConfigurationType(configType);
+
+        return getQueryForMongoApplicationConfiguration(
+                mongoConfigType,
+                applicationNameOrId,
+                applicationConfigurationNameOrId
+        );
+
+    }
+
+    public <T extends MongoApplicationConfiguration>
+    Query<T> getQueryForMongoApplicationConfiguration(
+            final Class<T> configType,
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId) {
+
+        final var parent = getMongoApplicationDao()
+                .findActiveMongoApplication(applicationNameOrId);
+
+        if (parent == null) {
+            return getDatastore()
+                    .find(configType)
+                    .filter(eq("_id", null));
+        }
+
+        final var nameOrIdFilter = getMongoDBUtils().parse(applicationConfigurationNameOrId)
+                .map(objectId -> eq("_id", objectId))
+                .orElseGet(() -> eq("name", applicationConfigurationNameOrId));
+
+        return getDatastore()
+                .find(configType)
+                .filter(nameOrIdFilter, eq("parent", parent));
+
+    }
+
+    public <SourceT extends ApplicationConfiguration>
+    Class<? extends MongoApplicationConfiguration> getMongoApplicationConfigurationType(final Class<SourceT> sourceTClass) {
+
+        final var mapper = getMapperRegistry()
+                .mappers()
+                .filter(m -> m
+                        .findSourceType()
+                        .map(c -> c.equals(sourceTClass))
+                        .orElse(false)
+                )
+                .filter(m -> m
+                        .findDestinationType()
+                        .map(MongoApplicationConfiguration.class::isAssignableFrom)
+                        .orElse(false)
+                )
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No mapper found for " + sourceTClass));
+
+        return (Class<? extends MongoApplicationConfiguration>) mapper
+                .findDestinationType()
+                .orElseThrow(() -> new IllegalArgumentException("No destination type for  " + sourceTClass));
+
     }
 
     public ValidationHelper getValidationHelper() {

@@ -14,6 +14,7 @@ import java.util.*;
  */
 @Schema
 public class ProductBundleReward implements Serializable {
+
     @NotNull
     @Schema(description = "The id of the item to be rewarded.")
     private String itemId;

@@ -5,9 +5,12 @@ import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
+import jakarta.validation.constraints.Pattern;
 
 import java.io.Serializable;
 import java.util.Objects;
+
+import static dev.getelements.elements.sdk.model.Constants.Regexp.WHOLE_WORD_ONLY;
 
 /**
  * Ties the {@link Application} model to one of its associated profiles as represented by the type. The type indicates
@@ -25,6 +28,7 @@ public class ApplicationConfiguration implements Serializable {
     private String id;
 
     @NotNull
+    @Pattern(regexp = WHOLE_WORD_ONLY)
     @Schema(description = "The application-configuration specific unique ID. Unique per application per category.")
     private String name;
 

@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.sdk.dao.RewardIssuanceDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
 import dev.getelements.elements.dao.mongo.model.MongoUser;

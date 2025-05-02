@@ -113,20 +113,20 @@ public interface ApplicationConfigurationDao {
     /**
      * Updates the application configuration.
      *
+     * @param <T>                 the type of application configuration
      * @param applicationNameOrId
      * @return the {@link ApplicationConfiguration} as written to the database
-     * @param <T> the type of application configuration
      */
     <T extends ApplicationConfiguration>
     T updateApplicationConfiguration(
             String applicationNameOrId,
-            String applicationConfigurationId,
             T applicationConfiguration
     );
 
     /**
      * Gets the {@link ApplicationConfiguration} with the supplied name and id.
      *
+     * @param configType the configuration type
      * @param applicationNameOrId the application name or ID
      * @param applicationConfigurationId the application configuration ID
      * @return the instance
@@ -134,7 +134,7 @@ public interface ApplicationConfigurationDao {
      */
     <T extends ApplicationConfiguration>
     Optional<T> findApplicationConfiguration(
-            Class<T> configT,
+            Class<T> configType,
             String applicationNameOrId,
             String applicationConfigurationId
     );
@@ -142,10 +142,12 @@ public interface ApplicationConfigurationDao {
     /**
      * Deletes the application configuration.
      *
-     * @param applicationNameOrId the application name or ID
+     * @param configType                 the configuration type
+     * @param applicationNameOrId        the application name or ID
      * @param applicationConfigurationId the application configuration ID
      */
     void deleteApplicationConfiguration(
+            Class<? extends ApplicationConfiguration> configType,
             String applicationNameOrId,
             String applicationConfigurationId
     );

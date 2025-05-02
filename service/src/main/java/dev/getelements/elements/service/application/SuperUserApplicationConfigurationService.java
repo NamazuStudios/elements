@@ -3,7 +3,6 @@ package dev.getelements.elements.service.application;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 
 import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;

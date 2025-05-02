@@ -21,7 +21,10 @@ public class SuperUserFacebookApplicationConfigurationService implements Faceboo
 
     @Override
     public void deleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId) {
-        getApplicationConfigurationDao().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
+        getApplicationConfigurationDao().deleteApplicationConfiguration(
+                FacebookApplicationConfiguration.class,
+                applicationNameOrId,
+                applicationConfigurationNameOrId);
     }
 
     @Override
@@ -58,7 +61,7 @@ public class SuperUserFacebookApplicationConfigurationService implements Faceboo
         final FacebookApplicationConfiguration result;
 
         result = getApplicationConfigurationDao()
-            .updateApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId, facebookApplicationConfiguration);
+            .updateApplicationConfiguration(applicationNameOrId, facebookApplicationConfiguration);
 
         return applyBuiltins(result);
 
