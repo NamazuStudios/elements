@@ -302,8 +302,8 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
         if (googlePlayApplicationConfiguration.getApplicationId() != null) {
             platformApplicationId = googlePlayApplicationConfiguration.getApplicationId();
-        } else if (googlePlayApplicationConfiguration.getUniqueIdentifier() != null) {
-            platformApplicationId = googlePlayApplicationConfiguration.getUniqueIdentifier();
+        } else if (googlePlayApplicationConfiguration.getName() != null) {
+            platformApplicationId = googlePlayApplicationConfiguration.getName();
         } else {
             throw new InvalidDataException("Platform application id (applicationId or uniqueIdentifier) is not set " +
                     "in application configuration " + googlePlayApplicationConfiguration.getId());

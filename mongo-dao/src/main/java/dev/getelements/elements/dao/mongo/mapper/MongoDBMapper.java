@@ -74,7 +74,8 @@ public interface MongoDBMapper {
 
     // Note: In the development of this type, I made a mistake by misunderstanding the use of how the uses field
     // works in the @Mapper annotation. Future types should make their own mappers and break this up into more
-    // bite-sized and manageable chunks.
+    // bite-sized and manageable chunks. Furthermore, due to the original misunderstanding we should chip away
+    // at the bloat in this interface as we continue to develop the database layer.
 
     // Application Mappings
 
@@ -88,16 +89,6 @@ public interface MongoDBMapper {
 
     @InheritInverseConfiguration
     MongoApplication toMongoApplication(Application source);
-
-    // Application Configuration Mapping
-
-    @Mapping(target = "id", source = "objectId")
-    ApplicationConfiguration toApplicationConfiguration(MongoApplicationConfiguration source);
-
-    @Mapping(target = "active", ignore = true)
-    @Mapping(target = "appleSignInPrivateKey", ignore = true)
-    @InheritInverseConfiguration
-    MongoApplicationConfiguration toMongoApplicationConfiguration(ApplicationConfiguration source);
 
     // User & Profile Mappings
     @Mapping(target = "id", source = "objectId")

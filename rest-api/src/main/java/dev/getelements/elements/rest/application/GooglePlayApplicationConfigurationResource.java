@@ -7,7 +7,6 @@ import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;
 import dev.getelements.elements.sdk.service.application.GooglePlayApplicationConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -110,7 +109,7 @@ public class GooglePlayApplicationConfigurationResource {
     }
 
     @PUT
-    @Path("{applicationConfigurationId}/product_bundles")
+    @Path("{applicationConfigurationNameOrId}/product_bundles")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Updates the ProductBundle",
             description = "Updates the ProductBundle for the given ApplicationConfiguration")
@@ -119,8 +118,8 @@ public class GooglePlayApplicationConfigurationResource {
             @PathParam("applicationNameOrId")
             final String applicationNameOrId,
 
-            @PathParam("applicationConfigurationId")
-            final String applicationConfigurationId,
+            @PathParam("applicationConfigurationNameOrId")
+            final String applicationConfigurationNameOrId,
 
             final List<ProductBundle> productBundles
     ) {
@@ -129,8 +128,12 @@ public class GooglePlayApplicationConfigurationResource {
             throw new InvalidParameterException("ProductBundles must not be empty.");
         }
 
-        final ApplicationConfiguration applicationConfiguration = getApplicationConfigurationService()
-                .updateProductBundles(applicationConfigurationId, productBundles);
+        final var applicationConfiguration = getApplicationConfigurationService()
+                .updateProductBundles(
+                        applicationNameOrId,
+                        applicationConfigurationNameOrId,
+                        GooglePlayApplicationConfiguration.class,
+                        productBundles);
 
         return applicationConfiguration;
     }

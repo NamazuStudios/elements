@@ -1,13 +1,13 @@
 package dev.getelements.elements.service.application;
 
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
-
+import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;
 import jakarta.inject.Inject;
+
 import java.util.List;
 
 /**
@@ -28,8 +28,11 @@ public class AnonApplicationConfigurationService implements ApplicationConfigura
     }
 
     @Override
-    public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
-                                                        final List<ProductBundle> productBundles) {
+    public <T extends ApplicationConfiguration> T updateProductBundles(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId,
+            final Class<T> configurationClass,
+            final List<ProductBundle> productBundles) {
         throw new ForbiddenException("Unprivileged requests are unable to update product bundles.");
     }
 

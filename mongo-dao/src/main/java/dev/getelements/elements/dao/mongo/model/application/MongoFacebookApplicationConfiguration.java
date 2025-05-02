@@ -19,4 +19,5 @@ public class MongoFacebookApplicationConfiguration extends MongoApplicationConfi
     public void setApplicationSecret(String applicationSecret) {
         this.applicationSecret = applicationSecret;
     }
+
 }

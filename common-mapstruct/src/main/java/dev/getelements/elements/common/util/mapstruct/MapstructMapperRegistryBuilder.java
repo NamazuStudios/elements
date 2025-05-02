@@ -13,6 +13,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -58,11 +59,11 @@ public class MapstructMapperRegistryBuilder {
 
     private Map<SimpleMapperRegistry.MappingKey, MapperRegistry.Mapper<?,?>> buildMappers() {
         return classGraph.getOptional().map(classGraph -> {
-            final var mappers = new HashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Mapper<?,?>>();
+            final var mappers = new LinkedHashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Mapper<?,?>>();
             scanForImplicitMappers(classGraph, mappers);
             scanForExplicitMappers(classGraph, mappers);
             return mappers;
-        }).orElseGet(HashMap::new);
+        }).orElseGet(LinkedHashMap::new);
     }
 
     private static final String MAPPER_CLASS_NAME = MapperRegistry.Mapper.class.getName();
@@ -172,11 +173,11 @@ public class MapstructMapperRegistryBuilder {
 
     private Map<SimpleMapperRegistry.MappingKey, MapperRegistry.Updater<?,?>> buildUpdaters() {
         return classGraph.getOptional().map(classGraph -> {
-            final var updaters = new HashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Updater<?,?>>();
+            final var updaters = new LinkedHashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Updater<?,?>>();
             scanForImplicitUpdaters(classGraph, updaters);
             scanForExplicitUpdaters(classGraph, updaters);
             return updaters;
-        }).orElseGet(HashMap::new);
+        }).orElseGet(LinkedHashMap::new);
     }
 
     private static boolean isImplicitUpdater(final ClassInfo aClassInfo) {

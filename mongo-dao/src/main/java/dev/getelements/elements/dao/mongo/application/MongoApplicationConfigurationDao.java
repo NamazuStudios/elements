@@ -1,19 +1,22 @@
 package dev.getelements.elements.dao.mongo.application;
 
-import dev.getelements.elements.dao.mongo.model.application.*;
-import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
+import dev.getelements.elements.dao.mongo.model.application.*;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
-import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.ValidationGroups.Update;
-import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
+import dev.getelements.elements.sdk.model.exception.BadQueryException;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -23,14 +26,13 @@ import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 
-import javax.xml.validation.Validator;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.model.application.ConfigurationCategory.*;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.exists;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 /**
@@ -60,28 +62,35 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
     private MongoApplicationDao mongoApplicationDao;
 
-    private MongoItemDao mongoItemDao;
-
     private MapperRegistry mapperRegistry;
 
+    private BooleanQueryParser booleanQueryParser;
+
+    private MongoItemDao mongoItemDao;
+
     @Override
-    public <T extends ApplicationConfiguration> List<T> getApplicationConfigurationsForApplication(
+    public <T extends ApplicationConfiguration> List<T> getAllActiveApplicationConfigurations(
             final String applicationNameOrId,
-            final ConfigurationCategory configurationCategory) {
-        final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+            final Class<T> configurationClass) {
 
-        final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoApplicationConfiguration.class);
+        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        query.filter(eq("parent", parent));
-        query.filter(eq("category", configurationCategory));
+        final var query = getDatastore().find(MongoApplicationConfiguration.class);
+
+        query.filter(
+                exists("name"),
+                eq("parent", parent),
+                eq("type", configurationClass.getName())
+        );
 
         final List<T> applicationConfigurations;
+        final var mapper = getMapperRegistry().getMapper(MongoApplicationConfiguration.class, configurationClass);
 
         try (var iterator = query.iterator()) {
             applicationConfigurations = iterator
                     .toList()
                     .stream()
-                    .map(mac -> getMapperRegistry().map(mac, (Class<T>) configurationCategory.getModelClass()))
+                    .map(mapper::forward)
                     .collect(Collectors.toList());
         }
 
@@ -90,19 +99,66 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     }
 
     @Override
-    public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(final String applicationNameOrId,
-                                                                                   final int offset, final int count) {
+    public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(
+            final String applicationNameOrId,
+            final int offset, final int count) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoApplicationConfiguration.class);
 
         query.filter(Filters.and(
-           exists("name"),
-           eq("parent", mongoApplication)
+            exists("name"),
+            eq("parent", parent)
         ));
 
+        return paginationFromQuery(query, offset, count);
+
+    }
+
+    @Override
+    public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(
+            final String applicationNameOrId,
+            final int offset, final int count,
+            final String search) {
+
+        final String trimmedSearch = nullToEmpty(search).trim();
+
+        if (trimmedSearch.isEmpty()) {
+            throw new InvalidDataException("search must be specified.");
+        }
+
+        final var query = getBooleanQueryParser()
+                .parse(MongoApplicationConfiguration.class, search)
+                .orElseGet(() -> parseTextQuery(search));
+
+        return getMongoDBUtils().isIndexedQuery(query)
+                ? paginationFromQuery(query, offset, count)
+                : Pagination.empty();
+
+    }
+
+    private Query<MongoApplicationConfiguration> parseTextQuery(final String search) {
+
+        final String trimmedSearch = nullToEmpty(search).trim();
+
+        if (trimmedSearch.isEmpty()) {
+            throw new BadQueryException("search must be specified.");
+        }
+
+        final Query<MongoApplicationConfiguration> profileQuery = getDatastore()
+                .find(MongoApplicationConfiguration.class);
+
+        return profileQuery.filter(
+                exists("name"),
+                text(trimmedSearch)
+        );
+
+    }
+
+    private Pagination<ApplicationConfiguration> paginationFromQuery(
+            final Query<MongoApplicationConfiguration> query,
+            final int offset, final int count) {
         return getMongoDBUtils().paginationFromQuery(
                 query,
                 offset, count,
@@ -111,26 +167,33 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
                         ApplicationConfiguration.class),
                 new FindOptions()
         );
-
     }
 
     @Override
-    public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(final String applicationNameOrId,
-                                                                                   final int offset, final int count,
-                                                                                   final String search) {
-        return Pagination.empty();
-    }
-
-    @Override
-    public ApplicationConfiguration updateProductBundles(
-            final String applicationConfigurationId,
+    public <T extends ApplicationConfiguration>
+    T updateProductBundles(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId,
+            final Class<T> configurationClass,
             final List<ProductBundle> productBundles) {
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(applicationConfigurationId);
-        final var query = getDatastore().find(MongoApplicationConfiguration.class);
-        query.filter(eq("_id", objectId));
+        final var mapper = getMapperRegistry()
+                .mappers()
+                .filter(m -> m.findSourceType().isPresent() && m.findSourceType().get().equals(configurationClass))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No mapper found for " + configurationClass));
 
-        // make sure to convert any item name strings to item id strings
+        final var mongApplicationConfigurationType = mapper
+                .findDestinationType()
+                .filter(MongoApplicationConfiguration.class::isAssignableFrom)
+                .orElseThrow(() -> new IllegalArgumentException("No destination type for  " + configurationClass));
+
+        final var mongoApplicationConfiguration = findMongoApplicationConfiguration(
+                mongApplicationConfigurationType,
+                applicationNameOrId,
+                applicationConfigurationNameOrId)
+                .orElseThrow(() -> new ApplicationNotFoundException("Application not found:" + applicationNameOrId));
+
         for (final var productBundle : productBundles) {
             for (final var productBundleReward : productBundle.getProductBundleRewards()) {
                 final String itemNameOrId = productBundleReward.getItemId();
@@ -155,7 +218,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         if (resultMongoApplicationConfiguration == null) {
             throw new NotFoundException(
                     "Application Configuration with id: " +
-                    applicationConfigurationId +
+                            applicationNameOrId +
                     "not found."
             );
         }
@@ -230,6 +293,13 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         return Optional.empty();
     }
 
+    public <T extends MongoMatchmakingApplicationConfiguration> Optional<T> findMongoApplicationConfiguration(
+            final Class<T> configT,
+            final String applicationNameOrId,
+            final String applicationConfigurationId) {
+        return Optional.empty();
+    }
+
     public ValidationHelper getValidationHelper() {
         return validationHelper;
     }
@@ -282,6 +352,15 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     @Inject
     public void setMapperRegistry(MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
+    }
+
+    public BooleanQueryParser getBooleanQueryParser() {
+        return booleanQueryParser;
+    }
+
+    @Inject
+    public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
+        this.booleanQueryParser = booleanQueryParser;
     }
 
 }

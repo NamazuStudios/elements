@@ -58,7 +58,7 @@ public class MongoApplicationConfigurationOperations {
 
         final var query = getDatastore().find(mongoApplicationConfigurationClass);
 
-        final var uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
+        final var uniqueIdentifier = applicationConfiguration.getName();
         if (uniqueIdentifier == null) throw new IllegalArgumentException("uniqueIdentifier must be specified.");
 
         query.filter(
@@ -185,7 +185,7 @@ public class MongoApplicationConfigurationOperations {
             query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final var uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
+        final var uniqueIdentifier = applicationConfiguration.getName();
         if (uniqueIdentifier == null) throw new IllegalArgumentException("uniqueIdentifier must be specified.");
 
         final UpdateBuilder builder = new UpdateBuilder();

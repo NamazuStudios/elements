@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest.application;
 
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
+import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
@@ -61,6 +62,7 @@ public class IosApplicationConfigurationResource {
      * @return the {@link IosApplicationConfiguration} the iOS Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
         summary = "Creates a new iOS ApplicationConfiguration",
@@ -84,6 +86,7 @@ public class IosApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a iOS ApplicationConfiguration",
@@ -118,7 +121,8 @@ public class IosApplicationConfigurationResource {
     }
 
     @PUT
-    @Path("{applicationConfigurationId}/product_bundles")
+    @Path("{applicationConfigurationNameOrId}/product_bundles")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Updates the ProductBundle",
             description = "Updates the ProductBundle for the given ApplicationConfiguration")
@@ -127,8 +131,8 @@ public class IosApplicationConfigurationResource {
             @PathParam("applicationNameOrId")
             final String applicationNameOrId,
 
-            @PathParam("applicationConfigurationId")
-            final String applicationConfigurationId,
+            @PathParam("applicationConfigurationNameOrId")
+            final String applicationConfigurationNameOrId,
 
             final List<ProductBundle> productBundles
     ) {
@@ -137,10 +141,15 @@ public class IosApplicationConfigurationResource {
             throw new InvalidParameterException("ProductBundles must not be empty.");
         }
 
-        final ApplicationConfiguration applicationConfiguration = getApplicationConfigurationService()
-                .updateProductBundles(applicationConfigurationId, productBundles);
+        final var applicationConfiguration = getApplicationConfigurationService()
+                .updateProductBundles(
+                        applicationNameOrId,
+                        applicationConfigurationNameOrId,
+                        IosApplicationConfiguration.class,
+                        productBundles);
 
         return applicationConfiguration;
+
     }
 
     public ApplicationConfigurationService getApplicationConfigurationService() {

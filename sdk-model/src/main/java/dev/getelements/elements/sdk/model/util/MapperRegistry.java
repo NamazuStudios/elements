@@ -2,7 +2,9 @@ package dev.getelements.elements.sdk.model.util;
 
 import dev.getelements.elements.sdk.model.exception.MapperException;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -11,6 +13,20 @@ import static java.lang.String.format;
  * deprecation of Dozer.
  */
 public interface MapperRegistry {
+
+    /**
+     * Gets all the mappers registered in this registry.
+     *
+     * @return all mappers
+     */
+    Stream<Mapper<?, ?>> mappers();
+
+    /**
+     * Gets all the updaters registered in this registry.
+     *
+     * @return all updaters
+     */
+    Stream<Updater<?, ?>> updaters();
 
     /**
      * Maps the source Object into the supplied destination Object, mutating the destination while preserving the
@@ -116,6 +132,24 @@ public interface MapperRegistry {
          */
         DestinationT forward(SourceT source);
 
+        /**
+         * Finds the source type. When used as intended, the default implementation should suffice.
+         *
+         * @return the source type
+         */
+        default Optional<Class<?>> findSourceType() {
+            return findGenericTypeArgumentFromMapper(getClass(), 0);
+        }
+
+        /**
+         * Finds the destination type. When used as intended, the default implementation should suffice.
+         *
+         * @return the destination type.
+         */
+        default Optional<Class<?>> findDestinationType() {
+            return findGenericTypeArgumentFromMapper(getClass(), 1);
+        }
+
     }
 
     /**
@@ -140,8 +174,30 @@ public interface MapperRegistry {
          * @return this {@link ReversibleMapper}, but in reverse.
          */
         default Mapper<DestinationT, SourceT> reversed() {
-            return ReversibleMapper.this::reverse;
+
+            final var _this = this;
+
+            return new Mapper<>() {
+
+                @Override
+                public SourceT forward(final DestinationT source) {
+                    return _this.reverse(source);
+                }
+
+                @Override
+                public Optional<Class<?>> findSourceType() {
+                    return _this.findDestinationType();
+                }
+
+                @Override
+                public Optional<Class<?>> findDestinationType() {
+                    return _this.findSourceType();
+                }
+
+            };
+
         }
+
 
     }
 
@@ -155,6 +211,24 @@ public interface MapperRegistry {
          * @param destination the destination
          */
         void forward(SourceT source, DestinationT destination);
+
+        /**
+         * Finds the source type. When used as intended, the default implementation should suffice.
+         *
+         * @return the source type
+         */
+        default Optional<Class<?>> findSourceType() {
+            return findGenericTypeArgumentFromUpdater(getClass(), 0);
+        }
+
+        /**
+         * Finds the destination type. When used as intended, the default implementation should suffice.
+         *
+         * @return the destination type.
+         */
+        default Optional<Class<?>> findDestinationType() {
+            return findGenericTypeArgumentFromUpdater(getClass(), 1);
+        }
 
     }
 
@@ -179,8 +253,93 @@ public interface MapperRegistry {
          * @return this {@link ReversibleMapper}, but in reverse.
          */
         default Updater<DestinationT, SourceT> reversed() {
-            return ReversibleUpdater.this::reverse;
+
+            final var _this = this;
+
+            return new Updater<>() {
+
+                @Override
+                public void forward(final DestinationT destination, final SourceT source) {
+                    _this.reverse(destination, source);
+                }
+
+                @Override
+                public Optional<Class<?>> findSourceType() {
+                    return _this.findDestinationType();
+                }
+
+                @Override
+                public Optional<Class<?>> findDestinationType() {
+                    return _this.findSourceType();
+                }
+
+            };
+
         }
+
+    }
+
+    /**
+     * Finds the geneirc type argument for the supplied class..
+     *
+     * @param aClass the class
+     * @param index the index
+     * @return the generic type argument
+     */
+    static Optional<Class<?>> findGenericTypeArgumentFromMapper(final Class<?> aClass, final int index) {
+        for (var aGenericInterface : aClass.getGenericInterfaces()) {
+
+            if (!(aGenericInterface instanceof ParameterizedType parameterizedType)) {
+                continue;
+            }
+
+            final var rawType = parameterizedType.getRawType();
+
+            if (!(Mapper.class.equals(rawType) || ReversibleMapper.class.equals(rawType))) {
+                continue;
+            }
+
+            final var argument = parameterizedType.getActualTypeArguments()[index];
+
+            if (argument instanceof Class<?>) {
+                return Optional.of((Class<?>) argument);
+            }
+
+        }
+
+        return Optional.empty();
+
+    }
+
+    /**
+     * Finds the geneirc type argument for the supplied class..
+     *
+     * @param aClass the class
+     * @param index the index
+     * @return the generic type argument
+     */
+    static Optional<Class<?>> findGenericTypeArgumentFromUpdater(final Class<?> aClass, final int index) {
+        for (var aGenericInterface : aClass.getGenericInterfaces()) {
+
+            if (!(aGenericInterface instanceof ParameterizedType parameterizedType)) {
+                continue;
+            }
+
+            final var rawType = parameterizedType.getRawType();
+
+            if (!(Updater.class.equals(rawType) || ReversibleUpdater.class.equals(rawType))) {
+                continue;
+            }
+
+            final var argument = parameterizedType.getActualTypeArguments()[index];
+
+            if (argument instanceof Class<?>) {
+                return Optional.of((Class<?>) argument);
+            }
+
+        }
+
+        return Optional.empty();
 
     }
 

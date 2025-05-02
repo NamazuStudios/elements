@@ -5,9 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 
 /**
- * Represents the platform with which SocialEngine integrates.  Each platform
- * profile is a specific type which houses the necessary information to communicate
- * with the platform's web services API.
+ * Represents the category of {@link ApplicationConfiguration} types, each of which represented by their own model type
+ * and can be attached to an {@link Application}.
  *
  * Created by patricktwohig on 7/10/15.
  */

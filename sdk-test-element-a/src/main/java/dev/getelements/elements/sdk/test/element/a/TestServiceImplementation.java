@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.test.element.a;
+    package dev.getelements.elements.sdk.test.element.a;
 
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;

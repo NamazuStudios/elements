@@ -10,8 +10,9 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
- * enumeration.  This is an abstract base class from which all application profiles are derived.
+ * Ties the {@link Application} model to one of its associated profiles as represented by the type. The type indicates
+ * the fully qualified class name of the model that represents the profile. For example, a matchmaking profile is
+ * {@link MatchmakingApplicationConfiguration}
  *
  * Created by patricktwohig on 7/10/15.
  */
@@ -24,12 +25,15 @@ public class ApplicationConfiguration implements Serializable {
     private String id;
 
     @NotNull
-    @Schema(description = "The category for the application configuration.")
-    private ConfigurationCategory category;
+    @Schema(description = "The application-configuration specific unique ID. Unique per application per category.")
+    private String name;
 
     @NotNull
-    @Schema(description = "The application-configuration specific unique ID.  (Varies by ConfigurationCategory)")
-    private String uniqueIdentifier;
+    @Schema(description = "The fully-qualified Java type of ApplicationConfiguration.")
+    private String type;
+
+    @NotNull
+    private String description;
 
     @NotNull
     @Schema(description = "The parent application owning this configuration.")
@@ -54,39 +58,37 @@ public class ApplicationConfiguration implements Serializable {
     }
 
     /**
-     * Gets the platfrom identifier.
-     *
-     * @return the identifier type
-     */
-    public ConfigurationCategory getCategory() {
-        return category;
-    }
-
-    /**
-     * Sets the category identifier.
-     *
-     * @param category the category identifier type.
-     */
-    public void setCategory(ConfigurationCategory category) {
-        this.category = category;
-    }
-
-    /**
      * Gets the unique identifier for the category.
      *
      * @return
      */
-    public String getUniqueIdentifier() {
-        return uniqueIdentifier;
+    public String getName() {
+        return name;
     }
 
     /**
      * Sets the unique identifier for the category.
      *
-     * @param uniqueIdentifier
+     * @param name
      */
-    public void setUniqueIdentifier(String uniqueIdentifier) {
-        this.uniqueIdentifier = uniqueIdentifier;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**
@@ -108,29 +110,27 @@ public class ApplicationConfiguration implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ApplicationConfiguration that = (ApplicationConfiguration) o;
-        return Objects.equals(getId(), that.getId()) &&
-                getCategory() == that.getCategory() &&
-                Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
-                Objects.equals(getParent(), that.getParent());
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        ApplicationConfiguration that = (ApplicationConfiguration) object;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getType(), that.getType()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getParent(), that.getParent());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent());
+        return Objects.hash(getId(), getName(), getType(), getDescription(), getParent());
     }
 
     @Override
     public String toString() {
-        return "ApplicationConfiguration{" +
-                "id='" + id + '\'' +
-                ", category=" + category +
-                ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
-                ", parent=" + parent +
-                '}';
+        final StringBuilder sb = new StringBuilder("ApplicationConfiguration{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", parent=").append(parent);
+        sb.append('}');
+        return sb.toString();
     }
 
 }
