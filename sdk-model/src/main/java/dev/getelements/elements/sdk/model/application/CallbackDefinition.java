@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.Objects;
 
 import static dev.getelements.elements.sdk.model.Constants.Regexp.NO_WHITE_SPACE;
 
@@ -36,6 +37,27 @@ public class CallbackDefinition implements Serializable {
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        CallbackDefinition that = (CallbackDefinition) object;
+        return Objects.equals(getModule(), that.getModule()) && Objects.equals(getMethod(), that.getMethod());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getModule(), getMethod());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("CallbackDefinition{");
+        sb.append("module='").append(module).append('\'');
+        sb.append(", method='").append(method).append('\'');
+        sb.append('}');
+        return sb.toString();
     }
 
 }

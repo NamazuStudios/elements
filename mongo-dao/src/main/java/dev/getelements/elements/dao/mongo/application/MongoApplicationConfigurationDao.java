@@ -213,6 +213,8 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         final var mongoApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
 
         mongoApplicationConfiguration.setParent(parent);
+        mongoApplicationConfiguration.setType(applicationConfiguration.getClass().getName());
+
         getMongoDBUtils().performV(ds -> getDatastore().insert(mongoApplicationConfiguration));
 
         return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
@@ -225,13 +227,15 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final T applicationConfiguration) {
 
         requireNonNull(applicationConfiguration, "applicationNameOrId");
-        getValidationHelper().validateModel(applicationConfiguration, Insert.class);
+        getValidationHelper().validateModel(applicationConfiguration);
 
         final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
         final var mongoApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
 
         mongoApplicationConfiguration.setParent(parent);
+        mongoApplicationConfiguration.setType(applicationConfiguration.getClass().getName());
+
         getMongoDBUtils().performV(ds -> getDatastore().replace(mongoApplicationConfiguration));
 
         return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());

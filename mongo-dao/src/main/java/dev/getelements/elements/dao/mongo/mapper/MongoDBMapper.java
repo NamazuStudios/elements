@@ -72,7 +72,7 @@ import static java.util.stream.Collectors.toMap;
  * @deprecated This is a bit of a "god type" and should be broken up into smaller mappers.
  */
 @Deprecated
-@Mapper(uses = PropertyConverters.class)
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class} )
 public interface MongoDBMapper {
 
     // Note: In the development of this type, I made a mistake by misunderstanding the use of how the uses field
@@ -82,16 +82,16 @@ public interface MongoDBMapper {
 
     // Application Mappings
 
-    @Mapping(target = "id", source = "objectId")
-    @Mapping(target = "scriptRepoUrl", ignore = true)
-    @Mapping(target = "httpDocumentationUrl", ignore = true)
-    @Mapping(target = "httpDocumentationUiUrl", ignore = true)
-    @Mapping(target = "httpTunnelEndpointUrl", ignore = true)
-    @Mapping(target = "applicationConfiguration", ignore = true)
-    Application toApplication(MongoApplication source);
-
-    @InheritInverseConfiguration
-    MongoApplication toMongoApplication(Application source);
+//    @Mapping(target = "id", source = "objectId")
+//    @Mapping(target = "scriptRepoUrl", ignore = true)
+//    @Mapping(target = "httpDocumentationUrl", ignore = true)
+//    @Mapping(target = "httpDocumentationUiUrl", ignore = true)
+//    @Mapping(target = "httpTunnelEndpointUrl", ignore = true)
+//    @Mapping(target = "applicationConfiguration", ignore = true)
+//    Application toApplication(MongoApplication source);
+//
+//    @InheritInverseConfiguration
+//    MongoApplication toMongoApplication(Application source);
 
     // User & Profile Mappings
     @Mapping(target = "id", source = "objectId")

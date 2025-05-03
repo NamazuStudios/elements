@@ -16,7 +16,7 @@ import org.bson.types.ObjectId;
         ),
         @Index(
                 fields = {
-                        @Field("_t"),
+                        @Field("type"),
                         @Field("parent"),
                         @Field("name")
                 },
@@ -24,7 +24,11 @@ import org.bson.types.ObjectId;
         ),
         @Index(fields = @Field(value = "description", type = IndexType.TEXT))
 })
-@Entity(value = "application_configuration")
+@Entity(
+        value = "application_configuration",
+        discriminatorKey = "type",
+        discriminator = "className()"
+)
 public class MongoApplicationConfiguration {
 
     @Id
@@ -32,6 +36,9 @@ public class MongoApplicationConfiguration {
 
     @Property
     private String name;
+
+    @Property
+    private String type;
 
     @Property
     private String description;
@@ -53,6 +60,14 @@ public class MongoApplicationConfiguration {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getDescription() {

@@ -7,7 +7,7 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {PropertyConverters.class, MongoDBMapper.class})
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class})
 public interface MongoApplicationConfigurationMapper extends MapperRegistry.ReversibleMapper<
         MongoApplicationConfiguration,
         ApplicationConfiguration> {

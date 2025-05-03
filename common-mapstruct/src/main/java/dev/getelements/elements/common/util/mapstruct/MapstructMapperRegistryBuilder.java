@@ -98,6 +98,7 @@ public class MapstructMapperRegistryBuilder {
                         final var instance = getOrCreateMapper(aMethodInfo.getClassInfo().loadClass());
 
                         final MapperRegistry.Mapper<Object, Object> mapper = object -> {
+
                             try {
                                 return aMethod.invoke(instance, object);
                             } catch (InvocationTargetException ex) {

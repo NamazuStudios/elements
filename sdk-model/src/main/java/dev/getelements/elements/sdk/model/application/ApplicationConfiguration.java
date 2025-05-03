@@ -34,7 +34,7 @@ public class ApplicationConfiguration implements Serializable {
 
     @NotNull
     @Schema(description = "The fully-qualified Java type of ApplicationConfiguration.")
-    private String type;
+    private String type = getClass().getName();
 
     @NotNull
     private String description;
