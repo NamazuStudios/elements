@@ -138,7 +138,22 @@ public interface MapperRegistry {
          * @return the source type
          */
         default Optional<Class<?>> findSourceType() {
-            return findGenericTypeArgumentFromMapper(getClass(), 0);
+
+            Class<?> aClass = getClass();
+            Optional<Class<?>> result = Optional.empty();
+
+            do {
+
+                var interfaces = aClass.getInterfaces();
+
+                for (int i = 0; i < interfaces.length && result.isEmpty(); i++) {
+                    result = findGenericTypeArgumentFromMapper(interfaces[i], 0);
+                }
+
+            } while ((aClass = aClass.getSuperclass()) != null && result.isEmpty());
+
+            return result;
+
         }
 
         /**
@@ -147,7 +162,22 @@ public interface MapperRegistry {
          * @return the destination type.
          */
         default Optional<Class<?>> findDestinationType() {
-            return findGenericTypeArgumentFromMapper(getClass(), 1);
+
+            Class<?> aClass = getClass();
+            Optional<Class<?>> result = Optional.empty();
+
+            do {
+
+                var interfaces = aClass.getInterfaces();
+
+                for (int i = 0; i < interfaces.length && result.isEmpty(); i++) {
+                    result = findGenericTypeArgumentFromMapper(interfaces[i], 1);
+                }
+
+            } while ((aClass = aClass.getSuperclass()) != null && result.isEmpty());
+
+            return result;
+
         }
 
     }
@@ -218,7 +248,22 @@ public interface MapperRegistry {
          * @return the source type
          */
         default Optional<Class<?>> findSourceType() {
-            return findGenericTypeArgumentFromUpdater(getClass(), 0);
+
+            Class<?> aClass = getClass();
+            Optional<Class<?>> result = Optional.empty();
+
+            do {
+
+                var interfaces = aClass.getInterfaces();
+
+                for (int i = 0; i < interfaces.length && result.isEmpty(); i++) {
+                    result = findGenericTypeArgumentFromUpdater(interfaces[i], 0);
+                }
+
+            } while ((aClass = aClass.getSuperclass()) != null && result.isEmpty());
+
+            return result;
+
         }
 
         /**
@@ -227,7 +272,22 @@ public interface MapperRegistry {
          * @return the destination type.
          */
         default Optional<Class<?>> findDestinationType() {
-            return findGenericTypeArgumentFromUpdater(getClass(), 1);
+
+            Class<?> aClass = getClass();
+            Optional<Class<?>> result = Optional.empty();
+
+            do {
+
+                var interfaces = aClass.getInterfaces();
+
+                for (int i = 0; i < interfaces.length && result.isEmpty(); i++) {
+                    result = findGenericTypeArgumentFromUpdater(interfaces[i], 1);
+                }
+
+            } while ((aClass = aClass.getSuperclass()) != null && result.isEmpty());
+
+            return result;
+
         }
 
     }

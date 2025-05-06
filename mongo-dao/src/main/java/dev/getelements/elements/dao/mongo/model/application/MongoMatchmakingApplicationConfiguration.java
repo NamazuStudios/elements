@@ -1,22 +1,32 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
 import dev.getelements.elements.dao.mongo.model.MongoCallbackDefinition;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.morphia.annotations.Entity;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Entity(value = "application_configuration")
 public class MongoMatchmakingApplicationConfiguration extends MongoApplicationConfiguration {
 
-    private MatchingAlgorithm algorithm;
+    private String matchmakerName;
+
+    private String matchmakerElement;
 
     private MongoCallbackDefinition success;
 
-    public MatchingAlgorithm getAlgorithm() {
-        return algorithm;
+    public String getMatchmakerName() {
+        return matchmakerName;
     }
 
-    public void setAlgorithm(MatchingAlgorithm algorithm) {
-        this.algorithm = algorithm;
+    public void setMatchmakerName(String matchmakerName) {
+        this.matchmakerName = matchmakerName;
+    }
+
+    public String getMatchmakerElement() {
+        return matchmakerElement;
+    }
+
+    public void setMatchmakerElement(String matchmakerElement) {
+        this.matchmakerElement = matchmakerElement;
     }
 
     public MongoCallbackDefinition getSuccess() {

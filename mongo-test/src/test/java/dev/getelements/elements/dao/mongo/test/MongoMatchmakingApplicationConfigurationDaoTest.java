@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.sdk.model.application.CallbackDefinition;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import org.testng.annotations.Guice;
 
 import static org.testng.Assert.assertEquals;
@@ -20,7 +19,6 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
 
         final var config = new MatchmakingApplicationConfiguration();
         config.setSuccess(success);
-        config.setAlgorithm(MatchingAlgorithm.FIFO);
 
         return config;
 
@@ -30,7 +28,7 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
     protected MatchmakingApplicationConfiguration update(final MatchmakingApplicationConfiguration config) {
         final var success = new CallbackDefinition();
         success.setMethod("success");
-        success.setModule("def.getelements.test.Updated");
+        success.setModule("dev.getelements.test.Updated");
         config.setSuccess(success);
         return config;
     }
