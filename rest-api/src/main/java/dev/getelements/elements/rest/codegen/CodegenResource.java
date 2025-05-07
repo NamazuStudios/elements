@@ -18,7 +18,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletConfig;
-import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.*;
@@ -45,7 +45,7 @@ public class CodegenResource extends BaseOpenApiResource {
 
     private Oas3DocumentationResource documentationResource;
 
-    @GET
+    @POST
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(
             summary = "Generate Client API Code",
@@ -64,8 +64,7 @@ public class CodegenResource extends BaseOpenApiResource {
 
         getValidationHelper().validateModel(request);
 
-        final var tempFolderName = "codegen-" + UUID.randomUUID();
-        final var temporaryFiles = new TemporaryFiles(tempFolderName);
+        final var temporaryFiles = new TemporaryFiles(CodegenResource.class);
         final var path = temporaryFiles.createTempDirectory();
 
         try {

@@ -24,7 +24,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Content;
@@ -172,15 +171,13 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 throw new IllegalArgumentException("Unsupported spec version: " + oas.getPaths());
         }
 
-        final var spec = new SpecFilter().filter(
+        return new SpecFilter().filter(
                 clone,
                 filter,
                 getQueryParams(uriInfo.getQueryParameters()),
                 getCookies(headers),
                 getHeaders(headers)
         );
-
-        return spec;
     }
 
     private OpenAPI cloneOas3Spec(final String type, final OpenApiContext context, final OpenAPI oas) {

@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -19,9 +18,8 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
     @Override
     public File generateCore(final File spec, final String language, final String packageName, final String options) {
 
-        final var tempFolderName = "codegen-" + UUID.randomUUID();
-        final var temporaryFiles = new TemporaryFiles(tempFolderName);
-        final var path = temporaryFiles.createTempDirectory();
+        final var temporaryFiles = new TemporaryFiles(SuperUserOpenApiCodegenService.class);
+        final var path = temporaryFiles.createTempDirectory(packageName);
         final var args = getArgs(spec, language, options, packageName, path.toString());
 
         try {
@@ -44,7 +42,7 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
         final var zipFile = spec.getParentFile().toPath().resolve("ElementsCore.zip").toFile();
 
         try (final var fos = new FileOutputStream(zipFile); final var zos = new ZipOutputStream(fos)) {
-            addDirToZipArchive(zos, path.toFile(), null);
+            addDirToZipArchive(zos, path.toFile(), null, 0);
             return zipFile;
         } catch (Exception e) {
             throw new InternalException(e.getMessage());
@@ -83,20 +81,21 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
 
     private void addDirToZipArchive(final ZipOutputStream zos,
                                     final File fileToZip,
-                                    final String parentDirectoryName) throws Exception {
+                                    final String parentDirectoryName,
+                                    final int level) throws Exception {
 
-        if (fileToZip == null || !fileToZip.exists()) {
+        if (fileToZip == null || !fileToZip.exists() || fileToZip.getName().startsWith(".")) {
             return;
         }
 
-        final var zipEntryName = parentDirectoryName != null && !parentDirectoryName.isEmpty() ?
+        final var zipEntryName = parentDirectoryName != null && !parentDirectoryName.isEmpty() && level > 1 ?
                 parentDirectoryName + "/" + fileToZip.getName() :
                 fileToZip.getName();
 
         if (fileToZip.isDirectory()) {
 
             for (final var file : Objects.requireNonNull(fileToZip.listFiles())) {
-                addDirToZipArchive(zos, file, zipEntryName);
+                addDirToZipArchive(zos, file, zipEntryName, level + 1);
             }
 
         } else {
