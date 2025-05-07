@@ -1,9 +1,9 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
-@Embedded
+@Entity
 public class MongoCallbackDefinition {
 
     @Property

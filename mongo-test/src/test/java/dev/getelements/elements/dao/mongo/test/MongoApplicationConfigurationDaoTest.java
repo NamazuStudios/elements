@@ -4,31 +4,21 @@ import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
-import dev.morphia.Datastore;
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.Id;
-import dev.morphia.annotations.Property;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import jakarta.inject.Inject;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Factory;
-import org.testng.annotations.Guice;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
-import static dev.morphia.query.filters.Filters.eq;
 import static java.lang.String.format;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends ApplicationConfiguration> {
 
@@ -47,13 +37,25 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
 
     private final AtomicInteger counter = new AtomicInteger();
 
-    protected abstract UnderTestT create();
+    protected abstract Class<? extends ApplicationConfiguration> getTestType();
 
-    protected abstract UnderTestT update(UnderTestT config);
+    protected abstract UnderTestT createTestObject();
 
-    protected abstract void checkCreated(UnderTestT expected, UnderTestT actual);
+    protected abstract UnderTestT updateTestObject(UnderTestT config);
 
-    private final List<UnderTestT> intermediate = new CopyOnWriteArrayList<>();
+    protected abstract void assertCreatedCorrectly(UnderTestT actual, UnderTestT expected);
+
+    private final Map<String, UnderTestT> intermediates = new ConcurrentHashMap<>();
+
+    @DataProvider
+    public Object[][] getIntermediates() {
+        return intermediates
+                .values()
+                .stream()
+                .map(i -> new Object[] {i})
+                .toArray(Object[][]::new);
+
+    }
 
     @BeforeClass
     public void setupApplication() {
@@ -61,17 +63,18 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         application = applicationDao.createOrUpdateInactiveApplication(application);
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 10)
-    public void testCreate() {
+    @Test(invocationCount = 100, threadPoolSize = 10, groups = "createApplicationConfiguration")
+    public void testCreateWithApplicationId() {
 
-        final var config = create();
+        final var config = createTestObject();
         final var sequence = counter.incrementAndGet();
+        final var className = config.getClass().getName();
         final var simpleName = config.getClass().getSimpleName();
 
         config.setParent(application);
         config.setName(format("%s_%d", simpleName, sequence));
-        config.setDescription(format("Test configuration for %s", simpleName));
-        config.setType(simpleName);
+        config.setDescription(format("Test configuration for %s", className));
+        config.setType(className);
 
         final var created = applicationConfigurationDao.createApplicationConfiguration(
                 application.getId(),
@@ -83,8 +86,222 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         assertEquals(created.getDescription(), config.getDescription(), "Description fields are not equal");
         assertEquals(created.getType(), config.getType(), "Type fields are not equal");
         assertEquals(created.getParent(), config.getParent(), "Parent fields are not equal");
+        assertCreatedCorrectly(created, config);
 
-        intermediate.add(created);
+        intermediates.put(created.getId(), created);
+
+    }
+
+    @Test(
+        invocationCount = 100,
+        threadPoolSize = 10,
+        groups = "createApplicationConfiguration"
+    )
+    public void testCreateWithApplicationName() {
+
+        final var config = createTestObject();
+        final var sequence = counter.incrementAndGet();
+        final var className = config.getClass().getName();
+        final var simpleName = config.getClass().getSimpleName();
+
+        config.setParent(application);
+        config.setName(format("%s_%d", simpleName, sequence));
+        config.setDescription(format("Test configuration for %s", className));
+        config.setType(className);
+
+        final var created = applicationConfigurationDao.createApplicationConfiguration(
+                application.getName(),
+                config
+        );
+
+        assertNotNull(created.getId(), "Created configuration id is null");
+        assertEquals(created.getName(), config.getName(), "Name fields are not equal");
+        assertEquals(created.getDescription(), config.getDescription(), "Description fields are not equal");
+        assertEquals(created.getType(), config.getType(), "Type fields are not equal");
+        assertEquals(created.getParent(), config.getParent(), "Parent fields are not equal");
+        assertCreatedCorrectly(created, config);
+
+        intermediates.put(created.getId(), created);
+
+    }
+
+    @Test(
+        dataProvider = "getIntermediates",
+        dependsOnGroups = "createApplicationConfiguration",
+        expectedExceptions = DuplicateException.class
+    )
+    public void testCreateDuplicateFailsById(UnderTestT intermediate) {
+
+        final var toFail = createTestObject();
+        toFail.setName(intermediate.getName());
+        toFail.setDescription(intermediate.getDescription());
+        toFail.setType(intermediate.getType());
+        toFail.setParent(intermediate.getParent());
+
+        applicationConfigurationDao.createApplicationConfiguration(
+                application.getId(),
+                toFail
+        );
+
+    }
+
+    @Test(
+        dataProvider = "getIntermediates",
+        dependsOnGroups = "createApplicationConfiguration",
+        expectedExceptions = DuplicateException.class
+    )
+    public void testCreateDuplicateFailsByName(UnderTestT intermediate) {
+
+        final var toFail = createTestObject();
+        toFail.setName(intermediate.getName());
+        toFail.setDescription(intermediate.getDescription());
+        toFail.setType(intermediate.getType());
+        toFail.setParent(intermediate.getParent());
+
+        applicationConfigurationDao.createApplicationConfiguration(
+                application.getName(),
+                toFail
+        );
+
+    }
+
+    @Test(
+        threadPoolSize = 10,
+        dataProvider = "getIntermediates",
+        groups = "updateApplicationConfiguration",
+        dependsOnGroups = "createApplicationConfiguration"
+    )
+    public void testUpdateWithApplicationId(UnderTestT intermediate) {
+
+        final var config = updateTestObject(intermediate);
+        final var sequence = counter.incrementAndGet();
+        final var className = config.getClass().getName();
+        final var simpleName = config.getClass().getSimpleName();
+
+        config.setParent(application);
+        config.setName(format("%s_%d", simpleName, sequence));
+        config.setDescription(format("Test configuration for %s", className));
+        config.setType(className);
+
+        final var updated = applicationConfigurationDao.updateApplicationConfiguration(
+                application.getId(),
+                config
+        );
+
+        assertNotNull(updated.getId(), "Created configuration id is null");
+        assertEquals(updated.getName(), config.getName(), "Name fields are not equal");
+        assertEquals(updated.getDescription(), config.getDescription(), "Description fields are not equal");
+        assertEquals(updated.getType(), config.getType(), "Type fields are not equal");
+        assertEquals(updated.getParent(), config.getParent(), "Parent fields are not equal");
+
+    }
+
+    @Test(
+        threadPoolSize = 10,
+        dataProvider = "getIntermediates",
+        groups = "updateApplicationConfiguration",
+        dependsOnGroups = "createApplicationConfiguration"
+    )
+    public void testUpdateWithApplicationName(UnderTestT intermediate) {
+
+        final var config = updateTestObject(intermediate);
+        final var sequence = counter.incrementAndGet();
+        final var className = config.getClass().getName();
+        final var simpleName = config.getClass().getSimpleName();
+
+        config.setParent(application);
+        config.setName(format("%s_%d", simpleName, sequence));
+        config.setDescription(format("Test configuration for %s", className));
+        config.setType(className);
+
+        final var updated = applicationConfigurationDao.updateApplicationConfiguration(
+                application.getName(),
+                config
+        );
+
+        assertNotNull(updated.getId(), "Created configuration id is null");
+        assertEquals(updated.getName(), config.getName(), "Name fields are not equal");
+        assertEquals(updated.getDescription(), config.getDescription(), "Description fields are not equal");
+        assertEquals(updated.getType(), config.getType(), "Type fields are not equal");
+        assertEquals(updated.getParent(), config.getParent(), "Parent fields are not equal");
+
+    }
+
+    @Test(
+        groups = "fetchApplicationConfiguration",
+        dependsOnGroups = "updateApplicationConfiguration"
+    )
+    public void testGetAllConfigurationsForTypeById() {
+
+        final var all = applicationConfigurationDao.getAllActiveApplicationConfigurations(
+                application.getId(),
+                getTestType()
+        );
+
+        all.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
+
+    }
+
+    @Test(
+        groups = "fetchApplicationConfiguration",
+        dependsOnGroups = "updateApplicationConfiguration"
+    )
+    public void testGetAllConfigurationsForTypeByName() {
+
+        final var all = applicationConfigurationDao.getAllActiveApplicationConfigurations(
+                application.getName(),
+                getTestType()
+        );
+
+        all.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
+
+    }
+
+    @Test(
+        groups = "fetchApplicationConfiguration",
+        dependsOnGroups = "updateApplicationConfiguration"
+    )
+    public void testGetConfigurationsForTypeById() {
+
+        final PaginationWalker.WalkFunction<ApplicationConfiguration> walkFunction =
+                (offset, count) -> applicationConfigurationDao.getActiveApplicationConfigurations(
+                        application.getId(),
+                        offset,
+                        count
+                );
+
+        final var configurations = new PaginationWalker()
+                .toList(walkFunction)
+                .stream()
+                .filter(c -> c.getClass().equals(getTestType()))
+                .toList();
+
+        assertEquals(configurations.size(), intermediates.size());
+        configurations.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
+
+    }
+
+    @Test(
+        groups = "fetchApplicationConfiguration",
+        dependsOnGroups = "updateApplicationConfiguration"
+    )
+    public void testGetConfigurationsForTypeByName() {
+
+        final PaginationWalker.WalkFunction<ApplicationConfiguration> walkFunction =
+                (offset, count) -> applicationConfigurationDao.getActiveApplicationConfigurations(
+                    application.getName(),
+                    offset,
+                    count
+            );
+
+        final var configurations = new PaginationWalker()
+                .toList(walkFunction)
+                .stream()
+                .filter(c -> c.getClass().equals(getTestType()))
+                .toList();
+
+        assertEquals(configurations.size(), intermediates.size());
+        configurations.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
 
     }
 

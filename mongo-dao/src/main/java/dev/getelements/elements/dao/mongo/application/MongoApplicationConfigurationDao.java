@@ -10,16 +10,19 @@ import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
+import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.BadQueryException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
 import dev.getelements.elements.sdk.model.exception.item.ItemNotFoundException;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
@@ -33,6 +36,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -70,7 +74,10 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         );
 
         final List<T> applicationConfigurations;
-        final var mapper = getMapperRegistry().getMapper(MongoApplicationConfiguration.class, configurationClass);
+
+        // Cast. Damnit. Cast.
+        final var mongoApplicationConfigurationClass = (Class<MongoApplicationConfiguration>) getMongoApplicationConfigurationType(configurationClass);
+        final var mapper = getMapperRegistry().getMapper(mongoApplicationConfigurationClass, configurationClass);
 
         try (var iterator = query.iterator()) {
             applicationConfigurations = iterator
@@ -132,13 +139,16 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             throw new BadQueryException("search must be specified.");
         }
 
-        final Query<MongoApplicationConfiguration> profileQuery = getDatastore()
+        final Query<MongoApplicationConfiguration> query = getDatastore()
                 .find(MongoApplicationConfiguration.class);
 
-        return profileQuery.filter(
-                exists("name"),
-                text(trimmedSearch)
-        );
+        query.filter(exists("name"));
+
+        if (search != null && !search.isBlank()) {
+            query.filter(text(trimmedSearch));
+        }
+
+        return query;
 
     }
 
@@ -227,7 +237,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final T applicationConfiguration) {
 
         requireNonNull(applicationConfiguration, "applicationNameOrId");
-        getValidationHelper().validateModel(applicationConfiguration);
+        getValidationHelper().validateModel(applicationConfiguration, Update.class);
 
         final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
@@ -247,7 +257,19 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final Class<? extends ApplicationConfiguration> configType,
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
-        final var mongoConfigType = getMongoApplicationConfigurationType(configType);
+
+        final var query = getQueryForApplicationConfiguration(
+                configType,
+                applicationNameOrId,
+                applicationConfigurationNameOrId);
+
+        final var result = new UpdateBuilder()
+                .with(unset("name"))
+                .execute(query, new UpdateOptions().upsert(false));
+
+        if (result.getModifiedCount() == 0) {
+            throw new ApplicationConfigurationNotFoundException();
+        }
 
     }
 

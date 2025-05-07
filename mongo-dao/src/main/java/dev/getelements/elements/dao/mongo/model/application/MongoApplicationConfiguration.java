@@ -24,11 +24,7 @@ import org.bson.types.ObjectId;
         ),
         @Index(fields = @Field(value = "description", type = IndexType.TEXT))
 })
-@Entity(
-        value = "application_configuration",
-        discriminatorKey = "type",
-        discriminator = "className()"
-)
+@Entity(value = "application_configuration")
 public class MongoApplicationConfiguration {
 
     @Id
