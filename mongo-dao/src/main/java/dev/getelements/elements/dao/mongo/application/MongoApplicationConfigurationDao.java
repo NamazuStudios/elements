@@ -267,11 +267,9 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
                 applicationNameOrId,
                 applicationConfigurationNameOrId);
 
-        final var result = new UpdateBuilder()
-                .with(unset("name"))
-                .execute(query, new UpdateOptions().upsert(false));
+        final var result = query.delete();
 
-        if (result.getModifiedCount() == 0) {
+        if (result.getDeletedCount() == 0) {
             throw new ApplicationConfigurationNotFoundException();
         }
 

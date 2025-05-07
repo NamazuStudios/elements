@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.model.exception.application.ApplicationConfi
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -78,14 +79,17 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         return intermediates
                 .values()
                 .stream()
-                .flatMap(intermediate -> streamScopes().map(scope -> {
+                .map(intermediate -> {
+
                     final var flag = flagSupplier.getAsInt();
+
                     return new Object[] {
                             (flag & 0x01) == 0 ? application.getId() : application.getName(),
                             (flag & 0x02) == 0 ? intermediate.getId() : intermediate.getName()
                     };
+
                 })
-                ).toArray(Object[][]::new);
+                .toArray(Object[][]::new);
 
     }
 

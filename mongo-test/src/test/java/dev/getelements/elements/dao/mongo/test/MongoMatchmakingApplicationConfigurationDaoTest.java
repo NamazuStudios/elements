@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.application.CallbackDefinition;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import org.testng.annotations.Guice;
 
+import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -35,6 +36,7 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
         success.setMethod("success");
         success.setModule("dev.getelements.test.Updated");
         config.setSuccess(success);
+        config.setName(format("%s_updated", config.getName()));
         return config;
     }
 
