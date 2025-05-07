@@ -273,7 +273,7 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         final var configurations = new PaginationWalker()
                 .toList(walkFunction)
                 .stream()
-                .filter(c -> c.getClass().equals(getTestType()))
+                .filter(c -> getTestType().getName().equals(c.getType()))
                 .toList();
 
         assertEquals(configurations.size(), intermediates.size());
@@ -297,7 +297,7 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         final var configurations = new PaginationWalker()
                 .toList(walkFunction)
                 .stream()
-                .filter(c -> c.getClass().equals(getTestType()))
+                .filter(c -> getTestType().getName().equals(c.getType()))
                 .toList();
 
         assertEquals(configurations.size(), intermediates.size());

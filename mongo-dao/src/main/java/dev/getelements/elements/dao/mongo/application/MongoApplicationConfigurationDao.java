@@ -14,7 +14,7 @@ import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.BadQueryException;
-import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
 import dev.getelements.elements.sdk.model.exception.item.ItemNotFoundException;
@@ -25,7 +25,6 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 
 import java.util.List;
@@ -95,18 +94,10 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(
             final String applicationNameOrId,
             final int offset, final int count) {
-
         final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-
-        final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoApplicationConfiguration.class);
-
-        query.filter(Filters.and(
-            exists("name"),
-            eq("parent", parent)
-        ));
-
+        final var query = getDatastore().find(MongoApplicationConfiguration.class);
+        query.filter(exists("name"), eq("parent", parent));
         return paginationFromQuery(query, offset, count);
-
     }
 
     @Override
@@ -115,15 +106,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final int offset, final int count,
             final String search) {
 
-        final String trimmedSearch = nullToEmpty(search).trim();
-
-        if (trimmedSearch.isEmpty()) {
-            throw new InvalidDataException("search must be specified.");
-        }
+        final var trimmed = nullToEmpty(search).trim();
+        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final var query = getBooleanQueryParser()
                 .parse(MongoApplicationConfiguration.class, search)
-                .orElseGet(() -> parseTextQuery(search));
+                .orElseGet(() -> parseTextQuery(trimmed));
+
+        query.filter(exists("name"), eq("parent", parent));
 
         return getMongoDBUtils().isIndexedQuery(query)
                 ? paginationFromQuery(query, offset, count)
@@ -155,14 +145,28 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     private Pagination<ApplicationConfiguration> paginationFromQuery(
             final Query<MongoApplicationConfiguration> query,
             final int offset, final int count) {
+
+        final var mapper = getMapperRegistry()
+                .mappers()
+                .filter(m -> m
+                        .findSourceType()
+                        .map(c -> c.equals(MongoApplicationConfiguration.class)).orElse(false)
+                )
+                .filter(m -> m
+                        .findDestinationType()
+                        .map(c -> c.equals(ApplicationConfiguration.class)).orElse(false)
+                )
+                .findFirst()
+                .map(m -> (MapperRegistry.Mapper<MongoApplicationConfiguration, ApplicationConfiguration>)m)
+                .orElseThrow(InternalException::new);
+
         return getMongoDBUtils().paginationFromQuery(
                 query,
                 offset, count,
-                input -> getMapperRegistry().map(
-                        input,
-                        ApplicationConfiguration.class),
+                o -> mapper.forward(o),
                 new FindOptions()
         );
+
     }
 
     @Override
@@ -336,7 +340,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         }
 
         final var nameOrIdFilter = getMongoDBUtils().parse(applicationConfigurationNameOrId)
-                .map(objectId -> eq("_id", objectId))
+                .map(oid -> eq("_id", oid))
                 .orElseGet(() -> eq("name", applicationConfigurationNameOrId));
 
         return getDatastore()

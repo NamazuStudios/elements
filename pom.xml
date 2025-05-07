@@ -177,7 +177,7 @@
         <neow3j.version>3.14.0</neow3j.version>
         <web3j.version>4.9.4</web3j.version>
         <solanaj.version>0.0.7</solanaj.version>
-        <morphia.version>2.4.13</morphia.version>
+        <morphia.version>2.4.18</morphia.version>
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.5.10</kotlin.version>
