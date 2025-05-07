@@ -5,7 +5,7 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
-import dev.getelements.elements.sdk.model.util.PaginationWalker;
+import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +16,8 @@ import org.testng.annotations.Test;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntSupplier;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.testng.Assert.*;
@@ -37,7 +39,7 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
 
     private final AtomicInteger counter = new AtomicInteger();
 
-    protected abstract Class<? extends ApplicationConfiguration> getTestType();
+    protected abstract Class<UnderTestT> getTestType();
 
     protected abstract UnderTestT createTestObject();
 
@@ -47,13 +49,43 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
 
     private final Map<String, UnderTestT> intermediates = new ConcurrentHashMap<>();
 
+    public Stream<String> streamScopes() {
+        return Stream.of(application.getId(), application.getName());
+    }
+
     @DataProvider
-    public Object[][] getIntermediates() {
+    public Object[][] getScope() {
+        return streamScopes()
+                .map(i -> new Object[] {i})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] getScopeAndIntermediates() {
         return intermediates
                 .values()
                 .stream()
-                .map(i -> new Object[] {i})
+                .flatMap(i -> streamScopes().map(scope -> new Object[] {scope, i}))
                 .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] getDeleteCandidates() {
+
+        final var counter = new AtomicInteger();
+        final IntSupplier flagSupplier = () -> counter.getAndIncrement() % 4;
+
+        return intermediates
+                .values()
+                .stream()
+                .flatMap(intermediate -> streamScopes().map(scope -> {
+                    final var flag = flagSupplier.getAsInt();
+                    return new Object[] {
+                            (flag & 0x01) == 0 ? application.getId() : application.getName(),
+                            (flag & 0x02) == 0 ? intermediate.getId() : intermediate.getName()
+                    };
+                })
+                ).toArray(Object[][]::new);
 
     }
 
@@ -63,8 +95,13 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         application = applicationDao.createOrUpdateInactiveApplication(application);
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 10, groups = "createApplicationConfiguration")
-    public void testCreateWithApplicationId() {
+    @Test(
+        invocationCount = 50,
+        threadPoolSize = 10,
+        groups = "createApplicationConfiguration",
+        dataProvider = "getScope"
+    )
+    public void testCreate(final String scope) {
 
         final var config = createTestObject();
         final var sequence = counter.incrementAndGet();
@@ -76,11 +113,7 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         config.setDescription(format("Test configuration for %s", className));
         config.setType(className);
 
-        final var created = applicationConfigurationDao.createApplicationConfiguration(
-                application.getId(),
-                config
-        );
-
+        final var created = applicationConfigurationDao.createApplicationConfiguration(scope, config);
         assertNotNull(created.getId(), "Created configuration id is null");
         assertEquals(created.getName(), config.getName(), "Name fields are not equal");
         assertEquals(created.getDescription(), config.getDescription(), "Description fields are not equal");
@@ -93,85 +126,26 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
     }
 
     @Test(
-        invocationCount = 100,
-        threadPoolSize = 10,
-        groups = "createApplicationConfiguration"
-    )
-    public void testCreateWithApplicationName() {
-
-        final var config = createTestObject();
-        final var sequence = counter.incrementAndGet();
-        final var className = config.getClass().getName();
-        final var simpleName = config.getClass().getSimpleName();
-
-        config.setParent(application);
-        config.setName(format("%s_%d", simpleName, sequence));
-        config.setDescription(format("Test configuration for %s", className));
-        config.setType(className);
-
-        final var created = applicationConfigurationDao.createApplicationConfiguration(
-                application.getName(),
-                config
-        );
-
-        assertNotNull(created.getId(), "Created configuration id is null");
-        assertEquals(created.getName(), config.getName(), "Name fields are not equal");
-        assertEquals(created.getDescription(), config.getDescription(), "Description fields are not equal");
-        assertEquals(created.getType(), config.getType(), "Type fields are not equal");
-        assertEquals(created.getParent(), config.getParent(), "Parent fields are not equal");
-        assertCreatedCorrectly(created, config);
-
-        intermediates.put(created.getId(), created);
-
-    }
-
-    @Test(
-        dataProvider = "getIntermediates",
+        dataProvider = "getScopeAndIntermediates",
         dependsOnGroups = "createApplicationConfiguration",
         expectedExceptions = DuplicateException.class
     )
-    public void testCreateDuplicateFailsById(UnderTestT intermediate) {
-
+    public void testCreateDuplicateFails(final String scope, final UnderTestT intermediate) {
         final var toFail = createTestObject();
         toFail.setName(intermediate.getName());
         toFail.setDescription(intermediate.getDescription());
         toFail.setType(intermediate.getType());
         toFail.setParent(intermediate.getParent());
-
-        applicationConfigurationDao.createApplicationConfiguration(
-                application.getId(),
-                toFail
-        );
-
-    }
-
-    @Test(
-        dataProvider = "getIntermediates",
-        dependsOnGroups = "createApplicationConfiguration",
-        expectedExceptions = DuplicateException.class
-    )
-    public void testCreateDuplicateFailsByName(UnderTestT intermediate) {
-
-        final var toFail = createTestObject();
-        toFail.setName(intermediate.getName());
-        toFail.setDescription(intermediate.getDescription());
-        toFail.setType(intermediate.getType());
-        toFail.setParent(intermediate.getParent());
-
-        applicationConfigurationDao.createApplicationConfiguration(
-                application.getName(),
-                toFail
-        );
-
+        applicationConfigurationDao.createApplicationConfiguration(scope, toFail);
     }
 
     @Test(
         threadPoolSize = 10,
-        dataProvider = "getIntermediates",
+        dataProvider = "getScopeAndIntermediates",
         groups = "updateApplicationConfiguration",
         dependsOnGroups = "createApplicationConfiguration"
     )
-    public void testUpdateWithApplicationId(UnderTestT intermediate) {
+    public void testUpdate(final String scope, final UnderTestT intermediate) {
 
         final var config = updateTestObject(intermediate);
         final var sequence = counter.incrementAndGet();
@@ -183,126 +157,88 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         config.setDescription(format("Test configuration for %s", className));
         config.setType(className);
 
-        final var updated = applicationConfigurationDao.updateApplicationConfiguration(
-                application.getId(),
-                config
-        );
-
+        final var updated = applicationConfigurationDao.updateApplicationConfiguration(scope, config);
         assertNotNull(updated.getId(), "Created configuration id is null");
         assertEquals(updated.getName(), config.getName(), "Name fields are not equal");
         assertEquals(updated.getDescription(), config.getDescription(), "Description fields are not equal");
         assertEquals(updated.getType(), config.getType(), "Type fields are not equal");
         assertEquals(updated.getParent(), config.getParent(), "Parent fields are not equal");
+        intermediates.put(intermediate.getId(), updated);
 
     }
 
     @Test(
-        threadPoolSize = 10,
-        dataProvider = "getIntermediates",
-        groups = "updateApplicationConfiguration",
-        dependsOnGroups = "createApplicationConfiguration"
-    )
-    public void testUpdateWithApplicationName(UnderTestT intermediate) {
-
-        final var config = updateTestObject(intermediate);
-        final var sequence = counter.incrementAndGet();
-        final var className = config.getClass().getName();
-        final var simpleName = config.getClass().getSimpleName();
-
-        config.setParent(application);
-        config.setName(format("%s_%d", simpleName, sequence));
-        config.setDescription(format("Test configuration for %s", className));
-        config.setType(className);
-
-        final var updated = applicationConfigurationDao.updateApplicationConfiguration(
-                application.getName(),
-                config
-        );
-
-        assertNotNull(updated.getId(), "Created configuration id is null");
-        assertEquals(updated.getName(), config.getName(), "Name fields are not equal");
-        assertEquals(updated.getDescription(), config.getDescription(), "Description fields are not equal");
-        assertEquals(updated.getType(), config.getType(), "Type fields are not equal");
-        assertEquals(updated.getParent(), config.getParent(), "Parent fields are not equal");
-
-    }
-
-    @Test(
+        dataProvider = "getScope",
         groups = "fetchApplicationConfiguration",
         dependsOnGroups = "updateApplicationConfiguration"
     )
-    public void testGetAllConfigurationsForTypeById() {
-
-        final var all = applicationConfigurationDao.getAllActiveApplicationConfigurations(
-                application.getId(),
-                getTestType()
-        );
-
+    public void testGetAllConfigurationsForType(final String scope) {
+        final var all = applicationConfigurationDao.getAllActiveApplicationConfigurations(scope, getTestType());
         all.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
-
     }
 
     @Test(
-        groups = "fetchApplicationConfiguration",
-        dependsOnGroups = "updateApplicationConfiguration"
+            dataProvider = "getScopeAndIntermediates",
+            groups = "fetchApplicationConfiguration",
+            dependsOnGroups = "updateApplicationConfiguration"
     )
-    public void testGetAllConfigurationsForTypeByName() {
+    public void testGetSpecificApplicationConfigurationById(final String scope, final UnderTestT intermediate) {
 
-        final var all = applicationConfigurationDao.getAllActiveApplicationConfigurations(
-                application.getName(),
-                getTestType()
+        final var fetched = applicationConfigurationDao.getApplicationConfiguration(
+                getTestType(),
+                scope,
+                intermediate.getId()
         );
 
-        all.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
+        assertEquals(fetched, intermediate);
 
     }
 
     @Test(
-        groups = "fetchApplicationConfiguration",
-        dependsOnGroups = "updateApplicationConfiguration"
+            dataProvider = "getScopeAndIntermediates",
+            groups = "fetchApplicationConfiguration",
+            dependsOnGroups = "updateApplicationConfiguration"
     )
-    public void testGetConfigurationsForTypeById() {
+    public void testGetSpecificApplicationConfigurationByName(final String scope, final UnderTestT intermediate) {
 
-        final PaginationWalker.WalkFunction<ApplicationConfiguration> walkFunction =
-                (offset, count) -> applicationConfigurationDao.getActiveApplicationConfigurations(
-                        application.getId(),
-                        offset,
-                        count
-                );
+        final var fetched = applicationConfigurationDao.getApplicationConfiguration(
+                getTestType(),
+                scope,
+                intermediate.getName()
+        );
 
-        final var configurations = new PaginationWalker()
-                .toList(walkFunction)
-                .stream()
-                .filter(c -> getTestType().getName().equals(c.getType()))
-                .toList();
-
-        assertEquals(configurations.size(), intermediates.size());
-        configurations.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
+        assertEquals(fetched, intermediate);
 
     }
 
     @Test(
-        groups = "fetchApplicationConfiguration",
-        dependsOnGroups = "updateApplicationConfiguration"
+            dataProvider = "getDeleteCandidates",
+            groups = "deleteApplicationConfiguration",
+            dependsOnGroups = "fetchApplicationConfiguration"
     )
-    public void testGetConfigurationsForTypeByName() {
+    public void testDelete(final String applicationScope,
+                           final String applicationConfigurationScope) {
+        applicationConfigurationDao.deleteApplicationConfiguration(
+                getTestType(),
+                applicationScope,
+                applicationConfigurationScope
+        );
+    }
 
-        final PaginationWalker.WalkFunction<ApplicationConfiguration> walkFunction =
-                (offset, count) -> applicationConfigurationDao.getActiveApplicationConfigurations(
-                    application.getName(),
-                    offset,
-                    count
-            );
-
-        final var configurations = new PaginationWalker()
-                .toList(walkFunction)
-                .stream()
-                .filter(c -> getTestType().getName().equals(c.getType()))
-                .toList();
-
-        assertEquals(configurations.size(), intermediates.size());
-        configurations.forEach(c -> assertTrue(intermediates.containsKey(c.getId())));
-
+    @Test(
+            dataProvider = "getDeleteCandidates",
+            groups = "deleteApplicationConfiguration",
+            dependsOnGroups = "fetchApplicationConfiguration",
+            dependsOnMethods = "testDelete",
+            expectedExceptions = ApplicationConfigurationNotFoundException.class
+    )
+    public void testDoubleDelete(final String applicationScope,
+                                 final String applicationConfigurationScope) {
+        applicationConfigurationDao.deleteApplicationConfiguration(
+                getTestType(),
+                applicationScope,
+                applicationConfigurationScope
+        );
     }
 
 }

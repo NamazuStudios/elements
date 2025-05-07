@@ -330,8 +330,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
-        final var parent = getMongoApplicationDao()
-                .findActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().findMongoApplication(applicationNameOrId);
 
         if (parent == null) {
             return getDatastore()

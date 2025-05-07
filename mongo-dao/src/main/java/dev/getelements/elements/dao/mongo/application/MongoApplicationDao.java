@@ -180,6 +180,24 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
+    public MongoApplication findMongoApplication(final String mongoApplicationNameOrId) {
+
+        final var query = datastore.find(MongoApplication.class);
+
+        if (ObjectId.isValid(mongoApplicationNameOrId)) {
+            query.filter(and(
+                    eq("_id", new ObjectId(mongoApplicationNameOrId))
+            ));
+        } else {
+            query.filter(and(
+                    eq("name", mongoApplicationNameOrId)
+            ));
+        }
+
+        return query.first();
+
+    }
+
     public MongoApplication findActiveMongoApplication(final String mongoApplicationNameOrId) {
 
         final var query = datastore.find(MongoApplication.class);

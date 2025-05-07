@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.test;
 
-import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.CallbackDefinition;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import org.testng.annotations.Guice;
@@ -12,7 +11,7 @@ import static org.testng.Assert.assertNotNull;
 public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplicationConfigurationDaoTest<MatchmakingApplicationConfiguration> {
 
     @Override
-    protected Class<? extends ApplicationConfiguration> getTestType() {
+    protected Class<MatchmakingApplicationConfiguration> getTestType() {
         return MatchmakingApplicationConfiguration.class;
     }
 

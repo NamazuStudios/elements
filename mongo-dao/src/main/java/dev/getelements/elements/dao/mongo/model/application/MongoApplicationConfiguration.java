@@ -15,12 +15,12 @@ import org.bson.types.ObjectId;
                 fields = @Field("parent")
         ),
         @Index(
-                fields = {
-                        @Field("type"),
-                        @Field("parent"),
-                        @Field("name")
-                },
-                options = @IndexOptions(unique = true, sparse = true)
+            fields = {
+                @Field("type"),
+                @Field("parent"),
+                @Field("name")
+            },
+            options = @IndexOptions(unique = true, partialFilter = "{ name: { $exists: true } }")
         ),
         @Index(fields = @Field(value = "description", type = IndexType.TEXT))
 })
