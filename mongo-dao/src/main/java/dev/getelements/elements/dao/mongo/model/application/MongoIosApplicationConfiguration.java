@@ -12,10 +12,18 @@ import java.util.List;
 public class MongoIosApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
-    private List<MongoProductBundle> productBundles;
+    private String applicationId;
 
     @Property
-    private MongoAppleSignInConfiguration appleSignInConfiguration;
+    private List<MongoProductBundle> productBundles;
+
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
 
     public List<MongoProductBundle> getProductBundles() {
         return productBundles;
@@ -23,14 +31,6 @@ public class MongoIosApplicationConfiguration extends MongoApplicationConfigurat
 
     public void setProductBundles(List<MongoProductBundle> productBundles) {
         this.productBundles = productBundles;
-    }
-
-    public MongoAppleSignInConfiguration getAppleSignInConfiguration() {
-        return appleSignInConfiguration;
-    }
-
-    public void setAppleSignInConfiguration(MongoAppleSignInConfiguration appleSignInConfiguration) {
-        this.appleSignInConfiguration = appleSignInConfiguration;
     }
 
 }

@@ -24,8 +24,9 @@ public interface ApplicationConfigurationDao {
      * @param count  the count
      * @return a {@link Pagination} of {@link Application} instances
      */
-    Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(String applicationNameOrId,
-                                                                            int offset, int count);
+    Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(
+            String applicationNameOrId,
+            int offset, int count);
 
     /**
      * Gets the active applications registered in the databse given the offset and count.
@@ -76,9 +77,11 @@ public interface ApplicationConfigurationDao {
      * @param applicationNameOrId the application name or id
      * @return a {@link List} associated with the {@link Application}
      */
-    <T extends ApplicationConfiguration> List<T> getAllActiveApplicationConfigurations(
+    <T extends ApplicationConfiguration>
+    List<T> getAllActiveApplicationConfigurations(
             String applicationNameOrId,
-            Class<T> configurationTClass);
+            Class<T> configurationTClass
+    );
 
     /**
      * Sets the ProductBundle for the given application configuration id.

@@ -17,31 +17,35 @@ import dev.getelements.elements.sdk.model.exception.BadQueryException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
-import dev.getelements.elements.sdk.model.exception.item.ItemNotFoundException;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import jakarta.inject.Inject;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
-import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.util.Objects.requireNonNull;
 
 /**
  * Created by patricktwohig on 7/13/15.
  */
 public class MongoApplicationConfigurationDao implements ApplicationConfigurationDao {
+
+    public static final String PRODUCT_BUNDLES_PROPERTY = "productBundles";
 
     private ValidationHelper validationHelper;
 
@@ -170,57 +174,13 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     }
 
     @Override
-    public <T extends ApplicationConfiguration>
-    T updateProductBundles(
-            final String applicationNameOrId,
-            final String applicationConfigurationNameOrId,
-            final Class<T> configurationClass,
-            final List<ProductBundle> productBundles) {
-
-        requireNonNull(productBundles, "productBundles");
-
-        for (final var productBundle : productBundles) {
-            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
-                final String itemNameOrId = productBundleReward.getItemId();
-                final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
-                if (mongoItem == null) {
-                    throw new ItemNotFoundException("Item with name/id: " + itemNameOrId + " not found.");
-                }
-                productBundleReward.setItemId(mongoItem.getObjectId().toHexString());
-            }
-        }
-
-        final var mongoProductBundles = productBundles
-            .stream()
-            .map(pb -> getMapperRegistry().map(pb, MongoProductBundle.class))
-            .collect(Collectors.toList());
-
-        final var query = getQueryForApplicationConfiguration(
-                configurationClass,
-                applicationNameOrId,
-                applicationConfigurationNameOrId
-        );
-
-        final var resultMongoApplicationConfiguration = new UpdateBuilder()
-                .with(set("productBundles", mongoProductBundles))
-                .modify(query)
-                .execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
-
-        if (resultMongoApplicationConfiguration == null) {
-            throw new NotFoundException("Application Configuration with id: " + applicationNameOrId + "not found.");
-        }
-
-        return getMapperRegistry().map(resultMongoApplicationConfiguration, configurationClass);
-
-    }
-
-    @Override
     public <T extends ApplicationConfiguration> T createApplicationConfiguration(
             final String applicationNameOrId,
             final T applicationConfiguration) {
 
         requireNonNull(applicationConfiguration, "applicationNameOrId");
         getValidationHelper().validateModel(applicationConfiguration, Insert.class);
+        normalizeProductBundles(applicationConfiguration);
 
         final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
@@ -242,6 +202,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
         requireNonNull(applicationConfiguration, "applicationNameOrId");
         getValidationHelper().validateModel(applicationConfiguration, Update.class);
+        normalizeProductBundles(applicationConfiguration);
 
         final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
@@ -254,6 +215,82 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
         return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
 
+    }
+
+    public void normalizeProductBundles(final ApplicationConfiguration applicationConfiguration) {
+
+        // This is kind of a hack that needs to addressed later. Those with product bundles are an edge case
+        // and should be better handled in the future.
+
+        try {
+
+            final var nfo = Introspector.getBeanInfo(applicationConfiguration.getClass());
+
+            final var descriptors = Stream.of(nfo.getPropertyDescriptors())
+                    .filter(pd -> pd.getName().equals(PRODUCT_BUNDLES_PROPERTY))
+                    .filter(pd -> List.class.isAssignableFrom(pd.getPropertyType()))
+                    .collect(Collectors.toList());
+
+            for (final var pd : descriptors) {
+                final var getter = (List<ProductBundle>) pd.getReadMethod().invoke(applicationConfiguration);
+                final var checked = Collections.checkedList(getter, ProductBundle.class);
+                final var normalized = getNormalizedProductBundles(checked);
+                pd.getWriteMethod().invoke(applicationConfiguration, normalized);
+            }
+
+        } catch (IntrospectionException | IllegalAccessException | InvocationTargetException ex) {
+            throw new InternalException(ex);
+        }
+
+    }
+
+    @Override
+    public <T extends ApplicationConfiguration>
+    T updateProductBundles(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId,
+            final Class<T> configurationClass,
+            final List<ProductBundle> productBundles) {
+
+        requireNonNull(productBundles, "productBundles");
+
+        final var mongoProductBundles = getNormalizedProductBundles(productBundles)
+                .stream()
+                .map(pb -> getMapperRegistry().map(pb, MongoProductBundle.class))
+                .collect(Collectors.toList());
+
+        final var query = getQueryForApplicationConfiguration(
+                configurationClass,
+                applicationNameOrId,
+                applicationConfigurationNameOrId
+        );
+
+        final var resultMongoApplicationConfiguration = new UpdateBuilder()
+                .with(set("productBundles", mongoProductBundles))
+                .modify(query)
+                .execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
+
+        if (resultMongoApplicationConfiguration == null) {
+            throw new NotFoundException("Application Configuration with id: " + applicationNameOrId + "not found.");
+        }
+
+        return getMapperRegistry().map(resultMongoApplicationConfiguration, configurationClass);
+
+    }
+
+    public List<ProductBundle> getNormalizedProductBundles(final List<ProductBundle> productBundles) {
+        return productBundles == null
+                ? null
+                : productBundles
+                    .stream()
+                    .map(getValidationHelper()::validateModel)
+                    .peek(pb -> pb.getProductBundleRewards()
+                        .forEach(reward -> {
+                            final String itemNameOrId = reward.getItemId();
+                            final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+                            reward.setItemId(mongoItem.getObjectId().toHexString());
+                        }))
+                    .toList();
     }
 
     @Override

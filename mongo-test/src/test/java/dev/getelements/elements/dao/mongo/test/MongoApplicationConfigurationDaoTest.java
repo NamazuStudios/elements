@@ -34,11 +34,11 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
     private ApplicationDao applicationDao;
 
     @Inject
-    private ApplicationConfigurationDao applicationConfigurationDao;
+    protected ApplicationConfigurationDao applicationConfigurationDao;
 
-    private Application application;
+    protected Application application;
 
-    private final AtomicInteger counter = new AtomicInteger();
+    protected final AtomicInteger counter = new AtomicInteger();
 
     protected abstract Class<UnderTestT> getTestType();
 
@@ -48,7 +48,7 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
 
     protected abstract void assertCreatedCorrectly(UnderTestT actual, UnderTestT expected);
 
-    private final Map<String, UnderTestT> intermediates = new ConcurrentHashMap<>();
+    protected final Map<String, UnderTestT> intermediates = new ConcurrentHashMap<>();
 
     public Stream<String> streamScopes() {
         return Stream.of(application.getId(), application.getName());
@@ -68,6 +68,30 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
                 .stream()
                 .flatMap(i -> streamScopes().map(scope -> new Object[] {scope, i}))
                 .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] getIntermediatesByMixedScope() {
+
+        final var counter = new AtomicInteger();
+        final IntSupplier flagSupplier = () -> counter.getAndIncrement() % 4;
+
+        return intermediates
+                .values()
+                .stream()
+                .map(intermediate -> {
+
+                    final var flag = flagSupplier.getAsInt();
+
+                    return new Object[] {
+                            (flag & 0x01) == 0 ? application.getId() : application.getName(),
+                            (flag & 0x02) == 0 ? intermediate.getId() : intermediate.getName(),
+                            intermediate
+                    };
+
+                })
+                .toArray(Object[][]::new);
+
     }
 
     @DataProvider

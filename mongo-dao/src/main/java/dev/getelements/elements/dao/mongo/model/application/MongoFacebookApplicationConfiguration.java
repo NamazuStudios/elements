@@ -10,7 +10,18 @@ import dev.morphia.annotations.Property;
 public class MongoFacebookApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
+    private String applicationId;
+
+    @Property
     private String applicationSecret;
+
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
 
     public String getApplicationSecret() {
         return applicationSecret;

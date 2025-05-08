@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.model.application;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
@@ -19,6 +20,7 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
     @NotNull
     private String applicationId;
 
+    @Valid
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
     private List<ProductBundle> productBundles;
 

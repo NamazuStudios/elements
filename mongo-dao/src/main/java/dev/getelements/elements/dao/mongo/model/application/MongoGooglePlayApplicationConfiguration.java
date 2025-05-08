@@ -13,10 +13,21 @@ import java.util.Map;
 public class MongoGooglePlayApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
+    private String applicationId;
+
+    @Property
     private Map<String, Object> jsonKey;
 
     @Property
     private List<MongoProductBundle> productBundles;
+
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
 
     public Map<String, Object> getJsonKey() {
         return jsonKey;
