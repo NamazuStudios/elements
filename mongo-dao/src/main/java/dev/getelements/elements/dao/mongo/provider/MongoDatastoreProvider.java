@@ -17,6 +17,8 @@ import jakarta.inject.Provider;
 
 import java.util.List;
 
+import static dev.morphia.Morphia.createDatastore;
+
 /**
  * Created by patricktwohig on 5/8/15.
  */
@@ -44,20 +46,8 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
                 .database(databaseNameProvider.get());
 
         final var client = mongoProvider.get();
-        final var datastore = Morphia.createDatastore(client, config);
-
-//        new Reflections("dev.getelements.elements.dao.mongo")
-//            .getTypesAnnotatedWith(Entity.class)
-//            .forEach(datastore.getMapper()::map);
-//
-//        try {
-//            datastore.ensureIndexes();
-//        } catch (MongoCommandException ex) {
-//            logger.error("Could not recreate indexes.", ex);
-//        }
-
-        return datastore;
-
+        return createDatastore(client, config);
+        
     }
 
 
