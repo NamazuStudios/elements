@@ -8,7 +8,8 @@ import java.util.Objects;
 @Schema(
     description =
             "This configures the matchmaking system for the application. This defines the queue name and the " +
-            "Matchmacker to use when finding players to match. Currently FIFO is builtin and is the default.")
+            "Matchmacker to use when finding players to match. Currently FIFO is builtin and is the default."
+)
 public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {
 
     @Schema(description = "Specifies the name of the Matchmaker within the Elements.")

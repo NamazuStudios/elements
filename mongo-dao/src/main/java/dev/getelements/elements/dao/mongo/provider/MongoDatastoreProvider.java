@@ -47,7 +47,7 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
 
         final var client = mongoProvider.get();
         return createDatastore(client, config);
-        
+
     }
 
 
