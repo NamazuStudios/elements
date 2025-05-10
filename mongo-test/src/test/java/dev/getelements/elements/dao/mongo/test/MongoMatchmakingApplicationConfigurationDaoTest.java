@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.sdk.model.application.CallbackDefinition;
+import dev.getelements.elements.sdk.model.application.ElementServiceReference;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import org.testng.annotations.Guice;
 
@@ -19,9 +20,14 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
     @Override
     protected MatchmakingApplicationConfiguration createTestObject() {
 
+        final var service = new ElementServiceReference();
+        service.setElementName("dev.getelements.test.element.a");
+        service.setServiceType("dev.getelements.test.MatchMaker");
+        service.setServiceName("some-service");
+
         final var success = new CallbackDefinition();
         success.setMethod("success");
-        success.setModule("def.getelements.test.MatchMaker");
+        success.setService(service);
 
         final var config = new MatchmakingApplicationConfiguration();
         config.setSuccess(success);
@@ -32,12 +38,24 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
 
     @Override
     protected MatchmakingApplicationConfiguration updateTestObject(final MatchmakingApplicationConfiguration config) {
+
+        final var service = new ElementServiceReference();
+        service.setElementName("dev.getelements.test.element.b");
+        service.setServiceType("dev.getelements.test.MatchMaker");
+
         final var success = new CallbackDefinition();
         success.setMethod("success");
-        success.setModule("dev.getelements.test.Updated");
+        success.setService(service);
+
+        final var matchmaker = new ElementServiceReference();
+        matchmaker.setElementName("dev.getelements.test.element.c");
+
         config.setSuccess(success);
+        config.setMatchmaker(matchmaker);
         config.setName(format("%s_updated", config.getName()));
+
         return config;
+
     }
 
     @Override
@@ -46,8 +64,7 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
             final MatchmakingApplicationConfiguration expected) {
         assertNotNull(actual.getSuccess());
         assertEquals(actual.getSuccess(), expected.getSuccess());
-        assertEquals(actual.getMatchmakerName(), expected.getMatchmakerName());
-        assertEquals(actual.getMatchmakerElement(), expected.getMatchmakerElement());
+        assertEquals(actual.getMatchmaker(), expected.getMatchmaker());
     }
 
 }

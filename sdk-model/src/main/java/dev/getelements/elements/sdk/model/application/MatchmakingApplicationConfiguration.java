@@ -1,7 +1,7 @@
 package dev.getelements.elements.sdk.model.application;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.Valid;
 
 import java.util.Objects;
 
@@ -12,30 +12,13 @@ import java.util.Objects;
 )
 public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {
 
-    @Schema(description = "Specifies the name of the Matchmaker within the Elements.")
-    private String matchmakerName;
-
-    @Schema(description = "Specifies the Element which provides the the Matchmaker.")
-    private String matchmakerElement;
-
+    @Valid
     @Schema(description = "The callback definition for when a successful match is made.")
     private CallbackDefinition success;
 
-    public String getMatchmakerName() {
-        return matchmakerName;
-    }
-
-    public void setMatchmakerName(String matchmakerName) {
-        this.matchmakerName = matchmakerName;
-    }
-
-    public String getMatchmakerElement() {
-        return matchmakerElement;
-    }
-
-    public void setMatchmakerElement(String matchmakerElement) {
-        this.matchmakerElement = matchmakerElement;
-    }
+    @Valid
+    @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
+    private ElementServiceReference matchmaker;
 
     public CallbackDefinition getSuccess() {
         return success;
@@ -45,26 +28,25 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         this.success = success;
     }
 
+    public ElementServiceReference getMatchmaker() {
+        return matchmaker;
+    }
+
+    public void setMatchmaker(ElementServiceReference matchmaker) {
+        this.matchmaker = matchmaker;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) o;
-        return Objects.equals(matchmakerName, that.matchmakerName) && Objects.equals(matchmakerElement, that.matchmakerElement) && Objects.equals(success, that.success);
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        if (!super.equals(object)) return false;
+        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) object;
+        return Objects.equals(getSuccess(), that.getSuccess()) && Objects.equals(getMatchmaker(), that.getMatchmaker());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), matchmakerName, matchmakerElement, success);
-    }
-
-    @Override
-    public String toString() {
-        return "MatchmakingApplicationConfiguration{" +
-                "matchmakerName='" + matchmakerName + '\'' +
-                ", matchmakerElement='" + matchmakerElement + '\'' +
-                ", success=" + success +
-                '}';
+        return Objects.hash(super.hashCode(), getSuccess(), getMatchmaker());
     }
 
 }

@@ -1,14 +1,12 @@
 package dev.getelements.elements.service.match;
 
-import dev.getelements.elements.sdk.dao.Matchmaker;
-import dev.getelements.elements.sdk.model.exception.InternalException;
-import dev.getelements.elements.sdk.model.exception.NoSuitableMatchException;
-import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
-import dev.getelements.elements.sdk.model.match.Match;
-import dev.getelements.elements.sdk.model.profile.Profile;
-import dev.getelements.elements.sdk.cluster.path.Path;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.dao.Matchmaker;
+import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
+import dev.getelements.elements.sdk.model.exception.NoSuitableMatchException;
+import dev.getelements.elements.sdk.model.match.Match;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.query.ElementQuery;
 import dev.getelements.elements.sdk.service.match.MatchServiceUtils;
 import dev.getelements.elements.sdk.service.topic.Topic;
@@ -47,23 +45,12 @@ public class StandardMatchServiceUtils implements MatchServiceUtils {
     private String finalize(final Match player, final Match opponent,
                             final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
 
-        final var success = matchmakingApplicationConfiguration.getSuccess();
+        final var callbackDefinition = matchmakingApplicationConfiguration.getSuccess();
+        final var elementServiceReference = callbackDefinition.getService();
 
-        final var module = success.getModule();
-        final var modulePath = new Path(module);
-
-        if (modulePath.getComponents().size() != 2) {
-            throw new InternalException("Element path must have exactly two components.");
-        }
-
-        final var elementName = modulePath.getComponents().get(0);
-        final var serviceKeyString = modulePath.getComponents().get(1);
-
-        final var method = success.getMethod();
-
-        final var callback = new ElementQuery(getElementRegistry(), elementName,0)
-                .service(serviceKeyString)
-                .callback(method, Profile.class, Profile.class)
+        final var callback = new ElementQuery(getElementRegistry(), elementServiceReference.getElementName(),0)
+                .service(elementServiceReference.getServiceName())
+                .callback(callbackDefinition.getMethod(), Profile.class, Profile.class)
                 .get()
                 .as(String.class);
 
@@ -80,6 +67,7 @@ public class StandardMatchServiceUtils implements MatchServiceUtils {
         return result;
 
     }
+
     private Match handleSuccessfulMatch(final Matchmaker.SuccessfulMatchTuple successfulMatchTuple) {
         notifyComplete(successfulMatchTuple.getPlayerMatch());
         notifyComplete(successfulMatchTuple.getOpponentMatch());

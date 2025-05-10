@@ -1,6 +1,5 @@
-package dev.getelements.elements.dao.mongo.model;
+package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.getelements.elements.dao.mongo.model.application.MongoElementServiceReference;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
