@@ -1,18 +1,23 @@
 <h1 mat-dialog-title>Android Google Play Application Configuration</h1>
 
 <div mat-dialog-content>
+
   <form [formGroup]="appInfoForm">
+
     <mat-form-field>
       <input matInput placeholder="Application Configuration Name" name="applicationId" formControlName="applicationId">
       <mat-error *ngIf="appInfoForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
     </mat-form-field>
+
     <mat-form-field>
       <input matInput placeholder="JSON Key" name="jsonKey" formControlName="jsonKey">
       <mat-error *ngIf="appInfoForm.controls.jsonKey.hasError('required')">JSON Key is required</mat-error>
     </mat-form-field>
+
   </form>
 
   <app-product-bundle-list [productBundles]="productBundles"></app-product-bundle-list>
+
 </div>
 
 <div mat-dialog-actions>

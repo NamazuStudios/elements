@@ -10,17 +10,17 @@ export interface ApplicationConfiguration {
   /**
    * The application-configuration specific uinique ID.  (Varies by ConfigurationCategory)
    */
-  name?: string;
+  name: string;
 
   /**
    * The category for the application configuration.
    */
-  type: 'MATCHMAKING' | 'PSN_PS4' | 'PSN_VITA' | 'IOS_APP_STORE' | 'ANDROID_GOOGLE_PLAY' | 'FACEBOOK' | 'FIREBASE';
+  type: string;
 
   /**
    * A description of the application configuration.
    */
-  description?: string;
+  description: string;
 
   /**
    * The parent application owning this configuration.
