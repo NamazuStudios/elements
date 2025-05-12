@@ -22,13 +22,13 @@
   <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource" >
 
     <ng-container matColumnDef="select" >
-      <mat-header-cell fxFlex="75px" *matHeaderCellDef>
+      <mat-header-cell fxFlex="50px" *matHeaderCellDef>
         <mat-checkbox (change)="$event ? masterToggle() : null"
                       [checked]="selection.hasValue() && isAllSelected()"
                       [indeterminate]="selection.hasValue() && !isAllSelected()">
         </mat-checkbox>
       </mat-header-cell>
-      <mat-cell fxFlex="75px" *matCellDef="let row">
+      <mat-cell fxFlex="50px" *matCellDef="let row">
         <mat-checkbox (click)="$event.stopPropagation()"
                       (change)="$event ? selection.toggle(row) : null"
                       [checked]="selection.isSelected(row)">
@@ -37,25 +37,24 @@
     </ng-container>
 
     <ng-container matColumnDef="id">
-      <mat-header-cell *matHeaderCellDef>Profile Id</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Configuration Id</mat-header-cell>
       <mat-cell *matCellDef="let applicationConfiguration">{{applicationConfiguration.id}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="category">
-      <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
-      <mat-cell *matCellDef="let applicationConfiguration">{{applicationConfiguration.category}}</mat-cell>
+    <ng-container matColumnDef="type">
+      <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+      <mat-cell *matCellDef="let applicationConfiguration">{{shortenType(applicationConfiguration.type)}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="uniqueIdentifier">
-      <mat-header-cell *matHeaderCellDef>Unique Identifier</mat-header-cell>
-      <mat-cell *matCellDef="let applicationConfiguration">{{applicationConfiguration.uniqueIdentifier}}</mat-cell>
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let applicationConfiguration">{{applicationConfiguration.name}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let applicationConfiguration">
         <button mat-raised-button color="primary" (click)="editApplicationConfiguration(applicationConfiguration)">Edit</button>
-        &nbsp;
         <button mat-raised-button color="primary" (click)="deleteApplicationConfiguration(applicationConfiguration)">Delete</button>
       </mat-cell>
     </ng-container>

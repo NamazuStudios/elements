@@ -33,7 +33,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   hasSelection = false;
   selection: SelectionModel<ApplicationConfiguration>;
   dataSource: ApplicationConfigurationsDataSource;
-  displayedColumns = ['select', 'id', 'category', 'uniqueIdentifier', 'actions'];
+  displayedColumns = ['select', 'id', 'type', 'name', 'actions'];
   currentApplicationConfigurations: ApplicationConfiguration[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -104,6 +104,10 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
     this.isAllSelected() ?
       this.selection.clear() :
       this.currentApplicationConfigurations.forEach(row => this.selection.select(row));
+  }
+
+  shortenType(type: string): string {
+    return type.split('.').pop() || type; // Extracts the last segment after the dot
   }
 
   deleteApplicationConfiguration(applicationConfiguration) {

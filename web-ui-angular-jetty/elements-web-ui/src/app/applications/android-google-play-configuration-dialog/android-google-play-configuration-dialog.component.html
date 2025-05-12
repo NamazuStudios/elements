@@ -5,7 +5,17 @@
   <form [formGroup]="appInfoForm">
 
     <mat-form-field>
-      <input matInput placeholder="Application Configuration Name" name="applicationId" formControlName="applicationId">
+      <input matInput placeholder="Application Configuration Name" name="name" formControlName="name">
+      <mat-error *ngIf="appInfoForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Application Configuration Description" name="description" formControlName="description">
+      <mat-error *ngIf="appInfoForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Application ID" name="applicationId" formControlName="applicationId">
       <mat-error *ngIf="appInfoForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
     </mat-form-field>
 

@@ -17,8 +17,9 @@ describe('AndroidGooglePlayConfigurationDialogComponent', () => {
       providers: [
         FormBuilder,
         { provide: MatDialogRef, useValue: {} },
-        { provide: MAT_DIALOG_DATA, useValue: { applicationConfiguration: {
-              applicationId: 1234,
+        { provide: MAT_DIALOG_DATA, useValue: {
+          applicationConfiguration: {
+              applicationId: "com.example.myapp",
               jsonKey: 'jsonKey'
             }}},
         { provide: AlertService, useValue: AlertService },
