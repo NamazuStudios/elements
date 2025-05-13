@@ -10,25 +10,25 @@
   <button mat-raised-button color="primary" [matMenuTriggerFor]="addMenu" >Add...</button>
 
   <mat-menu #addMenu="matMenu">
-    <a mat-menu-item (click)="addApplicationConfiguration('FACEBOOK')">Add Facebook</a>
-    <a mat-menu-item (click)="addApplicationConfiguration('FIREBASE')">Add Firebase</a>
-    <a mat-menu-item (click)="addApplicationConfiguration('MATCHMAKING')">Add Matchmaking</a>
-    <a mat-menu-item (click)="addApplicationConfiguration('IOS_APP_STORE')">Add iOS App Store</a>
-    <a mat-menu-item (click)="addApplicationConfiguration('ANDROID_GOOGLE_PLAY')">Add Google Play</a>
+    <a mat-menu-item (click)="addApplicationConfiguration(ApplicationConfigurationTypes.FACEBOOK)">Add Facebook</a>
+    <a mat-menu-item (click)="addApplicationConfiguration(ApplicationConfigurationTypes.FIREBASE)">Add Firebase</a>
+    <a mat-menu-item (click)="addApplicationConfiguration(ApplicationConfigurationTypes.MATCHMAKING)">Add Matchmaking</a>
+    <a mat-menu-item (click)="addApplicationConfiguration(ApplicationConfigurationTypes.IOS_APP_STORE)">Add iOS App Store</a>
+    <a mat-menu-item (click)="addApplicationConfiguration(ApplicationConfigurationTypes.ANDROID_GOOGLE_PLAY)">Add Google Play</a>
   </mat-menu>
 
   <button mat-raised-button color="primary" (click)="deleteSelectedApplicationConfigurations()" [disabled]="!hasSelection">Delete Selected</button>
 
   <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource" >
 
-    <ng-container matColumnDef="select" >
-      <mat-header-cell fxFlex="50px" *matHeaderCellDef>
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef class="narrow-column">
         <mat-checkbox (change)="$event ? masterToggle() : null"
                       [checked]="selection.hasValue() && isAllSelected()"
                       [indeterminate]="selection.hasValue() && !isAllSelected()">
         </mat-checkbox>
       </mat-header-cell>
-      <mat-cell fxFlex="50px" *matCellDef="let row">
+      <mat-cell *matCellDef="let row" class="narrow-column">
         <mat-checkbox (click)="$event.stopPropagation()"
                       (change)="$event ? selection.toggle(row) : null"
                       [checked]="selection.isSelected(row)">

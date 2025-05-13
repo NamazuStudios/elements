@@ -4,6 +4,7 @@ import {MatSnackBar} from '@angular/material/snack-bar'
 import {ProductBundle} from '../../api/models/product-bundle';
 import {Form, FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../../alert.service';
+import {ApplicationConfigurationTypes} from "../application-configuration-types";
 
 @Component({
   selector: 'app-ios-application-configuration-dialog',
@@ -15,27 +16,11 @@ export class IosApplicationConfigurationDialogComponent implements OnInit {
   public productBundles: Array<ProductBundle>;
 
   appIdForm = this.formBuilder.group({
+    id: [ this.data.applicationConfiguration.id ],
+    name: [ this.data.applicationConfiguration.name, [Validators.required]],
+    type: [ ApplicationConfigurationTypes.IOS_APP_STORE ],
     applicationId: [this.data.applicationConfiguration.applicationId, [Validators.required]],
-    category: ['IOS_APP_STORE'],
-    parent: [this.data.applicationConfiguration.parent],
-    appleSignInConfiguration: this.formBuilder.group({
-      teamId: [
-        this.data.applicationConfiguration.appleSignInConfiguration ?
-        this.data.applicationConfiguration.appleSignInConfiguration.teamId : ""
-      ],
-      clientId: [
-        this.data.applicationConfiguration.appleSignInConfiguration ?
-        this.data.applicationConfiguration.appleSignInConfiguration.clientId : ""
-      ],
-      keyId: [
-        this.data.applicationConfiguration.appleSignInConfiguration ?
-        this.data.applicationConfiguration.appleSignInConfiguration.keyId : ""
-      ],
-      appleSignInPrivateKey: [
-        this.data.applicationConfiguration.appleSignInConfiguration ?
-        this.data.applicationConfiguration.appleSignInConfiguration.appleSignInPrivateKey : ""
-      ]
-    })
+    parent: [this.data.applicationConfiguration.parent]
   });
 
   constructor(public dialogRef: MatDialogRef<IosApplicationConfigurationDialogComponent>,

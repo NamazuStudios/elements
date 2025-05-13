@@ -10,6 +10,9 @@
     <envs>
       <env name="NODE_OPTIONS" value="--openssl-legacy-provider" />
     </envs>
+    <EXTENSION ID="com.intellij.lang.javascript.buildTools.npm.rc.StartBrowserRunConfigurationExtension">
+      <browser start="true" with-js-debugger="true" url="http://localhost:4200" />
+    </EXTENSION>
     <method v="2">
       <option name="LaunchBrowser.Before.Run" url="http://localhost:4200" />
     </method>

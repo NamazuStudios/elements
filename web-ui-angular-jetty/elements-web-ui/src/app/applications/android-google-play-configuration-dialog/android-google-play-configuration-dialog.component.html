@@ -4,6 +4,20 @@
 
   <form [formGroup]="appInfoForm">
 
+    <div class="read-only-container">
+
+      <div class="read-only-field">
+        <label>Database ID</label>
+        <div class="value">{{ appInfoForm.get('id')?.value }}</div>
+      </div>
+
+      <div class="read-only-field">
+        <label>Fully Qualified Type Name</label>
+        <div class="value">{{ appInfoForm.get('type')?.value }}</div>
+      </div>
+
+    </div>
+
     <mat-form-field>
       <input matInput placeholder="Application Configuration Name" name="name" formControlName="name">
       <mat-error *ngIf="appInfoForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>

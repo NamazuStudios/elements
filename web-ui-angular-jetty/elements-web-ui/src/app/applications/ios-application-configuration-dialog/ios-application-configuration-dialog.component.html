@@ -2,31 +2,30 @@
 
 <div mat-dialog-content>
   <form [formGroup]="appIdForm">
+
+    <div class="read-only-container">
+
+      <div class="read-only-field">
+        <label>Database ID</label>
+        <div class="value">{{ appIdForm.get('id')?.value }}</div>
+      </div>
+
+      <div class="read-only-field">
+        <label>Fully Qualified Type Name</label>
+        <div class="value">{{ appIdForm.get('type')?.value }}</div>
+      </div>
+
+    </div>
+
     <mat-form-field>
       <input matInput placeholder="Application Configuration Name (Typically Application ID)" name="applicationId" formControlName="applicationId">
       <mat-error *ngIf="appIdForm.controls.applicationId.hasError('required')">Application ID is required</mat-error>
     </mat-form-field>
-    <div formGroupName="appleSignInConfiguration">
-      <mat-form-field>
-        <input matInput placeholder="Team ID" name="teamId" formControlName="teamId" >
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput placeholder="Client ID (App ID or App Group id)" name="clientId" formControlName="clientId" >
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput placeholder="Key ID" name="keyId" formControlName="keyId">
-      </mat-form-field>
-      <mat-form-field>
-          <textarea
-              matInput
-              placeholder="Apple Sign-In Private Key"
-              name="appleSignInPrivateKey"
-              formControlName="appleSignInPrivateKey">
-          </textarea>
-      </mat-form-field>
-    </div>
+
   </form>
+
   <app-product-bundle-list [productBundles]="productBundles"></app-product-bundle-list>
+
 </div>
 
 <div mat-dialog-actions>

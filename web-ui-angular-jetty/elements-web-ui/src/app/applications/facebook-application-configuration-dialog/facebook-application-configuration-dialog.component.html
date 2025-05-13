@@ -2,6 +2,21 @@
 
 <div mat-dialog-content>
   <form [formGroup]="configurationForm">
+
+    <div class="read-only-container">
+
+      <div class="read-only-field">
+        <label>Database ID</label>
+        <div class="value">{{ configurationForm.get('id')?.value }}</div>
+      </div>
+
+      <div class="read-only-field">
+        <label>Fully Qualified Type Name</label>
+        <div class="value">{{ configurationForm.get('type')?.value }}</div>
+      </div>
+
+    </div>
+
     <div class="configuration-form-container">
       <mat-form-field>
         <input matInput placeholder="Application Id" name="applicationId" formControlName="applicationId" >
@@ -12,6 +27,7 @@
         <mat-error *ngIf="configurationForm.controls.applicationSecret.hasError('required')">Application secret is required</mat-error>
       </mat-form-field>
     </div>
+
   </form>
 </div>
 

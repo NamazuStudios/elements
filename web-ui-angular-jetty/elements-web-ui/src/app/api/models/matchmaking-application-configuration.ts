@@ -1,6 +1,7 @@
 /* tslint:disable */
 import { Application } from './application';
 import { CallbackDefinition } from './callback-definition';
+import {ElementServiceReference} from "./element-service-reference";
 
 /**
  * This configures the matchmaking system.  More specifically, this configures which scripts andmethods will be called when a successful match has been made.
@@ -36,5 +37,10 @@ export interface MatchmakingApplicationConfiguration {
    * Specifies the callback to execute when a successful match has been made.  When invoked, the method will receive Match object generated as the result of the matchmaking process.  Match instances will easily
    */
   success: CallbackDefinition;
+
+  /**
+   * The Element Service Reference for the application.
+   */
+  matchmaker: ElementServiceReference;
 
 }

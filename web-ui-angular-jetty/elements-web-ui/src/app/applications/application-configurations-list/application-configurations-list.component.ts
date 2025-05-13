@@ -7,7 +7,6 @@ import {MatDialog} from '@angular/material/dialog';
 import {MatTable} from '@angular/material/table';
 import {AlertService} from '../../alert.service';
 import {ConfirmationDialogService} from '../../confirmation-dialog/confirmation-dialog.service';
-import {ApplicationConfigurationViewModel} from '../../models/application-configuration-view-model';
 import {ApplicationConfiguration} from '../../api/models/application-configuration';
 import {ApplicationConfigurationsDataSource} from '../application-configuration.datasource';
 import {ApplicationConfigurationsService} from '../../api/services/application-configurations.service';
@@ -21,6 +20,7 @@ import {IosApplicationConfigurationDialogComponent} from '../ios-application-con
 import {AndroidGooglePlayConfigurationDialogComponent} from '../android-google-play-configuration-dialog/android-google-play-configuration-dialog.component';
 import {IOSApplicationConfigurationService} from '../../api/services/iosapplication-configuration.service';
 import {GooglePlayApplicationConfigurationService} from '../../api/services/google-play-application-configuration.service';
+import {ApplicationConfigurationTypes} from "../application-configuration-types";
 
 @Component({
   selector: 'app-application-configurations-list',
@@ -107,7 +107,8 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   shortenType(type: string): string {
-    return type.split('.').pop() || type; // Extracts the last segment after the dot
+    const shortened = type.split('.').pop() || type; // Extracts the last segment after the dot
+    return shortened.replace('ApplicationConfiguration', ''); // Removes "ApplicationConfiguration" if present
   }
 
   deleteApplicationConfiguration(applicationConfiguration) {
@@ -121,34 +122,28 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   doDeleteApplicationConfiguration(applicationConfiguration) {
-    switch (applicationConfiguration.category) {
-      case 'FACEBOOK':
+    switch (applicationConfiguration.type) {
+      case ApplicationConfigurationTypes.FACEBOOK:
         this.facebookApplicationConfigurationService.deleteFacebookApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
           error => this.alertService.error(error));
-
         break;
-      case 'FIREBASE':
+      case ApplicationConfigurationTypes.FIREBASE:
         this.firebaseApplicationConfigurationService.deleteFirebaseApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
           error => this.alertService.error(error));
-
         break;
-      case 'MATCHMAKING':
+      case ApplicationConfigurationTypes.MATCHMAKING:
         this.matchmakingApplicationConfigurationService.deleteMatchmakingApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => { },
           error => this.alertService.error(error));
-
         break;
-      case 'IOS_APP_STORE':
+      case ApplicationConfigurationTypes.IOS_APP_STORE:
         this.iosApplicationConfigurationService.deleteIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
           error => this.alertService.error(error));
-
         break;
-      case 'ANDROID_GOOGLE_PLAY':
+      case ApplicationConfigurationTypes.ANDROID_GOOGLE_PLAY:
         this.googlePlayApplicationConfigurationService.deleteGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id}).subscribe(r => {},
           error => this.alertService.error(error));
-
         break;
     }
-
   }
 
   deleteSelectedApplicationConfigurations() {
@@ -164,7 +159,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
 
   showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next, isBundleDialog: boolean = false) {
     const dialogRef = this.dialog.open(dialog, {
-      width: isBundleDialog ? '900px' : '500px',
+      width: isBundleDialog ? '1000px' : '700px',
       data: { isNew: isNew, applicationConfiguration: applicationConfiguration, next: next, refresher: this }
     });
 
@@ -173,7 +168,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
 
   addApplicationConfiguration(category: string) {
     switch (category) {
-      case 'FACEBOOK':
+      case ApplicationConfigurationTypes.FACEBOOK:
           this.showDialog(true, FacebookApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
             this.facebookApplicationConfigurationService.createFacebookApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
                 this.refresh();
@@ -182,7 +177,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           });
 
         break;
-      case 'FIREBASE':
+      case ApplicationConfigurationTypes.FIREBASE:
         this.showDialog(true, FirebaseApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
           this.firebaseApplicationConfigurationService.createFirebaseApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
               this.refresh();
@@ -191,7 +186,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         });
 
         break;
-      case 'MATCHMAKING':
+      case ApplicationConfigurationTypes.MATCHMAKING:
         this.showDialog(true, MatchmakingApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId }, success: { } }, result => {
           this.matchmakingApplicationConfigurationService.createMatchmakingApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
               this.refresh();
@@ -200,7 +195,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         });
 
         break;
-      case 'IOS_APP_STORE':
+      case ApplicationConfigurationTypes.IOS_APP_STORE:
         this.showDialog(true, IosApplicationConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
           this.iosApplicationConfigurationService.createIosApplicationConfiguration({ applicationNameOrId: this.applicationNameOrId, body: result }).subscribe(r => {
             this.refresh();
@@ -209,7 +204,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         }, true);
 
         break;
-      case 'ANDROID_GOOGLE_PLAY':
+      case ApplicationConfigurationTypes.ANDROID_GOOGLE_PLAY:
         this.showDialog(true, AndroidGooglePlayConfigurationDialogComponent, { parent: { id: this.applicationNameOrId } }, result => {
           this.googlePlayApplicationConfigurationService.createGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, body: result}).subscribe(r => {
             this.refresh();
@@ -222,8 +217,8 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   }
 
   editApplicationConfiguration(applicationConfiguration) {
-    switch (applicationConfiguration.category) {
-      case 'FACEBOOK':
+    switch (applicationConfiguration.type) {
+      case ApplicationConfigurationTypes.FACEBOOK:
         this.facebookApplicationConfigurationService.getFacebookApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
           .subscribe(applicationConfiguration =>
           this.showDialog(false, FacebookApplicationConfigurationDialogComponent, applicationConfiguration, result => {
@@ -234,7 +229,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           }));
 
         break;
-      case 'FIREBASE':
+      case ApplicationConfigurationTypes.FIREBASE:
         this.firebaseApplicationConfigurationService.getFirebaseApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
           .subscribe(applicationConfiguration =>
             this.showDialog(false, FirebaseApplicationConfigurationDialogComponent, applicationConfiguration, result => {
@@ -245,7 +240,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
             }));
 
         break;
-      case 'MATCHMAKING':
+      case ApplicationConfigurationTypes.MATCHMAKING:
         this.matchmakingApplicationConfigurationService.getMatchmakingApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id})
           .subscribe(applicationConfiguration =>
             this.showDialog(false, MatchmakingApplicationConfigurationDialogComponent, applicationConfiguration, result => {
@@ -254,7 +249,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
                 },
                 error => this.alertService.error(error));
             }));
-      case 'IOS_APP_STORE':
+      case ApplicationConfigurationTypes.IOS_APP_STORE:
         this.iosApplicationConfigurationService.getIosApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
           .subscribe(applicationConfiguration => {
             this.showDialog(false, IosApplicationConfigurationDialogComponent, applicationConfiguration, result => {
@@ -266,7 +261,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
           });
 
         break;
-      case 'ANDROID_GOOGLE_PLAY':
+      case ApplicationConfigurationTypes.ANDROID_GOOGLE_PLAY:
         this.googlePlayApplicationConfigurationService.getGooglePlayApplicationConfiguration({applicationNameOrId: this.applicationNameOrId, applicationConfigurationNameOrId: applicationConfiguration.id })
           .subscribe(applicationConfiguration => {
             this.showDialog(false, AndroidGooglePlayConfigurationDialogComponent, applicationConfiguration, result => {
@@ -280,4 +275,6 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
         break;
     }
   }
+
+  protected readonly ApplicationConfigurationTypes = ApplicationConfigurationTypes;
 }
