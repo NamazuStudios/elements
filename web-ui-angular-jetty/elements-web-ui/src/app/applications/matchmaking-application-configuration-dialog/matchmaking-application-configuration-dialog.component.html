@@ -73,6 +73,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="dialogRef.close(configurationForm.value)" [disabled]="!configurationForm.valid">OK</button>
-  <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-raised-button (click)="save()" [disabled]="!configurationForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="cancel()">Cancel</button>
 </div>

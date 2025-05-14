@@ -69,4 +69,15 @@ export class MatchmakingApplicationConfigurationDialogComponent implements OnIni
     }
   }
 
+  save() {
+    const data = this.configurationForm.value;
+    delete data.useDefaultMatchmaker;
+    delete data.defineSuccessCallback;
+    this.dialogRef.close(data)
+  }
+
+  cancel() {
+    this.dialogRef.close()
+  }
+
 }
