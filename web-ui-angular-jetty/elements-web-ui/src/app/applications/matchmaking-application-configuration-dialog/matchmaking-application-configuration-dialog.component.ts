@@ -14,6 +14,7 @@ export class MatchmakingApplicationConfigurationDialogComponent implements OnIni
     id: [ this.data.applicationConfiguration.id ],
     name: [ this.data.applicationConfiguration.name, [Validators.required]],
     type: [ ApplicationConfigurationTypes.MATCHMAKING ],
+    description: [this.data.applicationConfiguration.description, [Validators.required]],
     useDefaultMatchmaker: [true],
     matchmaker: this.formBuilder.group({
       elementName: [ this.data.applicationConfiguration.matchmaker?.elementName || '', Validators.required ],

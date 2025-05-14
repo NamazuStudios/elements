@@ -211,9 +211,8 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         mongoApplicationConfiguration.setParent(parent);
         mongoApplicationConfiguration.setType(applicationConfiguration.getClass().getName());
 
-        getMongoDBUtils().performV(ds -> getDatastore().replace(mongoApplicationConfiguration));
-
-        return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
+        final var result = getMongoDBUtils().perform(ds -> getDatastore().replace(mongoApplicationConfiguration));
+        return getMapperRegistry().map(result, (Class<T>) applicationConfiguration.getClass());
 
     }
 

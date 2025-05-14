@@ -17,17 +17,19 @@
 
     </div>
 
-    <!-- Name Field -->
     <mat-form-field>
-      <input matInput placeholder="Name" formControlName="name">
-      <mat-error *ngIf="configurationForm.get('name')?.hasError('required')">Name is required</mat-error>
+      <input matInput placeholder="Application Configuration Name" name="name" formControlName="name">
+      <mat-error *ngIf="configurationForm.controls.applicationId.hasError('required')">Name is Required</mat-error>
     </mat-form-field>
 
-    <!-- Use Default Matchmaker Checkbox -->
+    <mat-form-field>
+      <input matInput placeholder="Application Configuration Description" name="description" formControlName="description">
+      <mat-error *ngIf="configurationForm.controls.applicationId.hasError('required')">Description is Required</mat-error>
+    </mat-form-field>
+
     <mat-checkbox formControlName="useDefaultMatchmaker">Use Default (FIFO) Matchmaker</mat-checkbox>
     <br>
 
-    <!-- Matchmaker Group -->
     <div formGroupName="matchmaker" *ngIf="!configurationForm.get('useDefaultMatchmaker')?.value">
       <mat-form-field>
         <input matInput placeholder="Element Name" formControlName="elementName">
@@ -43,11 +45,9 @@
       </mat-form-field>
     </div>
 
-    <!-- Define Success Callback Checkbox -->
     <mat-checkbox formControlName="defineSuccessCallback">Define Success Callback</mat-checkbox>
     <br>
 
-    <!-- Success Group -->
     <div formGroupName="success" *ngIf="configurationForm.get('defineSuccessCallback')?.value">
       <mat-form-field>
         <input matInput placeholder="Method" formControlName="method">

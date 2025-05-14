@@ -13,6 +13,7 @@ export class FirebaseApplicationConfigurationDialogComponent implements OnInit {
   configurationForm = this.formBuilder.group({
     id: [ this.data.applicationConfiguration.id ],
     name: [ this.data.applicationConfiguration.name, [Validators.required]],
+    description: [this.data.applicationConfiguration.description, [Validators.required]],
     type: [ ApplicationConfigurationTypes.FIREBASE ],
     projectId: [ this.data.applicationConfiguration.projectId, Validators.required ],
     serviceAccountCredentials: [ this.data.applicationConfiguration.serviceAccountCredentials, Validators.required ],
@@ -25,7 +26,6 @@ export class FirebaseApplicationConfigurationDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: any,
               private formBuilder: FormBuilder) { }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
 }

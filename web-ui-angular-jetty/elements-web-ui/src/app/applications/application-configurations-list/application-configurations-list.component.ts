@@ -159,7 +159,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
 
   showDialog(isNew: boolean, dialog: any, applicationConfiguration: any, next, isBundleDialog: boolean = false) {
     const dialogRef = this.dialog.open(dialog, {
-      width: isBundleDialog ? '1000px' : '700px',
+      width: '1000px',
       data: { isNew: isNew, applicationConfiguration: applicationConfiguration, next: next, refresher: this }
     });
 

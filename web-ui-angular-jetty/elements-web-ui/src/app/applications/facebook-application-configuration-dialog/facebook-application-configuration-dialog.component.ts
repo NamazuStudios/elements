@@ -13,6 +13,7 @@ export class FacebookApplicationConfigurationDialogComponent implements OnInit {
   configurationForm = this.formBuilder.group({
     id: [ this.data.applicationConfiguration.id ],
     name: [ this.data.applicationConfiguration.name, [Validators.required]],
+    description: [this.data.applicationConfiguration.description, [Validators.required]],
     type: [ ApplicationConfigurationTypes.FACEBOOK ],
     applicationId: [ this.data.applicationConfiguration.applicationId, Validators.required ],
     applicationSecret: [ this.data.applicationConfiguration.applicationSecret, Validators.required ],

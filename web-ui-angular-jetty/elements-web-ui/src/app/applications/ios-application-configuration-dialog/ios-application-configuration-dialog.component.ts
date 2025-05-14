@@ -18,7 +18,8 @@ export class IosApplicationConfigurationDialogComponent implements OnInit {
   appIdForm = this.formBuilder.group({
     id: [ this.data.applicationConfiguration.id ],
     name: [ this.data.applicationConfiguration.name, [Validators.required]],
-    type: [ ApplicationConfigurationTypes.IOS_APP_STORE ],
+    description: [this.data.applicationConfiguration.description, [Validators.required]],
+    type: [ ApplicationConfigurationTypes.IOS_APP_STORE, [Validators.required] ],
     applicationId: [this.data.applicationConfiguration.applicationId, [Validators.required]],
     parent: [this.data.applicationConfiguration.parent]
   });

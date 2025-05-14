@@ -18,14 +18,27 @@
     </div>
 
     <div class="configuration-form-container">
+
+      <mat-form-field>
+        <input matInput placeholder="Application Configuration Name" name="name" formControlName="name">
+        <mat-error *ngIf="configurationForm.controls.applicationId.hasError('required')">Name is Required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <input matInput placeholder="Application Configuration Description" name="description" formControlName="description">
+        <mat-error *ngIf="configurationForm.controls.applicationId.hasError('required')">Description is Required</mat-error>
+      </mat-form-field>
+
       <mat-form-field>
         <input matInput placeholder="Application Id" name="applicationId" formControlName="applicationId" >
         <mat-error *ngIf="configurationForm.controls.applicationId.hasError('required')">Application Id is required</mat-error>
       </mat-form-field>
+
       <mat-form-field>
         <input matInput placeholder="Application Secret" name="applicationSecret" formControlName="applicationSecret" >
         <mat-error *ngIf="configurationForm.controls.applicationSecret.hasError('required')">Application secret is required</mat-error>
       </mat-form-field>
+
     </div>
 
   </form>
