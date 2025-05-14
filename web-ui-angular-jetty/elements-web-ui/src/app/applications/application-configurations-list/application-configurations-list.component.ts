@@ -276,5 +276,5 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
     }
   }
 
-  protected readonly ApplicationConfigurationTypes = ApplicationConfigurationTypes;
+  readonly ApplicationConfigurationTypes = ApplicationConfigurationTypes;
 }
