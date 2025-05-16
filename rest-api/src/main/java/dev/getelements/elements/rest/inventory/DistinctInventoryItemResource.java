@@ -61,6 +61,8 @@ public class DistinctInventoryItemResource {
 
     @PUT
     @Path("{distinctInventoryItemId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates an inventory item for the specified item",
             description = "Updates an inventory item for the specified item")
@@ -81,6 +83,8 @@ public class DistinctInventoryItemResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Create an inventory item for the specified item",
             description = "Create an inventory item for the specified item")

@@ -48,6 +48,7 @@ public class GooglePlayApplicationConfigurationResource {
      * @return the {@link GooglePlayApplicationConfiguration} the Google Play Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a new Google Play ApplicationConfiguration",
@@ -69,6 +70,7 @@ public class GooglePlayApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a Google Play ApplicationConfiguration",

@@ -11,14 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.DefaultValue;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
@@ -32,6 +25,8 @@ public class ItemResource {
     private ValidationHelper validationHelper;
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
         summary = "Creates a new digital Item",
         description = "Supplying an item object, this will create a new item with a newly assigned unique id.  " +
@@ -68,6 +63,8 @@ public class ItemResource {
     }
 
     @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{identifier}")
     @Operation( summary = "Updates a single Item",
         description = "Supplying an item, this will update the Item identified by the identifier in the path with contents " +

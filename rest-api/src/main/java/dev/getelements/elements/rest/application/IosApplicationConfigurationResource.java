@@ -53,6 +53,7 @@ public class IosApplicationConfigurationResource {
      * @return the {@link IosApplicationConfiguration} the iOS Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
         summary = "Creates a new iOS ApplicationConfiguration",
@@ -76,6 +77,7 @@ public class IosApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a iOS ApplicationConfiguration",

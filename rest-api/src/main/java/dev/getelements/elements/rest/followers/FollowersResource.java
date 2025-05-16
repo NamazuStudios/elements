@@ -55,6 +55,8 @@ public class FollowersResource {
 
     @POST
     @Path("{profileId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a Follower relationship between two profiles.",
             description = "Supplying the follower object, this will store the information supplied " +

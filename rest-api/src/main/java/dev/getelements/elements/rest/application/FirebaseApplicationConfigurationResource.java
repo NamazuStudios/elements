@@ -48,6 +48,7 @@ public class FirebaseApplicationConfigurationResource {
      * @return the {@link FirebaseApplicationConfiguration} the Firebase Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a new Firebase ApplicationConfiguration",
@@ -77,6 +78,7 @@ public class FirebaseApplicationConfigurationResource {
      * @return the {@link FirebaseApplicationConfiguration} the Firebase Application Configuration
      */
     @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{applicationConfigurationNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(

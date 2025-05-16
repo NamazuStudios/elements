@@ -51,6 +51,7 @@ public class FacebookApplicationConfigurationResource {
      * @return the {@link FacebookApplicationConfiguration} the Facebook Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a new Facebook ApplicationConfiguration",
@@ -81,6 +82,7 @@ public class FacebookApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a Facebook ApplicationConfiguration",

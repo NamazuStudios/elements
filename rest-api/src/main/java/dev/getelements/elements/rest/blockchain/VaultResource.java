@@ -64,6 +64,7 @@ public class VaultResource {
 
     @PUT
     @Path("{vaultId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a  Vault",

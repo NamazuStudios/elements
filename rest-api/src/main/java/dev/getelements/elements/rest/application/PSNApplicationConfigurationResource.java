@@ -47,6 +47,7 @@ public class PSNApplicationConfigurationResource {
      * @return the {@link PSNApplicationConfiguration} the PSN Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Creates a new PSN ApplicationConfiguration",
                   description = "Creates a new PSN ApplicationConfiguration with the specific ID or application.")
@@ -67,6 +68,7 @@ public class PSNApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Updates a PSN ApplicationConfiguration",
                   description = "Updates an existing PSN Application profile if it is known to the server.")

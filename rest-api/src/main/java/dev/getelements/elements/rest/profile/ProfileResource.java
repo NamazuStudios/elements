@@ -116,6 +116,7 @@ public class ProfileResource {
 
     @PUT
     @Path("{profileId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a Profile",
@@ -138,6 +139,7 @@ public class ProfileResource {
 
     @PUT
     @Path("{profileId}/image")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Updates a Profile image object")
     public Profile updateProfileImage(
@@ -156,6 +158,7 @@ public class ProfileResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a Profile",

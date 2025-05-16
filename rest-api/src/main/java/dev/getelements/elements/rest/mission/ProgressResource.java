@@ -21,6 +21,7 @@ public class ProgressResource {
     private ProgressService progressService;
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Creates a new progress",
             description = "Supplying a progress object, this will create a new progress with a newly assigned unique id.  " +
@@ -62,6 +63,7 @@ public class ProgressResource {
 
     @PUT
     @Path("{progressId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Updates a single Progress",
             description = "Supplying a progress, this will update the Progress identified by the ID in the path with contents " +

@@ -26,6 +26,7 @@ public class GooglePlayIapReceiptResource {
 
     @POST
     @Path("purchase")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Upload Google Play IAP Receipt data (package name, product id and Google Play-issued " +
             "purchase token). Returns a list of RewardIssuances, some or all of which may be already redeemed.")

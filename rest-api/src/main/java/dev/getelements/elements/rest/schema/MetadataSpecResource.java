@@ -67,6 +67,7 @@ public class MetadataSpecResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Creates a new Metadata Spec definition",
             description = "Creates a new Metadata Spec definition.")
@@ -76,6 +77,7 @@ public class MetadataSpecResource {
 
     @PUT
     @Path("{metadataSpecId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Updates a Metadata Spec",
             description = "Updates a MetadataSpec with the specified id.")
