@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {PropertyConverters.class, MongoDBMapper.class})
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class, MongoDBMapper.class})
 public interface RankTabulationMapper extends MapperRegistry.Mapper<Rank, RankRow> {
 
     @Override

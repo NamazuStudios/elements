@@ -1,23 +1,17 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
 import dev.getelements.elements.dao.mongo.model.MongoCallbackDefinition;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Property;
 
 @Entity(value = "application_configuration")
 public class MongoMatchmakingApplicationConfiguration extends MongoApplicationConfiguration {
 
-    private MatchingAlgorithm algorithm;
-
+    @Property
     private MongoCallbackDefinition success;
 
-    public MatchingAlgorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(MatchingAlgorithm algorithm) {
-        this.algorithm = algorithm;
-    }
+    @Property
+    private MongoElementServiceReference matchmaker;
 
     public MongoCallbackDefinition getSuccess() {
         return success;
@@ -25,6 +19,14 @@ public class MongoMatchmakingApplicationConfiguration extends MongoApplicationCo
 
     public void setSuccess(MongoCallbackDefinition success) {
         this.success = success;
+    }
+
+    public MongoElementServiceReference getMatchmaker() {
+        return matchmaker;
+    }
+
+    public void setMatchmaker(MongoElementServiceReference matchmaker) {
+        this.matchmaker = matchmaker;
     }
 
 }

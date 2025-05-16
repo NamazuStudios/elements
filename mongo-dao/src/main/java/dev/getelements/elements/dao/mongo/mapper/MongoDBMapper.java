@@ -67,37 +67,31 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Interface to provide mappings.
+ * Interface to provide mappings for MongoTypes
+ *
+ * @deprecated This is a bit of a "god type" and should be broken up into smaller mappers.
  */
-@Mapper(uses = PropertyConverters.class)
+@Deprecated
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class} )
 public interface MongoDBMapper {
 
     // Note: In the development of this type, I made a mistake by misunderstanding the use of how the uses field
     // works in the @Mapper annotation. Future types should make their own mappers and break this up into more
-    // bite-sized and manageable chunks.
+    // bite-sized and manageable chunks. Furthermore, due to the original misunderstanding we should chip away
+    // at the bloat in this interface as we continue to develop the database layer.
 
     // Application Mappings
 
-    @Mapping(target = "id", source = "objectId")
-    @Mapping(target = "scriptRepoUrl", ignore = true)
-    @Mapping(target = "httpDocumentationUrl", ignore = true)
-    @Mapping(target = "httpDocumentationUiUrl", ignore = true)
-    @Mapping(target = "httpTunnelEndpointUrl", ignore = true)
-    @Mapping(target = "applicationConfiguration", ignore = true)
-    Application toApplication(MongoApplication source);
-
-    @InheritInverseConfiguration
-    MongoApplication toMongoApplication(Application source);
-
-    // Application Configuration Mapping
-
-    @Mapping(target = "id", source = "objectId")
-    ApplicationConfiguration toApplicationConfiguration(MongoApplicationConfiguration source);
-
-    @Mapping(target = "active", ignore = true)
-    @Mapping(target = "appleSignInPrivateKey", ignore = true)
-    @InheritInverseConfiguration
-    MongoApplicationConfiguration toMongoApplicationConfiguration(ApplicationConfiguration source);
+//    @Mapping(target = "id", source = "objectId")
+//    @Mapping(target = "scriptRepoUrl", ignore = true)
+//    @Mapping(target = "httpDocumentationUrl", ignore = true)
+//    @Mapping(target = "httpDocumentationUiUrl", ignore = true)
+//    @Mapping(target = "httpTunnelEndpointUrl", ignore = true)
+//    @Mapping(target = "applicationConfiguration", ignore = true)
+//    Application toApplication(MongoApplication source);
+//
+//    @InheritInverseConfiguration
+//    MongoApplication toMongoApplication(Application source);
 
     // User & Profile Mappings
     @Mapping(target = "id", source = "objectId")

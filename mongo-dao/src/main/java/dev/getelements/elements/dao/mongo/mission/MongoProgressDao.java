@@ -55,7 +55,6 @@ public class MongoProgressDao implements ProgressDao {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoProgressDao.class);
 
-
     private Datastore datastore;
 
     private ValidationHelper validationHelper;

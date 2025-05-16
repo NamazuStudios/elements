@@ -1,6 +1,9 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
 import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Property;
+
+import java.util.List;
 
 /**
  * Created by patricktwohig on 5/31/17.
@@ -8,19 +11,26 @@ import dev.morphia.annotations.Entity;
 @Entity(value = "application_configuration")
 public class MongoIosApplicationConfiguration extends MongoApplicationConfiguration {
 
-    // TODO This will likely be populated with more information.
-    // The unique app id (eg com.mycompany.myapp) is stored as the unique ID in the parent
-    // class.  This will likely include additional information such as the server side
-    // certificates and what not to enable push notifications or verify purchases.
+    @Property
+    private String applicationId;
 
-    private MongoAppleSignInConfiguration appleSignInConfiguration;
+    @Property
+    private List<MongoProductBundle> productBundles;
 
-    public MongoAppleSignInConfiguration getAppleSignInConfiguration() {
-        return appleSignInConfiguration;
+    public String getApplicationId() {
+        return applicationId;
     }
 
-    public void setAppleSignInConfiguration(MongoAppleSignInConfiguration appleSignInConfiguration) {
-        this.appleSignInConfiguration = appleSignInConfiguration;
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
+
+    public List<MongoProductBundle> getProductBundles() {
+        return productBundles;
+    }
+
+    public void setProductBundles(List<MongoProductBundle> productBundles) {
+        this.productBundles = productBundles;
     }
 
 }

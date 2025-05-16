@@ -12,9 +12,9 @@ public class SuperUserMatchmakingApplicationConfigurationService implements Matc
     @Override
     public void deleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId) {
         getApplicationConfigurationDao().deleteApplicationConfiguration(
+                MatchmakingApplicationConfiguration.class,
                 applicationNameOrId,
-                applicationConfigurationNameOrId
-        );
+                applicationConfigurationNameOrId);
     }
 
     @Override
@@ -38,7 +38,6 @@ public class SuperUserMatchmakingApplicationConfigurationService implements Matc
     public MatchmakingApplicationConfiguration updateApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId, MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
         return getApplicationConfigurationDao().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 matchmakingApplicationConfiguration);
     }
 

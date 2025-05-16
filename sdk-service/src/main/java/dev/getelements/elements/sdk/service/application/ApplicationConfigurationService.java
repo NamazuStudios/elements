@@ -47,7 +47,20 @@ public interface ApplicationConfigurationService {
                                                                 final int offset, final int count,
                                                                 final String search);
 
-    ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
-                                                  final List<ProductBundle> productBundles);
+    /**
+     * Udpates the product bundles for the given {@link ApplicationConfiguration} instance.
+     *
+     * @param applicationNameOrId the {@link Application} name or id
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} name or id
+     * @param configurationClass the {@link Class} to update
+     * @param productBundles the product bundles to update
+     * @return the updated {@link ApplicationConfiguration} instance
+     */
+    <T extends ApplicationConfiguration>
+    T updateProductBundles(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId,
+            final Class<T> configurationClass,
+            final List<ProductBundle> productBundles);
 
 }

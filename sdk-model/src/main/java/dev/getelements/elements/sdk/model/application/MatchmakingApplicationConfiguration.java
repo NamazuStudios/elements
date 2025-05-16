@@ -1,56 +1,24 @@
 package dev.getelements.elements.sdk.model.application;
 
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 
-
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-
-import static dev.getelements.elements.sdk.model.Constants.Regexp.WHOLE_WORD_ONLY;
+import java.util.Objects;
 
 @Schema(
-    description = "This configures the matchmaking system.  More specifically, this configures which scripts and" +
-                  "methods will be called when a successful match has been made.")
+    description =
+            "This configures the matchmaking system for the application. This defines the queue name and the " +
+            "Matchmacker to use when finding players to match. Currently FIFO is builtin and is the default."
+)
 public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {
 
-    @NotNull
-    @Pattern(regexp = WHOLE_WORD_ONLY)
-    @Schema(description =
-            "A user-specified unique identifier for the matching scheme.  It is possible to specify " +
-            "multiple schemes per application, but each must be uniquely named.  Each scheme allows for the " +
-            "specification of different scripts to handle the successful match.  When requesting matchmaking " +
-            "services clients will specify the scheme to be used.")
-    private String scheme;
-
-    @NotNull
-    @Schema(description =
-            "Specifies the matching algorithm to use.  Algorithms are builtin and implemented by the API " +
-            "services.  Currently, only FIFO is supported.")
-    private MatchingAlgorithm algorithm;
-
-    @NotNull
-    @Schema(description =
-            "Specifies the callback to execute when a successful match has been made.  When invoked, the " +
-            "method will receive Match object generated as the result of the matchmaking process.  Match " +
-            "instances will easily ")
+    @Valid
+    @Schema(description = "The callback definition for when a successful match is made.")
     private CallbackDefinition success;
 
-    public String getScheme() {
-        return scheme;
-    }
-
-    public void setScheme(String scheme) {
-        this.scheme = scheme;
-    }
-
-    public MatchingAlgorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(MatchingAlgorithm algorithm) {
-        this.algorithm = algorithm;
-    }
+    @Valid
+    @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
+    private ElementServiceReference matchmaker;
 
     public CallbackDefinition getSuccess() {
         return success;
@@ -58,6 +26,27 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
 
     public void setSuccess(CallbackDefinition success) {
         this.success = success;
+    }
+
+    public ElementServiceReference getMatchmaker() {
+        return matchmaker;
+    }
+
+    public void setMatchmaker(ElementServiceReference matchmaker) {
+        this.matchmaker = matchmaker;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        if (!super.equals(object)) return false;
+        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) object;
+        return Objects.equals(getSuccess(), that.getSuccess()) && Objects.equals(getMatchmaker(), that.getMatchmaker());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), getSuccess(), getMatchmaker());
     }
 
 }

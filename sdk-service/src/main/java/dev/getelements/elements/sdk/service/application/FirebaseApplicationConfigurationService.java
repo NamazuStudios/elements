@@ -22,7 +22,7 @@ public interface FirebaseApplicationConfigurationService {
      * and applicaiton configuration name/id.
      *
      * @param applicationNameOrId the value of {@link Application#getId()} or {@link Application#getName()}
-     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration#getId()} or {@link ApplicationConfiguration#getUniqueIdentifier()}
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration#getId()} or {@link ApplicationConfiguration#getName()}
      * @return the {@link FirebaseApplicationConfiguration} instance
      */
     FirebaseApplicationConfiguration getApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
@@ -52,7 +52,7 @@ public interface FirebaseApplicationConfigurationService {
      * Deletes an instance of {@link FirebaseApplicationConfiguration}.
      *
      * @param applicationNameOrId the value of {@link Application#getId()} or {@link Application#getName()}
-     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration#getId()} or {@link ApplicationConfiguration#getUniqueIdentifier()}
+     * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration#getId()} or {@link ApplicationConfiguration#getName()}
      */
     void deleteApplicationConfiguration(String applicationNameOrId, String applicationConfigurationNameOrId);
 

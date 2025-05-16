@@ -18,13 +18,14 @@ public class MongoProductBundle {
     @Property
     private String description;
 
+    @Property
     private List<MongoProductBundleReward> productBundleRewards = new ArrayList<>();
 
+    @Property
     private Map<String, Object> metadata = new HashMap<>();
 
     @Property
     private boolean display;
-
 
     public String getProductId() {
         return productId;

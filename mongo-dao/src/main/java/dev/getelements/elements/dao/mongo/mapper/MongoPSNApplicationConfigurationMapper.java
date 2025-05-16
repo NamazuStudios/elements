@@ -7,14 +7,13 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {PropertyConverters.class, MongoDBMapper.class})
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class})
 public interface MongoPSNApplicationConfigurationMapper extends MapperRegistry.ReversibleMapper<
         MongoPSNApplicationConfiguration,
         PSNApplicationConfiguration> {
 
     @Override
     @Mapping(target = "id", source = "objectId")
-    @Mapping(target = "npIdentifier", source = "uniqueIdentifier")
     PSNApplicationConfiguration forward(MongoPSNApplicationConfiguration source);
 
     @Override

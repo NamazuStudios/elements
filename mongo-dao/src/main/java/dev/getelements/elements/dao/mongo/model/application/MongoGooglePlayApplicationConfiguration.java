@@ -1,7 +1,9 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
 import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Property;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,12 +11,23 @@ import java.util.Map;
  */
 @Entity(value = "application_configuration")
 public class MongoGooglePlayApplicationConfiguration extends MongoApplicationConfiguration {
-    // TODO This will likely be populated with more information.
-    // The unique app id (eg com.mycompany.myapp) is stored as the unique ID in the parent
-    // class.  This will likely include additional information such as the server side
-    // certificates and what not to enable push notifications or verify purchases.
 
+    @Property
+    private String applicationId;
+
+    @Property
     private Map<String, Object> jsonKey;
+
+    @Property
+    private List<MongoProductBundle> productBundles;
+
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(String applicationId) {
+        this.applicationId = applicationId;
+    }
 
     public Map<String, Object> getJsonKey() {
         return jsonKey;
@@ -24,5 +37,12 @@ public class MongoGooglePlayApplicationConfiguration extends MongoApplicationCon
         this.jsonKey = jsonKey;
     }
 
+    public List<MongoProductBundle> getProductBundles() {
+        return productBundles;
+    }
+
+    public void setProductBundles(List<MongoProductBundle> productBundles) {
+        this.productBundles = productBundles;
+    }
 
 }

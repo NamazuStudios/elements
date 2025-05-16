@@ -1,15 +1,18 @@
 package dev.getelements.elements.rest.application;
 
+import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
+import dev.getelements.elements.sdk.model.application.ProductBundle;
+import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
-
+import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;
 import dev.getelements.elements.sdk.service.application.IosApplicationConfigurationService;
 import io.swagger.v3.oas.annotations.Operation;
-
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+
+import java.util.List;
 
 /**
  * Handles the management of {@link IosApplicationConfiguration} instances.
@@ -20,6 +23,8 @@ import jakarta.ws.rs.core.MediaType;
 public class IosApplicationConfigurationResource {
 
     private ValidationHelper validationHelper;
+
+    private ApplicationConfigurationService applicationConfigurationService;
 
     private IosApplicationConfigurationService iosApplicationConfigurationService;
 
@@ -53,6 +58,7 @@ public class IosApplicationConfigurationResource {
      * @return the {@link IosApplicationConfiguration} the iOS Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
         summary = "Creates a new iOS ApplicationConfiguration",
@@ -76,6 +82,7 @@ public class IosApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a iOS ApplicationConfiguration",
@@ -107,6 +114,47 @@ public class IosApplicationConfigurationResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId) {
         getIosApplicationConfigurationService().deleteApplicationConfiguration(applicationNameOrId, applicationConfigurationNameOrId);
+    }
+
+    @PUT
+    @Path("{applicationConfigurationNameOrId}/product_bundles")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Updates the ProductBundle",
+            description = "Updates the ProductBundle for the given ApplicationConfiguration")
+    public ApplicationConfiguration updateProductBundleForApplicationConfiguration(
+
+            @PathParam("applicationNameOrId")
+            final String applicationNameOrId,
+
+            @PathParam("applicationConfigurationNameOrId")
+            final String applicationConfigurationNameOrId,
+
+            final List<ProductBundle> productBundles
+    ) {
+
+        if (productBundles == null || productBundles.size() == 0) {
+            throw new InvalidParameterException("ProductBundles must not be empty.");
+        }
+
+        final var applicationConfiguration = getApplicationConfigurationService()
+                .updateProductBundles(
+                        applicationNameOrId,
+                        applicationConfigurationNameOrId,
+                        IosApplicationConfiguration.class,
+                        productBundles);
+
+        return applicationConfiguration;
+
+    }
+
+    public ApplicationConfigurationService getApplicationConfigurationService() {
+        return applicationConfigurationService;
+    }
+
+    @Inject
+    public void setApplicationConfigurationService(ApplicationConfigurationService applicationConfigurationService) {
+        this.applicationConfigurationService = applicationConfigurationService;
     }
 
     public IosApplicationConfigurationService getIosApplicationConfigurationService() {
