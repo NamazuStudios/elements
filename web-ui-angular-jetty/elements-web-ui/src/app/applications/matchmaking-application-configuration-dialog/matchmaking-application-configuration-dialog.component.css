@@ -1,3 +1,8 @@
+
+mat-form-field {
+  width: 100%;
+}
+
 .configuration-form-container {
   display: flex;
   flex-direction: column;
@@ -5,4 +10,26 @@
 
 .configuration-form-container > * {
   width: 100%;
+}
+
+.read-only-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 1rem;
+  margin-bottom: 10px;
+}
+
+.read-only-field label {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.read-only-field .value {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.87);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }

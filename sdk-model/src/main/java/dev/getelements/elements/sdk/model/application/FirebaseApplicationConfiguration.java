@@ -1,8 +1,6 @@
 package dev.getelements.elements.sdk.model.application;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
-
 import jakarta.validation.constraints.NotNull;
 
 @Schema

@@ -117,7 +117,7 @@ public class UserMatchService implements MatchService {
                     match.getScheme()
             );
 
-        final Matchmaker matchmaker = getMatchDao().getMatchmaker(configuration.getAlgorithm());
+        final Matchmaker matchmaker = getMatchDao().getDefaultMatchmaker();
         return getMatchServiceUtils().attempt(matchmaker, match, configuration);
 
     }

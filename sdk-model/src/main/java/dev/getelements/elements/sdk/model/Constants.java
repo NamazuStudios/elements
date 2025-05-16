@@ -167,6 +167,11 @@ public interface Constants {
          */
         String HEX_VALID_REGEX = "[0-9a-fA-F]*";
 
+        /**
+         * A regex pattern to validate fully qualified Java class names.
+         */
+        String JAVA_CLASS_NAME = "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$";
+
     }
 
 }

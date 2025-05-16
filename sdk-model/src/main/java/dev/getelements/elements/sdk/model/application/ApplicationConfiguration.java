@@ -1,14 +1,21 @@
 package dev.getelements.elements.sdk.model.application;
 
+import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
+import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
+import jakarta.validation.constraints.Pattern;
+
 import java.io.Serializable;
-import java.util.*;
+import java.util.Objects;
+
+import static dev.getelements.elements.sdk.model.Constants.Regexp.WHOLE_WORD_ONLY;
 
 /**
- * Ties the {@link Application} model to one of its associated profiles as represented by the {@link ConfigurationCategory}
- * enumeration.  This is an abstract base class from which all application profiles are derived.
+ * Ties the {@link Application} model to one of its associated profiles as represented by the type. The type indicates
+ * the fully qualified class name of the model that represents the profile. For example, a matchmaking profile is
+ * {@link MatchmakingApplicationConfiguration}
  *
  * Created by patricktwohig on 7/10/15.
  */
@@ -16,21 +23,25 @@ import java.util.*;
 public class ApplicationConfiguration implements Serializable {
 
     @Schema(description = "The database assigned ID for the application configuration.")
+    @Null(groups = Insert.class)
+    @NotNull(groups = Update.class)
     private String id;
 
     @NotNull
-    @Schema(description = "The category for the application configuration.")
-    private ConfigurationCategory category;
+    @Pattern(regexp = WHOLE_WORD_ONLY)
+    @Schema(description = "The application-configuration specific unique ID. Unique per application per category.")
+    private String name;
 
-    @Schema(description = "The application-configuration specific unique ID.  (Varies by ConfigurationCategory)")
-    private String uniqueIdentifier;
-
-    @Schema(description = "The parent application owning this configuration.")
     @NotNull
-    private Application parent;
+    @Schema(description = "The fully-qualified Java type of ApplicationConfiguration.")
+    private String type = getClass().getName();
 
-    @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
-    private List<ProductBundle> productBundles;
+    @NotNull
+    private String description;
+
+    @NotNull
+    @Schema(description = "The parent application owning this configuration.")
+    private Application parent;
 
     /**
      * Gets the actual profile ID.
@@ -51,39 +62,37 @@ public class ApplicationConfiguration implements Serializable {
     }
 
     /**
-     * Gets the platfrom identifier.
-     *
-     * @return the identifier type
-     */
-    public ConfigurationCategory getCategory() {
-        return category;
-    }
-
-    /**
-     * Sets the category identifier.
-     *
-     * @param category the category identifier type.
-     */
-    public void setCategory(ConfigurationCategory category) {
-        this.category = category;
-    }
-
-    /**
      * Gets the unique identifier for the category.
      *
      * @return
      */
-    public String getUniqueIdentifier() {
-        return uniqueIdentifier;
+    public String getName() {
+        return name;
     }
 
     /**
      * Sets the unique identifier for the category.
      *
-     * @param uniqueIdentifier
+     * @param name
      */
-    public void setUniqueIdentifier(String uniqueIdentifier) {
-        this.uniqueIdentifier = uniqueIdentifier;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     /**
@@ -104,66 +113,28 @@ public class ApplicationConfiguration implements Serializable {
         this.parent = parent;
     }
 
-    public List<ProductBundle> getProductBundles() {
-        return productBundles;
-    }
-
-    public void setProductBundles(List<ProductBundle> productBundles) {
-        this.productBundles = productBundles;
-    }
-
-    public ProductBundle getProductBundle(final String productId) {
-        if (getProductBundles() == null) {
-            return null;
-        }
-
-        for (final ProductBundle productBundle : getProductBundles()) {
-            if (Objects.equals(productBundle.getProductId(), productId)) {
-                return productBundle;
-            }
-        }
-
-        return null;
-    }
-//
-//    public void addProductBundle(final ProductBundle productBundle) {
-//        if (getProductBundles() == null) {
-//            setProductBundles(new ArrayList<>());
-//        }
-//
-//        if (getProductBundle(productBundle.getProductId()) != null) {
-//            throw new DuplicateException("ProductBundle with productId " + productBundle.getProductId() + " already exists " +
-//                    "in ApplicationConfiguration " + getId());
-//        }
-//
-//        getProductBundles().add(productBundle);
-//    }
-
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ApplicationConfiguration that = (ApplicationConfiguration) o;
-        return Objects.equals(getId(), that.getId()) &&
-                getCategory() == that.getCategory() &&
-                Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
-                Objects.equals(getParent(), that.getParent()) &&
-                Objects.equals(getProductBundles(), that.getProductBundles());
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        ApplicationConfiguration that = (ApplicationConfiguration) object;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getType(), that.getType()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getParent(), that.getParent());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getCategory(), getUniqueIdentifier(), getParent(), getProductBundles());
+        return Objects.hash(getId(), getName(), getType(), getDescription(), getParent());
     }
 
     @Override
     public String toString() {
-        return "ApplicationConfiguration{" +
-                "id='" + id + '\'' +
-                ", category=" + category +
-                ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
-                ", parent=" + parent +
-                ", productBundles=" + productBundles +
-                '}';
+        final StringBuilder sb = new StringBuilder("ApplicationConfiguration{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", type='").append(type).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", parent=").append(parent);
+        sb.append('}');
+        return sb.toString();
     }
+
 }

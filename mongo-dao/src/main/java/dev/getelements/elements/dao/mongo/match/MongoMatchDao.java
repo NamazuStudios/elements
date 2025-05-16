@@ -12,19 +12,18 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.TooBusyException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.match.Match;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 
+import jakarta.inject.Provider;
 import org.bson.types.ObjectId;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
 import java.sql.Timestamp;
-import java.util.function.Function;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -47,7 +46,7 @@ public class MongoMatchDao implements MatchDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
-    private Matchmaker.Factory matchmakerSupplierFunction;
+    private Provider<Matchmaker> matchmakerProvider;
 
     private MongoMatchUtils mongoMatchUtils;
 
@@ -159,8 +158,8 @@ public class MongoMatchDao implements MatchDao {
     }
 
     @Override
-    public Matchmaker getMatchmaker(MatchingAlgorithm matchingAlgorithm) {
-        return getMatchmakerSupplierFunction().apply(matchingAlgorithm);
+    public Matchmaker getDefaultMatchmaker() {
+        return getMatchmakerProvider().get();
     }
 
     public void validate(final Match match) {
@@ -222,13 +221,13 @@ public class MongoMatchDao implements MatchDao {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
     }
 
-    public Matchmaker.Factory getMatchmakerSupplierFunction() {
-        return matchmakerSupplierFunction;
+    public Provider<Matchmaker> getMatchmakerProvider() {
+        return matchmakerProvider;
     }
 
     @Inject
-    public void setMatchmakerSupplierFunction(Matchmaker.Factory matchmakerSupplierFunction) {
-        this.matchmakerSupplierFunction = matchmakerSupplierFunction;
+    public void setMatchmakerProvider(Provider<Matchmaker> matchmakerProvider) {
+        this.matchmakerProvider = matchmakerProvider;
     }
 
     public MongoMatchUtils getMongoMatchUtils() {

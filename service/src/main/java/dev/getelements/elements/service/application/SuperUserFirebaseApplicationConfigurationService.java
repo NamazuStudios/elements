@@ -14,9 +14,9 @@ public class SuperUserFirebaseApplicationConfigurationService implements Firebas
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
         getApplicationConfigurationDao().deleteApplicationConfiguration(
+                FirebaseApplicationConfiguration.class,
                 applicationNameOrId,
-                applicationConfigurationNameOrId
-        );
+                applicationConfigurationNameOrId);
     }
 
     @Override
@@ -47,7 +47,6 @@ public class SuperUserFirebaseApplicationConfigurationService implements Firebas
             final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {
         return getApplicationConfigurationDao().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 firebaseApplicationConfiguration
         );
     }

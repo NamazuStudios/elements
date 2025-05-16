@@ -12,7 +12,6 @@ public class SuperUserPSNApplicationConfigurationService implements PSNApplicati
 
     private ApplicationConfigurationDao applicationConfigurationDao;
 
-
     @Override
     public PSNApplicationConfiguration getApplicationConfiguration(
             final String applicationNameOrId,
@@ -41,7 +40,6 @@ public class SuperUserPSNApplicationConfigurationService implements PSNApplicati
             final PSNApplicationConfiguration psnApplicationProfile) {
         return getApplicationConfigurationDao().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationProfileNameOrId,
                 psnApplicationProfile
         );
     }
@@ -49,9 +47,9 @@ public class SuperUserPSNApplicationConfigurationService implements PSNApplicati
     @Override
     public void deleteApplicationConfiguration(String applicationNameOrId, String applicationProfileNameOrId) {
         getApplicationConfigurationDao().deleteApplicationConfiguration(
+                PSNApplicationConfiguration.class,
                 applicationNameOrId,
-                applicationProfileNameOrId
-        );
+                applicationProfileNameOrId);
     }
 
     public ApplicationConfigurationDao getApplicationConfigurationDao() {

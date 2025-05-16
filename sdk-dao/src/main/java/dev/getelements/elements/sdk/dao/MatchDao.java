@@ -1,12 +1,11 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.NotImplementedException;
-import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.match.Match;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.getelements.elements.sdk.model.profile.Profile;
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * Created by patricktwohig on 7/20/17.
@@ -66,13 +65,12 @@ public interface MatchDao {
     Match createMatch(Match match);
 
     /**
-     * Returns a {@link Matchmaker} instance for the supplied {@link MatchingAlgorithm}.
+     * Returns the default {@link Matchmaker} instance.
      *
-     * @param matchingAlgorithm the requested {@link MatchingAlgorithm}
      * @return a {@link Matchmaker}
      * @throws NotImplementedException if the supplied algorithm is not supported.
      */
-    Matchmaker getMatchmaker(MatchingAlgorithm matchingAlgorithm);
+    Matchmaker getDefaultMatchmaker();
 
     /**
      * Delets a {@link Match}, specyifying the id of the {@link Match}.  Note that a {@link Match} may not be deleted

@@ -19,11 +19,11 @@ import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
+import dev.getelements.elements.dao.mongo.match.MongoFIFOMatchmaker;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
-import dev.getelements.elements.dao.mongo.provider.MongoMatchmakerFactoryProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
@@ -90,13 +90,11 @@ public class MongoDaoModule extends PrivateModule {
         bind(ScheduleDao.class).to(MongoScheduleDao.class);
         bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
         bind(ScheduleProgressDao.class).to(MongoScheduleProgressDao.class);
+        bind(Matchmaker.class).to(MongoFIFOMatchmaker.class);
 
         bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
-
-        bind(Matchmaker.Factory.class)
-                .toProvider(MongoMatchmakerFactoryProvider.class);
 
         bind(BooleanQueryParser.class)
                 .to(SidhantAggarwalBooleanQueryParser.class);
@@ -116,7 +114,6 @@ public class MongoDaoModule extends PrivateModule {
 
         expose(Datastore.class);
         expose(Transaction.class);
-        expose(Matchmaker.Factory.class);
 
         expose(IndexDao.class);
         expose(UserDao.class);

@@ -10,15 +10,20 @@ import io.github.classgraph.ClassInfo;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
 
 public class MapstructMapperRegistryBuilder {
+
+    private static final Logger logger = LoggerFactory.getLogger(MapstructMapperRegistryBuilder.class);
 
     private final Map<Class<?>, Object> cache = new HashMap<>();
 
@@ -58,11 +63,11 @@ public class MapstructMapperRegistryBuilder {
 
     private Map<SimpleMapperRegistry.MappingKey, MapperRegistry.Mapper<?,?>> buildMappers() {
         return classGraph.getOptional().map(classGraph -> {
-            final var mappers = new HashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Mapper<?,?>>();
+            final var mappers = new LinkedHashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Mapper<?,?>>();
             scanForImplicitMappers(classGraph, mappers);
             scanForExplicitMappers(classGraph, mappers);
             return mappers;
-        }).orElseGet(HashMap::new);
+        }).orElseGet(LinkedHashMap::new);
     }
 
     private static final String MAPPER_CLASS_NAME = MapperRegistry.Mapper.class.getName();
@@ -97,6 +102,7 @@ public class MapstructMapperRegistryBuilder {
                         final var instance = getOrCreateMapper(aMethodInfo.getClassInfo().loadClass());
 
                         final MapperRegistry.Mapper<Object, Object> mapper = object -> {
+
                             try {
                                 return aMethod.invoke(instance, object);
                             } catch (InvocationTargetException ex) {
@@ -139,6 +145,23 @@ public class MapstructMapperRegistryBuilder {
                         final var key = SimpleMapperRegistry.MappingKey.fromMapper(aMapperInterface);
                         final var mapper = (MapperRegistry.Mapper<?, ?>)getOrCreateMapper(aMapperInterface);
 
+                        final var sourceType = mapper.findSourceType();
+                        final var destinationType = mapper.findDestinationType();
+
+                        if (sourceType.map(c -> c != key.source()).orElse(false)) {
+                            logger.warn("Mapper {} has a source type {} that does not match the key {}",
+                                    mapper.getClass(),
+                                    sourceType,
+                                    key.source());
+                        }
+
+                        if (destinationType.map(c -> c != key.destination()).orElse(false)) {
+                            logger.warn("Mapper {} has a destination type {} that does not match the key {}",
+                                    mapper.getClass(),
+                                    sourceType,
+                                    key.destination());
+                        }
+
                         if (mappers.putIfAbsent(key, mapper) != null) {
                             throw new IllegalArgumentException(format(
                                     "Duplicate mapper between %s and %s using %s.",
@@ -172,11 +195,11 @@ public class MapstructMapperRegistryBuilder {
 
     private Map<SimpleMapperRegistry.MappingKey, MapperRegistry.Updater<?,?>> buildUpdaters() {
         return classGraph.getOptional().map(classGraph -> {
-            final var updaters = new HashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Updater<?,?>>();
+            final var updaters = new LinkedHashMap<SimpleMapperRegistry.MappingKey, MapperRegistry.Updater<?,?>>();
             scanForImplicitUpdaters(classGraph, updaters);
             scanForExplicitUpdaters(classGraph, updaters);
             return updaters;
-        }).orElseGet(HashMap::new);
+        }).orElseGet(LinkedHashMap::new);
     }
 
     private static boolean isImplicitUpdater(final ClassInfo aClassInfo) {

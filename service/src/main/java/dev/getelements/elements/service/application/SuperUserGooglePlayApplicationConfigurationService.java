@@ -17,9 +17,9 @@ public class SuperUserGooglePlayApplicationConfigurationService implements Googl
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
         getApplicationConfigurationDao().deleteApplicationConfiguration(
+                GooglePlayApplicationConfiguration.class,
                 applicationNameOrId,
-                applicationConfigurationNameOrId
-        );
+                applicationConfigurationNameOrId);
     }
 
     @Override
@@ -50,7 +50,6 @@ public class SuperUserGooglePlayApplicationConfigurationService implements Googl
             final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {
         return getApplicationConfigurationDao().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 googlePlayApplicationConfiguration
         );
     }
