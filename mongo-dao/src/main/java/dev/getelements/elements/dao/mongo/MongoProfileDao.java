@@ -192,8 +192,8 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         final var query = getBooleanQueryParser()
-                .parse(MongoProfile.class, search)
-                .orElseGet(() -> parseLegacyQuery(search));
+                .parse(MongoProfile.class, trimmedSearch)
+                .orElseGet(() -> parseLegacyQuery(trimmedSearch));
 
         return getMongoDBUtils().isIndexedQuery(query)
                 ? paginationFromQuery(query, offset, count)
@@ -213,7 +213,6 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoUser> userQuery = getDatastore().find(MongoUser.class);
 
         userQuery.filter(
-                eq("active", true),
                 or(
                         regex("name", compile(trimmedSearch)),
                         regex("email", compile(trimmedSearch))
