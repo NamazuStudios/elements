@@ -9,7 +9,7 @@ import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
-import dev.getelements.elements.security.AuthorizationHeader;
+import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import io.swagger.util.Json;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,8 +28,8 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static dev.getelements.elements.rest.AuthSchemes.AUTH_BEARER;
-import static dev.getelements.elements.rest.AuthSchemes.SESSION_SECRET;
+import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.AUTH_BEARER;
+import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
 import static io.swagger.v3.oas.models.security.SecurityScheme.In.HEADER;
 import static io.swagger.v3.oas.models.security.SecurityScheme.Type.APIKEY;
 
