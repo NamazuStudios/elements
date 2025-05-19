@@ -37,6 +37,8 @@ import static io.swagger.v3.oas.models.security.SecurityScheme.Type.APIKEY;
 @Path("codegen")
 public class CodegenResource extends BaseOpenApiResource {
 
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(CodegenResource.class);
+
     private CodegenService codegenService;
 
     private ValidationHelper validationHelper;
@@ -64,7 +66,6 @@ public class CodegenResource extends BaseOpenApiResource {
 
         getValidationHelper().validateModel(request);
 
-        final var temporaryFiles = new TemporaryFiles(CodegenResource.class);
         final var path = temporaryFiles.createTempDirectory();
 
         try {

@@ -15,10 +15,11 @@ import java.util.zip.ZipOutputStream;
 
 public class SuperUserOpenApiCodegenService implements CodegenService {
 
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(SuperUserOpenApiCodegenService.class);
+
     @Override
     public File generateCore(final File spec, final String language, final String packageName, final String options) {
 
-        final var temporaryFiles = new TemporaryFiles(SuperUserOpenApiCodegenService.class);
         final var path = temporaryFiles.createTempDirectory(packageName);
         final var args = getArgs(spec, language, options, packageName, path.toString());
 
