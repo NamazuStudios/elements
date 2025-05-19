@@ -11,10 +11,13 @@ import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVeri
 import io.swagger.v3.oas.annotations.Operation;
 
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.checkerframework.checker.units.qual.C;
+
 import java.util.List;
 
 @Path("ios")
@@ -26,6 +29,7 @@ public class AppleIapReceiptResource {
 
     @POST
     @Path("receipt")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( description =
             "Upload Apple IAP Receipt. Returns a list of RewardIssuances, which may contain already-redeemed " +
