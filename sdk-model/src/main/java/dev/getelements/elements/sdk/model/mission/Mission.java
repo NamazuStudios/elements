@@ -38,8 +38,8 @@ public class Mission implements Serializable, Taggable {
     @NotNull
     private String displayName;
 
-    @Schema(description = "The description of the mission")
     @NotNull
+    @Schema(description = "The description of the mission")
     private String description;
 
     @Schema(description = "The tags used to categorize this mission")

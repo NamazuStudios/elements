@@ -2,9 +2,9 @@ package dev.getelements.elements.service;
 
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.MutableAttributes;
-import dev.getelements.elements.rt.ReentrantThreadLocal;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
-import dev.getelements.elements.rt.guice.ReentrantThreadLocalScope;
+import dev.getelements.elements.sdk.guice.ReentrantThreadLocalScope;
 
 import jakarta.inject.Provider;
 

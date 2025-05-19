@@ -2,11 +2,8 @@ package dev.getelements.elements.sdk.dao;
 
 import dev.getelements.elements.sdk.model.exception.NoSuitableMatchException;
 import dev.getelements.elements.sdk.model.match.Match;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -15,13 +12,6 @@ import java.util.function.Supplier;
 public interface Matchmaker {
 
     int DEFAULT_MAX_CANDIDATES = 100;
-
-    /**
-     * Returns the {@link MatchingAlgorithm} implemented by this matchmaker.
-     *
-     * @return the {@link MatchingAlgorithm}
-     */
-    MatchingAlgorithm getAlgorithm();
 
     /**
      * Invokes {@link #attemptToFindOpponent(Match, int, BiFunction<Match, Match, String>)} using the {@link #DEFAULT_MAX_CANDIDATES} value.
@@ -94,12 +84,5 @@ public interface Matchmaker {
         Match getOpponentMatch();
 
     }
-
-    /**
-     * Supplies a {@link Matchmaker} based on the algorithm.
-     */
-    @FunctionalInterface
-    @ElementServiceExport
-    interface Factory extends Function<MatchingAlgorithm, Matchmaker> {}
 
 }

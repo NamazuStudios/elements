@@ -1,17 +1,16 @@
 package dev.getelements.elements.dao.mongo.match;
 
-import dev.getelements.elements.sdk.dao.Matchmaker;
 import dev.getelements.elements.dao.mongo.model.match.MongoMatch;
+import dev.getelements.elements.sdk.dao.Matchmaker;
 import dev.getelements.elements.sdk.model.exception.NoSuitableMatchException;
 import dev.getelements.elements.sdk.model.match.Match;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
 import dev.morphia.query.filters.Filters;
-
 import jakarta.inject.Inject;
+
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -28,11 +27,6 @@ public class MongoFIFOMatchmaker implements Matchmaker {
     private MongoMatchUtils mongoMatchUtils;
 
     private Consumer<Query<MongoMatch>> applyScope = q -> q.field("scope").doesNotExist();
-
-    @Override
-    public MatchingAlgorithm getAlgorithm() {
-        return MatchingAlgorithm.FIFO;
-    }
 
     @Override
     public SuccessfulMatchTuple attemptToFindOpponent(

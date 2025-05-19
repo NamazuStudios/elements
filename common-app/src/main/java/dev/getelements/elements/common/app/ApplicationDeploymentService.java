@@ -16,7 +16,7 @@ public interface ApplicationDeploymentService {
     /**
      * Defines a name for the app-serve deployment service.
      */
-    String APP_SERVE = "dev.getelements.elements.common.app.server";
+    String APP_SERVE = "dev.getelements.elements.common.app.serve";
 
     /**
      * Starts the {@link ApplicationDeploymentService}, deploying all {@link Application}s and loading them into

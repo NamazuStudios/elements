@@ -2,18 +2,16 @@ package dev.getelements.elements.jetty;
 
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.app.serve.guice.AppServeModule;
+import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
+import dev.getelements.elements.app.serve.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.common.app.ApplicationDeploymentService;
-import dev.getelements.elements.guice.StandardServletSecurityModule;
-import dev.getelements.elements.guice.StandardServletServicesModule;
 import org.eclipse.jetty.server.Handler;
 
 import java.util.Collection;
 import java.util.List;
 
 import static com.google.inject.name.Names.named;
-import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_NODE;
 import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
-import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_node;
 import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_serve;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
@@ -38,11 +36,23 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
 
         expose(Handler.class);
 
-        install(new ElementsServletContextModule());
-        install(new StandardServletServicesModule());
-        install(new StandardServletSecurityModule());
-        install(new ElementsServletModule(this.elementsWebServiceComponents));
+        install(new PrivateModule() {
+            @Override
+            protected void configure() {
 
+                // Installs all the components for the core system.
+                install(new ElementsServletContextModule());
+                install(new ElementsServletModule(elementsWebServiceComponents));
+
+                // Exposes all the handlers for the core system.
+                expose(Handler.class);
+                expose(Handler.Sequence.class).annotatedWith(named(JakartaRsLoader.HANDLER_SEQUENCE));
+                expose(Handler.Sequence.class).annotatedWith(named(JakartaWebsocketLoader.HANDLER_SEQUENCE));
+
+            }
+        });
+
+        // If we specify app_serve, then we install an run the components.
         if (elementsWebServiceComponents.contains(app_serve)) {
             install(new AppServeModule());
             expose(ApplicationDeploymentService.class).annotatedWith(named(APP_SERVE));

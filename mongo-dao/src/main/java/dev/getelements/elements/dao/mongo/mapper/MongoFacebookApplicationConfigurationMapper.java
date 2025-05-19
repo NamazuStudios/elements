@@ -7,14 +7,13 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {PropertyConverters.class, MongoDBMapper.class})
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class})
 public interface MongoFacebookApplicationConfigurationMapper extends MapperRegistry.ReversibleMapper<
         MongoFacebookApplicationConfiguration,
         FacebookApplicationConfiguration> {
 
     @Override
     @Mapping(target = "id", source = "objectId")
-    @Mapping(target = "applicationId", source = "uniqueIdentifier")
     FacebookApplicationConfiguration forward(MongoFacebookApplicationConfiguration source);
 
     @Override

@@ -1,9 +1,7 @@
 package dev.getelements.elements.exception;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
-import dev.getelements.elements.sdk.model.exception.ErrorCode;
 import dev.getelements.elements.sdk.model.exception.BaseException;
+import dev.getelements.elements.sdk.model.exception.ErrorCode;
 
 import java.util.Map;
 
@@ -15,18 +13,17 @@ import static jakarta.servlet.http.HttpServletResponse.*;
  */
 public class StatusMapping {
 
-    private static final Map<ErrorCode, Integer> HTTP_STATUS_MAP = Maps.immutableEnumMap(
-            new ImmutableMap.Builder<ErrorCode, Integer>()
-                    .put(DUPLICATE, SC_CONFLICT)
-                    .put(FORBIDDEN, SC_FORBIDDEN)
-                    .put(UNAUTHORIZED, SC_UNAUTHORIZED)
-                    .put(INVALID_DATA, SC_BAD_REQUEST)
-                    .put(INVALID_PARAMETER, SC_BAD_REQUEST)
-                    .put(NOT_FOUND, SC_NOT_FOUND)
-                    .put(OVERLOAD, SC_SERVICE_UNAVAILABLE)
-                    .put(UNKNOWN, SC_INTERNAL_SERVER_ERROR)
-                    .put(NOT_IMPLEMENTED, SC_NOT_IMPLEMENTED)
-                .build());
+    public static final Map<ErrorCode, Integer> HTTP_STATUS_MAP = Map.ofEntries(
+            Map.entry(DUPLICATE, SC_CONFLICT),
+            Map.entry(FORBIDDEN, SC_FORBIDDEN),
+            Map.entry(UNAUTHORIZED, SC_UNAUTHORIZED),
+            Map.entry(INVALID_DATA, SC_BAD_REQUEST),
+            Map.entry(INVALID_PARAMETER, SC_BAD_REQUEST),
+            Map.entry(NOT_FOUND, SC_NOT_FOUND),
+            Map.entry(OVERLOAD, SC_SERVICE_UNAVAILABLE),
+            Map.entry(UNKNOWN, SC_INTERNAL_SERVER_ERROR),
+            Map.entry(NOT_IMPLEMENTED, SC_NOT_IMPLEMENTED)
+        );
 
     public static int map(final BaseException ex) {
         return HTTP_STATUS_MAP.getOrDefault(ex.getCode(), SC_INTERNAL_SERVER_ERROR);

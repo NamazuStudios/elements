@@ -1,5 +1,8 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.ElementRegistrySupplier;
+import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
@@ -14,9 +17,17 @@ public class MessageEndpoint {
 
     private static final Map<Integer, Message> messages = new ConcurrentSkipListMap<>();
 
+    private final UserService userService = ElementRegistrySupplier
+            .getElementLocal(MessageEndpoint.class)
+            .get()
+            .find("dev.getelements.elements.sdk.service")
+            .findAny()
+            .get()
+            .getServiceLocator()
+            .getInstance(UserService.class);
+
     @POST
-    public Response createMessage(
-            final CreateMessageRequest createMessageRequest) {
+    public Response createMessage(final CreateMessageRequest createMessageRequest) {
 
         if (createMessageRequest.getMessage() == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -27,6 +38,7 @@ public class MessageEndpoint {
 
         final var message = new Message();
         message.setId(id);
+        message.setUser(userService.getCurrentUser());
         message.setMessage(createMessageRequest.getMessage());
         message.setCreated(now);
         message.setUpdated(now);

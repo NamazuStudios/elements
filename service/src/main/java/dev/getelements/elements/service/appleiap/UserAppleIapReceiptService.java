@@ -12,7 +12,6 @@ import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
 import dev.getelements.elements.sdk.model.application.Application;
 
 import static dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt.buildRewardIssuanceTags;
-import static dev.getelements.elements.sdk.model.application.ConfigurationCategory.IOS_APP_STORE;
 
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
@@ -204,7 +203,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         IosApplicationConfiguration iosApplicationConfiguration =  getApplicationConfigurationDao()
                 .getDefaultApplicationConfigurationForApplication(
                         applicationId,
-                        IOS_APP_STORE);
+                        IosApplicationConfiguration.class);
 
         // for each purchase we received from the ios app...
         for (final AppleIapReceipt appleIapReceipt : appleIapReceipts) {

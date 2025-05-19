@@ -2,9 +2,9 @@ package dev.getelements.elements.servlet;
 
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.MutableAttributes;
-
 import dev.getelements.elements.sdk.util.ImmutableAttributes;
 import jakarta.servlet.ServletRequest;
+
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Optional;

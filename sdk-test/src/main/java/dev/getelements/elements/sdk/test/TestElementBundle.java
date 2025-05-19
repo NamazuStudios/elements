@@ -5,7 +5,7 @@ package dev.getelements.elements.sdk.test;
  */
 public enum TestElementBundle {
 
-    JAKARTA_RS_DEPENDENCIES("sdk-test-element-ws-3.0.0-SNAPSHOT");
+    JAKARTA_RS_DEPENDENCIES("sdk-test-element-ws-3.1.0-SNAPSHOT");
 
     private final String directoryName;
 

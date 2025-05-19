@@ -14,13 +14,14 @@ import java.util.*;
  */
 @Schema
 public class ProductBundleReward implements Serializable {
+
     @NotNull
     @Schema(description = "The id of the item to be rewarded.")
     private String itemId;
 
     @NotNull
     @Schema(description = "The quantity of the item to be rewarded.")
-    private Integer quantity;
+    private int quantity;
 
     public String getItemId() {
         return itemId;
@@ -30,21 +31,19 @@ public class ProductBundleReward implements Serializable {
         this.itemId = itemId;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ProductBundleReward that = (ProductBundleReward) o;
-        return Objects.equals(getItemId(), that.getItemId()) &&
-                Objects.equals(getQuantity(), that.getQuantity());
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        ProductBundleReward reward = (ProductBundleReward) object;
+        return getQuantity() == reward.getQuantity() && Objects.equals(getItemId(), reward.getItemId());
     }
 
     @Override
@@ -54,10 +53,12 @@ public class ProductBundleReward implements Serializable {
 
     @Override
     public String toString() {
-        return "ProductBundleReward{" +
-                "itemId='" + itemId + '\'' +
-                ", quantity=" + quantity +
-                '}';
+        final StringBuilder sb = new StringBuilder("ProductBundleReward{");
+        sb.append("itemId='").append(itemId).append('\'');
+        sb.append(", quantity=").append(quantity);
+        sb.append('}');
+        return sb.toString();
     }
+    
 }
 

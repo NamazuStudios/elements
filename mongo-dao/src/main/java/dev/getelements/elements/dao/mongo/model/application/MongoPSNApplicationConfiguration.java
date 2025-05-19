@@ -10,7 +10,18 @@ import dev.morphia.annotations.Property;
 public class MongoPSNApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
+    private String npIdentifier;
+
+    @Property
     private String clientSecret;
+
+    public String getNpIdentifier() {
+        return npIdentifier;
+    }
+
+    public void setNpIdentifier(String npIdentifier) {
+        this.npIdentifier = npIdentifier;
+    }
 
     public String getClientSecret() {
         return clientSecret;

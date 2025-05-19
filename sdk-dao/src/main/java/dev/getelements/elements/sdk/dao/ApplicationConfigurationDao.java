@@ -4,7 +4,6 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
 import dev.getelements.elements.sdk.model.exception.notification.NotificationConfigurationException;
@@ -15,7 +14,6 @@ import java.util.Optional;
 /**
  * Created by patricktwohig on 7/13/15.
  */
-
 @ElementServiceExport
 public interface ApplicationConfigurationDao {
 
@@ -26,8 +24,9 @@ public interface ApplicationConfigurationDao {
      * @param count  the count
      * @return a {@link Pagination} of {@link Application} instances
      */
-    Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(String applicationNameOrId,
-                                                                            int offset, int count);
+    Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(
+            String applicationNameOrId,
+            int offset, int count);
 
     /**
      * Gets the active applications registered in the databse given the offset and count.
@@ -51,20 +50,20 @@ public interface ApplicationConfigurationDao {
      */
     default <T extends ApplicationConfiguration> T getDefaultApplicationConfigurationForApplication(
             final String applicationNameOrId,
-            final ConfigurationCategory configurationCategory) {
+            final Class<T> configurationClass) {
 
-        final var applicationConfigurationList = getApplicationConfigurationsForApplication(
+        final var applicationConfigurationList = getAllActiveApplicationConfigurations(
                 applicationNameOrId,
-                configurationCategory
+                configurationClass
         );
 
         if (applicationConfigurationList.isEmpty()) {
             throw new ApplicationConfigurationNotFoundException(
-                    "No " + configurationCategory.toString() +
+                    "No " + configurationClass.getName() +
                             " configuration for application name/id: " + applicationNameOrId);
         } else if (applicationConfigurationList.size() > 1) {
             throw new NotificationConfigurationException(
-                    applicationConfigurationList.size() + " " + configurationCategory.toString() +
+                    applicationConfigurationList.size() + " " + configurationClass.getName() +
                             " configurations for " + applicationNameOrId);
         } else {
             return (T) applicationConfigurationList.getFirst();
@@ -78,19 +77,26 @@ public interface ApplicationConfigurationDao {
      * @param applicationNameOrId the application name or id
      * @return a {@link List} associated with the {@link Application}
      */
-    <T extends ApplicationConfiguration> List<T> getApplicationConfigurationsForApplication(
+    <T extends ApplicationConfiguration>
+    List<T> getAllActiveApplicationConfigurations(
             String applicationNameOrId,
-            ConfigurationCategory configurationCategory);
+            Class<T> configurationTClass
+    );
 
     /**
      * Sets the ProductBundle for the given application configuration id.
      *
-     * @param applicationConfigurationId the application name or id
-     * @param productBundle              the product bundle
-     * @return
+     * @param applicationNameOrId              the application name or id
+     * @param applicationConfigurationNameOrId the application configuration name or id
+     * @param configurationClass               the configuration class
+     * @param productBundle                    the product bundle
+     * @return the updated {@link ApplicationConfiguration}
      */
-    ApplicationConfiguration updateProductBundles(
-            String applicationConfigurationId,
+    <T extends ApplicationConfiguration>
+    T updateProductBundles(
+            String applicationNameOrId,
+            String applicationConfigurationNameOrId,
+            Class<T> configurationClass,
             List<ProductBundle> productBundle
     );
 
@@ -110,20 +116,20 @@ public interface ApplicationConfigurationDao {
     /**
      * Updates the application configuration.
      *
+     * @param <T>                 the type of application configuration
      * @param applicationNameOrId
      * @return the {@link ApplicationConfiguration} as written to the database
-     * @param <T> the type of application configuration
      */
     <T extends ApplicationConfiguration>
     T updateApplicationConfiguration(
             String applicationNameOrId,
-            String applicationConfigurationId,
             T applicationConfiguration
     );
 
     /**
      * Gets the {@link ApplicationConfiguration} with the supplied name and id.
      *
+     * @param configType the configuration type
      * @param applicationNameOrId the application name or ID
      * @param applicationConfigurationId the application configuration ID
      * @return the instance
@@ -131,7 +137,7 @@ public interface ApplicationConfigurationDao {
      */
     <T extends ApplicationConfiguration>
     Optional<T> findApplicationConfiguration(
-            Class<T> configT,
+            Class<T> configType,
             String applicationNameOrId,
             String applicationConfigurationId
     );
@@ -139,10 +145,12 @@ public interface ApplicationConfigurationDao {
     /**
      * Deletes the application configuration.
      *
-     * @param applicationNameOrId the application name or ID
+     * @param configType                 the configuration type
+     * @param applicationNameOrId        the application name or ID
      * @param applicationConfigurationId the application configuration ID
      */
     void deleteApplicationConfiguration(
+            Class<? extends ApplicationConfiguration> configType,
             String applicationNameOrId,
             String applicationConfigurationId
     );

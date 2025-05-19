@@ -12,6 +12,7 @@ public class EchoEndpoint {
 
     @OnOpen
     public void onOpen(final Session session) {
+        final var request = session.getRequestParameterMap();
         logger.info("Opened {}", session.getId());
     }
 

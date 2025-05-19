@@ -4,7 +4,7 @@ import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
-import dev.getelements.elements.sdk.model.http.BasicAuthorizationHeader;
+import dev.getelements.elements.sdk.util.security.BasicAuthorizationHeader;
 
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 

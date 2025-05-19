@@ -4,7 +4,7 @@ import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.rt.transact.NullResourceException;
 import dev.getelements.elements.rt.transact.ResourceContents;
-import dev.getelements.elements.rt.util.FinallyAction;
+import dev.getelements.elements.sdk.util.FinallyAction;
 import dev.getelements.elements.sdk.util.LazyValue;
 import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import org.slf4j.Logger;

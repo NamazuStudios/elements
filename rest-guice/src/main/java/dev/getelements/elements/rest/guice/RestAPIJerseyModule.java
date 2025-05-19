@@ -7,9 +7,9 @@ import com.opencsv.CSVWriter;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
 import com.opencsv.bean.MappingStrategy;
 import dev.getelements.elements.guice.ServletBindings;
-import dev.getelements.elements.rest.MethodOverrideFilter;
+import dev.getelements.elements.sdk.jakarta.rs.MethodOverrideFilter;
 import dev.getelements.elements.rest.status.VersionResource;
-import dev.getelements.elements.rest.support.DefaultExceptionMapper;
+import dev.getelements.elements.sdk.jakarta.rs.DefaultExceptionMapper;
 import io.swagger.v3.jaxrs2.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 

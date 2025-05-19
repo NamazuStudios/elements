@@ -23,11 +23,11 @@ public class FilteredServiceLocator implements ServiceLocator {
     @Override
     public <T> Optional<Supplier<T>> findInstance(final ElementServiceKey<T> key) {
 
-        if (!serviceKeySet.contains(key)) {
-            throw new SdkServiceNotFoundException("Service not found: " + key);
+        if (serviceKeySet.stream().anyMatch(k -> k.type() == key.type())) {
+            return delegate.findInstance(key);
         }
 
-        return delegate.findInstance(key);
+        throw new SdkServiceNotFoundException("Service not found: " + key);
 
     }
 

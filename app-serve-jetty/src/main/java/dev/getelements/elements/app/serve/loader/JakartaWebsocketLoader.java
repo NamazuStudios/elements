@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
 import static dev.getelements.elements.app.serve.AppServeConstants.APPLICATION_PREFIX;
+import static dev.getelements.elements.app.serve.AppServeConstants.ENABLE_ELEMENTS_AUTH;
 import static dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
 import static org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure;
 
@@ -37,6 +38,8 @@ public class JakartaWebsocketLoader implements Loader {
     private Handler.Sequence sequence;
 
     private HttpContextRoot httpContextRoot;
+
+    private AuthFilterFeature authFilterFeature;
 
     @Override
     public void load(final ApplicationElementRecord record, final Element element) {
@@ -101,11 +104,24 @@ public class JakartaWebsocketLoader implements Loader {
                 .filter(Predicate.not(String::isBlank))
                 .orElseGet(element.getElementRecord().definition()::name);
 
+        final var enableAuth = element
+                .getElementRecord()
+                .attributes()
+                .getAttributeOptional(ENABLE_ELEMENTS_AUTH)
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .map(Boolean::parseBoolean)
+                .orElse(false);
+
         final var contextPath = getHttpContextRoot()
                 .formatNormalized(APP_PREFIX_FORMAT, prefix);
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(contextPath);
+
+        if (enableAuth) {
+            getAuthFilterFeature().accept(servletContextHandler);
+        }
 
         configure(servletContextHandler, (s, context) -> {
             for (var aClass : classes)
@@ -141,6 +157,15 @@ public class JakartaWebsocketLoader implements Loader {
     @Inject
     public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
         this.httpContextRoot = httpContextRoot;
+    }
+
+    public AuthFilterFeature getAuthFilterFeature() {
+        return authFilterFeature;
+    }
+
+    @Inject
+    public void setAuthFilterFeature(AuthFilterFeature authFilterFeature) {
+        this.authFilterFeature = authFilterFeature;
     }
 
 }

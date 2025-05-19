@@ -2,26 +2,77 @@
 
 <div mat-dialog-content>
   <form [formGroup]="configurationForm">
-    <div class="configuration-form-container">
-      <mat-form-field>
-        <input matInput placeholder="Matchmaking Scheme" name="scheme" formControlName="scheme" >
-        <mat-error *ngIf="configurationForm.controls.scheme.hasError('required')">Scheme is required</mat-error>
-      </mat-form-field>
-      <ng-container [formGroup]="configurationForm.controls.success">
-        <mat-form-field>
-          <input matInput placeholder="Success Callback Module" name="module" formControlName="module" >
-          <mat-error *ngIf="configurationForm.get('success').get('module').hasError('required')">Module is required</mat-error>
-        </mat-form-field>
-        <mat-form-field>
-          <input matInput placeholder="Success Callback Method" name="method" formControlName="method" >
-          <mat-error *ngIf="configurationForm.get('success').get('method').hasError('required')">Method is required</mat-error>
-        </mat-form-field>
-      </ng-container>
+
+    <div class="read-only-container">
+
+      <div class="read-only-field">
+        <label>Database ID</label>
+        <div class="value">{{ configurationForm.get('id')?.value }}</div>
+      </div>
+
+      <div class="read-only-field">
+        <label>Fully Qualified Type Name</label>
+        <div class="value">{{ configurationForm.get('type')?.value }}</div>
+      </div>
+
     </div>
+
+    <mat-form-field>
+      <input matInput placeholder="Application Configuration Name" name="name" formControlName="name">
+      <mat-error *ngIf="configurationForm.controls.name.hasError('required')">Name is Required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Application Configuration Description" name="description" formControlName="description">
+      <mat-error *ngIf="configurationForm.controls.description.hasError('required')">Description is Required</mat-error>
+    </mat-form-field>
+
+    <mat-checkbox formControlName="useDefaultMatchmaker">Use Default (FIFO) Matchmaker</mat-checkbox>
+    <br>
+
+    <div formGroupName="matchmaker" *ngIf="!configurationForm.get('useDefaultMatchmaker')?.value">
+      <mat-form-field>
+        <input matInput placeholder="Element Name" formControlName="elementName">
+        <mat-error *ngIf="configurationForm.get('matchmaker.elementName')?.hasError('required')">Element Name is required</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Service Type" formControlName="serviceType">
+        <mat-error *ngIf="configurationForm.get('matchmaker.serviceType')?.hasError('required')">Service Type is required</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Service Name" formControlName="serviceName">
+        <mat-error *ngIf="configurationForm.get('matchmaker.serviceName')?.hasError('required')">Service Name is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-checkbox formControlName="defineSuccessCallback">Define Success Callback</mat-checkbox>
+    <br>
+
+    <div formGroupName="success" *ngIf="configurationForm.get('defineSuccessCallback')?.value">
+      <mat-form-field>
+        <input matInput placeholder="Method" formControlName="method">
+        <mat-error *ngIf="configurationForm.get('success.method')?.hasError('required')">Method is required</mat-error>
+      </mat-form-field>
+      <div formGroupName="service">
+        <mat-form-field>
+          <input matInput placeholder="Service Element Name" formControlName="elementName">
+          <mat-error *ngIf="configurationForm.get('success.service.elementName')?.hasError('required')">Element Name is required</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Service Type" formControlName="serviceType">
+          <mat-error *ngIf="configurationForm.get('success.service.serviceType')?.hasError('required')">Service Type is required</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <input matInput placeholder="Service Name" formControlName="serviceName">
+          <mat-error *ngIf="configurationForm.get('success.service.serviceName')?.hasError('required')">Service Name is required</mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
   </form>
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="dialogRef.close(configurationForm.value)" [disabled]="!configurationForm.valid">OK</button>
-  <button type="button" mat-raised-button (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-raised-button (click)="save()" [disabled]="!configurationForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="cancel()">Cancel</button>
 </div>

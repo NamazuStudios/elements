@@ -86,7 +86,9 @@ public interface ElementLoaderFactory {
      * @param serviceLocator a pre-configured {@link ServiceLocator}, from an existing source
      * @return the {@link Element}, loaded
      */
-    ElementLoader getSharedLoader(ElementRecord elementRecord, ServiceLocator serviceLocator);
+    ElementLoader getSharedLoader(
+            ElementRecord elementRecord,
+            ServiceLocator serviceLocator);
 
     /**
      * Finds the {@link Element} name, this will find the {@link ElementRecord} associated with it, throwing an
@@ -133,12 +135,12 @@ public interface ElementLoaderFactory {
                 ElementLoaderFactory.class.getName())
         );
     }
-
+    
     /**
      * <p>
      * A constructor type for a {@link ClassLoader}. Extending {@link Function} for clarity in documentation and
      * rationale, but otherwise just semantically identical to {@link Function}. However, as the name implies, it must
-     * return a new instance for each invocation of {@link #apply}.
+     * return a new instance for each invocation of {@link Function#apply}.
      * </p>
      */
     @FunctionalInterface

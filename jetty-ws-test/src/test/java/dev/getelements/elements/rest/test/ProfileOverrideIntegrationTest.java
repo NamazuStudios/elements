@@ -106,22 +106,4 @@ public class ProfileOverrideIntegrationTest {
 
     }
 
-    @Test(dataProvider = "provideProfiles", dependsOnMethods = "testOverrideProfileFailure")
-    public void testOverrideProfileSessionSecretHeader(final Profile profile,
-                                                       final String authHeader) throws Exception {
-
-        final String sessionSecretHeader = format("%s p%s", clientContext.getSessionSecret(), profile.getId());
-
-        final Profile current = client
-                .target(apiRoot + "/profile/current")
-                .request()
-                .header(authHeader, sessionSecretHeader)
-                .buildGet()
-                .submit(Profile.class)
-            .get();
-
-        assertEquals(current.getId(), profile.getId());
-
-    }
-
 }

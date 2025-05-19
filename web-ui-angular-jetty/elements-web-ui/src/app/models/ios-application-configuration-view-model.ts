@@ -3,9 +3,7 @@ import {IosApplicationConfiguration} from "../api/models/ios-application-configu
 import {ApplicationConfigurationViewModel} from "./application-configuration-view-model";
 import {AppleSignInConfiguration} from "../api/models/apple-sign-in-configuration";
 
-export class IosApplicationConfigurationViewModel
-    extends ApplicationConfigurationViewModel
-    implements IosApplicationConfiguration {
+export class IosApplicationConfigurationViewModel extends ApplicationConfigurationViewModel implements IosApplicationConfiguration {
 
   appleSignInConfiguration?: AppleSignInConfiguration;
 

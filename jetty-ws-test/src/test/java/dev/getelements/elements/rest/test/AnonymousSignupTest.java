@@ -9,7 +9,6 @@ import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserCreateRequest;
 import dev.getelements.elements.sdk.model.user.UserCreateResponse;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
@@ -22,7 +21,7 @@ import org.testng.annotations.Test;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
 import static dev.getelements.elements.sdk.model.Headers.SOCIALENGINE_SESSION_SECRET;
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
-import static dev.getelements.elements.security.AuthorizationHeader.AUTH_HEADER;
+import static dev.getelements.elements.sdk.util.security.AuthorizationHeader.AUTH_HEADER;
 import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;

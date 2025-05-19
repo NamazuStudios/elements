@@ -1,14 +1,10 @@
 package dev.getelements.elements.sdk.model.auth;
 
-import dev.getelements.elements.rt.annotation.ClientSerializationStrategy;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
-import java.security.Key;
 import java.util.List;
 import java.util.Objects;
-
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class JWKSet implements Serializable {
 

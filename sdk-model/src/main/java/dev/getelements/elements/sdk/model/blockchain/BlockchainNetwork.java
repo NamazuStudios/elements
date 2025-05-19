@@ -1,22 +1,10 @@
 package dev.getelements.elements.sdk.model.blockchain;
 
-import dev.getelements.elements.rt.annotation.RemoteModel;
-import dev.getelements.elements.rt.annotation.RemoteScope;
-
-import java.util.Optional;
-
-import static dev.getelements.elements.rt.annotation.RemoteScope.API_SCOPE;
-import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
 import static java.lang.String.format;
 
 /**
  * Enumerates the systems supported blockchains.
  */
-@RemoteModel(
-        scopes = {
-                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
-        }
-)
 public enum BlockchainNetwork {
 
     /**

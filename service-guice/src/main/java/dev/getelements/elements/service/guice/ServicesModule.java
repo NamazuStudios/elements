@@ -1,12 +1,21 @@
 package dev.getelements.elements.service.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.Scope;
+import com.google.inject.TypeLiteral;
+import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
+import dev.getelements.elements.service.security.ElementScopeOptionalProfileProvider;
+import dev.getelements.elements.service.security.ElementScopeProfileSupplierProvider;
+import dev.getelements.elements.service.security.ElementScopeUserProvider;
 import jakarta.inject.Provider;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Configures all of the services, using a {@link Scope} for {@link User}, {@link Profile} injections.
@@ -27,6 +36,13 @@ public class ServicesModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
+        final var optionalProfileKey = Key.get(new TypeLiteral<Optional<Profile>>() {});
+
+        bind(User.class).toProvider(ElementScopeUserProvider.class);
+
+        bind(new TypeLiteral<Optional<Profile>>() {}).toProvider(ElementScopeOptionalProfileProvider.class);
+        bind(new TypeLiteral<Supplier<Profile>>() {}).toProvider(ElementScopeProfileSupplierProvider.class);
 
         install(new ServiceUtilityModule());
         install(new DatabaseHealthStatusDaoAggregator());

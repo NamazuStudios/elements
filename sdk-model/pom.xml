@@ -8,11 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>sdk-model</artifactId>
-    <name>sdk-model</name>
+    <version>3.2.0-SNAPSHOT</version>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>
@@ -24,8 +25,8 @@
             <artifactId>swagger-annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-common</artifactId>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

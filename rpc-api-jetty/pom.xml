@@ -8,11 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.1.0-SNAPSHOT</version>
+        <version>3.2.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>rpc-api-jetty</artifactId>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>3.2.0-SNAPSHOT</version>
+    <url>https://namazustudios.com</url>
 
     <dependencies>
         <dependency>
@@ -30,10 +31,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common-jetty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>common-rt</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>

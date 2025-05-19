@@ -1,42 +1,30 @@
 package dev.getelements.elements.sdk.model.blockchain;
 
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.rt.annotation.RemoteModel;
-import dev.getelements.elements.rt.annotation.RemoteScope;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import static dev.getelements.elements.rt.annotation.RemoteScope.API_SCOPE;
-import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
-import static java.lang.String.format;
 
 /**
  * Enumerates the various blockchain protocols supported by elements.
  */
-@RemoteModel(
-        scopes = {
-                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
-        }
-)
 public enum BlockchainApi {
 
     /**
      * The Neo API.
      */
-    NEO(ELEMENTS_JSON_RPC_PROTOCOL),
+    NEO,
 
     /**
      * The Ethereum API.
      */
-    ETHEREUM(ELEMENTS_JSON_RPC_PROTOCOL),
+    ETHEREUM,
 
     /**
      * The Solana protocol.
      */
-    SOLANA(ELEMENTS_JSON_RPC_PROTOCOL),
+    SOLANA,
 
     /**
      * The Flow API.
@@ -47,15 +35,6 @@ public enum BlockchainApi {
      * The Flow API.
      */
     NEAR;
-
-    /**
-     * Lists all protocols supported by this {@link BlockchainApi}.
-     */
-    private final Set<String> protocols;
-
-    BlockchainApi(final String ... protocols) {
-        this.protocols = Set.of(protocols);
-    }
 
     /**
      * Validates that one or more network matches the
@@ -93,15 +72,6 @@ public enum BlockchainApi {
      */
     public Stream<BlockchainNetwork> networks() {
         return Stream.of(BlockchainNetwork.values()).filter(network -> this.equals(network.api()));
-    }
-
-    /**
-     * Gets the protocols, as specified in the {@link RemoteScope#protocol()} annotation.
-     *
-     * @return the protocols supported by this API
-     */
-    public Set<String> getApis() {
-        return protocols;
     }
 
 }

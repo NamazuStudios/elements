@@ -57,6 +57,31 @@ public interface Element extends AutoCloseable {
     ElementRegistry getElementRegistry();
 
     /**
+     * Begins building the {@link ElementScope} for this thread.
+     *
+     * @return the {@link ElementScope.Builder} to begin building the scope.
+     */
+    ElementScope.Builder withScope();
+
+    /**
+     * Gets the current {@link ElementScope}, if available. Throwing an exception
+     * if there is no scope.
+     *
+     * @return the {@link ElementScope}, never null.
+     * @throws IllegalStateException if no scope is current
+     */
+    default ElementScope getCurrentScope() throws IllegalStateException {
+        return findCurrentScope().orElseThrow(IllegalStateException::new);
+    }
+
+    /**
+     * Attempts to find the current scope, returning an {@link Optional} containing the scope, if present.
+     *
+     * @return an {@link Optional} with the {@link ElementScope}
+     */
+    Optional<ElementScope> findCurrentScope();
+
+    /**
      * Publishes an {@link Event} to the {@link Element}. All public {@link Element} instances will receive the
      * event provided that the arguments match the method, or that the method {}
      * @param event

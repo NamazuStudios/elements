@@ -22,7 +22,8 @@ public class ElementsMain {
 
     private static final OptionSpec<ElementsWebServiceComponent> servicesOptionSpec = optionParser
             .accepts("web-service", "Specifies all web services to run.")
-            .withRequiredArg().ofType(ElementsWebServiceComponent.class)
+            .withRequiredArg()
+            .ofType(ElementsWebServiceComponent.class)
             .defaultsTo(ElementsWebServiceComponent.values())
             .ofType(ElementsWebServiceComponent.class);
 

@@ -8,6 +8,7 @@ import java.util.Objects;
 
 @Embedded
 public class MongoProductBundleReward {
+
     @Property
     private ObjectId itemId;
 

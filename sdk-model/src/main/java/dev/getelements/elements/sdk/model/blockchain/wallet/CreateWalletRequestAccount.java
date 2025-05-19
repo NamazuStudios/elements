@@ -1,10 +1,6 @@
 package dev.getelements.elements.sdk.model.blockchain.wallet;
 
-import dev.getelements.elements.rt.annotation.RemoteModel;
-import dev.getelements.elements.rt.annotation.RemoteScope;
 import io.swagger.v3.oas.annotations.media.Schema;
-
-
 import jakarta.validation.constraints.AssertFalse;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
@@ -12,15 +8,7 @@ import jakarta.validation.constraints.Null;
 
 import java.util.Objects;
 
-import static dev.getelements.elements.rt.annotation.RemoteScope.API_SCOPE;
-import static dev.getelements.elements.rt.annotation.RemoteScope.ELEMENTS_JSON_RPC_PROTOCOL;
-
 @Schema(description = "Specifies a Custodial Wallet Account Creating a Wallet")
-@RemoteModel(
-        scopes = {
-                @RemoteScope(scope = API_SCOPE, protocol = ELEMENTS_JSON_RPC_PROTOCOL)
-        }
-)
 public class CreateWalletRequestAccount {
 
     public interface Import {}

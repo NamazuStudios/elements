@@ -1,15 +1,17 @@
 package dev.getelements.elements.sdk.spi.guice;
 
-import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
+import dev.getelements.elements.sdk.spi.DefaultElementScope;
+import dev.getelements.elements.sdk.spi.DefaultElementScopeBuilder;
 import dev.getelements.elements.sdk.spi.ElementEventDispatcher;
 import dev.getelements.elements.sdk.util.ConcurrentDequePublisher;
 import dev.getelements.elements.sdk.util.Publisher;
+import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import jakarta.inject.Inject;
+
+import java.util.Optional;
 
 public class GuiceSdkElement implements Element {
 
@@ -22,6 +24,8 @@ public class GuiceSdkElement implements Element {
     private final ElementEventDispatcher elementEventDispatcher;
 
     private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(GuiceSdkElement.class);
+
+    private final ReentrantThreadLocal<DefaultElementScope> scopeThreadLocal = new ReentrantThreadLocal<>();
 
     @Inject
     public GuiceSdkElement(final ElementRecord elementRecord,
@@ -46,6 +50,19 @@ public class GuiceSdkElement implements Element {
     @Override
     public ElementRegistry getElementRegistry() {
         return elementRegistry;
+    }
+
+    @Override
+    public ElementScope.Builder withScope() {
+        final var attributes = getElementRecord().attributes();
+        return new DefaultElementScopeBuilder(attributes, scopeThreadLocal);
+    }
+
+    @Override
+    public Optional<ElementScope> findCurrentScope() {
+        return scopeThreadLocal
+                .getCurrentOptional()
+                .map(ElementScope.class::cast);
     }
 
     @Override

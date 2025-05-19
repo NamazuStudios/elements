@@ -155,7 +155,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             ) {
                 final var properties = new Properties();
                 properties.load(bis);
-                return new PropertiesAttributes(properties);
+                return PropertiesAttributes.wrap(properties);
             } catch (IOException ex) {
                 throw new SdkException(ex);
             }

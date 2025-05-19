@@ -65,7 +65,6 @@ public class ApplicationNode {
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new KryoPayloadReaderWriterModule(),
-            new AppNodeSecurityModule(),
             new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
             new PersistentInstanceIdModule(),
             new ZContextModule(),

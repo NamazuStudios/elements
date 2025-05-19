@@ -7,14 +7,13 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(uses = {PropertyConverters.class, MongoDBMapper.class})
+@Mapper(uses = {PropertyConverters.class, MongoApplicationMapper.class})
 public interface MongoFirebaseApplicationConfigurationMapper extends MapperRegistry.ReversibleMapper<
         MongoFirebaseApplicationConfiguration,
         FirebaseApplicationConfiguration> {
 
     @Override
     @Mapping(target = "id", source = "objectId")
-    @Mapping(target = "projectId", source = "uniqueIdentifier")
     FirebaseApplicationConfiguration forward(MongoFirebaseApplicationConfiguration source);
 
     @Override

@@ -1,9 +1,6 @@
 package dev.getelements.elements.sdk;
 
-import dev.getelements.elements.sdk.exception.SdkException;
-
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 

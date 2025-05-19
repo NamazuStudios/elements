@@ -616,6 +616,19 @@ an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
 
+Elements Plugin Exception
+
+As the copyright holder, we grant the following additional permission under
+Section 7 of the GNU Affero General Public License, version 3:
+
+Notwithstanding the requirements of Section 13, software components referred
+to as 'Elements' in the documentation are exempt from the obligation to offer
+Corresponding Source under Section 13, provided that they depend solely upon
+code located within the 'dev.getelements.sdk' package and its subpackages,
+and do not themselves modify or include any other part of the Program covered
+under this license. This permission applies only to use and interaction over a
+network, and does not affect any other rights or obligations under this License.
+
                      END OF TERMS AND CONDITIONS
 
             How to Apply These Terms to Your New Programs

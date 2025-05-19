@@ -128,14 +128,21 @@ public class ClientContext {
     }
 
     public ClientContext createSession(final Profile profile) {
+
         final Session session = new Session();
         final long expiry = MILLISECONDS.convert(1, DAYS) + currentTimeMillis();
+
         session.setUser(user);
         session.setExpiry(expiry);
-        session.setProfile(profile);
-        session.setApplication(application);
+
+        if (profile != null) {
+            session.setProfile(profile);
+            session.setApplication(profile.getApplication());
+        }
+
         sessionCreation = sessionDao.create(session);
         return this;
+
     }
 
 

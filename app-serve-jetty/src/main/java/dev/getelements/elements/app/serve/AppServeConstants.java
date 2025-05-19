@@ -19,4 +19,12 @@ public interface AppServeConstants {
     @ElementDefaultAttribute("")
     String APPLICATION_PREFIX = "dev.getelements.elements.app.serve.prefix";
 
+    /**
+     * Defines an attribute which specifies if the elements should enable the standard auth pipeline in Elements.
+     * This ensures that the application server will be able to authenticate users using the Authorization or
+     * Elements-SessionSecret headers as well as allow the appropriate override headers to be used.
+     */
+    @ElementDefaultAttribute("")
+    String ENABLE_ELEMENTS_AUTH = "dev.getelements.elements.auth.enabled";
+
 }

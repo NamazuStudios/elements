@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.model.application;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.*;
@@ -27,6 +28,7 @@ public class ProductBundle implements Serializable {
     @Schema(description = "The description of the product bundle to display to end users.")
     private String description;
 
+    @Valid
     @NotNull
     @Schema(description = "The list of product bundle rewards that will be issued to the user upon purchase.")
     private List<ProductBundleReward> productBundleRewards;
@@ -36,7 +38,7 @@ public class ProductBundle implements Serializable {
 
     @NotNull
     @Schema(description = "Whether or not the frontend should display this product bundle to end users.")
-    private Boolean display;
+    private boolean display;
 
     public String getProductId() {
         return productId;
@@ -78,11 +80,11 @@ public class ProductBundle implements Serializable {
         this.metadata = metadata;
     }
 
-    public Boolean getDisplay() {
+    public boolean getDisplay() {
         return display;
     }
 
-    public void setDisplay(Boolean display) {
+    public void setDisplay(boolean display) {
         this.display = display;
     }
 
@@ -99,27 +101,6 @@ public class ProductBundle implements Serializable {
 
         return null;
     }
-
-//    public void addProductBundleReward(final ProductBundleReward productBundleReward) {
-//        if (getProductBundleRewards() == null) {
-//            setProductBundleRewards(new ArrayList<>());
-//        }
-//
-//        if (getProductBundleReward(productBundleReward.getItemId()) != null) {
-//            throw new DuplicateException("ProductBundle with productId" + getProductId() + " already has a " +
-//                    "ProductBundleReward for itemId " + productBundleReward.getItemId());
-//        }
-//
-//        getProductBundleRewards().add(productBundleReward);
-//    }
-//
-//    public void addProductBundleReward(final String itemId, final Integer quantity) {
-//        final ProductBundleReward productBundleReward = new ProductBundleReward();
-//        productBundleReward.setItemId(itemId);
-//        productBundleReward.setQuantity(quantity);
-//
-//        addProductBundleReward(productBundleReward);
-//    }
 
     @Override
     public boolean equals(Object o) {

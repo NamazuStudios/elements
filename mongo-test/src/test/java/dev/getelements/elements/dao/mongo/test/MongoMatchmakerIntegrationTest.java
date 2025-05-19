@@ -8,7 +8,6 @@ import dev.getelements.elements.sdk.model.exception.NoSuitableMatchException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.match.Match;
-import dev.getelements.elements.sdk.model.match.MatchingAlgorithm;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.morphia.query.filters.Filters;
 import org.bson.types.ObjectId;
@@ -22,8 +21,6 @@ import jakarta.inject.Inject;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static dev.getelements.elements.sdk.model.match.MatchingAlgorithm.FIFO;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
@@ -54,18 +51,17 @@ public class MongoMatchmakerIntegrationTest {
     private List<Matchmaker.SuccessfulMatchTuple> intermediateSuccessfulMatchTuples = new ArrayList<>();
 
     @DataProvider
-    public static Iterator<Object[]> matchingAlgorithmsAndScopes() {
-        return asList(MatchingAlgorithm.values())
-            .stream()
-            .flatMap(algo -> Stream.of(new Object[]{algo, null}, new Object[]{algo, TEST_SCOPE}))
-            .collect(toList())
-            .iterator();
+    public static Object[][] matchingAlgorithmsAndScopes() {
+        return new Object[][] {
+            new Object[] { null },
+            new Object[] { TEST_SCOPE }
+        };
     }
 
     @Test(dataProvider = "matchingAlgorithmsAndScopes")
-    public void testMatch(final MatchingAlgorithm matchingAlgorithm, final String scope) {
+    public void testMatch(final String scope) {
 
-        logger.info("Testing matching algorithm {}", matchingAlgorithm);
+        logger.info("Testing default matching algoirthm.");
 
         final Application application = getMatchingMockObjects().makeMockApplication();
 
@@ -78,7 +74,7 @@ public class MongoMatchmakerIntegrationTest {
         final Match matcha = getMatchDao().createMatch(makeMockMatch(profilea, scope));
 
         try {
-            getMatchDao().getMatchmaker(matchingAlgorithm)
+            getMatchDao().getDefaultMatchmaker()
                          .attemptToFindOpponent(matcha,  (p, o) -> "fail");
             fail("Matched when not matches were expected.");
         } catch (NoSuitableMatchException ex) {
@@ -89,7 +85,7 @@ public class MongoMatchmakerIntegrationTest {
 
         final Matchmaker.SuccessfulMatchTuple successfulMatchTuple;
         successfulMatchTuple = getMatchDao()
-            .getMatchmaker(FIFO)
+            .getDefaultMatchmaker()
             .withScope(scope)
             .attemptToFindOpponent(matchb, (p, o) -> Stream.of(p.getId(), o.getId()).sorted().collect(joining("+")));
 
@@ -225,4 +221,3 @@ public class MongoMatchmakerIntegrationTest {
     }
 
 }
-

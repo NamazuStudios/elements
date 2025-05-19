@@ -1,7 +1,9 @@
 # Elements
 
 Welcome to the Elements Open Source repository. Here you will find the
-complete source code to ELements. Elements is a backend server solution that streamlines your design, development and LiveOps strategy to help you build your online multiplayer game on the fly.
+complete source code to ELements. Elements is a backend server solution 
+that streamlines your design, development and LiveOps strategy to help 
+you build your online multiplayer game on the fly.
 
 Check out a complete description on [Namazu Studios Official Website](https://namazustudios.com/elements/)
 
@@ -9,10 +11,54 @@ Check out a complete description on [Namazu Studios Official Website](https://na
 
 ## License
 
-Elements is licensed under the [AGPLv3](LICENSE.txt). Before using, forking
-or modifying the Elements source code, please understand the rules and the
-terms of the AGPL license. To receive a commercial enterprise license, please
-contact bd@getelemetns.dev
+Elements is licensed under the [AGPLv3](LICENSE.txt). We chose this
+license to ensure that the core of Elements is, and always will be, 
+freely available for anyone to use. It also ensures that the project
+remains community first, with a strong focus on transparency and 
+collaboration.
+
+We also offer a commercial license for Elements. Please contact us 
+at [contact us](https://namazustudios.com/contact-us/) 
+for more information. We're happy to work with studios and teams 
+that need a more permissive option.
+
+### Note on Commercial Code
+
+We want and fully encourage developers to use Elements in their 
+commercial products. To support this, we’ve made a few important 
+exceptions to the AGPL license:
+
+> Notwithstanding the requirements of Section 13, software 
+components referred to as "Elements" in the documentation are 
+exempt from the obligation to offer Corresponding Source under 
+Section 13, provided that they depend solely on code located 
+within the `dev.getelements.sdk` package and its subpackages, 
+and do not themselves modify or include any other part of the 
+Program covered under this License. This permission applies 
+only to use and interaction over a network and does not affect
+any other rights or obligations under this License.
+
+In short: if you're building plugins using our SDK, you are not
+required to open source your game or server code. We’ve designed 
+Elements to be modular, so you can use it commercially without 
+compromising your IP.
+
+### Contributing
+
+We welcome and encourage contributions to Elements. We ask that 
+contributions be submitted via pull requests and that they 
+remain open and available to the community. These are considered 
+derivative works and must comply with the AGPL license.
+
+We gladly accept:
+
+- Bug fixes  
+- Feature improvements  
+- Documentation updates
+
+Before submitting a pull request, please sign our 
+[Contributor License Agreement](CONTRIBUTING.pdf). Simply fill it 
+out [submit it to this form](https://share.hsforms.com/2-N76EKCiRBaYb1w2UwtxyAckwr1)
 
 # Building and Setup
 
@@ -142,7 +188,6 @@ The following are internal libraries which make up the implementation of Element
 The following are deprecated and slated for removal.
 
 - **app-node**
-- **common-rt**
 
 ## RT System
 

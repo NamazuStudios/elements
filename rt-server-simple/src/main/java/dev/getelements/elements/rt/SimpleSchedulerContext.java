@@ -2,7 +2,7 @@ package dev.getelements.elements.rt;
 
 import dev.getelements.elements.rt.exception.NoSuchTaskException;
 import dev.getelements.elements.sdk.cluster.id.TaskId;
-import dev.getelements.elements.rt.util.FinallyAction;
+import dev.getelements.elements.sdk.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
