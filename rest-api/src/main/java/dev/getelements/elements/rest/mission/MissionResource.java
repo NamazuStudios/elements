@@ -21,6 +21,8 @@ public class MissionResource {
     private MissionService missionService;
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a new mission",
             description = "Supplying a mission object, this will create a new mission with a newly assigned unique id.  " +
@@ -69,6 +71,8 @@ public class MissionResource {
     }
 
     @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{missionNameOrId}")
     @Operation(
             summary = "Updates an entire single Mission",

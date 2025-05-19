@@ -36,6 +36,8 @@ public class DocModule extends PrivateModule {
                 "baseResource", getResource("swagger").toString()
         );
 
+        bindings.filter(DOC_SWAGGER_ROOT).through(DocSwaggerConfigurationFilter.class);
+
         bindings.useGlobalAuthFor(DOC_SWAGGER_ROOT);
         bindings.serve(DOC_SWAGGER_ROOT).with(SERVLET_KEY, servletParameters);
 

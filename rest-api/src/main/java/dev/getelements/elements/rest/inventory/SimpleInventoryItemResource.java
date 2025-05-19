@@ -54,6 +54,8 @@ public class SimpleInventoryItemResource {
     }
 
     @PATCH
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{inventoryItemId}")
     @Operation( summary = "Adjust the quantity of the inventory item for the specified item.",
                   description = "Adjust the quantity of the first (primary) inventory item for the specified item.  This " +
@@ -72,6 +74,8 @@ public class SimpleInventoryItemResource {
     }
 
     @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{inventoryItemId}")
     @Operation( summary = "Updates an inventory item for the specified item",
                   description = "Updates an inventory item for the specified item")
@@ -89,6 +93,8 @@ public class SimpleInventoryItemResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Create an inventory item for the specified item",
             description = "Create an inventory item for the specified item")

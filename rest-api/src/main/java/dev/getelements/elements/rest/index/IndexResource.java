@@ -38,6 +38,8 @@ public class IndexResource {
 
     @POST
     @Path("build")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Builds all indexes.")
     public void buildIndexes(final BuildIndexRequest buildIndexRequest) {
         getIndexService().build(buildIndexRequest);

@@ -20,7 +20,7 @@ public class DocSwaggerConfigurationFilter implements Filter {
 
     private URI apiOutsideUrl;
 
-    private static final String SWAGGER_INITIALIZER_JS = "/swagger-initializer.js";
+    private static final String SWAGGER_INITIALIZER_JS = "/doc/swagger/swagger-initializer.js";
     private static final String SWAGGER_INITIALIZER_JS_CLASSPATH = "/swagger/swagger-initializer.js";
 
     private String swaggerInitializerScriptFormat;
@@ -54,7 +54,7 @@ public class DocSwaggerConfigurationFilter implements Filter {
         final var request = (HttpServletRequest) _request;
         final var response = (HttpServletResponse) _response;
 
-        if (SWAGGER_INITIALIZER_JS.equals(request.getPathInfo())) {
+        if (SWAGGER_INITIALIZER_JS.equals(request.getServletPath())) {
             intercept(response);
         } else {
             chain.doFilter(request, response);

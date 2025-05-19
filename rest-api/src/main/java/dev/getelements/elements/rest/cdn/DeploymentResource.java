@@ -42,6 +42,7 @@ public class DeploymentResource {
     @Schema(description = "This will update the revision for a specific deployment version" +
                     " This will search the git repo for the matching revision" +
                     "and clone all content to the static endpoint for delivery.")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Deployment updateDeployment(
 
@@ -59,6 +60,7 @@ public class DeploymentResource {
     @Schema(description = "This will create a new deployment if one does not exist. It will throw an error if the " +
             "requested version already exists This will search the git repo for the matching revision" +
             "and clone all content to the static endpoint for delivery.")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Deployment createNewDeployment(final @PathParam("applicationId") String applicationId,
                                           CreateDeploymentRequest createDeploymentRequest) {
