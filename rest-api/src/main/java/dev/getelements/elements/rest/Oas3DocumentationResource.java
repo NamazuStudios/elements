@@ -178,7 +178,6 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 getCookies(headers),
                 getHeaders(headers)
         );
-
     }
 
     private OpenAPI cloneOas3Spec(final String type, final OpenApiContext context, final OpenAPI oas) {

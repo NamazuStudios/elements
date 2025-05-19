@@ -196,6 +196,7 @@
         <fst.version>3.0.1</fst.version>
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
         <mapstruct.version>1.6.2</mapstruct.version>
+        <openapi-generator.version>7.12.0</openapi-generator.version>
     </properties>
     <dependencies>
         <dependency>
