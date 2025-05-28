@@ -72,6 +72,19 @@ pipelines:
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
+    "stealth/*":
+      - step:
+          size: 4x
+          name: Build and Test - Stealth
+          runs-on:
+            - "linux"
+            - "self.hosted"
+          script:
+            - make setup
+            - make build
+          after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
+            - pipe: atlassian/checkstyle-report:0.3.0
     main:
       - step:
           size: 4x
