@@ -53,6 +53,7 @@ public class SmartContractResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Patches a  Smart Contract",
@@ -63,6 +64,7 @@ public class SmartContractResource {
 
     @PUT
     @Path("{contractId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Patches a  Smart Contract",

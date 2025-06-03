@@ -44,6 +44,7 @@ public class AuthSchemeResource {
 
     @GET
     @Path("{authSchemeId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Gets a specific Auth Scheme",
             description = "Gets a specific Auth Scheme by the authSchemeId.")
@@ -59,6 +60,7 @@ public class AuthSchemeResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Creates a new Auth Scheme",
             description = "Creates a new Auth Scheme, from the data in the given auth scheme request")
@@ -68,6 +70,7 @@ public class AuthSchemeResource {
 
     @PUT
     @Path("{authSchemeId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Updates an Auth Scheme",
             description = "Updates an Auth Scheme with the specified data in the auth scheme request.")
@@ -102,4 +105,5 @@ public class AuthSchemeResource {
     public void setAuthSchemeService(AuthSchemeService authSchemeService) {
         this.authSchemeService = authSchemeService;
     }
+
 }

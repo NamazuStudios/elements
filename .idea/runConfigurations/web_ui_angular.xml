@@ -5,13 +5,14 @@
     <scripts>
       <script value="start" />
     </scripts>
-    <node-interpreter value="project" />
+    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v22.14.0/bin/node" />
     <package-manager value="npm" />
     <envs>
       <env name="NODE_OPTIONS" value="--openssl-legacy-provider" />
     </envs>
-    <method v="2">
-      <option name="LaunchBrowser.Before.Run" url="http://localhost:4200" />
-    </method>
+    <EXTENSION ID="com.intellij.lang.javascript.buildTools.npm.rc.StartBrowserRunConfigurationExtension">
+      <browser name="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" start="true" with-js-debugger="true" url="http://localhost:4200" />
+    </EXTENSION>
+    <method v="2" />
   </configuration>
 </component>

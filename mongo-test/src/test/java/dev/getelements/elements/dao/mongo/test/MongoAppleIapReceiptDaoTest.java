@@ -11,6 +11,7 @@ import org.testng.annotations.*;
 import jakarta.inject.Inject;
 
 import java.util.Date;
+import java.util.Objects;
 
 import static org.testng.Assert.*;
 
@@ -35,7 +36,7 @@ public class MongoAppleIapReceiptDaoTest {
     public void testCreateAppleIapReceipt(ITestContext testContext) {
         final int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
 
-        final AppleIapReceipt appleIapReceipt = new AppleIapReceipt();
+        final var appleIapReceipt = new AppleIapReceipt();
         appleIapReceipt.setOriginalTransactionId("id." + invocation);
         appleIapReceipt.setUser(testUser);
         appleIapReceipt.setReceiptData("receiptData." + invocation);
@@ -44,13 +45,23 @@ public class MongoAppleIapReceiptDaoTest {
         appleIapReceipt.setBundleId("dev.getelements.test_app");
         appleIapReceipt.setOriginalPurchaseDate(new Date());
 
-        final AppleIapReceipt resultAppleIapReceipt =
-                getAppleIapReceiptDao().getOrCreateAppleIapReceipt(appleIapReceipt);
+        try {
+            getAppleIapReceiptDao().getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
+        } catch (NotFoundException e) {
+            // this is the expected result
+        }
+
+        final var resultAppleIapReceipt = getAppleIapReceiptDao().getOrCreateAppleIapReceipt(appleIapReceipt);
 
         assertNotNull(resultAppleIapReceipt);
-        // the AppleIapReceipt is keyed by the originalTransactionId and no other params are dynamically generated, so
-        // we can just check for POJO equality
-        assertEquals(appleIapReceipt, resultAppleIapReceipt);
+
+        assertEquals(resultAppleIapReceipt.getOriginalTransactionId(), appleIapReceipt.getOriginalTransactionId());
+        assertEquals(resultAppleIapReceipt.getUser(), appleIapReceipt.getUser());
+        assertEquals(resultAppleIapReceipt.getReceiptData(), appleIapReceipt.getReceiptData());
+        assertEquals(resultAppleIapReceipt.getQuantity(), appleIapReceipt.getQuantity());
+        assertEquals(resultAppleIapReceipt.getProductId(), appleIapReceipt.getProductId());
+        assertEquals(resultAppleIapReceipt.getBundleId(), appleIapReceipt.getBundleId());
+
     }
 
     @DataProvider

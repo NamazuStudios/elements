@@ -1,18 +1,49 @@
 <h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} Firebase Application Configuration</h1>
 
 <div mat-dialog-content>
+
   <form [formGroup]="configurationForm">
+
+    <div class="read-only-container">
+
+      <div class="read-only-field">
+        <label>Database ID</label>
+        <div class="value">{{ configurationForm.get('id')?.value }}</div>
+      </div>
+
+      <div class="read-only-field">
+        <label>Fully Qualified Type Name</label>
+        <div class="value">{{ configurationForm.get('type')?.value }}</div>
+      </div>
+
+    </div>
+
     <div class="configuration-form-container">
+
+      <mat-form-field>
+        <input matInput placeholder="Application Configuration Name" name="name" formControlName="name">
+        <mat-error *ngIf="configurationForm.controls.name.hasError('required')">Name is Required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <input matInput placeholder="Application Configuration Description" name="description" formControlName="description">
+        <mat-error *ngIf="configurationForm.controls.description.hasError('required')">Description is Required</mat-error>
+      </mat-form-field>
+
       <mat-form-field>
         <input matInput placeholder="Project Id" name="projectId" formControlName="projectId" >
         <mat-error *ngIf="configurationForm.controls.projectId.hasError('required')">Project Id is required</mat-error>
       </mat-form-field>
+
       <mat-form-field>
         <input matInput placeholder="Service Account Credentials" name="serviceAccountCredentials" formControlName="serviceAccountCredentials" >
         <mat-error *ngIf="configurationForm.controls.serviceAccountCredentials.hasError('required')">Service account credentials are required</mat-error>
       </mat-form-field>
+
     </div>
+
   </form>
+
 </div>
 
 <div mat-dialog-actions>

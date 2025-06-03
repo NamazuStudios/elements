@@ -8,11 +8,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.2.0-SNAPSHOT</version>
+        <version>3.3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>service</artifactId>
-    <version>3.2.0-SNAPSHOT</version>
+    <version>3.3.0-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
@@ -150,6 +150,11 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common-mapstruct</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator-cli</artifactId>
+            <version>${openapi-generator.version}</version>
         </dependency>
     </dependencies>
 

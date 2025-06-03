@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
-    <version>3.2.0-SNAPSHOT</version>
+    <version>3.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -177,7 +177,7 @@
         <neow3j.version>3.14.0</neow3j.version>
         <web3j.version>4.9.4</web3j.version>
         <solanaj.version>0.0.7</solanaj.version>
-        <morphia.version>2.4.13</morphia.version>
+        <morphia.version>2.4.14</morphia.version>
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.5.10</kotlin.version>
@@ -196,6 +196,7 @@
         <fst.version>3.0.1</fst.version>
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
         <mapstruct.version>1.6.2</mapstruct.version>
+        <openapi-generator.version>7.12.0</openapi-generator.version>
     </properties>
     <dependencies>
         <dependency>

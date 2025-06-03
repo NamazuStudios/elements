@@ -18,6 +18,7 @@ public class FCMRegistrationResource {
     private FCMRegistrationService fcmRegistrationService;
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
         summary = "Creates an FCM Registration Token",
@@ -38,6 +39,7 @@ public class FCMRegistrationResource {
 
     @PUT
     @Path("{fcmRegistrationId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Update an FCM Registration Token",

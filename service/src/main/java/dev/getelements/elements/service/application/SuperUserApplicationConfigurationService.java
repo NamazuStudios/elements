@@ -29,9 +29,18 @@ public class SuperUserApplicationConfigurationService implements ApplicationConf
     }
 
     @Override
-    public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
-                                                 final List<ProductBundle> productBundles) {
-        return applicationConfigurationDao.updateProductBundles(applicationConfigurationId, productBundles);
+    public <T extends ApplicationConfiguration>
+    T updateProductBundles(
+            final String applicationNameOrId,
+            final String applicationConfigurationNameOrId,
+            final Class<T> configurationClass,
+            final List<ProductBundle> productBundles) {
+        return applicationConfigurationDao.updateProductBundles(
+                applicationNameOrId,
+                applicationConfigurationNameOrId,
+                configurationClass,
+                productBundles
+        );
     }
 
 }

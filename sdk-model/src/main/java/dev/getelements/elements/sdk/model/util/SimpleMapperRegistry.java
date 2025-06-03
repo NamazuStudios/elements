@@ -1,8 +1,8 @@
 package dev.getelements.elements.sdk.model.util;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class SimpleMapperRegistry implements MapperRegistry {
 
@@ -14,6 +14,16 @@ public class SimpleMapperRegistry implements MapperRegistry {
                                 final Map<MappingKey, Updater<?, ?>> updatermap) {
         this.mapperMap = mapperMap;
         this.updatermap = updatermap;
+    }
+
+    @Override
+    public Stream<Mapper<?, ?>> mappers() {
+        return mapperMap.values().stream();
+    }
+
+    @Override
+    public Stream<Updater<?, ?>> updaters() {
+        return updatermap.values().stream();
     }
 
     @Override
@@ -58,28 +68,19 @@ public class SimpleMapperRegistry implements MapperRegistry {
          */
         public static MappingKey fromMapper(final Class<?> aMapperClass) {
 
-            for (var aGenericInterface : aMapperClass.getGenericInterfaces()) {
+            final var source = MapperRegistry.findGenericTypeArgumentFromMapper(aMapperClass, 0)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unable to determine source type for: " +
+                            aMapperClass.getName())
+                    );
 
-                if (!(aGenericInterface instanceof ParameterizedType parameterizedType)) {
-                    continue;
-                }
+            final var destination = MapperRegistry.findGenericTypeArgumentFromMapper(aMapperClass, 1)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unable to determine destination type for: " +
+                            aMapperClass.getName())
+                    );
 
-                final var rawType = parameterizedType.getRawType();
-
-                if (!(Mapper.class.equals(rawType) || ReversibleMapper.class.equals(rawType))) {
-                    continue;
-                }
-
-                final var source = parameterizedType.getActualTypeArguments()[0];
-                final var destination = parameterizedType.getActualTypeArguments()[1];
-
-                if (source instanceof Class<?> && destination instanceof Class<?>) {
-                    return new MappingKey((Class<?>) source, (Class<?>) destination);
-                }
-
-            }
-
-            throw new IllegalArgumentException("Unable to determine mapped types for: " + aMapperClass.getName());
+            return new MappingKey(source, destination);
 
         }
 
@@ -91,28 +92,19 @@ public class SimpleMapperRegistry implements MapperRegistry {
          */
         public static MappingKey fromUpdater(final Class<?> anUpdaterClass) {
 
-            for (var aGenericInterface : anUpdaterClass.getGenericInterfaces()) {
+            final var source = MapperRegistry.findGenericTypeArgumentFromUpdater(anUpdaterClass, 0)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unable to determine source type for: " +
+                            anUpdaterClass.getName())
+                    );
 
-                if (!(aGenericInterface instanceof ParameterizedType parameterizedType)) {
-                    continue;
-                }
+            final var destination = MapperRegistry.findGenericTypeArgumentFromUpdater(anUpdaterClass, 1)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unable to determine destination type for: " +
+                            anUpdaterClass.getName())
+                    );
 
-                final var rawType = parameterizedType.getRawType();
-
-                if (!(Updater.class.equals(rawType) || ReversibleUpdater.class.equals(rawType))) {
-                    continue;
-                }
-
-                final var source = parameterizedType.getActualTypeArguments()[0];
-                final var destination = parameterizedType.getActualTypeArguments()[1];
-
-                if (source instanceof Class<?> && destination instanceof Class<?>) {
-                    return new MappingKey((Class<?>) source, (Class<?>) destination);
-                }
-
-            }
-
-            throw new IllegalArgumentException("Unable to determine mapped types for: " + anUpdaterClass.getName());
+            return new MappingKey(source, destination);
 
         }
 

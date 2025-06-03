@@ -77,6 +77,7 @@ public class UserResource {
 
     @PUT
     @Path("{userId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a User",
@@ -98,6 +99,7 @@ public class UserResource {
 
     @PUT
     @Path("{userId}/password")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a User's Password",
@@ -117,6 +119,7 @@ public class UserResource {
     }
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a User",

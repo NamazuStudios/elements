@@ -1,24 +1,17 @@
 package dev.getelements.elements.dao.mongo.model;
 
-import dev.morphia.annotations.Embedded;
+import dev.getelements.elements.dao.mongo.model.application.MongoElementServiceReference;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
-@Embedded
+@Entity
 public class MongoCallbackDefinition {
-
-    @Property
-    private String module;
 
     @Property
     private String method;
 
-    public String getModule() {
-        return module;
-    }
-
-    public void setModule(String module) {
-        this.module = module;
-    }
+    @Property
+    private MongoElementServiceReference service;
 
     public String getMethod() {
         return method;
@@ -26,6 +19,14 @@ public class MongoCallbackDefinition {
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public MongoElementServiceReference getService() {
+        return service;
+    }
+
+    public void setService(MongoElementServiceReference service) {
+        this.service = service;
     }
 
 }

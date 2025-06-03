@@ -3,14 +3,13 @@ package dev.getelements.elements.service.firebase;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
-import dev.getelements.elements.sdk.model.exception.InternalException;
-import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
-import dev.getelements.elements.sdk.model.application.Application;
-import dev.getelements.elements.sdk.model.application.ConfigurationCategory;
-import dev.getelements.elements.sdk.model.application.FirebaseApplicationConfiguration;
 import dev.getelements.elements.rt.util.ReadWriteGuard;
 import dev.getelements.elements.rt.util.ReentrantReadWriteGuard;
+import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
+import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.application.FirebaseApplicationConfiguration;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
 import jakarta.inject.Inject;
 
 import java.io.ByteArrayInputStream;
@@ -36,7 +35,7 @@ public class CachingFirebaseAppFactory implements FirebaseAppFactory {
             final FirebaseApplicationConfiguration firebaseApplicationConfiguration = getApplicationConfigurationDao()
                     .getDefaultApplicationConfigurationForApplication(
                             application.getId(),
-                            ConfigurationCategory.FIREBASE
+                            FirebaseApplicationConfiguration.class
                     );
 
             return fromConfiguration(firebaseApplicationConfiguration);

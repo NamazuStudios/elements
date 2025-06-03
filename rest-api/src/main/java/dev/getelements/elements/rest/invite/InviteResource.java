@@ -20,6 +20,7 @@ public class InviteResource {
     private InviteService inviteService;
 
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Match normalized phone numbers with requested list",
@@ -49,4 +50,5 @@ public class InviteResource {
     public void setInviteService(InviteService inviteService) {
         this.inviteService = inviteService;
     }
+
 }

@@ -43,6 +43,7 @@ public class MatchmakingApplicationConfigurationResource {
      * @return the {@link MatchmakingApplicationConfiguration} the iOS Application Configuration
      */
     @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Creates a new iOS ApplicationConfiguration",
@@ -64,6 +65,7 @@ public class MatchmakingApplicationConfigurationResource {
      */
     @PUT
     @Path("{applicationConfigurationNameOrId}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Updates a iOS ApplicationConfiguration",

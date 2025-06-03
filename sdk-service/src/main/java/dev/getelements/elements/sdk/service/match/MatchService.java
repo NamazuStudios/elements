@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 @ElementEventProducer(
         value = MatchService.EVENT_1V1_MADE,
         parameters = {Profile.class, Profile.class},
-        description = "Fires when a simple 1v1 match has been made between two profiles."
+        description = "Event indicating that a simple 1v1 match has been made between two profiles."
 )
 public interface MatchService {
 

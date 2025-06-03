@@ -3,6 +3,7 @@ package dev.getelements.elements.service.application;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.sdk.service.application.IosApplicationConfigurationService;
+import jakarta.inject.Inject;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -14,7 +15,10 @@ public class SuperUserIosApplicationConfigurationService implements IosApplicati
     @Override
     public void deleteApplicationConfiguration(final String applicationNameOrId,
                                                final String applicationProfileNameOrId) {
-        getApplicationConfigurationDao().deleteApplicationConfiguration(applicationNameOrId, applicationProfileNameOrId);
+        getApplicationConfigurationDao().deleteApplicationConfiguration(
+                IosApplicationConfiguration.class,
+                applicationNameOrId,
+                applicationProfileNameOrId);
     }
 
     @Override
@@ -42,7 +46,6 @@ public class SuperUserIosApplicationConfigurationService implements IosApplicati
                                                                       final IosApplicationConfiguration iosApplicationConfiguration) {
         return getApplicationConfigurationDao().updateApplicationConfiguration(
                 applicationNameOrId,
-                applicationConfigurationNameOrId,
                 iosApplicationConfiguration
         );
     }
@@ -51,6 +54,7 @@ public class SuperUserIosApplicationConfigurationService implements IosApplicati
         return applicationConfigurationDao;
     }
 
+    @Inject
     public void setApplicationConfigurationDao(ApplicationConfigurationDao applicationConfigurationDao) {
         this.applicationConfigurationDao = applicationConfigurationDao;
     }
