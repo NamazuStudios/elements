@@ -4,14 +4,18 @@ import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 
 import java.util.List;
 
-public record ElementEventProducerRecord(String name, List<Class<?>> parameters) {
+public record ElementEventProducerRecord(String name, String description, List<Class<?>> parameters) {
 
     public ElementEventProducerRecord {
         parameters = List.copyOf(parameters);
     }
 
     public static ElementEventProducerRecord from(final ElementEventProducer producer) {
-        return new ElementEventProducerRecord(producer.value(), List.of(producer.parameters()));
+        return new ElementEventProducerRecord(
+                producer.value(),
+                producer.description(),
+                List.of(producer.parameters())
+        );
     }
 
 }
