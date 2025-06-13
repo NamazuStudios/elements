@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
 
 import static dev.getelements.elements.sdk.model.ValidationGroups.*;
 
@@ -49,6 +50,9 @@ public class User implements Serializable {
     @NotNull
     @Schema(description = "The user's access level.")
     private Level level;
+
+    @Schema(description = "List of linked account or auth scheme names.")
+    private Set<String> linkedAccounts;
 
     private static final User UNPRIVILIGED = new User() {
 
@@ -214,17 +218,25 @@ public class User implements Serializable {
         this.lastName = lastName;
     }
 
+    public Set<String> getLinkedAccounts() {
+        return linkedAccounts;
+    }
+
+    public void setLinkedAccounts(Set<String> linkedAccounts) {
+        this.linkedAccounts = linkedAccounts;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level;
+        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(linkedAccounts, user.linkedAccounts);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level);
+        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, linkedAccounts);
     }
 
     @Override
@@ -237,6 +249,7 @@ public class User implements Serializable {
                 ", email='" + email + '\'' +
                 ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
                 ", level=" + level +
+                ", linkedAccounts=" + linkedAccounts +
                 '}';
     }
 }

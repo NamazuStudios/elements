@@ -123,8 +123,8 @@ public class OAuth2AuthServiceOperations {
             }
 
             return id;
-        } catch (JsonProcessingException e) {
-            throw new InternalException("Response mapper mismatch!");
+        } catch (Exception e) {
+            throw new InternalException("There was a problem parsing id from the response. Please ensure that the ticket has not expired.");
         }
     }
 
