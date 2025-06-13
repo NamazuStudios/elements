@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.mongo.match;
 
+import dev.getelements.elements.dao.mongo.MongoProfileDao;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.morphia.annotations.Id;
@@ -14,11 +16,11 @@ public class MongoMultiMatchProfile {
 
     @Indexed
     @Reference
-    private Profile profile;
+    private MultiMatch match;
 
     @Indexed
     @Reference
-    private MultiMatch match;
+    private MongoProfile profile;
 
     public ObjectId getId() {
         return id;
@@ -28,19 +30,19 @@ public class MongoMultiMatchProfile {
         this.id = id;
     }
 
-    public Profile getProfile() {
-        return profile;
-    }
-
-    public void setProfile(Profile profile) {
-        this.profile = profile;
-    }
-
     public MultiMatch getMatch() {
         return match;
     }
 
     public void setMatch(MultiMatch match) {
         this.match = match;
+    }
+
+    public MongoProfile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(MongoProfile profile) {
+        this.profile = profile;
     }
 }
