@@ -16,10 +16,19 @@ public interface MultiMatchDao {
     /**
      * Gets all {@link MultiMatch} instances.
      *
+     * @return a {@link List} of {@link MultiMatch} instances
+     */
+    default List<MultiMatch> getAllMultiMatches() {
+        return getAllMultiMatches("");
+    }
+
+    /**
+     * Gets all {@link MultiMatch} instances.
+     *
      * @param query the query to execute
      * @return a {@link List} of {@link MultiMatch} instances
      */
-    List<MultiMatch> getMultiMatches(String query);
+    List<MultiMatch> getAllMultiMatches(String query);
 
     /**
      * Finds a {@link MultiMatch} by its ID.
@@ -40,7 +49,17 @@ public interface MultiMatchDao {
     }
 
     /**
+     * Gets all {@link Profile} instances in the {@link MultiMatch}.
+     *
+     * @param multiMatchId tbe multi-match id to get profiles from
+     * @return the {@link List} of {@link Profile} instances in the {@link MultiMatch}
+     * @throws MultiMatchNotFoundException if no {@link MultiMatch} with the given ID exists
+     */
+    List<Profile> getProfiles(String multiMatchId);
+
+    /**
      * Adds a new {@link Profile} to the {@link MultiMatch}.
+     *
      * @param multiMatchId the multi-match id receiving the profile
      * @param profile  the profile to add
      * @return the updated {@link MultiMatch}
@@ -48,7 +67,7 @@ public interface MultiMatchDao {
     MultiMatch addProfile(String multiMatchId, Profile profile);
 
     /**
-     * Deletes the {@link Profile} to the {@link MultiMatch}.
+     * Removes the {@link Profile} to the {@link MultiMatch}.
      *
      * @param multiMatchId the multi-match id receiving the profile
      * @param profile  the profile to add
@@ -70,6 +89,20 @@ public interface MultiMatchDao {
      * @param configuration the {@link MatchmakingApplicationConfiguration} to use
      * @return the newly created {@link MultiMatch}
      */
-    MultiMatch updateMultimatch(MatchmakingApplicationConfiguration configuration);
+    MultiMatch updateMultiMatch(MultiMatch configuration);
+
+    /**
+     * Deletes the {@link MultiMatch} with the given ID, throwing an exception if it does not exist.
+     */
+    default void deleteMultiMatch(final String multiMatchId) {
+        if (!tryDeleteMultiMatch(multiMatchId)) {
+            throw new MultiMatchNotFoundException();
+        }
+    }
+
+    /**
+     * Deletes the {@link MultiMatch} with the given ID, returning true if it was deleted, false if it did not exist.
+     */
+    boolean tryDeleteMultiMatch(String multiMatchId);
 
 }
