@@ -58,7 +58,12 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
                         .filter(eq("_id", objectId))
                 ).orElseGet(() -> getDatastore()
                         .find(MongoOidcAuthScheme.class)
-                        .filter(eq("issuer", authSchemeIssuerNameOrId))
+                        .filter(
+                            or(
+                                eq("name", authSchemeIssuerNameOrId),
+                                eq("issuer", authSchemeIssuerNameOrId)
+                            )
+                        )
                 );
 
 
@@ -88,6 +93,7 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
         query.filter(eq("_id", objectId));
 
         final var builder = new UpdateBuilder();
+        builder.with(set("name", authScheme.getName()));
         builder.with(set("keys", authScheme.getKeys()));
         builder.with(set("issuer", authScheme.getIssuer()));
         builder.with(set("keysUrl", authScheme.getKeysUrl()));
