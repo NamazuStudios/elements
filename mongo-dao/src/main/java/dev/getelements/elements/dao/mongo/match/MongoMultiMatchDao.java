@@ -3,16 +3,17 @@ package dev.getelements.elements.dao.mongo.match;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
-import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
+import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.morphia.Datastore;
-import dev.morphia.query.updates.UpdateOperator;
+import dev.morphia.UpdateOptions;
 import jakarta.inject.Inject;
 
 import java.util.List;
@@ -75,41 +76,80 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     @Override
     public MultiMatch addProfile(final String multiMatchId, final Profile profile) {
+
         final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
 
         return findMongoMultiMatch(multiMatchId).map(mongoMultiMatch -> {
-                    final var query = getDatastore().find(MongoMultiMatch.class);
 
-                    new UpdateBuilder()
+                    final var query = getDatastore().find(MongoMultiMatch.class)
+                            .filter(eq("match", mongoMultiMatch))
+                            .filter(eq("profile", mongoProfile));
+
+                    final var result = new UpdateBuilder()
                             .with(set("match", mongoMultiMatch))
-                            .with(set("profile", mongoProfile));
+                            .with(set("profile", mongoProfile))
+                            .execute(query, new UpdateOptions().upsert(true));
+
+                    if (result.getModifiedCount() == 0) {
+                        throw new DuplicateException();
+                    }
+
                     return getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
+
                 })
                 .orElseThrow(MultiMatchNotFoundException::new);
+
     }
 
     @Override
     public MultiMatch removeProfile(final String multiMatchId, final Profile profile) {
-        return null;
+
+        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
+
+        return findMongoMultiMatch(multiMatchId).map(mongoMultiMatch -> {
+
+                    final var result = getDatastore().find(MongoMultiMatch.class)
+                            .filter(eq("match", mongoMultiMatch))
+                            .filter(eq("profile", mongoProfile))
+                            .delete();
+
+                    if (result.getDeletedCount() == 0) {
+                        throw new ProfileNotFoundException();
+                    }
+
+                    return getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
+
+                })
+                .orElseThrow(MultiMatchNotFoundException::new);
+
     }
 
     @Override
     public List<Profile> getProfiles(final String multiMatchId) {
-        return List.of();
+        return findMongoMultiMatch(multiMatchId)
+                .map(mongoMultiMatch -> getDatastore()
+                        .find(MongoMultiMatchProfile.class)
+                        .filter(eq("match", mongoMultiMatch))
+                        .stream()
+                        .map(MongoMultiMatchProfile::getProfile)
+                        .map(mp -> getMapperRegistry().map(mongoMultiMatch, Profile.class))
+                        .toList()
+                )
+                .orElseThrow(MultiMatchNotFoundException::new);
     }
 
     @Override
-    public MultiMatch createMultiMatch(MatchmakingApplicationConfiguration configuration) {
+    public MultiMatch createMultiMatch(final MatchmakingApplicationConfiguration configuration) {
         return null;
     }
 
     @Override
-    public MultiMatch updateMultiMatch(MultiMatch multiMatch) {
+    public MultiMatch updateMultiMatch(final MultiMatch multiMatch) {
         return null;
     }
 
     @Override
-    public boolean tryDeleteMultiMatch(String multiMatchId) {
+    public boolean tryDeleteMultiMatch(final String multiMatchId) {
         return false;
     }
 

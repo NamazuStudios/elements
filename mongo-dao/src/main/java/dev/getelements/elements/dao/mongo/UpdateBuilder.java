@@ -83,7 +83,7 @@ public class UpdateBuilder {
      * @param query the {@link Query}
      * @param <ModelT> the model type to update
      * @return an instance of {@link Update} with the updates supplied by this builder
-     *
+     * @deprecated depends on deprecated code and is slated for removal
      * @throws IllegalStateException if no updates were applied.
      */
     public <ModelT> Update<ModelT> update(final Query<ModelT> query) {
