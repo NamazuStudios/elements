@@ -2,11 +2,9 @@ package dev.getelements.elements.sdk.model.match;
 
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
-import dev.getelements.elements.sdk.model.profile.Profile;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Null;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -50,14 +48,6 @@ public class MultiMatch {
         this.configuration = configuration;
     }
 
-    public List<Profile> getProfiles() {
-        return profiles;
-    }
-
-    public void setProfiles(List<Profile> profiles) {
-        this.profiles = profiles;
-    }
-
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -70,8 +60,9 @@ public class MultiMatch {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         MultiMatch that = (MultiMatch) o;
-        return Objects.equals(id, that.id) &&
+        return
             status == that.status &&
+            Objects.equals(id, that.id) &&
             Objects.equals(configuration, that.configuration) &&
             Objects.equals(metadata, that.metadata);
     }
