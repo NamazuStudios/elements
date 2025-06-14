@@ -3,6 +3,8 @@ package dev.getelements.elements.sdk.model.match;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
 import java.util.Map;
@@ -11,13 +13,17 @@ import java.util.Objects;
 @Schema
 public class MultiMatch {
 
-    @Null(groups = ValidationGroups.Create.class)
+    @NotNull(groups = ValidationGroups.Update.class)
+    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @Schema(description = "The unique ID of the match.")
     private String id;
 
+    @NotNull
     @Schema(description = "The status of the match.")
     private MultiMatchStatus status;
 
+    @Valid
+    @NotNull
     @Schema(description = "The matchmaking configuration for this multi-match.")
     private MatchmakingApplicationConfiguration configuration;
 
