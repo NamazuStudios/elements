@@ -13,6 +13,16 @@ import java.util.Optional;
  */
 public interface MultiMatchDao {
 
+    String MULTI_MATCH_CREATED = "dev.getelements.elements.sdk.model.match.multi.match.created";
+
+    String MULTI_MATCH_ADD_PROFILE = "dev.getelements.elements.sdk.model.match.multi.match.add.profile";
+
+    String MULTI_MATCH_REMOVE_PROFILE = "dev.getelements.elements.sdk.model.match.multi.match.remove.profile";
+
+    String MULTI_MATCH_UPDATED = "dev.getelements.elements.sdk.model.match.multi.match.updated";
+
+    String MULTI_MATCH_DELETED = "dev.getelements.elements.sdk.model.match.multi.match.deleted";
+
     /**
      * Gets all {@link MultiMatch} instances.
      *
@@ -78,10 +88,10 @@ public interface MultiMatchDao {
     /**
      * Creates a new {@link MultiMatch} with no players.
      *
-     * @param configuration the {@link MatchmakingApplicationConfiguration} to use
+     * @param multiMatch the {@link MultiMatch} to create
      * @return the newly created {@link MultiMatch}
      */
-    MultiMatch createMultiMatch(MatchmakingApplicationConfiguration configuration);
+    MultiMatch createMultiMatch(MultiMatch multiMatch);
 
     /**
      * Creates a new {@link MultiMatch} with no players.
