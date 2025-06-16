@@ -3,6 +3,7 @@ package dev.getelements.elements.service.auth;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
+import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
@@ -50,14 +51,13 @@ public class UserOidcAuthService implements OidcAuthService {
         return Optional.empty();
     }
 
-    private User apply(DecodedJWT jwt) {
+    private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
-        final var scheme = jwt.getClaim(OidcAuthServiceOperations.Claim.SCHEME.value).asString();
         final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
         final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();
 
         //Search the existing UIds to see if the user already exists
-        var oidcUid = userUidDao.findUserUid(uid, scheme);
+        var oidcUid = userUidDao.findUserUid(uid, scheme.getName());
         var emailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
 
         var userOptional = tryGetUserFromUid(oidcUid);
@@ -72,7 +72,7 @@ public class UserOidcAuthService implements OidcAuthService {
             final var user = userOptional.get();
 
             if (oidcUid.isEmpty()) {
-                createNewUserUid(uid, scheme, user.getId());
+                createNewUserUid(uid, scheme.getName(), user.getId());
             }
 
             if (emailUid.isEmpty() && !email.isEmpty()) {
@@ -89,7 +89,7 @@ public class UserOidcAuthService implements OidcAuthService {
         user.setLevel(USER);
         user = getUserDao().createUser(user);
 
-        createNewUserUid(uid, scheme, user.getId());
+        createNewUserUid(uid, scheme.getName(), user.getId());
 
         if (!email.isEmpty()) {
             createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());

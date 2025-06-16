@@ -26,6 +26,7 @@ import dev.getelements.elements.sdk.service.name.NameService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
+import kotlin.jvm.functions.Function2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
@@ -68,13 +68,31 @@ public class OidcAuthServiceOperations {
 
     public SessionCreation createOrUpdateUserWithToken(
             final OidcSessionRequest oidcSessionRequest,
-            final Function<DecodedJWT, User> userMapper) {
+            final Function2<DecodedJWT, OidcAuthScheme, User> userMapper) {
+
+        final DecodedJWT decodedJWT;
+        final var identityToken = oidcSessionRequest.getJwt();
+
+        try {
+            decodedJWT = JWT.decode(identityToken);
+        } catch (JWTDecodeException ex) {
+            throw new InvalidDataException(ex.getMessage(), ex);
+        }
+
+        final var schemeId = decodedJWT.getClaim(OidcAuthServiceOperations.Claim.SCHEME.value).asString();
+        final var schemeSearch = getOidcAuthSchemeDao().findAuthScheme(schemeId);
+
+        if(schemeSearch.isEmpty()) {
+            throw new ForbiddenException("No scheme with issuer " + schemeId + " was found");
+        }
+
+        final var scheme = schemeSearch.get();
 
         // Attempts to validate the identity, and if it is not valid presumes that the request should be forbidden.
-        final DecodedJWT decodedJWT = verify(oidcSessionRequest.getJwt());
+        verify(decodedJWT, scheme);
 
         // Maps the user, writing it to the database.
-        final User user = userMapper.apply(decodedJWT);
+        final User user = userMapper.invoke(decodedJWT, scheme);
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         final var session = new Session();
         final var applicationId = decodedJWT.getClaim(OidcAuthServiceOperations.Claim.APPLICATION_ID.value).asString();
@@ -100,25 +118,9 @@ public class OidcAuthServiceOperations {
         return getSessionDao().create(session);
     }
 
-    private DecodedJWT verify(final String identityToken) {
+    private void verify(final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
-        final DecodedJWT jwt;
-
-        try {
-            jwt = JWT.decode(identityToken);
-        } catch (JWTDecodeException ex) {
-            throw new InvalidDataException(ex.getMessage(), ex);
-        }
-
-        final var schemeId = jwt.getClaim(OidcAuthServiceOperations.Claim.SCHEME.value).asString();
         final var kid = jwt.getHeaderClaim(OidcClaim.KID.getValue()).asString();
-        final var schemeSearch = getOidcAuthSchemeDao().findAuthScheme(schemeId);
-
-        if(schemeSearch.isEmpty()) {
-            throw new ForbiddenException("No scheme with issuer " + schemeId + " was found");
-        }
-
-        final var scheme = schemeSearch.get();
 
         final var jwk = scheme.getKeys()
                 .stream()
@@ -128,18 +130,17 @@ public class OidcAuthServiceOperations {
 
         if(jwk != null) {
             final var algorithm = getAlgorithmFromJWK(jwk);
-            final var verifiedJwt = attemptVerify(jwt, algorithm);
-
-            return verifiedJwt;
+            attemptVerify(jwt, algorithm);
+            return;
         }
 
         //If we don't have a matching JWK for the provided KID, attempt to fetch
         if(scheme.getKeysUrl() != null) {
-            return fetchPublicKeys(kid, scheme)
-                    .map(algorithm -> attemptVerify(jwt, algorithm))
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElseThrow(() -> new ForbiddenException("No matching JWK for the provided key id"));
+            fetchPublicKeys(kid, scheme)
+                .map(algorithm -> attemptVerify(jwt, algorithm))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new ForbiddenException("No matching JWK for the provided key id"));
         }
 
         throw new ForbiddenException("No matching JWK for the provided key id");

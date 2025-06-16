@@ -140,6 +140,7 @@ public class OidcAuthServiceTest {
                     Base64.getUrlEncoder().encodeToString(pubKey.getModulus().toByteArray()));
 
 
+            scheme.setName("Google");
             scheme.setIssuer("https://accounts.google.com");
             scheme.setKeysUrl("https://www.googleapis.com/oauth2/v3/certs");
             scheme.setMediaType("application/json");
@@ -231,6 +232,8 @@ public class OidcAuthServiceTest {
         session.setUser(activeUser);
         session.setApplication(application);
         session.setExpiry(new Date().getTime() + 10000);
+
+        final var verifyUser = oidcUserDao.findUser(activeUser.getId());
 
         return oidcSessionDao.create(session);
     }
