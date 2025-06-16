@@ -1,4 +1,4 @@
-import {AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {UsersService} from "../../api/services/users.service";
 import {UsersDataSource} from "../users.datasource";
 import {MatPaginator} from "@angular/material/paginator";
@@ -12,7 +12,7 @@ import {AlertService} from "../../alert.service";
 import {ConfirmationDialogService} from "../../confirmation-dialog/confirmation-dialog.service";
 import {UserDialogComponent} from "../user-dialog/user-dialog.component";
 import {UserViewModel} from "../../models/user-view-model";
-import { InventoryDialogComponent } from '../../digital-goods/inventory-dialog/inventory-dialog.component';
+import {InventoryDialogComponent} from '../../digital-goods/inventory-dialog/inventory-dialog.component';
 
 @Component({
   selector: 'app-users-list',
@@ -23,7 +23,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<User>;
   dataSource: UsersDataSource;
-  displayedColumns = ["select", "id", "email", "level", "inventory-action", "edit-action", "delete-action"];
+  displayedColumns = ["select", "id", "name", "email", "linkedAccounts", "level", "inventory-action", "edit-action", "delete-action"];
   currentUsers: User[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -148,5 +148,13 @@ export class UsersListComponent implements OnInit, AfterViewInit {
         user: user
       }
     });
+  }
+
+  getLinkedAccountsForUser(user: User) {
+    return user.linkedAccounts?.map(item => {
+      const parts = item.split('.');
+      const lastPart = parts[parts.length - 1];
+      return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+    })
   }
 }

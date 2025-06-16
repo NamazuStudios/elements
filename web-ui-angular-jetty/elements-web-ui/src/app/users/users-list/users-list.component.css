@@ -33,3 +33,13 @@ mat-footer-cell:last-of-type {
   max-width: 49px;
   min-width: 49px;
 }
+
+.mat-column-id {
+  max-width: 200px;
+  min-width: 200px;
+}
+
+.mat-column-level {
+  max-width: 85px;
+  min-width: 85px;
+}
