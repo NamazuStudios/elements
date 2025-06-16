@@ -24,7 +24,7 @@ public class MongoMultiMatch {
     @Reference
     private MongoMatchmakingApplicationConfiguration configuration;
 
-    @Reference
+    @Property
     private Map<String, Object> metadata;
 
     public ObjectId getId() {

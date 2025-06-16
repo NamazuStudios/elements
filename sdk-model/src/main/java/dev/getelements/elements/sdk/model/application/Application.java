@@ -235,4 +235,5 @@ public class Application implements Serializable {
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
     }
+
 }

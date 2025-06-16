@@ -19,6 +19,7 @@ public class MultiMatch {
     private String id;
 
     @NotNull
+    @NotNull
     @Schema(description = "The status of the match.")
     private MultiMatchStatus status;
 
