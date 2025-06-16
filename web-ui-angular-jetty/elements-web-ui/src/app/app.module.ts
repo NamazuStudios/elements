@@ -116,6 +116,7 @@ import {
 import {
   MissionSelectDialogComponent
 } from "./schedules/schedule-event-missions-dialog/mission-select-dialog/mission-select-dialog.component";
+import { LastSegmentCapitalizePipe } from './users/last-segment-capitalize.pipe';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -238,7 +239,8 @@ export function initialize(configService: ConfigService) {
     OmniChainWalletsDialogComponent,
     OmniChainWalletsVaultSearchDialogComponent,
     OmniChainUserSearchDialogComponent,
-    OmniChainWalletsAccountsDialogComponent
+    OmniChainWalletsAccountsDialogComponent,
+    LastSegmentCapitalizePipe
   ],
   imports: [
     BrowserModule,
@@ -263,6 +265,9 @@ export function initialize(configService: ConfigService) {
     { provide: APP_INITIALIZER, useFactory: initialize, multi: true, deps: [ ConfigService ] },
     { provide: HTTP_INTERCEPTORS, useClass: AuthenticationInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true }
+  ],
+  exports: [
+    LastSegmentCapitalizePipe
   ],
   bootstrap: [AppComponent]
 })

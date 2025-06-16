@@ -39,10 +39,7 @@ export class UserDialogComponent implements OnInit {
     password: ["", [Validators.pattern("^\\S+$")]],
     passwordConfirmation: ["", this.getPasswordMatchValidator("password")],
     level: [this.data.user.level, Validators.required],
-    facebookId: [ {value: this.data.user.facebookId, disabled: true} ],
-    firebaseId: [ {value: this.data.user.firebaseId, disabled: true} ],
-    appleSignInId: [ {value: this.data.user.appleSignInId, disabled: true} ],
-    externalUserId: [ {value: this.data.user.externalUserId, disabled: true} ],
+    linkedAccounts: [ {value: "\n", disabled: true} ]
   });
 
   constructor(

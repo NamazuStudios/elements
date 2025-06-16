@@ -44,7 +44,13 @@
 
     <ng-container matColumnDef="linkedAccounts">
       <mat-header-cell *matHeaderCellDef>Linked Accounts</mat-header-cell>
-      <mat-cell *matCellDef="let user"><span class="truncate-text-right">{{getLinkedAccountsForUser(user)}}</span></mat-cell>
+      <mat-cell *matCellDef="let user">
+        <div style="white-space: nowrap;">
+          <span *ngFor="let item of user.linkedAccounts; let last = last">
+            {{ item | lastSegmentCapitalize }}<span *ngIf="!last">, </span>
+          </span>
+        </div>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="level">
