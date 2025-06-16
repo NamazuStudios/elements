@@ -13,6 +13,7 @@ import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
@@ -205,20 +206,24 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         requireNonNull(multiMatch, "multiMatch");
         getValidationHelper().validateModel(multiMatch, ValidationGroups.Insert.class);
 
-        final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
+        final var applicationId = multiMatch.getConfiguration().getParent().getId();
 
-        final var mongoApplication = getMongoApplicationDao().findActiveMongoApplication(multiMatch
-                .getConfiguration()
-                .getParent()
-                .getId()
-        );
+        final var mongoApplication = getMongoApplicationDao()
+                .findActiveMongoApplication(applicationId)
+                .orElseThrow(() -> new InvalidDataException("Application not found: " + applicationId));
 
         final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfigurationDao()
                 .findMongoApplicationConfiguration(
                         MongoMatchmakingApplicationConfiguration.class,
-                        multiMatch.getConfiguration().getParent().getId(),
+                        mongoApplication.getObjectId().toHexString(),
                         multiMatch.getConfiguration().getId()
-                );
+                )
+                .orElseThrow(InvalidDataException::new);
+
+        final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
+        mongoMultiMatch.setApplication(mongoApplication);
+        mongoMultiMatch.setConfiguration(mongoMatchmakingApplicationConfiguration);
+        mongoMultiMatch.setMetadata(mongoMatchmakingApplicationConfiguration.getMetadata());
 
         final var createdMongoMultiMatch = getDatastore().save(mongoMultiMatch);
         final var createdMultiMatch = getMapperRegistry().map(createdMongoMultiMatch, MultiMatch.class);

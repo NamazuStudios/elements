@@ -161,12 +161,17 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         if (applicationNameOrId != null) {
-            final MongoApplication mongoApplication;
-            mongoApplication = getMongoApplicationDao().findActiveMongoApplication(applicationNameOrId);
+
+            final var mongoApplication = getMongoApplicationDao()
+                    .findActiveMongoApplication(applicationNameOrId)
+                    .orElse(null);
+
             if (mongoApplication == null) return new Pagination<>();
+
             query.filter(
                     eq("application", mongoApplication)
             );
+
         }
 
         if (userId != null) {
