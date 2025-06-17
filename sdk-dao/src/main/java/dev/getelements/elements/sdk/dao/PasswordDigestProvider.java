@@ -25,4 +25,5 @@ public class PasswordDigestProvider implements Provider<MessageDigest> {
             throw new IllegalStateException(ex);
         }
     }
+
 }

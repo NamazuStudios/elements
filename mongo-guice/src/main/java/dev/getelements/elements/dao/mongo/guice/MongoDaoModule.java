@@ -21,6 +21,7 @@ import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoFIFOMatchmaker;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
+import dev.getelements.elements.dao.mongo.match.MongoMultiMatchDao;
 import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
@@ -60,6 +61,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ApplicationDao.class).to(MongoApplicationDao.class);
         bind(ApplicationConfigurationDao.class).to(MongoApplicationConfigurationDao.class);
         bind(MatchDao.class).to(MongoMatchDao.class);
+        bind(MultiMatchDao.class).to(MongoMultiMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
         bind(LeaderboardDao.class).to(MongoLeaderboardDao.class);
@@ -122,6 +124,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ApplicationDao.class);
         expose(ApplicationConfigurationDao.class);
         expose(MatchDao.class);
+        expose(MultiMatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
         expose(LeaderboardDao.class);

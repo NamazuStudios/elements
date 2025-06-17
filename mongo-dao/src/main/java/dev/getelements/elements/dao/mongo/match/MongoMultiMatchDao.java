@@ -9,10 +9,10 @@ import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingAppl
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
@@ -21,6 +21,7 @@ import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -34,31 +35,6 @@ import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.util.Objects.requireNonNull;
 
-@ElementEventProducer(
-        value = MultiMatchDao.MULTI_MATCH_CREATED,
-        parameters = MultiMatch.class,
-        description = "Called when a multi-match was created."
-)
-@ElementEventProducer(
-        value = MultiMatchDao.MULTI_MATCH_ADD_PROFILE,
-        parameters = {MultiMatch.class, Profile.class},
-        description = "Called when a profile is added to a multi match."
-)
-@ElementEventProducer(
-        value = MultiMatchDao.MULTI_MATCH_REMOVE_PROFILE,
-        parameters = {MultiMatch.class, Profile.class},
-        description = "Called when a profile is aremoved from a multi match."
-)
-@ElementEventProducer(
-        value = MultiMatchDao.MULTI_MATCH_UPDATED,
-        parameters = MultiMatch.class,
-        description = "Called when a multi-match was updated."
-)
-@ElementEventProducer(
-        value = MultiMatchDao.MULTI_MATCH_DELETED,
-        parameters = MultiMatch.class,
-        description = "Called when a multi-match was deleted."
-)
 public class MongoMultiMatchDao implements MultiMatchDao {
 
     private Datastore datastore;
@@ -206,35 +182,21 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         requireNonNull(multiMatch, "multiMatch");
         getValidationHelper().validateModel(multiMatch, ValidationGroups.Insert.class);
 
-        final var applicationId = multiMatch.getConfiguration().getParent().getId();
-
-        final var mongoApplication = getMongoApplicationDao()
-                .findActiveMongoApplication(applicationId)
-                .orElseThrow(() -> new InvalidDataException("Application not found: " + applicationId));
-
-        final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfigurationDao()
-                .findMongoApplicationConfiguration(
-                        MongoMatchmakingApplicationConfiguration.class,
-                        mongoApplication.getObjectId().toHexString(),
-                        multiMatch.getConfiguration().getId()
-                )
-                .orElseThrow(InvalidDataException::new);
+        final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
 
         final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
-        mongoMultiMatch.setApplication(mongoApplication);
         mongoMultiMatch.setConfiguration(mongoMatchmakingApplicationConfiguration);
-        mongoMultiMatch.setMetadata(mongoMatchmakingApplicationConfiguration.getMetadata());
+        mongoMultiMatch.setApplication(mongoMatchmakingApplicationConfiguration.getParent());
 
-        final var createdMongoMultiMatch = getDatastore().save(mongoMultiMatch);
-        final var createdMultiMatch = getMapperRegistry().map(createdMongoMultiMatch, MultiMatch.class);
+        final var inserted = getDatastore().save(mongoMultiMatch);
 
         getElementRegistry().publish(Event.builder()
-                .argument(createdMultiMatch)
+                .argument(multiMatch)
                 .named(MULTI_MATCH_CREATED)
                 .build()
         );
 
-        return createdMultiMatch;
+        return getMapperRegistry().map(inserted, MultiMatch.class);
 
     }
 
@@ -251,12 +213,65 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         final var query = getDatastore().find(MongoMultiMatch.class)
                 .filter(eq("_id", objectId));
 
+        final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
+
+        final var updated = new UpdateBuilder()
+                .with(set("status", multiMatch.getStatus()))
+                .with(set("application", mongoMatchmakingApplicationConfiguration.getParent()))
+                .with(set("configuration", mongoMatchmakingApplicationConfiguration))
+                .with(set("metadata", mongoMatchmakingApplicationConfiguration.getMetadata()))
+                .execute(query, new ModifyOptions().upsert(false));
+
+        if (updated == null) {
+            throw new MultiMatchNotFoundException();
+        }
+
+        getElementRegistry().publish(Event.builder()
+                .argument(multiMatch)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+    }
+
+    private MongoMatchmakingApplicationConfiguration getMongoApplicationConfiguration(final MultiMatch multiMatch) {
+
+        final var applicationId = multiMatch.getConfiguration().getParent().getId();
+
+        final var mongoApplication = getMongoApplicationDao()
+                .findActiveMongoApplication(applicationId)
+                .orElseThrow(() -> new InvalidDataException("Application not found: " + applicationId));
+
+        return getMongoApplicationConfigurationDao()
+                .findMongoApplicationConfiguration(
+                        MongoMatchmakingApplicationConfiguration.class,
+                        mongoApplication.getObjectId().toHexString(),
+                        multiMatch.getConfiguration().getId()
+                )
+                .orElseThrow(InvalidDataException::new);
 
     }
 
     @Override
     public boolean tryDeleteMultiMatch(final String multiMatchId) {
-        return false;
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var query = getDatastore().find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var result = query.delete();
+
+        if (result.getDeletedCount() > 1) {
+            throw new InternalException("More than one multi-match deleted, this should not happen.");
+        }
+
+        return result.getDeletedCount() > 0;
+
     }
 
     public Datastore getDatastore() {

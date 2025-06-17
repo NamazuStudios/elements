@@ -209,15 +209,11 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     public MongoApplication getActiveMongoApplication(final String mongoApplicationNameOrId) {
-
-        final MongoApplication mongoApplication = findActiveMongoApplication(mongoApplicationNameOrId);
-
-        if (mongoApplication == null) {
-            throw new ApplicationNotFoundException("application not found: " + mongoApplicationNameOrId);
-        }
-
-        return mongoApplication;
-
+        return findActiveMongoApplication(mongoApplicationNameOrId)
+                .orElseThrow(() -> new ApplicationNotFoundException(
+                        "application not found: " +
+                        mongoApplicationNameOrId)
+                );
     }
 
     private Application transform(final MongoApplication mongoApplication) {
