@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.model.application;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 
 import java.util.Map;
 import java.util.Objects;
@@ -21,6 +22,10 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
     @Valid
     @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
     private ElementServiceReference matchmaker;
+
+    @Min(0)
+    @Schema(description = "The maximum number of players that can be matched in a single match. ")
+    private int maxPlayers;
 
     @Schema(description = "The metadata for this matchmaking configuration. This will be copied to the match when it is created.")
     private Map<String, Object> metadata;
@@ -45,6 +50,14 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         this.matchmaker = matchmaker;
     }
 
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public void setMaxPlayers(int maxPlayers) {
+        this.maxPlayers = maxPlayers;
+    }
+
     public Map<String, Object> getMetadata() {
         return metadata;
     }
@@ -62,16 +75,31 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass()) return false;
-        if (!super.equals(object)) return false;
-        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) object;
-        return Objects.equals(getSuccess(), that.getSuccess()) && Objects.equals(getMatchmaker(), that.getMatchmaker()) && Objects.equals(getMetadata(), that.getMetadata()) && Objects.equals(getMetadataSpec(), that.getMetadataSpec());
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) o;
+        return maxPlayers == that.maxPlayers &&
+                Objects.equals(success, that.success) &&
+                Objects.equals(matchmaker, that.matchmaker) &&
+                Objects.equals(metadata, that.metadata) &&
+                Objects.equals(metadataSpec, that.metadataSpec);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getSuccess(), getMatchmaker(), getMetadata(), getMetadataSpec());
+        return Objects.hash(super.hashCode(), success, matchmaker, maxPlayers, metadata, metadataSpec);
+    }
+
+    @Override
+    public String toString() {
+        return "MatchmakingApplicationConfiguration{" +
+                "success=" + success +
+                ", matchmaker=" + matchmaker +
+                ", maxPlayers=" + maxPlayers +
+                ", metadata=" + metadata +
+                ", metadataSpec=" + metadataSpec +
+                '}';
     }
 
 }

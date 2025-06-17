@@ -72,7 +72,10 @@ public class MetadataSpec implements Serializable, MetadataSpecPropertiesContain
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MetadataSpec that = (MetadataSpec) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && getType() == that.getType() && Objects.equals(getProperties(), that.getProperties());
+        return Objects.equals(getId(), that.getId()) &&
+                Objects.equals(getName(), that.getName()) &&
+                getType() == that.getType() &&
+                Objects.equals(getProperties(), that.getProperties());
     }
 
     @Override

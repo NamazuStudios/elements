@@ -80,19 +80,6 @@ public interface MongoDBMapper {
     // bite-sized and manageable chunks. Furthermore, due to the original misunderstanding we should chip away
     // at the bloat in this interface as we continue to develop the database layer.
 
-    // Application Mappings
-
-//    @Mapping(target = "id", source = "objectId")
-//    @Mapping(target = "scriptRepoUrl", ignore = true)
-//    @Mapping(target = "httpDocumentationUrl", ignore = true)
-//    @Mapping(target = "httpDocumentationUiUrl", ignore = true)
-//    @Mapping(target = "httpTunnelEndpointUrl", ignore = true)
-//    @Mapping(target = "applicationConfiguration", ignore = true)
-//    Application toApplication(MongoApplication source);
-//
-//    @InheritInverseConfiguration
-//    MongoApplication toMongoApplication(Application source);
-
     // User & Profile Mappings
     @Mapping(target = "id", source = "objectId")
     User toUser(MongoUser source);

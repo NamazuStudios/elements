@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
@@ -11,6 +13,32 @@ import java.util.Optional;
 /**
  * Handles multi-matches, allowing multiple players to join or leave a match.
  */
+@ElementServiceExport
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_CREATED,
+        parameters = MultiMatch.class,
+        description = "Called when a multi-match was created."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_ADD_PROFILE,
+        parameters = {MultiMatch.class, Profile.class},
+        description = "Called when a profile is added to a multi match."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_REMOVE_PROFILE,
+        parameters = {MultiMatch.class, Profile.class},
+        description = "Called when a profile is removed from a multi match."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_UPDATED,
+        parameters = MultiMatch.class,
+        description = "Called when a multi-match was updated."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_DELETED,
+        parameters = MultiMatch.class,
+        description = "Called when a multi-match was deleted."
+)
 public interface MultiMatchDao {
 
     String MULTI_MATCH_CREATED = "dev.getelements.elements.sdk.model.match.multi.match.created";
