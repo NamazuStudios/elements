@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.match;
 
+import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
@@ -173,7 +175,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                         .filter(eq("match", mongoMultiMatch))
                         .stream()
                         .map(MongoMultiMatchProfile::getProfile)
-                        .map(mp -> getMapperRegistry().map(mongoMultiMatch, Profile.class))
+                        .map(mp -> getMapperRegistry().map(mp, Profile.class))
                         .toList()
                 )
                 .orElseThrow(MultiMatchNotFoundException::new);
@@ -224,7 +226,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .with(set("application", mongoMatchmakingApplicationConfiguration.getParent()))
                 .with(set("configuration", mongoMatchmakingApplicationConfiguration))
                 .with(set("metadata", mongoMatchmakingApplicationConfiguration.getMetadata()))
-                .execute(query, new ModifyOptions().upsert(false));
+                .execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (updated == null) {
             throw new MultiMatchNotFoundException();

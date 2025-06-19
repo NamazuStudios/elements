@@ -25,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.dao.MultiMatchDao.*;
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.IN_PROGRESS;
 import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.OPEN;
 import static org.testng.Assert.*;
 
@@ -250,6 +251,20 @@ public class MongoMultiMatchDaoTest {
 
     @Test(
             threadPoolSize = 10,
+            groups = "addProfilesToMultiMatch",
+            dependsOnGroups = "createMultiMatch",
+            dependsOnMethods = "testDoubleAddProfileToMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testProfilesWereAddedToMultiMatch(final MultiMatch match) {
+        final var actual = multiMatchDao.getProfiles(match.getId());
+        final var expected = profilesByMatch.get(match.getId());
+        assertEquals(actual.size(), expected.size(), "Profile count mismatch for match: " + match.getId());
+        assertTrue(expected.containsAll(actual), "Expected profiles not found in match: " + match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
             groups = "removeProfilesFromMultiMatch",
             dependsOnGroups = "addProfilesToMultiMatch",
             dataProvider = "allMatchesAndLowerProfiles"
@@ -270,10 +285,61 @@ public class MongoMultiMatchDaoTest {
         multiMatchDao.removeProfile(match.getId(), profile);
     }
 
-    private record ProfileMatchRecord(String multiMatchId, String profileId) {
-        public static ProfileMatchRecord of(MultiMatch match, Profile profile) {
-            return new ProfileMatchRecord(match.getId(), profile.getId());
-        }
+    @Test(
+            threadPoolSize = 10,
+            groups = "removeProfilesFromMultiMatch",
+            dependsOnGroups = "addProfilesToMultiMatch",
+            dependsOnMethods = "testDoubleRemoveProfileFromMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testProfilesWereRemovedFromMultiMatch(final MultiMatch match) {
+        final var actual = multiMatchDao.getProfiles(match.getId());
+        final var expected = profilesByMatch.get(match.getId());
+        assertEquals(actual.size(), expected.size(), "Profile count mismatch for match: " + match.getId());
+        assertTrue(expected.containsAll(actual), "Expected profiles not found in match: " + match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "updateMultiMatch",
+            dependsOnGroups = "removeProfilesFromMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testUpdateMultiMatch(final MultiMatch match) {
+        match.setStatus(IN_PROGRESS);
+        multiMatchDao.updateMultiMatch(match);
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "updateMultiMatch",
+            dependsOnGroups = "removeProfilesFromMultiMatch",
+            dependsOnMethods = "testUpdateMultiMatch"
+    )
+    public void testMultiMatchesUpdated() {
+        matches.forEach(m -> assertEquals(m.getStatus(), IN_PROGRESS));
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testFindMultiMatch(final MultiMatch match) {
+        final var actual = multiMatchDao.findMultiMatch(match.getId()).get();
+        assertEquals(actual, match, "Match not found: " + match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testGetMultiMatch(final MultiMatch match) {
+        final var actual = multiMatchDao.getMultiMatch(match.getId());
+        assertEquals(actual, match, "Match not found: " + match.getId());
     }
 
 }

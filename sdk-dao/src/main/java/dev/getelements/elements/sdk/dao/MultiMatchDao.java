@@ -82,7 +82,7 @@ public interface MultiMatchDao {
      * @param multiMatchId the {@link MultiMatch}
      * @return the {@link MultiMatch}
      */
-    default MultiMatch getMultiMatch(String multiMatchId) {
+    default MultiMatch getMultiMatch(final String multiMatchId) {
         return findMultiMatch(multiMatchId).orElseThrow(MultiMatchNotFoundException::new);
     }
 

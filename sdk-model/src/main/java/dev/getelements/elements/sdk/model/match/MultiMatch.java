@@ -78,4 +78,15 @@ public class MultiMatch {
         return Objects.hash(id, status, configuration, metadata);
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("MultiMatch{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", status=").append(status);
+        sb.append(", configuration=").append(configuration);
+        sb.append(", metadata=").append(metadata);
+        sb.append('}');
+        return sb.toString();
+    }
+
 }
