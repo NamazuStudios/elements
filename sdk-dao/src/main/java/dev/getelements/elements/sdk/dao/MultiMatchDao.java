@@ -41,15 +41,15 @@ import java.util.Optional;
 )
 public interface MultiMatchDao {
 
-    String MULTI_MATCH_CREATED = "dev.getelements.elements.sdk.model.match.multi.match.created";
+    String MULTI_MATCH_CREATED = "dev.getelements.elements.sdk.model.dao.multi.match.created";
 
-    String MULTI_MATCH_ADD_PROFILE = "dev.getelements.elements.sdk.model.match.multi.match.add.profile";
+    String MULTI_MATCH_ADD_PROFILE = "dev.getelements.elements.sdk.model.dao.multi.match.add.profile";
 
-    String MULTI_MATCH_REMOVE_PROFILE = "dev.getelements.elements.sdk.model.match.multi.match.remove.profile";
+    String MULTI_MATCH_REMOVE_PROFILE = "dev.getelements.elements.sdk.model.dao.multi.match.remove.profile";
 
-    String MULTI_MATCH_UPDATED = "dev.getelements.elements.sdk.model.match.multi.match.updated";
+    String MULTI_MATCH_UPDATED = "dev.getelements.elements.sdk.model.match.dao.multi.match.updated";
 
-    String MULTI_MATCH_DELETED = "dev.getelements.elements.sdk.model.match.multi.match.deleted";
+    String MULTI_MATCH_DELETED = "dev.getelements.elements.sdk.model.match.dao.multi.match.deleted";
 
     /**
      * Gets all {@link MultiMatch} instances.

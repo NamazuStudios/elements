@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.match;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
+import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
 import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Reference;
@@ -10,6 +11,7 @@ import org.bson.types.ObjectId;
 
 import java.util.Map;
 
+@Entity("multi_match")
 public class MongoMultiMatch {
 
     @Id

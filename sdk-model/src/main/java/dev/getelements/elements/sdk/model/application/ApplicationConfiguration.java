@@ -40,7 +40,6 @@ public class ApplicationConfiguration implements Serializable {
     @NotNull
     private String description;
 
-    @Valid
     @NotNull
     @Schema(description = "The parent application owning this configuration.")
     private Application parent;
