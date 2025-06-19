@@ -7,11 +7,11 @@ import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurat
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.rt.exception.DuplicateProfileException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.ValidationGroups;
-import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
@@ -101,17 +101,19 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         return findMongoMultiMatch(multiMatchId).map(mongoMultiMatch -> {
 
-                    final var query = getDatastore().find(MongoMultiMatch.class)
-                            .filter(eq("match", mongoMultiMatch))
-                            .filter(eq("profile", mongoProfile));
+                    final var id = new MongoMultiMatchProfile.ID(mongoMultiMatch, mongoProfile);
+
+                    final var query = getDatastore().find(MongoMultiMatchProfile.class)
+                            .filter(eq("_id", id));
 
                     final var result = new UpdateBuilder()
+                            .with(set("_id", id))
                             .with(set("match", mongoMultiMatch))
                             .with(set("profile", mongoProfile))
                             .execute(query, new UpdateOptions().upsert(true));
 
-                    if (result.getModifiedCount() == 0) {
-                        throw new DuplicateException();
+                    if (result.getUpsertedId() == null) {
+                        throw new DuplicateProfileException();
                     }
 
                     final var multiMatch = getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
@@ -137,9 +139,10 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         return findMongoMultiMatch(multiMatchId).map(mongoMultiMatch -> {
 
-                    final var result = getDatastore().find(MongoMultiMatch.class)
-                            .filter(eq("match", mongoMultiMatch))
-                            .filter(eq("profile", mongoProfile))
+                    final var id = new MongoMultiMatchProfile.ID(mongoMultiMatch, mongoProfile);
+
+                    final var result = getDatastore().find(MongoMultiMatchProfile.class)
+                            .filter(eq("_id", id))
                             .delete();
 
                     if (result.getDeletedCount() == 0) {
@@ -190,14 +193,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var inserted = getDatastore().save(mongoMultiMatch);
 
+        final var result =  getMapperRegistry().map(inserted, MultiMatch.class);
+
         getElementRegistry().publish(Event.builder()
-                .argument(multiMatch)
+                .argument(result)
                 .named(MULTI_MATCH_CREATED)
                 .build()
         );
 
-        return getMapperRegistry().map(inserted, MultiMatch.class);
-
+        return result;
     }
 
     @Override
@@ -226,19 +230,22 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new MultiMatchNotFoundException();
         }
 
+        final var result =  getMapperRegistry().map(updated, MultiMatch.class);
+
         getElementRegistry().publish(Event.builder()
-                .argument(multiMatch)
+                .argument(result)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
         );
 
-        return getMapperRegistry().map(updated, MultiMatch.class);
+        return result;
 
     }
 
     private MongoMatchmakingApplicationConfiguration getMongoApplicationConfiguration(final MultiMatch multiMatch) {
 
         final var applicationId = multiMatch.getConfiguration().getParent().getId();
+        getValidationHelper().validateModel(multiMatch.getConfiguration());
 
         final var mongoApplication = getMongoApplicationDao()
                 .findActiveMongoApplication(applicationId)
@@ -261,16 +268,34 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .parse(multiMatchId)
                 .orElseThrow(MultiMatchNotFoundException::new);
 
-        final var query = getDatastore().find(MongoMultiMatch.class)
+        final var multiMatchQuery = getDatastore().find(MongoMultiMatch.class)
                 .filter(eq("_id", objectId));
 
-        final var result = query.delete();
+        final var multiMatch = multiMatchQuery.first();
+
+        if (multiMatch == null) {
+            return false;
+        }
+
+        getDatastore().find(MongoMultiMatchProfile.class)
+                .filter(eq("match", multiMatch))
+                .delete();
+
+        final var result = multiMatchQuery.delete();
 
         if (result.getDeletedCount() > 1) {
             throw new InternalException("More than one multi-match deleted, this should not happen.");
         }
 
-        return result.getDeletedCount() > 0;
+        final var deleted = getMapperRegistry().map(result, MultiMatch.class);
+
+        getElementRegistry().publish(Event.builder()
+                .argument(deleted)
+                .named(MULTI_MATCH_DELETED)
+                .build()
+        );
+
+        return true;
 
     }
 

@@ -41,6 +41,30 @@ public interface Event {
     List<Object> getEventArguments();
 
     /**
+     * Gets the argument at the specified index. The index must be within the bounds of the event arguments list.
+     *
+     * @param index the index of the argument to retrieve
+     * @return the argument at the specified index
+     * @param <T> the type of the argument to retrieve
+     */
+    default <T> T getEventArgument(final int index) {
+        return (T) getEventArguments().get(index);
+    }
+
+    /**
+     * Gets the argument at the specified index. The index must be within the bounds of the event arguments list.
+     * Similar to {@link #getEventArgument(int)}, thie enforces more predictable exception behavior  by requiring the
+     * type to be explicitly named in the method call.
+     *
+     * @param index the index of the argument to retrieve
+     * @return the argument at the specified index
+     * @param <T> the type of the argument to retrieve
+     */
+    default <T> T getEventArgument(final int index, Class<T> type) {
+        return type.cast(getEventArguments().get(index));
+    }
+
+    /**
      * Returns a new {@link Builder} for {@link Event} instances.
      *
      * @return the {@link Builder}

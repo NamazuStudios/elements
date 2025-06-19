@@ -1,5 +1,8 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import com.google.inject.Key;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -18,6 +21,8 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static java.lang.String.format;
 
 
@@ -54,12 +59,20 @@ public class IntegrationTestModule extends AbstractModule {
         });
 
         bind(MapperRegistry.class)
-            .annotatedWith(Names.named(TEST_COMPONENT))
+            .annotatedWith(named(TEST_COMPONENT))
             .toProvider(MongoDozerMapperProvider.class);
 
         bind(PasswordGenerator.class)
                 .to(SecureRandomPasswordGenerator.class)
                 .asEagerSingleton();
+
+        bind(ElementRegistry.class)
+                .annotatedWith(named(ROOT))
+                .to(Key.get(MutableElementRegistry.class, named(ROOT)));
+
+        bind(MutableElementRegistry.class)
+                .annotatedWith(named(ROOT))
+                .toInstance(MutableElementRegistry.newDefaultInstance());
 
         bind(UserTestFactory.class).asEagerSingleton();
         bind(ProfileTestFactory.class).asEagerSingleton();

@@ -23,7 +23,6 @@ public class MultiMatch {
     @Schema(description = "The status of the match.")
     private MultiMatchStatus status;
 
-    @Valid
     @NotNull
     @Schema(description = "The matchmaking configuration for this multi-match.")
     private MatchmakingApplicationConfiguration configuration;
