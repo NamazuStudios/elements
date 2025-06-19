@@ -6,11 +6,13 @@ import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
+import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -63,11 +65,31 @@ public class MongoMultiMatchDaoTest {
 
     private final List<MultiMatch> matches = new CopyOnWriteArrayList<>();
 
+    private final List<MultiMatch> deletedMatches = new CopyOnWriteArrayList<>();
+
     private final Map<String, Set<Profile>> profilesByMatch = new ConcurrentHashMap<>();
 
     @DataProvider
     public Object[][] allMatches() {
         return matches.stream()
+                .map(m -> new Object[]{m})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] lowerMatches() {
+        final var count = matches.size() / 2;
+        return matches.stream()
+                .limit(count)
+                .map(m -> new Object[]{m})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] upperMatches() {
+        final var count = matches.size() / 2;
+        return matches.stream()
+                .skip(count)
                 .map(m -> new Object[]{m})
                 .toArray(Object[][]::new);
     }
@@ -183,8 +205,8 @@ public class MongoMultiMatchDaoTest {
     }
 
     private void onDelete(final MultiMatch match) {
+        deletedMatches.add(match);
         profilesByMatch.remove(match.getId());
-        assertTrue(matches.removeIf(m -> m.getId().equals(match.getId())), "Expected match to exist.");
     }
 
     @BeforeClass(dependsOnMethods = "setUpApplication")
@@ -309,6 +331,19 @@ public class MongoMultiMatchDaoTest {
         match.setStatus(IN_PROGRESS);
         multiMatchDao.updateMultiMatch(match);
     }
+    @Test(
+            threadPoolSize = 10,
+            groups = "updateMultiMatch",
+            dependsOnGroups = "removeProfilesFromMultiMatch",
+            expectedExceptions = MultiMatchNotFoundException.class
+    )
+    public void testUpdateNonExistantMultiMatch() {
+        final var match = new MultiMatch();
+        match.setId(new ObjectId().toHexString());
+        match.setStatus(IN_PROGRESS);
+        match.setConfiguration(applicationConfiguration);
+        multiMatchDao.updateMultiMatch(match);
+    }
 
     @Test(
             threadPoolSize = 10,
@@ -340,6 +375,89 @@ public class MongoMultiMatchDaoTest {
     public void testGetMultiMatch(final MultiMatch match) {
         final var actual = multiMatchDao.getMultiMatch(match.getId());
         assertEquals(actual, match, "Match not found: " + match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch"
+    )
+    public void testGetAllMultiMatches() {
+        final var allMatches = multiMatchDao.getAllMultiMatches();
+        assertEquals(allMatches.size(), matches.size(), "Mismatch in number of matches retrieved.");
+        for (final var match : matches) {
+            assertTrue(allMatches.contains(match), "Expected match not found: " + match.getId());
+        }
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch",
+            expectedExceptions = MultiMatchNotFoundException.class
+    )
+    public void testGetMultiMatchNotFound() {
+        multiMatchDao.getMultiMatch(new ObjectId().toHexString());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch"
+    )
+    public void testFindMultiMatchNotFound() {
+        final var result = multiMatchDao.findMultiMatch(new ObjectId().toHexString());
+        assertFalse(result.isPresent(), "MultiMatch found when none was expected: " + result);
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "deleteMultiMatches",
+            dependsOnGroups = "getMultiMatches",
+            dataProvider = "lowerMatches"
+    )
+    public void testDeleteMultiMatch(final MultiMatch match) {
+        multiMatchDao.deleteMultiMatch(match.getId());
+        assertFalse(multiMatchDao.tryDeleteMultiMatch(match.getId()));
+        assertThrows(MultiMatchNotFoundException.class, () -> multiMatchDao.getProfiles(match.getId()));
+        assertThrows(MultiMatchNotFoundException.class, () -> multiMatchDao.getMultiMatch(match.getId()));
+        assertThrows(MultiMatchNotFoundException.class, () -> multiMatchDao.deleteMultiMatch(match.getId()));
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "deleteMultiMatches",
+            dependsOnGroups = "getMultiMatches",
+            dataProvider = "upperMatches"
+    )
+    public void testTryDeleteMultiMatch(final MultiMatch match) {
+        assertTrue(multiMatchDao.tryDeleteMultiMatch(match.getId()));
+        assertFalse(multiMatchDao.tryDeleteMultiMatch(match.getId()));
+        assertThrows(MultiMatchNotFoundException.class, () -> multiMatchDao.getProfiles(match.getId()));
+        assertThrows(MultiMatchNotFoundException.class, () -> multiMatchDao.getMultiMatch(match.getId()));
+        assertThrows(MultiMatchNotFoundException.class, () -> multiMatchDao.deleteMultiMatch(match.getId()));
+    }
+
+    @Test(
+            groups = "postDeleteMultiMatches",
+            dependsOnGroups = "deleteMultiMatches"
+    )
+    public void checkDeletedMultiMatches() {
+
+        assertEquals(deletedMatches.size(), TEST_MATCH_COUNT, "Expected all of the matches to be deleted.");
+
+        for (final var match : matches) {
+            assertTrue(deletedMatches
+                    .stream()
+                    .anyMatch(m -> m.getId().equals(match.getId())),
+                    "Match not deleted: " + match.getId()
+            );
+        }
+
+        for (final var deleted : deletedMatches) {
+            assertFalse(profilesByMatch.containsKey(deleted.getId()), "Profiles not removed for match: " + deleted.getId());
+        }
+
     }
 
 }
