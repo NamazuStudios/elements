@@ -35,6 +35,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static java.nio.file.Files.find;
 import static java.util.Objects.requireNonNull;
 
 public class MongoMultiMatchDao implements MultiMatchDao {
@@ -62,20 +63,23 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var trimmedSearch = nullToEmpty(search).trim();
 
-        if (trimmedSearch.isEmpty()) {
-            return List.of();
-        }
-
         final var parsed = getBooleanQueryParser()
                 .parse(MongoMultiMatch.class, trimmedSearch);
 
-        return parsed
+        return getBooleanQueryParser()
+                .parse(MongoMultiMatch.class, trimmedSearch)
                 .filter(q -> getMongoDBUtils().isIndexedQuery(q))
                 .map(q -> q
                         .stream()
                         .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class))
                         .toList()
-                ).orElseGet(List::of);
+                )
+                .orElseGet(() -> getDatastore()
+                        .find(MongoMultiMatch.class)
+                        .stream()
+                        .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class))
+                        .toList()
+                );
 
     }
 
@@ -273,14 +277,14 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         final var multiMatchQuery = getDatastore().find(MongoMultiMatch.class)
                 .filter(eq("_id", objectId));
 
-        final var multiMatch = multiMatchQuery.first();
+        final var mongoMultiMatch = multiMatchQuery.first();
 
-        if (multiMatch == null) {
+        if (mongoMultiMatch == null) {
             return false;
         }
 
         getDatastore().find(MongoMultiMatchProfile.class)
-                .filter(eq("match", multiMatch))
+                .filter(eq("match", mongoMultiMatch))
                 .delete();
 
         final var result = multiMatchQuery.delete();
@@ -289,7 +293,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InternalException("More than one multi-match deleted, this should not happen.");
         }
 
-        final var deleted = getMapperRegistry().map(result, MultiMatch.class);
+        final var deleted = getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
 
         getElementRegistry().publish(Event.builder()
                 .argument(deleted)
