@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
@@ -216,6 +217,7 @@ public class MongoMultiMatchDaoTest {
         config.setName("test_multi_match");
         config.setDescription("Test Multi Match");
         config.setParent(application);
+        config.setMaxProfiles(TEST_USER_COUNT);
 
         applicationConfiguration = applicationConfigurationDao.createApplicationConfiguration(
                 application.getId(),
@@ -256,26 +258,22 @@ public class MongoMultiMatchDaoTest {
             dataProvider = "allMatchesAndProfiles"
     )
     public void testAddProfileToMultiMatch(final MultiMatch match, final Profile profile) {
+
         multiMatchDao.addProfile(match.getId(), profile);
+
+        final var full = profilesByMatch.get(match.getId()).size() == match.getConfiguration().getMaxProfiles();
+        final var expected = full
+                ? InvalidDataException.class
+                : DuplicateProfileException.class;
+
+        assertThrows(expected, () -> multiMatchDao.addProfile(match.getId(), profile));
+
     }
 
     @Test(
             threadPoolSize = 10,
             groups = "addProfilesToMultiMatch",
             dependsOnGroups = "createMultiMatch",
-            dependsOnMethods = "testAddProfileToMultiMatch",
-            dataProvider = "allMatchesAndProfiles",
-            expectedExceptions = DuplicateProfileException.class
-    )
-    public void testDoubleAddProfileToMultiMatch(final MultiMatch match, final Profile profile) {
-        multiMatchDao.addProfile(match.getId(), profile);
-    }
-
-    @Test(
-            threadPoolSize = 10,
-            groups = "addProfilesToMultiMatch",
-            dependsOnGroups = "createMultiMatch",
-            dependsOnMethods = "testDoubleAddProfileToMultiMatch",
             dataProvider = "allMatches"
     )
     public void testProfilesWereAddedToMultiMatch(final MultiMatch match) {
