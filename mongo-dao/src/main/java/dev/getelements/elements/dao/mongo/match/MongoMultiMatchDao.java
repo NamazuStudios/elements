@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.match;
 
-import com.mongodb.client.model.ReturnDocument;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -35,7 +34,6 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
-import static java.nio.file.Files.find;
 import static java.util.Objects.requireNonNull;
 
 public class MongoMultiMatchDao implements MultiMatchDao {
