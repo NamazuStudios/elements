@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.model.application.ElementServiceReference;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import org.testng.annotations.Guice;
 
+import static dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration.MIN_PROFILE_CAP;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -31,6 +32,7 @@ public class MongoMatchmakingApplicationConfigurationDaoTest extends MongoApplic
 
         final var config = new MatchmakingApplicationConfiguration();
         config.setSuccess(success);
+        config.setMaxProfiles(MIN_PROFILE_CAP);
 
         return config;
 
