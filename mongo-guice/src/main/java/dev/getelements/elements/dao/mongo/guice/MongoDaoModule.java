@@ -52,6 +52,7 @@ public class MongoDaoModule extends PrivateModule {
         bindMapper();
         bindDatastore();
         bindTransaction();
+        bindElementRegistries();
 
         bind(ObjectMapper.class).asEagerSingleton();
 
@@ -173,5 +174,7 @@ public class MongoDaoModule extends PrivateModule {
     protected void bindTransaction() {
         bind(Transaction.class).toProvider(MongoTransactionProvider.class);
     }
+
+    protected void bindElementRegistries() {}
 
 }
