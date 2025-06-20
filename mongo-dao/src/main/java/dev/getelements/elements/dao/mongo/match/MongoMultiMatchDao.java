@@ -109,6 +109,14 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
                     final var id = new MongoMultiMatchProfile.ID(mongoMultiMatch, mongoProfile);
 
+                    final var count = getDatastore().find(MongoMultiMatchProfile.class)
+                            .filter(eq("match", mongoMultiMatch))
+                            .count();
+
+                    if (count >= mongoMultiMatch.getConfiguration().getMaxProfiles()) {
+                        throw new InvalidDataException("Maximum number of profiles reached for multi-match: " + mongoMultiMatch.getId());
+                    }
+
                     final var query = getDatastore().find(MongoMultiMatchProfile.class)
                             .filter(eq("_id", id));
 

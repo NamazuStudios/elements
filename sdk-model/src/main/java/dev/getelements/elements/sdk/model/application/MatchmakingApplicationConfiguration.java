@@ -23,9 +23,9 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
     @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
     private ElementServiceReference matchmaker;
 
-    @Min(0)
-    @Schema(description = "The maximum number of players that can be matched in a single match. ")
-    private int maxPlayers;
+    @Min(1)
+    @Schema(description = "The maximum number of profiles that can be matched in a single match. ")
+    private int maxProfiles;
 
     @Schema(description = "The metadata for this matchmaking configuration. This will be copied to the match when it is created.")
     private Map<String, Object> metadata;
@@ -50,12 +50,12 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         this.matchmaker = matchmaker;
     }
 
-    public int getMaxPlayers() {
-        return maxPlayers;
+    public int getMaxProfiles() {
+        return maxProfiles;
     }
 
-    public void setMaxPlayers(int maxPlayers) {
-        this.maxPlayers = maxPlayers;
+    public void setMaxProfiles(int maxProfiles) {
+        this.maxProfiles = maxProfiles;
     }
 
     public Map<String, Object> getMetadata() {
@@ -79,7 +79,7 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) o;
-        return maxPlayers == that.maxPlayers &&
+        return maxProfiles == that.maxProfiles &&
                 Objects.equals(success, that.success) &&
                 Objects.equals(matchmaker, that.matchmaker) &&
                 Objects.equals(metadata, that.metadata) &&
@@ -88,7 +88,7 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), success, matchmaker, maxPlayers, metadata, metadataSpec);
+        return Objects.hash(super.hashCode(), success, matchmaker, maxProfiles, metadata, metadataSpec);
     }
 
     @Override
@@ -96,7 +96,7 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         return "MatchmakingApplicationConfiguration{" +
                 "success=" + success +
                 ", matchmaker=" + matchmaker +
-                ", maxPlayers=" + maxPlayers +
+                ", maxPlayers=" + maxProfiles +
                 ", metadata=" + metadata +
                 ", metadataSpec=" + metadataSpec +
                 '}';
