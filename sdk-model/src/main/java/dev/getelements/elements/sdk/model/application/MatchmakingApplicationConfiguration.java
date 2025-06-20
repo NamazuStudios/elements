@@ -15,6 +15,11 @@ import java.util.Objects;
 )
 public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {
 
+    /**
+     * Indicates the minimum number of profiles that can can be capped per match.
+     */
+    public static final int MIN_PROFILE_CAP = 2;
+
     @Valid
     @Schema(description = "The callback definition for when a successful match is made.")
     private CallbackDefinition success;
@@ -23,7 +28,7 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
     @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
     private ElementServiceReference matchmaker;
 
-    @Min(1)
+    @Min(MIN_PROFILE_CAP)
     @Schema(description = "The maximum number of profiles that can be matched in a single match. ")
     private int maxProfiles;
 
