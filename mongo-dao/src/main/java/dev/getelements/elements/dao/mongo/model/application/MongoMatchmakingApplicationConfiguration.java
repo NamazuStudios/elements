@@ -17,6 +17,9 @@ public class MongoMatchmakingApplicationConfiguration extends MongoApplicationCo
     private MongoElementServiceReference matchmaker;
 
     @Property
+    private int maxProfiles;
+
+    @Property
     private Map<String, Object> metadata;
 
     @Property
@@ -36,6 +39,14 @@ public class MongoMatchmakingApplicationConfiguration extends MongoApplicationCo
 
     public void setMatchmaker(MongoElementServiceReference matchmaker) {
         this.matchmaker = matchmaker;
+    }
+
+    public int getMaxProfiles() {
+        return maxProfiles;
+    }
+
+    public void setMaxProfiles(int maxProfiles) {
+        this.maxProfiles = maxProfiles;
     }
 
     public Map<String, Object> getMetadata() {
