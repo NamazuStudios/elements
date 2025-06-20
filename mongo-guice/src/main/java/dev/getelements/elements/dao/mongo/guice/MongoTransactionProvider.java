@@ -4,16 +4,21 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Stage;
 import com.mongodb.client.MongoDatabase;
-import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.guice.ConfigurationModule;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.dao.Transaction;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.morphia.Datastore;
 import dev.morphia.transactions.MorphiaSession;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
-
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.validation.Validator;
+
 import java.util.Properties;
+
+import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 
 public class MongoTransactionProvider implements Provider<Transaction> {
 
@@ -27,13 +32,15 @@ public class MongoTransactionProvider implements Provider<Transaction> {
 
     private Provider<MongoDatabase> mongoDatabaseProvider;
 
+    private Provider<ElementRegistry> rootElementRegistryProvider;
+
     @Override
     public Transaction get() {
 
         final var datastore = getDatastoreProvider().get();
         final var properties = getPropertiesProvider().get();
-
         final var morphiaSession = datastore.startSession();
+
         morphiaSession.startTransaction();
 
         final var transactionInjector = Guice.createInjector(
@@ -66,6 +73,12 @@ public class MongoTransactionProvider implements Provider<Transaction> {
                                 .asEagerSingleton();
                     }
 
+                    @Override
+                    protected void bindElementRegistries() {
+                        bind(ElementRegistry.class)
+                                .annotatedWith(named(ROOT))
+                                .toProvider(getRootElementRegistryProvider());
+                    }
                 }
         );
 
@@ -116,6 +129,15 @@ public class MongoTransactionProvider implements Provider<Transaction> {
     @Inject
     public void setValidatorProvider(Provider<Validator> validatorProvider) {
         this.validatorProvider = validatorProvider;
+    }
+
+    public Provider<ElementRegistry> getRootElementRegistryProvider() {
+        return rootElementRegistryProvider;
+    }
+
+    @Inject
+    public void setRootElementRegistryProvider(@Named(ROOT) Provider<ElementRegistry> rootElementRegistryProvider) {
+        this.rootElementRegistryProvider = rootElementRegistryProvider;
     }
 
 }
