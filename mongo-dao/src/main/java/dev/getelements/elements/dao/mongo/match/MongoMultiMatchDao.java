@@ -22,6 +22,7 @@ import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import jakarta.inject.Inject;
@@ -296,7 +297,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         getDatastore().find(MongoMultiMatchProfile.class)
                 .filter(eq("match", mongoMultiMatch))
-                .delete();
+                .delete(new DeleteOptions().multi(true));
 
         final var result = multiMatchQuery.delete();
 
@@ -343,7 +344,10 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         final var now = new Timestamp(System.currentTimeMillis());
         final var updates = new UpdateBuilder().with(set("expiry", now));
 
-        updates.execute(multiMatchProfileQuery, new UpdateOptions());
+        updates.execute(
+                multiMatchProfileQuery,
+                new UpdateOptions().multi(true)
+        );
 
         final var expiredMultiMatch = updates.execute(
                 multiMatchQuery,
