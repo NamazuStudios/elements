@@ -77,7 +77,6 @@ public class SessionSecretHeader {
      *
      * @param header the header value, may be null
      */
-
     private SessionSecretHeader(final Optional<String> header) {
 
         if (header.isEmpty()) {

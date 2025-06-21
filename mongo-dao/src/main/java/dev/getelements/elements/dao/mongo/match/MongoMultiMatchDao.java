@@ -17,6 +17,7 @@ import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
+import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
@@ -25,14 +26,18 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.bouncycastle.math.raw.Mod;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.morphia.aggregation.expressions.BooleanExpressions.not;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.util.Objects.requireNonNull;
 
@@ -304,6 +309,62 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         getElementRegistry().publish(Event.builder()
                 .argument(deleted)
                 .named(MULTI_MATCH_DELETED)
+                .build()
+        );
+
+        getDatastore().find(MongoMultiMatchProfile.class)
+                .filter(eq("match", mongoMultiMatch))
+                .delete();
+
+        return true;
+
+    }
+
+    @Override
+    public boolean tryExpireMultiMatch(final String multiMatchId) {
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var multiMatchQuery = getDatastore()
+                .find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var mongoMultiMatch = multiMatchQuery.first();
+
+        if (mongoMultiMatch == null) {
+            return false;
+        }
+
+        final var multiMatchProfileQuery = getDatastore().find(MongoMultiMatchProfile.class)
+                .filter(eq("match", mongoMultiMatch));
+
+        final var now = new Timestamp(System.currentTimeMillis());
+        final var updates = new UpdateBuilder().with(set("expiry", now));
+
+        updates.execute(multiMatchProfileQuery, new UpdateOptions());
+
+        final var expiredMultiMatch = updates.execute(
+                multiMatchQuery,
+                new ModifyOptions().returnDocument(AFTER)
+        );
+
+        if (expiredMultiMatch == null) {
+            return false;
+        }
+
+        final var expired = getMapperRegistry().map(expiredMultiMatch, MultiMatch.class);
+
+        getElementRegistry().publish(Event.builder()
+                .argument(expired)
+                .named(MULTI_MATCH_EXPIRED)
+                .build()
+        );
+
+        getElementRegistry().publish(Event.builder()
+                .argument(expired)
+                .named(MULTI_MATCH_UPDATED)
                 .build()
         );
 

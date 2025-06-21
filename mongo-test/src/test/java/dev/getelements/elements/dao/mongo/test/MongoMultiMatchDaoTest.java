@@ -68,6 +68,8 @@ public class MongoMultiMatchDaoTest {
 
     private final List<MultiMatch> deletedMatches = new CopyOnWriteArrayList<>();
 
+    private final List<MultiMatch> expiredMatches = new CopyOnWriteArrayList<>();
+
     private final Map<String, Set<Profile>> profilesByMatch = new ConcurrentHashMap<>();
 
     @DataProvider
@@ -158,6 +160,7 @@ public class MongoMultiMatchDaoTest {
                         ev.getEventArgument(0, MultiMatch.class),
                         ev.getEventArgument(1, Profile.class)
                 );
+                case MULTI_MATCH_EXPIRED -> onExpire(ev.getEventArgument(0));
                 case MULTI_MATCH_DELETED -> onDelete(ev.getEventArgument(0));
             }
         });
@@ -203,6 +206,10 @@ public class MongoMultiMatchDaoTest {
             return profiles.isEmpty() ? null : profiles;
 
         });
+    }
+
+    private void onExpire(final MultiMatch match) {
+        expiredMatches.add(match);
     }
 
     private void onDelete(final MultiMatch match) {
@@ -410,8 +417,48 @@ public class MongoMultiMatchDaoTest {
 
     @Test(
             threadPoolSize = 10,
-            groups = "deleteMultiMatches",
+            groups = "expireMultiMatches",
             dependsOnGroups = "getMultiMatches",
+            dataProvider = "lowerMatches"
+    )
+    public void testExpireMultiMatches(final MultiMatch match) {
+        multiMatchDao.expireMultiMatch(match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "expireMultiMatches",
+            dependsOnGroups = "getMultiMatches",
+            dataProvider = "upperMatches"
+    )
+    public void testTryExpireMultiMatches(final MultiMatch match) {
+        assertTrue(multiMatchDao.tryExpireMultiMatch(match.getId()), "Match should be expired: " + match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "expireMultiMatches",
+            dependsOnGroups = "getMultiMatches",
+            dependsOnMethods = {
+                    "testExpireMultiMatches",
+                    "testTryExpireMultiMatches"
+            }
+    )
+    public void testAllMatchesAreExpired() {
+        assertEquals(expiredMatches.size(), matches.size(), "Mismatch in number of matches retrieved.");
+        for (final var expired : expiredMatches) {
+            assertNotNull(expired.getExpiry());
+            assertTrue(
+                    matches.stream().anyMatch(m -> m.getId().equals(expired.getId())),
+                    "Match not found: " + expired.getId()
+            );
+        }
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "deleteMultiMatches",
+            dependsOnGroups = "expireMultiMatches",
             dataProvider = "lowerMatches"
     )
     public void testDeleteMultiMatch(final MultiMatch match) {
@@ -425,7 +472,7 @@ public class MongoMultiMatchDaoTest {
     @Test(
             threadPoolSize = 10,
             groups = "deleteMultiMatches",
-            dependsOnGroups = "getMultiMatches",
+            dependsOnGroups = "expireMultiMatches",
             dataProvider = "upperMatches"
     )
     public void testTryDeleteMultiMatch(final MultiMatch match) {
