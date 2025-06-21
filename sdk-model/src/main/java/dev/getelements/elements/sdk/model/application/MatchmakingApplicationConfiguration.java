@@ -1,8 +1,11 @@
 package dev.getelements.elements.sdk.model.application;
 
+import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Schema(
@@ -12,6 +15,11 @@ import java.util.Objects;
 )
 public class MatchmakingApplicationConfiguration extends ApplicationConfiguration {
 
+    /**
+     * Indicates the minimum number of profiles that can can be capped per match.
+     */
+    public static final int MIN_PROFILE_CAP = 2;
+
     @Valid
     @Schema(description = "The callback definition for when a successful match is made.")
     private CallbackDefinition success;
@@ -19,6 +27,17 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
     @Valid
     @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
     private ElementServiceReference matchmaker;
+
+    @Min(MIN_PROFILE_CAP)
+    @Schema(description = "The maximum number of profiles that can be matched in a single match. ")
+    private int maxProfiles;
+
+    @Schema(description = "The metadata for this matchmaking configuration. This will be copied to the match when it is created.")
+    private Map<String, Object> metadata;
+
+    @Valid
+    @Schema(description = "The metadata spec for this matchmaking configuration. This defines the structure of the metadata.")
+    private MetadataSpec metadataSpec;
 
     public CallbackDefinition getSuccess() {
         return success;
@@ -36,17 +55,56 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         this.matchmaker = matchmaker;
     }
 
+    public int getMaxProfiles() {
+        return maxProfiles;
+    }
+
+    public void setMaxProfiles(int maxProfiles) {
+        this.maxProfiles = maxProfiles;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public MetadataSpec getMetadataSpec() {
+        return metadataSpec;
+    }
+
+    public void setMetadataSpec(MetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
+    }
+
     @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass()) return false;
-        if (!super.equals(object)) return false;
-        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) object;
-        return Objects.equals(getSuccess(), that.getSuccess()) && Objects.equals(getMatchmaker(), that.getMatchmaker());
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        MatchmakingApplicationConfiguration that = (MatchmakingApplicationConfiguration) o;
+        return maxProfiles == that.maxProfiles &&
+                Objects.equals(success, that.success) &&
+                Objects.equals(matchmaker, that.matchmaker) &&
+                Objects.equals(metadata, that.metadata) &&
+                Objects.equals(metadataSpec, that.metadataSpec);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getSuccess(), getMatchmaker());
+        return Objects.hash(super.hashCode(), success, matchmaker, maxProfiles, metadata, metadataSpec);
+    }
+
+    @Override
+    public String toString() {
+        return "MatchmakingApplicationConfiguration{" +
+                "success=" + success +
+                ", matchmaker=" + matchmaker +
+                ", maxPlayers=" + maxProfiles +
+                ", metadata=" + metadata +
+                ", metadataSpec=" + metadataSpec +
+                '}';
     }
 
 }

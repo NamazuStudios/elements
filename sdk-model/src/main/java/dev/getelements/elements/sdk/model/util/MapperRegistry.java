@@ -54,7 +54,13 @@ public interface MapperRegistry {
     <SourceT, DestinationT> DestinationT map(
             final SourceT source,
             final Class<DestinationT> destinationClass) {
+
+        if (source == null) {
+            return null;
+        }
+
         return getMapper((Class<SourceT>)source.getClass(), destinationClass).forward(source);
+
     }
 
     /**

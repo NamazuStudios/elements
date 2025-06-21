@@ -34,13 +34,10 @@ import static java.util.Collections.emptyMap;
  */
 public class MongoApplicationDao implements ApplicationDao {
 
-    @Inject
     private ValidationHelper validationHelper;
 
-    @Inject
     private MongoDBUtils mongoDBUtils;
 
-    @Inject
     private Datastore datastore;
 
     private MapperRegistry mapperRegistry;
@@ -198,36 +195,25 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public MongoApplication findActiveMongoApplication(final String mongoApplicationNameOrId) {
-
-        final var query = datastore.find(MongoApplication.class);
-
-        if (ObjectId.isValid(mongoApplicationNameOrId)) {
-            query.filter(and(
-                eq("_id", new ObjectId(mongoApplicationNameOrId)),
-                exists("name")
-            ));
-        } else {
-            query.filter(and(
-                eq("name", mongoApplicationNameOrId),
-                exists("name")
-            ));
-        }
-
-        return query.first();
-
+    public Optional<MongoApplication> findActiveMongoApplication(final String mongoApplicationNameOrId) {
+        return getMongoDBUtils().parse(mongoApplicationNameOrId)
+                .map(objectId -> getDatastore()
+                        .find(MongoApplication.class)
+                        .filter(eq("_id", objectId))
+                ).orElseGet(() -> getDatastore()
+                        .find(MongoApplication.class)
+                        .filter(eq("name", mongoApplicationNameOrId))
+                )
+                .stream()
+                .findFirst();
     }
 
     public MongoApplication getActiveMongoApplication(final String mongoApplicationNameOrId) {
-
-        final MongoApplication mongoApplication = findActiveMongoApplication(mongoApplicationNameOrId);
-
-        if (mongoApplication == null) {
-            throw new ApplicationNotFoundException("application not found: " + mongoApplicationNameOrId);
-        }
-
-        return mongoApplication;
-
+        return findActiveMongoApplication(mongoApplicationNameOrId)
+                .orElseThrow(() -> new ApplicationNotFoundException(
+                        "application not found: " +
+                        mongoApplicationNameOrId)
+                );
     }
 
     private Application transform(final MongoApplication mongoApplication) {
@@ -244,6 +230,24 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
+    }
+
     public Datastore getDatastore() {
         return datastore;
     }
@@ -253,13 +257,13 @@ public class MongoApplicationDao implements ApplicationDao {
         this.datastore = datastore;
     }
 
-    private MapperRegistry getMapperRegistry() {
+    public MapperRegistry getMapperRegistry() {
         return mapperRegistry;
     }
 
     @Inject
-    public void setMapperRegistry(MapperRegistry dozerMapperRegistry) {
-        this.mapperRegistry = dozerMapperRegistry;
+    public void setMapperRegistry(MapperRegistry mapperRegistry) {
+        this.mapperRegistry = mapperRegistry;
     }
 
 }

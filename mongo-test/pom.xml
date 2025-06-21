@@ -21,6 +21,10 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-spi-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
