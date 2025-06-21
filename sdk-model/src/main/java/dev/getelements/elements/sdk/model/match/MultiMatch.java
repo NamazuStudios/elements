@@ -3,14 +3,13 @@ package dev.getelements.elements.sdk.model.match;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
 import java.util.Map;
 import java.util.Objects;
 
-@Schema
+@Schema(description = "Represents a multi-match in the matchmaking system.")
 public class MultiMatch {
 
     @NotNull(groups = ValidationGroups.Update.class)
@@ -27,8 +26,11 @@ public class MultiMatch {
     @Schema(description = "The matchmaking configuration for this multi-match.")
     private MatchmakingApplicationConfiguration configuration;
 
-    @Schema(description = "Metadata")
+    @Schema(description = "The metadata of hte multi-match, which can be used to store additional information about the match.")
     private Map<String, Object> metadata;
+
+    @Schema(description = "The expiry time of the match in seconds. If not set, the match will not expire.")
+    private Long expiry;
 
     public String getId() {
         return id;
@@ -62,20 +64,24 @@ public class MultiMatch {
         this.metadata = metadata;
     }
 
+    public Long getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(Long expiry) {
+        this.expiry = expiry;
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        MultiMatch that = (MultiMatch) o;
-        return
-            status == that.status &&
-            Objects.equals(id, that.id) &&
-            Objects.equals(configuration, that.configuration) &&
-            Objects.equals(metadata, that.metadata);
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        MultiMatch that = (MultiMatch) object;
+        return Objects.equals(getId(), that.getId()) && getStatus() == that.getStatus() && Objects.equals(getConfiguration(), that.getConfiguration()) && Objects.equals(getMetadata(), that.getMetadata()) && Objects.equals(getExpiry(), that.getExpiry());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, status, configuration, metadata);
+        return Objects.hash(getId(), getStatus(), getConfiguration(), getMetadata(), getExpiry());
     }
 
     @Override
@@ -85,6 +91,7 @@ public class MultiMatch {
         sb.append(", status=").append(status);
         sb.append(", configuration=").append(configuration);
         sb.append(", metadata=").append(metadata);
+        sb.append(", expiry=").append(expiry);
         sb.append('}');
         return sb.toString();
     }

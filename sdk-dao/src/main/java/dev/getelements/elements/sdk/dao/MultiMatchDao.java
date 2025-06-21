@@ -35,6 +35,11 @@ import java.util.Optional;
         description = "Called when a multi-match was updated."
 )
 @ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_EXPIRED,
+        parameters = MultiMatch.class,
+        description = "Called when a multi-match was expired."
+)
+@ElementEventProducer(
         value = MultiMatchDao.MULTI_MATCH_DELETED,
         parameters = MultiMatch.class,
         description = "Called when a multi-match was deleted."
@@ -48,6 +53,8 @@ public interface MultiMatchDao {
     String MULTI_MATCH_REMOVE_PROFILE = "dev.getelements.elements.sdk.model.dao.multi.match.remove.profile";
 
     String MULTI_MATCH_UPDATED = "dev.getelements.elements.sdk.model.match.dao.multi.match.updated";
+
+    String MULTI_MATCH_EXPIRED = "dev.getelements.elements.sdk.model.match.dao.multi.match.expired";
 
     String MULTI_MATCH_DELETED = "dev.getelements.elements.sdk.model.match.dao.multi.match.deleted";
 
@@ -142,5 +149,26 @@ public interface MultiMatchDao {
      * Deletes the {@link MultiMatch} with the given ID, returning true if it was deleted, false if it did not exist.
      */
     boolean tryDeleteMultiMatch(String multiMatchId);
+
+
+    /**
+     * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
+     *
+     * @param multiMatchId the ID of the {@link MultiMatch}
+     * @throws MultiMatchNotFoundException if the multi-match does not exist or is already expired.
+     */
+    default void expireMultiMatch(String multiMatchId) {
+        if (!tryExpireMultiMatch(multiMatchId)) {
+            throw new MultiMatchNotFoundException();
+        }
+    }
+
+    /**
+     * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
+     *
+     * @param multiMatchId the ID of the {@link MultiMatch}
+     * @return true if the multi-match was expired, false if it did not exist or was already expired.
+     */
+    boolean tryExpireMultiMatch(String multiMatchId);
 
 }

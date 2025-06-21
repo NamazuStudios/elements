@@ -14,7 +14,12 @@ public enum MultiMatchStatus {
     OPEN,
 
     /**
-     * The match is in progress, no longer accepting new entries.
+     * The match is full and no longer accepting new players.
+     */
+    FULL,
+
+    /**
+     * The match is in progress.
      */
     IN_PROGRESS,
 
