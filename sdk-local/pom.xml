@@ -104,6 +104,9 @@
                                 <relocation>
                                     <pattern>ch.</pattern>
                                     <shadedPattern>_internal.ch.</shadedPattern>
+                                    <excludes>
+                                        <exclude>ch.qos.logback.**</exclude>
+                                    </excludes>
                                 </relocation>
                                 <relocation>
                                     <pattern>io.</pattern>

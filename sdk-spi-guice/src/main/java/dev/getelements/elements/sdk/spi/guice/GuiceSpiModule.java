@@ -4,6 +4,8 @@ import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.annotation.ElementServiceImplementation;
+import dev.getelements.elements.sdk.annotation.ElementServiceImplementation.DefaultImplementation;
 import dev.getelements.elements.sdk.guice.record.GuiceElementModuleRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
@@ -44,12 +46,14 @@ public class GuiceSpiModule extends PrivateModule {
 
         elementRecord
                 .services()
+                .stream()
+                .filter(esr -> !DefaultImplementation.class.equals(esr.implementation().type()))
                 .forEach(esr -> bindService(targets, esr));
 
         elementRecord
                 .dependencies()
                 .stream()
-                .flatMap(dep -> parent.find(dep.name()).filter(dep.selector()))
+                .flatMap(dep -> dep.findDependencies(parent))
                 .forEach(this::bindDependentElement);
 
         final var elementPackage = elementRecord.definition().pkg();

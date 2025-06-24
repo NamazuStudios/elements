@@ -60,6 +60,24 @@
         <dependency>
             <groupId>com.github.sidhant92</groupId>
             <artifactId>boolparser</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback.contrib</groupId>
+                    <artifactId>logback-json-classic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback.contrib</groupId>
+                    <artifactId>logback-jackson</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.logstash.logback</groupId>
+                    <artifactId>logstash-logback-encoder</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.zeromq</groupId>
