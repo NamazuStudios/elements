@@ -4,7 +4,6 @@ import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.annotation.ElementServiceImplementation;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation.DefaultImplementation;
 import dev.getelements.elements.sdk.guice.record.GuiceElementModuleRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
@@ -47,8 +46,14 @@ public class GuiceSpiModule extends PrivateModule {
         elementRecord
                 .services()
                 .stream()
+                .filter(esr -> DefaultImplementation.class.equals(esr.implementation().type()))
+                .forEach(this::exposeService);
+
+        elementRecord
+                .services()
+                .stream()
                 .filter(esr -> !DefaultImplementation.class.equals(esr.implementation().type()))
-                .forEach(esr -> bindService(targets, esr));
+                .forEach(esr -> bindAndExposeService(targets, esr));
 
         elementRecord
                 .dependencies()
@@ -65,8 +70,20 @@ public class GuiceSpiModule extends PrivateModule {
 
     }
 
-    private void bindService(final Set<Class<?>> targets,
-                             final ElementServiceRecord elementServiceRecord) {
+    private void exposeService(final ElementServiceRecord elementServiceRecord) {
+
+        final var export = elementServiceRecord.export();
+
+        final var keys = export.isNamed()
+                ? export.exposed().stream().map(anInterface -> Key.get(anInterface, named(export.name())))
+                : export.exposed().stream().map(Key::get);
+
+        keys.forEach(this::expose);
+
+    }
+
+    private void bindAndExposeService(final Set<Class<?>> targets,
+                                      final ElementServiceRecord elementServiceRecord) {
 
         final var export = elementServiceRecord.export();
         final var implementation = elementServiceRecord.implementation();
