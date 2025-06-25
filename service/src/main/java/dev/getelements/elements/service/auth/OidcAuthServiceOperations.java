@@ -26,7 +26,6 @@ import dev.getelements.elements.sdk.service.name.NameService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
-import kotlin.jvm.functions.Function2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +37,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
@@ -68,7 +68,7 @@ public class OidcAuthServiceOperations {
 
     public SessionCreation createOrUpdateUserWithToken(
             final OidcSessionRequest oidcSessionRequest,
-            final Function2<DecodedJWT, OidcAuthScheme, User> userMapper) {
+            final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
 
         final DecodedJWT decodedJWT;
         final var identityToken = oidcSessionRequest.getJwt();
@@ -92,7 +92,7 @@ public class OidcAuthServiceOperations {
         verify(decodedJWT, scheme);
 
         // Maps the user, writing it to the database.
-        final User user = userMapper.invoke(decodedJWT, scheme);
+        final User user = userMapper.apply(decodedJWT, scheme);
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         final var session = new Session();
         final var applicationId = decodedJWT.getClaim(OidcAuthServiceOperations.Claim.APPLICATION_ID.value).asString();

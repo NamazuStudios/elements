@@ -11,9 +11,7 @@ import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
 import jakarta.inject.Inject;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 

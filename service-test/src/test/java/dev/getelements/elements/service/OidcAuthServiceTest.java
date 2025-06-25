@@ -233,8 +233,6 @@ public class OidcAuthServiceTest {
         session.setApplication(application);
         session.setExpiry(new Date().getTime() + 10000);
 
-        final var verifyUser = oidcUserDao.findUser(activeUser.getId());
-
         return oidcSessionDao.create(session);
     }
 
