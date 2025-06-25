@@ -252,4 +252,5 @@ public class User implements Serializable {
                 ", linkedAccounts=" + linkedAccounts +
                 '}';
     }
+
 }

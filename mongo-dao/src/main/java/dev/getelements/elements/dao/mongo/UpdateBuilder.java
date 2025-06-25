@@ -9,6 +9,7 @@ import dev.morphia.query.Update;
 import dev.morphia.query.updates.UpdateOperator;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -17,6 +18,20 @@ import static java.util.Arrays.asList;
 public class UpdateBuilder {
 
     private final List<UpdateOperator> updates = new ArrayList<>();
+
+    /**
+     * Constructs an empty {@link UpdateBuilder}.
+     */
+    public UpdateBuilder() {}
+
+    /**
+     * Constructs an {@link UpdateBuilder} with the supplied updates.
+     *
+     * @param updates the updates to apply
+     */
+    public UpdateBuilder(final Collection<UpdateOperator> updates) {
+        this.updates.addAll(updates);
+    }
 
     /**
      * Appends an {@link UpdateOperator}.
@@ -83,7 +98,7 @@ public class UpdateBuilder {
      * @param query the {@link Query}
      * @param <ModelT> the model type to update
      * @return an instance of {@link Update} with the updates supplied by this builder
-     *
+     * @deprecated depends on deprecated code and is slated for removal
      * @throws IllegalStateException if no updates were applied.
      */
     public <ModelT> Update<ModelT> update(final Query<ModelT> query) {
@@ -98,6 +113,15 @@ public class UpdateBuilder {
 
         return query.update(first, remaining);
 
+    }
+
+    /**
+     * Builds a new {@link UpdateBuilder} based on this instance.
+     *
+     * @return a new {@link UpdateBuilder} instanc
+     */
+    public UpdateBuilder then() {
+        return new UpdateBuilder(updates);
     }
 
     /**

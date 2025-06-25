@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.model.application;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;

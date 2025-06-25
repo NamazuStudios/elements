@@ -73,7 +73,7 @@ public interface MatchDao {
     Matchmaker getDefaultMatchmaker();
 
     /**
-     * Delets a {@link Match}, specyifying the id of the {@link Match}.  Note that a {@link Match} may not be deleted
+     * Deletes a {@link Match}, specyifying the id of the {@link Match}.  Note that a {@link Match} may not be deleted
      * if it is already matched to an opponent.
      *
      * @param profileId the id of the {@link Profile} as determined by {@link Profile#getId()}
