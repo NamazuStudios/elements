@@ -9,21 +9,21 @@ import org.testng.annotations.Test;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_A;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_B;
+import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE;
 import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_1;
 import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_2;
 
 public class ElementLoaderTest {
 
-    private final URL elementUrl;
+    private final URL[] elementUrls;
 
     private final String elementPackage;
 
     private final MutableElementRegistry elementRegistry;
-
-    private final ClassLoader  baseClassLoader = ClassLoader.getSystemClassLoader();
 
     private static final TestArtifactRegistry testArtifactRegistry = new TestArtifactRegistry();
 
@@ -32,11 +32,12 @@ public class ElementLoaderTest {
         return new Object[] {
                 new ElementLoaderTest(
                         "dev.getelements.elements.sdk.test.element.a",
+                        GUICE,
                         VARIANT_A
-                )
-                ,
+                ),
                 new ElementLoaderTest(
                         "dev.getelements.elements.sdk.test.element.b",
+                        GUICE,
                         VARIANT_B
                 )
         };
@@ -44,10 +45,14 @@ public class ElementLoaderTest {
 
     public ElementLoaderTest(
             final String elementPackage,
+            final TestElementSpi elementSpi,
             final TestElementArtifact artifact) {
         this.elementPackage = elementPackage;
         this.elementRegistry = MutableElementRegistry.newDefaultInstance();
-        this.elementUrl = testArtifactRegistry.findJarUrl(artifact);
+        this.elementUrls = Stream.concat(
+                    testArtifactRegistry.findSpiUrls(elementSpi),
+                    Stream.of(testArtifactRegistry.findArtifactUrl(artifact))
+                ).toArray(URL[]::new);
     }
 
     @AfterClass
@@ -61,13 +66,12 @@ public class ElementLoaderTest {
 
     @Test
     public void testLoadThroughRegistry() {
-        final var attributes = Attributes.emptyAttributes();
 
-        final var elementUrls = new URL[] {elementUrl};
+        final var attributes = Attributes.emptyAttributes();
 
         final var loader = ElementLoaderFactory
                 .getDefault()
-                .getIsolatedLoader(attributes, baseClassLoader, cl -> new URLClassLoader(elementUrls, cl));
+                .getIsolatedLoader(attributes, cl -> new URLClassLoader(elementUrls, cl));
 
         element = elementRegistry.register(loader);
         elementName = element.getElementRecord().definition().name();

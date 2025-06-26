@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.*;
@@ -166,17 +167,27 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             final var urls = allClasspathUrls();
             final var attributes = loadAttributes();
-            final var preloadClassLoader = new URLClassLoader(urls, baseClassLoader);
 
-            final var elementLoader = ServiceLoader.load(ElementLoaderFactory.class, preloadClassLoader)
+            final var classLoaderName = String.format("%s={%s}",
+                    ELEMENT_PATH_ENV,
+                    Stream
+                        .of(urls)
+                        .map(URL::toString)
+                        .collect(Collectors.joining())
+            );
+
+            final var elementLoader = ServiceLoader.load(ElementLoaderFactory.class, baseClassLoader)
                     .stream()
                     .findFirst()
-                    .orElseThrow(() -> new SdkException("No SPI for " + ElementLoaderFactory.class.getName()))
+                    .orElseThrow(() -> new SdkException(
+                            "No SPI for " + ElementLoaderFactory.class.getName() + " " +
+                            "found in " + baseClassLoader.getName()
+                    ))
                     .get()
                     .getIsolatedLoader(
                             attributes,
                             baseClassLoader,
-                            cl -> new URLClassLoader(urls, cl),
+                            cl -> new URLClassLoader(classLoaderName, urls, cl),
                             edr -> registry
                                     .stream()
                                     .map(element -> element.getElementRecord().definition().name())

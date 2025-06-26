@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static java.nio.file.Files.isDirectory;
 
@@ -30,6 +31,30 @@ public class TestArtifactRegistry {
     private static final Path artifactRoot = determineArtifactRoot();
 
     private static final Pattern ARTIFACT_PATTERN = Pattern.compile("^(.+?)-(\\d+(?:\\.\\d+)*(?:-SNAPSHOT)?)\\.jar$");
+
+    /**
+     * Tests the artifact for the jar file name.
+     *
+     * @param spi the artifact
+     * @param jarFile the jar file name
+     * @return true if the artifact matches the jar file name
+     */
+    public static boolean isArtifact(final TestElementSpi spi, final String jarFile) {
+        return spi.getArtifacts()
+                .stream()
+                .anyMatch(artifactName -> isArtifact(artifactName, jarFile));
+    }
+
+    /**
+     * Tests the artifact for the jar file name.
+     *
+     * @param artifact the artifact
+     * @param jarFile the jar file name
+     * @return true if the artifact matches the jar file name
+     */
+    public static boolean isArtifact(final TestElementArtifact artifact, final String jarFile) {
+        return isArtifact(artifact.getArtifact(), jarFile);
+    }
 
     /**
      * Tests the jar file name for the artifact name.
@@ -73,17 +98,70 @@ public class TestArtifactRegistry {
     }
 
     /**
+     * Finds the SPI of the artifact with the artifact name.
+     *
+     * @param spi the SPI
+     * @return the URL of the artifact
+     * @throws java.util.NoSuchElementException if the artifact wasn't found
+     */
+    public Stream<URL> findSpiUrls(final TestElementSpi spi) {
+        return findSpiPaths(spi)
+                .map(p -> {
+                    try {
+                        return p.toUri().toURL();
+                    } catch (MalformedURLException e) {
+                        throw new SdkException(e);
+                    }
+                });
+    }
+
+    /**
+     * Finds the SPI of the artifact with the artifact name.
+     *
+     * @param spi the SPI
+     * @return the URL of the artifact
+     * @throws java.util.NoSuchElementException if the artifact wasn't found
+     */
+    public Stream<Path> findSpiPaths(final TestElementSpi spi) {
+        try {
+            return Files
+                    .list(artifactRoot)
+                    .filter(p -> isArtifact(spi, p.getFileName().toString()));
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        }
+    }
+
+    /**
      * Finds the URL of the artifact with the artifact name.
      *
      * @param artifact the artifact name
      * @return the URL of the artifact
      * @throws java.util.NoSuchElementException if the artifact wasn't found
      */
-    public URL findJarUrl(final TestElementArtifact artifact) {
+    public URL findArtifactUrl(final TestElementArtifact artifact) {
         try {
             return findArtifactPath(artifact).toUri().toURL();
-        } catch (MalformedURLException ex) {
-            throw new SdkException(ex);
+        } catch (MalformedURLException e) {
+            throw new SdkException(e);
+        }
+    }
+
+    /**
+     * Finds the Path of the artifact with the artifact name.
+     *
+     * @param artifact the artifact
+     * @return the Path of the artifact
+     * @throws java.util.NoSuchElementException if the artifact wasn't found
+     */
+    public Path findArtifactPath(final TestElementArtifact artifact) {
+        try {
+            return Files.list(artifactRoot)
+                    .filter(p -> isArtifact(artifact, p.getFileName().toString()))
+                    .findFirst()
+                    .get();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -99,24 +177,6 @@ public class TestArtifactRegistry {
             return Files.list(artifactRoot)
                     .filter(Files::isDirectory)
                     .filter(path -> path.getFileName().toString().equals(bundle.getDirectoryName()))
-                    .findFirst()
-                    .get();
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
-
-    /**
-     * Finds the Path of the artifact with the artifact name.
-     *
-     * @param artifact the artifact
-     * @return the Path of the artifact
-     * @throws java.util.NoSuchElementException if the artifact wasn't found
-     */
-    public Path findArtifactPath(final TestElementArtifact artifact) {
-        try {
-            return Files.list(artifactRoot)
-                    .filter(p -> isArtifact(artifact.getArtifact(), p.getFileName().toString()))
                     .findFirst()
                     .get();
         } catch (IOException ex) {

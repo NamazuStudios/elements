@@ -36,6 +36,7 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Other third-party dependencies -->
@@ -77,6 +78,11 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-spi-guice</artifactId>
             <scope>test</scope>
         </dependency>
 

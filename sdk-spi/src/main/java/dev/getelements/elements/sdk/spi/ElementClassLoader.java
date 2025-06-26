@@ -26,7 +26,10 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link ClassLoader} type which inspects classes at load time processing the visibility annotations provided by the
- * Elements' SDK. Such annotations include {@link ElementPrivate} and {@link ElementPublic}.
+ * Elements' SDK. Such annotations include {@link ElementPrivate} and {@link ElementPublic}. This implementation can
+ * be thought of as a fence between the Element's classpath and the parent classloader. Checking first the platform
+ * class loader, then the parent classloader, and finally the Element's classpath. When checking the parent classloader,
+ * it will also load classes consistent with the various visibility annotations and services.
  */
 public class ElementClassLoader extends ClassLoader {
 

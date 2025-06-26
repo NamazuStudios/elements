@@ -33,31 +33,35 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ClassLoader baseClassLoader,
             final ClassLoaderConstructor classLoaderCtor,
             final Predicate<ElementDefinitionRecord> selector) {
-        final var elementRecord = loadElementRecord(attributes, baseClassLoader, classLoaderCtor, selector);
-        final var elementLoader = newIsolatedLoader(baseClassLoader, elementRecord);
+
+        final var isolated = new ElementClassLoader(baseClassLoader);
+        final var classLoader = classLoaderCtor.apply(isolated);
+        final var elementDefinitionRecord = scanForModuleDefinition(classLoader, selector);
+
+        // Partially initializes the classloaders with the ElementDefinitionRecord
+        reflectionUtils.injectBeanProperties(isolated, elementDefinitionRecord);
+        reflectionUtils.injectBeanProperties(classLoader, elementDefinitionRecord);
+
+        final var elementRecord = loadElementRecord(attributes, classLoader, elementDefinitionRecord);
+
+        // Fully initializes the classloaders with the ElementDefinitionRecord
+        reflectionUtils.injectBeanProperties(isolated, elementRecord);
+        reflectionUtils.injectBeanProperties(classLoader, elementRecord);
+
+        final var elementLoader = newIsolatedLoader(classLoader, elementRecord);
         return reflectionUtils.injectBeanProperties(elementLoader, elementRecord);
+
     }
 
     private ElementRecord loadElementRecord(
             final Attributes attributes,
-            final ClassLoader baseClassLoader,
-            final ClassLoaderConstructor classLoaderCtor,
-            final Predicate<ElementDefinitionRecord> selector) {
+            final ClassLoader classLoader,
+            final ElementDefinitionRecord elementDefinitionRecord) {
 
-        // We first create a classloader for the purposes of scanning for annotations and building the element
-        // definitions.
-        final var isolatedElementClassLoader = new ElementClassLoader(baseClassLoader);
-        final var elementClassLoader = classLoaderCtor.apply(isolatedElementClassLoader);
-
-        // The Module Definition Records and Services
-        final var elementDefinitionRecord = scanForModuleDefinition(elementClassLoader, selector);
-        reflectionUtils.injectBeanProperties(elementClassLoader, elementDefinitionRecord);
-        reflectionUtils.injectBeanProperties(isolatedElementClassLoader, elementDefinitionRecord);
-
-        final var elementServices = scanForElementServices(elementClassLoader, elementDefinitionRecord);
-        final var elementProducedEvents = scanForProducedEvents(elementClassLoader, elementDefinitionRecord);
-        final var elementConsumedEvents = scanForConsumedEvents(elementClassLoader, elementDefinitionRecord, elementServices);
-        final var elementDefaultAttributes = scanForDefaultAttributes(elementClassLoader, elementDefinitionRecord);
+        final var elementServices = scanForElementServices(classLoader, elementDefinitionRecord);
+        final var elementProducedEvents = scanForProducedEvents(classLoader, elementDefinitionRecord);
+        final var elementConsumedEvents = scanForConsumedEvents(classLoader, elementDefinitionRecord, elementServices);
+        final var elementDefaultAttributes = scanForDefaultAttributes(classLoader, elementDefinitionRecord);
         final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
         // The Module Records and Services
@@ -67,7 +71,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .build()
                 .immutableCopy();
 
-        final var elementRecord = new ElementRecord(
+        return new ElementRecord(
                 ElementType.ISOLATED_CLASSPATH,
                 elementDefinitionRecord,
                 elementServices,
@@ -76,14 +80,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
-                elementClassLoader
+                classLoader
         );
-
-        // Finally, initializes the isolated classloader with the ElementRecord
-        reflectionUtils.injectBeanProperties(elementClassLoader, elementRecord);
-        reflectionUtils.injectBeanProperties(isolatedElementClassLoader, elementRecord);
-
-        return elementRecord;
 
     }
 

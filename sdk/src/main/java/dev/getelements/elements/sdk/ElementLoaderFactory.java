@@ -13,7 +13,8 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
- * The {@link ElementLoader} factory. This loads an instance of a {@link Element} on-demand.
+ * The {@link ElementLoader} factory. This loads an instance of a {@link Element} on-demand. When loading an
+ * {@link ElementType#ISOLATED_CLASSPATH} {@link Element}, must supply a {@link ClassLoader} which is parented to
  **/
 public interface ElementLoaderFactory {
 
@@ -30,8 +31,33 @@ public interface ElementLoaderFactory {
      * </p>
      *
      * @param attributes the attributes to use
-     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
-     *                        {@link ClassLoader} instance.
+     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @return the {@link ElementLoader}
+     */
+    default ElementLoader getIsolatedLoader(
+            Attributes attributes,
+            ClassLoaderConstructor classLoaderCtor) {
+        return getIsolatedLoader(
+                attributes,
+                getClass().getClassLoader(),
+                classLoaderCtor,
+                r -> true);
+    }
+
+    /**
+     * <p>
+     * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
+     * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
+     * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
+     * exactly one {@link ElementDefinition}.
+     * </p>
+     *
+     * <p>
+     * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
+     * </p>
+     *
+     * @param attributes the attributes to use
+     * @param baseClassLoader the base {@link ClassLoader}
      * @param classLoaderCtor the {@link ClassLoader} classloader
      * @return the {@link ElementLoader}
      */
@@ -51,7 +77,35 @@ public interface ElementLoaderFactory {
      * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
      * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
      * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
-     * exactly one {@link ElementDefinition}.
+     * exactly one {@link ElementDefinition} matched by the supplied {@link Predicate}.
+     * </p>
+     *
+     * <p>
+     * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
+     * </p>
+     *
+     * @param attributes the attributes to use
+     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
+     * @return the {@link ElementLoader}
+     */
+    default ElementLoader getIsolatedLoader(
+            Attributes attributes,
+            ClassLoaderConstructor classLoaderCtor,
+            Predicate<ElementDefinitionRecord> selector) {
+        return getIsolatedLoader(
+                attributes,
+                getClass().getClassLoader(),
+                classLoaderCtor,
+                selector);
+    }
+
+    /**
+     * <p>
+     * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
+     * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
+     * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
+     * exactly one {@link ElementDefinition} with the supplied {@link Predicate}.
      * </p>
      *
      * <p>
@@ -89,6 +143,26 @@ public interface ElementLoaderFactory {
     ElementLoader getSharedLoader(
             ElementRecord elementRecord,
             ServiceLocator serviceLocator);
+
+    /**
+     * Finds the {@link Element} name, this will find the {@link ElementRecord} associated with it, throwing an
+     * exception  if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared
+     * elements.
+     *
+     * @param classLoader
+     * @param attributes  the attributes to use
+     * @param selector    a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
+     * @return the {@link ElementRecord}
+     */
+    default Optional<ElementDefinitionRecord> findElementDefinitionRecord(
+            Attributes attributes,
+            Predicate<ElementDefinitionRecord> selector) {
+        return findElementDefinitionRecord(
+                getClass().getClassLoader(),
+                attributes,
+                selector
+        );
+    }
 
     /**
      * Finds the {@link Element} name, this will find the {@link ElementRecord} associated with it, throwing an

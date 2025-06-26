@@ -85,10 +85,8 @@ class LocalApplicationElementService implements ApplicationElementService {
 
     private ElementLoader doLoadElement(final LocalApplicationElementRecord lar) {
 
-        final var preloadClassLoader = new DelegatingPreloadClassLoader();
-
         final var elf = ServiceLoader
-                .load(ElementLoaderFactory.class, preloadClassLoader)
+                .load(ElementLoaderFactory.class)
                 .findFirst().orElseThrow(() -> new SdkException(
                         "No SPI (Service Provider Implementation) for " +
                         ElementLoaderFactory.class.getName())
@@ -98,7 +96,6 @@ class LocalApplicationElementService implements ApplicationElementService {
 
         final var elementDefinitionRecord = elf
             .findElementDefinitionRecord(
-                preloadClassLoader,
                 lar.attributes(),
                 edr -> edr.name().equals(lar.elementName())
             )
@@ -106,7 +103,6 @@ class LocalApplicationElementService implements ApplicationElementService {
 
         return elf.getIsolatedLoader(
                         lar.attributes(),
-                        preloadClassLoader,
                         parentClassLoader -> {
                             final var elementClassLoader = getClassLoaderConstructor().apply(parentClassLoader);
                             elementReflectionUtils.injectBeanProperties(elementClassLoader, elementDefinitionRecord);
