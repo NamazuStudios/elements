@@ -30,10 +30,6 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-spi-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
             <artifactId>service</artifactId>
         </dependency>
         <dependency>
@@ -163,6 +159,10 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

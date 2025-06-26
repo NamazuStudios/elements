@@ -1,9 +1,9 @@
-package dev.getelements.elements.sdk.guice.record;
+package dev.getelements.elements.sdk.spi.guice.record;
 
 import com.google.inject.Module;
 import dev.getelements.elements.sdk.exception.SdkException;
-import dev.getelements.elements.sdk.guice.annotations.GuiceElementModule;
-import dev.getelements.elements.sdk.guice.annotations.GuiceElementModules;
+import dev.getelements.elements.sdk.spi.guice.annotations.GuiceElementModule;
+import dev.getelements.elements.sdk.spi.guice.annotations.GuiceElementModules;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.stream.Stream;

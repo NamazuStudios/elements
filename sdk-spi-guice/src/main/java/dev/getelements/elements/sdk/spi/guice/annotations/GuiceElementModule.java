@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.guice.annotations;
+package dev.getelements.elements.sdk.spi.guice.annotations;
 
 import com.google.inject.Module;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;

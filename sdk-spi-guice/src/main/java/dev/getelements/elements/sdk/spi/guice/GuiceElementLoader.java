@@ -27,6 +27,10 @@ import static dev.getelements.elements.sdk.ElementType.ISOLATED_CLASSPATH;
  */
 public class GuiceElementLoader implements ElementLoader {
 
+    static {
+        System.out.println("Loadded GuiceElementLoader");
+    }
+
     private ElementRecord elementRecord;
 
     @Override

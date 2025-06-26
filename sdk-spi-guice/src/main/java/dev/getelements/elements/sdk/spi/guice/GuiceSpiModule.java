@@ -5,7 +5,7 @@ import com.google.inject.PrivateModule;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation.DefaultImplementation;
-import dev.getelements.elements.sdk.guice.record.GuiceElementModuleRecord;
+import dev.getelements.elements.sdk.spi.guice.record.GuiceElementModuleRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
 import jakarta.inject.Provider;

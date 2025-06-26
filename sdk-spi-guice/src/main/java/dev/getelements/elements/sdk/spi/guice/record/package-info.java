@@ -1,4 +1,4 @@
 @ElementPublic
-package dev.getelements.elements.sdk.guice.record;
+package dev.getelements.elements.sdk.spi.guice.record;
 
 import dev.getelements.elements.sdk.annotation.ElementPublic;

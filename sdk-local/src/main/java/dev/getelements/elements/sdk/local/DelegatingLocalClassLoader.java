@@ -52,6 +52,17 @@ public class DelegatingLocalClassLoader extends ClassLoader {
         if (aClass.isAnnotationPresent(ElementLocal.class)) {
             return getParent().loadClass(name);
         } else if (getElementDefinitionRecord().isPartOfElement(aClass)) {
+
+            aClass = doLoadClass(name);
+            if (resolve)
+                resolveClass(aClass);
+
+        // TODO Replace this with a proper SPI Check instead of the hacks below
+        } else if (aClass.getPackageName().startsWith("dev.getelements.elements.sdk.spi")) {
+            aClass = doLoadClass(name);
+            if (resolve)
+                resolveClass(aClass);
+        } else if (aClass.getPackageName().startsWith("com.google.inject")) {
             aClass = doLoadClass(name);
             if (resolve)
                 resolveClass(aClass);

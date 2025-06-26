@@ -31,29 +31,25 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-spi-guice</artifactId>
+            <artifactId>jetty-ws</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>jetty-ws</artifactId>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
 
         <!-- Other third-party dependencies -->
-        <!-- These are all flagged as provided and must be included in client projects, explicitly -->
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.websocket</groupId>
             <artifactId>jakarta.websocket-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Test Dependencies -->

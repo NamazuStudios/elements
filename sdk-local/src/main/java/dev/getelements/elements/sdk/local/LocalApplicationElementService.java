@@ -19,10 +19,7 @@ import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -88,13 +85,20 @@ class LocalApplicationElementService implements ApplicationElementService {
 
     private ElementLoader doLoadElement(final LocalApplicationElementRecord lar) {
 
-        final var elf = ElementLoaderFactory.getDefault();
-        final var systemClassLoader = getSystemClassLoader();
+        final var preloadClassLoader = new DelegatingPreloadClassLoader();
+
+        final var elf = ServiceLoader
+                .load(ElementLoaderFactory.class, preloadClassLoader)
+                .findFirst().orElseThrow(() -> new SdkException(
+                        "No SPI (Service Provider Implementation) for " +
+                        ElementLoaderFactory.class.getName())
+                );
+
         final var elementReflectionUtils = ElementReflectionUtils.getInstance();
 
         final var elementDefinitionRecord = elf
             .findElementDefinitionRecord(
-                systemClassLoader,
+                preloadClassLoader,
                 lar.attributes(),
                 edr -> edr.name().equals(lar.elementName())
             )
@@ -102,7 +106,7 @@ class LocalApplicationElementService implements ApplicationElementService {
 
         return elf.getIsolatedLoader(
                         lar.attributes(),
-                        systemClassLoader,
+                        preloadClassLoader,
                         parentClassLoader -> {
                             final var elementClassLoader = getClassLoaderConstructor().apply(parentClassLoader);
                             elementReflectionUtils.injectBeanProperties(elementClassLoader, elementDefinitionRecord);
