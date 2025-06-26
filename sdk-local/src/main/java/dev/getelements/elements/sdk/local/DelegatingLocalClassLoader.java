@@ -33,7 +33,7 @@ public class DelegatingLocalClassLoader extends ClassLoader {
         return elementDefinitionRecord;
     }
 
-    public void setElementDefinitionRecord(ElementDefinitionRecord elementDefinitionRecord) {
+    public void setElementDefinitionRecord(final ElementDefinitionRecord elementDefinitionRecord) {
         this.elementDefinitionRecord = elementDefinitionRecord;
     }
 
@@ -57,16 +57,17 @@ public class DelegatingLocalClassLoader extends ClassLoader {
             if (resolve)
                 resolveClass(aClass);
 
-        // TODO Replace this with a proper SPI Check instead of the hacks below
-        } else if (aClass.getPackageName().startsWith("dev.getelements.elements.sdk.spi")) {
-            aClass = doLoadClass(name);
-            if (resolve)
-                resolveClass(aClass);
-        } else if (aClass.getPackageName().startsWith("com.google.inject")) {
-            aClass = doLoadClass(name);
-            if (resolve)
-                resolveClass(aClass);
         }
+        // TODO Replace this with a proper SPI Check instead of the hacks below
+//        else if (aClass.getPackageName().startsWith("dev.getelements.elements.sdk.spi")) {
+//            aClass = doLoadClass(name);
+//            if (resolve)
+//                resolveClass(aClass);
+//        } else if (aClass.getPackageName().startsWith("com.google.inject")) {
+//            aClass = doLoadClass(name);
+//            if (resolve)
+//                resolveClass(aClass);
+//        }
 
         return aClass;
 
