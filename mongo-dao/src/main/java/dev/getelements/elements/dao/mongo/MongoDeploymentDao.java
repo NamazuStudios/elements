@@ -17,6 +17,8 @@ import dev.morphia.query.FindOptions;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
+
+import java.sql.Timestamp;
 import java.util.Date;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -127,6 +129,9 @@ public class MongoDeploymentDao implements DeploymentDao {
     @Override
     public Deployment createDeployment(Deployment deployment) {
         final var mongoDeployment = getBeanMapper().map(deployment, MongoDeployment.class);
+        final var nowDate = new Date();
+        final var timestamp = new Timestamp(nowDate.getTime());
+        mongoDeployment.setCreatedAt(timestamp);
 
         try {
             getDatastore().insert(mongoDeployment);
