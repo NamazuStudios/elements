@@ -1,8 +1,10 @@
 package dev.getelements.elements.dao.mongo;
 
+import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.sdk.dao.DeploymentDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.MongoDeployment;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.cdnserve.DeploymentNotFoundException;
@@ -124,35 +126,15 @@ public class MongoDeploymentDao implements DeploymentDao {
 
     @Override
     public Deployment createDeployment(Deployment deployment) {
+        final var mongoDeployment = getBeanMapper().map(deployment, MongoDeployment.class);
 
-        final var application = getMongoApplicationDao().getActiveMongoApplication(deployment.getApplication().getId());
-
-        final var query = getDatastore().find(MongoDeployment.class);
-
-        final Date nowDate = new Date();
-        final var builder = new UpdateBuilder();
-
-        builder.with(
-            set("createdAt", nowDate),
-            set("application", application),
-            set("version", deployment.getVersion()),
-            set("revision", deployment.getRevision())
-        );
-
-        final var opts = new ModifyOptions().upsert(true).returnDocument(AFTER);
-        final var result = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
-
-        if (result == null) {
-
-            final var msg = format("Deployment version: %s, for application: %s, not found",
-                    deployment.getVersion(),
-                    application.getName());
-
-            throw new DeploymentNotFoundException(msg);
-
+        try {
+            getDatastore().insert(mongoDeployment);
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
         }
 
-        return getBeanMapper().map(result, Deployment.class);
+        return getBeanMapper().map(mongoDeployment, Deployment.class);
 
     }
 

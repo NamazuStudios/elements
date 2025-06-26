@@ -6,7 +6,7 @@ import org.bson.types.ObjectId;
 
 import java.sql.Timestamp;
 
-@Entity("deployment")
+@Entity(value = "deployment", useDiscriminator = false)
 @Indexes(
     @Index(
         fields = { @Field("application"), @Field("version") },
@@ -24,7 +24,6 @@ public class MongoDeployment {
     @Property
     private String revision;
 
-    @Indexed
     @Property
     private Timestamp createdAt;
 

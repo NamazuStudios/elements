@@ -15,6 +15,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.File;
 import java.nio.file.Paths;
 
 import static dev.getelements.elements.sdk.service.Constants.CDN_FILE_DIRECTORY;
@@ -71,7 +72,7 @@ public class StaticContentServlet extends HttpServlet {
 
         final var applicationBase = Paths.get(
                 getContentDirectory(),
-                applicationOptional.get().getId()
+                applicationOptional.get().getName()
         ).toRealPath();
 
         final var components = staticContentPath
@@ -82,7 +83,7 @@ public class StaticContentServlet extends HttpServlet {
                 .stream()
                 .collect(joining(applicationBase.getFileSystem().getSeparator()));
 
-        final var applicationFilePath = Paths.get(relativePathString).toRealPath();
+        final var applicationFilePath = Paths.get(applicationBase.toString() + File.separatorChar + relativePathString).toRealPath();
 
         if (applicationFilePath.startsWith(applicationBase)) {
             try (var fis = new FileInputStream(applicationFilePath.toFile());
@@ -107,6 +108,7 @@ public class StaticContentServlet extends HttpServlet {
         return applicationDao;
     }
 
+    @Inject
     public void setApplicationDao(ApplicationDao applicationDao) {
         this.applicationDao = applicationDao;
     }
