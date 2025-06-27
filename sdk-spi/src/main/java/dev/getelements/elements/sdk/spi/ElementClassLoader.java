@@ -40,29 +40,53 @@ public class ElementClassLoader extends ClassLoader {
             "text://dev.getelements.elements.sdk.spi.ElementScopedElementRegistrySupplier"
     );
 
-    private static final List<Predicate<Class<?>>> BUILTIN_TYPES_WHITELIST = ServiceLoader
-            .load(PermittedTypes.class)
-            .stream()
-            .map(ServiceLoader.Provider::get)
-            .collect(Collectors.toUnmodifiableList());
-
-    private static final List<Predicate<Package>> BUILTIN_PACKAGES_WHITELIST = ServiceLoader
-            .load(PermittedPackages.class)
-            .stream()
-            .map(ServiceLoader.Provider::get)
-            .collect(Collectors.toUnmodifiableList());
-
     private ElementRecord elementRecord;
 
     private final ClassLoader delegate;
 
+    private final List<Predicate<Class<?>>> permittedTypes;
+
+    private final List<Predicate<Package>> permittedPackages;
+
+    /**
+     * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
+     * loader will be the sources for classes that are not found in this class loader. This is typically the system
+     * class path and the Element's class path.
+     *
+     * This constructor uses the bootstrap as the parent class loader.
+     *
+     * @param delegate the delegate class loader to use for loading classes that are not found in this class loader.
+     */
     public ElementClassLoader(final ClassLoader delegate) {
         this(delegate, null);
     }
 
+    /**
+     * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
+     * loader will be the sources for classes that are not found in this class loader. This is typically the system
+     * class path and the Element's class path.
+     *
+     * @param delegate the delegate class loader to use for loading classes that are not found in this class loader.
+     * @param parent the parent class loader to use for loading classes that are not found in this class loader.
+     */
     public ElementClassLoader(final ClassLoader delegate, final ClassLoader parent) {
+
         super("Element Class Loader", parent);
+
         this.delegate = requireNonNull(delegate, "delegate");
+
+        permittedTypes = ServiceLoader
+                .load(PermittedTypes.class, delegate)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .collect(Collectors.toUnmodifiableList());
+
+        permittedPackages = ServiceLoader
+                .load(PermittedPackages.class, delegate)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .collect(Collectors.toUnmodifiableList());
+
     }
 
     public ElementRecord getElementRecord() {
@@ -112,11 +136,11 @@ public class ElementClassLoader extends ClassLoader {
         // make configurable based on application attributes later, but we'll stitck to hardcoded values we have for
         // now. We will likely need to extend more.
 
-        if (BUILTIN_TYPES_WHITELIST.stream().anyMatch(t -> t.test(aClass))) {
+        if (permittedTypes.stream().anyMatch(t -> t.test(aClass))) {
             return aClass;
         }
 
-        if (BUILTIN_PACKAGES_WHITELIST.stream().anyMatch(p -> p.test(aClassPackage))) {
+        if (permittedPackages.stream().anyMatch(p -> p.test(aClassPackage))) {
             return aClass;
         }
 

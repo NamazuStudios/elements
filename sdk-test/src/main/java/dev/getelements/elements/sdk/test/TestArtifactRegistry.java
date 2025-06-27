@@ -35,19 +35,6 @@ public class TestArtifactRegistry {
     /**
      * Tests the artifact for the jar file name.
      *
-     * @param spi the artifact
-     * @param jarFile the jar file name
-     * @return true if the artifact matches the jar file name
-     */
-    public static boolean isArtifact(final TestElementSpi spi, final String jarFile) {
-        return spi.getArtifacts()
-                .stream()
-                .anyMatch(artifactName -> isArtifact(artifactName, jarFile));
-    }
-
-    /**
-     * Tests the artifact for the jar file name.
-     *
      * @param artifact the artifact
      * @param jarFile the jar file name
      * @return true if the artifact matches the jar file name
@@ -124,9 +111,7 @@ public class TestArtifactRegistry {
      */
     public Stream<Path> findSpiPaths(final TestElementSpi spi) {
         try {
-            return Files
-                    .list(artifactRoot)
-                    .filter(p -> isArtifact(spi, p.getFileName().toString()));
+            return Files.list(artifactRoot.resolve(spi.getBase()));
         } catch (IOException ex) {
             throw new SdkException(ex);
         }
@@ -214,6 +199,23 @@ public class TestArtifactRegistry {
             throw new UncheckedIOException(e);
         }
 
+    }
+
+    /**
+     * Copies the specified artifact to the path. If the destination path is a directory it will be copied into
+     * that directory. Otherwise, it will be copied to the destination exactly as it is.
+     *
+     * @param artifact the artifact name
+     * @param destination the artifact destination
+     * @throws java.util.NoSuchElementException if the artifact wasn't found
+     */
+    public void copySpiTo(final TestElementSpi spi, final Path destination) throws IOException {
+        for (final var source : findSpiPaths(spi).toList()) {
+            Files.copy(source, isDirectory(destination)
+                    ? destination.resolve(source.getFileName())
+                    : destination
+            );
+        }
     }
 
     /**

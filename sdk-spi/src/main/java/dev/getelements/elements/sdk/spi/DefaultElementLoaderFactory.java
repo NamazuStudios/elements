@@ -7,15 +7,12 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.*;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
 import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
-import io.github.classgraph.FieldInfo;
-import io.github.classgraph.MethodInfo;
+import io.github.classgraph.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-import java.util.Optional;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -24,6 +21,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public class DefaultElementLoaderFactory implements ElementLoaderFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultElementLoaderFactory.class);
 
     private final ElementReflectionUtils reflectionUtils = new ElementReflectionUtils();
 
@@ -62,6 +61,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementProducedEvents = scanForProducedEvents(classLoader, elementDefinitionRecord);
         final var elementConsumedEvents = scanForConsumedEvents(classLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(classLoader, elementDefinitionRecord);
+        final var elementSpiImplementations = scanForSpiImplementations(classLoader);
         final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
         // The Module Records and Services
@@ -80,7 +80,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
-                classLoader
+                classLoader,
+                elementSpiImplementations
         );
 
     }
@@ -170,7 +171,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
-                localClassLoader
+                localClassLoader,
+                List.of()
         );
 
     }
@@ -219,6 +221,67 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         }
 
     }
+
+    private List<ElementSpiImplementationRecord> scanForSpiImplementations(final ClassLoader classLoader) {
+
+        final var cg = new ClassGraph()
+                .overrideClassLoaders(classLoader)
+                .enableClassInfo()
+                .enableAnnotationInfo();
+
+        try (final var result = cg.scan()) {
+            return result.getClassesWithAnnotation(ElementSpiImplementation.class)
+                    .stream()
+                    .map(ClassInfo::loadClass)
+                    .map(ElementSpiImplementationRecord::from)
+                    .toList();
+        }
+
+    }
+
+//    private ElementSpiImplementationRecord findTransientDependencies(
+//            final ClassInfo spiImplementationClassInfo) {
+//
+//        final var visited = new HashSet<String>();
+//        final var dependencies = new HashSet<Class<?>>();
+//        final var toProcess = new ArrayDeque<ClassInfo>();
+//        toProcess.add(spiImplementationClassInfo);
+//
+//        while (!toProcess.isEmpty()) {
+//
+//            final var current = toProcess.poll();
+//
+//            if (!visited.add(current.getName()))
+//                continue;
+//
+//            for (final var dep : current.getClassDependencies()) {
+//
+//                if (visited.contains(dep.getName()))
+//                    continue;
+//
+//                try {
+//                    dependencies.add(dep.loadClass());
+//                } catch (Exception ex) {
+//                    logger.warn(
+//                            "Could not load class dependency: {} from SPI implementation: {}",
+//                            dep.getName(),
+//                            spiImplementationClassInfo.getName(),
+//                            ex
+//                    );
+//                }
+//
+//                toProcess.add(dep);
+//
+//            }
+//
+//        }
+//
+//        return new ElementSpiImplementationRecord(
+//                spiImplementationClassInfo.loadClass(),
+//                dependencies
+//        );
+//
+//    }
 
     private ElementDefinitionRecord scanForModuleDefinition(
             final ClassLoader classLoader,

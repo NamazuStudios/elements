@@ -27,13 +27,26 @@ public record ElementRecord(
         List<ElementDependencyRecord> dependencies,
         Attributes attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes,
-        ClassLoader classLoader) {
+        ClassLoader classLoader,
+        List<ElementSpiImplementationRecord> spis) {
 
     public ElementRecord {
         services = List.copyOf(services);
         consumedEvents = List.copyOf(consumedEvents);
         defaultAttributes = List.copyOf(defaultAttributes);
         dependencies = List.copyOf(dependencies);
+    }
+
+    /**
+     * Checks if the supplied {@link Class} is part of the {@link Element} attached to this record.
+     *
+     * @param aClass a {@link Class}
+     * @return true if part of this {@link Element}, false otherwise
+     */
+    public boolean isPartOfElement(final Class<?> aClass) {
+        return definition().isPartOfElement(aClass) || spis()
+                .stream()
+                .anyMatch(spi -> spi.isPartOfElement(aClass));
     }
 
     /**

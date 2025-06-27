@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.test;
 
-import java.util.List;
+import java.nio.file.Path;
 
 /**
  * Enumerates the SPI (Service Provider Interface) types used in testing elements. Each SPI type corresponds to a set of
@@ -11,26 +11,21 @@ public enum TestElementSpi {
     /**
      * The base SPI type, which includes the core SDK SPI artifact.
      */
-    BASE("sdk-spi"),
+    BASE,
 
     /**
      * The SPI type that uses Guice for dependency injection.
      */
-    GUICE("sdk-spi", "sdk-spi-guice");
+    GUICE_7_0_X;
 
-    private final List<String> artifacts;
-
-    TestElementSpi(final String ... artifacts) {
-        this.artifacts = List.of(artifacts);
-    }
+    private final Path base = Path.of("SPI", name());
 
     /**
-     * Gets all the artifacts associated with this SPI type.
-     *
-     * @return the artifacts
+     * Gets the base path for this SPI type. This is the directory where the artifacts for this SPI type are located.
+     * @return the base path
      */
-    public List<String> getArtifacts() {
-        return artifacts;
+    public Path getBase() {
+        return base;
     }
 
 }

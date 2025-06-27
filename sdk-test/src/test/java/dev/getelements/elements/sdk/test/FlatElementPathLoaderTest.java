@@ -1,11 +1,11 @@
 package dev.getelements.elements.sdk.test;
 
 import dev.getelements.elements.sdk.ElementPathLoader;
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -13,7 +13,9 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.CLASSPATH_DIR;
+import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
+import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
 import static java.lang.ClassLoader.getSystemClassLoader;
 import static org.testng.Assert.assertEquals;
@@ -31,13 +33,29 @@ public class FlatElementPathLoaderTest {
 
     private final Path variantBDirectory = baseDirectory.resolve("variant_b");
 
+    private final TestElementSpi elementSpi;
+
+    @Factory
+    public static Object[] getTestFixtures() {
+        return new Object[] { new FlatElementPathLoaderTest(GUICE_7_0_X)};
+    }
+
+    public FlatElementPathLoaderTest(final TestElementSpi elementSpi) {
+        this.elementSpi = elementSpi;
+    }
+
     @BeforeClass
     public void arrangeElementsInDirectory() throws IOException {
         layoutSkeletonElement(baseDirectory, BASE.getAttributes());
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
+
+        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(LIB_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(LIB_DIR));
+
         testArtifactRegistry.unpackArtifact(VARIANT_A, variantADirectory.resolve(CLASSPATH_DIR));
         testArtifactRegistry.unpackArtifact(VARIANT_B, variantBDirectory.resolve(CLASSPATH_DIR));
+
     }
 
     @Test

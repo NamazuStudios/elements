@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_A;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_B;
-import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE;
+import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_1;
 import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_2;
 
@@ -32,12 +32,12 @@ public class ElementLoaderTest {
         return new Object[] {
                 new ElementLoaderTest(
                         "dev.getelements.elements.sdk.test.element.a",
-                        GUICE,
+                        GUICE_7_0_X,
                         VARIANT_A
                 ),
                 new ElementLoaderTest(
                         "dev.getelements.elements.sdk.test.element.b",
-                        GUICE,
+                        GUICE_7_0_X,
                         VARIANT_B
                 )
         };

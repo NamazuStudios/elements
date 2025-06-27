@@ -1,10 +1,8 @@
-package dev.getelements.elements.common.app;
-
-import dev.getelements.elements.sdk.PermittedPackages;
+package dev.getelements.elements.sdk;
 
 import java.util.List;
 
-public class CommonApplicationPermittedPackages implements PermittedPackages {
+public class LoggingPermittedPackages implements PermittedPackages {
 
     private static final List<String> PERMITTED_PACKAGES = List.of(
             "org.slf4j",
