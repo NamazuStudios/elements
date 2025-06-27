@@ -12,10 +12,7 @@ import dev.getelements.elements.sdk.record.ElementRecord;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -70,7 +67,6 @@ public class ElementClassLoader extends ClassLoader {
      * @param parent the parent class loader to use for loading classes that are not found in this class loader.
      */
     public ElementClassLoader(final ClassLoader delegate, final ClassLoader parent) {
-
         super("Element Class Loader", parent);
 
         this.delegate = requireNonNull(delegate, "delegate");
@@ -98,21 +94,44 @@ public class ElementClassLoader extends ClassLoader {
     }
 
     @Override
-    protected URL findResource(String name) {
+    protected URL findResource(final String name) {
         final var url = BUILTIN_RESOURCES.getOrDefault(name, null);
         return url == null ? null : toUrl(url);
     }
 
     @Override
     protected Enumeration<URL> findResources(final String name) throws IOException {
+
         final var url = BUILTIN_RESOURCES.getOrDefault(name, null);
-        return url == null ? toUrls() : toUrls(url);
+        final var delegateUrls = delegate.getResources(name);
+
+        final var all = new ArrayList<URL>();
+
+        if (url != null) {
+            all.add(toUrl(url));
+        }
+
+        if (delegateUrls != null) {
+            delegateUrls.asIterator().forEachRemaining(all::add);
+        }
+
+        return Collections.enumeration(all);
+
     }
 
     @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         try {
-            return super.loadClass(name, resolve);
+
+            final var aClass =  super.loadClass(name, resolve);
+
+            if (aClass.getAnnotation(ElementLocal.class) != null) {
+                final var aLocalClass = findLoadedClass(name);
+                return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
+            }
+
+            return aClass;
+
         } catch (final ClassNotFoundException e) {
             final var delegateClass = delegate.loadClass(name);
             return processVisibilityAnnotations(delegateClass);

@@ -2,6 +2,8 @@ package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.sdk.annotation.ElementLocal;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
+import dev.getelements.elements.sdk.record.ElementSpiImplementationRecord;
+import dev.getelements.elements.sdk.record.ElementSpiImplementationsRecord;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,6 +25,8 @@ public class DelegatingLocalClassLoader extends ClassLoader {
 
     private ElementDefinitionRecord elementDefinitionRecord;
 
+    private ElementSpiImplementationsRecord elementSpiImplementationsRecord;
+
     private final ClassLoader delegate = ClassLoader.getSystemClassLoader();
 
     public DelegatingLocalClassLoader(final ClassLoader parent) {
@@ -37,8 +41,35 @@ public class DelegatingLocalClassLoader extends ClassLoader {
         this.elementDefinitionRecord = elementDefinitionRecord;
     }
 
+    public ElementSpiImplementationsRecord getElementSpiImplementationsRecord() {
+        return elementSpiImplementationsRecord;
+    }
+
+    public void setElementSpiImplementationsRecord(ElementSpiImplementationsRecord elementSpiImplementationsRecord) {
+        this.elementSpiImplementationsRecord = elementSpiImplementationsRecord;
+    }
+
     @Override
-    public Class<?> loadClass(String name) throws ClassNotFoundException {
+    protected Class<?> loadClass(final String name, boolean resolve) throws ClassNotFoundException {
+
+        if (getElementSpiImplementationsRecord() == null) {
+            // Without an ElementRecord, we can't properly filter out system classes from the SPIs provided by the
+            // Element. Therefore, we throw this exception. The class loading process will later replace the value
+            throw new IllegalStateException("No element record found.");
+        }
+
+        Class<?> aClass = delegate.loadClass(name);
+
+        if (getElementSpiImplementationsRecord().isPathOfElement(aClass)) {
+
+            aClass = doLoadClass(name);
+
+            if (resolve)
+                resolveClass(aClass);
+
+            return aClass;
+
+        }
 
         if (getElementDefinitionRecord() == null) {
             // Without an ElementRecord, we can't properly filter out system classes from the classes
@@ -47,59 +78,20 @@ public class DelegatingLocalClassLoader extends ClassLoader {
             throw new IllegalStateException("No element record found.");
         }
 
-        Class<?> aClass = delegate.loadClass(name);
-
         if (aClass.isAnnotationPresent(ElementLocal.class)) {
             return getParent().loadClass(name);
         } else if (getElementDefinitionRecord().isPartOfElement(aClass)) {
+
             aClass = doLoadClass(name);
-        }
-        // TODO Replace this with a proper SPI Check instead of the hacks below
-        else if (aClass.getPackageName().startsWith("dev.getelements.elements.sdk.spi")) {
-            aClass = doLoadClass(name);
-        } else if (aClass.getPackageName().startsWith("com.google.inject")) {
-            aClass = doLoadClass(name);
+
+            if (resolve)
+                resolveClass(aClass);
+
         }
 
         return aClass;
 
     }
-
-//    @Override
-//    protected Class<?> loadClass(final String name, boolean resolve) throws ClassNotFoundException {
-//
-//        if (getElementDefinitionRecord() == null) {
-//            // Without an ElementRecord, we can't properly filter out system classes from the classes
-//            // specific to the Element. Therefore, we throw this exception. The class loading process
-//            // will later replace the value set to this classloader as not to avoid class
-//            throw new IllegalStateException("No element record found.");
-//        }
-//
-//        Class<?> aClass = delegate.loadClass(name);
-//
-//        if (aClass.isAnnotationPresent(ElementLocal.class)) {
-//            return getParent().loadClass(name);
-//        } else if (getElementDefinitionRecord().isPartOfElement(aClass)) {
-//
-//            aClass = doLoadClass(name);
-//            if (resolve)
-//                resolveClass(aClass);
-//
-//        }
-//        // TODO Replace this with a proper SPI Check instead of the hacks below
-////        else if (aClass.getPackageName().startsWith("dev.getelements.elements.sdk.spi")) {
-////            aClass = doLoadClass(name);
-////            if (resolve)
-////                resolveClass(aClass);
-////        } else if (aClass.getPackageName().startsWith("com.google.inject")) {
-////            aClass = doLoadClass(name);
-////            if (resolve)
-////                resolveClass(aClass);
-////        }
-//
-//        return aClass;
-//
-//    }
 
     private Class<?> doLoadClass(final String name) throws ClassNotFoundException {
 

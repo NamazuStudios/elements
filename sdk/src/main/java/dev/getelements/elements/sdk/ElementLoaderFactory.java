@@ -30,6 +30,9 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
+     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
+     * base {@link ClassLoader} as the parent classloader.
+     *
      * @param attributes the attributes to use
      * @param classLoaderCtor the {@link ClassLoader} classloader
      * @return the {@link ElementLoader}
@@ -55,6 +58,9 @@ public interface ElementLoaderFactory {
      * <p>
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
+     *
+     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
+     * base {@link ClassLoader} as the parent classloader.
      *
      * @param attributes the attributes to use
      * @param baseClassLoader the base {@link ClassLoader}
@@ -84,6 +90,9 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
+     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
+     * base {@link ClassLoader} as the parent classloader.
+     *
      * @param attributes the attributes to use
      * @param classLoaderCtor the {@link ClassLoader} classloader
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
@@ -112,6 +121,9 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
+     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
+     * base {@link ClassLoader} as the parent classloader.
+     *
      * @param attributes the attributes to use
      * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
      *                        {@link ClassLoader} instance.
@@ -119,10 +131,84 @@ public interface ElementLoaderFactory {
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementLoader}
      */
-    ElementLoader getIsolatedLoader(
+    default ElementLoader getIsolatedLoader(
             Attributes attributes,
             ClassLoader baseClassLoader,
             ClassLoaderConstructor classLoaderCtor,
+            Predicate<ElementDefinitionRecord> selector) {
+        return getIsolatedLoaderWithParent(
+                attributes,
+                baseClassLoader,
+                classLoaderCtor,
+                null,
+                selector
+        );
+    }
+
+    /**
+     * <p>
+     * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
+     * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
+     * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
+     * exactly one {@link ElementDefinition} with the supplied {@link Predicate}.
+     * </p>
+     *
+     * <p>
+     * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
+     * </p>
+     *
+     * The returned {@link ElementLoader} will use the {@link Element}'s classpath with a filtered version of the
+     * supplied base {@link ClassLoader} as the parent classloader.
+     *
+     * @param attributes the attributes to use
+     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
+     *                        {@link ClassLoader} instance.
+     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @return the {@link ElementLoader}
+     */
+    default ElementLoader getIsolatedLoaderWithParent(
+            Attributes attributes,
+            ClassLoader baseClassLoader,
+            ClassLoaderConstructor classLoaderCtor,
+            Element element) {
+        return getIsolatedLoaderWithParent(
+                attributes,
+                baseClassLoader,
+                classLoaderCtor,
+                element,
+                r -> true
+        );
+    }
+
+    /**
+     * <p>
+     * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
+     * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
+     * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
+     * exactly one {@link ElementDefinition} with the supplied {@link Predicate}.
+     * </p>
+     *
+     * <p>
+     * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
+     * </p>
+     *
+     * The returned {@link ElementLoader} will use the {@link Element}'s classpath with a filtered version of the
+     * supplied base {@link ClassLoader} as the parent classloader.
+     *
+     * @param attributes the attributes to use
+     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
+     *                        {@link ClassLoader} instance.
+     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param element the parent {@link Element} to use for the classloader isolation, may be null indicating that 
+     *                isolation should exist for the bootstrap classpath only.
+     * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
+     * @return the {@link ElementLoader}
+     */
+    ElementLoader getIsolatedLoaderWithParent(
+            Attributes attributes,
+            ClassLoader baseClassLoader,
+            ClassLoaderConstructor classLoaderCtor,
+            Element element,
             Predicate<ElementDefinitionRecord> selector);
 
     /**
@@ -149,7 +235,6 @@ public interface ElementLoaderFactory {
      * exception  if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared
      * elements.
      *
-     * @param classLoader
      * @param attributes  the attributes to use
      * @param selector    a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementRecord}

@@ -28,7 +28,7 @@ public record ElementRecord(
         Attributes attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes,
         ClassLoader classLoader,
-        List<ElementSpiImplementationRecord> spis) {
+        ElementSpiImplementationsRecord spis) {
 
     public ElementRecord {
         services = List.copyOf(services);
@@ -44,9 +44,7 @@ public record ElementRecord(
      * @return true if part of this {@link Element}, false otherwise
      */
     public boolean isPartOfElement(final Class<?> aClass) {
-        return definition().isPartOfElement(aClass) || spis()
-                .stream()
-                .anyMatch(spi -> spi.isPartOfElement(aClass));
+        return definition().isPartOfElement(aClass) || spis().isPathOfElement(aClass);
     }
 
     /**

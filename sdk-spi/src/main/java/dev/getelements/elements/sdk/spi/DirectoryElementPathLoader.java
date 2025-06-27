@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.*;
+import static java.util.stream.Collectors.joining;
 
 public class DirectoryElementPathLoader implements ElementPathLoader {
 
@@ -35,25 +36,19 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final ClassLoader baseClassLoader) {
 
         Stream<Element> result = Stream.empty();
-        ClassLoader subClassLoader = baseClassLoader;
 
         try (final var directory = newDirectoryStream(path)) {
 
-            final var record = ElementPathRecord.from(directory);
+            final var record = ElementPathRecord.from(registry, baseClassLoader, directory);
 
             if (record.isValidClasspath()) {
+                final var element = record.load();
+                result = Stream.concat(result, element.stream());
+
                 try {
-                    final var element = record.load(registry, baseClassLoader);
-                    result = Stream.of(element);
-                    subClassLoader = element.getElementRecord().classLoader();
                 } catch (SdkElementNotFoundException ex) {
                     logger.warn("{} has valid classpath but no elements were found.", path, ex);
                 }
-            }
-
-            for (var subDirectory : record.directories()) {
-                final var subStream = load(registry, subDirectory, subClassLoader);
-                result = Stream.concat(result, subStream);
             }
 
         } catch (IOException ex) {
@@ -67,9 +62,18 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     }
 
-    private record ElementPathRecord(Path libs, Path classpath, Path attributesFile, List<Path> directories) {
+    private record ElementPathRecord(
+            Path libs,
+            Path classpath,
+            Path attributesFile,
+            List<Path> directories,
+            ClassLoader baseClassLoader,
+            MutableElementRegistry registry,
+            Element parent) {
 
-        public static ElementPathRecord from(final DirectoryStream<Path> directory) {
+        public static ElementPathRecord from(final MutableElementRegistry registry,
+                                             final ClassLoader baseClassLoader,
+                                             final DirectoryStream<Path> directory) {
 
             Path libs, classpath, attributesFile;
             libs = classpath = attributesFile = null;
@@ -90,7 +94,48 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 }
             }
 
-            return new ElementPathRecord(libs, classpath, attributesFile, List.copyOf(directories));
+            return new ElementPathRecord(
+                    libs,
+                    classpath,
+                    attributesFile,
+                    List.copyOf(directories),
+                    baseClassLoader,
+                    registry,
+                    null
+            );
+
+        }
+
+        public ElementPathRecord descendant(final Element parent, final DirectoryStream<Path> directory) {
+
+            Path libs, classpath, attributesFile;
+            libs = classpath = attributesFile = null;
+
+            final var directories = new ArrayList<Path>();
+
+            for (var subpath : directory) {
+                if (isLibDirectory(subpath)) {
+                    libs = subpath;
+                } else if (isClasspathDirectory(subpath)) {
+                    classpath = subpath;
+                } else if (isAttributesFiles(subpath)) {
+                    attributesFile = subpath;
+                } else if (isDirectory(subpath)) {
+                    directories.add(subpath);
+                } else {
+                    logger.warn("Unexpected path in Element definition: {}, ignoring.", subpath);
+                }
+            }
+
+            return new ElementPathRecord(
+                    libs,
+                    classpath,
+                    attributesFile,
+                    directories,
+                    baseClassLoader(),
+                    registry(),
+                    parent
+            );
 
         }
 
@@ -163,7 +208,39 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         }
 
-        public Element load(final MutableElementRegistry registry, final ClassLoader baseClassLoader) {
+        public List<Element> load() {
+
+            final var results = new ArrayList<Element>();
+
+            Element element = parent();
+
+            try {
+                final var elementLoader = getLoader();
+                element = registry().register(elementLoader);
+                results.add(element);
+            } catch (SdkElementNotFoundException ex) {
+                logger.warn("{} has valid classpath but no elements were found.",
+                        directories().stream().map(Path::toString).collect(joining(",")),
+                        ex);
+            }
+
+            for (var subDirectory : directories()) {
+                try (final var subDirectoryStream = newDirectoryStream(subDirectory)) {
+                    final var descendant = descendant(element, subDirectoryStream);
+                    results.addAll(descendant.load());
+                } catch (IOException ex) {
+                    throw new SdkException(ex);
+                } catch (Exception ex) {
+                    results.forEach(Element::close);
+                    throw ex;
+                }
+            }
+
+            return results;
+
+        }
+
+        private ElementLoader getLoader() {
 
             final var urls = allClasspathUrls();
             final var attributes = loadAttributes();
@@ -171,30 +248,30 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final var classLoaderName = String.format("%s={%s}",
                     ELEMENT_PATH_ENV,
                     Stream
-                        .of(urls)
-                        .map(URL::toString)
-                        .collect(Collectors.joining())
+                            .of(urls)
+                            .map(URL::toString)
+                            .collect(joining())
             );
 
-            final var elementLoader = ServiceLoader.load(ElementLoaderFactory.class, baseClassLoader)
+            return ServiceLoader
+                    .load(ElementLoaderFactory.class, baseClassLoader)
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new SdkException(
                             "No SPI for " + ElementLoaderFactory.class.getName() + " " +
-                            "found in " + baseClassLoader.getName()
+                                    "found in " + baseClassLoader.getName()
                     ))
                     .get()
-                    .getIsolatedLoader(
+                    .getIsolatedLoaderWithParent(
                             attributes,
                             baseClassLoader,
                             cl -> new URLClassLoader(classLoaderName, urls, cl),
+                            parent(),
                             edr -> registry
                                     .stream()
                                     .map(element -> element.getElementRecord().definition().name())
                                     .noneMatch(name -> edr.name().equals(name))
                     );
-
-            return registry.register(elementLoader);
 
         }
 
