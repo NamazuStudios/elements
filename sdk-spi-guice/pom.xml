@@ -61,11 +61,6 @@
                         <version>7.4.0</version>
                     </dependency>
                 </dependencies>
-                <configuration>
-                    <suiteXmlFiles>
-                        <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
-                    </suiteXmlFiles>
-                </configuration>
             </plugin>
         </plugins>
     </build>
