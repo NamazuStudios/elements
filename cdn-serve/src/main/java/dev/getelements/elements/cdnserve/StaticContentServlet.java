@@ -83,7 +83,11 @@ public class StaticContentServlet extends HttpServlet {
                 .stream()
                 .collect(joining(applicationBase.getFileSystem().getSeparator()));
 
-        final var applicationFilePath = Paths.get(applicationBase.toString() + File.separatorChar + relativePathString).toRealPath();
+        final var applicationFilePath = java.nio.file.Path.of(
+                applicationBase.toString(),
+                String.valueOf(File.separatorChar),
+                relativePathString)
+                .toRealPath();
 
         if (applicationFilePath.startsWith(applicationBase)) {
             try (var fis = new FileInputStream(applicationFilePath.toFile());

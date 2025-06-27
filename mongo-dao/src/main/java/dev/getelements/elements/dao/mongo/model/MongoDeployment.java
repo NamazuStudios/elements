@@ -6,7 +6,7 @@ import org.bson.types.ObjectId;
 
 import java.sql.Timestamp;
 
-@Entity(value = "deployment", useDiscriminator = false)
+@Entity(value = "deployment")
 @Indexes(
     @Index(
         fields = { @Field("application"), @Field("version") },
