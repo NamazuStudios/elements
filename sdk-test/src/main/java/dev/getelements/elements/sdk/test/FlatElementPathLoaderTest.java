@@ -54,7 +54,6 @@ public class FlatElementPathLoaderTest {
 
         final var inRegistry = elementRegistry.stream().toList();
         assertEquals(inRegistry.size(), 2);
-
         assertEquals(loadedElements.size(), 2);
 
         for (final var artifact : List.of(VARIANT_A, VARIANT_B)) {

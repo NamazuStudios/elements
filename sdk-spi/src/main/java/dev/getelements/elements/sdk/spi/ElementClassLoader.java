@@ -54,8 +54,15 @@ public class ElementClassLoader extends ClassLoader {
 
     private ElementRecord elementRecord;
 
-    public ElementClassLoader(final ClassLoader parent) {
-        super(requireNonNull(parent, "parent"));
+    private final ClassLoader delegate;
+
+    public ElementClassLoader(final ClassLoader delegate) {
+        this(delegate, null);
+    }
+
+    public ElementClassLoader(final ClassLoader delegate, final ClassLoader parent) {
+        super("Element Class Loader", parent);
+        this.delegate = requireNonNull(delegate, "delegate");
     }
 
     public ElementRecord getElementRecord() {
@@ -80,26 +87,12 @@ public class ElementClassLoader extends ClassLoader {
 
     @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-
-        Class<?> aClass;
-
         try {
-            // All system-provided classes automatically exist in the classloader hierarchy without needing special
-            // permission. This enables the element to see the core JVM classes, but essentially skips all of the
-            // Element's classpath.
-            aClass = getPlatformClassLoader().loadClass(name);
-        } catch (ClassNotFoundException ex) {
-            // If not present, then we load the class from the parent and the process any annotations. We have explicit
-            // whitelists.
-            aClass = processVisibilityAnnotations(getParent().loadClass(name));
+            return super.loadClass(name, resolve);
+        } catch (final ClassNotFoundException e) {
+            final var delegateClass = delegate.loadClass(name);
+            return processVisibilityAnnotations(delegateClass);
         }
-
-        if (resolve) {
-            resolveClass(aClass);
-        }
-
-        return aClass;
-
     }
 
     private Class<?> processVisibilityAnnotations(final Class<?> aClass) throws ClassNotFoundException {
@@ -110,7 +103,7 @@ public class ElementClassLoader extends ClassLoader {
         // classloader. This ensures that the Element Local types are unique per Element.
         if (aClass.getAnnotation(ElementLocal.class) != null) {
             final var aLocalClass = findLoadedClass(name);
-            return aLocalClass == null ? copyFromParent(aClass) : aLocalClass;
+            return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
         }
 
         final var aClassPackage = aClass.getPackage();
@@ -183,12 +176,12 @@ public class ElementClassLoader extends ClassLoader {
 
     }
 
-    private Class<?> copyFromParent(final Class<?> parentClass) {
+    private Class<?> copyFromDelegate(final Class<?> parentClass) {
 
         final var clsName = parentClass.getName();
         final var registryResourceURL = clsName.replace(".", "/") + ".class";
 
-        try (var is = getParent().getResourceAsStream(registryResourceURL);
+        try (var is = delegate.getResourceAsStream(registryResourceURL);
              var os = new ByteArrayOutputStream()) {
 
             assert is != null;
