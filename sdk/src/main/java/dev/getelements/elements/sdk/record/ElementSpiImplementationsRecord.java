@@ -14,7 +14,7 @@ public record ElementSpiImplementationsRecord(List<ElementSpiImplementationRecor
      * @param aClass the {@link Class} to check
      * @return true if any SPI implementation is part of the Element, false otherwise
      */
-    public boolean isPathOfElement(final Class<?> aClass) {
+    public boolean isPartOfElement(final Class<?> aClass) {
         return spis()
                 .stream()
                 .anyMatch(spi -> spi.isPartOfElement(aClass));

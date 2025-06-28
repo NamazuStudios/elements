@@ -44,7 +44,7 @@ public record ElementRecord(
      * @return true if part of this {@link Element}, false otherwise
      */
     public boolean isPartOfElement(final Class<?> aClass) {
-        return definition().isPartOfElement(aClass) || spis().isPathOfElement(aClass);
+        return definition().isPartOfElement(aClass) || spis().isPartOfElement(aClass);
     }
 
     /**

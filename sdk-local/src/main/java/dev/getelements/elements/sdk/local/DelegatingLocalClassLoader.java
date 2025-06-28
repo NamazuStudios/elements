@@ -2,8 +2,8 @@ package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.sdk.annotation.ElementLocal;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
-import dev.getelements.elements.sdk.record.ElementSpiImplementationRecord;
 import dev.getelements.elements.sdk.record.ElementSpiImplementationsRecord;
+import dev.getelements.elements.sdk.spi.ClassLoaderUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,6 +22,8 @@ import static dev.getelements.elements.sdk.local.SystemClasspathUtils.getSystemC
 /// types which do not belong to the Element. This may actually enforce stricter than usual rules than when running in
 /// the server environment. However, should result in the same behavior in a properly configured Element.
 public class DelegatingLocalClassLoader extends ClassLoader {
+
+    private static final ClassLoaderUtils utils = new ClassLoaderUtils(DelegatingLocalClassLoader.class);
 
     private ElementDefinitionRecord elementDefinitionRecord;
 
@@ -52,15 +54,17 @@ public class DelegatingLocalClassLoader extends ClassLoader {
     @Override
     protected Class<?> loadClass(final String name, boolean resolve) throws ClassNotFoundException {
 
-        if (getElementSpiImplementationsRecord() == null) {
-            // Without an ElementRecord, we can't properly filter out system classes from the SPIs provided by the
-            // Element. Therefore, we throw this exception. The class loading process will later replace the value
-            throw new IllegalStateException("No element record found.");
+        var aClass = delegate.loadClass(name);
+
+        if (getElementSpiImplementationsRecord() == null || getElementDefinitionRecord() == null) {
+            if (utils.isAnnotatedWithSdkAnnotation(aClass)) {
+                return aClass;
+            } else {
+                throw new IllegalStateException("Class " + name + " is not annotated with SDK annotation.");
+            }
         }
 
-        Class<?> aClass = delegate.loadClass(name);
-
-        if (getElementSpiImplementationsRecord().isPathOfElement(aClass)) {
+        if (getElementSpiImplementationsRecord().isPartOfElement(aClass)) {
 
             aClass = doLoadClass(name);
 
@@ -69,16 +73,7 @@ public class DelegatingLocalClassLoader extends ClassLoader {
 
             return aClass;
 
-        }
-
-        if (getElementDefinitionRecord() == null) {
-            // Without an ElementRecord, we can't properly filter out system classes from the classes
-            // specific to the Element. Therefore, we throw this exception. The class loading process
-            // will later replace the value set to this classloader as not to avoid class
-            throw new IllegalStateException("No element record found.");
-        }
-
-        if (aClass.isAnnotationPresent(ElementLocal.class)) {
+        } else if (aClass.isAnnotationPresent(ElementLocal.class)) {
             return getParent().loadClass(name);
         } else if (getElementDefinitionRecord().isPartOfElement(aClass)) {
 
