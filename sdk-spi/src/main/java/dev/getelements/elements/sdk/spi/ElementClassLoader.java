@@ -30,6 +30,8 @@ import static java.util.Objects.requireNonNull;
  */
 public class ElementClassLoader extends ClassLoader {
 
+    private static final ClassLoaderUtils utils = new ClassLoaderUtils(ElementClassLoader.class);
+
     private static final Map<String, String> BUILTIN_RESOURCES = Map.of(
             "META-INF/services/dev.getelements.elements.sdk.ElementSupplier",
             "text://dev.getelements.elements.sdk.spi.ElementScopedElementSupplier",
@@ -123,7 +125,7 @@ public class ElementClassLoader extends ClassLoader {
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         try {
 
-            final var aClass =  super.loadClass(name, resolve);
+            final var aClass = super.loadClass(name, resolve);
 
             if (aClass.getAnnotation(ElementLocal.class) != null) {
                 final var aLocalClass = findLoadedClass(name);
@@ -192,9 +194,7 @@ public class ElementClassLoader extends ClassLoader {
         }
 
         if (getElementRecord() == null) {
-            // This happens pre-initialization of the classloader, so there is not an ElementRecord yet to be loaded
-            // so this remains as-is until it is properly scoped.
-            return aClass;
+            throw new ClassNotFoundException();
         }
 
         final var isRegisteredService = getElementRecord()
