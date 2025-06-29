@@ -38,27 +38,15 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         Stream<Element> result = Stream.empty();
 
         try (final var directory = newDirectoryStream(path)) {
-
             final var record = ElementPathRecord.from(registry, baseClassLoader, directory);
-
-            if (record.isValidClasspath()) {
-                final var element = record.load();
-                result = Stream.concat(result, element.stream());
-
-                try {
-                } catch (SdkElementNotFoundException ex) {
-                    logger.warn("{} has valid classpath but no elements were found.", path, ex);
-                }
-            }
-
+            final var elements = record.load();
+            return elements.stream();
         } catch (IOException ex) {
             throw new SdkException(ex);
         } catch (Exception ex) {
             result.forEach(Element::close);
             throw ex;
         }
-
-        return result;
 
     }
 
@@ -214,14 +202,22 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             Element element = parent();
 
-            try {
-                final var elementLoader = getLoader();
-                element = registry().register(elementLoader);
-                results.add(element);
-            } catch (SdkElementNotFoundException ex) {
-                logger.warn("{} has valid classpath but no elements were found.",
-                        directories().stream().map(Path::toString).collect(joining(",")),
-                        ex);
+            if (isValidClasspath()) {
+
+                logger.debug("Loading classpath: {}", directories());
+
+                try {
+                    final var elementLoader = getLoader();
+                    element = registry().register(elementLoader);
+                    results.add(element);
+                } catch (SdkElementNotFoundException ex) {
+                    logger.warn(
+                            "{} has valid classpath but no elements were found.",
+                            directories().stream().map(Path::toString).collect(joining(",")),
+                            ex);
+                }
+            } else {
+                logger.debug("Skipping load of elements from {}", directories());
             }
 
             for (var subDirectory : directories()) {
