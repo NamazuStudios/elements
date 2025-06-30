@@ -29,6 +29,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>${guice.version}</version>
@@ -76,19 +81,5 @@
             <version>${morphia.version}</version>
             <scope>compile</scope>
         </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-spi-guice</artifactId>
-            <scope>test</scope>
-
-        </dependency>
-
     </dependencies>
 </project>
