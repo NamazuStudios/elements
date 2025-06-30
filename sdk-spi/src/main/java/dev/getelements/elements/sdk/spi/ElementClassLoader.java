@@ -23,10 +23,9 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link ClassLoader} type which inspects classes at load time processing the visibility annotations provided by the
- * Elements' SDK. Such annotations include {@link ElementPrivate} and {@link ElementPublic}. This implementation can
- * be thought of as a fence between the Element's classpath and the parent classloader. Checking first the platform
- * class loader, then the parent classloader, and finally the Element's classpath. When checking the parent classloader,
- * it will also load classes consistent with the various visibility annotations and services.
+ * Elements' SDK. Such annotations include {@link ElementPrivate} and {@link ElementPublic}. This implementation
+ * allows for a separate hierarchy of classes to be loaded for each Element, while still allowing some parts of the
+ * core system through. The delegate {@link ClassLoader} is typically the system class loader.
  */
 public class ElementClassLoader extends ClassLoader {
 
@@ -142,11 +141,11 @@ public class ElementClassLoader extends ClassLoader {
 
     private Class<?> processVisibilityAnnotations(final Class<?> aClass) throws ClassNotFoundException {
 
-        final var name = aClass.getName();
-
         // SPI Types annotated as ElementLocal will be copied from the bytecode of the parent and then loaded into this
         // classloader. This ensures that the Element Local types are unique per Element.
+
         if (aClass.getAnnotation(ElementLocal.class) != null) {
+            final var name = aClass.getName();
             final var aLocalClass = findLoadedClass(name);
             return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
         }
@@ -194,6 +193,9 @@ public class ElementClassLoader extends ClassLoader {
         }
 
         if (getElementRecord() == null) {
+            // This ensures that if the ElementRecord is not set, we aren't done initializing the Element. Anything
+            // past this point should exist in the Element's ClassLoader. If it doesn't, then the Element isn't
+            // properly configured (eg it's missing an SPI).
             throw new ClassNotFoundException();
         }
 
@@ -204,6 +206,7 @@ public class ElementClassLoader extends ClassLoader {
                 .anyMatch(exposed -> exposed.equals(aClass));
 
         if (isRegisteredService) {
+            // This implicitly makes a registered service public.
             return aClass;
         }
 
