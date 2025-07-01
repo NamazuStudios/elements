@@ -64,7 +64,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         }
 
         final var mongoUser = getMongoUserDao()
-                .findMongoUser(distinctInventoryItem.getUser())
+                .findMongoUser(distinctInventoryItem.getUser().getId())
                 .orElseThrow(() -> new InvalidDataException("No such user."));
 
         mongoDistinctInventoryItem.setItem(mongoItem);
