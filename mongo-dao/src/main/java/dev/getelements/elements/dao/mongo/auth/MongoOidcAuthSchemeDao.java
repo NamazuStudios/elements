@@ -21,6 +21,7 @@ import java.util.Optional;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 
 public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
 
@@ -116,12 +117,21 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
 
         final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
 
-        final var result = getDatastore()
-                .find(MongoOidcAuthScheme.class)
-                .filter(eq("_id", objectId))
-                .delete();
+        final var query = getDatastore().find(MongoOidcAuthScheme.class);
+        query.filter(eq("_id", objectId));
 
-        if (result.getDeletedCount() == 0) {
+        final var builder = new UpdateBuilder();
+        builder.with(unset("name"));
+        builder.with(unset("keys"));
+        builder.with(unset("issuer"));
+        builder.with(unset("keysUrl"));
+        builder.with(unset("mediaType"));
+
+        final MongoOidcAuthScheme mongoOidcAuthScheme = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoOidcAuthScheme == null) {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authSchemeId);
         }
 
