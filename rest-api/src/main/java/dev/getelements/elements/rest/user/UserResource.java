@@ -58,7 +58,7 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Gets a Specific User",
-            description = "Gets a specific user by email or unique user ID.")
+            description = "Gets a specific user by name, email, or unique user ID.")
     public User getUser(@PathParam("name") final String name) {
         return getUserService().getUser(name);
     }
