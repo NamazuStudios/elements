@@ -12,6 +12,7 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.InsertOneOptions;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
@@ -192,6 +193,20 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
+        final var query = getDatastore().find(MongoUser.class);
+
+        final var existingUser = query.filter(
+                    or(
+                        eq("name", user.getName()),
+                        eq("email", user.getEmail())
+                    )
+                )
+                .first();
+
+        if(existingUser != null) {
+            throw new DuplicateException("A user already exists with either this name or email.");
+        }
+
         final MongoUser mongoUser = getDozerMapper().map(user, MongoUser.class);
 
         final byte[] passwordBytes;
@@ -216,11 +231,7 @@ public class MongoUserDao implements UserDao {
         mongoUser.setPasswordHash(digest.digest());
         mongoUser.setHashAlgorithm(digest.getAlgorithm());
 
-        try {
-            getMongoDBUtils().performV(ds -> getDatastore().save(mongoUser));
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
-        }
+        getMongoDBUtils().performV(ds -> getDatastore().save(mongoUser));
 
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
