@@ -60,7 +60,14 @@ public class UserResource {
             summary = "Gets a Specific User",
             description = "Gets a specific user by name, email, or unique user ID.")
     public User getUser(@PathParam("name") final String name) {
-        return getUserService().getUser(name);
+
+        final var user = getUserService().getUser(name);
+
+        if (user == null) {
+            throw new NotFoundException("User not found.");
+        }
+
+        return user;
     }
 
     @GET
