@@ -127,7 +127,7 @@ public class MongoUserDao implements UserDao {
 
         final var mongoUser = findMongoUser(mongoUserId);
 
-        return Optional.of(getDozerMapper().map(mongoUser, User.class));
+        return mongoUser.map(user -> getDozerMapper().map(user, User.class));
     }
 
     @Override
