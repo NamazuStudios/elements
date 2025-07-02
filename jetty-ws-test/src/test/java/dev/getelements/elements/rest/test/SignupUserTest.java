@@ -1,5 +1,7 @@
 package dev.getelements.elements.rest.test;
 
+import com.google.inject.CreationException;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.profile.CreateProfileRequest;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.Session;
@@ -185,4 +187,19 @@ public class SignupUserTest {
 
     }
 
+    @Test(dependsOnMethods = "createUser")
+    public void createDuplicateUserExpectingFailure() {
+
+        final UserCreateRequest toCreate = new UserCreateRequest();
+        toCreate.setName(name);
+        toCreate.setEmail(email);
+        toCreate.setPassword(password);
+
+        var response = client
+                .target(apiRoot + "/signup")
+                .request()
+                .post(Entity.entity(toCreate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 409);
+    }
 }
