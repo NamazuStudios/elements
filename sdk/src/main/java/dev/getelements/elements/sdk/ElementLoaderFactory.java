@@ -250,11 +250,11 @@ public interface ElementLoaderFactory {
     }
 
     /**
-     * Finds the {@link Element} name, this will find the {@link ElementRecord} associated with it, throwing an
-     * exception  if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared
+     * Finds the {@link Element} name, this will find the {@link ElementRecord} associated with it, return  an empty
+     * optional if it is unable to find the {@link ElementDefinition} annotation. Used in constructing shared
      * elements.
      *
-     * @param classLoader
+     * @param classLoader the classloader to scan
      * @param attributes  the attributes to use
      * @param selector    a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementRecord}

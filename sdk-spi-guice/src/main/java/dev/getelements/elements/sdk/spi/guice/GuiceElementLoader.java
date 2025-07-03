@@ -33,6 +33,7 @@ import static dev.getelements.elements.sdk.ElementType.ISOLATED_CLASSPATH;
                 @ElementPackage("org.aopalliance"),
                 @ElementPackage("com.google.common.util.concurrent"),
                 @ElementPackage("dev.getelements.elements.sdk.spi.guice"),
+                @ElementPackage(value = "com.google.inject", recursive = true),
                 @ElementPackage(value = "com.google.common", recursive = true),
         }
 )
