@@ -52,7 +52,7 @@ tag:
 git:
 	git config --global user.name $(GIT_USER)
 	git config --global user.email $(GIT_EMAIL)
-	git remote add github git@github.com:Elemental-Computing/elements.git
+	git remote add github git@github.com:NamazuStudios/elements.git
 
 setup: git
 	ng

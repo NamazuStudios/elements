@@ -1,16 +1,16 @@
-package dev.getelements.elements.sdk.local;
+package dev.getelements.elements.sdk.local.test;
 
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.test.DockerMongoTestInstance;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
-import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
+import dev.getelements.elements.sdk.local.ElementsLocal;
+import dev.getelements.elements.sdk.local.ElementsLocalBuilder;
 import dev.getelements.elements.sdk.model.application.Application;
-import dev.getelements.elements.sdk.service.Constants;
-import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -20,8 +20,6 @@ import java.util.Properties;
 import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.sdk.model.Constants.HTTP_PORT;
 import static java.lang.String.format;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 
 public class TestLocalSDK {
 
@@ -111,7 +109,7 @@ public class TestLocalSDK {
                     .get();
 
             final var status = response.getStatus();
-            assertEquals(status, Response.Status.OK.getStatusCode());
+            Assert.assertEquals(status, Response.Status.OK.getStatusCode());
 
         }
     }
@@ -125,7 +123,7 @@ public class TestLocalSDK {
                     .get();
 
             final var status = response.getStatus();
-            assertEquals(status, Response.Status.OK.getStatusCode());
+            Assert.assertEquals(status, Response.Status.OK.getStatusCode());
 
         }
     }

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.getelements.elements</groupId>
+        <artifactId>eci-elements</artifactId>
+        <version>3.3.0-SNAPSHOT</version>
+    </parent>
+
+    <version>3.3.0-SNAPSHOT</version>
+    <artifactId>sdk-local-test</artifactId>
+    <groupId>dev.getelements.elements</groupId>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-local</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>mongo-test</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
