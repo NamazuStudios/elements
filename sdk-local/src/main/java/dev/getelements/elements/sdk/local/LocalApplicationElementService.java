@@ -31,17 +31,9 @@ import static java.lang.ClassLoader.getSystemClassLoader;
 
 class LocalApplicationElementService implements ApplicationElementService {
 
-    public static final String SDK_CLASSPATH = "dev.getelements.elements.sdk.local.sdk.classpath";
-
-    public static final String ELEMENT_CLASSPATH = "dev.getelements.elements.sdk.local.element.classpath";
-
     private static final Logger logger = LoggerFactory.getLogger(LocalApplicationElementService.class);
 
     private final Lock lock = new ReentrantLock();
-
-    private List<URL> sdkClasspath;
-
-    private List<URL> elementClasspath;
 
     private List<LocalApplicationElementRecord> localElements;
 
@@ -113,6 +105,7 @@ class LocalApplicationElementService implements ApplicationElementService {
 
         return elf.getIsolatedLoader(
                         lar.attributes(),
+                        getClass().getClassLoader(),
                         parentClassLoader -> {
                             final var elementClassLoader = getClassLoaderConstructor().apply(parentClassLoader);
                             elementReflectionUtils.injectBeanProperties(elementClassLoader, elementDefinitionRecord);
@@ -121,24 +114,6 @@ class LocalApplicationElementService implements ApplicationElementService {
                         edr -> edr.name().equals(lar.elementName())
                 );
 
-    }
-
-    public List<URL> getSdkClasspath() {
-        return sdkClasspath;
-    }
-
-    @Inject
-    public void setSdkClasspath(@Named(SDK_CLASSPATH) List<URL> sdkClasspath) {
-        this.sdkClasspath = sdkClasspath;
-    }
-
-    public List<URL> getElementClasspath() {
-        return elementClasspath;
-    }
-
-    @Inject
-    public void setElementClasspath(@Named(ELEMENT_CLASSPATH) List<URL> elementClasspath) {
-        this.elementClasspath = elementClasspath;
     }
 
     public List<LocalApplicationElementRecord> getLocalElements() {
