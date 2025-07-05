@@ -18,7 +18,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 
-class MavenElementsLocalLoader {
+/**
+ * This is used to load the local elements SDK from Maven on a separate ClassLoader.
+ */
+public class MavenElementsLocalLoader {
 
     public ElementsLocal load(
             final Attributes attributes,
@@ -38,11 +41,12 @@ class MavenElementsLocalLoader {
                     @Override
                     protected void configure() {
                         bind(ElementsLocal.class).to(StandardElementsLocal.class).asEagerSingleton();
-                        bind(ElementLoaderFactory.ClassLoaderConstructor.class).toInstance(parent -> new URLClassLoader(
-                                "Elements Local",
-                                localElementClassPath.toArray(new URL[0]),
-                                parent
-                        ));
+                        bind(ElementLoaderFactory.ClassLoaderConstructor.class)
+                                .toInstance(parent -> new URLClassLoader(
+                                        "Elements Local",
+                                        localElementClassPath.toArray(URL[]::new),
+                                        parent
+                                ));
                     }
                 }
         );

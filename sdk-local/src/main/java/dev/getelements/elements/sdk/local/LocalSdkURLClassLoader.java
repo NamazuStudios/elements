@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.local;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +15,7 @@ public class LocalSdkURLClassLoader extends URLClassLoader {
 
     private static final ClassLoader SYSTEM = ClassLoader.getSystemClassLoader();
 
-    private static final Set<String> PACKAGES = Set.of(
+    private static final Set<String> CORE_SDK_PACKAGES = Set.of(
             "dev.getelements.elements.sdk",
             "dev.getelements.elements.sdk.local",
             "dev.getelements.elements.sdk.annotation",
@@ -23,8 +24,11 @@ public class LocalSdkURLClassLoader extends URLClassLoader {
             "dev.getelements.elements.sdk.record"
     );
 
-    public LocalSdkURLClassLoader(final List<URL> classpath) {
+    private final Set<String> packages;
+
+    private LocalSdkURLClassLoader(final List<URL> classpath, final Set<String> packages) {
         super("Local Elements SDK", classpath.toArray(URL[]::new), null);
+        this.packages = packages;
     }
 
     @Override
@@ -40,13 +44,33 @@ public class LocalSdkURLClassLoader extends URLClassLoader {
 
         final var aClass = SYSTEM.loadClass(name);
 
-        if (!PACKAGES.contains(aClass.getPackage().getName()))
+        if (!packages.contains(aClass.getPackage().getName()))
             throw new ClassNotFoundException(name);
 
         if (resolve)
             resolveClass(aClass);
 
         return aClass;
+
+    }
+
+    public static class Builder {
+
+        private final Set<String> packages = new HashSet<>();
+
+        public Builder withPackage(final String packageName) {
+            packages.add(packageName);
+            return this;
+        }
+
+        public Builder withCoreSdkPackages() {
+            packages.addAll(CORE_SDK_PACKAGES);
+            return this;
+        }
+
+        public LocalSdkURLClassLoader build(final List<URL> classpath) {
+            return new LocalSdkURLClassLoader(classpath, packages);
+        }
 
     }
 

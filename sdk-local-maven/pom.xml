@@ -99,7 +99,8 @@
                                 jakarta.inject,
                                 com.google.guava,
                                 com.google.inject,
-                                dev.getelements.elements
+                                dev.getelements.elements,
+                                com.fasterxml.jackson
                             </includeGroupIds>
                             <includeArtifactIds>
                                 guice,
@@ -108,7 +109,13 @@
                                 aopalliance,
                                 sdk-test-element-rs,
                                 sdk-test-element-ws,
-                                sdk-spi-guice
+                                sdk-spi-guice,
+                                jackson-core,
+                                jackson-databind,
+                                jackson-annotations,
+                                jackson-jakarta-rs-base,
+                                jackson-jakarta-rs-json-provider,
+                                jackson-module-jakarta-xmlbind-annotations
                             </includeArtifactIds>
                             <outputDirectory>${project.build.directory}/element-libs</outputDirectory>
                         </configuration>
@@ -121,22 +128,21 @@
 
     <profiles>
         <profile>
-            <id>run-tests</id>
+            <id>sdk-local-test</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>3.0.0</version>
-                        <executions>
-                            <execution>
-                                <id>default-test</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>test</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                        <configuration>
+                            <suiteXmlFiles>
+                                <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+                            </suiteXmlFiles>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

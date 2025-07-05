@@ -61,14 +61,14 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
     }
 
-
     private Attributes attributes = Attributes.emptyAttributes();
 
     private final List<LocalApplicationElementRecord> localElements = new ArrayList<>();
 
     @Override
-    public ElementsLocalBuilder withAttributes(Attributes attributes) {
-        return null;
+    public ElementsLocalBuilder withAttributes(final Attributes attributes) {
+        this.attributes = attributes;
+        return this;
     }
 
     @Override
@@ -88,7 +88,11 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
         final var elementClasspath = ClasspathUtils.parse(ELEMENT_CLASSPATH);
         final var sdkLocalClasspath = ClasspathUtils.parse(SDK_LOCAL_CLASSPATH);
-        final var sdkClassLoader = new LocalSdkURLClassLoader(sdkLocalClasspath);
+        
+        final var sdkClassLoader = new LocalSdkURLClassLoader.Builder()
+                .withCoreSdkPackages()
+                .withPackage("dev.getelements.elements.sdk.local.maven")
+                .build(sdkLocalClasspath);
 
         try {
 
