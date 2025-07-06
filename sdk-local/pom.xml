@@ -15,47 +15,16 @@
     <url>https://namazustudios.com</url>
 
     <dependencies>
-
-        <!-- SDK Dependencies -->
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-util</artifactId>
-        </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>jetty-ws</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.github.classgraph</groupId>
-            <artifactId>classgraph</artifactId>
-        </dependency>
-
-        <!-- Other third-party dependencies -->
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.websocket</groupId>
-            <artifactId>jakarta.websocket-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-        </dependency>
-
     </dependencies>
 
     <build>

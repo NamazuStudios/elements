@@ -178,20 +178,13 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
     }
 
     /**
-     * This scans the classpath using the {@link ClassLoader} from {@link ClassLoader#getSystemClassLoader()} to scan
+     * This scans the classpath using the {@link ClassLoader} from {@link Class#getClassLoader()} to scan
      * for defaults and will use the supplied properties.  The configured properties are loaded using
      * {@link #loadProperties()}
      * @param properties the
      */
     public DefaultConfigurationSupplier(final Properties properties) {
-        this(ClassLoader.getSystemClassLoader(), properties);
-    }
-
-    public DefaultConfigurationSupplier(final ClassLoader classLoader) {
-        this(classLoader, loadProperties());
-    }
-
-    public DefaultConfigurationSupplier(final ClassLoader classLoader, final Properties properties) {
+        final var classLoader = getClass().getClassLoader();
 
         defaultProperties = scanForDefaults(classLoader);
         this.properties = new Properties(defaultProperties);
@@ -233,7 +226,8 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
     private Properties scanForDefaults(final ClassLoader classLoader) {
 
         final var result = new ClassGraph()
-                .addClassLoader(classLoader)
+                .overrideClassLoaders(classLoader)
+                .ignoreParentClassLoaders()
                 .enableClassInfo()
                 .acceptPackages("dev.getelements")
                 .enableFieldInfo()

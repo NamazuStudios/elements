@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.local;
+package dev.getelements.elements.sdk.local.internal;
 
 import dev.getelements.elements.sdk.exception.SdkException;
 

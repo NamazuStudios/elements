@@ -3,10 +3,9 @@ package dev.getelements.elements.sdk.local.maven;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.local.*;
+import dev.getelements.elements.sdk.local.internal.ClasspathUtils;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static dev.getelements.elements.sdk.local.maven.Maven.mvn;
 import static java.util.Objects.requireNonNull;
@@ -31,8 +30,6 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
     public static final String SDK_LOCAL_CLASSPATH_PROPERTY = "dev.getelements.elements.mvn.sdk.local.classpath";
 
-    public static final String LOADER_CLASS = "dev.getelements.elements.sdk.local.maven.MavenElementsLocalLoader";
-
     static {
 
         final var pathSeparator = System.getProperty("path.separator");
@@ -53,7 +50,7 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
         SDK_LOCAL_CLASSPATH = System.getenv(MavenElementsLocalBuilder.SDK_LOCAL_CLASSPATH_ENV) != null
                 ? System.getenv(MavenElementsLocalBuilder.SDK_LOCAL_CLASSPATH_ENV)
-                : System.getProperty(MavenElementsLocalBuilder.SDK_LOCAL_CLASSPATH_PROPERTY, "target/element-libs/*");
+                : System.getProperty(MavenElementsLocalBuilder.SDK_LOCAL_CLASSPATH_PROPERTY, "target/sdk-libs/*");
 
         if (!MAVEN_PHASE.isBlank()) {
             mvn(MAVEN_PHASE);
@@ -63,7 +60,11 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
     private Attributes attributes = Attributes.emptyAttributes();
 
-    private final List<LocalApplicationElementRecord> localElements = new ArrayList<>();
+    private final Set<String> sharedTypes = new HashSet<>();
+
+    private final Set<String> sharedPackages = new HashSet<>();
+
+    private final List<ElementsLocalApplicationElementRecord> localElements = new ArrayList<>();
 
     @Override
     public ElementsLocalBuilder withAttributes(final Attributes attributes) {
@@ -79,7 +80,19 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
         requireNonNull(applicationNameOrId, "applicationNameOrId");
         requireNonNull(elementName, "aPacakge");
         requireNonNull(attributes, "attributes");
-        localElements.add(new LocalApplicationElementRecord(applicationNameOrId, elementName, attributes));
+        localElements.add(new ElementsLocalApplicationElementRecord(applicationNameOrId, elementName, attributes));
+        return this;
+    }
+
+    @Override
+    public ElementsLocalBuilder withSharedType(final String sharedType) {
+        sharedTypes.add(sharedType);
+        return this;
+    }
+
+    @Override
+    public ElementsLocalBuilder withSharedPackage(final String packageName) {
+        sharedPackages.add(packageName);
         return this;
     }
 
@@ -88,33 +101,28 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
         final var elementClasspath = ClasspathUtils.parse(ELEMENT_CLASSPATH);
         final var sdkLocalClasspath = ClasspathUtils.parse(SDK_LOCAL_CLASSPATH);
-        
-        final var sdkClassLoader = new LocalSdkURLClassLoader.Builder()
+
+        final var sdkClassLoader = new ElementsLocalURLClassLoader.Builder()
+                .withType("java.sql.Timestamp")
                 .withCoreSdkPackages()
-                .withPackage("dev.getelements.elements.sdk.local.maven")
+                .withPackages(sharedPackages)
                 .build(sdkLocalClasspath);
 
-        try {
+        final var factoryRecord = new ElementsLocalFactoryRecord(
+                attributes,
+                elementClasspath,
+                localElements,
+                sdkClassLoader
+        );
 
-            final var loaderClass = sdkClassLoader.loadClass(LOADER_CLASS);
+        final var factory = ServiceLoader
+                .load(ElementsLocalFactory.class)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new SdkException("Unable to find SPI for " + ElementsLocalFactory.class.getName()))
+                .get();
 
-            final var loader = (MavenElementsLocalLoader) loaderClass
-                    .getConstructor()
-                    .newInstance();
-
-            return loader.load(
-                    attributes,
-                    elementClasspath,
-                    localElements
-            );
-
-        } catch (InstantiationException |
-                 ClassNotFoundException |
-                 InvocationTargetException |
-                 IllegalAccessException |
-                 NoSuchMethodException ex) {
-            throw new SdkException("Unable to load SDK.", ex);
-        }
+        return factory.create(factoryRecord);
 
     }
 

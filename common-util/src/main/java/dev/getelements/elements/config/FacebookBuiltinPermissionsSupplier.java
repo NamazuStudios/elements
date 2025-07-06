@@ -23,13 +23,12 @@ public class FacebookBuiltinPermissionsSupplier implements Supplier<List<Faceboo
     private final List<FacebookPermission> facebookPermissionList;
 
     public FacebookBuiltinPermissionsSupplier() {
-        this(ClassLoader.getSystemClassLoader());
-    }
 
-    public FacebookBuiltinPermissionsSupplier(final ClassLoader classLoader) {
+        final var classLoader = getClass().getClassLoader();
 
         final var result = new ClassGraph()
-                .addClassLoader(classLoader)
+                .ignoreParentClassLoaders()
+                .overrideClassLoaders(classLoader)
                 .enableClassInfo()
                 .acceptPackages("dev.getelements")
                 .enableClassInfo()

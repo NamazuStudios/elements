@@ -22,7 +22,7 @@ public class  SetupCommonModule extends AbstractModule {
     protected void configure() {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier(Setup.class.getClassLoader());
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final FacebookBuiltinPermissionsSupplier facebookBuiltinPermissionsSupplier;
         facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();

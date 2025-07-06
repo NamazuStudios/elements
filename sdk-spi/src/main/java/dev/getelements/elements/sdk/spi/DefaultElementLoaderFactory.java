@@ -19,7 +19,6 @@ import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -112,6 +111,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         final var cg = new ClassGraph()
                 .overrideClassLoaders(classLoader)
+                .ignoreParentClassLoaders()
                 .enableClassInfo()
                 .enableAnnotationInfo();
 
@@ -165,7 +165,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
     private ElementRecord loadElementRecord(final Attributes attributes, final Package aPackage) {
 
-        final var localClassLoader = getSystemClassLoader();
+        final var localClassLoader = getClass().getClassLoader();
         final var elementDefinitionRecord = ElementDefinitionRecord.fromPackage(aPackage);
         final var elementServices = scanForElementServices(localClassLoader, elementDefinitionRecord);
         final var elementProducedEvents = scanForProducedEvents(localClassLoader, elementDefinitionRecord);
@@ -203,6 +203,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .enableClassInfo()
                 .enableFieldInfo()
                 .enableAnnotationInfo()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader);
 
         elementDefinitionRecord.acceptPackages(
@@ -243,6 +244,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
     private ElementSpiImplementationsRecord scanForSpiImplementations(final ClassLoader classLoader) {
 
         final var cg = new ClassGraph()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
                 .enableClassInfo()
                 .enableAnnotationInfo();
@@ -266,6 +268,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final Predicate<ElementDefinitionRecord> selector) {
 
         final var cg = new ClassGraph()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
                 .enableClassInfo()
                 .enableAnnotationInfo();
@@ -306,6 +309,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ElementDefinitionRecord elementDefinitionRecord) {
 
         final var classGraph = new ClassGraph()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
                 .enableClassInfo()
                 .enableAnnotationInfo();
@@ -335,6 +339,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ElementDefinitionRecord elementDefinitionRecord) {
 
         final var classGraph = new ClassGraph()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
                 .enableClassInfo()
                 .enableMethodInfo()
@@ -368,6 +373,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .toList();
 
         final var classGraph = new ClassGraph()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
                 .enableClassInfo()
                 .enableMethodInfo()

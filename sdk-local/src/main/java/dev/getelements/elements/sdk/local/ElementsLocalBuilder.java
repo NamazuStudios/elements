@@ -42,13 +42,13 @@ public interface ElementsLocalBuilder {
      * Specifies an {@link Element} to load associated with the supplied package.
      *
      * @param applicationNameOrId the name or id of the {@link Application}
-     * @param aPacakge            the name of the Java package for the Element
+     * @param aPackage            the name of the Java package for the Element
      * @return this instance
      */
     default ElementsLocalBuilder withElementNamed(
             final String applicationNameOrId,
-            final String aPacakge) {
-        return withElementNamed(applicationNameOrId, aPacakge, emptyAttributes());
+            final String aPackage) {
+        return withElementNamed(applicationNameOrId, aPackage, emptyAttributes());
     }
 
     /**
@@ -63,6 +63,32 @@ public interface ElementsLocalBuilder {
             String applicationNameOrId,
             String elementName,
             Attributes attributes);
+
+    /**
+     * Enables Logback Classic to be shared among system, sdk, and Element.
+     * @return this instance
+     */
+    default ElementsLocalBuilder withLogbackClassic() {
+        return this
+            .withSharedPackage("ch.qos.logback.core")
+            .withSharedPackage("ch.qos.logback.classic");
+    }
+
+    /**
+     * Enables sharing among System, SDK, and Element.
+     * @param packageName the package name.
+     *
+     * @return this instance
+     */
+    ElementsLocalBuilder withSharedPackage(String packageName);
+
+    /**
+     * Enables sharing among System, SDK, and Element.
+     *
+     * @param sharedType the type to share
+     * @return the shared type
+     */
+    ElementsLocalBuilder withSharedType(String sharedType);
 
     /**
      * Builds the {@link ElementsLocal} instance

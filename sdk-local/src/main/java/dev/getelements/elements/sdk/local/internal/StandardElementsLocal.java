@@ -1,8 +1,8 @@
-package dev.getelements.elements.sdk.local;
+package dev.getelements.elements.sdk.local.internal;
 
 import dev.getelements.elements.jetty.ElementsWebServices;
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.local.ElementsLocal;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
