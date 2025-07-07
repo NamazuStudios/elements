@@ -10,10 +10,8 @@ import java.util.Objects;
 
 @Entity(value = "oidc_auth_scheme", useDiscriminator = false)
 @Indexes({
-        @Index(fields = {
-                @Field("name"),
-                @Field("issuer")
-        }, options = @IndexOptions(unique = true))
+        @Index(fields = @Field("name"), options = @IndexOptions(unique = true)),
+        @Index(fields = @Field("issuer"), options = @IndexOptions(unique = true))
 })
 public class MongoOidcAuthScheme {
 
