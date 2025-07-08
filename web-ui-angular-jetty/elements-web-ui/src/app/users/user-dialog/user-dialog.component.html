@@ -15,20 +15,8 @@
         <mat-error *ngIf="userForm.controls.email.hasError('email')">Email must be a valid email address</mat-error>
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Facebook ID</mat-label>
-        <input matInput placeholder="facebookId" name="facebookId" formControlName="facebookId">
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Firebase ID</mat-label>
-        <input matInput placeholder="firebaseId" name="firebaseId" formControlName="firebaseId">
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>Apple Sign In ID</mat-label>
-        <input matInput placeholder="appleSignInId" name="appleSignInId" formControlName="appleSignInId">
-      </mat-form-field>
-      <mat-form-field>
-        <mat-label>External User ID</mat-label>
-        <input matInput placeholder="externalUserId" name="externalUserId" formControlName="externalUserId">
+        <input matInput placeholder="Linked Accounts"  name="Linked Accounts" formControlName="linkedAccounts">
+        <ul><li *ngFor="let item of data.user.linkedAccounts">{{ item | lastSegmentCapitalize }}</li></ul>
       </mat-form-field>
       <mat-form-field>
         <input matInput placeholder="Password" name="password" formControlName="password"

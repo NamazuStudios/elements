@@ -21,6 +21,7 @@ import java.util.Optional;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 
 public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
 
@@ -98,12 +99,22 @@ public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
     public void deleteAuthScheme(final String authSchemeId) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
-        final var result = getDatastore()
-                .find(MongoOAuth2AuthScheme.class)
-                .filter(eq("_id", objectId))
-                .delete();
 
-        if (result.getDeletedCount() == 0) {
+        final var query = getDatastore().find(MongoOAuth2AuthScheme.class);
+        query.filter(eq("_id", objectId));
+
+        final var builder = new UpdateBuilder();
+        builder.with(unset("name"));
+        builder.with(unset("params"));
+        builder.with(unset("headers"));
+        builder.with(unset("validationUrl"));
+        builder.with(unset("responseIdMapping"));
+
+        final MongoOAuth2AuthScheme mongoOidcAuthScheme = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoOidcAuthScheme == null) {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authSchemeId);
         }
 

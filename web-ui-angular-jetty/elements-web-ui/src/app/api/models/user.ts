@@ -5,5 +5,5 @@ export interface User {
   email: string;
   level: 'UNPRIVILEGED' | 'USER' | 'SUPERUSER';
   active?: boolean;
-  facebookId?: string;
+  linkedAccounts?: string[];
 }

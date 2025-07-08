@@ -3,7 +3,6 @@ package dev.getelements.elements.sdk.model.auth;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +13,9 @@ public class OidcAuthScheme {
     @NotNull(groups = ValidationGroups.Update.class)
     @Schema(description = "The unique ID of the auth scheme.")
     private String id;
+
+    @Schema(description = "The unique name of the auth scheme.")
+    private String name;
 
     @NotNull
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
@@ -36,6 +38,14 @@ public class OidcAuthScheme {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getIssuer() {
@@ -75,12 +85,23 @@ public class OidcAuthScheme {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OidcAuthScheme that = (OidcAuthScheme) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(getId(), getName(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
     }
 
+    @Override
+    public String toString() {
+        return "OidcAuthScheme{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", issuer='" + issuer + '\'' +
+                ", keys='" + keys + '\'' +
+                ", keysUrl='" + keysUrl + '\'' +
+                ", mediaType='" + mediaType +
+                '}';
+    }
 }

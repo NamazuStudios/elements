@@ -2,11 +2,11 @@ package dev.getelements.elements.dao.mongo.model;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.morphia.annotations.*;
-import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Created by patricktwohig on 3/31/15.
@@ -43,6 +43,9 @@ public class MongoUser {
 
     @Property
     private User.Level level;
+
+    @Property
+    private Set<String> linkedAccounts;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -124,17 +127,25 @@ public class MongoUser {
         this.lastName = lastName;
     }
 
+    public Set<String> getLinkedAccounts() {
+        return linkedAccounts;
+    }
+
+    public void setLinkedAccounts(Set<String> linkedAccounts) {
+        this.linkedAccounts = linkedAccounts;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-        return Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level;
+        return Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(linkedAccounts, mongoUser.linkedAccounts);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level);
+        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, linkedAccounts);
         result = 31 * result + Arrays.hashCode(salt);
         result = 31 * result + Arrays.hashCode(passwordHash);
         return result;
@@ -153,6 +164,7 @@ public class MongoUser {
                 ", salt=" + Arrays.toString(salt) +
                 ", passwordHash=" + Arrays.toString(passwordHash) +
                 ", level=" + level +
+                ", linkedAccounts=" + linkedAccounts +
                 '}';
     }
 }

@@ -13,13 +13,13 @@
   <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource" >
 
     <ng-container matColumnDef="select">
-      <mat-header-cell fxFlex="75px" *matHeaderCellDef>
+      <mat-header-cell *matHeaderCellDef>
         <mat-checkbox (change)="$event ? masterToggle() : null"
                       [checked]="selection.hasValue() && isAllSelected()"
                       [indeterminate]="selection.hasValue() && !isAllSelected()">
         </mat-checkbox>
       </mat-header-cell>
-      <mat-cell fxFlex="75px" *matCellDef="let row">
+      <mat-cell *matCellDef="let row">
         <mat-checkbox (click)="$event.stopPropagation()"
                       (change)="$event ? selection.toggle(row) : null"
                       [checked]="selection.isSelected(row)">
@@ -28,8 +28,13 @@
     </ng-container>
 
     <ng-container matColumnDef="id">
+      <mat-header-cell class="mat-column-id" *matHeaderCellDef>Id</mat-header-cell>
+      <mat-cell class="mat-column-id" *matCellDef="let user">{{user.id}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Username</mat-header-cell>
-      <mat-cell *matCellDef="let user">{{user.name}}</mat-cell>
+      <mat-cell *matCellDef="let user"><span class="truncate-text-right">{{user.name}}</span></mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="email">
@@ -37,8 +42,19 @@
       <mat-cell *matCellDef="let user"><span class="truncate-text-right">{{user.email}}</span></mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="linkedAccounts">
+      <mat-header-cell *matHeaderCellDef>Linked Accounts</mat-header-cell>
+      <mat-cell *matCellDef="let user">
+        <div style="white-space: nowrap;">
+          <span *ngFor="let item of user.linkedAccounts; let last = last">
+            {{ item | lastSegmentCapitalize }}<span *ngIf="!last">, </span>
+          </span>
+        </div>
+      </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="level">
-      <mat-header-cell *matHeaderCellDef>Access Level</mat-header-cell>
+      <mat-header-cell class="mat-column-level" *matHeaderCellDef>Access Level</mat-header-cell>
       <mat-cell *matCellDef="let user">{{user.level}}</mat-cell>
     </ng-container>
 

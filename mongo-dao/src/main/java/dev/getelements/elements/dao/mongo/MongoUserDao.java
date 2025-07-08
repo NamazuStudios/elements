@@ -28,6 +28,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -258,7 +259,7 @@ public class MongoUserDao implements UserDao {
         );
 
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
-        createUidsForUser(createdUser);
+        createUidsStrictForUser(createdUser);
 
         return createdUser;
 
@@ -529,7 +530,7 @@ public class MongoUserDao implements UserDao {
 
         final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
-        createUidsForUser(createdUser);
+        createUidsStrictForUser(createdUser);
 
         return createdUser;
     }
@@ -644,47 +645,32 @@ public class MongoUserDao implements UserDao {
 
     }
 
-    private void createUidsForUser(final User user) {
-        if(user.getEmail() != null && !user.getEmail().isBlank()) {
-            createUid(UserUidDao.SCHEME_EMAIL, user.getEmail(), user.getId());
-        }
-
-        if(user.getName() != null && !user.getName().isBlank()) {
-            createUid(UserUidDao.SCHEME_NAME, user.getName(), user.getId());
-        }
-
-        if(user.getPrimaryPhoneNb() != null && !user.getPrimaryPhoneNb().isBlank()) {
-            createUid(UserUidDao.SCHEME_PHONE_NUMBER, user.getPrimaryPhoneNb(), user.getId());
-        }
-    }
-
-    private void createUid(String scheme, String id, String userId) {
-        final var uid = new UserUid();
-        uid.setScheme(scheme);
-        uid.setId(id);
-        uid.setUserId(userId);
-        getMongoUserUidDao().createUserUidStrict(uid);
-    }
-
     private void createUidsStrictForUser(final User user) {
         if(user.getEmail() != null && !user.getEmail().isBlank()) {
-            createUidStrict(UserUidDao.SCHEME_EMAIL, user.getEmail(), user.getId());
+            createUidStrict(UserUidDao.SCHEME_EMAIL, user, user.getEmail());
         }
 
         if(user.getName() != null && !user.getName().isBlank()) {
-            createUidStrict(UserUidDao.SCHEME_NAME, user.getName(), user.getId());
+            createUidStrict(UserUidDao.SCHEME_NAME, user, user.getName());
         }
 
         if(user.getPrimaryPhoneNb() != null && !user.getPrimaryPhoneNb().isBlank()) {
-            createUidStrict(UserUidDao.SCHEME_PHONE_NUMBER, user.getPrimaryPhoneNb(), user.getId());
+            createUidStrict(UserUidDao.SCHEME_PHONE_NUMBER, user, user.getPrimaryPhoneNb());
         }
     }
 
-    private void createUidStrict(String scheme, String id, String userId) {
+    private void createUidStrict(final String scheme, final User user, final String schemeId) {
         final var uid = new UserUid();
         uid.setScheme(scheme);
-        uid.setId(id);
-        uid.setUserId(userId);
+        uid.setId(schemeId);
+        uid.setUserId(user.getId());
+
+        if(user.getLinkedAccounts() == null) {
+            user.setLinkedAccounts(new HashSet<>());
+        }
+
+        user.getLinkedAccounts().add(scheme);
+
         getMongoUserUidDao().createUserUidStrict(uid);
     }
 

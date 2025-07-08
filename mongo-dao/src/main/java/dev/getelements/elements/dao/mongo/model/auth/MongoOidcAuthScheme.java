@@ -10,12 +10,16 @@ import java.util.Objects;
 
 @Entity(value = "oidc_auth_scheme", useDiscriminator = false)
 @Indexes({
+        @Index(fields = @Field("name"), options = @IndexOptions(unique = true)),
         @Index(fields = @Field("issuer"), options = @IndexOptions(unique = true))
 })
 public class MongoOidcAuthScheme {
 
     @Id
     private ObjectId id;
+
+    @Property
+    private String name;
 
     @Property
     private String issuer;
@@ -35,6 +39,14 @@ public class MongoOidcAuthScheme {
 
     public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getIssuer() {
@@ -74,12 +86,12 @@ public class MongoOidcAuthScheme {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoOidcAuthScheme that = (MongoOidcAuthScheme) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(getId(), getName(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
     }
 
 }

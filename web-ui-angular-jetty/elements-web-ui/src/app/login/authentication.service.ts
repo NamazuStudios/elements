@@ -36,7 +36,7 @@ export class AuthenticationService {
     return this.usernamePasswordSessionService.createSession({ userId: username, password: password })
       .pipe(map(sessionCreation => {
         let json = JSON.stringify(sessionCreation)
-        console.log("CREATED SESSION " + json);
+        // console.log("CREATED SESSION " + json);
         localStorage.setItem('currentSession', json);
 
         this.currentSessionSubject.next(sessionCreation);
