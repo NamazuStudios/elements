@@ -58,6 +58,8 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
     }
 
+    private boolean isolatedSdk = false;
+
     private Attributes attributes = Attributes.emptyAttributes();
 
     private final Set<String> sharedTypes = new HashSet<>();
@@ -65,6 +67,12 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
     private final Set<String> sharedPackages = new HashSet<>();
 
     private final List<ElementsLocalApplicationElementRecord> localElements = new ArrayList<>();
+
+    @Override
+    public ElementsLocalBuilder withIsolatedSdk(boolean isolatedSdk) {
+        this.isolatedSdk = isolatedSdk;
+        return this;
+    }
 
     @Override
     public ElementsLocalBuilder withAttributes(final Attributes attributes) {
@@ -116,7 +124,7 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
         );
 
         final var factory = ServiceLoader
-                .load(ElementsLocalFactory.class)
+                .load(ElementsLocalFactory.class, isolatedSdk ? sdkClassLoader : getClass().getClassLoader())
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new SdkException("Unable to find SPI for " + ElementsLocalFactory.class.getName()))

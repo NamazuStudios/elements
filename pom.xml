@@ -114,6 +114,7 @@
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>
+        <module>sdk-logback</module>
         <module>common-mapstruct</module>
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
@@ -264,6 +265,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-local-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-logback</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

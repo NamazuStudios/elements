@@ -20,6 +20,13 @@ import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 public interface ElementsLocalBuilder {
 
     /**
+     * Specifies if the Elements SDK should run in an isolated classpath.
+     * @param isolatedSdk true to isolate the SDK types when running.
+     * @return this instance
+     */
+    ElementsLocalBuilder withIsolatedSdk(boolean isolatedSdk);
+
+    /**
      * Specifies the system properties as a {@link Properties} instance.
      *
      * @param properties properties
