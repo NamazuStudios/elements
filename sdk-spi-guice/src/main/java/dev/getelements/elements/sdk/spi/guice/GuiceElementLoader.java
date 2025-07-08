@@ -6,7 +6,6 @@ import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.annotation.ElementPackage;
 import dev.getelements.elements.sdk.annotation.ElementService;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
-import dev.getelements.elements.sdk.annotation.ElementSpiImplementation;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.guice.GuiceServiceLocatorModule;
 import dev.getelements.elements.sdk.record.ElementRecord;
@@ -27,16 +26,6 @@ import static dev.getelements.elements.sdk.ElementType.ISOLATED_CLASSPATH;
  *     <li>Each specification of {@link ElementServiceExport} will expose the the service exposed.</li>
  * </ul>
  */
-@ElementSpiImplementation(
-        dependencies = {
-                @ElementPackage("jakarta.inject"),
-                @ElementPackage("org.aopalliance"),
-                @ElementPackage("com.google.common.util.concurrent"),
-                @ElementPackage("dev.getelements.elements.sdk.spi.guice"),
-                @ElementPackage(value = "com.google.inject", recursive = true),
-                @ElementPackage(value = "com.google.common", recursive = true),
-        }
-)
 public class GuiceElementLoader implements ElementLoader {
 
     private ElementRecord elementRecord;

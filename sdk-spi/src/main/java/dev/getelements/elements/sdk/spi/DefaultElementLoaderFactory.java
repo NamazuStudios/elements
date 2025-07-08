@@ -44,21 +44,15 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var classLoader = classLoaderCtor.apply(isolated);
 
         final var elementDefinitionRecord = scanForModuleDefinition(classLoader, selector);
-        final var elementSpiImplementationsRecord = scanForSpiImplementations(classLoader);
 
         // Partially initializes the classloaders with the ElementDefinitionRecord
         reflectionUtils.injectBeanProperties(isolated, elementDefinitionRecord);
         reflectionUtils.injectBeanProperties(classLoader, elementDefinitionRecord);
 
-        // Partially initializes the classloaders with the ElementSpiImplementationsRecord
-        reflectionUtils.injectBeanProperties(isolated, elementSpiImplementationsRecord);
-        reflectionUtils.injectBeanProperties(classLoader, elementSpiImplementationsRecord);
-
         final var elementRecord = loadElementRecord(
                 attributes,
                 classLoader,
-                elementDefinitionRecord,
-                elementSpiImplementationsRecord);
+                elementDefinitionRecord);
 
         // Fully initializes the classloaders with the ElementDefinitionRecord
         reflectionUtils.injectBeanProperties(isolated, elementRecord);
@@ -72,8 +66,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
     private ElementRecord loadElementRecord(
             final Attributes attributes,
             final ClassLoader classLoader,
-            final ElementDefinitionRecord elementDefinitionRecord,
-            final ElementSpiImplementationsRecord elementSpiImplementationsRecord) {
+            final ElementDefinitionRecord elementDefinitionRecord) {
 
         final var elementServices = scanForElementServices(classLoader, elementDefinitionRecord);
         final var elementProducedEvents = scanForProducedEvents(classLoader, elementDefinitionRecord);
@@ -97,8 +90,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
-                classLoader,
-                elementSpiImplementationsRecord
+                classLoader
         );
 
     }
@@ -189,8 +181,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
-                localClassLoader,
-                new ElementSpiImplementationsRecord(List.of())
+                localClassLoader
         );
 
     }
@@ -236,28 +227,6 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                         }
                     })
                     .collect(toList());
-
-        }
-
-    }
-
-    private ElementSpiImplementationsRecord scanForSpiImplementations(final ClassLoader classLoader) {
-
-        final var cg = new ClassGraph()
-                .ignoreParentClassLoaders()
-                .overrideClassLoaders(classLoader)
-                .enableClassInfo()
-                .enableAnnotationInfo();
-
-        try (final var result = cg.scan()) {
-
-            final var spis = result.getClassesWithAnnotation(ElementSpiImplementation.class)
-                    .stream()
-                    .map(ClassInfo::loadClass)
-                    .map(ElementSpiImplementationRecord::from)
-                    .toList();
-
-            return new ElementSpiImplementationsRecord(spis);
 
         }
 

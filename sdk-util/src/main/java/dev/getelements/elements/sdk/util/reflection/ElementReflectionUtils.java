@@ -103,9 +103,6 @@ public class ElementReflectionUtils implements ElementStandardBeanProperties {
                     if (setIfMatch(target, descriptor, ELEMENT_REGISTRY_PROPERTY, bean))
                         break;
 
-                    if (setIfMatch(target, descriptor, ELEMENT_SPI_IMPLEMENTATIONS_PROPERTY, bean))
-                        break;
-
                 }
             }
 
