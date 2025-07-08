@@ -33,7 +33,7 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
             deployApplication(application);
         } catch (ApplicationCodeNotFoundException ex) {
             logger.info("No code for application {} ({}).", application.getName(), application.getId());
-        } catch (Exception ex) {
+        } catch (Exception | LinkageError ex) {
             logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
         }
     }
