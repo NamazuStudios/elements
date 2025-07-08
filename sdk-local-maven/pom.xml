@@ -51,6 +51,11 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-logback</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-local-test</artifactId>
             <scope>test</scope>
         </dependency>
@@ -109,6 +114,9 @@
                                 aopalliance,
                                 sdk-test-element-rs,
                                 sdk-test-element-ws,
+                                sdk-spi,
+                                sdk-guice,
+                                guava,
                                 sdk-spi-guice,
                                 jackson-core,
                                 jackson-databind,

@@ -20,13 +20,6 @@ import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 public interface ElementsLocalBuilder {
 
     /**
-     * Specifies if the Elements SDK should run in an isolated classpath.
-     * @param isolatedSdk true to isolate the SDK types when running.
-     * @return this instance
-     */
-    ElementsLocalBuilder withIsolatedSdk(boolean isolatedSdk);
-
-    /**
      * Specifies the system properties as a {@link Properties} instance.
      *
      * @param properties properties
@@ -70,32 +63,6 @@ public interface ElementsLocalBuilder {
             String applicationNameOrId,
             String elementName,
             Attributes attributes);
-
-    /**
-     * Enables Logback Classic to be shared among system, sdk, and Element.
-     * @return this instance
-     */
-    default ElementsLocalBuilder withLogbackClassic() {
-        return this
-            .withSharedPackage("ch.qos.logback.core")
-            .withSharedPackage("ch.qos.logback.classic");
-    }
-
-    /**
-     * Enables sharing among System, SDK, and Element.
-     * @param packageName the package name.
-     *
-     * @return this instance
-     */
-    ElementsLocalBuilder withSharedPackage(String packageName);
-
-    /**
-     * Enables sharing among System, SDK, and Element.
-     *
-     * @param sharedType the type to share
-     * @return the shared type
-     */
-    ElementsLocalBuilder withSharedType(String sharedType);
 
     /**
      * Builds the {@link ElementsLocal} instance

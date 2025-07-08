@@ -8,5 +8,4 @@ import java.util.List;
 public record ElementsLocalFactoryRecord(
         Attributes attributes,
         List<URL> classpath,
-        List<ElementsLocalApplicationElementRecord> elements,
-        ElementsLocalURLClassLoader localSdkURLClassLoader) {}
+        List<ElementsLocalApplicationElementRecord> elements) {}
