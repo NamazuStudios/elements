@@ -8,6 +8,8 @@ import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,6 +30,8 @@ import static java.util.Objects.requireNonNull;
  * core system through. The delegate {@link ClassLoader} is typically the system class loader.
  */
 public class ElementClassLoader extends ClassLoader {
+
+    private static final Logger logger = LoggerFactory.getLogger(ElementClassLoader.class);
 
     private static final ClassLoaderUtils utils = new ClassLoaderUtils(ElementClassLoader.class);
 
@@ -210,15 +214,15 @@ public class ElementClassLoader extends ClassLoader {
             return aClass;
         }
 
-        final var message = format("%s or %s's package (%s) must have @%s annotation or be exposed via @%s",
+        logger.error("{} or {}'s package ({}) must have @{} annotation or be exposed via @{}",
                 aClass.getSimpleName(),
-                aClass.getName(),
+                aClass.getSimpleName(),
                 aClassPackage,
                 ElementPublic.class.getSimpleName(),
                 ElementDefinition.class.getSimpleName()
         );
 
-        throw new ClassNotFoundException(message);
+        throw new ClassNotFoundException(aClass.getName());
 
     }
 
