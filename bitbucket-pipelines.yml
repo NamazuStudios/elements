@@ -15,9 +15,8 @@ definitions:
     docker:
       image: docker:dind
 
-options:
-  max-time: 120
-  size: 2x
+clone:
+  depth: full
 
 pipelines:
   tags:
