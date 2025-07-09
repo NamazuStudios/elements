@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.cluster.ApplicationAssetLoader;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.test.TestArtifactRegistry;
+import dev.getelements.elements.sdk.test.TestElementSpi;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_WS;
 import static dev.getelements.elements.sdk.test.TestElementBundle.JAKARTA_RS_DEPENDENCIES;
+import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static java.nio.file.Files.createDirectories;
 
 /**
@@ -41,10 +43,15 @@ public class TestApplicationAssetLoader implements ApplicationAssetLoader {
             createDirectories(rsTestDirectory);
             createDirectories(wsTestDirectory);
 
+            // Install the artifacts to the output directories
             registry.copyArtifactTo(JAKARTA_RS, rsTestDirectory);
             registry.copyBundleTo(JAKARTA_RS_DEPENDENCIES, rsTestDirectory);
-
             registry.copyArtifactTo(JAKARTA_WS, wsTestDirectory);
+
+
+            // Install the SPIs
+            registry.copySpiTo(GUICE_7_0_X, rsTestDirectory);
+            registry.copySpiTo(GUICE_7_0_X, wsTestDirectory);
 
             return path;
         } catch (Exception ex) {

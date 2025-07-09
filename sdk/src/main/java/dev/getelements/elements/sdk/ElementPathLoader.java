@@ -92,7 +92,7 @@ public interface ElementPathLoader {
      */
     default Stream<Element> load(final MutableElementRegistry registry) {
         final var path = Path.of(getenv(ELEMENT_PATH_ENV));
-        final var systemClassLoader = ClassLoader.getSystemClassLoader();
+        final var systemClassLoader = getClass().getClassLoader();
         return load(registry, path, systemClassLoader);
     }
 
@@ -104,7 +104,7 @@ public interface ElementPathLoader {
      * @return a {@link Stream} of {@link Element} instances
      */
     default Stream<Element> load(final MutableElementRegistry registry, final Path path) {
-        return load(registry, path, ClassLoader.getSystemClassLoader());
+        return load(registry, path, getClass().getClassLoader());
     }
 
     /**

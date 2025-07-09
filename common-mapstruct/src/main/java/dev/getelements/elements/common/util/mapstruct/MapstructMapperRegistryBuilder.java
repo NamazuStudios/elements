@@ -32,6 +32,8 @@ public class MapstructMapperRegistryBuilder {
     private final LazyValue<ClassGraph> classGraph = new SimpleLazyValue<>(() -> new ClassGraph()
             .enableClassInfo()
             .enableMethodInfo()
+            .ignoreParentClassLoaders()
+            .overrideClassLoaders(getClass().getClassLoader())
             .enableAnnotationInfo());
 
     public MapstructMapperRegistryBuilder withPackages(final String ... packages) {

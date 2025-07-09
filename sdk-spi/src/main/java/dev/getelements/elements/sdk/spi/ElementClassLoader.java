@@ -12,10 +12,7 @@ import dev.getelements.elements.sdk.record.ElementRecord;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -26,9 +23,13 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A {@link ClassLoader} type which inspects classes at load time processing the visibility annotations provided by the
- * Elements' SDK. Such annotations include {@link ElementPrivate} and {@link ElementPublic}.
+ * Elements' SDK. Such annotations include {@link ElementPrivate} and {@link ElementPublic}. This implementation
+ * allows for a separate hierarchy of classes to be loaded for each Element, while still allowing some parts of the
+ * core system through. The delegate {@link ClassLoader} is typically the system class loader.
  */
 public class ElementClassLoader extends ClassLoader {
+
+    private static final ClassLoaderUtils utils = new ClassLoaderUtils(ElementClassLoader.class);
 
     private static final Map<String, String> BUILTIN_RESOURCES = Map.of(
             "META-INF/services/dev.getelements.elements.sdk.ElementSupplier",
@@ -37,22 +38,52 @@ public class ElementClassLoader extends ClassLoader {
             "text://dev.getelements.elements.sdk.spi.ElementScopedElementRegistrySupplier"
     );
 
-    private static final List<Predicate<Class<?>>> BUILTIN_TYPES_WHITELIST = ServiceLoader
-            .load(PermittedTypes.class)
-            .stream()
-            .map(ServiceLoader.Provider::get)
-            .collect(Collectors.toUnmodifiableList());
-
-    private static final List<Predicate<Package>> BUILTIN_PACKAGES_WHITELIST = ServiceLoader
-            .load(PermittedPackages.class)
-            .stream()
-            .map(ServiceLoader.Provider::get)
-            .collect(Collectors.toUnmodifiableList());
-
     private ElementRecord elementRecord;
 
-    public ElementClassLoader(final ClassLoader parent) {
-        super(requireNonNull(parent, "parent"));
+    private final ClassLoader delegate;
+
+    private final List<Predicate<Class<?>>> permittedTypes;
+
+    private final List<Predicate<Package>> permittedPackages;
+
+    /**
+     * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
+     * loader will be the sources for classes that are not found in this class loader. This is typically the system
+     * class path and the Element's class path.
+     *
+     * This constructor uses the bootstrap as the parent class loader.
+     *
+     * @param delegate the delegate class loader to use for loading classes that are not found in this class loader.
+     */
+    public ElementClassLoader(final ClassLoader delegate) {
+        this(delegate, null);
+    }
+
+    /**
+     * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
+     * loader will be the sources for classes that are not found in this class loader. This is typically the system
+     * class path and the Element's class path.
+     *
+     * @param delegate the delegate class loader to use for loading classes that are not found in this class loader.
+     * @param parent the parent class loader to use for loading classes that are not found in this class loader.
+     */
+    public ElementClassLoader(final ClassLoader delegate, final ClassLoader parent) {
+        super("Element Class Loader", parent);
+
+        this.delegate = requireNonNull(delegate, "delegate");
+
+        permittedTypes = ServiceLoader
+                .load(PermittedTypes.class, delegate)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .collect(Collectors.toUnmodifiableList());
+
+        permittedPackages = ServiceLoader
+                .load(PermittedPackages.class, delegate)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .collect(Collectors.toUnmodifiableList());
+
     }
 
     public ElementRecord getElementRecord() {
@@ -64,50 +95,59 @@ public class ElementClassLoader extends ClassLoader {
     }
 
     @Override
-    protected URL findResource(String name) {
+    protected URL findResource(final String name) {
         final var url = BUILTIN_RESOURCES.getOrDefault(name, null);
         return url == null ? null : toUrl(url);
     }
 
     @Override
     protected Enumeration<URL> findResources(final String name) throws IOException {
+
         final var url = BUILTIN_RESOURCES.getOrDefault(name, null);
-        return url == null ? toUrls() : toUrls(url);
+        final var delegateUrls = delegate.getResources(name);
+
+        final var all = new ArrayList<URL>();
+
+        if (url != null) {
+            all.add(toUrl(url));
+        }
+
+        if (delegateUrls != null) {
+            delegateUrls.asIterator().forEachRemaining(all::add);
+        }
+
+        return Collections.enumeration(all);
+
     }
 
     @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-
-        Class<?> aClass;
-
         try {
-            // All system-provided classes automatically exist in the classloader hierarchy without needing special
-            // permission. This enables the element to see the core JVM classes, but essentially skips all of the
-            // Element's classpath.
-            aClass = getPlatformClassLoader().loadClass(name);
-        } catch (ClassNotFoundException ex) {
-            // If not present, then we load the class from the parent and the process any annotations. We have explicit
-            // whitelists.
-            aClass = processVisibilityAnnotations(getParent().loadClass(name));
+
+            final var aClass = super.loadClass(name, resolve);
+
+            if (aClass.getAnnotation(ElementLocal.class) != null) {
+                final var aLocalClass = findLoadedClass(name);
+                return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
+            }
+
+            return aClass;
+
+        } catch (final ClassNotFoundException e) {
+            final var delegateClass = delegate.loadClass(name);
+            return processVisibilityAnnotations(delegateClass);
         }
-
-        if (resolve) {
-            resolveClass(aClass);
-        }
-
-        return aClass;
-
     }
 
     private Class<?> processVisibilityAnnotations(final Class<?> aClass) throws ClassNotFoundException {
 
-        final var name = aClass.getName();
-
         // SPI Types annotated as ElementLocal will be copied from the bytecode of the parent and then loaded into this
         // classloader. This ensures that the Element Local types are unique per Element.
+
         if (aClass.getAnnotation(ElementLocal.class) != null) {
+            final var name = aClass.getName();
             final var aLocalClass = findLoadedClass(name);
-            return aLocalClass == null ? copyFromParent(aClass) : aLocalClass;
+            return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
         }
 
         final var aClassPackage = aClass.getPackage();
@@ -116,11 +156,11 @@ public class ElementClassLoader extends ClassLoader {
         // make configurable based on application attributes later, but we'll stitck to hardcoded values we have for
         // now. We will likely need to extend more.
 
-        if (BUILTIN_TYPES_WHITELIST.stream().anyMatch(t -> t.test(aClass))) {
+        if (permittedTypes.stream().anyMatch(t -> t.test(aClass))) {
             return aClass;
         }
 
-        if (BUILTIN_PACKAGES_WHITELIST.stream().anyMatch(p -> p.test(aClassPackage))) {
+        if (permittedPackages.stream().anyMatch(p -> p.test(aClassPackage))) {
             return aClass;
         }
 
@@ -153,9 +193,10 @@ public class ElementClassLoader extends ClassLoader {
         }
 
         if (getElementRecord() == null) {
-            // This happens pre-initialization of the classloader, so there is not an ElementRecord yet to be loaded
-            // so this remains as-is until it is properly scoped.
-            return aClass;
+            // This ensures that if the ElementRecord is not set, we aren't done initializing the Element. Anything
+            // past this point should exist in the Element's ClassLoader. If it doesn't, then the Element isn't
+            // properly configured (eg it's missing an SPI).
+            throw new ClassNotFoundException();
         }
 
         final var isRegisteredService = getElementRecord()
@@ -165,6 +206,7 @@ public class ElementClassLoader extends ClassLoader {
                 .anyMatch(exposed -> exposed.equals(aClass));
 
         if (isRegisteredService) {
+            // This implicitly makes a registered service public.
             return aClass;
         }
 
@@ -180,12 +222,12 @@ public class ElementClassLoader extends ClassLoader {
 
     }
 
-    private Class<?> copyFromParent(final Class<?> parentClass) {
+    private Class<?> copyFromDelegate(final Class<?> parentClass) {
 
         final var clsName = parentClass.getName();
         final var registryResourceURL = clsName.replace(".", "/") + ".class";
 
-        try (var is = getParent().getResourceAsStream(registryResourceURL);
+        try (var is = delegate.getResourceAsStream(registryResourceURL);
              var os = new ByteArrayOutputStream()) {
 
             assert is != null;

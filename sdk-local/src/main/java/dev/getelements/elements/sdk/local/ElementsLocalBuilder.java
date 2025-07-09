@@ -42,13 +42,13 @@ public interface ElementsLocalBuilder {
      * Specifies an {@link Element} to load associated with the supplied package.
      *
      * @param applicationNameOrId the name or id of the {@link Application}
-     * @param aPacakge            the name of the Java package for the Element
+     * @param aPackage            the name of the Java package for the Element
      * @return this instance
      */
     default ElementsLocalBuilder withElementNamed(
             final String applicationNameOrId,
-            final String aPacakge) {
-        return withElementNamed(applicationNameOrId, aPacakge, emptyAttributes());
+            final String aPackage) {
+        return withElementNamed(applicationNameOrId, aPackage, emptyAttributes());
     }
 
     /**
@@ -63,24 +63,6 @@ public interface ElementsLocalBuilder {
             String applicationNameOrId,
             String elementName,
             Attributes attributes);
-
-    /**
-     * Delegates to the system classloader to load elements. This is the default behavior.
-     *
-     * @return this instance
-     */
-    default ElementsLocalBuilder withDelegatingClassLoader() {
-        return withClassLoaderConstructor(DelegatingLocalClassLoader::new);
-    }
-
-    /**
-     * Specifies the classloader constructor to use for loading the {@link Element}. This is passed to
-     * {@link ElementLoaderFactory#getIsolatedLoader(Attributes, ClassLoader, ClassLoaderConstructor, Predicate)}
-     *
-     * @param constructor the constructor
-     * @return this instance
-     */
-    ElementsLocalBuilder withClassLoaderConstructor(ClassLoaderConstructor constructor);
 
     /**
      * Builds the {@link ElementsLocal} instance

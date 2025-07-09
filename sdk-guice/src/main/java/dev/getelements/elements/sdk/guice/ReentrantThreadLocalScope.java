@@ -50,7 +50,7 @@ public class ReentrantThreadLocalScope<ScopedT> implements Scope {
         this.instanceSupplier = instanceSupplier;
 
         this.proxy = scoped.cast(newProxyInstance(
-            getSystemClassLoader(),
+            getClass().getClassLoader(),
             new Class[]{scoped}, (proxy, method, args) -> {
                 final var actual = instanceSupplier.get();
                 return method.invoke(actual, args);

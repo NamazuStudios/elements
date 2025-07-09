@@ -33,7 +33,8 @@ public interface ElementStandardBeanProperties {
      */
     StandardBeanProperty<ElementRecord> ELEMENT_RECORD_PROPERTY = new StandardBeanProperty<>(
             ElementRecord.class,
-            ELEMENT_RECORD);
+            ELEMENT_RECORD
+    );
 
     /**
      * The {@link StandardBeanProperty} for the {@link ElementDefinitionRecord}.

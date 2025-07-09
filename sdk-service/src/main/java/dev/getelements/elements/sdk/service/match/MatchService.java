@@ -81,7 +81,6 @@ public interface MatchService {
      * receive a null value indicating so.
      *
      * The returned {@link Subscription} need not be closed, unless explicitly requesting un-subscription.
-     * {@see {@link Subscription#subscribeNext(Consumer, Consumer)}}.
      *
      * @param matchId the match ID {@link Match#getId()}.
      * @param matchConsumer a {@link Consumer<Match>} used to receive the {@link Match} instance

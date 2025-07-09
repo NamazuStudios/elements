@@ -72,6 +72,7 @@ public class JakartaWebsocketLoader implements Loader {
         final var classgraph = new ClassGraph()
                 .enableClassInfo()
                 .enableAnnotationInfo()
+                .ignoreParentClassLoaders()
                 .overrideClassLoaders(element.getElementRecord().classLoader());
 
         final var definition = element.getElementRecord().definition();
