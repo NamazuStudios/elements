@@ -144,7 +144,7 @@ public class MongoVaultDao implements VaultDao {
         getValidationHelper().validateModel(vault.getUser(), Read.class);
 
         final var mongoUser = getMongoUserDao()
-            .findMongoUser(vault.getUser())
+            .findMongoUser(vault.getUser().getId())
             .orElseThrow(() -> new InvalidDataException("User not found: " + vault.getUser().getId()));
 
         final var mongoVaultKey = getMapper().map(vault.getKey(), MongoVaultKey.class);
