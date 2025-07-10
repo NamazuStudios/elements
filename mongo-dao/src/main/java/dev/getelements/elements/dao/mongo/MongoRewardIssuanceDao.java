@@ -73,7 +73,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     @Override
     public RewardIssuance getRewardIssuance(final User user, final String context) {
-        final MongoUser mongoUser = getMongoUserDao().getMongoUser(user);
+        final MongoUser mongoUser = getMongoUserDao().getMongoUser(user.getId());
         final Query<MongoRewardIssuance> query = getDatastore().find(MongoRewardIssuance.class);
 
         query.filter(eq("user", mongoUser));
@@ -111,7 +111,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
             final List<State> states,
             final List<String> tags) {
 
-        final MongoUser mongoUser = getMongoUserDao().getMongoUser(user);
+        final MongoUser mongoUser = getMongoUserDao().getMongoUser(user.getId());
         final Query<MongoRewardIssuance> query = getDatastore().find(MongoRewardIssuance.class);
 
         query.filter(eq("user", mongoUser));
