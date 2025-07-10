@@ -41,7 +41,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User getUser(String userId) {
-        return getUserDao().getUser(userId);
+        return getUserDao().findUser(userId).orElse(null);
     }
 
     @Override

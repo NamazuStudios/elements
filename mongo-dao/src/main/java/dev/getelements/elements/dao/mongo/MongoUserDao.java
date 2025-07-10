@@ -68,14 +68,14 @@ public class MongoUserDao implements UserDao {
         return getDozerMapper().map(mongoUser, User.class);
     }
 
-    public MongoUser getMongoUser(final User user) {
-        return getMongoUser(user.getId());
+    public MongoUser getMongoUser(final String userId) {
+        return findMongoUser(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found."));
     }
 
-    public Optional<MongoUser> findMongoUser(final User user) {
-        return Optional
-            .ofNullable(user)
-            .flatMap(u -> findMongoUser(u.getId()));
+    public MongoUser getMongoUser(final ObjectId mongoUserId) {
+        return findMongoUser(mongoUserId)
+                .orElseThrow(() -> new UserNotFoundException("User with id " + mongoUserId + " not found."));
     }
 
     public Optional<MongoUser> findMongoUser(final String userId) {
@@ -94,16 +94,6 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = query.first();
         return Optional.ofNullable(mongoUser);
 
-    }
-
-    public MongoUser getMongoUser(final String userId) {
-        return findMongoUser(userId)
-            .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found."));
-    }
-
-    public MongoUser getMongoUser(final ObjectId mongoUserId) {
-        return findMongoUser(mongoUserId)
-            .orElseThrow(() -> new UserNotFoundException("User with id " + mongoUserId + " not found."));
     }
 
     @Override
@@ -126,6 +116,19 @@ public class MongoUserDao implements UserDao {
             ? Optional.empty()
             : Optional.of(getDozerMapper().map(mongoUser, User.class));
 
+    }
+
+    public Optional<User> findUser(final String userId) {
+
+        final var mongoUserId = getMongoDBUtils().parseOrReturnNull(userId);
+
+        if(mongoUserId == null) {
+            return findUserByNameOrEmail(userId);
+        }
+
+        final var mongoUser = findMongoUser(mongoUserId);
+
+        return mongoUser.map(user -> getDozerMapper().map(user, User.class));
     }
 
     @Override

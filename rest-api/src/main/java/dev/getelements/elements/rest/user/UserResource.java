@@ -1,8 +1,8 @@
 package dev.getelements.elements.rest.user;
 
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
-import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.*;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
@@ -58,9 +58,16 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Gets a Specific User",
-            description = "Gets a specific user by email or unique user ID.")
+            description = "Gets a specific user by name, email, or unique user ID.")
     public User getUser(@PathParam("name") final String name) {
-        return getUserService().getUser(name);
+
+        final var user = getUserService().getUser(name);
+
+        if (user == null) {
+            throw new UserNotFoundException("User not found.");
+        }
+
+        return user;
     }
 
     @GET
@@ -90,7 +97,7 @@ public class UserResource {
         getValidationHelper().validateModel(userUpdateRequest);
 
         if (isNullOrEmpty(userId)) {
-            throw new NotFoundException("User not found.");
+            throw new UserNotFoundException("User not found.");
         }
 
         return getUserService().updateUser(userId, userUpdateRequest);
@@ -111,7 +118,7 @@ public class UserResource {
         getValidationHelper().validateModel(userUpdatePasswordRequest);
 
         if (isNullOrEmpty(userId)) {
-            throw new NotFoundException("User not found.");
+            throw new UserNotFoundException("User not found.");
         }
 
         return getUserService().updateUserPassword(userId, userUpdatePasswordRequest);
