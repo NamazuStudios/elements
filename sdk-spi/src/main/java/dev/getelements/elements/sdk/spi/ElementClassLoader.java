@@ -50,6 +50,10 @@ public class ElementClassLoader extends ClassLoader {
 
     private final List<Predicate<Package>> permittedPackages;
 
+    static {
+        registerAsParallelCapable();
+    }
+
     /**
      * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
      * loader will be the sources for classes that are not found in this class loader. This is typically the system
@@ -126,20 +130,22 @@ public class ElementClassLoader extends ClassLoader {
 
     @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
-        try {
+        synchronized (getClassLoadingLock(name)) {
+            try {
 
-            final var aClass = super.loadClass(name, resolve);
+                final var aClass = super.loadClass(name, resolve);
 
-            if (aClass.getAnnotation(ElementLocal.class) != null) {
-                final var aLocalClass = findLoadedClass(name);
-                return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
+                if (aClass.getAnnotation(ElementLocal.class) != null) {
+                    final var aLocalClass = findLoadedClass(name);
+                    return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
+                }
+
+                return aClass;
+
+            } catch (final ClassNotFoundException e) {
+                final var delegateClass = delegate.loadClass(name);
+                return processVisibilityAnnotations(delegateClass);
             }
-
-            return aClass;
-
-        } catch (final ClassNotFoundException e) {
-            final var delegateClass = delegate.loadClass(name);
-            return processVisibilityAnnotations(delegateClass);
         }
     }
 
@@ -214,7 +220,7 @@ public class ElementClassLoader extends ClassLoader {
             return aClass;
         }
 
-        logger.error("{} or {}'s package ({}) must have @{} annotation or be exposed via @{}",
+        logger.trace("{} or {}'s package ({}) must have @{} annotation or be exposed via @{}",
                 aClass.getSimpleName(),
                 aClass.getSimpleName(),
                 aClassPackage,
