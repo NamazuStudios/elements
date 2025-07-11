@@ -92,7 +92,7 @@ public class MongoOidcUserDaoTest {
     @Test
     public void testConnectIfNecessaryUnconnected() {
 
-        final User inserted = getUserDao().createUserWithPasswordStrict(testUserB, "Testy's Dog Named Fido");
+        final User inserted = getUserDao().createUserWithPassword(testUserB, "Testy's Dog Named Fido");
 
         assertNotNull(inserted.getId());
         assertTrue(ObjectId.isValid(inserted.getId()));
