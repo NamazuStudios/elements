@@ -153,7 +153,7 @@
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
-            <artifactId>openapi-generator-cli</artifactId>
+            <artifactId>openapi-generator</artifactId>
             <version>${openapi-generator.version}</version>
         </dependency>
     </dependencies>
