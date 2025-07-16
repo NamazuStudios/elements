@@ -22,6 +22,7 @@ import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoFIFOMatchmaker;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.match.MongoMultiMatchDao;
+import dev.getelements.elements.dao.mongo.metadata.MongoMetadataDao;
 import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
@@ -80,6 +81,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(TokensWithExpirationDao.class).to(MongoTokensWithExpirationDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
+        bind(MetadataDao.class).to(MongoMetadataDao.class);
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
@@ -143,6 +145,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(TokensWithExpirationDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
+        expose(MetadataDao.class);
         expose(MetadataSpecDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);

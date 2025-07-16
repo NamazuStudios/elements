@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.inventory.*;
 import dev.getelements.elements.sdk.service.invite.InviteService;
+import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.user.*;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
@@ -46,7 +47,6 @@ import dev.getelements.elements.service.blockchain.crypto.flow.FlowSmartContract
 import dev.getelements.elements.service.blockchain.crypto.flow.SuperUserFlowSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.near.NearSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.crypto.near.SuperUserNearSmartContractInvocationService;
-import dev.getelements.elements.service.blockchain.invoke.SuperUserSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.omni.*;
 import dev.getelements.elements.service.cdn.AnonCdnDeploymentService;
 import dev.getelements.elements.service.cdn.CdnDeploymentServiceProvider;
@@ -75,6 +75,10 @@ import dev.getelements.elements.service.largeobject.UserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.*;
 import dev.getelements.elements.service.match.MatchServiceProvider;
 import dev.getelements.elements.service.match.UserMatchService;
+import dev.getelements.elements.service.metadata.AnonMetadataService;
+import dev.getelements.elements.service.metadata.MetadataServiceProvider;
+import dev.getelements.elements.service.metadata.SuperUserMetadataService;
+import dev.getelements.elements.service.metadata.UserMetadataService;
 import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.notification.FCMRegistrationServiceProvider;
 import dev.getelements.elements.service.notification.SuperUserFCMRegistrationService;
@@ -251,6 +255,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OAuth2AuthSchemeServiceProvider.class)
                 .in(scope);
 
+        bind(MetadataService.class)
+                .toProvider(MetadataServiceProvider.class)
+                .in(scope);
+
         bind(MetadataSpecService.class)
                 .toProvider(MetadataSpecServiceProvider.class)
                 .in(scope);
@@ -362,6 +370,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonLeaderboardService.class);
 
+        bind(MetadataService.class)
+                .annotatedWith(named(ANONYMOUS))
+                .to(AnonMetadataService.class);
+
         bind(MissionService.class)
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonMissionService.class);
@@ -432,6 +444,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(MatchService.class)
                 .annotatedWith(named(USER))
                 .to(UserMatchService.class);
+
+        bind(MetadataService.class)
+                .annotatedWith(named(USER))
+                .to(UserMetadataService.class);
 
         bind(OidcAuthService.class)
                 .annotatedWith(named(USER))
@@ -584,6 +600,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(MatchmakingApplicationConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserMatchmakingApplicationConfigurationService.class);
+
+        bind(MetadataService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserMetadataService.class);
 
         bind(MetadataSpecService.class)
                 .annotatedWith(named(SUPERUSER))

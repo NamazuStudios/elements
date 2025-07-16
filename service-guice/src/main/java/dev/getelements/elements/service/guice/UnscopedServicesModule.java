@@ -18,6 +18,7 @@ import dev.getelements.elements.sdk.service.largeobject.LargeObjectService;
 import dev.getelements.elements.sdk.service.leaderboard.LeaderboardService;
 import dev.getelements.elements.sdk.service.leaderboard.RankService;
 import dev.getelements.elements.sdk.service.leaderboard.ScoreService;
+import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
@@ -53,6 +54,7 @@ import dev.getelements.elements.service.inventory.*;
 import dev.getelements.elements.service.invite.SuperUserInviteService;
 import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.*;
+import dev.getelements.elements.service.metadata.SuperUserMetadataService;
 import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
 import dev.getelements.elements.service.notification.StandardNotificationService;
@@ -187,6 +189,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(DefaultHealthStatusService.class)
                 .asEagerSingleton();
+
+        bind(MetadataService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserMetadataService.class);
 
         bind(MetadataSpecService.class)
                 .annotatedWith(named(UNSCOPED))
