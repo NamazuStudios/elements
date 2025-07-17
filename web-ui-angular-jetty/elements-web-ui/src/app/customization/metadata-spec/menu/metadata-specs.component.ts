@@ -4,27 +4,27 @@ import {MatDialog} from '@angular/material/dialog';
 import {MatPaginator} from '@angular/material/paginator';
 import {filter, tap} from 'rxjs/operators';
 import {AlertService} from 'src/app/alert.service';
+import {MetadataSpecsService} from 'src/app/api/services/metadata-specs.service';
 import {ConfirmationDialogService} from 'src/app/confirmation-dialog/confirmation-dialog.service';
 import {
-  NeoSmartTokenSpecsDialogComponent
-} from 'src/app/omni-chain/neo/neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
+  MetadataSpecsDialogComponent
+} from './metadata-specs-dialog/metadata-specs-dialog.component';
 import {
-  NeoSmartTokenSpecsDuplicateDialogComponent
-} from 'src/app/omni-chain/neo/neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
-import {NeoTokensSpecDataSource} from 'src/app/omni-chain/neo/neo-tokens-spec.datasource';
-import {NeoTokensService} from "../../../../api/services/blockchain/neo-tokens.service";
-import {NeoToken} from "../../../../api/models/blockchain/neo-token";
+  MetadataSpecsDuplicateDialogComponent
+} from './metadata-specs-duplicate-dialog/metadata-specs-duplicate-dialog.component';
+import {MetadataSpecDatasource} from '../metadataspec.datasource';
+import {MetadataSpec, MetadataSpecPropertyType} from '../../../api/models/metadata-spec-tab';
 
 @Component({
-  selector: 'app-neo-smart-token-specs',
-  templateUrl: './neo-smart-token-specs.component.html',
-  styleUrls: ['./neo-smart-token-specs.component.css']
+  selector: 'metadata-specs',
+  templateUrl: './metadata-specs.component.html',
+  styleUrls: ['./metadata-specs.component.css']
 })
-export class NeoSmartTokenSpecsComponent implements OnInit {
+export class MetadataSpecsComponent implements OnInit {
 
   hasSelection = false;
-  dataSource: NeoTokensSpecDataSource;
-  selection: SelectionModel<NeoToken>;
+  dataSource: MetadataSpecDatasource;
+  selection: SelectionModel<MetadataSpec>;
   templates = [];
   displayedColumns: Array<string> = [
     "select",
@@ -38,21 +38,21 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
   constructor(
-    private neoTokensService: NeoTokensService,
+    private metadataSpecsService: MetadataSpecsService,
     private dialogService: ConfirmationDialogService,
     private alertService: AlertService,
     public dialog: MatDialog,
   ) {}
 
   ngOnInit() {
-    this.selection = new SelectionModel<NeoToken>(true, []);
-    this.dataSource = new NeoTokensSpecDataSource(this.neoTokensService);
-    this.dataSource.loadTemplates(null, null);
+    this.selection = new SelectionModel<MetadataSpec>(true, []);
+    this.dataSource = new MetadataSpecDatasource(this.metadataSpecsService);
+    this.dataSource.loadSpecs(null, null);
   }
 
   ngAfterViewInit() {
     this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
-    this.dataSource.tokens$.subscribe(
+    this.dataSource.metadataSpecs$.subscribe(
       (tokenSpecs) => {
         this.templates = tokenSpecs;
       }
@@ -63,8 +63,8 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
     this.paginator.page.pipe(tap(() => this.refresh())).subscribe();
   }
 
-  showDialog(template: NeoToken) {
-    this.dialog.open(NeoSmartTokenSpecsDialogComponent, {
+  showDialog(template: MetadataSpec) {
+    this.dialog.open(MetadataSpecsDialogComponent, {
       width: "800px",
       maxHeight: "90vh",
       data: {
@@ -77,7 +77,7 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
   refresh(delay = 500) {
     setTimeout(() => {
       this.selection.clear();
-      this.dataSource.loadTemplates(
+      this.dataSource.loadSpecs(
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize,
       );
@@ -98,8 +98,8 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
       this.templates.forEach(row => this.selection.select(row));
   }
 
-  openDuplicateModal(template: NeoToken) {
-    this.dialog.open(NeoSmartTokenSpecsDuplicateDialogComponent, {
+  openDuplicateModal(template: MetadataSpec) {
+    this.dialog.open(MetadataSpecsDuplicateDialogComponent, {
       width: "450px",
       maxHeight: "90vh",
       data: {
@@ -108,18 +108,19 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
     });
   }
 
-  duplicateTemplate(template: NeoToken, name: string) {
-
-    // this.neoTokensService.createToken({
-    //   contractId: name
-    // })
-    // .subscribe(() => {
-    //   this.refresh();
-    // });
+  duplicateTemplate(template: MetadataSpec, name: string) {
+    this.metadataSpecsService.createMetadataSpec({
+      name: name,
+      type: MetadataSpecPropertyType.STRING,  // TODO
+      properties: template.properties,
+    })
+    .subscribe(() => {
+      this.refresh();
+    });
   }
 
-  removeTemplate(template: NeoToken) {
-    this.neoTokensService.deleteToken(template.id).subscribe(
+  removeTemplate(template: MetadataSpec) {
+    this.metadataSpecsService.deleteMetadataSpec(template.id).subscribe(
       (r) => {
         this.refresh();
       },
@@ -127,11 +128,11 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
     );
   }
 
-  confirmTemplateRemove(template: NeoToken) {
+  confirmTemplateRemove(template: MetadataSpec) {
     this.dialogService
       .confirm(
         "Confirm Dialog",
-        `Are you sure you want to remove the token spec ${template.token.name}?`
+        `Are you sure you want to remove the metadata spec ${template.name}?`
       )
       .pipe(filter((r) => r))
       .subscribe(() => {
@@ -145,7 +146,7 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
       .confirm(
         "Confirm Dialog",
         `Are you sure you want to remove ${
-          this.selection.selected.length} selected token spec${
+          this.selection.selected.length} selected metadata spec${
             this.selection.selected.length == 1 ? "" : "s"
         }?`
       )
@@ -156,4 +157,21 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
       });
   }
 
+  confirmRebuildDialog() {
+    this.dialogService
+      .confirm(
+        "Confirm Reindexing",
+        `Reindexing a large database can take a very long time depending on Its size. Do you wish to proceed?`
+      )
+      .pipe(filter((r) => r))
+      .subscribe(() => {
+
+        this.metadataSpecsService.callReindex().subscribe(
+          (r) => {
+            this.refresh();
+          },
+          (error) => this.alertService.error(error)
+        );
+      });
+  }
 }

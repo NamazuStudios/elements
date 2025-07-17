@@ -3,12 +3,11 @@ import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog
 import {MatPaginator} from '@angular/material/paginator';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTable} from '@angular/material/table';
-import {AlertService} from '../../alert.service';
-import {fromEvent} from 'rxjs';
-import {debounceTime, distinctUntilChanged, tap} from 'rxjs/operators';
-import {MetadataspecDatasource} from "../metadataspec.datasource";
-import {MetadataSpec} from "../../api/models/token-spec-tab";
-import {MetadataSpecsService} from "../../api/services/metadata-specs.service";
+import {AlertService} from '../../../alert.service';
+import {tap} from 'rxjs/operators';
+import {MetadataSpecDatasource} from "../metadataspec.datasource";
+import {MetadataSpec} from "../../../api/models/token-spec-tab";
+import {MetadataSpecsService} from "../../../api/services/metadata-specs.service";
 
 @Component({
   selector: 'app-metadataspec-select-dialog',
@@ -16,7 +15,7 @@ import {MetadataSpecsService} from "../../api/services/metadata-specs.service";
   styleUrls: ['./metadataspec-select-dialog.component.css']
 })
 export class MetadataspecSelectDialogComponent implements OnInit, AfterViewInit {
-  dataSource: MetadataspecDatasource;
+  dataSource: MetadataSpecDatasource;
   displayedColumns = ["id", "name", "actions"];
   currentSpecs: MetadataSpec[];
 
@@ -28,7 +27,7 @@ export class MetadataspecSelectDialogComponent implements OnInit, AfterViewInit 
               private metadataSpecsService: MetadataSpecsService, private alertService: AlertService, private snackBar: MatSnackBar) { }
 
   ngOnInit() {
-    this.dataSource = new MetadataspecDatasource(this.metadataSpecsService);
+    this.dataSource = new MetadataSpecDatasource(this.metadataSpecsService);
     this.refresh(0);
   }
 

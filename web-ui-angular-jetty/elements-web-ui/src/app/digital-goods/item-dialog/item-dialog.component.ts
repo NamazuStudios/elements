@@ -6,7 +6,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {AlertService} from '../../alert.service';
 import {ItemCategory} from "../../api/models/item";
-import {MetadataspecSelectDialogComponent} from "../../customization/metadataspec-select-dialog/metadataspec-select-dialog.component";
+import {MetadataspecSelectDialogComponent} from "../../customization/metadata-spec/metadataspec-select-dialog/metadataspec-select-dialog.component";
 import {MetadataSpecProperty} from "../../api/models/token-spec-tab";
 import {APIError} from '../../api/models/api-error';
 

@@ -19,6 +19,9 @@
       >
         Delete Selected
       </button>
+      <button mat-raised-button color="primary" (click)="confirmRebuildDialog()">
+        Reindex
+      </button>
     </div>
   </section>
   <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource">

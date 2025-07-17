@@ -12,7 +12,7 @@ import {CreateMetadataSpecRequest, MetadataSpec} from "../models/token-spec-tab"
 @Injectable({
   providedIn: 'root'
 })
-class MetadataSpecsService extends BaseService {
+class MetadataService extends BaseService {
 
   constructor(
     config: ApiConfiguration,
@@ -31,7 +31,7 @@ class MetadataSpecsService extends BaseService {
    *
    * @return successful operation
    */
-   getMetadataSpecsResponse(params: MetadataSpecsService.GetMetadataSpecParams): Observable<StrictHttpResponse<PaginationMetadataSpec>> {
+  getMetadataSpecsResponse(params: MetadataSpecsService.GetMetadataSpecParams): Observable<StrictHttpResponse<PaginationMetadataSpec>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -69,7 +69,7 @@ class MetadataSpecsService extends BaseService {
    *
    * @return successful operation
    */
-   getMetadataSpecs(params: MetadataSpecsService.GetMetadataSpecParams): Observable<PaginationMetadataSpec> {
+  getMetadataSpecs(params: MetadataSpecsService.GetMetadataSpecParams): Observable<PaginationMetadataSpec> {
     return this.getMetadataSpecsResponse(params).pipe(
       __map(_r => _r.body)
     );
@@ -80,7 +80,7 @@ class MetadataSpecsService extends BaseService {
    * @param body undefined
    * @return successful operation
    */
-   createMetadataSpecResponse(body?: CreateMetadataSpecRequest): Observable<StrictHttpResponse<MetadataSpec>> {
+  createMetadataSpecResponse(body?: CreateMetadataSpecRequest): Observable<StrictHttpResponse<MetadataSpec>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = body;
@@ -120,7 +120,7 @@ class MetadataSpecsService extends BaseService {
    * @param tokenNameOrId undefined
    * @return successful operation
    */
-   getMetadataSpecResponse(tokenNameOrId: string): Observable<StrictHttpResponse<MetadataSpec>> {
+  getMetadataSpecResponse(tokenNameOrId: string): Observable<StrictHttpResponse<MetadataSpec>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -164,7 +164,7 @@ class MetadataSpecsService extends BaseService {
    *
    * @return successful operation
    */
-   updateMetadataSpecResponse(specId: string, request: CreateMetadataSpecRequest): Observable<StrictHttpResponse<MetadataSpec>> {
+  updateMetadataSpecResponse(specId: string, request: CreateMetadataSpecRequest): Observable<StrictHttpResponse<MetadataSpec>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -208,7 +208,7 @@ class MetadataSpecsService extends BaseService {
    * Deletes a Neo Token with the specified id.
    * @param tokenId undefined
    */
-   deleteMetadataSpecResponse(tokenId: string): Observable<StrictHttpResponse<void>> {
+  deleteMetadataSpecResponse(tokenId: string): Observable<StrictHttpResponse<void>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
