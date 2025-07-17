@@ -139,7 +139,7 @@ public class MongoSessionDao implements SessionDao {
 
         validate(session);
 
-        final var mongoUser = getMongoUserDao().getMongoUser(session.getUser());
+        final var mongoUser = getMongoUserDao().getMongoUser(session.getUser().getId());
         final var mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
 
         final var messageDigest = getMessageDigestProvider().get();

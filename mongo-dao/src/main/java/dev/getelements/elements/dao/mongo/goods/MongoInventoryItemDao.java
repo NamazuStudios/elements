@@ -76,7 +76,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     @Override
     public InventoryItem getInventoryItemByItemNameOrId(final User user, final String itemNameOrId, int priority) {
 
-        final var mongoUser = getMongoUserDao().getMongoUser(user);
+        final var mongoUser = getMongoUserDao().getMongoUser(user.getId());
         final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
         final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
 
@@ -152,7 +152,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             throw new InvalidDataException("Item must be of type: " + FUNGIBLE);
         }
 
-        final var mongoUser = getMongoUserDao().getMongoUser(inventoryItem.getUser());
+        final var mongoUser = getMongoUserDao().getMongoUser(inventoryItem.getUser().getId());
 
         final MongoInventoryItem mongoInventoryItem = getDozerMapper().map(inventoryItem, MongoInventoryItem.class);
 
@@ -201,7 +201,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         if (quantity < 0) throw new IllegalArgumentException("invalid quantity: " + quantity);
 
-        final var mongoUser = getMongoUserDao().getMongoUser(user);
+        final var mongoUser = getMongoUserDao().getMongoUser(user.getId());
         final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
         final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
 
@@ -243,7 +243,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     public InventoryItem adjustQuantityForItem(final User user,
                                                final String itemNameOrId,
                                                final int priority, final int quantityDelta) {
-        final var mongoUser = getMongoUserDao().getMongoUser(user);
+        final var mongoUser = getMongoUserDao().getMongoUser(user.getId());
         final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
         final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
         return adjustQuantityForItem(objectId, quantityDelta);
