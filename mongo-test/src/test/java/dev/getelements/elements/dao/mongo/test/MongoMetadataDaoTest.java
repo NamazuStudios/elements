@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JacksonCollectors;
 import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
 import dev.getelements.elements.sdk.model.goods.Item;
@@ -141,7 +140,7 @@ public class MongoMetadataDaoTest {
         assertNotEquals(updatedMetadata.getName(), metadataUpdate.getName());
         assertEquals(updatedMetadata.getAccessLevel(), metadataUpdate.getAccessLevel());
         assertEquals(updatedMetadata.getMetadata().size(), metadataUpdate.getMetadata().size());
-        assertEquals(updatedMetadata.getMetadata().get("Key7"), metadataUpdate.getMetadata().get("Key7"));
+        assertEquals(updatedMetadata.getMetadata().get("UpdateKey"), metadataUpdate.getMetadata().get("UpdateKey"));
     }
 
     @Test(groups = "fetch", dependsOnGroups = "update", dataProvider = "intermediateMetadataDataProvider")
