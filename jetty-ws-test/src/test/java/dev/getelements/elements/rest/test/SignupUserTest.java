@@ -185,4 +185,19 @@ public class SignupUserTest {
 
     }
 
+    @Test(dependsOnMethods = "createUser")
+    public void createDuplicateUserExpectingFailure() {
+
+        final UserCreateRequest toCreate = new UserCreateRequest();
+        toCreate.setName(name);
+        toCreate.setEmail(email);
+        toCreate.setPassword(password);
+
+        var response = client
+                .target(apiRoot + "/signup")
+                .request()
+                .post(Entity.entity(toCreate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 409);
+    }
 }

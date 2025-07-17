@@ -41,7 +41,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public User getUser(String userId) {
-        return getUserDao().getUser(userId);
+        return getUserDao().findUser(userId).orElse(null);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
             ? getPasswordGenerator().generate()
             : userCreateRequest.getPassword();
 
-        final var created = getUserDao().createUserWithPassword(user, password);
+        final var created = getUserDao().createUserWithPasswordStrict(user, password);
 
         final var response = getMapper().map(created, UserCreateResponse.class);
         response.setPassword(password);
