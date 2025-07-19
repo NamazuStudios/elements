@@ -1,28 +1,31 @@
-package dev.getelements.elements.dao.mongo.goods;
+package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.MongoCollection;
-import dev.getelements.elements.sdk.dao.Indexable;
-import dev.getelements.elements.sdk.dao.index.IndexPlanner;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
-import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexMetadata;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlan;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlanStep;
+import dev.getelements.elements.dao.mongo.model.metadata.MongoMetadata;
+import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
+import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.sdk.cluster.path.Path;
+import dev.getelements.elements.sdk.dao.Indexable;
+import dev.getelements.elements.sdk.dao.index.IndexPlanner;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.index.IndexMetadata;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.schema.MetadataSpecProperty;
-import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.morphia.Datastore;
 import dev.morphia.UpdateOptions;
+import jakarta.inject.Inject;
 import org.bson.Document;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
+import java.util.function.Function;
 
+import static dev.getelements.elements.dao.mongo.MongoStandardProperties.*;
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.DISTINCT;
 import static dev.getelements.elements.sdk.model.index.IndexPlanState.APPLIED;
 import static dev.getelements.elements.sdk.model.index.IndexPlanState.READY;
@@ -32,7 +35,7 @@ import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 
-public class MongoDistinctInventoryItemIndexable implements Indexable {
+public abstract class MongoIndexable<ModelT> implements Indexable {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoDistinctInventoryItem.class);
 
@@ -40,13 +43,28 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
 
     private Datastore datastore;
 
+    protected final Class<ModelT> model;
+
+    protected final Function<ModelT, String> nameExtractor;
+
+    protected final Function<ModelT, MongoMetadataSpec> metadataSpecExtractor;
+
+    public MongoIndexable(final Class<ModelT> model) {
+        this(model, getNameExtractor(model), getMetadataSpecExtractor(model));
+    }
+
+    public MongoIndexable(final Class<ModelT> model,
+                          final Function<ModelT, String> nameExtractor,
+                          final Function<ModelT, MongoMetadataSpec> metadataSpecExtractor) {
+        this.model = model;
+        this.nameExtractor = nameExtractor;
+        this.metadataSpecExtractor = metadataSpecExtractor;
+    }
+
     @Override
     public void plan() {
 
-        final var collection = getDatastore()
-                .getMapper()
-                .getEntityModel(MongoDistinctInventoryItem.class)
-                .getCollectionName();
+        final var collection = getCollectionName();
 
         final var existing = getDatastore().find(MongoIndexPlan.class)
                 .filter(eq("_id", collection))
@@ -78,13 +96,7 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
                         .build(this::generate)
                 );
 
-        getDatastore().find(MongoItem.class)
-                .filter(eq("category", DISTINCT), exists("metadataSpec"))
-                .stream()
-                .forEach(item -> {
-                    final var spec = getMapper().map(item.getMetadataSpec(), MetadataSpec.class);
-                    plan.update(item.getName(), spec);
-                });
+        updatePlanWithMetadataSpecs(plan);
 
         final var steps = plan.getFinalExecutionSteps()
                         .stream()
@@ -98,6 +110,56 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
                 .orElseGet(() -> getDatastore().find(MongoIndexPlan.class).filter(eq("_id", collection)))
                 .update(options, set("steps", steps), set("state", READY));
 
+    }
+
+    /**
+     * Returns the collection name for the distinct inventory item indexable.
+     *
+     * @return the collection name
+     */
+    protected String getCollectionName() {
+        return getDatastore()
+                .getMapper()
+                .getEntityModel(model)
+                .getCollectionName();
+    }
+
+    /**
+     * Generates the index metadata for the given path and metadata spec property.
+     *
+     * @param path                   the path to generate the index for
+     * @param metadataSpecProperty   the metadata spec property to use
+     * @return the generated index metadata
+     */
+    protected IndexMetadata<Document> generate(
+            final Path path,
+            final MetadataSpecProperty metadataSpecProperty) {
+
+        final var keys = new Document();
+        keys.put(METADATA_PROPERTY + "." + join(".", path.getComponents()), 1);
+
+        final var metadata = new MongoIndexMetadata();
+        metadata.setKeys(keys);
+
+        return metadata;
+
+    }
+
+    /**
+     * Updates the index plan with metadata specifications.
+     *
+     * @param planner the index planner to update
+     */
+    protected void updatePlanWithMetadataSpecs(final IndexPlanner<Document> planner) {
+        getDatastore().find(model)
+                .filter(eq("category", DISTINCT), exists(METADATA_SPEC_PROPERTY))
+                .stream()
+                .forEach(item -> {
+                    final var name = nameExtractor.apply(item);
+                    final var metadataSpec = metadataSpecExtractor.apply(item);
+                    final var spec = getMapper().map(metadataSpec, MetadataSpec.class);
+                    planner.update(name, spec);
+                });
     }
 
     @Override
@@ -163,20 +225,6 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
         collection.dropIndex(step.getIndexMetadata().getKeys());
     }
 
-    private IndexMetadata<Document> generate(
-            final Path path,
-            final MetadataSpecProperty metadataSpecProperty) {
-
-        final var keys = new Document();
-        keys.put("metadata." + join(".", path.getComponents()), 1);
-
-        final var metadata = new MongoIndexMetadata();
-        metadata.setKeys(keys);
-
-        return metadata;
-
-    }
-
     public MapperRegistry getMapper() {
         return mapperRegistry;
     }
@@ -193,6 +241,22 @@ public class MongoDistinctInventoryItemIndexable implements Indexable {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public static class Metadata extends MongoIndexable<MongoMetadata> {
+
+        public Metadata() {
+            super(MongoMetadata.class);
+        }
+
+    }
+
+    public static class DistinctInventoryItem extends MongoIndexable<MongoDistinctInventoryItem> {
+
+        public DistinctInventoryItem() {
+            super(MongoDistinctInventoryItem.class);
+        }
+
     }
 
 }
