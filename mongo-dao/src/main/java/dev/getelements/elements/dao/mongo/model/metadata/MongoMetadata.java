@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo.model.metadata;
 
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
-import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
@@ -23,7 +22,7 @@ public class MongoMetadata {
     private Map<String, Object> metadata;
 
     @Reference
-    private MongoMetadataSpec spec;
+    private MongoMetadataSpec metadataSpec;
 
     @Property
     private User.Level accessLevel;
@@ -52,12 +51,12 @@ public class MongoMetadata {
         this.metadata = metadata;
     }
 
-    public MongoMetadataSpec getSpec() {
-        return spec;
+    public MongoMetadataSpec getMetadataSpec() {
+        return metadataSpec;
     }
 
-    public void setSpec(MongoMetadataSpec spec) {
-        this.spec = spec;
+    public void setMetadataSpec(MongoMetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
     }
 
     public User.Level getAccessLevel() {
@@ -73,12 +72,12 @@ public class MongoMetadata {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoMetadata that = (MongoMetadata) o;
-        return Objects.equals(objectId, that.getObjectId()) && Objects.equals(name, that.getName()) && Objects.equals(metadata, that.getMetadata()) && Objects.equals(spec, that.getSpec()) && Objects.equals(accessLevel, that.getAccessLevel());
+        return Objects.equals(objectId, that.getObjectId()) && Objects.equals(name, that.getName()) && Objects.equals(metadata, that.getMetadata()) && Objects.equals(metadataSpec, that.getMetadataSpec()) && Objects.equals(accessLevel, that.getAccessLevel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, name, metadata, spec, accessLevel);
+        return Objects.hash(objectId, name, metadata, metadataSpec, accessLevel);
     }
 
     @Override
@@ -87,7 +86,7 @@ public class MongoMetadata {
                 "objectId='" + objectId + '\'' +
                 ", name='" + name + '\'' +
                 ", metadata='" + metadata + '\'' +
-                ", spec='" + spec + '\'' +
+                ", spec='" + metadataSpec + '\'' +
                 ", accessLevel=" + accessLevel +
                 '}';
     }

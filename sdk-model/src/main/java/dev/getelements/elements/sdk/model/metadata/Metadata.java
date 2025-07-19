@@ -2,7 +2,6 @@ package dev.getelements.elements.sdk.model.metadata;
 
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.ValidationGroups;
-import dev.getelements.elements.sdk.model.profile.CreateProfileRequest;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,7 +27,7 @@ public class Metadata {
     private Map<String, Object> metadata;
 
     @Schema(description = "The corresponding spec that defines the structure of the metadata.")
-    private MetadataSpec spec;
+    private MetadataSpec metadataSpec;
 
     @Schema(description = "The minimum level of access required to view this metadata.")
     private User.Level accessLevel;
@@ -57,12 +56,12 @@ public class Metadata {
         this.metadata = metadata;
     }
 
-    public MetadataSpec getSpec() {
-        return spec;
+    public MetadataSpec getMetadataSpec() {
+        return metadataSpec;
     }
 
-    public void setSpec(MetadataSpec spec) {
-        this.spec = spec;
+    public void setMetadataSpec(MetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
     }
 
     public User.Level getAccessLevel() {
@@ -78,12 +77,12 @@ public class Metadata {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Metadata that = (Metadata) o;
-        return Objects.equals(id, that.getId()) && Objects.equals(name, that.getName()) && Objects.equals(metadata, that.getMetadata()) && Objects.equals(spec, that.getSpec()) && Objects.equals(accessLevel, that.getAccessLevel());
+        return Objects.equals(id, that.getId()) && Objects.equals(name, that.getName()) && Objects.equals(metadata, that.getMetadata()) && Objects.equals(metadataSpec, that.getMetadataSpec()) && Objects.equals(accessLevel, that.getAccessLevel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, metadata, spec, accessLevel);
+        return Objects.hash(id, name, metadata, metadataSpec, accessLevel);
     }
 
     @Override
@@ -92,7 +91,7 @@ public class Metadata {
                 "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", metadata='" + metadata + '\'' +
-                ", spec='" + spec + '\'' +
+                ", spec='" + metadataSpec + '\'' +
                 ", accessLevel=" + accessLevel +
                 '}';
     }

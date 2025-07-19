@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.MongoCollection;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
+import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexMetadata;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlan;
 import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlanStep;
@@ -152,7 +153,6 @@ public abstract class MongoIndexable<ModelT> implements Indexable {
      */
     protected void updatePlanWithMetadataSpecs(final IndexPlanner<Document> planner) {
         getDatastore().find(model)
-                .filter(eq("category", DISTINCT), exists(METADATA_SPEC_PROPERTY))
                 .stream()
                 .forEach(item -> {
                     final var name = nameExtractor.apply(item);
@@ -251,12 +251,24 @@ public abstract class MongoIndexable<ModelT> implements Indexable {
 
     }
 
-    public static class DistinctInventoryItem extends MongoIndexable<MongoDistinctInventoryItem> {
+    public static class DistinctInventoryItem extends MongoIndexable<MongoItem> {
 
         public DistinctInventoryItem() {
-            super(MongoDistinctInventoryItem.class);
+            super(MongoItem.class);
         }
 
+        @Override
+        protected void updatePlanWithMetadataSpecs(IndexPlanner<Document> planner) {
+            getDatastore().find(model)
+                    .filter(eq("category", DISTINCT), exists(METADATA_SPEC_PROPERTY))
+                    .stream()
+                    .forEach(item -> {
+                        final var name = nameExtractor.apply(item);
+                        final var metadataSpec = metadataSpecExtractor.apply(item);
+                        final var spec = getMapper().map(metadataSpec, MetadataSpec.class);
+                        planner.update(name, spec);
+                    });
+        }
     }
 
 }

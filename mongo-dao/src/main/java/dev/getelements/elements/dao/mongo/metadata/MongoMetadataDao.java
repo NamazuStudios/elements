@@ -119,7 +119,7 @@ public class MongoMetadataDao implements MetadataDao {
         final var updated = getDatastore().find(MongoMetadata.class)
                 .filter(eq("_id", objectId), exists("name"))
                 .modify(options,
-                        set("spec", mongoMetadata.getSpec()),
+                        set("spec", mongoMetadata.getMetadataSpec()),
                         set("metadata", mongoMetadata.getMetadata()),
                         set("accessLevel", metadata.getAccessLevel())
                 );
