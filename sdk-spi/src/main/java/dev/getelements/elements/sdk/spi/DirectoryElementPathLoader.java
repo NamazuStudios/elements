@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.*;
@@ -28,6 +28,28 @@ import static java.util.stream.Collectors.joining;
 public class DirectoryElementPathLoader implements ElementPathLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(DirectoryElementPathLoader.class);
+
+    private static boolean isPathInHiddenHierarchy(Path path) {
+
+        boolean isHidden;
+
+        try {
+
+            path = path.toAbsolutePath();
+
+            do {
+                isHidden = isHidden(path);
+                path = path.getParent();
+            } while (path != null && !isHidden);
+
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
+        return isHidden;
+
+    }
+
 
     @Override
     public Stream<Element> load(
@@ -77,6 +99,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile = subpath;
                 } else if (isDirectory(subpath)) {
                     directories.add(subpath);
+                } else if (isPathInHiddenHierarchy(subpath)) {
+                    logger.debug("Skipping hidden path: {}.", subpath);
                 } else {
                     logger.warn("Unexpected path in Element definition: {}, ignoring.", subpath);
                 }
@@ -110,6 +134,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile = subpath;
                 } else if (isDirectory(subpath)) {
                     directories.add(subpath);
+                } else if (isPathInHiddenHierarchy(subpath)) {
+                    logger.debug("Skipping hidden path: {}.", subpath);
                 } else {
                     logger.warn("Unexpected path in Element definition: {}, ignoring.", subpath);
                 }
