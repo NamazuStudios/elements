@@ -1,7 +1,7 @@
 import {CollectionViewer, DataSource} from "@angular/cdk/collections";
 import {BehaviorSubject, Observable, of} from "rxjs";
 import {catchError, finalize} from "rxjs/operators";
-import {MetadataSpec} from "../../api/models/token-spec-tab";
+import {MetadataSpec} from "../../api/models/metadata-spec-tab";
 import {MetadataSpecsService} from "../../api/services/metadata-specs.service";
 
 export class MetadataSpecDatasource implements DataSource<MetadataSpec> {

@@ -126,6 +126,11 @@ import {
 import {
   MetadataSpecDialogDefineObjectComponent
 } from "./customization/metadata-spec/menu/metadata-specs-dialog/metadata-spec-dialog-define-object/metadata-spec-dialog-define-object.component";
+import {MetadataDialogComponent} from "./customization/metadata/metadata-dialog/metadata-dialog.component";
+import {MetadataComponent} from "./customization/metadata/menu/metadata.component";
+import {
+  MetadataDuplicateDialogComponent
+} from "./customization/metadata/menu/metadata-duplicate-dialog/metadata-duplicate-dialog.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -149,6 +154,7 @@ export function initialize(configService: ConfigService) {
     ProductBundleEditorComponent,
     ProfileDialogComponent,
     UserSelectDialogComponent,
+    MetadataDialogComponent,
     MetadataspecSelectDialogComponent,
     LeaderboardDialogComponent,
     InventoryDialogComponent,
@@ -218,6 +224,9 @@ export function initialize(configService: ConfigService) {
     Oauth2AuthSchemeDialogComponent,
     RegenerateKeysDialogComponent,
     GeneratedKeysDialogComponent,
+    MetadataComponent,
+    MetadataDialogComponent,
+    MetadataDuplicateDialogComponent,
     MetadataSpecsComponent,
     MetadataSpecsDialogComponent,
     MetadataSpecsDuplicateDialogComponent,

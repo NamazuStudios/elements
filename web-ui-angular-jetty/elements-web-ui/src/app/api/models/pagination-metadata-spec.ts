@@ -1,4 +1,4 @@
-import { MetadataSpec } from './token-spec-tab';
+import { MetadataSpec } from './metadata-spec-tab';
 
 /* tslint:disable */
 export interface PaginationMetadataSpec {

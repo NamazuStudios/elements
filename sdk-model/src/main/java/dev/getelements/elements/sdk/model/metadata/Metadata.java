@@ -20,16 +20,19 @@ public class Metadata {
     @Schema(description = "The metadata object's database assigned unique ID.")
     private String id;
 
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Read.class})
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     @Schema(description = "A unique name for the metadata object.")
     private String name;
 
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class, ValidationGroups.Read.class})
     @Schema(description = "An object containing the metadata payload as key-value pairs.")
     private Map<String, Object> metadata;
 
     @Schema(description = "The corresponding spec that defines the structure of the metadata.")
     private MetadataSpec spec;
 
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class, ValidationGroups.Read.class})
     @Schema(description = "The minimum level of access required to view this metadata.")
     private User.Level accessLevel;
 

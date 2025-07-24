@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.model.metadata;
 
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
+import dev.getelements.elements.sdk.model.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Map;
@@ -12,6 +13,9 @@ public class UpdateMetadataRequest {
 
     @Schema(description = "The corresponding spec that defines the structure of the metadata.")
     private MetadataSpec spec;
+
+    @Schema(description = "The minimum level of access required to view this metadata.")
+    private User.Level accessLevel;
 
     public Map<String, Object> getMetadata() {
         return metadata;
@@ -27,5 +31,13 @@ public class UpdateMetadataRequest {
 
     public void setSpec(MetadataSpec spec) {
         this.spec = spec;
+    }
+
+    public User.Level getAccessLevel() {
+        return accessLevel;
+    }
+
+    public void setAccessLevel(User.Level accessLevel) {
+        this.accessLevel = accessLevel;
     }
 }

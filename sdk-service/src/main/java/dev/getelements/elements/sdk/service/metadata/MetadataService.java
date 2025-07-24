@@ -1,8 +1,15 @@
 package dev.getelements.elements.sdk.service.metadata;
 
+import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.metadata.*;
 
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
+
+@ElementPublic
+@ElementServiceExport
+@ElementServiceExport(name = UNSCOPED)
 public interface MetadataService {
 
     /**
