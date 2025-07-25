@@ -14,7 +14,7 @@ public interface MongoMetadataMapper extends MapperRegistry.ReversibleMapper<
 
     @Override
     @Mapping(target = "id", source = "objectId")
-    @Mapping(target = "spec.id", source = "spec.objectId")
+    @Mapping(target = "metadataSpec.id", source = "metadataSpec.objectId")
     Metadata forward(MongoMetadata source);
 
     @Override

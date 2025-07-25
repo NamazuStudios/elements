@@ -91,7 +91,7 @@ public class MongoMetadataDaoTest {
     public void testCreateMetadata(final User.Level accessLevel) {
 
         final var metadata = new Metadata();
-        metadata.setSpec(testMetadataSpec);
+        metadata.setMetadataSpec(testMetadataSpec);
         metadata.setName("test_metadata-" + accessLevel.name());
         metadata.setAccessLevel(accessLevel);
 
@@ -125,7 +125,7 @@ public class MongoMetadataDaoTest {
 
         final var metadataUpdate = new Metadata();
         metadataUpdate.setId(metadata.getId());
-        metadataUpdate.setSpec(metadata.getSpec());
+        metadataUpdate.setMetadataSpec(metadata.getMetadataSpec());
         metadataUpdate.setAccessLevel(metadata.getAccessLevel());
         metadataUpdate.setName("dkfhasakdsfhaks");
 
