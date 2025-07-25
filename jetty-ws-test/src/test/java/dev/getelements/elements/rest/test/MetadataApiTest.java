@@ -130,7 +130,7 @@ public class MetadataApiTest {
         assertEquals(User.Level.SUPERUSER, metadataObject.getAccessLevel());
         assertEquals("test_a", metadataObject.getName());
         assertEquals(metadata, metadataObject.getMetadata());
-        assertEquals(workingMetadataSpec, metadataObject.getSpec());
+        assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
 
         workingMetadata = metadataObject;
 
@@ -167,7 +167,7 @@ public class MetadataApiTest {
         assertEquals(User.Level.USER, metadataObject.getAccessLevel());
         assertEquals("test_a", metadataObject.getName());
         assertEquals(metadata, metadataObject.getMetadata());
-        assertEquals(workingMetadataSpec, metadataObject.getSpec());
+        assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
 
         workingMetadata = metadataObject;
 
