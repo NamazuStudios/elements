@@ -3,7 +3,6 @@ package dev.getelements.elements.sdk.spi.guice.record;
 import com.google.inject.Module;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.spi.guice.annotations.GuiceElementModule;
-import dev.getelements.elements.sdk.spi.guice.annotations.GuiceElementModules;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.stream.Stream;
@@ -40,16 +39,9 @@ public record GuiceElementModuleRecord(Class<? extends Module> moduleType) {
      * @return a {@link Stream} of records
      */
     public static Stream<GuiceElementModuleRecord> fromPackage(final Package aPackage) {
-
-        var modules = aPackage.getAnnotation(GuiceElementModules.class);
-        var annotations = Stream.of(aPackage.getAnnotationsByType(GuiceElementModule.class));
-
-        if (modules != null) {
-            annotations = Stream.concat(annotations, Stream.of(modules.value()));
-        }
-
-        return annotations.map(GuiceElementModuleRecord::from);
-
+        return Stream
+                .of(aPackage.getAnnotationsByType(GuiceElementModule.class))
+                .map(GuiceElementModuleRecord::from);
     }
 
     /**
