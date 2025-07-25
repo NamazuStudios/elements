@@ -8,7 +8,7 @@
       <mat-form-field>
         <input matInput placeholder="Search Metadata" #input>
       </mat-form-field>
-      <button mat-raised-button color="primary" (click)="showDialog(null)">
+      <button mat-raised-button color="primary" (click)="createMetadata()">
         New Metadata
       </button>
       <button
@@ -58,7 +58,7 @@
     <ng-container matColumnDef="edit-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let template">
-        <button mat-raised-button color="primary" (click)="showDialog(template)">Edit</button>
+        <button mat-raised-button color="primary" (click)="updateMetadata(template)">Edit</button>
       </mat-cell>
     </ng-container>
 

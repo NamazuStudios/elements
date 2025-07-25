@@ -13,7 +13,8 @@ import {
   MetadataDuplicateDialogComponent
 } from './metadata-duplicate-dialog/metadata-duplicate-dialog.component';
 import {MetadataDatasource} from '../metadata.datasource';
-import {Metadata} from '../../../api/models/metadata-tab';
+import {CreateMetadataRequest, Metadata, UpdateMetadataRequest} from '../../../api/models/metadata-tab';
+import {ItemViewModel} from "../../../models/item-view-model";
 
 @Component({
   selector: 'metadata',
@@ -42,7 +43,8 @@ export class MetadataComponent implements OnInit {
     private dialogService: ConfirmationDialogService,
     private alertService: AlertService,
     public dialog: MatDialog,
-  ) {}
+  ) {
+  }
 
   ngOnInit() {
     this.selection = new SelectionModel<Metadata>(true, []);
@@ -63,14 +65,42 @@ export class MetadataComponent implements OnInit {
     this.paginator.page.pipe(tap(() => this.refresh())).subscribe();
   }
 
-  showDialog(template: Metadata) {
+  createMetadata() {
+    this.showDialog(null, (result: Metadata) => {
+
+      let request: CreateMetadataRequest = {
+        accessLevel: result.accessLevel,
+        spec: result.spec,
+        metadata: result.metadata,
+        name: result.name
+      }
+
+      return this.metadataService.createMetadata(request);
+    });
+  }
+
+  updateMetadata(template: Metadata) {
+    this.showDialog(template, (result: Metadata) => {
+
+      let request: UpdateMetadataRequest = {
+        accessLevel: result.accessLevel,
+        spec: result.spec,
+        metadata: result.metadata,
+      }
+
+      return this.metadataService.updateMetadata(template.id, request);
+    });
+  }
+
+  showDialog(template: Metadata, next) {
     this.dialog.open(MetadataDialogComponent, {
       width: "800px",
       maxHeight: "90vh",
       data: {
-        template,
+        metadata: template,
         refresh: this.refresh.bind(this),
-        isNew: template == null
+        isNew: template == null,
+        next: next
       },
     });
   }
@@ -112,7 +142,7 @@ export class MetadataComponent implements OnInit {
   duplicateTemplate(template: Metadata, name: string) {
     this.metadataService.createMetadata({
       name: name,
-      level: template.level,
+      accessLevel: template.accessLevel,
       spec: template.spec,
       metadata: template.metadata
     })

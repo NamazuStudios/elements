@@ -1,19 +1,13 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
-import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {AlertService} from '../../../alert.service';
 import {MetadataspecSelectDialogComponent} from "../../metadata-spec/metadataspec-select-dialog/metadataspec-select-dialog.component";
 import {MetadataSpecProperty} from "../../../api/models/token-spec-tab";
 import {APIError} from '../../../api/models/api-error';
-import {Metadata} from "../../../api/models/metadata-tab";
-
-export interface ItemCategoryPair {
-  key: string;
-  description: string;
-}
+import {UserLevel} from "../../../users/user-dialog/user-dialog.component";
 
 @Component({
   selector: 'app-metadata-dialog',
@@ -22,15 +16,21 @@ export interface ItemCategoryPair {
 })
 export class MetadataDialogComponent implements OnInit {
 
+  userLevels: UserLevel[] = [
+    { key: "UNPRIVILEGED", description: "Unprivileged" },
+    { key: "USER", description: "User" },
+    { key: "SUPERUSER", description: "Superuser" },
+  ];
+
   selectable = true;
   removable = true;
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   itemForm = this.formBuilder.group({
-    name: [this.data.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
-    level: [this.data.level, [Validators.required]],
-    metadataSpec: [{value: (this.data.spec) ? this.data.spec.name : null, disabled: true}],
+    name: [this.data.metadata.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
+    accessLevel: [this.data.metadata.accessLevel, [Validators.required]],
+    metadataSpec: [{value: (this.data.metadata.spec) ? this.data.metadata.spec.name : null, disabled: true}],
   });
 
   metadataSpecForm = this.formBuilder.group({});
@@ -54,8 +54,8 @@ export class MetadataDialogComponent implements OnInit {
 
     const formData = this.itemForm.value;
 
-    if (this.data.spec) {
-      formData.metadataSpec = this.data.spec.id;
+    if (this.data.metadata.spec) {
+      formData.spec = this.data.metadata.spec;
       formData.metadata = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
     }
 
@@ -73,8 +73,8 @@ export class MetadataDialogComponent implements OnInit {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
-    if (this.data.item.metadata && this.data.item.metadataSpec) {
-      this.initMetadataSpecForm(this.data.item.metadata);
+    if (this.data.metadata.metadata && this.data.metadata.spec) {
+      this.initMetadataSpecForm(this.data.metadata.metadata);
     }
   }
 
@@ -83,7 +83,7 @@ export class MetadataDialogComponent implements OnInit {
       width: '700px',
       data: {
         next: result => {
-          this.data.item.metadataSpec = result;
+          this.data.metadata.spec = result;
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
@@ -96,7 +96,7 @@ export class MetadataDialogComponent implements OnInit {
   private initMetadataSpecForm(values: any[]) {
     this.metadataFormNestLevel = 0;
     this.formMap = [];
-    let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
+    let props : MetadataSpecProperty[] = this.data.metadata.spec.properties;
     this.addFormControlsFromProperties("", props, values);
   }
 

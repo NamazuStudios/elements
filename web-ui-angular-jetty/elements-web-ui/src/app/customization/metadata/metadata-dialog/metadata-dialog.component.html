@@ -1,5 +1,5 @@
 <h1 mat-dialog-title>
-  {{data.isNew ? "New" : "Edit"}} Item
+  {{data.isNew ? "New" : "Edit"}} Metadata
 </h1>
 
 <div mat-dialog-content>
@@ -15,9 +15,18 @@
 
       </div>
 
+      <mat-form-field>
+        <mat-select placeholder="Access Level" name="accessLevel" formControlName="accessLevel">
+          <mat-option *ngFor="let userLevel of userLevels" [value]="userLevel.key">
+            {{userLevel.description}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="itemForm.controls.accessLevel.hasError('required')">Access level is required</mat-error>
+      </mat-form-field>
+
       <div class="item-form-row mb-20">
         <mat-form-field>
-          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.spec ? data.spec.name : ''">
+          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.metadata.spec ? data.metadata.spec.name : ''">
         </mat-form-field>
         <div class="spec-button">
           <button color="primary" type="button" mat-raised-button (click)="showSelectMetadataSpecDialog()">Select Metadata Spec</button>
@@ -26,7 +35,7 @@
     </div>
   </form>
 
-  <div *ngIf="data.spec && data.spec.name">
+  <div *ngIf="data.metadata.spec && data.metadata.spec.name">
     <div class="metadata-header">Metadata Editor:</div>
     <form [formGroup]="metadataSpecForm">
       <div class="item-form-container">

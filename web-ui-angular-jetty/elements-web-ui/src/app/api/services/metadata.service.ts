@@ -7,7 +7,7 @@ import {ApiConfiguration} from '../api-configuration';
 import {BaseService} from '../base-service';
 import {PaginationMetadata} from '../models/pagination-metadata';
 import {StrictHttpResponse} from '../strict-http-response';
-import {CreateMetadataRequest, Metadata} from "../models/metadata-tab";
+import {CreateMetadataRequest, Metadata, UpdateMetadataRequest} from "../models/metadata-tab";
 
 @Injectable({
   providedIn: 'root'
@@ -164,7 +164,7 @@ class MetadataService extends BaseService {
    *
    * @return successful operation
    */
-  updateMetadataResponse(specId: string, request: CreateMetadataRequest): Observable<StrictHttpResponse<Metadata>> {
+  updateMetadataResponse(specId: string, request: UpdateMetadataRequest): Observable<StrictHttpResponse<Metadata>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -198,7 +198,7 @@ class MetadataService extends BaseService {
    *
    * @return successful operation
    */
-  updateMetadata(specId: string, request: CreateMetadataRequest): Observable<Metadata> {
+  updateMetadata(specId: string, request: UpdateMetadataRequest): Observable<Metadata> {
     return this.updateMetadataResponse(specId, request).pipe(
       __map(_r => _r.body)
     );
