@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toList;
 
 public abstract class MongoIndexable<SpecT, IndexedT> implements Indexable {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoDistinctInventoryItem.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoIndexable.class);
 
     private MapperRegistry mapperRegistry;
 

@@ -75,7 +75,7 @@ public class MetadataApiTest {
                 .endProperties();
 
         final var request = new CreateMetadataSpecRequest();
-        request.setName("test_a");
+        request.setName("test_metadata_spec_for_metadata");
         request.setType(OBJECT);
         request.setProperties(properties);
 
@@ -92,7 +92,7 @@ public class MetadataApiTest {
         assertNotNull(metadataSpec);
         assertNotNull(metadataSpec.getId());
         assertEquals(OBJECT, metadataSpec.getType());
-        assertEquals("test_a", metadataSpec.getName());
+        assertEquals("test_metadata_spec_for_metadata", metadataSpec.getName());
         assertEquals(properties, metadataSpec.getProperties());
 
         workingMetadataSpec = metadataSpec;
@@ -110,7 +110,7 @@ public class MetadataApiTest {
         );
 
         final var createMetadataRequest = new CreateMetadataRequest();
-        createMetadataRequest.setName("test_a");
+        createMetadataRequest.setName("test_metadata");
         createMetadataRequest.setSpec(workingMetadataSpec);
         createMetadataRequest.setMetadata(metadata);
         createMetadataRequest.setAccessLevel(User.Level.SUPERUSER);
@@ -128,7 +128,7 @@ public class MetadataApiTest {
         assertNotNull(metadataObject);
         assertNotNull(metadataObject.getId());
         assertEquals(User.Level.SUPERUSER, metadataObject.getAccessLevel());
-        assertEquals("test_a", metadataObject.getName());
+        assertEquals("test_metadata", metadataObject.getName());
         assertEquals(metadata, metadataObject.getMetadata());
         assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
 
@@ -165,7 +165,7 @@ public class MetadataApiTest {
         assertNotNull(metadataObject);
         assertNotNull(metadataObject.getId());
         assertEquals(User.Level.USER, metadataObject.getAccessLevel());
-        assertEquals("test_a", metadataObject.getName());
+        assertEquals("test_metadata", metadataObject.getName());
         assertEquals(metadata, metadataObject.getMetadata());
         assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
 
