@@ -3,7 +3,7 @@ import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 import {MetadataspecSelectDialogComponent} from './metadataspec-select-dialog.component';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
-import {AlertService} from '../../alert.service';
+import {AlertService} from '../../../alert.service';
 import {RouterTestingModule} from '@angular/router/testing';
 import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';

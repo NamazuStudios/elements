@@ -1,0 +1,65 @@
+.item-form-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-form-row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.item-form-row mat-form-field {
+  width: 50%;
+  margin-right: 60px;
+}
+
+.item-form-row mat-form-field:last-of-type {
+  margin-right: 0;
+}
+
+.spec-button {
+  display: flex;
+  height: fit-content;
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.metadata-header {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/*no scss :(*/
+.ml-1 {
+  margin-left: 20px;
+}
+.ml-2 {
+  margin-left: 40px;
+}
+.ml-3 {
+  margin-left: 60px;
+}
+.ml-4 {
+  margin-left: 80px;
+}
+.ml-5 {
+  margin-left: 100px;
+}
+.ml-6 {
+  margin-left: 120px;
+}
+
+.nested-checkbox {
+  color: #737373;
+  margin-bottom: 15px;
+}
+
+.mh-1 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}

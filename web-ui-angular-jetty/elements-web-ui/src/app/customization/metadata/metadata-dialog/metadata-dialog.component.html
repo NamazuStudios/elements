@@ -1,0 +1,59 @@
+<h1 mat-dialog-title>
+  {{data.isNew ? "New" : "Edit"}} Metadata
+</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="itemForm">
+    <div class="item-form-container">
+      <div class="item-form-row">
+
+        <mat-form-field>
+          <input autofocus matInput placeholder="Name" name="name" formControlName="name" >
+          <mat-error *ngIf="itemForm.controls.name.hasError('required')">Name is required</mat-error>
+          <mat-error *ngIf="itemForm.controls.name.hasError('pattern')">Name must consist only of alphanumeric characters</mat-error>
+        </mat-form-field>
+
+      </div>
+
+      <mat-form-field>
+        <mat-select placeholder="Access Level" name="accessLevel" formControlName="accessLevel">
+          <mat-option *ngFor="let userLevel of userLevels" [value]="userLevel.key">
+            {{userLevel.description}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="itemForm.controls.accessLevel.hasError('required')">Access level is required</mat-error>
+      </mat-form-field>
+
+      <div class="item-form-row mb-20">
+        <mat-form-field>
+          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.metadata.spec ? data.metadata.spec.name : ''">
+        </mat-form-field>
+        <div class="spec-button">
+          <button color="primary" type="button" mat-raised-button (click)="showSelectMetadataSpecDialog()">Select Metadata Spec</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div *ngIf="data.metadata.spec && data.metadata.spec.name">
+    <div class="metadata-header">Metadata Editor:</div>
+    <form [formGroup]="metadataSpecForm">
+      <div class="item-form-container">
+        <div *ngFor="let item of formMap" class="item-form-row">
+          <mat-form-field *ngIf="item.type === 'STRING' || item.type === 'NUMBER'" [ngClass]="getNestedMargin(item.nestLvl)">
+            <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
+          </mat-form-field>
+          <mat-checkbox *ngIf="item.type === 'BOOLEAN'" name="{{item.name}}" formControlName="{{item.name}}" [ngClass]="getNestedMargin(item.nestLvl)" class="nested-checkbox">
+            {{getPlaceholder(item)}}"
+          </mat-checkbox>
+          <div *ngIf="item.type === 'OBJECT'" class="mh-1" [ngClass]="getNestedMargin(item.nestLvl - 1)">{{item.name}} :</div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div mat-dialog-actions>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!itemForm.valid || !metadataSpecForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="close()">Cancel</button>
+</div>

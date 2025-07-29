@@ -36,28 +36,46 @@ import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 
-public abstract class MongoIndexable<ModelT> implements Indexable {
+public abstract class MongoIndexable<SpecT, IndexedT> implements Indexable {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoDistinctInventoryItem.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoIndexable.class);
 
     private MapperRegistry mapperRegistry;
 
     private Datastore datastore;
 
-    protected final Class<ModelT> model;
+    protected final Class<SpecT> spec;
 
-    protected final Function<ModelT, String> nameExtractor;
+    protected final Class<IndexedT> indexed;
 
-    protected final Function<ModelT, MongoMetadataSpec> metadataSpecExtractor;
+    protected final Function<SpecT, String> nameExtractor;
 
-    public MongoIndexable(final Class<ModelT> model) {
-        this(model, getNameExtractor(model), getMetadataSpecExtractor(model));
+    protected final Function<SpecT, MongoMetadataSpec> metadataSpecExtractor;
+
+    /**
+     * Creates a new MongoIndexable instance with the default name and metadata spec extractors.
+     *
+     * @param spec the type that contains the specification and unique name
+     * @param indexed the type that will be indexed based on the spec provided
+     */
+    public MongoIndexable(final Class<SpecT> spec, final Class<IndexedT> indexed) {
+        this(spec, indexed, getNameExtractor(spec), getMetadataSpecExtractor(spec));
     }
 
-    public MongoIndexable(final Class<ModelT> model,
-                          final Function<ModelT, String> nameExtractor,
-                          final Function<ModelT, MongoMetadataSpec> metadataSpecExtractor) {
-        this.model = model;
+    /**
+     * Creates a new MongoIndexable instance with the default name and metadata spec extractors. This allows for
+     * specification of custom name and metadata spec extractors in case the default bean properties ones are not
+     * sufficient.
+     *
+     * @param spec the type that contains the specification and unique name
+     * @param indexed the type that will be indexed based on the spec provided
+     */
+    public MongoIndexable(final Class<SpecT> spec,
+                          final Class<IndexedT> indexed,
+                          final Function<SpecT, String> nameExtractor,
+                          final Function<SpecT, MongoMetadataSpec> metadataSpecExtractor) {
+        this.spec = spec;
+        this.indexed = indexed;
         this.nameExtractor = nameExtractor;
         this.metadataSpecExtractor = metadataSpecExtractor;
     }
@@ -114,14 +132,23 @@ public abstract class MongoIndexable<ModelT> implements Indexable {
     }
 
     /**
-     * Returns the collection name for the distinct inventory item indexable.
+     * Returns the collection which will be indexed.
+     *
+     * @return the collection
+     */
+    protected MongoCollection<IndexedT> getCollection() {
+        return getDatastore().getCollection(indexed);
+    }
+
+    /**
+     * Returns the name of the collection which will be indexed.
      *
      * @return the collection name
      */
     protected String getCollectionName() {
         return getDatastore()
                 .getMapper()
-                .getEntityModel(model)
+                .getEntityModel(indexed)
                 .getCollectionName();
     }
 
@@ -152,26 +179,27 @@ public abstract class MongoIndexable<ModelT> implements Indexable {
      * @param planner the index planner to update
      */
     protected void updatePlanWithMetadataSpecs(final IndexPlanner<Document> planner) {
-        getDatastore().find(model)
+        getDatastore()
+                .find(spec)
                 .stream()
                 .forEach(item -> {
+
                     final var name = nameExtractor.apply(item);
                     final var metadataSpec = metadataSpecExtractor.apply(item);
-                    final var spec = getMapper().map(metadataSpec, MetadataSpec.class);
-                    planner.update(name, spec);
+
+                    if (name != null && metadataSpec != null) {
+                        final var spec = getMapper().map(metadataSpec, MetadataSpec.class);
+                        planner.update(name, spec);
+                    }
+
                 });
     }
 
     @Override
     public void buildIndexes() {
 
-        final var collection = getDatastore()
-                .getCollection(MongoDistinctInventoryItem.class);
-
-        final var collectionName = getDatastore()
-                .getMapper()
-                .getEntityModel(MongoDistinctInventoryItem.class)
-                .getCollectionName();
+        final var collection = getCollection();
+        final var collectionName = getCollectionName();
 
         final var plan = getDatastore().find(MongoIndexPlan.class)
                 .filter(eq("_id", collectionName))
@@ -212,14 +240,14 @@ public abstract class MongoIndexable<ModelT> implements Indexable {
     }
 
     private void create(
-            final MongoCollection<MongoDistinctInventoryItem> collection,
+            final MongoCollection<IndexedT> collection,
             final MongoIndexPlanStep step) {
         logger.info("Creating {}", step.getIndexMetadata().getIdentifier());
         collection.createIndex(step.getIndexMetadata().getKeys());
     }
 
     private void delete(
-            final MongoCollection<MongoDistinctInventoryItem> collection,
+            final MongoCollection<IndexedT> collection,
             final MongoIndexPlanStep step) {
         logger.info("Deleting {}", step.getIndexMetadata().getIdentifier());
         collection.dropIndex(step.getIndexMetadata().getKeys());
@@ -243,32 +271,45 @@ public abstract class MongoIndexable<ModelT> implements Indexable {
         this.datastore = datastore;
     }
 
-    public static class Metadata extends MongoIndexable<MongoMetadata> {
+    public static class Metadata extends MongoIndexable<MongoMetadata, MongoMetadata> {
 
         public Metadata() {
-            super(MongoMetadata.class);
+            super(MongoMetadata.class, MongoMetadata.class);
         }
 
     }
 
-    public static class DistinctInventoryItem extends MongoIndexable<MongoItem> {
+    public static class Item extends MongoIndexable<MongoItem, MongoItem> {
+        public Item() {
+            super(MongoItem.class, MongoItem.class);
+        }
+    }
+
+    public static class DistinctInventoryItem extends MongoIndexable<MongoItem, MongoDistinctInventoryItem> {
 
         public DistinctInventoryItem() {
-            super(MongoItem.class);
+            super(MongoItem.class, MongoDistinctInventoryItem.class);
         }
 
         @Override
         protected void updatePlanWithMetadataSpecs(IndexPlanner<Document> planner) {
-            getDatastore().find(model)
+            getDatastore()
+                    .find(spec)
                     .filter(eq("category", DISTINCT), exists(METADATA_SPEC_PROPERTY))
                     .stream()
                     .forEach(item -> {
-                        final var name = nameExtractor.apply(item);
-                        final var metadataSpec = metadataSpecExtractor.apply(item);
-                        final var spec = getMapper().map(metadataSpec, MetadataSpec.class);
-                        planner.update(name, spec);
+
+                        final var name = item.getName();
+                        final var metadataSpec = item.getMetadataSpec();
+
+                        if (name != null && metadataSpec != null) {
+                            final var spec = getMapper().map(metadataSpec, MetadataSpec.class);
+                            planner.update(name, spec);
+                        }
+
                     });
         }
+
     }
 
 }
