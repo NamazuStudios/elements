@@ -6,10 +6,10 @@
   <section style="display: grid; justify-content: space-between; margin: 10px auto;">
     <div>
       <mat-form-field>
-        <input matInput placeholder="Search Specs" #input>
+        <input matInput placeholder="Search Metadata" #input>
       </mat-form-field>
-      <button mat-raised-button color="primary" (click)="showDialog(null)">
-        New Metadata Spec
+      <button mat-raised-button color="primary" (click)="createMetadata()">
+        New Metadata
       </button>
       <button
         mat-raised-button
@@ -18,6 +18,9 @@
         [disabled]="!hasSelection"
       >
         Delete Selected
+      </button>
+      <button mat-raised-button color="primary" (click)="confirmRebuildDialog()">
+        Reindex
       </button>
     </div>
   </section>
@@ -55,7 +58,7 @@
     <ng-container matColumnDef="edit-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let template">
-        <button mat-raised-button color="primary" (click)="showDialog(template)">Edit</button>
+        <button mat-raised-button color="primary" (click)="updateMetadata(template)">Edit</button>
       </mat-cell>
     </ng-container>
 
@@ -65,7 +68,7 @@
         <button
           mat-raised-button
           color="primary"
-          matTooltip="Duplicate Metadata Spec"
+          matTooltip="Duplicate Metadata"
           matTooltipPosition="above"
           (click)="openDuplicateModal(template)"
         >

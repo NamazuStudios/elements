@@ -112,7 +112,7 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
             throw new MetadataSpecNotFoundException("Spec with id not found.");
         }
 
-        return transform(mongoMetadataSpec);
+        return transform(updated);
 
 
     }

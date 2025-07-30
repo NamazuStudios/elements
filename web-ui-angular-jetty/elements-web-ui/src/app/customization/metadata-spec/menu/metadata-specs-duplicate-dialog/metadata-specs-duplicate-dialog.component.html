@@ -1,0 +1,25 @@
+<div class="title">
+  New Metadata Spec Name
+</div>
+
+<div>
+  <mat-form-field>
+    <mat-label>Name</mat-label>
+    <input
+      matInput
+      placeholder="Name"
+      type="text"
+      [value]="name"
+      (change)="changeTemplateName($event.target.value)"
+    >
+  </mat-form-field>
+</div>
+
+<div>
+  <button mat-raised-button color="primary" (click)="submit()">
+    Ok
+  </button>
+  <button mat-raised-button (click)="close()">
+    Cancel
+  </button>
+</div>

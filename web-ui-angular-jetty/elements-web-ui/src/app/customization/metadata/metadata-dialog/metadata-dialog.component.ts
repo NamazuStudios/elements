@@ -1,30 +1,25 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {FormBuilder, FormControl, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
-import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {COMMA, ENTER} from '@angular/cdk/keycodes';
-import {AlertService} from '../../alert.service';
-import {ItemCategory} from "../../api/models/item";
-import {MetadataspecSelectDialogComponent} from "../../customization/metadata-spec/metadataspec-select-dialog/metadataspec-select-dialog.component";
-import {MetadataSpecProperty} from "../../api/models/token-spec-tab";
-import {APIError} from '../../api/models/api-error';
-
-export interface ItemCategoryPair {
-  key: string;
-  description: string;
-}
+import {AlertService} from '../../../alert.service';
+import {MetadataspecSelectDialogComponent} from "../../metadata-spec/metadataspec-select-dialog/metadataspec-select-dialog.component";
+import {MetadataSpecProperty} from "../../../api/models/token-spec-tab";
+import {APIError} from '../../../api/models/api-error';
+import {UserLevel} from "../../../users/user-dialog/user-dialog.component";
 
 @Component({
-  selector: 'app-item-dialog',
-  templateUrl: './item-dialog.component.html',
-  styleUrls: ['./item-dialog.component.css']
+  selector: 'app-metadata-dialog',
+  templateUrl: './metadata-dialog.component.html',
+  styleUrls: ['./metadata-dialog.component.css']
 })
-export class ItemDialogComponent implements OnInit {
+export class MetadataDialogComponent implements OnInit {
 
-  itemCategories: ItemCategoryPair[] = [
-    {key: ItemCategory.FUNGIBLE, description: "Fungible"},
-    {key: ItemCategory.DISTINCT, description: "Distinct"}
+  userLevels: UserLevel[] = [
+    { key: "UNPRIVILEGED", description: "Unprivileged" },
+    { key: "USER", description: "User" },
+    { key: "SUPERUSER", description: "Superuser" },
   ];
 
   selectable = true;
@@ -33,53 +28,24 @@ export class ItemDialogComponent implements OnInit {
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   itemForm = this.formBuilder.group({
-    name: [this.data.item.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
-    displayName: [this.data.item.displayName, [Validators.required]],
-    description: [this.data.item.description, [Validators.required]],
-    category: [this.data.item.category, [Validators.required]],
-    metadataSpec: [{value: (this.data.item.metadataSpec) ? this.data.item.metadataSpec.name : null, disabled: true}],
-    publicVisible: [this.data.item.publicVisible],
-    tags: []
+    name: [this.data.metadata.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
+    accessLevel: [this.data.metadata.accessLevel, [Validators.required]],
+    metadataSpec: [{value: (this.data.metadata.spec) ? this.data.metadata.spec.name : null, disabled: true}],
   });
 
   metadataSpecForm = this.formBuilder.group({});
   formMap = [];
   private metadataFormNestLevel: number = 0;
 
-  constructor(public dialogRef: MatDialogRef<ItemDialogComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any, public dialog: MatDialog,
-              private formBuilder: FormBuilder, private alertService: AlertService, private snackBar: MatSnackBar) {
+  constructor(
+    public dialogRef: MatDialogRef<MetadataDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialog: MatDialog,
+    private formBuilder: FormBuilder,
+    private alertService: AlertService,
+    private snackBar: MatSnackBar) {
   }
 
-  addTag(event: MatChipInputEvent): void {
-    const input = event.input;
-    const value = event.value;
-
-    if ((value || '').trim()) {
-      if (!this.data.item.tags) {
-        this.data.item.tags = [];
-      }
-      this.data.item.tags.push(value);
-    }
-
-    if (input) {
-      input.value = '';
-    }
-  }
-
-  remove(tag: string): void {
-    const index = this.data.item.tags.indexOf(tag);
-
-    if (index >= 0) {
-      this.data.item.tags.splice(index, 1);
-    }
-  }
-
-  /*
-  * Can't just call dialogRef.close(itemForm.value) since it doesn't accurately
-  * capture changes to item tags so we need to explicitly attach the entire tag
-  * array to the itemForm, overwriting the initial tags value
-  */
   close(saveChanges?: boolean): void {
     if (!saveChanges) {
       this.dialogRef.close();
@@ -87,17 +53,10 @@ export class ItemDialogComponent implements OnInit {
     }
 
     const formData = this.itemForm.value;
-    if (this.data.item.tags !== undefined) {
-      formData.tags = this.data.item.tags;
-    }
 
-    if (this.data.item.metadataSpec) {
-      formData.metadataSpec = this.data.item.metadataSpec.id;
+    if (this.data.metadata.spec) {
+      formData.spec = this.data.metadata.spec;
       formData.metadata = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
-    }
-
-    if (!this.data.isNew && formData.category !== undefined) {
-      delete formData.category
     }
 
     this.data.next(formData).subscribe(() => {
@@ -114,15 +73,9 @@ export class ItemDialogComponent implements OnInit {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
-    if (this.data.item.metadata && this.data.item.metadataSpec) {
-      this.initMetadataSpecForm(this.data.item.metadata);
+    if (this.data.metadata.metadata && this.data.metadata.spec) {
+      this.initMetadataSpecForm(this.data.metadata.metadata);
     }
-  }
-
-  currentItemCategory() {
-    return this.data.item.category == null
-      ? this.itemCategories[0].description
-      : this.itemCategories.find(value => this.data.item.category == value.key).description
   }
 
   showSelectMetadataSpecDialog() {
@@ -130,7 +83,7 @@ export class ItemDialogComponent implements OnInit {
       width: '700px',
       data: {
         next: result => {
-          this.data.item.metadataSpec = result;
+          this.data.metadata.spec = result;
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
@@ -143,7 +96,7 @@ export class ItemDialogComponent implements OnInit {
   private initMetadataSpecForm(values: any[]) {
     this.metadataFormNestLevel = 0;
     this.formMap = [];
-    let props : MetadataSpecProperty[] = this.data.item.metadataSpec.properties;
+    let props : MetadataSpecProperty[] = this.data.metadata.spec.properties;
     this.addFormControlsFromProperties("", props, values);
   }
 

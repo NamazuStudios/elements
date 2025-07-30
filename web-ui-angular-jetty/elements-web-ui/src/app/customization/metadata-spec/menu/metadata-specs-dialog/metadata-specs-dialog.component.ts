@@ -1,11 +1,11 @@
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
-import {MetadataSpec, MetadataSpecProperty, MetadataSpecPropertyType,} from '../../../api/models/token-spec-tab';
-import {MetadataSpecsService} from '../../../api/services/metadata-specs.service';
+import {MetadataSpec, MetadataSpecProperty, MetadataSpecPropertyType,} from '../../../../api/models/metadata-spec-tab';
+import {MetadataSpecsService} from '../../../../api/services/metadata-specs.service';
 import {
-  NeoTokenDialogDefineObjectComponent
-} from '../neo-token-dialog-define-object/neo-token-dialog-define-object.component';
+  MetadataSpecDialogDefineObjectComponent
+} from "./metadata-spec-dialog-define-object/metadata-spec-dialog-define-object.component";
 
 interface PropertyType {
   key: string;
@@ -20,11 +20,11 @@ const complexFields = [
 export const enumRegex = /^[a-zA-Z0-9_]+(,[a-zA-Z0-9_]+)*$/;
 
 @Component({
-  selector: 'app-neo-smart-token-specs-dialog',
-  templateUrl: './neo-smart-token-specs-dialog.component.html',
-  styleUrls: ['./neo-smart-token-specs-dialog.component.css']
+  selector: 'metadata-specs-dialog',
+  templateUrl: './metadata-specs-dialog.component.html',
+  styleUrls: ['./metadata-specs-dialog.component.css']
 })
-export class NeoSmartTokenSpecsDialogComponent implements OnInit {
+export class MetadataSpecsDialogComponent implements OnInit {
   specName = '';
   properties: MetadataSpecProperty[] = [];
   propertiesTypes: PropertyType[];
@@ -36,7 +36,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
 
   constructor(
     private metadataSpecsService: MetadataSpecsService,
-    public dialogRef: MatDialogRef<NeoSmartTokenSpecsDialogComponent>,
+    public dialogRef: MatDialogRef<MetadataSpecsDialogComponent>,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -169,7 +169,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   }
 
   openDefineObjectModal(index: number): void {
-    this.dialog.open(NeoTokenDialogDefineObjectComponent, {
+    this.dialog.open(MetadataSpecDialogDefineObjectComponent, {
       width: '800px',
       data: {
         updateProperties: this.updatePropertiesFromObjectComponent.bind(this),

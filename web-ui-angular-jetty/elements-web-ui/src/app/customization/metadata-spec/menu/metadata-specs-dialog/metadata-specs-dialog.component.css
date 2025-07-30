@@ -1,0 +1,152 @@
+.head-title {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 30px;
+}
+.head-controls {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  column-gap: 25px;
+  align-items: center;
+  padding: 0 30px;
+}
+
+.head-controls mat-form-field {
+  min-width: 375px;
+}
+
+.add-tab {
+  height: 42px;
+  margin-bottom: 10px;
+}
+
+.mat-tab-label {
+  max-width: 50px;
+  min-width: 50px;
+}
+
+.tab-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr max-content;
+  column-gap: 50px;
+  padding: 30px;
+}
+
+.tab-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-left: 60px;
+}
+
+.tab-buttons button {
+  max-width: 45px;
+  min-width: 45px;
+  padding: 0;
+  margin-left: 10px;
+}
+
+.fields-header {
+  padding: 0 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+mat-card {
+  padding: 20px;
+  margin-bottom: 10px;
+}
+
+mat-expansion-panel-header {
+  padding: 0 12px;
+}
+
+.menu-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-right: 20px;
+}
+
+.sharp-panel {
+  background: #f7f7f7;
+  padding: 20px;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+}
+
+.menu-index-keyname {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.menu-index-keyname mat-icon {
+  margin-right: 20px;
+}
+
+.menu-index-keyname .menu-keyname {
+  color: #333333;
+  margin-left: 10px;
+}
+
+.menu-index-keyname .menu-keyname-empty {
+  opacity: 0.4;
+  margin-left: 10px;
+}
+
+.field-name-type {
+  display: grid;
+  grid-template-columns: 1fr 0.1fr;
+  column-gap: 30px;
+}
+
+.field-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 10px;
+}
+
+.field-buttons button {
+  padding: 0;
+  min-width: 45px;
+  max-width: 45px;
+  margin-left: 10px;
+}
+
+.menu-panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.menu-panel-footer.menu-panel-footer-column {
+  flex-direction: column;
+  width: 100%;
+}
+
+
+app-neo-smart-token-specs-dialog-field-type {
+  flex: 1;
+  width: 100%;
+}
+
+.custom-placeholder {
+  background: #e1e1e1;
+  border: dotted 3px #cbcbcb;
+  min-height: 48px;
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+mb-20 {
+  margin-bottom: 20px;
+}

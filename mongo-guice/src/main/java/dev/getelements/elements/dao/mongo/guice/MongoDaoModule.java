@@ -14,7 +14,6 @@ import dev.getelements.elements.dao.mongo.blockchain.MongoSmartContractDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
 import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemDao;
-import dev.getelements.elements.dao.mongo.goods.MongoDistinctInventoryItemIndexable;
 import dev.getelements.elements.dao.mongo.goods.MongoInventoryItemDao;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
 import dev.getelements.elements.dao.mongo.health.MongoDatabaseHealthStatusDao;
@@ -22,6 +21,7 @@ import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
 import dev.getelements.elements.dao.mongo.match.MongoFIFOMatchmaker;
 import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.match.MongoMultiMatchDao;
+import dev.getelements.elements.dao.mongo.metadata.MongoMetadataDao;
 import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
@@ -38,6 +38,7 @@ import java.security.MessageDigest;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
 import static dev.getelements.elements.sdk.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
+import static dev.getelements.elements.sdk.model.index.IndexableType.METADATA;
 
 /**
  * Configures any Mongo-specific system properties.
@@ -80,6 +81,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(TokensWithExpirationDao.class).to(MongoTokensWithExpirationDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
+        bind(MetadataDao.class).to(MongoMetadataDao.class);
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
@@ -113,7 +115,8 @@ public class MongoDaoModule extends PrivateModule {
         booleanQueryOperatorSet.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
 
         final var indexableByType = newMapBinder(binder(), IndexableType.class, Indexable.class);
-        indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoDistinctInventoryItemIndexable.class);
+        indexableByType.addBinding(METADATA).to(MongoIndexable.Metadata.class);
+        indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoIndexable.DistinctInventoryItem.class);
 
         expose(Datastore.class);
         expose(Transaction.class);
@@ -143,6 +146,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(TokensWithExpirationDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
+        expose(MetadataDao.class);
         expose(MetadataSpecDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);

@@ -94,6 +94,9 @@ import { NeoTokenDialogUpdatedDefineComponent } from './omni-chain/neo/neo-token
 import { NeoSmartTokenSpecsDuplicateDialogComponent } from './omni-chain/neo/neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
 import { TokenDefinationDuplicateDialogComponent } from './omni-chain/token-defination-duplicate-dialog/token-defination-duplicate-dialog.component';
 import { NeoSmartTokenSpecsComponent } from './omni-chain/neo/neo-smart-token-specs/neo-smart-token-specs/neo-smart-token-specs.component';
+import { MetadataSpecsComponent } from "./customization/metadata-spec/menu/metadata-specs.component";
+import { MetadataSpecsDialogComponent } from "./customization/metadata-spec/menu/metadata-specs-dialog/metadata-specs-dialog.component";
+import { MetadataSpecsDuplicateDialogComponent } from "./customization/metadata-spec/menu/metadata-specs-duplicate-dialog/metadata-specs-duplicate-dialog.component";
 import { OmniChainComponent } from './omni-chain/omni-chain.component';
 import { OmniChainVaultsComponent } from './omni-chain/omni-chain-vaults/omni-chain-vaults.component';
 import { OmniChainVaultsDialogComponent } from './omni-chain/omni-chain-vaults-dialog/omni-chain-vaults-dialog.component';
@@ -106,7 +109,7 @@ import { OmniChainWalletsVaultSearchDialogComponent } from './omni-chain/omni-ch
 import { OmniChainUserSearchDialogComponent } from './omni-chain/omni-chain-user-search-dialog/omni-chain-user-search-dialog.component';
 import { OmniChainWalletsAccountsDialogComponent } from './omni-chain/omni-chain-wallets-accounts-dialog/omni-chain-wallets-accounts-dialog.component';
 import { ApplicationAttributesComponent } from './applications/application-attributes/application-attributes.component';
-import {MetadataspecSelectDialogComponent} from "./customization/metadataspec-select-dialog/metadataspec-select-dialog.component";
+import {MetadataspecSelectDialogComponent} from "./customization/metadata-spec/metadataspec-select-dialog/metadataspec-select-dialog.component";
 import {SchedulesListComponent} from "./schedules/schedules-list/schedules-list.component";
 import {ScheduleDialogComponent} from "./schedules/schedule-dialog/schedule-dialog.component";
 import {ScheduleEventsDialogComponent} from "./schedules/schedule-events-dialog/schedule-events-dialog.component";
@@ -117,6 +120,17 @@ import {
   MissionSelectDialogComponent
 } from "./schedules/schedule-event-missions-dialog/mission-select-dialog/mission-select-dialog.component";
 import { LastSegmentCapitalizePipe } from './users/last-segment-capitalize.pipe';
+import {
+  MetadataSpecsDialogFieldTypeComponent
+} from "./customization/metadata-spec/menu/metadata-specs-dialog/metadata-specs-dialog-field-type/metadata-specs-dialog-field-type.component";
+import {
+  MetadataSpecDialogDefineObjectComponent
+} from "./customization/metadata-spec/menu/metadata-specs-dialog/metadata-spec-dialog-define-object/metadata-spec-dialog-define-object.component";
+import {MetadataDialogComponent} from "./customization/metadata/metadata-dialog/metadata-dialog.component";
+import {MetadataComponent} from "./customization/metadata/menu/metadata.component";
+import {
+  MetadataDuplicateDialogComponent
+} from "./customization/metadata/menu/metadata-duplicate-dialog/metadata-duplicate-dialog.component";
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -140,6 +154,7 @@ export function initialize(configService: ConfigService) {
     ProductBundleEditorComponent,
     ProfileDialogComponent,
     UserSelectDialogComponent,
+    MetadataDialogComponent,
     MetadataspecSelectDialogComponent,
     LeaderboardDialogComponent,
     InventoryDialogComponent,
@@ -209,6 +224,14 @@ export function initialize(configService: ConfigService) {
     Oauth2AuthSchemeDialogComponent,
     RegenerateKeysDialogComponent,
     GeneratedKeysDialogComponent,
+    MetadataComponent,
+    MetadataDialogComponent,
+    MetadataDuplicateDialogComponent,
+    MetadataSpecsComponent,
+    MetadataSpecsDialogComponent,
+    MetadataSpecsDuplicateDialogComponent,
+    MetadataSpecsDialogFieldTypeComponent,
+    MetadataSpecDialogDefineObjectComponent,
     NeoSmartContractsListComponent,
     NeoSmartContractsDialogComponent,
     NeoSmartContractSelectDialogComponent,
