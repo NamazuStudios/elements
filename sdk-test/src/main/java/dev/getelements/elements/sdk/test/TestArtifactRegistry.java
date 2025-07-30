@@ -205,7 +205,7 @@ public class TestArtifactRegistry {
      * Copies the specified artifact to the path. If the destination path is a directory it will be copied into
      * that directory. Otherwise, it will be copied to the destination exactly as it is.
      *
-     * @param artifact the artifact name
+     * @param spi the spi
      * @param destination the artifact destination
      * @throws java.util.NoSuchElementException if the artifact wasn't found
      */
