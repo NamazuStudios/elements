@@ -51,7 +51,7 @@ public class AnonUserService extends AbstractUserService implements UserService 
             ? getPasswordGenerator().generate()
             : userCreateRequest.getPassword();
 
-        final var created = getUserDao().createUserWithPassword(user, password);
+        final var created = getUserDao().createUserWithPasswordStrict(user, password);
 
         final var response = getMapper().map(created, UserCreateResponse.class);
         response.setPassword(password);

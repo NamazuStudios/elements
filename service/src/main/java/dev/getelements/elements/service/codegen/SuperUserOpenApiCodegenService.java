@@ -3,12 +3,12 @@ package dev.getelements.elements.service.codegen;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
-import org.openapitools.codegen.OpenAPIGenerator;
+import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.config.CodegenConfigurator;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -21,13 +21,31 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
     public File generateCore(final File spec, final String language, final String packageName, final String options) {
 
         final var path = temporaryFiles.createTempDirectory(packageName);
-        final var args = getArgs(spec, language, options, packageName, path.toString());
 
         try {
-            //We might need to figure out if we need a more stable way to do this.
-            //Throws System.exit(1) internally if the args are malformed,
-            //so try/catch sometimes doesn't do anything for us here.
-            OpenAPIGenerator.main(args);
+            final var generator = new DefaultGenerator();
+            final var configurator = new CodegenConfigurator();
+            final var additionalOptions = options.split(",");
+
+            configurator.setInputSpec(spec.getAbsolutePath());
+            configurator.setOutputDir(path.toString());
+            configurator.setGeneratorName(language);
+            configurator.setPackageName(packageName);
+            configurator.setValidateSpec(false);
+
+            //Parse out the args, with a check to make sure an empty option value wasn't passed through
+            for (final var option : additionalOptions) {
+
+                final var kvp = option.split("=");
+
+                if(kvp.length == 2) {
+                    configurator.addAdditionalProperty(kvp[0], kvp[1]);
+                }
+            }
+
+            generator.opts(configurator.toClientOptInput());
+            generator.generate();
+
         } catch (Exception e) {
             throw new InternalException(e);
         }
@@ -56,28 +74,6 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
     public File generateApplication(final File spec, final String applicationNameOrId, final String language, final String packageName, final String options) {
         //TODO: EL-101
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    private String[] getArgs(final File spec, final String language, final String options, final String packageName, final String path) {
-
-        final var args = new ArrayList<String>();
-
-        args.add("generate");
-        args.add("-g");
-        args.add(language);
-        args.add("-i");
-        args.add(spec.getAbsolutePath());
-        args.add("-o");
-        args.add(path);
-        args.add("--package-name");
-        args.add(packageName);
-        args.add("--skip-validate-spec");
-
-        if(options != null && !options.isEmpty()) {
-            args.add("--additional-properties=" + options);
-        }
-
-        return args.toArray(String[]::new);
     }
 
     private void addDirToZipArchive(final ZipOutputStream zos,

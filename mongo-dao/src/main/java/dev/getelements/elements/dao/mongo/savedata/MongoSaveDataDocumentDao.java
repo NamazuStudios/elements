@@ -150,7 +150,7 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
             ObjectId owner = null;
 
             if (user != null) {
-                final var mongoUser = getMongoUserDao().getMongoUser(user);
+                final var mongoUser = getMongoUserDao().getMongoUser(user.getId());
                 owner = mongoUser.getObjectId();
                 msd.setUser(mongoUser);
             }
