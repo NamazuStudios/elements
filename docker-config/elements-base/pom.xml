@@ -6,7 +6,7 @@
     <parent>
         <artifactId>docker-config</artifactId>
         <groupId>dev.getelements.elements</groupId>
-        <version>3.3.4-SNAPSHOT</version>
+        <version>3.3.4</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -14,7 +14,7 @@
 
     <artifactId>elements-base</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.3.4-SNAPSHOT</version>
+    <version>3.3.4</version>
 
 </project>
 
