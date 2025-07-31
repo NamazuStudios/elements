@@ -13,6 +13,7 @@
     <packaging>pom</packaging>
 
     <groupId>dev.getelements.elements</groupId>
+    <name>${project.artifactId}</name>
     <artifactId>elements-jetty-ws</artifactId>
     <version>3.3.3-SNAPSHOT</version>
 

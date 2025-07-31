@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>rt-server-transact</artifactId>
+    <name>${project.artifactId}</name>
     <version>3.3.3-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
