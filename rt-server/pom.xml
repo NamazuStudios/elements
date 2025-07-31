@@ -6,7 +6,7 @@
     <parent>
         <artifactId>eci-elements</artifactId>
         <groupId>dev.getelements.elements</groupId>
-        <version>3.3.2-SNAPSHOT</version>
+        <version>3.3.2</version>
     </parent>
 
     <properties>
@@ -14,7 +14,7 @@
     </properties>
 
     <artifactId>rt-server</artifactId>
-    <version>3.3.2-SNAPSHOT</version>
+    <version>3.3.2</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
