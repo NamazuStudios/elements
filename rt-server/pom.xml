@@ -14,6 +14,7 @@
     </properties>
 
     <artifactId>rt-server</artifactId>
+    <name>${project.artifactId}</name>
     <version>3.3.0-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 

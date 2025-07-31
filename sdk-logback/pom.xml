@@ -8,6 +8,7 @@
     </parent>
 
     <artifactId>sdk-logback</artifactId>
+    <name>${project.artifactId}</name>
     <version>3.3.0-SNAPSHOT</version>
 
     <dependencies>
