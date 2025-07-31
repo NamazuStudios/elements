@@ -13,6 +13,7 @@
 
     <version>3.3.2-SNAPSHOT</version>
     <artifactId>sdk-local-test</artifactId>
+    <name>${project.artifactId}</name>
     <groupId>dev.getelements.elements</groupId>
 
     <dependencies>

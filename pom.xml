@@ -1,29 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
+    <name>Namazu Elements</name>
     <version>3.3.2-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
         <connection>scm:git:ssh://git@bitbucket.org:eci-elements/web-services.git</connection>
         <developerConnection>scm:git:git@bitbucket.org:eci-elements/web-services.git</developerConnection>
     </scm>
+
     <repositories>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
+
     <licenses>
         <license>
             <name>Modified GNU AGPL v3.0</name>
             <url>https://raw.githubusercontent.com/Elemental-Computing/OSS-Licenses/8e60b05/LICENSE.txt</url>
         </license>
     </licenses>
+
     <url>https://namazustudios.com</url>
     <description>Elements is an Open Source Backend for Games</description>
+
     <developers>
         <developer>
             <name>Keith Hudnall</name>
@@ -36,6 +43,7 @@
             <organization>Elemental Computing Inc.</organization>
         </developer>
     </developers>
+
     <modules>
         <module>common-app</module>
         <module>common-util</module>
@@ -119,6 +127,7 @@
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
     </modules>
+
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>7.0.0</guice.version>
@@ -191,6 +200,7 @@
         <mapstruct.version>1.6.2</mapstruct.version>
         <openapi-generator.version>7.12.0</openapi-generator.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -204,6 +214,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <!-- First-party Dependencies -->
@@ -1329,4 +1340,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>

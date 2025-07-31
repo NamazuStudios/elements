@@ -12,6 +12,7 @@
     </parent>
 
     <artifactId>rt-server-git-guice</artifactId>
+    <name>${project.artifactId}</name>
     <version>3.3.2-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 

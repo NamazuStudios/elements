@@ -13,6 +13,7 @@
 
     <version>3.3.2-SNAPSHOT</version>
     <artifactId>app-serve-jetty</artifactId>
+    <name>${project.artifactId}</name>
     <url>https://namazustudios.com</url>
 
     <dependencies>
