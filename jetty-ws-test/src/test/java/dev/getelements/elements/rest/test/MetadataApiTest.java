@@ -111,7 +111,7 @@ public class MetadataApiTest {
 
         final var createMetadataRequest = new CreateMetadataRequest();
         createMetadataRequest.setName("test_metadata");
-        createMetadataRequest.setSpec(workingMetadataSpec);
+        createMetadataRequest.setMetadataSpec(workingMetadataSpec);
         createMetadataRequest.setMetadata(metadata);
         createMetadataRequest.setAccessLevel(User.Level.SUPERUSER);
 
@@ -148,7 +148,7 @@ public class MetadataApiTest {
 
         final var request = new UpdateMetadataRequest();
 
-        request.setSpec(workingMetadataSpec);
+        request.setMetadataSpec(workingMetadataSpec);
         request.setMetadata(metadata);
         request.setAccessLevel(User.Level.USER);
 
