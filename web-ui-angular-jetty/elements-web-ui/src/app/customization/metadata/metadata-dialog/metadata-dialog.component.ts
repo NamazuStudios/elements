@@ -8,6 +8,7 @@ import {MetadataspecSelectDialogComponent} from "../../metadata-spec/metadataspe
 import {MetadataSpecProperty} from "../../../api/models/token-spec-tab";
 import {APIError} from '../../../api/models/api-error';
 import {UserLevel} from "../../../users/user-dialog/user-dialog.component";
+import {Metadata} from "../../../api/models/metadata-tab";
 
 @Component({
   selector: 'app-metadata-dialog',
@@ -28,9 +29,9 @@ export class MetadataDialogComponent implements OnInit {
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   itemForm = this.formBuilder.group({
-    name: [this.data.metadata.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
-    accessLevel: [this.data.metadata.accessLevel, [Validators.required]],
-    metadataSpec: [{value: (this.data.metadata.spec) ? this.data.metadata.spec.name : null, disabled: true}],
+    name: [(this.data.metadata) ? this.data.metadata.name : null, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
+    accessLevel: [(this.data.metadata) ? this.data.metadata.accessLevel : null, [Validators.required]],
+    metadataSpec: [{value: (this.data.metadata && this.data.metadata.metadataSpec) ? this.data.metadata.metadataSpec.name : null, disabled: true}],
   });
 
   metadataSpecForm = this.formBuilder.group({});
@@ -39,7 +40,12 @@ export class MetadataDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<MetadataDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    @Inject(MAT_DIALOG_DATA) public data: {
+      metadata: Metadata,
+      refresh: any,
+      isNew: boolean,
+      next: any
+    },
     public dialog: MatDialog,
     private formBuilder: FormBuilder,
     private alertService: AlertService,
@@ -54,14 +60,14 @@ export class MetadataDialogComponent implements OnInit {
 
     const formData = this.itemForm.value;
 
-    if (this.data.metadata.spec) {
-      formData.spec = this.data.metadata.spec;
+    if (this.data.metadata.metadataSpec) {
+      formData.metadataSpec = this.data.metadata.metadataSpec;
       formData.metadata = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
     }
 
     this.data.next(formData).subscribe(() => {
       this.dialogRef.close();
-      this.data.refresher.refresh();
+      this.data.refresh();
     }, (err: APIError) => {
       this.alertService.error(err);
     });
@@ -73,7 +79,7 @@ export class MetadataDialogComponent implements OnInit {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
-    if (this.data.metadata.metadata && this.data.metadata.spec) {
+    if (this.data.metadata && this.data.metadata.metadata && this.data.metadata.metadataSpec) {
       this.initMetadataSpecForm(this.data.metadata.metadata);
     }
   }
@@ -83,7 +89,7 @@ export class MetadataDialogComponent implements OnInit {
       width: '700px',
       data: {
         next: result => {
-          this.data.metadata.spec = result;
+          this.data.metadata.metadataSpec = result;
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
@@ -93,14 +99,14 @@ export class MetadataDialogComponent implements OnInit {
     });
   }
 
-  private initMetadataSpecForm(values: any[]) {
+  private initMetadataSpecForm(values: {[key: string]: any}) {
     this.metadataFormNestLevel = 0;
     this.formMap = [];
-    let props : MetadataSpecProperty[] = this.data.metadata.spec.properties;
+    let props : MetadataSpecProperty[] = this.data.metadata.metadataSpec.properties;
     this.addFormControlsFromProperties("", props, values);
   }
 
-  private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[], values: any[]) {
+  private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[], values: {[key: string]: any}) {
     props.forEach(prop => {
       let controlName = ((currentName) && currentName.length > 0) ? (currentName + "." + prop.name) : prop.name;
       let controlValue = (values) ? this.getValueByPath(values, controlName) : '';

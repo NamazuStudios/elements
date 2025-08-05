@@ -6,19 +6,19 @@ export interface Metadata {
   id: string;
   name: string;
   accessLevel: UserLevel
-  spec?: MetadataSpec;
+  metadataSpec?: MetadataSpec;
   metadata?: {[key: string]: any};
 }
 
 export interface CreateMetadataRequest {
   name: string;
   accessLevel: UserLevel
-  spec?: MetadataSpec;
+  metadataSpec?: MetadataSpec;
   metadata?: {[key: string]: any};
 }
 
 export interface UpdateMetadataRequest {
   accessLevel: UserLevel
-  spec?: MetadataSpec;
+  metadataSpec?: MetadataSpec;
   metadata?: {[key: string]: any};
 }
