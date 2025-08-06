@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.3.4-SNAPSHOT</version>
+        <version>3.3.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-kryo-guice</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.3.4-SNAPSHOT</version>
+    <version>3.3.5-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
