@@ -12,7 +12,7 @@ public class UpdateMetadataRequest {
     private Map<String, Object> metadata;
 
     @Schema(description = "The corresponding spec that defines the structure of the metadata.")
-    private MetadataSpec spec;
+    private MetadataSpec metadataSpec;
 
     @Schema(description = "The minimum level of access required to view this metadata.")
     private User.Level accessLevel;
@@ -25,12 +25,12 @@ public class UpdateMetadataRequest {
         this.metadata = metadata;
     }
 
-    public MetadataSpec getSpec() {
-        return spec;
+    public MetadataSpec getMetadataSpec() {
+        return metadataSpec;
     }
 
-    public void setSpec(MetadataSpec spec) {
-        this.spec = spec;
+    public void setMetadataSpec(MetadataSpec metadataSpec) {
+        this.metadataSpec = metadataSpec;
     }
 
     public User.Level getAccessLevel() {
