@@ -34,7 +34,7 @@ public class SuperUserMetadataService implements MetadataService {
         final var metadata = new Metadata();
         metadata.setMetadata(createMetadataRequest.getMetadata());
         metadata.setName(createMetadataRequest.getName());
-        metadata.setMetadataSpec(createMetadataRequest.getSpec());
+        metadata.setMetadataSpec(createMetadataRequest.getMetadataSpec());
         metadata.setAccessLevel(createMetadataRequest.getAccessLevel());
 
         return metadataDao.createMetadata(metadata);
@@ -46,7 +46,7 @@ public class SuperUserMetadataService implements MetadataService {
         final var metadata = new Metadata();
         metadata.setId(metadataId);
         metadata.setMetadata(updateMetadataRequest.getMetadata());
-        metadata.setMetadataSpec(updateMetadataRequest.getSpec());
+        metadata.setMetadataSpec(updateMetadataRequest.getMetadataSpec());
         metadata.setAccessLevel(updateMetadataRequest.getAccessLevel());
 
         return metadataDao.updateMetadata(metadata);

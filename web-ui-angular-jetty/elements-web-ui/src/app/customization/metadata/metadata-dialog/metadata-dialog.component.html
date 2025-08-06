@@ -26,7 +26,7 @@
 
       <div class="item-form-row mb-20">
         <mat-form-field>
-          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.metadata.spec ? data.metadata.spec.name : ''">
+          <input matInput placeholder="Metadata Spec" name="metadataSpec" formControlName="metadataSpec" [value]="data.metadata && data.metadata.metadataSpec ? data.metadata.metadataSpec.name : ''">
         </mat-form-field>
         <div class="spec-button">
           <button color="primary" type="button" mat-raised-button (click)="showSelectMetadataSpecDialog()">Select Metadata Spec</button>
@@ -35,8 +35,8 @@
     </div>
   </form>
 
-  <div *ngIf="data.metadata.spec && data.metadata.spec.name">
-    <div class="metadata-header">Metadata Editor:</div>
+<div *ngIf="data.metadata && data.metadata.metadataSpec && data.metadata.metadataSpec.name">
+  <div class="metadata-header">Metadata Editor:</div>
     <form [formGroup]="metadataSpecForm">
       <div class="item-form-container">
         <div *ngFor="let item of formMap" class="item-form-row">

@@ -66,11 +66,19 @@ export class MetadataComponent implements OnInit {
   }
 
   createMetadata() {
-    this.showDialog(null, (result: Metadata) => {
+    let newMetadata = {
+      id: "",
+      name: "",
+      accessLevel: undefined,
+      metadata: null,
+      metadataSpec: undefined
+    }
+
+    this.showDialog(newMetadata, (result: Metadata) => {
 
       let request: CreateMetadataRequest = {
         accessLevel: result.accessLevel,
-        spec: result.spec,
+        metadataSpec: result.metadataSpec,
         metadata: result.metadata,
         name: result.name
       }
@@ -84,7 +92,7 @@ export class MetadataComponent implements OnInit {
 
       let request: UpdateMetadataRequest = {
         accessLevel: result.accessLevel,
-        spec: result.spec,
+        metadataSpec: result.metadataSpec,
         metadata: result.metadata,
       }
 
@@ -143,7 +151,7 @@ export class MetadataComponent implements OnInit {
     this.metadataService.createMetadata({
       name: name,
       accessLevel: template.accessLevel,
-      spec: template.spec,
+      metadataSpec: template.metadataSpec,
       metadata: template.metadata
     })
     .subscribe(() => {
