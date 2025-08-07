@@ -6,12 +6,12 @@
     <parent>
         <artifactId>eci-elements</artifactId>
         <groupId>dev.getelements.elements</groupId>
-        <version>3.3.6-SNAPSHOT</version>
+        <version>3.3.6</version>
     </parent>
 
     <artifactId>rt-server-cluster-jeromq-guice</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.3.6-SNAPSHOT</version>
+    <version>3.3.6</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
