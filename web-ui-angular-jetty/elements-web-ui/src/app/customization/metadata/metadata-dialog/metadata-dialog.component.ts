@@ -17,16 +17,19 @@ import {Metadata} from "../../../api/models/metadata-tab";
 })
 export class MetadataDialogComponent implements OnInit {
 
-  userLevels: UserLevel[] = [
+  readonly separatorKeyCodes: number[] = [ENTER, COMMA];
+
+  readonly userLevels: UserLevel[] = [
     { key: "UNPRIVILEGED", description: "Unprivileged" },
     { key: "USER", description: "User" },
     { key: "SUPERUSER", description: "Superuser" },
   ];
 
+  private metadataFormNestLevel: number = 0;
+
   selectable = true;
   removable = true;
   addOnBlur = true;
-  readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
   itemForm = this.formBuilder.group({
     name: [(this.data.metadata) ? this.data.metadata.name : null, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$')]],
@@ -36,7 +39,7 @@ export class MetadataDialogComponent implements OnInit {
 
   metadataSpecForm = this.formBuilder.group({});
   formMap = [];
-  private metadataFormNestLevel: number = 0;
+
 
   constructor(
     public dialogRef: MatDialogRef<MetadataDialogComponent>,
@@ -49,10 +52,11 @@ export class MetadataDialogComponent implements OnInit {
     public dialog: MatDialog,
     private formBuilder: FormBuilder,
     private alertService: AlertService,
-    private snackBar: MatSnackBar) {
-  }
+    private snackBar: MatSnackBar) {}
+
 
   close(saveChanges?: boolean): void {
+
     if (!saveChanges) {
       this.dialogRef.close();
       return;
@@ -71,61 +75,90 @@ export class MetadataDialogComponent implements OnInit {
     }, (err: APIError) => {
       this.alertService.error(err);
     });
+
   }
 
   ngOnInit() {
+
     this.alertService.getMessage().subscribe((message: any) => {
+
       if (message) {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
+
     });
+
     if (this.data.metadata && this.data.metadata.metadata && this.data.metadata.metadataSpec) {
       this.initMetadataSpecForm(this.data.metadata.metadata);
     }
+
   }
 
   showSelectMetadataSpecDialog() {
+
     this.dialog.open(MetadataspecSelectDialogComponent, {
       width: '700px',
       data: {
         next: result => {
+
           this.data.metadata.metadataSpec = result;
+
           Object.keys(this.metadataSpecForm.controls).forEach(key => {
             this.metadataSpecForm.removeControl(key);
           });
+
           this.initMetadataSpecForm(null);
+
         }
       }
     });
+
   }
 
   private initMetadataSpecForm(values: {[key: string]: any}) {
+
     this.metadataFormNestLevel = 0;
     this.formMap = [];
+
     let props : MetadataSpecProperty[] = this.data.metadata.metadataSpec.properties;
+
     this.addFormControlsFromProperties("", props, values);
+
   }
 
-  private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[], values: {[key: string]: any}) {
+  private addFormControlsFromProperties(currentName: string,
+                                        props: MetadataSpecProperty[],
+                                        values: {[key: string]: any}) {
+
     props.forEach(prop => {
+
       let controlName = ((currentName) && currentName.length > 0) ? (currentName + "." + prop.name) : prop.name;
       let controlValue = (values) ? this.getValueByPath(values, controlName) : '';
 
-      if (prop.type === 'NUMBER') {
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
-        this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
-      }
-      if (prop.type === 'OBJECT') {
-        this.metadataFormNestLevel++;
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.addFormControlsFromProperties(controlName, prop.properties,values);
-      }
-      if (prop.type === 'STRING' || prop.type === 'BOOLEAN') {
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
-        this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
+      switch (prop.type) {
+
+        case 'NUMBER':
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
+          break;
+        case 'STRING':
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
+          break;
+        case 'OBJECT':
+          this.metadataFormNestLevel++;
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
+          this.addFormControlsFromProperties(controlName, prop.properties,values);
+          break;
+        case 'BOOLEAN':
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
+          break;
       }
     });
+
     this.metadataFormNestLevel--;
+
   }
 
   getNestedMargin(nestLevel: number) {
@@ -133,7 +166,7 @@ export class MetadataDialogComponent implements OnInit {
   }
 
   getPlaceholder(item: any[]) {
-    return (item['placeholder']) ? item['placeholder'] : item['name'];
+    return item['placeholder'];
   }
 
   private makeNestedObjectFromDotSeparated(obj: {}) {
