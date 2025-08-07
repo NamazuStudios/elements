@@ -5,7 +5,7 @@
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <name>Namazu Elements</name>
-    <version>3.3.6-SNAPSHOT</version>
+    <version>3.3.8-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>

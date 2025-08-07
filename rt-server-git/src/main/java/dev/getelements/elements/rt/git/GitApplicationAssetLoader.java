@@ -26,7 +26,7 @@ public interface GitApplicationAssetLoader extends ApplicationAssetLoader {
      * branches or commits to be used as the reference for the {@link ApplicationId} that is
      * associated with the code.
      */
-    String DEFAULT_MAIN_BRANCH = "master";
+    String DEFAULT_MAIN_BRANCH = "main";
 
     /**
      * Opens a {@link Git} instance for the supplied {@link ApplicationId} which can be used to manipulate the various
