@@ -107,7 +107,7 @@ export class MetadataComponent implements OnInit {
       data: {
         metadata: template,
         refresh: this.refresh.bind(this),
-        isNew: template == null,
+        isNew: template.metadata == null,
         next: next
       },
     });

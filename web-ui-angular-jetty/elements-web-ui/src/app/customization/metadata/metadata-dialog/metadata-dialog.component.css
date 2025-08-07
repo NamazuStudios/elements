@@ -1,6 +1,7 @@
 .item-form-container {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .item-form-row {
@@ -32,6 +33,12 @@
   margin-top: 20px;
   margin-bottom: 20px;
   font-weight: 500;
+}
+
+.metadata-input {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-weight: 50;
 }
 
 /*no scss :(*/
