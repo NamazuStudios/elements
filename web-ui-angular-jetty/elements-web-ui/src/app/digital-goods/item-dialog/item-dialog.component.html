@@ -82,7 +82,7 @@
               {{item.name}}
             </mat-label>
 
-            <mat-form-field [ngClass]="getNestedMargin(item.nestLvl)">
+            <mat-form-field [ngClass]="getNestedMargin(item.nestLvl)" [floatLabel]="'never'" class="metadata-input">
               <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
             </mat-form-field>
           </div>
@@ -91,7 +91,7 @@
             <mat-label [ngClass]="getNestedMargin(item.nestLvl)">
               {{item.name}}
             </mat-label>
-            <mat-form-field [ngClass]="getNestedMargin(item.nestLvl)">
+            <mat-form-field [ngClass]="getNestedMargin(item.nestLvl)" [floatLabel]="'never'" class="metadata-input">
               <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
               <mat-error
                 *ngIf="metadataSpecForm.controls[item.name].hasError('pattern')">
