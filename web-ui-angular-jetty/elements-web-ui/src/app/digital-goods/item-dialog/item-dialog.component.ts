@@ -92,7 +92,7 @@ export class ItemDialogComponent implements OnInit {
     }
 
     if (this.data.item.metadataSpec) {
-      formData.metadataSpec = this.data.item.metadataSpec.id;
+      formData.metadataSpec = this.data.item.metadataSpec;
       formData.metadata = this.makeNestedObjectFromDotSeparated(this.metadataSpecForm.getRawValue());
     }
 
@@ -148,24 +148,34 @@ export class ItemDialogComponent implements OnInit {
   }
 
   private addFormControlsFromProperties(currentName: string, props: MetadataSpecProperty[], values: any[]) {
+
     props.forEach(prop => {
+
       let controlName = ((currentName) && currentName.length > 0) ? (currentName + "." + prop.name) : prop.name;
       let controlValue = (values) ? this.getValueByPath(values, controlName) : '';
 
-      if (prop.type === 'NUMBER') {
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
-        this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
-      }
-      if (prop.type === 'OBJECT') {
-        this.metadataFormNestLevel++;
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
-        this.addFormControlsFromProperties(controlName, prop.properties,values);
-      }
-      if (prop.type === 'STRING' || prop.type === 'BOOLEAN') {
-        this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
-        this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
+      switch (prop.type) {
+
+        case 'NUMBER':
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
+          break;
+        case 'STRING':
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
+          break;
+        case 'OBJECT':
+          this.metadataFormNestLevel++;
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel})
+          this.addFormControlsFromProperties(controlName, prop.properties,values);
+          break;
+        case 'BOOLEAN':
+          this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue));
+          break;
       }
     });
+
     this.metadataFormNestLevel--;
   }
 
@@ -174,7 +184,7 @@ export class ItemDialogComponent implements OnInit {
   }
 
   getPlaceholder(item: any[]) {
-    return (item['placeholder']) ? item['placeholder'] : item['name'];
+    return item['placeholder'];
   }
 
   private makeNestedObjectFromDotSeparated(obj: {}) {

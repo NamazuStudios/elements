@@ -1,9 +1,11 @@
 package dev.getelements.elements.dao.mongo.metadata;
 
+import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.metadata.MongoMetadata;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
@@ -16,9 +18,14 @@ import dev.morphia.UpdateOptions;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
-import java.util.Optional;
+import org.bson.types.ObjectId;
 
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
@@ -49,11 +56,23 @@ public class MongoMetadataDao implements MetadataDao {
 
     @Override
     public Pagination<Metadata> searchMetadatas(int offset, int count, final String search, final User.Level accessLevel) {
+
         final var mongoQuery = getDatastore()
                 .find(MongoMetadata.class)
                 .filter(exists("name"));
 
         final var filteredQuery = filterQueryByAccessLevel(mongoQuery, accessLevel);
+
+        final String trimmedQueryString = nullToEmpty(search).trim();
+
+        if (!trimmedQueryString.isEmpty()) {
+            filteredQuery.filter(
+                    or(
+                            Filters.regex("name", Pattern.compile(search)),
+                            Filters.regex("accessLevel", Pattern.compile(search))
+                    )
+            );
+        }
 
         return getMongoDBUtils().paginationFromQuery(filteredQuery, offset, count, this::transform);
     }
@@ -64,16 +83,18 @@ public class MongoMetadataDao implements MetadataDao {
     }
 
     public Optional<MongoMetadata> findMongoMetadata(final String metadataId, final User.Level accessLevel) {
-        return getMongoDBUtils()
-                .parse(metadataId)
-                .map(objectId -> {
 
-                    final var metadata = getDatastore()
-                            .find(MongoMetadata.class)
-                            .filter(eq("_id", objectId), exists("name"));
+        final var query = getDatastore().find(MongoMetadata.class);
 
-                    return filterQueryByAccessLevel(metadata, accessLevel).first();
-                });
+        if (ObjectId.isValid(metadataId)) {
+            query.filter(eq("_id", new ObjectId(metadataId)), exists("name"));
+        } else {
+            query.filter(eq("name", metadataId));
+        }
+
+        final var result = filterQueryByAccessLevel(query, accessLevel).first();
+
+        return Optional.ofNullable(result);
     }
 
     @Override

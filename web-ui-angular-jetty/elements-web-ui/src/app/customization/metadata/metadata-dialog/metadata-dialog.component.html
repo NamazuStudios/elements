@@ -40,13 +40,38 @@
     <form [formGroup]="metadataSpecForm">
       <div class="item-form-container">
         <div *ngFor="let item of formMap" class="item-form-row">
-          <mat-form-field *ngIf="item.type === 'STRING' || item.type === 'NUMBER'" [ngClass]="getNestedMargin(item.nestLvl)">
-            <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
-          </mat-form-field>
-          <mat-checkbox *ngIf="item.type === 'BOOLEAN'" name="{{item.name}}" formControlName="{{item.name}}" [ngClass]="getNestedMargin(item.nestLvl)" class="nested-checkbox">
-            {{getPlaceholder(item)}}"
-          </mat-checkbox>
-          <div *ngIf="item.type === 'OBJECT'" class="mh-1" [ngClass]="getNestedMargin(item.nestLvl - 1)">{{item.name}} :</div>
+
+            <div *ngIf="item.type === 'STRING'" class="item-form-container">
+                <mat-label [ngClass]="getNestedMargin(item.nestLvl)">
+                    {{item.name}}
+                </mat-label>
+
+                <mat-form-field [ngClass]="getNestedMargin(item.nestLvl)" [floatLabel]="'never'" class="metadata-input">
+                    <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
+                </mat-form-field>
+            </div>
+
+            <div *ngIf="item.type === 'NUMBER'" class="item-form-container">
+                <mat-label [ngClass]="getNestedMargin(item.nestLvl)">
+                    {{item.name}}
+                </mat-label>
+                <mat-form-field [ngClass]="getNestedMargin(item.nestLvl)" [floatLabel]="'never'" class="metadata-input">
+                    <input matInput placeholder="{{getPlaceholder(item)}}" name="{{item.name}}" formControlName="{{item.name}}" >
+                    <mat-error
+                        *ngIf="metadataSpecForm.controls[item.name].hasError('pattern')">
+                        Incorrect format, must be a number
+                    </mat-error>
+                </mat-form-field>
+            </div>
+
+            <div *ngIf="item.type === 'BOOLEAN'">
+                <mat-checkbox name="{{item.name}}" formControlName="{{item.name}}" [ngClass]="getNestedMargin(item.nestLvl)" class="nested-checkbox">
+                    {{item.name}}
+                </mat-checkbox>
+            </div>
+
+            <div *ngIf="item.type === 'OBJECT'" class="mh-1" [ngClass]="getNestedMargin(item.nestLvl - 1)">{{item.name}} :</div>
+
         </div>
       </div>
     </form>
