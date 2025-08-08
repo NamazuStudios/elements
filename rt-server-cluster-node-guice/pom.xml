@@ -6,12 +6,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.3.8-SNAPSHOT</version>
+        <version>3.4.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-cluster-node-guice</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.3.8-SNAPSHOT</version>
+    <version>3.4.0-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
