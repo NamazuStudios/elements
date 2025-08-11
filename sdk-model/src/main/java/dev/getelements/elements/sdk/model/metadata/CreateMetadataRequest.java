@@ -4,11 +4,13 @@ import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 import java.util.Map;
 
+@Schema
 public class CreateMetadataRequest {
 
     @NotNull

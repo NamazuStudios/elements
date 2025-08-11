@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Map;
 
+@Schema
 public class UpdateMetadataRequest {
 
     @Schema(description = "An object containing the metadata payload as key-value pairs.")

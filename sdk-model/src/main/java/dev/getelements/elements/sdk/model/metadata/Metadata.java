@@ -9,10 +9,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
-public class Metadata {
+@Schema(description = "Represents a custom metadata object.")
+public class Metadata implements Serializable {
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = {ValidationGroups.Update.class, ValidationGroups.Read.class})
