@@ -22,9 +22,15 @@ public class Maven {
 
     static {
 
+        final var os = System.getProperty("os.name").toLowerCase();
+
+        final var defaultMavenCommand = os.contains("win")
+                ? "mvn.cmd"
+                : "mvn";
+
         MAVEN_EXECUTABLE = System.getenv(MAVEN_EXECUTABLE_ENV) != null
                 ? System.getenv(MAVEN_EXECUTABLE_ENV)
-                : System.getProperty(MAVEN_EXECUTABLE_PROPERTY, "mvn");
+                : System.getProperty(MAVEN_EXECUTABLE_PROPERTY, defaultMavenCommand);
 
         if (MAVEN_EXECUTABLE.isBlank()) {
 
