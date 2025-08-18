@@ -9,7 +9,8 @@ public class AppServePermittedPackages implements PermittedPackages {
     private static final List<String> PERMITTED_PACKAGES = List.of(
             "jakarta.ws.rs",
             "jakarta.servlet",
-            "jakarta.websocket"
+            "jakarta.websocket",
+            "io.swagger.v3.oas.annotations"
     );
 
     @Override
