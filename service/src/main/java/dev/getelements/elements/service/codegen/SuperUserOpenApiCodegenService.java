@@ -70,12 +70,6 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
         }
     }
 
-    @Override
-    public File generateApplication(final File spec, final String applicationNameOrId, final String language, final String packageName, final String options) {
-        //TODO: EL-101
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     private void addDirToZipArchive(final ZipOutputStream zos,
                                     final File fileToZip,
                                     final String parentDirectoryName,

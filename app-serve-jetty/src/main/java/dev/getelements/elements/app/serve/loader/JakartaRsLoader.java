@@ -6,13 +6,9 @@ import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.servlet.HttpContextRoot;
-import dev.getelements.elements.servlet.security.HttpServletAuthenticationFilter;
-import dev.getelements.elements.servlet.security.HttpServletElementScopeFilter;
-import dev.getelements.elements.servlet.security.HttpServletHeaderProfileOverrideFilter;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
-import jakarta.servlet.DispatcherType;
 import jakarta.ws.rs.core.Application;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
@@ -22,14 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static java.util.EnumSet.allOf;
 import static org.glassfish.jersey.server.ResourceConfig.forApplication;
 
 /**
@@ -103,9 +97,12 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
         final var contextPath = getHttpContextRoot()
                 .formatNormalized(APP_PREFIX_FORMAT, prefix);
 
-        final var config = forApplication(application);
+        final var config = forApplication(application).register(OpenApiResource.class);
         final var container = new ServletContainer(config);
         final var holder = new ServletHolder(container);
+
+        holder.setInitParameter("openApi.configuration.resourceClasses",
+                "io.swagger.v3.jaxrs2.integration.resources.OpenApiResource");
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(contextPath);
