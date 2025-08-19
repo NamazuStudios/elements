@@ -98,7 +98,6 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                 .formatNormalized(APP_PREFIX_FORMAT, prefix);
 
         final var config = forApplication(application).register(OpenApiResource.class);
-
         final var container = new ServletContainer(config);
         final var holder = new ServletHolder(container);
 
