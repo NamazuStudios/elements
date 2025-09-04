@@ -72,6 +72,7 @@ export class MatchmakingApplicationConfigurationDialogComponent implements OnIni
   save() {
 
     const data = this.configurationForm.value;
+    const minProfiles = 2;
 
     if (data.useDefaultMatchmaker) {
       data.matchmaker = null;
@@ -79,6 +80,10 @@ export class MatchmakingApplicationConfigurationDialogComponent implements OnIni
 
     if (!data.defineSuccessCallback) {
       data.success = null;
+    }
+
+    if(!data.maxProfiles || data.maxProfiles < minProfiles) {
+      data.maxProfiles = minProfiles;
     }
 
     delete data.useDefaultMatchmaker;
