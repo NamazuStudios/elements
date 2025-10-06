@@ -139,7 +139,7 @@ export class MetadataDialogComponent implements OnInit {
 
         case 'NUMBER':
           this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
-          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, [Validators.pattern('^[0-9]+$')]));
+          this.metadataSpecForm.addControl(controlName, new FormControl(controlValue, Validators.pattern(/^-?\d+(\.\d+)?$/)));
           break;
         case 'STRING':
           this.formMap.push({name: controlName, type: prop.type, nestLvl: this.metadataFormNestLevel, placeholder: prop.placeholder})
