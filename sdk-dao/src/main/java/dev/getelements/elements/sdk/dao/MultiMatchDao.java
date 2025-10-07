@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.dao;
 
 import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
@@ -76,6 +77,25 @@ public interface MultiMatchDao {
     List<MultiMatch> getAllMultiMatches(String query);
 
     /**
+     * Fetches a paginated subset of {@link MultiMatch} instances matching the search.
+     * @param offset - Pagination offset
+     * @param count - Maximum objects in results
+     * @param search - Search query to filter results
+     * @return Pagination of {@link MultiMatch}
+     */
+    Pagination<MultiMatch> getMultiMatches(int offset, int count, String search);
+
+    /**
+     * Fetches a paginated subset of {@link MultiMatch} instances.
+     * @param offset - Pagination offset
+     * @param count - Maximum objects in results
+     * @return Pagination of {@link MultiMatch}
+     */
+    default Pagination<MultiMatch> getMultiMatches(int offset, int count) {
+        return getMultiMatches(offset, count, "");
+    }
+
+    /**
      * Finds a {@link MultiMatch} by its ID.
      * @param multiMatchId the ID of the multi-match to find.
      *
@@ -134,7 +154,12 @@ public interface MultiMatchDao {
      * @param configuration the {@link MatchmakingApplicationConfiguration} to use
      * @return the newly created {@link MultiMatch}
      */
-    MultiMatch updateMultiMatch(MultiMatch configuration);
+    MultiMatch updateMultiMatch(String matchId, MultiMatch configuration);
+
+    /**
+     * Deletes all of the {@link MultiMatch} instances.
+     */
+    void deleteAllMultiMatches();
 
     /**
      * Deletes the {@link MultiMatch} with the given ID, throwing an exception if it does not exist.

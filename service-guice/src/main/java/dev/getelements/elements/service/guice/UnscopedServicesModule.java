@@ -18,6 +18,7 @@ import dev.getelements.elements.sdk.service.largeobject.LargeObjectService;
 import dev.getelements.elements.sdk.service.leaderboard.LeaderboardService;
 import dev.getelements.elements.sdk.service.leaderboard.RankService;
 import dev.getelements.elements.sdk.service.leaderboard.ScoreService;
+import dev.getelements.elements.sdk.service.match.MultiMatchService;
 import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
@@ -54,6 +55,7 @@ import dev.getelements.elements.service.inventory.*;
 import dev.getelements.elements.service.invite.SuperUserInviteService;
 import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.*;
+import dev.getelements.elements.service.match.SuperuserMultiMatchService;
 import dev.getelements.elements.service.metadata.SuperUserMetadataService;
 import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
@@ -69,6 +71,7 @@ import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 
 import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.sdk.service.Constants.SUPERUSER;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 
 public class UnscopedServicesModule extends AbstractModule {
@@ -107,6 +110,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(MatchmakingApplicationConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserMatchmakingApplicationConfigurationService.class);
+
+        bind(MultiMatchService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperuserMultiMatchService.class);
 
         bind(FirebaseApplicationConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))

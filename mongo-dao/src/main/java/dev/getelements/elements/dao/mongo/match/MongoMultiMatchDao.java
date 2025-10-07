@@ -6,11 +6,13 @@ import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
+import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.rt.exception.DuplicateProfileException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
@@ -37,8 +39,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.morphia.aggregation.expressions.BooleanExpressions.not;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.exists;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.util.Objects.requireNonNull;
 
@@ -61,6 +62,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     private MongoApplicationConfigurationDao mongoApplicationConfigurationDao;
 
     private ElementRegistry elementRegistry;
+
+    private MapperRegistry dozerMapperRegistry;
 
     @Override
     public List<MultiMatch> getAllMultiMatches(final String search) {
@@ -85,6 +88,21 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                         .toList()
                 );
 
+    }
+
+    @Override
+    public Pagination<MultiMatch> getMultiMatches(int offset, int count, String search) {
+
+        final var trimmedSearch = nullToEmpty(search).trim();
+        final var parsed = getBooleanQueryParser()
+                .parse(MongoMultiMatch.class, trimmedSearch)
+                .orElseGet(() -> getDatastore().find(MongoMultiMatch.class).filter(text(search)));
+
+        return getMongoDBUtils()
+                .paginationFromQuery(
+                        parsed, offset, count,
+                        f -> getDozerMapper().map(f, MultiMatch.class)
+                );
     }
 
     @Override
@@ -223,13 +241,14 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     }
 
     @Override
-    public MultiMatch updateMultiMatch(final MultiMatch multiMatch) {
+    public MultiMatch updateMultiMatch(final String matchId, final MultiMatch multiMatch) {
 
         requireNonNull(multiMatch, "multiMatch");
+        requireNonNull(matchId, "matchId");
         getValidationHelper().validateModel(multiMatch, ValidationGroups.Update.class);
 
         final var objectId = getMongoDBUtils()
-                .parse(multiMatch.getId())
+                .parse(matchId)
                 .orElseThrow(MultiMatchNotFoundException::new);
 
         final var query = getDatastore().find(MongoMultiMatch.class)
@@ -376,6 +395,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     }
 
+    @Override
+    public void deleteAllMultiMatches() {
+        datastore.find(MongoMultiMatch.class)
+                 .delete();
+
+        datastore.find(MongoMultiMatchProfile.class)
+                 .delete();
+    }
+
     public Datastore getDatastore() {
         return datastore;
     }
@@ -455,6 +483,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     @Inject
     public void setElementRegistry(@Named(ROOT) ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public MapperRegistry getDozerMapper() {
+        return dozerMapperRegistry;
+    }
+
+    @Inject
+    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
+        this.dozerMapperRegistry = dozerMapperRegistry;
     }
 
 }

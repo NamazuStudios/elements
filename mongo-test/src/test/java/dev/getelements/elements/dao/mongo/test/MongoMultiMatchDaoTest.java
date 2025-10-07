@@ -334,7 +334,7 @@ public class MongoMultiMatchDaoTest {
     )
     public void testUpdateMultiMatch(final MultiMatch match) {
         match.setStatus(IN_PROGRESS);
-        multiMatchDao.updateMultiMatch(match);
+        multiMatchDao.updateMultiMatch(match.getId(), match);
     }
     @Test(
             threadPoolSize = 10,
@@ -347,7 +347,7 @@ public class MongoMultiMatchDaoTest {
         match.setId(new ObjectId().toHexString());
         match.setStatus(IN_PROGRESS);
         match.setConfiguration(applicationConfiguration);
-        multiMatchDao.updateMultiMatch(match);
+        multiMatchDao.updateMultiMatch(match.getId(), match);
     }
 
     @Test(
