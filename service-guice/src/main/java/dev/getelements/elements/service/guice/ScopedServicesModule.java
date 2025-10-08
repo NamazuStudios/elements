@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.inventory.*;
 import dev.getelements.elements.sdk.service.invite.InviteService;
+import dev.getelements.elements.sdk.service.match.MultiMatchService;
 import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.user.*;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
@@ -73,8 +74,7 @@ import dev.getelements.elements.service.largeobject.LargeObjectServiceProvider;
 import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.largeobject.UserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.*;
-import dev.getelements.elements.service.match.MatchServiceProvider;
-import dev.getelements.elements.service.match.UserMatchService;
+import dev.getelements.elements.service.match.*;
 import dev.getelements.elements.service.metadata.AnonMetadataService;
 import dev.getelements.elements.service.metadata.MetadataServiceProvider;
 import dev.getelements.elements.service.metadata.SuperUserMetadataService;
@@ -161,6 +161,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(MatchService.class)
                 .toProvider(MatchServiceProvider.class)
+                .in(scope);
+
+        bind(MultiMatchService.class)
+                .toProvider(MultiMatchServiceProvider.class)
                 .in(scope);
 
         bind(IosApplicationConfigurationService.class)
@@ -445,6 +449,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(USER))
                 .to(UserMatchService.class);
 
+        bind(MultiMatchService.class)
+                .annotatedWith(named(USER))
+                .to(UserMultiMatchService.class);
+
         bind(MetadataService.class)
                 .annotatedWith(named(USER))
                 .to(UserMetadataService.class);
@@ -616,6 +624,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(MockSessionService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserMockSessionService.class);
+
+        bind(MultiMatchService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperuserMultiMatchService.class);
 
         bind(NearSmartContractInvocationService.class)
                 .annotatedWith(named(SUPERUSER))

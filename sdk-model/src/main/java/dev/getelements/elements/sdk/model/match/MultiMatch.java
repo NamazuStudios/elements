@@ -12,7 +12,6 @@ import java.util.Objects;
 @Schema(description = "Represents a multi-match in the matchmaking system.")
 public class MultiMatch {
 
-    @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @Schema(description = "The unique ID of the match.")
     private String id;
