@@ -8,7 +8,6 @@ import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -169,7 +168,7 @@ public class MultiMatchApiTest {
     public void testGetMatch() {
 
         final var response = client
-                .target(format("%s/metadata/%s", apiRoot, workingMatches.getFirst().getId()))
+                .target(format("%s/multi_match/%s", apiRoot, workingMatches.getFirst().getId()))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .get();
@@ -237,7 +236,7 @@ public class MultiMatchApiTest {
 
     }
 
-    @Test(groups = "delete", dependsOnGroups = "fetch")
+    @Test(groups = "postDelete", dependsOnGroups = "delete")
     public void testDeleteAll() {
 
         final var request = client
@@ -251,7 +250,7 @@ public class MultiMatchApiTest {
 
     }
 
-    @Test(groups = "delete", dependsOnGroups = "fetch")
+    @Test(groups = "postDeleteConfirmation", dependsOnGroups = "postDelete")
     public void testConfirmDeleteAll() {
 
         final var response = client
