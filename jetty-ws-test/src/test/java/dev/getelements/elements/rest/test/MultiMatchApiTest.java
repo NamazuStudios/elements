@@ -1,20 +1,19 @@
 package dev.getelements.elements.rest.test;
 
-import dev.getelements.elements.rest.test.model.MetadataPagination;
+import dev.getelements.elements.rest.test.model.MultiMatchPagination;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
-import dev.getelements.elements.sdk.model.metadata.CreateMetadataRequest;
-import dev.getelements.elements.sdk.model.metadata.Metadata;
-import dev.getelements.elements.sdk.model.metadata.UpdateMetadataRequest;
-import dev.getelements.elements.sdk.model.schema.MetadataSpec;
-import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.match.MultiMatch;
+import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,9 +48,9 @@ public class MultiMatchApiTest {
     @Inject
     private ClientContext userClientContext;
 
-    private Metadata workingMetadata;
+    private MatchmakingApplicationConfiguration workingMatchmakingConfiguration;
 
-    private MetadataSpec workingMetadataSpec;
+    private List<MultiMatch> workingMatches = new ArrayList<>();
 
     @BeforeClass
     public void createSuperUser() {
@@ -74,125 +73,121 @@ public class MultiMatchApiTest {
         matchmakingConfiguration.setMaxProfiles(2);
         matchmakingConfiguration.setParent(app);
 
-        final var response = client
+        final var request = client
                 .target(apiRoot + "/application/" + app.getId() + "/configuration/matchmaking")
                 .request()
-                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-                .post(entity(matchmakingConfiguration, APPLICATION_JSON));
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret());
 
-        assertEquals(response.getStatus(), 200);
+        try(final var response = request.post(entity(matchmakingConfiguration, APPLICATION_JSON))) {
+
+            assertEquals(200, response.getStatus());
+
+            workingMatchmakingConfiguration = response.readEntity(MatchmakingApplicationConfiguration.class);
+        }
     }
 
-    @Test(groups = "create", dependsOnMethods = "createMatchmakingConfiguration")
-    public void testCreateMetadata() {
+    @Test(groups = "create", dependsOnMethods = "createMatchmakingConfiguration", invocationCount = 10)
+    public void testCreateMultiMatch() {
 
-        final var metadata = Map.of(
-                "ListKey", List.of("value1", "value2", "value3"),
-                "StringKey", "value4",
-                "IntKey", 5,
-                "MapKey", Map.of("name", "test")
-        );
+        final var multimatch = new MultiMatch();
+        multimatch.setConfiguration(workingMatchmakingConfiguration);
+        multimatch.setStatus(MultiMatchStatus.OPEN);
+        multimatch.setExpiry(1000L);
+        multimatch.setMetadata(Map.of("code", "1234"));
 
-        final var createMetadataRequest = new CreateMetadataRequest();
-        createMetadataRequest.setName("test_metadata");
-        createMetadataRequest.setMetadataSpec(workingMetadataSpec);
-        createMetadataRequest.setMetadata(metadata);
-        createMetadataRequest.setAccessLevel(User.Level.SUPERUSER);
-
-        final var response = client
-                .target(apiRoot + "/metadata")
+        final var request = client
+                .target(apiRoot + "/multi_match")
                 .request()
-                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-                .post(entity(createMetadataRequest, APPLICATION_JSON));
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret());
 
-        assertEquals(response.getStatus(), 200);
+        try(final var response = request.post(entity(multimatch, APPLICATION_JSON)))
+        {
+            assertEquals(200, response.getStatus());
 
-        final var metadataObject = response.readEntity(Metadata.class);
+            final var multiMatchResponse = response.readEntity(MultiMatch.class);
 
-        assertNotNull(metadataObject);
-        assertNotNull(metadataObject.getId());
-        assertEquals(User.Level.SUPERUSER, metadataObject.getAccessLevel());
-        assertEquals("test_metadata", metadataObject.getName());
-        assertEquals(metadata, metadataObject.getMetadata());
-        assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
+            assertNotNull(multiMatchResponse);
+            assertNotNull(multiMatchResponse.getId());
+            assertEquals(MultiMatchStatus.OPEN, multiMatchResponse.getStatus());
+            assertEquals(multimatch.getMetadata(), multiMatchResponse.getMetadata());
+            assertEquals(multimatch.getExpiry(), multiMatchResponse.getExpiry());
+            assertEquals(multimatch.getConfiguration(), multiMatchResponse.getConfiguration());
 
-        workingMetadata = metadataObject;
+            workingMatches.add(multiMatchResponse);
+        }
 
     }
 
     @Test(groups = "update", dependsOnGroups = "create")
     public void testUpdateMetadata() {
 
-        final var metadata = Map.of(
-                "ListKey", List.of("value12", "value21", "value33"),
-                "StringKey", "value41321",
-                "IntKey", 123123,
-                "MapKey", Map.of("name", "test2")
-        );
+        final var matchUpdate = new MultiMatch();
+        final var workingMatch = workingMatches.getFirst();
+        final var expiry = workingMatch.getExpiry() + 1000L;
 
-        final var request = new UpdateMetadataRequest();
+        matchUpdate.setConfiguration(workingMatch.getConfiguration());
+        matchUpdate.setMetadata(workingMatch.getMetadata());
+        matchUpdate.setStatus(MultiMatchStatus.IN_PROGRESS);
+        matchUpdate.setExpiry(expiry);
 
-        request.setMetadataSpec(workingMetadataSpec);
-        request.setMetadata(metadata);
-        request.setAccessLevel(User.Level.USER);
-
-        final var response = client
-                .target(format("%s/metadata/%s", apiRoot, workingMetadata.getId()))
+        final var request = client
+                .target(format("%s/multi_match/%s", apiRoot, workingMatch.getId()))
                 .request()
-                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-                .put(entity(request, APPLICATION_JSON));
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret());
 
-        assertEquals(response.getStatus(), 200);
+        try(final var response = request.put(entity(matchUpdate, APPLICATION_JSON))) {
 
-        final var metadataObject = response.readEntity(Metadata.class);
+            assertEquals(200, response.getStatus());
 
-        assertNotNull(metadataObject);
-        assertNotNull(metadataObject.getId());
-        assertEquals(User.Level.USER, metadataObject.getAccessLevel());
-        assertEquals("test_metadata", metadataObject.getName());
-        assertEquals(metadata, metadataObject.getMetadata());
-        assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
+            final var multiMatchResponse = response.readEntity(MultiMatch.class);
 
-        workingMetadata = metadataObject;
+            assertNotNull(multiMatchResponse);
+            assertNotNull(multiMatchResponse.getId());
+            assertEquals(matchUpdate.getStatus(), multiMatchResponse.getStatus());
+            assertEquals(matchUpdate.getMetadata(), multiMatchResponse.getMetadata());
+            assertEquals(matchUpdate.getExpiry(), multiMatchResponse.getExpiry());
+            assertEquals(matchUpdate.getConfiguration(), multiMatchResponse.getConfiguration());
 
+            workingMatches.set(0, multiMatchResponse);
+        }
     }
 
     @Test(groups = "fetch")
-    public void testGetBogusSpec() {
+    public void testGetBogusMatch() {
 
         final var response = client
-                .target(format("%s/metadata/asdf", apiRoot))
+                .target(format("%s/multi_match/asdf", apiRoot))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .get();
 
-        assertEquals(response.getStatus(), 404);
+        assertEquals(404, response.getStatus());
 
     }
 
     @Test(groups = "fetch", dependsOnGroups = "update")
-    public void testGetMetadata() {
+    public void testGetMatch() {
 
         final var response = client
-                .target(format("%s/metadata/%s", apiRoot, workingMetadata.getId()))
+                .target(format("%s/metadata/%s", apiRoot, workingMatches.getFirst().getId()))
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .get();
 
-        assertEquals(response.getStatus(), 200);
+        assertEquals(200, response.getStatus());
 
-        final var metadata = response.readEntity(Metadata.class);
-        assertEquals(workingMetadata, metadata);
+        final var match = response.readEntity(MultiMatch.class);
+        assertEquals(workingMatches.getFirst(), match);
 
     }
 
     @Test(groups = "fetch", dependsOnGroups = "update")
-    public void testGetMetadatas() {
+    public void testGetMatches() {
 
-        final PaginationWalker.WalkFunction<Metadata> walkFunction = (offset, count) -> {
+        final PaginationWalker.WalkFunction<MultiMatch> walkFunction = (offset, count) -> {
 
             final var response = client
-                    .target(format("%s/metadata?offset=%d&count=%d",
+                    .target(format("%s/multi_match?offset=%d&count=%d",
                             apiRoot,
                             offset, count)
                     )
@@ -201,64 +196,77 @@ public class MultiMatchApiTest {
                     .get();
 
             assertEquals(200, response.getStatus());
-            return response.readEntity(MetadataPagination.class);
 
+            return response.readEntity(MultiMatchPagination.class);
         };
 
         final var specs = new PaginationWalker().toList(walkFunction);
-        assertTrue(specs.contains(workingMetadata));
 
+        assertEquals(specs.size(), workingMatches.size());
+
+        for (final MultiMatch spec : specs) {
+            assertTrue(workingMatches.contains(spec));
+        }
     }
-//
-//    @Test(groups = "fetch", dependsOnGroups = "update")
-//    public void testGetJsonSchema() {
-//
-//        final var response = client
-//                .target(format("%s/metadata/%s/schema.json", apiRoot, workingMetadata.getName()))
-//                .request()
-//                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-//                .get();
-//
-//        assertEquals(response.getStatus(), 200);
-//
-//    }
-
-//    @Test(groups = "fetch", dependsOnGroups = "update")
-//    public void testGetEditorSchema() {
-//
-//        final var response = client
-//                .target(format("%s/metadata/%s/editor.json", apiRoot, workingMetadata.getName()))
-//                .request()
-//                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-//                .get();
-//
-//        assertEquals(response.getStatus(), 200);
-//
-//    }
 
     @Test(groups = "delete", dependsOnGroups = "fetch")
-    public void testDeleteMetadata() {
+    public void testDeleteMatch() {
 
-        final var response = client
-                .target(format("%s/metadata/%s", apiRoot, workingMetadata.getId()))
+        final var request = client
+                .target(format("%s/multi_match/%s", apiRoot, workingMatches.getFirst().getId()))
                 .request()
-                .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-                .delete();
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret());
 
-        assertEquals(204, response.getStatus());
+        try(final var response = request.delete()) {
+            assertEquals(204, response.getStatus());
+        }
 
     }
 
     @Test(groups = "postDelete", dependsOnGroups = "delete")
     public void testDoubleDelete() {
 
+        final var request = client
+                .target(format("%s/multi_match/%s", apiRoot, workingMatches.getFirst().getId()))
+                .request()
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret());
+
+        try(final var response = request.delete()) {
+            assertEquals(404, response.getStatus());
+        }
+
+    }
+
+    @Test(groups = "delete", dependsOnGroups = "fetch")
+    public void testDeleteAll() {
+
+        final var request = client
+                .target(format("%s/multi_match", apiRoot))
+                .request()
+                .header(SESSION_SECRET, superUserClientContext.getSessionSecret());
+
+        try(final var response = request.delete()) {
+            assertEquals(204, response.getStatus());
+        }
+
+    }
+
+    @Test(groups = "delete", dependsOnGroups = "fetch")
+    public void testConfirmDeleteAll() {
+
         final var response = client
-                .target(format("%s/metadata/%s", apiRoot, workingMetadata.getId()))
+                .target(format("%s/multi_match?offset=%d&count=%d",
+                        apiRoot,
+                        0, 20)
+                )
                 .request()
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
-                .delete();
+                .get();
 
-        assertEquals(404, response.getStatus());
+        assertEquals(200, response.getStatus());
 
+        final var pagination = response.readEntity(MultiMatchPagination.class);
+
+        assertEquals(0, pagination.getTotal());
     }
 }
