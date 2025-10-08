@@ -30,7 +30,15 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
 
     @Min(MIN_PROFILE_CAP)
     @Schema(description = "The maximum number of profiles that can be matched in a single match. ")
-    private int maxProfiles;
+    private int maxProfiles = MIN_PROFILE_CAP;
+
+    @Min(0)
+    @Schema(description = "The amount of time a match will linger after it is marked as expired.")
+    private int lingerSeconds;
+
+    @Min(0)
+    @Schema(description = "The absolute timeout of the match. A match will be automatically deleted after this amount of time.")
+    private int timeoutSeconds;
 
     @Schema(description = "The metadata for this matchmaking configuration. This will be copied to the match when it is created.")
     private Map<String, Object> metadata;
@@ -69,6 +77,22 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public int getLingerSeconds() {
+        return lingerSeconds;
+    }
+
+    public void setLingerSeconds(int lingerSeconds) {
+        this.lingerSeconds = lingerSeconds;
+    }
+
+    public int getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(int timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     public MetadataSpec getMetadataSpec() {

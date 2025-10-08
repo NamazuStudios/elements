@@ -84,6 +84,19 @@ public interface MultiMatchDao {
     Optional<MultiMatch> findMultiMatch(String multiMatchId);
 
     /**
+     * Finds the latest {@link MultiMatch} for the given configuration and profile ID.
+     *
+     * @param configuration the matchmaking configuration
+     * @param profileId the profile ID to find the latest match for
+     * @param query the query to execute when searching for a match
+     * @return the found {@link MultiMatch}, or an empty Optional if not found.
+     */
+    Optional<MultiMatch> findLatestMultiMatchCandidate(
+            MatchmakingApplicationConfiguration configuration,
+            String profileId,
+            String query);
+
+    /**
      * Gets a {@link MultiMatch} by its ID.
      *
      * @param multiMatchId the {@link MultiMatch}
@@ -149,7 +162,6 @@ public interface MultiMatchDao {
      * Deletes the {@link MultiMatch} with the given ID, returning true if it was deleted, false if it did not exist.
      */
     boolean tryDeleteMultiMatch(String multiMatchId);
-
 
     /**
      * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
