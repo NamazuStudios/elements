@@ -9,6 +9,8 @@ import jakarta.validation.constraints.Null;
 import java.util.Map;
 import java.util.Objects;
 
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.OPEN;
+
 @Schema(description = "Represents a multi-match in the matchmaking system.")
 public class MultiMatch {
 
@@ -19,7 +21,7 @@ public class MultiMatch {
     @NotNull
     @NotNull
     @Schema(description = "The status of the match.")
-    private MultiMatchStatus status;
+    private MultiMatchStatus status = OPEN;
 
     @NotNull
     @Schema(description = "The matchmaking configuration for this multi-match.")

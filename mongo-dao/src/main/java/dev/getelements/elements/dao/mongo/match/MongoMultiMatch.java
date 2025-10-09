@@ -5,6 +5,7 @@ import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.morphia.annotations.*;
+import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
 
 import java.sql.Timestamp;
@@ -19,6 +20,7 @@ public class MongoMultiMatch {
     @Id
     private ObjectId id;
 
+    @NotNull
     @Property
     private MultiMatchStatus status;
 
@@ -31,10 +33,15 @@ public class MongoMultiMatch {
     @Property
     private Map<String, Object> metadata;
 
+    @Indexed
+    @Property
+    private Timestamp created;
+
     @Property
     @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_SECONDS))
     private Timestamp expiry;
 
+    @Indexed
     @Reference
     private List<MongoProfile> profiles;
 
@@ -76,6 +83,14 @@ public class MongoMultiMatch {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public Timestamp getCreated() {
+        return created;
+    }
+
+    public void setCreated(Timestamp created) {
+        this.created = created;
     }
 
     public Timestamp getExpiry() {

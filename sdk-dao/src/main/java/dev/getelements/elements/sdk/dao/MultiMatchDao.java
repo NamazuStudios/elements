@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
+import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.getelements.elements.sdk.model.profile.Profile;
 
 import java.util.List;
@@ -104,14 +105,19 @@ public interface MultiMatchDao {
     Optional<MultiMatch> findMultiMatch(String multiMatchId);
 
     /**
-     * Finds the latest {@link MultiMatch} for the given configuration and profile ID.
+     * Finds the latest {@link MultiMatch} for the given configuration and profile ID. This method will exclude any
+     * matches that the specific profile currently not participating in. If no match meets the criteria, then an empty
+     * optional is returned allowing downstream code to create a new match.
+     *
+     * Additionally, a query can be provided to further filter the matches that are considered. The query is appended
+     * to the supplied criteria.
      *
      * @param configuration the matchmaking configuration
      * @param profileId the profile ID to find the latest match for
      * @param query the query to execute when searching for a match
      * @return the found {@link MultiMatch}, or an empty Optional if not found.
      */
-    Optional<MultiMatch> findLatestMultiMatchCandidate(
+    Optional<MultiMatch> findOldestAvailableMultiMatchCandidate(
             MatchmakingApplicationConfiguration configuration,
             String profileId,
             String query
@@ -137,7 +143,8 @@ public interface MultiMatchDao {
     List<Profile> getProfiles(String multiMatchId);
 
     /**
-     * Adds a new {@link Profile} to the {@link MultiMatch}.
+     * Adds a new {@link Profile} to the {@link MultiMatch}. Automatically sets the match status to
+     * {@link MultiMatchStatus#FULL} if the match reaches capacity.
      *
      * @param multiMatchId the multi-match id receiving the profile
      * @param profile  the profile to add
@@ -146,7 +153,8 @@ public interface MultiMatchDao {
     MultiMatch addProfile(String multiMatchId, Profile profile);
 
     /**
-     * Removes the {@link Profile} to the {@link MultiMatch}.
+     * Removes the {@link Profile} to the {@link MultiMatch}. Automatically sets the match status to
+     * {@link MultiMatchStatus#OPEN} if the match was previously full and not {@link MultiMatchStatus#CLOSED}.
      *
      * @param multiMatchId the multi-match id receiving the profile
      * @param profile  the profile to add
@@ -169,6 +177,28 @@ public interface MultiMatchDao {
      * @return the newly created {@link MultiMatch}
      */
     MultiMatch updateMultiMatch(String matchId, MultiMatch configuration);
+
+    /**
+     * Flags the {@link MultiMatch} as open, allowing players to join. If the match is currently full, then
+     * this operation will set the match as {@link MultiMatchStatus#FULL}, otherwise it will set the match to
+     * {@link MultiMatchStatus#OPEN}.
+     *
+     * @param multiMatchId the {@link MultiMatch}
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch openMatch(String multiMatchId);
+
+    /**
+     * Flags the {@link MultiMatch} as closed, disallowing players to join. This operation will set the match as
+     * {@link MultiMatchStatus#CLOSED}. Fails if the match is {@link MultiMatchStatus#ENDED}.
+     */
+    MultiMatch closeMatch(String multiMatchId);
+
+    /**
+     * Flags the {@link MultiMatch} as ended, disallowing players to join. This operation will set the match as
+     * {@link MultiMatchStatus#ENDED}. Fails if the match is already {@link MultiMatchStatus#ENDED}.
+     */
+    MultiMatch endMatch(String multiMatchId);
 
     /**
      * Deletes all of the {@link MultiMatch} instances.

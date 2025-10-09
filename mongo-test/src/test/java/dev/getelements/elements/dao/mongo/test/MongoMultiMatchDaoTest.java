@@ -28,7 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.dao.MultiMatchDao.*;
-import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.IN_PROGRESS;
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.CLOSED;
 import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.OPEN;
 import static org.testng.Assert.*;
 
@@ -333,7 +333,7 @@ public class MongoMultiMatchDaoTest {
             dataProvider = "allMatches"
     )
     public void testUpdateMultiMatch(final MultiMatch match) {
-        match.setStatus(IN_PROGRESS);
+        match.setStatus(CLOSED);
         multiMatchDao.updateMultiMatch(match.getId(), match);
     }
     @Test(
@@ -345,7 +345,7 @@ public class MongoMultiMatchDaoTest {
     public void testUpdateNonExistantMultiMatch() {
         final var match = new MultiMatch();
         match.setId(new ObjectId().toHexString());
-        match.setStatus(IN_PROGRESS);
+        match.setStatus(CLOSED);
         match.setConfiguration(applicationConfiguration);
         multiMatchDao.updateMultiMatch(match.getId(), match);
     }
@@ -357,7 +357,7 @@ public class MongoMultiMatchDaoTest {
             dependsOnMethods = "testUpdateMultiMatch"
     )
     public void testMultiMatchesUpdated() {
-        matches.forEach(m -> assertEquals(m.getStatus(), IN_PROGRESS));
+        matches.forEach(m -> assertEquals(m.getStatus(), CLOSED));
     }
 
     @Test(

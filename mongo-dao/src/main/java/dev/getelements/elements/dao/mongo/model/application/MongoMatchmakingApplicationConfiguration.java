@@ -4,6 +4,8 @@ import dev.getelements.elements.dao.mongo.model.MongoCallbackDefinition;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 
 import java.util.Map;
 
@@ -24,6 +26,12 @@ public class MongoMatchmakingApplicationConfiguration extends MongoApplicationCo
 
     @Property
     private MongoMetadataSpec metadataSpec;
+
+    @Property
+    private int lingerSeconds;
+
+    @Property
+    private int timeoutSeconds;
 
     public MongoCallbackDefinition getSuccess() {
         return success;
@@ -63,6 +71,22 @@ public class MongoMatchmakingApplicationConfiguration extends MongoApplicationCo
 
     public void setMetadataSpec(MongoMetadataSpec metadataSpec) {
         this.metadataSpec = metadataSpec;
+    }
+
+    public int getLingerSeconds() {
+        return lingerSeconds;
+    }
+
+    public void setLingerSeconds(int lingerSeconds) {
+        this.lingerSeconds = lingerSeconds;
+    }
+
+    public int getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(int timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
     }
 
 }
