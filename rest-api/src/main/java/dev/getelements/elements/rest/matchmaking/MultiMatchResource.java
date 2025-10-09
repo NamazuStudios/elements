@@ -90,7 +90,7 @@ public class MultiMatchResource {
             description = "This method accepts an instance of MultiMatch and updates the DB entry for it that matches " +
                     "the matchId. Though it is generally recommended to update a MultiMatch via matchmaking code in " +
                     "an Element, it can be updated via REST for the purposes of testing or custom workflows.")
-    public MultiMatch createMatch(@PathParam("matchId") final String matchId, final MultiMatch match) {
+    public MultiMatch updateMatch(@PathParam("matchId") final String matchId, final MultiMatch match) {
         getValidationHelper().validateModel(match, ValidationGroups.Update.class);
         return getMultiMatchService().updateMatch(matchId, match);
     }
@@ -108,7 +108,6 @@ public class MultiMatchResource {
     }
 
     @DELETE
-    @Path("{matchId}")
     @Operation( summary = "Deletes a MultiMatch",
             description = "Deletes and permanently removes all MultiMatches from he server.  This effectively " +
                     "will cancel any pending request for a match.  If a game is currently being played " +

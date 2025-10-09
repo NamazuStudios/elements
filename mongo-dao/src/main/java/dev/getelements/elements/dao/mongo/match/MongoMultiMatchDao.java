@@ -92,15 +92,27 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     public Pagination<MultiMatch> getMultiMatches(int offset, int count, String search) {
 
         final var trimmedSearch = nullToEmpty(search).trim();
-        final var parsed = getBooleanQueryParser()
-                .parse(MongoMultiMatch.class, trimmedSearch)
-                .orElseGet(() -> getDatastore().find(MongoMultiMatch.class).filter(text(search)));
 
-        return getMongoDBUtils()
-                .paginationFromQuery(
-                        parsed, offset, count,
-                        f -> getDozerMapper().map(f, MultiMatch.class)
-                );
+        var query = getDatastore().find(MongoMultiMatch.class);
+
+        if (!trimmedSearch.isEmpty()) {
+
+            var parsedQuery = getBooleanQueryParser()
+                    .parse(MongoMultiMatch.class, trimmedSearch);
+
+            if (parsedQuery.isPresent()) {
+                query = parsedQuery.get();
+            } else {
+                query.filter(text(trimmedSearch));
+            }
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+                query,
+                offset,
+                count,
+                f -> getDozerMapper().map(f, MultiMatch.class)
+        );
     }
 
     @Override
@@ -261,19 +273,21 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .filter(eq("_id", objectId));
 
         final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
+        final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
 
         final var updated = new UpdateBuilder()
-                .with(set("status", multiMatch.getStatus()))
+                .with(set("status", mongoMultiMatch.getStatus()))
+                .with(set("metadata", mongoMultiMatch.getMetadata()))
+                .with(set("expiry", mongoMultiMatch.getExpiry()))
                 .with(set("application", mongoMatchmakingApplicationConfiguration.getParent()))
                 .with(set("configuration", mongoMatchmakingApplicationConfiguration))
-                .with(set("metadata", mongoMatchmakingApplicationConfiguration.getMetadata()))
                 .execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (updated == null) {
             throw new MultiMatchNotFoundException();
         }
 
-        final var result =  getMapperRegistry().map(updated, MultiMatch.class);
+        final var result = getMapperRegistry().map(updated, MultiMatch.class);
 
         getElementRegistry().publish(Event.builder()
                 .argument(result)
@@ -403,11 +417,17 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     @Override
     public void deleteAllMultiMatches() {
+
         datastore.find(MongoMultiMatch.class)
-                 .delete();
+                 .delete(new DeleteOptions().multi(true));
 
         datastore.find(MongoMultiMatchProfile.class)
-                 .delete();
+                 .delete(new DeleteOptions().multi(true));
+
+        getElementRegistry().publish(Event.builder()
+                .named(MULTI_MATCH_DELETED)
+                .build()
+        );
     }
 
     public Datastore getDatastore() {
