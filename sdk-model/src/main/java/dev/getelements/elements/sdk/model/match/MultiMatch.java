@@ -30,6 +30,9 @@ public class MultiMatch {
     @Schema(description = "The metadata of hte multi-match, which can be used to store additional information about the match.")
     private Map<String, Object> metadata;
 
+    @Schema(description = "The number of players currently in the match.")
+    private int count;
+
     @Schema(description = "The expiry time of the match in seconds. If not set, the match will not expire.")
     private Long expiry;
 
@@ -65,6 +68,14 @@ public class MultiMatch {
         this.metadata = metadata;
     }
 
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
     public Long getExpiry() {
         return expiry;
     }
@@ -77,24 +88,24 @@ public class MultiMatch {
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         MultiMatch that = (MultiMatch) object;
-        return Objects.equals(getId(), that.getId()) && getStatus() == that.getStatus() && Objects.equals(getConfiguration(), that.getConfiguration()) && Objects.equals(getMetadata(), that.getMetadata()) && Objects.equals(getExpiry(), that.getExpiry());
+        return count == that.count && Objects.equals(id, that.id) && status == that.status && Objects.equals(configuration, that.configuration) && Objects.equals(metadata, that.metadata) && Objects.equals(expiry, that.expiry);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getStatus(), getConfiguration(), getMetadata(), getExpiry());
+        return Objects.hash(id, status, configuration, metadata, count, expiry);
     }
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("MultiMatch{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", status=").append(status);
-        sb.append(", configuration=").append(configuration);
-        sb.append(", metadata=").append(metadata);
-        sb.append(", expiry=").append(expiry);
-        sb.append('}');
-        return sb.toString();
+        return "MultiMatch{" +
+                "id='" + id + '\'' +
+                ", status=" + status +
+                ", configuration=" + configuration +
+                ", metadata=" + metadata +
+                ", count=" + count +
+                ", expiry=" + expiry +
+                '}';
     }
 
 }

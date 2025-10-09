@@ -29,7 +29,6 @@ import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.Sort;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
@@ -119,6 +118,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 count,
                 f -> getDozerMapper().map(f, MultiMatch.class)
         );
+
     }
 
     @Override
@@ -575,11 +575,12 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .named(MULTI_MATCH_DELETED)
                 .build()
         );
+
     }
 
     public Query<MongoMultiMatch> getBaseQuery() {
         final var now = new Timestamp(currentTimeMillis());
-        return getDatastore().find(MongoMultiMatch.class).filter(gt("expiry", now));
+        return getDatastore().find(MongoMultiMatch.class).filter(lt("expiry", now));
     }
 
     public Datastore getDatastore() {

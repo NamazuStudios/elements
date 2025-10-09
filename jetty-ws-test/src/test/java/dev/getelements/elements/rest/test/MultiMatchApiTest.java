@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.OPEN;
 import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
@@ -90,7 +91,7 @@ public class MultiMatchApiTest {
 
         final var multimatch = new MultiMatch();
         multimatch.setConfiguration(workingMatchmakingConfiguration);
-        multimatch.setStatus(MultiMatchStatus.OPEN);
+        multimatch.setStatus(OPEN);
         multimatch.setExpiry(1000L);
         multimatch.setMetadata(Map.of("code", "1234"));
 
@@ -107,7 +108,7 @@ public class MultiMatchApiTest {
 
             assertNotNull(multiMatchResponse);
             assertNotNull(multiMatchResponse.getId());
-            assertEquals(MultiMatchStatus.OPEN, multiMatchResponse.getStatus());
+            assertEquals(OPEN, multiMatchResponse.getStatus());
             assertEquals(multimatch.getMetadata(), multiMatchResponse.getMetadata());
             assertEquals(multimatch.getExpiry(), multiMatchResponse.getExpiry());
             assertEquals(multimatch.getConfiguration(), multiMatchResponse.getConfiguration());
@@ -126,7 +127,7 @@ public class MultiMatchApiTest {
 
         matchUpdate.setConfiguration(workingMatch.getConfiguration());
         matchUpdate.setMetadata(workingMatch.getMetadata());
-        matchUpdate.setStatus(MultiMatchStatus.IN_PROGRESS);
+        matchUpdate.setStatus(OPEN);
         matchUpdate.setExpiry(expiry);
 
         final var request = client
