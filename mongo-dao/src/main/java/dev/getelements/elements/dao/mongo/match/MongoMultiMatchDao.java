@@ -580,7 +580,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     public Query<MongoMultiMatch> getBaseQuery() {
         final var now = new Timestamp(currentTimeMillis());
-        return getDatastore().find(MongoMultiMatch.class).filter(lt("expiry", now));
+        return getDatastore().find(MongoMultiMatch.class).filter(gt("expiry", now));
     }
 
     public Datastore getDatastore() {

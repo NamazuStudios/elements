@@ -92,7 +92,6 @@ public class MultiMatchApiTest {
         final var multimatch = new MultiMatch();
         multimatch.setConfiguration(workingMatchmakingConfiguration);
         multimatch.setStatus(OPEN);
-        multimatch.setExpiry(1000L);
         multimatch.setMetadata(Map.of("code", "1234"));
 
         final var request = client
@@ -110,7 +109,6 @@ public class MultiMatchApiTest {
             assertNotNull(multiMatchResponse.getId());
             assertEquals(OPEN, multiMatchResponse.getStatus());
             assertEquals(multimatch.getMetadata(), multiMatchResponse.getMetadata());
-            assertEquals(multimatch.getExpiry(), multiMatchResponse.getExpiry());
             assertEquals(multimatch.getConfiguration(), multiMatchResponse.getConfiguration());
 
             workingMatches.add(multiMatchResponse);
