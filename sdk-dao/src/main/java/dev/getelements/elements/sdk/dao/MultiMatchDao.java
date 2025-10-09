@@ -114,7 +114,8 @@ public interface MultiMatchDao {
     Optional<MultiMatch> findLatestMultiMatchCandidate(
             MatchmakingApplicationConfiguration configuration,
             String profileId,
-            String query);
+            String query
+    );
 
     /**
      * Gets a {@link MultiMatch} by its ID.

@@ -14,6 +14,7 @@ import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
@@ -70,9 +71,6 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var trimmedSearch = nullToEmpty(search).trim();
 
-        final var parsed = getBooleanQueryParser()
-                .parse(MongoMultiMatch.class, trimmedSearch);
-
         return getBooleanQueryParser()
                 .parse(MongoMultiMatch.class, trimmedSearch)
                 .filter(q -> getMongoDBUtils().isIndexedQuery(q))
@@ -120,6 +118,14 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                         .stream()
                         .findFirst()
                 );
+    }
+
+    @Override
+    public Optional<MultiMatch> findLatestMultiMatchCandidate(
+            final MatchmakingApplicationConfiguration configuration,
+            final String profileId,
+            final String query) {
+        return Optional.empty();
     }
 
     @Override

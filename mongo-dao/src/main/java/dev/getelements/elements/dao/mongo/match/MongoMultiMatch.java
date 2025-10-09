@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.match;
 
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
@@ -7,6 +8,7 @@ import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 
 @Entity("multi_match")
@@ -32,6 +34,9 @@ public class MongoMultiMatch {
     @Property
     @Indexed(options = @IndexOptions(expireAfterSeconds = EXPIRY_SECONDS))
     private Timestamp expiry;
+
+    @Reference
+    private List<MongoProfile> profiles;
 
     public ObjectId getId() {
         return id;
@@ -79,6 +84,14 @@ public class MongoMultiMatch {
 
     public void setExpiry(Timestamp expiry) {
         this.expiry = expiry;
+    }
+
+    public List<MongoProfile> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(List<MongoProfile> profiles) {
+        this.profiles = profiles;
     }
 
 }
