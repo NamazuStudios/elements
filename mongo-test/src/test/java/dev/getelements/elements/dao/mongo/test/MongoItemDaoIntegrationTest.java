@@ -17,8 +17,7 @@ import java.util.stream.Collectors;
 
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.FUNGIBLE;
 import static java.lang.String.format;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoItemDaoIntegrationTest {
@@ -190,6 +189,30 @@ public class MongoItemDaoIntegrationTest {
         return item;
     }
 
+    @Test
+    private void TestDeleteItem() {
+
+        final var itemName = "to_be_deleted";
+        final var item = createMockItem(itemName);
+        final var createdItem = itemDao.createItem(item);
+        assertNotNull(createdItem.getId());
+
+        itemDao.deleteItem(createdItem.getId());
+
+        var postDelete = itemDao.getItems(0, 100, null, null, null);
+
+        assertTrue(postDelete.stream().noneMatch(i -> i.getId().equals(createdItem.getId())));
+
+        final var recreatedItem = itemDao.createItem(item);
+
+        assertNotNull(createdItem.getName());
+
+        itemDao.deleteItem(createdItem.getName());
+
+        postDelete = itemDao.getItems(0, 100, null, null, null);
+
+        assertTrue(postDelete.stream().noneMatch(i -> i.getId().equals(recreatedItem.getId())));
+    }
 
     @Inject
     public void setItemDao(ItemDao itemDao) {

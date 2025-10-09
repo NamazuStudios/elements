@@ -56,4 +56,10 @@ public interface ItemDao {
      * @throws DuplicateException   if the passed in Item has a name that already exists
      */
     Item createItem(Item item);
+
+    /**
+     * Attempts to delete the item with the given identifier
+     * @param identifier Item name or id
+     */
+    void deleteItem(String identifier);
 }

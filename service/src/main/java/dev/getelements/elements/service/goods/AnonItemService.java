@@ -45,4 +45,9 @@ public class AnonItemService implements ItemService {
     public void setItemDao(ItemDao itemDao) {
         this.itemDao = itemDao;
     }
+
+    @Override
+    public void deleteItem(String identifier) {
+        throw new ForbiddenException("Unprivileged requests are unable to delete items.");
+    }
 }

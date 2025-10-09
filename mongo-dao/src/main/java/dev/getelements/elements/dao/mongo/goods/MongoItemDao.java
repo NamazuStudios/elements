@@ -33,8 +33,11 @@ import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -153,7 +156,7 @@ public class MongoItemDao implements ItemDao {
                     "by tags");
         }
 
-        final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class);
+        final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class).filter(exists("name"));
 
         if (tags != null && !tags.isEmpty()) {
             mongoQuery.filter(Filters.in("tags", tags));
@@ -195,8 +198,10 @@ public class MongoItemDao implements ItemDao {
             return updateItemWtihMetadata(item ,query);
         }
 
+        final var options = new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER);
+
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
-                query.modify(
+                query.modify(options,
                         set("name", item.getName()),
                         set("displayName", item.getDisplayName()),
                         set("metadata", item.getMetadata()),
@@ -204,7 +209,7 @@ public class MongoItemDao implements ItemDao {
                         set("description", item.getDescription()),
                         set("publicVisible", item.isPublicVisible()),
                         set("category", item.getCategory())
-                ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+                )
         );
 
         if (updatedMongoItem == null) {
@@ -219,8 +224,10 @@ public class MongoItemDao implements ItemDao {
         final var mongoMetadataSpec = isNull(item.getMetadataSpec()) ? null :
                 getMongoMetadataSpec(item.getMetadataSpec().getId());
 
+        final var options = new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER);
+
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
-                query.modify(
+                query.modify(options,
                         set("name", item.getName()),
                         set("displayName", item.getDisplayName()),
                         set("metadataSpec", Objects.requireNonNull(mongoMetadataSpec)),
@@ -229,7 +236,7 @@ public class MongoItemDao implements ItemDao {
                         set("description", item.getDescription()),
                         set("publicVisible", item.isPublicVisible()),
                         set("category", item.getCategory())
-                ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+                )
         );
 
         if (updatedMongoItem == null) {
@@ -256,6 +263,18 @@ public class MongoItemDao implements ItemDao {
         query.filter(eq("_id", mongoItem.getObjectId()));
 
         return getDozerMapper().map(query.first(), Item.class);
+    }
+
+    @Override
+    public void deleteItem(String identifier) {
+
+        final var objectId = getMongoDBUtils().parseOrReturnNull(identifier);
+        final var filter = objectId != null ? eq("_id", objectId) : eq("name", identifier);
+        final var options = new ModifyOptions().returnDocument(ReturnDocument.AFTER);
+
+        getDatastore().find(MongoItem.class)
+                .filter(filter)
+                .modify(options, unset("name"));
     }
 
     private void normalize(Item item) {
