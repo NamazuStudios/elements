@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.InvalidMultiMatchPhaseException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
@@ -28,8 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.dao.MultiMatchDao.*;
-import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.CLOSED;
-import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.OPEN;
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.*;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -266,14 +266,26 @@ public class MongoMultiMatchDaoTest {
     )
     public void testAddProfileToMultiMatch(final MultiMatch match, final Profile profile) {
 
-        multiMatchDao.addProfile(match.getId(), profile);
+        final var result = multiMatchDao.addProfile(match.getId(), profile);
 
         final var full = profilesByMatch.get(match.getId()).size() == match.getConfiguration().getMaxProfiles();
+
+        if (full) {
+            assertEquals(result.getCount(), match.getConfiguration().getMaxProfiles());
+            assertEquals(result.getStatus(), FULL, "Match status not updated correctly.");
+        } else {
+            assertTrue(result.getCount() < match.getConfiguration().getMaxProfiles());
+            assertEquals(result.getStatus(), OPEN, "Match status not updated correctly.");
+        }
+
         final var expected = full
                 ? InvalidDataException.class
                 : DuplicateProfileException.class;
 
         assertThrows(expected, () -> multiMatchDao.addProfile(match.getId(), profile));
+
+        final var fetched = multiMatchDao.getMultiMatch(match.getId());
+        assertEquals(fetched.getStatus(), full ? FULL : OPEN, "Match status not updated correctly on fetch.");
 
     }
 
@@ -281,13 +293,33 @@ public class MongoMultiMatchDaoTest {
             threadPoolSize = 10,
             groups = "addProfilesToMultiMatch",
             dependsOnGroups = "createMultiMatch",
-            dataProvider = "allMatches"
+            dataProvider = "allMatches",
+            dependsOnMethods = "testAddProfileToMultiMatch"
     )
     public void testProfilesWereAddedToMultiMatch(final MultiMatch match) {
         final var actual = multiMatchDao.getProfiles(match.getId());
         final var expected = profilesByMatch.get(match.getId());
         assertEquals(actual.size(), expected.size(), "Profile count mismatch for match: " + match.getId());
         assertTrue(expected.containsAll(actual), "Expected profiles not found in match: " + match.getId());
+    }
+
+    @Test(
+            groups = "addProfilesToMultiMatch",
+            dependsOnGroups = "createMultiMatch",
+            dependsOnMethods = "testProfilesWereAddedToMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testCloseMatch(final MultiMatch match) {
+
+        final var updated = multiMatchDao.closeMatch(match.getId());
+        assertEquals(updated.getStatus(), CLOSED, "Match not closed properly: " + match.getId());
+
+        final var someProfile = profiles.get(0);
+        assertThrows(InvalidMultiMatchPhaseException.class, () -> multiMatchDao.addProfile(match.getId(), someProfile));
+
+        final var fetched = multiMatchDao.getMultiMatch(match.getId());
+        assertEquals(fetched.getStatus(), CLOSED, "Match status not updated correctly on fetch.");
+
     }
 
     @Test(

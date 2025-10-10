@@ -46,6 +46,11 @@ import java.util.Optional;
         parameters = MultiMatch.class,
         description = "Called when a multi-match was deleted."
 )
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCHES_TRUNCATED,
+        parameters = MultiMatch.class,
+        description = "Called when all multi-matches were deleted. Will not drive individual deletion events."
+)
 public interface MultiMatchDao {
 
     String MULTI_MATCH_CREATED = "dev.getelements.elements.sdk.model.dao.multi.match.created";
@@ -59,6 +64,8 @@ public interface MultiMatchDao {
     String MULTI_MATCH_EXPIRED = "dev.getelements.elements.sdk.model.match.dao.multi.match.expired";
 
     String MULTI_MATCH_DELETED = "dev.getelements.elements.sdk.model.match.dao.multi.match.deleted";
+
+    String MULTI_MATCHES_TRUNCATED = "dev.getelements.elements.sdk.model.match.dao.multi.matches.truncated";
 
     /**
      * Gets all {@link MultiMatch} instances.

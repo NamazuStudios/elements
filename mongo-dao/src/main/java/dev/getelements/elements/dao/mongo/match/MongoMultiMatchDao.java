@@ -213,12 +213,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         profiles.add(mongoProfile);
 
+        final var configuration = mongoMultiMatch.getConfiguration();
+
+        final var status = profiles.size() >= configuration.getMaxProfiles()
+                ? FULL
+                : OPEN;
+
         final var updated = new UpdateBuilder()
                 .with(set("profiles", profiles))
-                .with(set("status", profiles.size() >= mongoMultiMatch.getConfiguration().getMaxProfiles()
-                        ? FULL
-                        : OPEN
-                ))
+                .with(set("status", status))
                 .execute(query, new ModifyOptions().returnDocument(AFTER));
 
         final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
@@ -261,8 +264,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new ProfileNotFoundException();
         }
 
+        final var status = switch (mongoMultiMatch.getStatus()) {
+            case OPEN, FULL -> OPEN;
+            case CLOSED -> CLOSED;
+            case ENDED -> throw new InvalidDataException();
+        };
+
         final var updated = new UpdateBuilder()
                 .with(set("profiles", profiles))
+                .with(set("status", status))
                 .execute(query, new ModifyOptions().returnDocument(AFTER));
 
         final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
@@ -388,6 +398,12 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
+
         return getMapperRegistry().map(updated, MultiMatch.class);
 
     }
@@ -420,6 +436,12 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         if (updated == null) {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
+
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
 
         return getMapperRegistry().map(updated, MultiMatch.class);
 
@@ -460,6 +482,12 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         if (updated == null) {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
+
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
 
         return getMapperRegistry().map(updated, MultiMatch.class);
 
@@ -572,7 +600,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                  .delete(new DeleteOptions().multi(true));
 
         getElementRegistry().publish(Event.builder()
-                .named(MULTI_MATCH_DELETED)
+                .named(MULTI_MATCHES_TRUNCATED)
                 .build()
         );
 
