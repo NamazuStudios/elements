@@ -149,7 +149,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .findMongoApplicationConfiguration(MongoMatchmakingApplicationConfiguration.class,
                         configuration.getParent().getId(),
                         configuration.getId()
-                );
+                )
+                .orElseThrow(InvalidDataException::new);
 
         var query = getBaseQuery();
 
@@ -170,7 +171,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         return query
                 .filter(eq("status", OPEN))
                 .filter(eq("configuration", mongoMatchmakingApplicationConfiguration))
-                .filter(ne("profiles", mongoProfile))                .stream(options)
+                .filter(elemMatch("profiles", eq("$id", mongoProfile.getObjectId())).not())
+                .stream(options)
                 .findFirst()
                 .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class));
 

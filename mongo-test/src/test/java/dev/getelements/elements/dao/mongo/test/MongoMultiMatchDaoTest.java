@@ -20,10 +20,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -256,6 +253,29 @@ public class MongoMultiMatchDaoTest {
                 TEST_MATCH_COUNT,
                 "Expected " + TEST_MATCH_COUNT + " matches to be created."
         );
+    }
+
+    @Test(groups = "createMultiMatch",
+          dependsOnMethods = "testCreateMultiMatch")
+    public void testOldestMatchIsSearchable() {
+
+        final var someProfile = profiles.get(0);
+
+        final var oldestAvailable = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                someProfile.getId(),
+                ""
+        );
+
+        assertTrue(oldestAvailable.isPresent(), "Expected to find an available match.");
+
+        final var expected = matches
+                .stream()
+                .min(Comparator.comparingLong(MultiMatch::getCreated))
+                .orElseThrow(IllegalStateException::new);
+
+        assertEquals(oldestAvailable.get(), matches.get(0));
+
     }
 
     @Test(

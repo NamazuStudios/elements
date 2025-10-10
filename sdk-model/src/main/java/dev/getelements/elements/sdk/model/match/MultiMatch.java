@@ -36,6 +36,9 @@ public class MultiMatch {
     @Schema(description = "The expiry time of the match in seconds. If not set, the match will not expire.")
     private Long expiry;
 
+    @Schema(description = "The timestamp at which the match was created, in milliseconds since epoch.")
+    private Long created;
+
     public String getId() {
         return id;
     }
@@ -84,16 +87,24 @@ public class MultiMatch {
         this.expiry = expiry;
     }
 
+    public Long getCreated() {
+        return created;
+    }
+
+    public void setCreated(Long created) {
+        this.created = created;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         MultiMatch that = (MultiMatch) object;
-        return count == that.count && Objects.equals(id, that.id) && status == that.status && Objects.equals(configuration, that.configuration) && Objects.equals(metadata, that.metadata) && Objects.equals(expiry, that.expiry);
+        return count == that.count && Objects.equals(id, that.id) && status == that.status && Objects.equals(configuration, that.configuration) && Objects.equals(metadata, that.metadata) && Objects.equals(expiry, that.expiry) && Objects.equals(created, that.created);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, status, configuration, metadata, count, expiry);
+        return Objects.hash(id, status, configuration, metadata, count, expiry, created);
     }
 
     @Override
@@ -105,6 +116,7 @@ public class MultiMatch {
                 ", metadata=" + metadata +
                 ", count=" + count +
                 ", expiry=" + expiry +
+                ", created=" + created +
                 '}';
     }
 
