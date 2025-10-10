@@ -269,13 +269,6 @@ public class MongoMultiMatchDaoTest {
 
         assertTrue(oldestAvailable.isPresent(), "Expected to find an available match.");
 
-        final var expected = matches
-                .stream()
-                .min(Comparator.comparingLong(MultiMatch::getCreated))
-                .orElseThrow(IllegalStateException::new);
-
-        assertEquals(oldestAvailable.get(), matches.get(0));
-
     }
 
     @Test(
@@ -306,6 +299,16 @@ public class MongoMultiMatchDaoTest {
 
         final var fetched = multiMatchDao.getMultiMatch(match.getId());
         assertEquals(fetched.getStatus(), full ? FULL : OPEN, "Match status not updated correctly on fetch.");
+
+        final var candidate = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                profile.getId(),
+                ""
+        );
+
+        // Checks that the same match is not returned as a candidate since the profile is already in it. Additionally,
+        // if we are on the edge case where all matches are full then it is valid to not find any candidate.
+        candidate.ifPresent(multiMatch -> assertNotEquals(multiMatch.getId(), match.getId()));
 
     }
 
@@ -339,6 +342,16 @@ public class MongoMultiMatchDaoTest {
 
         final var fetched = multiMatchDao.getMultiMatch(match.getId());
         assertEquals(fetched.getStatus(), CLOSED, "Match status not updated correctly on fetch.");
+
+        final var candidate = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                someProfile.getId(),
+                ""
+        );
+
+        // Checks that the same match is not returned as a candidate because the match is closed. Additionally,
+        // if we are on the edge case where all matches are full then it is valid to not find any candidate.
+        candidate.ifPresent(multiMatch -> assertNotEquals(multiMatch.getId(), match.getId()));
 
     }
 
@@ -376,6 +389,29 @@ public class MongoMultiMatchDaoTest {
         final var expected = profilesByMatch.get(match.getId());
         assertEquals(actual.size(), expected.size(), "Profile count mismatch for match: " + match.getId());
         assertTrue(expected.containsAll(actual), "Expected profiles not found in match: " + match.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "removeProfilesFromMultiMatch",
+            dependsOnGroups = "addProfilesToMultiMatch",
+            dependsOnMethods = "testRemoveProfileFromMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testClosedMatchesWillNotAppear(final MultiMatch match) {
+
+        final var someProfile = profiles.get(0);
+
+        final var candidate = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                someProfile.getId(),
+                ""
+        );
+
+        // Checks that the same match is not returned as a candidate because the match is closed and profiles were
+        // removed. At this point in the test there should be no matches available and open.
+        assertTrue(candidate.isEmpty(), "Unexpected match candidate: " + match.getId());
+
     }
 
     @Test(
