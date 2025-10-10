@@ -356,6 +356,18 @@ public class MongoMultiMatchDaoTest {
     }
 
     @Test(
+            groups = "addProfilesToMultiMatch",
+            dependsOnGroups = "createMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testRefreshMatch(final MultiMatch match) {
+        final var refreshed = multiMatchDao.refreshMatch(match.getId());
+        assertNotNull(refreshed);
+        assertNotNull(refreshed.getExpiry());
+        assertTrue(match.getExpiry().longValue() > System.currentTimeMillis());
+    }
+
+    @Test(
             threadPoolSize = 10,
             groups = "removeProfilesFromMultiMatch",
             dependsOnGroups = "addProfilesToMultiMatch",
@@ -507,40 +519,11 @@ public class MongoMultiMatchDaoTest {
             threadPoolSize = 10,
             groups = "expireMultiMatches",
             dependsOnGroups = "getMultiMatches",
-            dataProvider = "lowerMatches"
+            dataProvider = "allMatches"
     )
-    public void testExpireMultiMatches(final MultiMatch match) {
-        multiMatchDao.expireMultiMatch(match.getId());
-    }
-
-    @Test(
-            threadPoolSize = 10,
-            groups = "expireMultiMatches",
-            dependsOnGroups = "getMultiMatches",
-            dataProvider = "upperMatches"
-    )
-    public void testTryExpireMultiMatches(final MultiMatch match) {
-        assertTrue(multiMatchDao.tryExpireMultiMatch(match.getId()), "Match should be expired: " + match.getId());
-    }
-
-    @Test(
-            threadPoolSize = 10,
-            groups = "expireMultiMatches",
-            dependsOnGroups = "getMultiMatches",
-            dependsOnMethods = {
-                    "testExpireMultiMatches",
-                    "testTryExpireMultiMatches"
-            }
-    )
-    public void testAllMatchesAreExpired() {
-        assertEquals(expiredMatches.size(), matches.size(), "Mismatch in number of matches retrieved.");
-        for (final var expired : expiredMatches) {
-            assertNotNull(expired.getExpiry());
-            assertTrue(
-                    matches.stream().anyMatch(m -> m.getId().equals(expired.getId())),
-                    "Match not found: " + expired.getId()
-            );
-        }
+    public void testEnd(final MultiMatch match) {
+        final var result = multiMatchDao.endMatch(match.getId());
+        assertEquals(result.getStatus(), ENDED, "Match not found: " + match.getId());
     }
 
     @Test(

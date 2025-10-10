@@ -477,7 +477,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         ));
 
         final var updated = new UpdateBuilder()
-                .with(set("status", CLOSED))
+                .with(set("status", ENDED))
                 .with(set("expiry", expiry))
                 .execute(query, new ModifyOptions().returnDocument(AFTER));
 
@@ -487,7 +487,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         getElementRegistry().publish(Event.builder()
                 .argument(updated)
-                .named(MULTI_MATCH_UPDATED)
+                .named(MULTI_MATCH_EXPIRED)
                 .build()
         );
 
@@ -511,6 +511,52 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                         multiMatch.getConfiguration().getId()
                 )
                 .orElseThrow(InvalidDataException::new);
+
+    }
+
+    @Override
+    public MultiMatch refreshMatch(String multiMatchId) {
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var existing = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
+                existing.getConfiguration().getTimeoutSeconds(),
+                SECONDS
+        ));
+
+        query.filter(or(
+                eq("status", OPEN),
+                eq("status", FULL),
+                eq("status", CLOSED)
+        ));
+
+        final var updated = new UpdateBuilder()
+                .with(set("expiry", expiry))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) {
+            throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
+        }
+
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
 
     }
 
@@ -541,53 +587,6 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         getElementRegistry().publish(Event.builder()
                 .argument(deleted)
                 .named(MULTI_MATCH_DELETED)
-                .build()
-        );
-
-        return true;
-
-    }
-
-    @Override
-    public boolean tryExpireMultiMatch(final String multiMatchId) {
-
-        final var objectId = getMongoDBUtils()
-                .parse(multiMatchId)
-                .orElseThrow(MultiMatchNotFoundException::new);
-
-        final var multiMatchQuery = getDatastore()
-                .find(MongoMultiMatch.class)
-                .filter(eq("_id", objectId));
-
-        final var mongoMultiMatch = multiMatchQuery.first();
-
-        if (mongoMultiMatch == null) {
-            return false;
-        }
-
-        final var now = new Timestamp(currentTimeMillis());
-        final var updates = new UpdateBuilder().with(set("expiry", now));
-
-        final var expiredMultiMatch = updates.execute(
-                multiMatchQuery,
-                new ModifyOptions().returnDocument(AFTER)
-        );
-
-        if (expiredMultiMatch == null) {
-            return false;
-        }
-
-        final var expired = getMapperRegistry().map(expiredMultiMatch, MultiMatch.class);
-
-        getElementRegistry().publish(Event.builder()
-                .argument(expired)
-                .named(MULTI_MATCH_EXPIRED)
-                .build()
-        );
-
-        getElementRegistry().publish(Event.builder()
-                .argument(expired)
-                .named(MULTI_MATCH_UPDATED)
                 .build()
         );
 

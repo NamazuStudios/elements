@@ -198,14 +198,28 @@ public interface MultiMatchDao {
     /**
      * Flags the {@link MultiMatch} as closed, disallowing players to join. This operation will set the match as
      * {@link MultiMatchStatus#CLOSED}. Fails if the match is {@link MultiMatchStatus#ENDED}.
+     * @param multiMatchId the multi-match id to refresh
+     * @return the updated {@link MultiMatch}
      */
     MultiMatch closeMatch(String multiMatchId);
 
     /**
      * Flags the {@link MultiMatch} as ended, disallowing players to join. This operation will set the match as
      * {@link MultiMatchStatus#ENDED}. Fails if the match is already {@link MultiMatchStatus#ENDED}.
+     *
+     * @param multiMatchId the multi-match id to refresh
+     * @return the updated {@link MultiMatch}
+     *
      */
     MultiMatch endMatch(String multiMatchId);
+
+    /**
+     * Refreshes the {@link MultiMatch}, resetting its expiry timer.
+     *
+     * @param multiMatchId the multi-match id to refresh
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch refreshMatch(String multiMatchId);
 
     /**
      * Deletes all of the {@link MultiMatch} instances.
@@ -225,25 +239,5 @@ public interface MultiMatchDao {
      * Deletes the {@link MultiMatch} with the given ID, returning true if it was deleted, false if it did not exist.
      */
     boolean tryDeleteMultiMatch(String multiMatchId);
-
-    /**
-     * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
-     *
-     * @param multiMatchId the ID of the {@link MultiMatch}
-     * @throws MultiMatchNotFoundException if the multi-match does not exist or is already expired.
-     */
-    default void expireMultiMatch(String multiMatchId) {
-        if (!tryExpireMultiMatch(multiMatchId)) {
-            throw new MultiMatchNotFoundException();
-        }
-    }
-
-    /**
-     * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
-     *
-     * @param multiMatchId the ID of the {@link MultiMatch}
-     * @return true if the multi-match was expired, false if it did not exist or was already expired.
-     */
-    boolean tryExpireMultiMatch(String multiMatchId);
 
 }
