@@ -73,6 +73,11 @@ public class SuperuserItemService implements ItemService {
 
     }
 
+    @Override
+    public void deleteItem(String identifier) {
+        getItemDao().deleteItem(identifier);
+    }
+
     @SuppressWarnings("unused")
     public ItemDao getItemDao() {
         return itemDao;

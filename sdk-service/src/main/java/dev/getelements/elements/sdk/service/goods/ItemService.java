@@ -50,4 +50,9 @@ public interface ItemService {
      */
     Item createItem(CreateItemRequest item);
 
+    /**
+     * Soft deletes the item with the given identifier.
+     * @param identifier Item name or id
+     */
+    void deleteItem(String identifier);
 }
