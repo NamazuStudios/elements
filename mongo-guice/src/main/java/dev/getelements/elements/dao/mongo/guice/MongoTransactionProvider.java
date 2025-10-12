@@ -3,9 +3,11 @@ package dev.getelements.elements.dao.mongo.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Stage;
+import com.google.inject.TypeLiteral;
 import com.mongodb.client.MongoDatabase;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.morphia.Datastore;
@@ -16,6 +18,7 @@ import jakarta.inject.Provider;
 import jakarta.validation.Validator;
 
 import java.util.Properties;
+import java.util.function.Consumer;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
@@ -74,11 +77,23 @@ public class MongoTransactionProvider implements Provider<Transaction> {
                     }
 
                     @Override
+                    protected void bindEventPublisher() {
+
+                        bind(new TypeLiteral<Consumer<Event>>() {})
+                                .to(MongoTransactionBufferedEventPublisher.class);
+
+                        bind(MongoTransactionBufferedEventPublisher.class)
+                                .asEagerSingleton();
+
+                    }
+
+                    @Override
                     protected void bindElementRegistries() {
                         bind(ElementRegistry.class)
                                 .annotatedWith(named(ROOT))
                                 .toProvider(getRootElementRegistryProvider());
                     }
+
                 }
         );
 

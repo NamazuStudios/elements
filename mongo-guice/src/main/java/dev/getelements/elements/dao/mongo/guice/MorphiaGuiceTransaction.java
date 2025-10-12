@@ -29,6 +29,8 @@ public class MorphiaGuiceTransaction implements Transaction {
 
     private MorphiaSession morphiaSession;
 
+    private MongoTransactionBufferedEventPublisher bufferedEventPublisher;
+
     @Override
     public <DaoT> DaoT getDao(final Class<DaoT> daoT) {
         return getInjector().getInstance(daoT);
@@ -48,6 +50,7 @@ public class MorphiaGuiceTransaction implements Transaction {
 
         try {
             getMorphiaSession().commitTransaction();
+            getBufferedEventPublisher().postCommit();
         } catch (MongoException ex) {
             handle(ex, this::retryCommitUntilSuccessOrFailure);
         }
@@ -55,8 +58,8 @@ public class MorphiaGuiceTransaction implements Transaction {
     }
 
     private void retryCommitUntilSuccessOrFailure() {
-        while (failures < MAX_RETRIES) {
 
+        while (failures < MAX_RETRIES) {
             try {
                 final var delay = calculateNextDelay();
                 sleep(delay);
@@ -100,6 +103,7 @@ public class MorphiaGuiceTransaction implements Transaction {
     @Override
     public void rollback() {
         getMorphiaSession().abortTransaction();
+        getBufferedEventPublisher().rollback();
     }
 
     @Override
@@ -123,6 +127,15 @@ public class MorphiaGuiceTransaction implements Transaction {
     @Inject
     public void setMorphiaSession(final MorphiaSession morphiaSession) {
         this.morphiaSession = morphiaSession;
+    }
+
+    public MongoTransactionBufferedEventPublisher getBufferedEventPublisher() {
+        return bufferedEventPublisher;
+    }
+
+    @Inject
+    public void setBufferedEventPublisher(MongoTransactionBufferedEventPublisher bufferedEventPublisher) {
+        this.bufferedEventPublisher = bufferedEventPublisher;
     }
 
 }

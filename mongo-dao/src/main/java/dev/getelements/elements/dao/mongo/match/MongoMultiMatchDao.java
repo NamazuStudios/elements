@@ -9,7 +9,6 @@ import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.rt.exception.DuplicateProfileException;
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -30,16 +29,15 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.*;
 import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.filters.Filters.*;
@@ -67,9 +65,9 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     private MongoApplicationConfigurationDao mongoApplicationConfigurationDao;
 
-    private ElementRegistry elementRegistry;
-
     private MapperRegistry dozerMapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public List<MultiMatch> getAllMultiMatches(final String search) {
@@ -228,7 +226,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(multiMatch)
                 .argument(getMapperRegistry().map(mongoProfile, Profile.class))
                 .named(MULTI_MATCH_ADD_PROFILE)
@@ -279,7 +277,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(multiMatch)
                 .argument(getMapperRegistry().map(mongoProfile, Profile.class))
                 .named(MULTI_MATCH_REMOVE_PROFILE)
@@ -324,7 +322,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var result =  getMapperRegistry().map(inserted, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(result)
                 .named(MULTI_MATCH_CREATED)
                 .build()
@@ -364,7 +362,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var result = getMapperRegistry().map(updated, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(result)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
@@ -400,7 +398,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(updated)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
@@ -439,7 +437,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(updated)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
@@ -485,7 +483,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(updated)
                 .named(MULTI_MATCH_EXPIRED)
                 .build()
@@ -549,7 +547,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(updated)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
@@ -584,7 +582,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var deleted = getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(deleted)
                 .named(MULTI_MATCH_DELETED)
                 .build()
@@ -600,7 +598,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         datastore.find(MongoMultiMatch.class)
                  .delete(new DeleteOptions().multi(true));
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .named(MULTI_MATCHES_TRUNCATED)
                 .build()
         );
@@ -684,15 +682,6 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         this.mongoApplicationConfigurationDao = mongoApplicationConfigurationDao;
     }
 
-    public ElementRegistry getElementRegistry() {
-        return elementRegistry;
-    }
-
-    @Inject
-    public void setElementRegistry(@Named(ROOT) ElementRegistry elementRegistry) {
-        this.elementRegistry = elementRegistry;
-    }
-
     public MapperRegistry getDozerMapper() {
         return dozerMapperRegistry;
     }
@@ -700,6 +689,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     @Inject
     public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
         this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }
