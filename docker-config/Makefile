@@ -3,7 +3,7 @@
 .PHONY=login,tag,push,clean
 
 REV ?= $(shell git rev-parse --verify HEAD)
-TAG ?= $(shell git describe --tags 2> /dev/null || git rev-parse --verify HEAD)
+TAG ?= $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 
 BASE_REPO ?= elements-docker
