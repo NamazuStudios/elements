@@ -2,9 +2,11 @@ package dev.getelements.elements.sdk.dao;
 
 import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
+import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.getelements.elements.sdk.model.profile.Profile;
 
 import java.util.List;
@@ -44,6 +46,11 @@ import java.util.Optional;
         parameters = MultiMatch.class,
         description = "Called when a multi-match was deleted."
 )
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCHES_TRUNCATED,
+        parameters = MultiMatch.class,
+        description = "Called when all multi-matches were deleted. Will not drive individual deletion events."
+)
 public interface MultiMatchDao {
 
     String MULTI_MATCH_CREATED = "dev.getelements.elements.sdk.model.dao.multi.match.created";
@@ -57,6 +64,8 @@ public interface MultiMatchDao {
     String MULTI_MATCH_EXPIRED = "dev.getelements.elements.sdk.model.match.dao.multi.match.expired";
 
     String MULTI_MATCH_DELETED = "dev.getelements.elements.sdk.model.match.dao.multi.match.deleted";
+
+    String MULTI_MATCHES_TRUNCATED = "dev.getelements.elements.sdk.model.match.dao.multi.matches.truncated";
 
     /**
      * Gets all {@link MultiMatch} instances.
@@ -76,12 +85,50 @@ public interface MultiMatchDao {
     List<MultiMatch> getAllMultiMatches(String query);
 
     /**
+     * Fetches a paginated subset of {@link MultiMatch} instances matching the search.
+     * @param offset - Pagination offset
+     * @param count - Maximum objects in results
+     * @param search - Search query to filter results
+     * @return Pagination of {@link MultiMatch}
+     */
+    Pagination<MultiMatch> getMultiMatches(int offset, int count, String search);
+
+    /**
+     * Fetches a paginated subset of {@link MultiMatch} instances.
+     * @param offset - Pagination offset
+     * @param count - Maximum objects in results
+     * @return Pagination of {@link MultiMatch}
+     */
+    default Pagination<MultiMatch> getMultiMatches(int offset, int count) {
+        return getMultiMatches(offset, count, "");
+    }
+
+    /**
      * Finds a {@link MultiMatch} by its ID.
      * @param multiMatchId the ID of the multi-match to find.
      *
      * @return the found {@link MultiMatch}, or an empty Optional if not found.
      */
     Optional<MultiMatch> findMultiMatch(String multiMatchId);
+
+    /**
+     * Finds the latest {@link MultiMatch} for the given configuration and profile ID. This method will exclude any
+     * matches that the specific profile currently not participating in. If no match meets the criteria, then an empty
+     * optional is returned allowing downstream code to create a new match.
+     *
+     * Additionally, a query can be provided to further filter the matches that are considered. The query is appended
+     * to the supplied criteria.
+     *
+     * @param configuration the matchmaking configuration
+     * @param profileId the profile ID to find the latest match for
+     * @param query the query to execute when searching for a match
+     * @return the found {@link MultiMatch}, or an empty Optional if not found.
+     */
+    Optional<MultiMatch> findOldestAvailableMultiMatchCandidate(
+            MatchmakingApplicationConfiguration configuration,
+            String profileId,
+            String query
+    );
 
     /**
      * Gets a {@link MultiMatch} by its ID.
@@ -103,7 +150,8 @@ public interface MultiMatchDao {
     List<Profile> getProfiles(String multiMatchId);
 
     /**
-     * Adds a new {@link Profile} to the {@link MultiMatch}.
+     * Adds a new {@link Profile} to the {@link MultiMatch}. Automatically sets the match status to
+     * {@link MultiMatchStatus#FULL} if the match reaches capacity.
      *
      * @param multiMatchId the multi-match id receiving the profile
      * @param profile  the profile to add
@@ -112,7 +160,8 @@ public interface MultiMatchDao {
     MultiMatch addProfile(String multiMatchId, Profile profile);
 
     /**
-     * Removes the {@link Profile} to the {@link MultiMatch}.
+     * Removes the {@link Profile} to the {@link MultiMatch}. Automatically sets the match status to
+     * {@link MultiMatchStatus#OPEN} if the match was previously full and not {@link MultiMatchStatus#CLOSED}.
      *
      * @param multiMatchId the multi-match id receiving the profile
      * @param profile  the profile to add
@@ -134,7 +183,48 @@ public interface MultiMatchDao {
      * @param configuration the {@link MatchmakingApplicationConfiguration} to use
      * @return the newly created {@link MultiMatch}
      */
-    MultiMatch updateMultiMatch(MultiMatch configuration);
+    MultiMatch updateMultiMatch(String matchId, MultiMatch configuration);
+
+    /**
+     * Flags the {@link MultiMatch} as open, allowing players to join. If the match is currently full, then
+     * this operation will set the match as {@link MultiMatchStatus#FULL}, otherwise it will set the match to
+     * {@link MultiMatchStatus#OPEN}.
+     *
+     * @param multiMatchId the {@link MultiMatch}
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch openMatch(String multiMatchId);
+
+    /**
+     * Flags the {@link MultiMatch} as closed, disallowing players to join. This operation will set the match as
+     * {@link MultiMatchStatus#CLOSED}. Fails if the match is {@link MultiMatchStatus#ENDED}.
+     * @param multiMatchId the multi-match id to refresh
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch closeMatch(String multiMatchId);
+
+    /**
+     * Flags the {@link MultiMatch} as ended, disallowing players to join. This operation will set the match as
+     * {@link MultiMatchStatus#ENDED}. Fails if the match is already {@link MultiMatchStatus#ENDED}.
+     *
+     * @param multiMatchId the multi-match id to refresh
+     * @return the updated {@link MultiMatch}
+     *
+     */
+    MultiMatch endMatch(String multiMatchId);
+
+    /**
+     * Refreshes the {@link MultiMatch}, resetting its expiry timer.
+     *
+     * @param multiMatchId the multi-match id to refresh
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch refreshMatch(String multiMatchId);
+
+    /**
+     * Deletes all of the {@link MultiMatch} instances.
+     */
+    void deleteAllMultiMatches();
 
     /**
      * Deletes the {@link MultiMatch} with the given ID, throwing an exception if it does not exist.
@@ -149,26 +239,5 @@ public interface MultiMatchDao {
      * Deletes the {@link MultiMatch} with the given ID, returning true if it was deleted, false if it did not exist.
      */
     boolean tryDeleteMultiMatch(String multiMatchId);
-
-
-    /**
-     * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
-     *
-     * @param multiMatchId the ID of the {@link MultiMatch}
-     * @throws MultiMatchNotFoundException if the multi-match does not exist or is already expired.
-     */
-    default void expireMultiMatch(String multiMatchId) {
-        if (!tryExpireMultiMatch(multiMatchId)) {
-            throw new MultiMatchNotFoundException();
-        }
-    }
-
-    /**
-     * Expires a {@link MultiMatch} by its ID, setting its status to expired flagging it for removal at a later date.
-     *
-     * @param multiMatchId the ID of the {@link MultiMatch}
-     * @return true if the multi-match was expired, false if it did not exist or was already expired.
-     */
-    boolean tryExpireMultiMatch(String multiMatchId);
 
 }

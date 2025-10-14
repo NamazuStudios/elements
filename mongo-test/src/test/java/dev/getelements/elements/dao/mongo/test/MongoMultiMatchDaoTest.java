@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.dao.MultiMatchDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.InvalidMultiMatchPhaseException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
@@ -19,17 +20,13 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.dao.MultiMatchDao.*;
-import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.IN_PROGRESS;
-import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.OPEN;
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.*;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -258,6 +255,22 @@ public class MongoMultiMatchDaoTest {
         );
     }
 
+    @Test(groups = "createMultiMatch",
+          dependsOnMethods = "testCreateMultiMatch")
+    public void testOldestMatchIsSearchable() {
+
+        final var someProfile = profiles.get(0);
+
+        final var oldestAvailable = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                someProfile.getId(),
+                ""
+        );
+
+        assertTrue(oldestAvailable.isPresent(), "Expected to find an available match.");
+
+    }
+
     @Test(
             threadPoolSize = 10,
             groups = "addProfilesToMultiMatch",
@@ -266,14 +279,36 @@ public class MongoMultiMatchDaoTest {
     )
     public void testAddProfileToMultiMatch(final MultiMatch match, final Profile profile) {
 
-        multiMatchDao.addProfile(match.getId(), profile);
+        final var result = multiMatchDao.addProfile(match.getId(), profile);
 
         final var full = profilesByMatch.get(match.getId()).size() == match.getConfiguration().getMaxProfiles();
+
+        if (full) {
+            assertEquals(result.getCount(), match.getConfiguration().getMaxProfiles());
+            assertEquals(result.getStatus(), FULL, "Match status not updated correctly.");
+        } else {
+            assertTrue(result.getCount() < match.getConfiguration().getMaxProfiles());
+            assertEquals(result.getStatus(), OPEN, "Match status not updated correctly.");
+        }
+
         final var expected = full
                 ? InvalidDataException.class
                 : DuplicateProfileException.class;
 
         assertThrows(expected, () -> multiMatchDao.addProfile(match.getId(), profile));
+
+        final var fetched = multiMatchDao.getMultiMatch(match.getId());
+        assertEquals(fetched.getStatus(), full ? FULL : OPEN, "Match status not updated correctly on fetch.");
+
+        final var candidate = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                profile.getId(),
+                ""
+        );
+
+        // Checks that the same match is not returned as a candidate since the profile is already in it. Additionally,
+        // if we are on the edge case where all matches are full then it is valid to not find any candidate.
+        candidate.ifPresent(multiMatch -> assertNotEquals(multiMatch.getId(), match.getId()));
 
     }
 
@@ -281,13 +316,55 @@ public class MongoMultiMatchDaoTest {
             threadPoolSize = 10,
             groups = "addProfilesToMultiMatch",
             dependsOnGroups = "createMultiMatch",
-            dataProvider = "allMatches"
+            dataProvider = "allMatches",
+            dependsOnMethods = "testAddProfileToMultiMatch"
     )
     public void testProfilesWereAddedToMultiMatch(final MultiMatch match) {
         final var actual = multiMatchDao.getProfiles(match.getId());
         final var expected = profilesByMatch.get(match.getId());
         assertEquals(actual.size(), expected.size(), "Profile count mismatch for match: " + match.getId());
         assertTrue(expected.containsAll(actual), "Expected profiles not found in match: " + match.getId());
+    }
+
+    @Test(
+            groups = "addProfilesToMultiMatch",
+            dependsOnGroups = "createMultiMatch",
+            dependsOnMethods = "testProfilesWereAddedToMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testCloseMatch(final MultiMatch match) {
+
+        final var updated = multiMatchDao.closeMatch(match.getId());
+        assertEquals(updated.getStatus(), CLOSED, "Match not closed properly: " + match.getId());
+
+        final var someProfile = profiles.get(0);
+        assertThrows(InvalidMultiMatchPhaseException.class, () -> multiMatchDao.addProfile(match.getId(), someProfile));
+
+        final var fetched = multiMatchDao.getMultiMatch(match.getId());
+        assertEquals(fetched.getStatus(), CLOSED, "Match status not updated correctly on fetch.");
+
+        final var candidate = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                someProfile.getId(),
+                ""
+        );
+
+        // Checks that the same match is not returned as a candidate because the match is closed. Additionally,
+        // if we are on the edge case where all matches are full then it is valid to not find any candidate.
+        candidate.ifPresent(multiMatch -> assertNotEquals(multiMatch.getId(), match.getId()));
+
+    }
+
+    @Test(
+            groups = "addProfilesToMultiMatch",
+            dependsOnGroups = "createMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testRefreshMatch(final MultiMatch match) {
+        final var refreshed = multiMatchDao.refreshMatch(match.getId());
+        assertNotNull(refreshed);
+        assertNotNull(refreshed.getExpiry());
+        assertTrue(match.getExpiry().longValue() > System.currentTimeMillis());
     }
 
     @Test(
@@ -328,13 +405,36 @@ public class MongoMultiMatchDaoTest {
 
     @Test(
             threadPoolSize = 10,
+            groups = "removeProfilesFromMultiMatch",
+            dependsOnGroups = "addProfilesToMultiMatch",
+            dependsOnMethods = "testRemoveProfileFromMultiMatch",
+            dataProvider = "allMatches"
+    )
+    public void testClosedMatchesWillNotAppear(final MultiMatch match) {
+
+        final var someProfile = profiles.get(0);
+
+        final var candidate = multiMatchDao.findOldestAvailableMultiMatchCandidate(
+                applicationConfiguration,
+                someProfile.getId(),
+                ""
+        );
+
+        // Checks that the same match is not returned as a candidate because the match is closed and profiles were
+        // removed. At this point in the test there should be no matches available and open.
+        assertTrue(candidate.isEmpty(), "Unexpected match candidate: " + match.getId());
+
+    }
+
+    @Test(
+            threadPoolSize = 10,
             groups = "updateMultiMatch",
             dependsOnGroups = "removeProfilesFromMultiMatch",
             dataProvider = "allMatches"
     )
     public void testUpdateMultiMatch(final MultiMatch match) {
-        match.setStatus(IN_PROGRESS);
-        multiMatchDao.updateMultiMatch(match);
+        match.setStatus(CLOSED);
+        multiMatchDao.updateMultiMatch(match.getId(), match);
     }
     @Test(
             threadPoolSize = 10,
@@ -345,9 +445,9 @@ public class MongoMultiMatchDaoTest {
     public void testUpdateNonExistantMultiMatch() {
         final var match = new MultiMatch();
         match.setId(new ObjectId().toHexString());
-        match.setStatus(IN_PROGRESS);
+        match.setStatus(CLOSED);
         match.setConfiguration(applicationConfiguration);
-        multiMatchDao.updateMultiMatch(match);
+        multiMatchDao.updateMultiMatch(match.getId(), match);
     }
 
     @Test(
@@ -357,7 +457,7 @@ public class MongoMultiMatchDaoTest {
             dependsOnMethods = "testUpdateMultiMatch"
     )
     public void testMultiMatchesUpdated() {
-        matches.forEach(m -> assertEquals(m.getStatus(), IN_PROGRESS));
+        matches.forEach(m -> assertEquals(m.getStatus(), CLOSED));
     }
 
     @Test(
@@ -419,40 +519,11 @@ public class MongoMultiMatchDaoTest {
             threadPoolSize = 10,
             groups = "expireMultiMatches",
             dependsOnGroups = "getMultiMatches",
-            dataProvider = "lowerMatches"
+            dataProvider = "allMatches"
     )
-    public void testExpireMultiMatches(final MultiMatch match) {
-        multiMatchDao.expireMultiMatch(match.getId());
-    }
-
-    @Test(
-            threadPoolSize = 10,
-            groups = "expireMultiMatches",
-            dependsOnGroups = "getMultiMatches",
-            dataProvider = "upperMatches"
-    )
-    public void testTryExpireMultiMatches(final MultiMatch match) {
-        assertTrue(multiMatchDao.tryExpireMultiMatch(match.getId()), "Match should be expired: " + match.getId());
-    }
-
-    @Test(
-            threadPoolSize = 10,
-            groups = "expireMultiMatches",
-            dependsOnGroups = "getMultiMatches",
-            dependsOnMethods = {
-                    "testExpireMultiMatches",
-                    "testTryExpireMultiMatches"
-            }
-    )
-    public void testAllMatchesAreExpired() {
-        assertEquals(expiredMatches.size(), matches.size(), "Mismatch in number of matches retrieved.");
-        for (final var expired : expiredMatches) {
-            assertNotNull(expired.getExpiry());
-            assertTrue(
-                    matches.stream().anyMatch(m -> m.getId().equals(expired.getId())),
-                    "Match not found: " + expired.getId()
-            );
-        }
+    public void testEnd(final MultiMatch match) {
+        final var result = multiMatchDao.endMatch(match.getId());
+        assertEquals(result.getStatus(), ENDED, "Match not found: " + match.getId());
     }
 
     @Test(

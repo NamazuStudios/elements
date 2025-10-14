@@ -1,33 +1,30 @@
 package dev.getelements.elements.rest.test;
 
+import dev.getelements.elements.rest.test.model.MetadataPagination;
 import dev.getelements.elements.sdk.model.metadata.CreateMetadataRequest;
-import dev.getelements.elements.sdk.model.schema.CreateMetadataSpecRequest;
-import dev.getelements.elements.sdk.model.schema.EditorSchema;
 import dev.getelements.elements.sdk.model.metadata.Metadata;
 import dev.getelements.elements.sdk.model.metadata.UpdateMetadataRequest;
-import dev.getelements.elements.rest.test.model.MetadataPagination;
+import dev.getelements.elements.sdk.model.schema.CreateMetadataSpecRequest;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MetadataSpecBuilder;
 import dev.getelements.elements.sdk.model.util.PaginationWalker;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.ws.rs.client.Client;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.ws.rs.client.Client;
-
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
 import static dev.getelements.elements.sdk.model.schema.MetadataSpecPropertyType.*;
-import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
-import static java.lang.String.format;
 import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static java.lang.String.format;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;

@@ -1,7 +1,9 @@
 package dev.getelements.elements.dao.mongo.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.dao.mongo.*;
@@ -28,13 +30,17 @@ import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.index.IndexableType;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import dev.getelements.elements.sdk.util.Publisher;
 import dev.morphia.Datastore;
 
 import java.security.MessageDigest;
+import java.util.function.Consumer;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
 import static dev.getelements.elements.sdk.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
@@ -53,6 +59,7 @@ public class MongoDaoModule extends PrivateModule {
         bindMapper();
         bindDatastore();
         bindTransaction();
+        bindEventPublisher();
         bindElementRegistries();
 
         bind(ObjectMapper.class).asEagerSingleton();
@@ -177,6 +184,16 @@ public class MongoDaoModule extends PrivateModule {
 
     protected void bindTransaction() {
         bind(Transaction.class).toProvider(MongoTransactionProvider.class);
+    }
+
+    protected void bindEventPublisher() {
+
+        final var key = Key.get(ElementRegistry.class, Names.named(ElementRegistry.ROOT));
+        final var registryProvider = getProvider(key);
+
+        bind(new TypeLiteral<Consumer<Event>>(){})
+                .toInstance(ev -> registryProvider.get().publish(ev));
+
     }
 
     protected void bindElementRegistries() {}

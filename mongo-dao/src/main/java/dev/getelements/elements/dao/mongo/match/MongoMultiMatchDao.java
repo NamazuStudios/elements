@@ -5,42 +5,47 @@ import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.rt.exception.DuplicateProfileException;
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.InvalidMultiMatchPhaseException;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
-import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import org.bouncycastle.math.raw.Mod;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
-import static dev.morphia.aggregation.expressions.BooleanExpressions.not;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.exists;
+import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.*;
+import static dev.morphia.query.Sort.ascending;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MongoMultiMatchDao implements MultiMatchDao {
 
@@ -60,18 +65,17 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     private MongoApplicationConfigurationDao mongoApplicationConfigurationDao;
 
-    private ElementRegistry elementRegistry;
+    private MapperRegistry dozerMapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public List<MultiMatch> getAllMultiMatches(final String search) {
 
         final var trimmedSearch = nullToEmpty(search).trim();
 
-        final var parsed = getBooleanQueryParser()
-                .parse(MongoMultiMatch.class, trimmedSearch);
-
         return getBooleanQueryParser()
-                .parse(MongoMultiMatch.class, trimmedSearch)
+                .parse(getBaseQuery(), trimmedSearch)
                 .filter(q -> getMongoDBUtils().isIndexedQuery(q))
                 .map(q -> q
                         .stream()
@@ -88,6 +92,34 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     }
 
     @Override
+    public Pagination<MultiMatch> getMultiMatches(int offset, int count, String search) {
+
+        final var trimmedSearch = nullToEmpty(search).trim();
+
+        var query = getBaseQuery();
+
+        if (!trimmedSearch.isEmpty()) {
+
+            var parsedQuery = getBooleanQueryParser().parse(MongoMultiMatch.class, trimmedSearch);
+
+            if (parsedQuery.isPresent()) {
+                query = parsedQuery.get();
+            } else {
+                query.filter(text(trimmedSearch));
+            }
+
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+                query,
+                offset,
+                count,
+                f -> getDozerMapper().map(f, MultiMatch.class)
+        );
+
+    }
+
+    @Override
     public Optional<MultiMatch> findMultiMatch(final String multiMatchId) {
         return findMongoMultiMatch(multiMatchId)
                 .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class));
@@ -96,8 +128,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     public Optional<MongoMultiMatch> findMongoMultiMatch(final String multiMatchId) {
         return getMongoDBUtils()
                 .parse(multiMatchId)
-                .flatMap(objectId -> getDatastore()
-                        .find(MongoMultiMatch.class)
+                .flatMap(objectId -> getBaseQuery()
                         .filter(eq("_id", objectId))
                         .stream()
                         .findFirst()
@@ -105,92 +136,163 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     }
 
     @Override
+    public Optional<MultiMatch> findOldestAvailableMultiMatchCandidate(
+            final MatchmakingApplicationConfiguration configuration,
+            final String profileId,
+            final String search) {
+
+        final var trimmedSearch = nullToEmpty(search).trim();
+        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
+        final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfigurationDao()
+                .findMongoApplicationConfiguration(MongoMatchmakingApplicationConfiguration.class,
+                        configuration.getParent().getId(),
+                        configuration.getId()
+                )
+                .orElseThrow(InvalidDataException::new);
+
+        var query = getBaseQuery();
+
+        if (!trimmedSearch.isEmpty()) {
+
+            var parsedQuery = getBooleanQueryParser().parse(MongoMultiMatch.class, trimmedSearch);
+
+            if (parsedQuery.isPresent()) {
+                query = parsedQuery.get();
+            } else {
+                query.filter(text(trimmedSearch));
+            }
+
+        }
+
+        final var options = new FindOptions().sort(ascending("created"));
+
+        return query
+                .filter(eq("status", OPEN))
+                .filter(eq("configuration", mongoMatchmakingApplicationConfiguration))
+                .filter(elemMatch("profiles", eq("$id", mongoProfile.getObjectId())).not())
+                .stream(options)
+                .findFirst()
+                .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class));
+
+    }
+
+    @Override
     public MultiMatch addProfile(final String multiMatchId, final Profile profile) {
 
-        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
-
-        return findMongoMultiMatch(multiMatchId).map(mongoMultiMatch -> {
-
-                    final var id = new MongoMultiMatchProfile.ID(mongoMultiMatch, mongoProfile);
-
-                    final var count = getDatastore().find(MongoMultiMatchProfile.class)
-                            .filter(eq("match", mongoMultiMatch))
-                            .count();
-
-                    if (count >= mongoMultiMatch.getConfiguration().getMaxProfiles()) {
-                        throw new InvalidDataException("Maximum number of profiles reached for multi-match: " + mongoMultiMatch.getId());
-                    }
-
-                    final var query = getDatastore().find(MongoMultiMatchProfile.class)
-                            .filter(eq("_id", id));
-
-                    final var result = new UpdateBuilder()
-                            .with(set("_id", id))
-                            .with(set("match", mongoMultiMatch))
-                            .with(set("profile", mongoProfile))
-                            .execute(query, new UpdateOptions().upsert(true));
-
-                    if (result.getUpsertedId() == null) {
-                        throw new DuplicateProfileException();
-                    }
-
-                    final var multiMatch = getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
-
-                    getElementRegistry().publish(Event.builder()
-                            .argument(multiMatch)
-                            .argument(getMapperRegistry().map(mongoProfile, Profile.class))
-                            .named(MULTI_MATCH_ADD_PROFILE)
-                            .build()
-                    );
-
-                    return multiMatch;
-
-                })
+        final var query = getMongoDBUtils()
+                .parse(multiMatchId)
+                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
                 .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
+        final var mongoProfileId = mongoProfile.getObjectId();
+        final var mongoMultiMatch = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        if (!OPEN.equals(mongoMultiMatch.getStatus())) {
+            throw new InvalidMultiMatchPhaseException(mongoMultiMatch.getStatus(), OPEN);
+        }
+
+        var profiles = mongoMultiMatch.getProfiles();
+        profiles = profiles == null ? new ArrayList<>() : new ArrayList<>(profiles);
+
+        if (profiles.size() >= mongoMultiMatch.getConfiguration().getMaxProfiles()) {
+            throw new InvalidDataException("Maximum number of profiles reached for multi-match: " + mongoMultiMatch.getId());
+        }
+
+        final var exists = profiles
+                .stream()
+                .map(MongoProfile::getObjectId)
+                .anyMatch(id -> id.equals(mongoProfileId));
+
+        if (exists) {
+            throw new DuplicateProfileException();
+        }
+
+        profiles.add(mongoProfile);
+
+        final var configuration = mongoMultiMatch.getConfiguration();
+
+        final var status = profiles.size() >= configuration.getMaxProfiles()
+                ? FULL
+                : OPEN;
+
+        final var updated = new UpdateBuilder()
+                .with(set("profiles", profiles))
+                .with(set("status", status))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(multiMatch)
+                .argument(getMapperRegistry().map(mongoProfile, Profile.class))
+                .named(MULTI_MATCH_ADD_PROFILE)
+                .build()
+        );
+
+        return multiMatch;
 
     }
 
     @Override
     public MultiMatch removeProfile(final String multiMatchId, final Profile profile) {
 
-        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
-
-        return findMongoMultiMatch(multiMatchId).map(mongoMultiMatch -> {
-
-                    final var id = new MongoMultiMatchProfile.ID(mongoMultiMatch, mongoProfile);
-
-                    final var result = getDatastore().find(MongoMultiMatchProfile.class)
-                            .filter(eq("_id", id))
-                            .delete();
-
-                    if (result.getDeletedCount() == 0) {
-                        throw new ProfileNotFoundException();
-                    }
-
-                    final var multiMatch = getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
-
-                    getElementRegistry().publish(Event.builder()
-                            .argument(multiMatch)
-                            .argument(getMapperRegistry().map(mongoProfile, Profile.class))
-                            .named(MULTI_MATCH_REMOVE_PROFILE)
-                            .build()
-                    );
-
-                    return multiMatch;
-
-                })
+        final var query = getMongoDBUtils()
+                .parse(multiMatchId)
+                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
                 .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
+        final var mongoProfileId = mongoProfile.getObjectId();
+        final var mongoMultiMatch = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        var profiles = mongoMultiMatch.getProfiles();
+
+        profiles = profiles == null
+                ? new ArrayList<>()
+                : new ArrayList<>(profiles);
+
+        final var removed = profiles.removeIf(p -> p.getObjectId().equals(mongoProfileId));
+
+        if (!removed) {
+            throw new ProfileNotFoundException();
+        }
+
+        final var status = switch (mongoMultiMatch.getStatus()) {
+            case OPEN, FULL -> OPEN;
+            case CLOSED -> CLOSED;
+            case ENDED -> throw new InvalidDataException();
+        };
+
+        final var updated = new UpdateBuilder()
+                .with(set("profiles", profiles))
+                .with(set("status", status))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(multiMatch)
+                .argument(getMapperRegistry().map(mongoProfile, Profile.class))
+                .named(MULTI_MATCH_REMOVE_PROFILE)
+                .build()
+        );
+
+        return multiMatch;
 
     }
 
     @Override
     public List<Profile> getProfiles(final String multiMatchId) {
         return findMongoMultiMatch(multiMatchId)
-                .map(mongoMultiMatch -> getDatastore()
-                        .find(MongoMultiMatchProfile.class)
-                        .filter(eq("match", mongoMultiMatch))
+                .map(mongoMultiMatch -> mongoMultiMatch.getProfiles()
                         .stream()
-                        .map(MongoMultiMatchProfile::getProfile)
                         .map(mp -> getMapperRegistry().map(mp, Profile.class))
                         .toList()
                 )
@@ -205,7 +307,14 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
 
+        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
+                mongoMatchmakingApplicationConfiguration.getTimeoutSeconds(),
+                SECONDS
+        ));
+
         final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
+        mongoMultiMatch.setExpiry(expiry);
+        mongoMultiMatch.setCreated(new Timestamp(currentTimeMillis()));
         mongoMultiMatch.setConfiguration(mongoMatchmakingApplicationConfiguration);
         mongoMultiMatch.setApplication(mongoMatchmakingApplicationConfiguration.getParent());
 
@@ -213,7 +322,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var result =  getMapperRegistry().map(inserted, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(result)
                 .named(MULTI_MATCH_CREATED)
                 .build()
@@ -223,40 +332,164 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     }
 
     @Override
-    public MultiMatch updateMultiMatch(final MultiMatch multiMatch) {
+    public MultiMatch updateMultiMatch(final String matchId, final MultiMatch multiMatch) {
 
         requireNonNull(multiMatch, "multiMatch");
+        requireNonNull(matchId, "matchId");
         getValidationHelper().validateModel(multiMatch, ValidationGroups.Update.class);
 
         final var objectId = getMongoDBUtils()
-                .parse(multiMatch.getId())
+                .parse(matchId)
                 .orElseThrow(MultiMatchNotFoundException::new);
 
         final var query = getDatastore().find(MongoMultiMatch.class)
                 .filter(eq("_id", objectId));
 
         final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
+        final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
 
         final var updated = new UpdateBuilder()
-                .with(set("status", multiMatch.getStatus()))
+                .with(set("status", mongoMultiMatch.getStatus()))
+                .with(set("metadata", mongoMultiMatch.getMetadata()))
+                .with(set("expiry", mongoMultiMatch.getExpiry()))
                 .with(set("application", mongoMatchmakingApplicationConfiguration.getParent()))
                 .with(set("configuration", mongoMatchmakingApplicationConfiguration))
-                .with(set("metadata", mongoMatchmakingApplicationConfiguration.getMetadata()))
                 .execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (updated == null) {
             throw new MultiMatchNotFoundException();
         }
 
-        final var result =  getMapperRegistry().map(updated, MultiMatch.class);
+        final var result = getMapperRegistry().map(updated, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(result)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
         );
 
         return result;
+
+    }
+
+    @Override
+    public MultiMatch openMatch(final String multiMatchId) {
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var existing = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        query.filter(eq("status", CLOSED));
+
+        final var updated = new UpdateBuilder()
+                .with(set("status", OPEN))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) {
+            throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
+        }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+    }
+
+    @Override
+    public MultiMatch closeMatch(final String multiMatchId) {
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var existing = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        query.filter(or(
+                eq("status", OPEN),
+                eq("status", FULL)
+        ));
+
+        final var updated = new UpdateBuilder()
+                .with(set("status", CLOSED))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) {
+            throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
+        }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+    }
+
+    @Override
+    public MultiMatch endMatch(final String multiMatchId) {
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var existing = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
+                existing.getConfiguration().getLingerSeconds(),
+                SECONDS
+        ));
+
+        query.filter(or(
+                eq("status", OPEN),
+                eq("status", FULL),
+                eq("status", CLOSED)
+        ));
+
+        final var updated = new UpdateBuilder()
+                .with(set("status", ENDED))
+                .with(set("expiry", expiry))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) {
+            throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
+        }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_EXPIRED)
+                .build()
+        );
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
 
     }
 
@@ -280,6 +513,52 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     }
 
     @Override
+    public MultiMatch refreshMatch(String multiMatchId) {
+
+        final var objectId = getMongoDBUtils()
+                .parse(multiMatchId)
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var query = getDatastore()
+                .find(MongoMultiMatch.class)
+                .filter(eq("_id", objectId));
+
+        final var existing = query
+                .stream()
+                .findFirst()
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
+                existing.getConfiguration().getTimeoutSeconds(),
+                SECONDS
+        ));
+
+        query.filter(or(
+                eq("status", OPEN),
+                eq("status", FULL),
+                eq("status", CLOSED)
+        ));
+
+        final var updated = new UpdateBuilder()
+                .with(set("expiry", expiry))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) {
+            throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
+        }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(MULTI_MATCH_UPDATED)
+                .build()
+        );
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+
+    }
+
+    @Override
     public boolean tryDeleteMultiMatch(final String multiMatchId) {
 
         final var objectId = getMongoDBUtils()
@@ -295,10 +574,6 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             return false;
         }
 
-        getDatastore().find(MongoMultiMatchProfile.class)
-                .filter(eq("match", mongoMultiMatch))
-                .delete(new DeleteOptions().multi(true));
-
         final var result = multiMatchQuery.delete();
 
         if (result.getDeletedCount() > 1) {
@@ -307,73 +582,32 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var deleted = getMapperRegistry().map(mongoMultiMatch, MultiMatch.class);
 
-        getElementRegistry().publish(Event.builder()
+        getEventPublisher().accept(Event.builder()
                 .argument(deleted)
                 .named(MULTI_MATCH_DELETED)
                 .build()
         );
-
-        getDatastore().find(MongoMultiMatchProfile.class)
-                .filter(eq("match", mongoMultiMatch))
-                .delete();
 
         return true;
 
     }
 
     @Override
-    public boolean tryExpireMultiMatch(final String multiMatchId) {
+    public void deleteAllMultiMatches() {
 
-        final var objectId = getMongoDBUtils()
-                .parse(multiMatchId)
-                .orElseThrow(MultiMatchNotFoundException::new);
+        datastore.find(MongoMultiMatch.class)
+                 .delete(new DeleteOptions().multi(true));
 
-        final var multiMatchQuery = getDatastore()
-                .find(MongoMultiMatch.class)
-                .filter(eq("_id", objectId));
-
-        final var mongoMultiMatch = multiMatchQuery.first();
-
-        if (mongoMultiMatch == null) {
-            return false;
-        }
-
-        final var multiMatchProfileQuery = getDatastore().find(MongoMultiMatchProfile.class)
-                .filter(eq("match", mongoMultiMatch));
-
-        final var now = new Timestamp(System.currentTimeMillis());
-        final var updates = new UpdateBuilder().with(set("expiry", now));
-
-        updates.execute(
-                multiMatchProfileQuery,
-                new UpdateOptions().multi(true)
-        );
-
-        final var expiredMultiMatch = updates.execute(
-                multiMatchQuery,
-                new ModifyOptions().returnDocument(AFTER)
-        );
-
-        if (expiredMultiMatch == null) {
-            return false;
-        }
-
-        final var expired = getMapperRegistry().map(expiredMultiMatch, MultiMatch.class);
-
-        getElementRegistry().publish(Event.builder()
-                .argument(expired)
-                .named(MULTI_MATCH_EXPIRED)
+        getEventPublisher().accept(Event.builder()
+                .named(MULTI_MATCHES_TRUNCATED)
                 .build()
         );
 
-        getElementRegistry().publish(Event.builder()
-                .argument(expired)
-                .named(MULTI_MATCH_UPDATED)
-                .build()
-        );
+    }
 
-        return true;
-
+    public Query<MongoMultiMatch> getBaseQuery() {
+        final var now = new Timestamp(currentTimeMillis());
+        return getDatastore().find(MongoMultiMatch.class).filter(gt("expiry", now));
     }
 
     public Datastore getDatastore() {
@@ -448,13 +682,22 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         this.mongoApplicationConfigurationDao = mongoApplicationConfigurationDao;
     }
 
-    public ElementRegistry getElementRegistry() {
-        return elementRegistry;
+    public MapperRegistry getDozerMapper() {
+        return dozerMapperRegistry;
     }
 
     @Inject
-    public void setElementRegistry(@Named(ROOT) ElementRegistry elementRegistry) {
-        this.elementRegistry = elementRegistry;
+    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
+        this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

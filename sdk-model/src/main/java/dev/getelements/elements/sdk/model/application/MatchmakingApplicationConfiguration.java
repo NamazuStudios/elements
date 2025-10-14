@@ -20,6 +20,10 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
      */
     public static final int MIN_PROFILE_CAP = 2;
 
+    public static final int DEFAULT_MATCH_LINGER = 300; // 5 minutes
+
+    public static final int DEFAULT_MATCH_TIMEOUT = 86400; // 24 hours
+
     @Valid
     @Schema(description = "The callback definition for when a successful match is made.")
     private CallbackDefinition success;
@@ -30,7 +34,15 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
 
     @Min(MIN_PROFILE_CAP)
     @Schema(description = "The maximum number of profiles that can be matched in a single match. ")
-    private int maxProfiles;
+    private int maxProfiles = MIN_PROFILE_CAP;
+
+    @Min(0)
+    @Schema(description = "The amount of time a match will linger after it is marked as expired.")
+    private int lingerSeconds = DEFAULT_MATCH_LINGER;
+
+    @Min(0)
+    @Schema(description = "The absolute timeout of the match. A match will be automatically deleted after this amount of time.")
+    private int timeoutSeconds = DEFAULT_MATCH_TIMEOUT;
 
     @Schema(description = "The metadata for this matchmaking configuration. This will be copied to the match when it is created.")
     private Map<String, Object> metadata;
@@ -69,6 +81,22 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public int getLingerSeconds() {
+        return lingerSeconds;
+    }
+
+    public void setLingerSeconds(int lingerSeconds) {
+        this.lingerSeconds = lingerSeconds;
+    }
+
+    public int getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
+
+    public void setTimeoutSeconds(int timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     public MetadataSpec getMetadataSpec() {
