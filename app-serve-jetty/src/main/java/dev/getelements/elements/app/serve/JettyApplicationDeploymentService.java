@@ -4,13 +4,20 @@ import dev.getelements.elements.app.serve.loader.Loader;
 import dev.getelements.elements.common.app.AbstractApplicationDeploymentService;
 import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
 import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
+import dev.getelements.elements.rt.exception.ApplicationDeploymentException;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+
+import static dev.getelements.elements.common.app.ApplicationDeploymentService.DeploymentStatus.DEPLOYED;
 
 public class JettyApplicationDeploymentService extends AbstractApplicationDeploymentService {
 
@@ -21,26 +28,59 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
     private ApplicationDao applicationDao;
 
     @Override
-    public void deployAvailableApplications() {
-            getApplicationDao()
+    public List<DeploymentRecord> deployAvailableApplications() {
+            return getApplicationDao()
                 .getActiveApplications()
                 .stream()
-                .forEach(this::tryDeployApplication);
+                .map(this::tryDeployApplication)
+                .toList();
     }
 
-    private void tryDeployApplication(final Application application) {
+    private DeploymentRecord tryDeployApplication(final Application application) {
         try {
-            deployApplication(application);
+            return deployApplication(application);
         } catch (ApplicationCodeNotFoundException ex) {
             logger.info("No code for application {} ({}).", application.getName(), application.getId());
-        } catch (Exception | LinkageError ex) {
+            final var logs = List.of("No application code found.");
+            return DeploymentRecord.fail(logs, ex);
+        } catch (ApplicationDeploymentException ex) {
+            return DeploymentRecord.fail(ex.getLogs(), ex.getCauses());
+        } catch (Exception ex) {
             logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
+            final var logs = List.of("No application code found.");
+            return DeploymentRecord.fail(logs, ex);
+        } catch (LinkageError ex) {
+
+            logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
+
+            final var logs = List.of(
+                    "Caught LinkageError Deploying application: " + application.getId(),
+                    "Check that @ElementPublic was added to all public facing interfaces and types."
+            );
+
+            return DeploymentRecord.fail(logs, ex);
+
         }
     }
 
     @Override
-    protected void doDeployment(final ApplicationElementRecord record) {
-        getLoaders().forEach(loader -> loader.load(record));
+    protected DeploymentRecord doDeployment(final ApplicationElementRecord record) {
+
+        final var uris = new TreeSet<URI>();
+        final var logs = new ArrayList<String>();
+        final var errors = new ArrayList<Throwable>();
+        final var pending = new Loader.PendingDeployment(uris::add, logs::add, errors::add);
+
+        getLoaders().forEach(loader -> {
+            try {
+                loader.load(pending, record);
+            } catch (Throwable th) {
+                errors.add(th);
+            }
+        });
+
+        return new DeploymentRecord(DEPLOYED, record, Set.copyOf(uris), List.copyOf(logs), List.copyOf(errors));
+
     }
 
     public ApplicationDao getApplicationDao() {

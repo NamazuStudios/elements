@@ -49,7 +49,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
     private AuthFilterFeature authFilterFeature;
 
     @Override
-    public void load(final ApplicationElementRecord record, final Element element) {
+    public void load(final PendingDeployment pending, final ApplicationElementRecord record, final Element element) {
         try (var mon = Monitor.enter(lock)) {
 
             final var deployed = activeDeployments
@@ -66,14 +66,16 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                         .map(Supplier::get)
                         .filter(a -> Application.class != a.getClass())
                         .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
-                        .map(a -> deploy(element, a))
+                        .map(a -> deploy(pending, element, a))
                         .ifPresent(activeDeployments::add);
             }
 
         }
     }
 
-    private DeploymentRecord deploy(final Element element, final Application application) {
+    private DeploymentRecord deploy(final PendingDeployment pending,
+                                    final Element element,
+                                    final Application application) {
 
         // *bruh*
         final var prefix = element

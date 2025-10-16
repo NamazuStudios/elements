@@ -42,7 +42,7 @@ public class JakartaWebsocketLoader implements Loader {
     private AuthFilterFeature authFilterFeature;
 
     @Override
-    public void load(final ApplicationElementRecord record, final Element element) {
+    public void load(final PendingDeployment pending, final ApplicationElementRecord record, final Element element) {
         try (var mon = Monitor.enter(lock)) {
 
             final var deployed = activeDeployments
@@ -50,15 +50,19 @@ public class JakartaWebsocketLoader implements Loader {
                     .anyMatch(d -> d.element().equals(element));
 
             if (deployed) {
+
+                pending.logf("Detected existing deployment for %s.", record.applicationId());
+
                 logger.warn("{}/{} is already deployed. Skipping.",
                         record.applicationId(),
                         element.getElementRecord().definition().name());
+
             } else {
 
-                final var classes = getEndpointClasses(element);
+                final var classes = getEndpointClasses(pending, element);
 
                 if (!classes.isEmpty()) {
-                    final var deploymentRecord = loadClasses(classes, element);
+                    final var deploymentRecord = loadClasses(pending, classes, element);
                     activeDeployments.add(deploymentRecord);
                 }
 
@@ -67,7 +71,7 @@ public class JakartaWebsocketLoader implements Loader {
         }
     }
 
-    private ClassGraph newClassGraph(final Element element) {
+    private ClassGraph newClassGraph(final PendingDeployment pending, final Element element) {
 
         final var classgraph = new ClassGraph()
                 .enableClassInfo()
@@ -86,15 +90,17 @@ public class JakartaWebsocketLoader implements Loader {
 
     }
 
-    private List<Class<?>> getEndpointClasses(final Element element) {
-        try (final var result = newClassGraph(element).scan()) {
+    private List<Class<?>> getEndpointClasses(final PendingDeployment pending, final Element element) {
+        try (final var result = newClassGraph(pending, element).scan()) {
             return result
                     .getClassesWithAnnotation(ServerEndpoint.class)
                     .loadClasses();
         }
     }
 
-    private DeploymentRecord loadClasses(final List<Class<?>> classes, final Element element) {
+    private DeploymentRecord loadClasses(final PendingDeployment pending,
+                                         final List<Class<?>> classes,
+                                         final Element element) {
 
         final var prefix = element
                 .getElementRecord()
