@@ -200,10 +200,7 @@ public class MongoProfileDao implements ProfileDao {
                 .parse(MongoProfile.class, trimmedSearch)
                 .orElseGet(() -> parseLegacyQuery(trimmedSearch));
 
-        return getMongoDBUtils().isIndexedQuery(query)
-                ? paginationFromQuery(query, offset, count)
-                : Pagination.empty();
-
+        return paginationFromQuery(query, offset, count);
     }
 
     public Query<MongoProfile> parseLegacyQuery(final String search) {
@@ -231,7 +228,6 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         return profileQuery.filter(
-                eq("active", true),
                 or(
                         regex("displayName", compile(trimmedSearch)),
                         in("user", userList)
