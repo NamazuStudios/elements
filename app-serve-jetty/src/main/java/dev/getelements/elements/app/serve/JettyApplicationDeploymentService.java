@@ -4,6 +4,7 @@ import dev.getelements.elements.app.serve.loader.Loader;
 import dev.getelements.elements.common.app.AbstractApplicationDeploymentService;
 import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
+import dev.getelements.elements.sdk.model.application.Application;
 import jakarta.inject.Inject;
 
 import java.net.URI;
@@ -31,7 +32,8 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
     }
 
     @Override
-    protected DeploymentRecord doDeployment(final ApplicationElementRecord record) {
+    protected DeploymentRecord doDeployment(final Application application,
+                                            final ApplicationElementRecord record) {
 
         final var uris = new TreeSet<URI>();
         final var logs = new ArrayList<String>();
@@ -47,6 +49,7 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
         });
 
         return new DeploymentRecord(
+                application,
                 errors.isEmpty() ? CLEAN : UNSTABLE,
                 record,
                 Set.copyOf(uris),

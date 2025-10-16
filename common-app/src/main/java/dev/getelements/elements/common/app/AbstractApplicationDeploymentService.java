@@ -8,13 +8,11 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 public abstract class AbstractApplicationDeploymentService implements ApplicationDeploymentService {
 
@@ -47,11 +45,11 @@ public abstract class AbstractApplicationDeploymentService implements Applicatio
         } catch (ApplicationCodeNotFoundException ex) {
             logger.info("No code for application {} ({}).", application.getName(), application.getId());
             final var logs = List.of("No application code found.");
-            return DeploymentRecord.fail(logs, ex);
+            return DeploymentRecord.fail(application, logs, ex);
         } catch (Exception ex) {
             logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
             final var logs = List.of("No application code found.");
-            return DeploymentRecord.fail(logs, ex);
+            return DeploymentRecord.fail(application, logs, ex);
         } catch (LinkageError ex) {
 
             logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
@@ -61,14 +59,14 @@ public abstract class AbstractApplicationDeploymentService implements Applicatio
                     "Check that @ElementPublic was added to all public facing interfaces and types."
             );
 
-            return DeploymentRecord.fail(logs, ex);
+            return DeploymentRecord.fail(application, logs, ex);
 
         }
 
         try (final var mon = Monitor.enter(lock)) {
             return deployments.computeIfAbsent(application.getId(), applicationId -> {
 
-                final var deploymentRecord =  doDeployment(applicationElementRecord);
+                final var deploymentRecord =  doDeployment(application, applicationElementRecord);
 
                 deploymentRecord.logs().forEach(log -> logger.info(
                         "Log during deployment of application {} ({}): {}",
@@ -99,7 +97,8 @@ public abstract class AbstractApplicationDeploymentService implements Applicatio
      * @param record the result of loading the {@link Application}
      * @return the result of the deployment
      */
-    protected abstract DeploymentRecord doDeployment(final ApplicationElementRecord record);
+    protected abstract DeploymentRecord doDeployment(final Application application,
+                                                     final ApplicationElementRecord record);
 
     public ApplicationElementService getApplicationElementService() {
         return applicationElementService;

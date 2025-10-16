@@ -54,6 +54,7 @@ public interface ApplicationDeploymentService {
      * @param errors a set of {@link java.net.URI}s served out of this deployment
      */
     record DeploymentRecord(
+            Application application,
             DeploymentStatus status,
             ApplicationElementRecord applicationElementRecord,
             Set<URI> uris,
@@ -73,8 +74,13 @@ public interface ApplicationDeploymentService {
          * @param error the error produced during deployment
          * @return a {@link DeploymentRecord}
          */
-        public static DeploymentRecord fail(final List<String> logs, final Throwable error) {
-            return new DeploymentRecord(DeploymentStatus.FAILED,
+        public static DeploymentRecord fail(
+                final Application application,
+                final List<String> logs,
+                final Throwable error) {
+            return new DeploymentRecord(
+                    application,
+                    DeploymentStatus.FAILED,
                     null,
                     Set.of(),
                     List.copyOf(logs),
@@ -89,8 +95,12 @@ public interface ApplicationDeploymentService {
          * @param causes the errors produced during deployment
          * @return a {@link DeploymentRecord}
          */
-        public static DeploymentRecord fail(final List<String> logs, List<Throwable> causes) {
+        public static DeploymentRecord fail(
+                final Application application,
+                final List<String> logs,
+                final List<Throwable> causes) {
             return new DeploymentRecord(
+                    application,
                     DeploymentStatus.FAILED,
                     null,
                     Set.of(),

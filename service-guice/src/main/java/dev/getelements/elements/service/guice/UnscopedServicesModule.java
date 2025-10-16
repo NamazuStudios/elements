@@ -71,7 +71,6 @@ import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 
 import static com.google.inject.name.Names.named;
-import static dev.getelements.elements.sdk.service.Constants.SUPERUSER;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 
 public class UnscopedServicesModule extends AbstractModule {
@@ -291,6 +290,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(NotificationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardNotificationService.class);
+
+        bind(ApplicationStatusService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserApplicationStatusService.class);
 
         bind(CodegenService.class)
                 .annotatedWith(named(UNSCOPED))
