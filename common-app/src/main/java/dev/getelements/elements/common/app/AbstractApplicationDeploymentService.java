@@ -2,8 +2,11 @@ package dev.getelements.elements.common.app;
 
 import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.LinkedHashMap;
@@ -14,6 +17,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public abstract class AbstractApplicationDeploymentService implements ApplicationDeploymentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractApplicationDeploymentService.class);
 
     private ApplicationElementService applicationElementService;
 
@@ -34,12 +39,57 @@ public abstract class AbstractApplicationDeploymentService implements Applicatio
 
     @Override
     public DeploymentRecord deployApplication(final Application application) {
+
+        final ApplicationElementRecord applicationElementRecord;
+
+        try {
+            applicationElementRecord = getApplicationElementService().getOrLoadApplication(application);
+        } catch (ApplicationCodeNotFoundException ex) {
+            logger.info("No code for application {} ({}).", application.getName(), application.getId());
+            final var logs = List.of("No application code found.");
+            return DeploymentRecord.fail(logs, ex);
+        } catch (Exception ex) {
+            logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
+            final var logs = List.of("No application code found.");
+            return DeploymentRecord.fail(logs, ex);
+        } catch (LinkageError ex) {
+
+            logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
+
+            final var logs = List.of(
+                    "Caught LinkageError Deploying application: " + application.getId(),
+                    "Check that @ElementPublic was added to all public facing interfaces and types."
+            );
+
+            return DeploymentRecord.fail(logs, ex);
+
+        }
+
         try (final var mon = Monitor.enter(lock)) {
             return deployments.computeIfAbsent(application.getId(), applicationId -> {
-                final var record = getApplicationElementService().getOrLoadApplication(application);
-                return doDeployment(record);
+
+                final var deploymentRecord =  doDeployment(applicationElementRecord);
+
+                deploymentRecord.logs().forEach(log -> logger.info(
+                        "Log during deployment of application {} ({}): {}",
+                        application.getName(),
+                        application.getId(),
+                        log
+                ));
+
+                deploymentRecord.errors().forEach(error -> logger.error(
+                        "Error during deployment of application {} ({}): {}",
+                        application.getName(),
+                        application.getId(),
+                        error.getMessage(),
+                        error
+                ));
+
+                return deploymentRecord;
+
             });
         }
+
     }
 
     /**

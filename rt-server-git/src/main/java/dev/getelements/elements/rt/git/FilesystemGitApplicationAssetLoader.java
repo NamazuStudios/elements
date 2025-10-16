@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.git;
 
-import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
+import dev.getelements.elements.sdk.model.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.TemporaryFiles;

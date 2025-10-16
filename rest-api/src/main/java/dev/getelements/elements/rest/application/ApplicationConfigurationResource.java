@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest.application;
 
+import dev.getelements.elements.common.app.ApplicationDeploymentService;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;

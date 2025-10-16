@@ -281,7 +281,7 @@ public class OidcAuthServiceTest {
             // Service Level Dependencies
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
             bind(long.class).annotatedWith(named(SESSION_TIMEOUT_SECONDS)).toInstance(300L);
-            bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("https://localhost:8080/api/rest");
+            bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
 
     }

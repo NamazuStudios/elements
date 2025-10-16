@@ -12,6 +12,8 @@ import org.eclipse.jetty.server.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -21,6 +23,7 @@ import java.util.function.Predicate;
 import static dev.getelements.elements.app.serve.AppServeConstants.APPLICATION_PREFIX;
 import static dev.getelements.elements.app.serve.AppServeConstants.ENABLE_ELEMENTS_AUTH;
 import static dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
+import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure;
 
 public class JakartaWebsocketLoader implements Loader {
@@ -33,7 +36,9 @@ public class JakartaWebsocketLoader implements Loader {
 
     private final Lock lock = new ReentrantLock();
 
-    private final List<DeploymentRecord> activeDeployments = new ArrayList<>();
+    private final List<JettyDeploymentRecord> activeDeployments = new ArrayList<>();
+
+    private String appOutsideUrl;
 
     private Handler.Sequence sequence;
 
@@ -42,7 +47,9 @@ public class JakartaWebsocketLoader implements Loader {
     private AuthFilterFeature authFilterFeature;
 
     @Override
-    public void load(final PendingDeployment pending, final ApplicationElementRecord record, final Element element) {
+    public void load(final PendingDeployment pending,
+                     final ApplicationElementRecord record,
+                     final Element element) {
         try (var mon = Monitor.enter(lock)) {
 
             final var deployed = activeDeployments
@@ -82,8 +89,14 @@ public class JakartaWebsocketLoader implements Loader {
         final var definition = element.getElementRecord().definition();
 
         definition.acceptPackages(
-                classgraph::acceptPackages,
-                classgraph::acceptPackagesNonRecursive
+                pkg -> {
+                    pending.logf("Scanning Package and Subpackages of %s", pkg);
+                    classgraph.acceptPackages(pkg);
+                },
+                pkg -> {
+                    pending.logf("Scanning Package %s", pkg);
+                    classgraph.acceptPackagesNonRecursive(pkg);
+                }
         );
 
         return classgraph;
@@ -98,9 +111,11 @@ public class JakartaWebsocketLoader implements Loader {
         }
     }
 
-    private DeploymentRecord loadClasses(final PendingDeployment pending,
-                                         final List<Class<?>> classes,
-                                         final Element element) {
+    private JettyDeploymentRecord loadClasses(final PendingDeployment pending,
+                                              final List<Class<?>> classes,
+                                              final Element element) {
+
+        pending.logf("Starting JAX-WS deployment for %s.", element.getElementRecord().definition().name());
 
         final var prefix = element
                 .getElementRecord()
@@ -109,7 +124,16 @@ public class JakartaWebsocketLoader implements Loader {
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
                 .filter(Predicate.not(String::isBlank))
-                .orElseGet(element.getElementRecord().definition()::name);
+                .orElseGet(() -> {
+
+                    pending.logf(
+                            "Unable to determine application prefix for %s. Using default.",
+                            element.getElementRecord().definition().name()
+                    );
+
+                    return element.getElementRecord().definition().name();
+
+                });
 
         final var enableAuth = element
                 .getElementRecord()
@@ -120,8 +144,36 @@ public class JakartaWebsocketLoader implements Loader {
                 .map(Boolean::parseBoolean)
                 .orElse(false);
 
-        final var contextPath = getHttpContextRoot()
-                .formatNormalized(APP_PREFIX_FORMAT, prefix);
+        pending.logf("Built-in Auth Enabled: %s", enableAuth);
+
+        final var contextPath = getHttpContextRoot().formatNormalized(APP_PREFIX_FORMAT, prefix);
+
+        try {
+
+            final var contextPathURI = URI.create(getAppOutsideUrl()).resolve(contextPath);
+            final String webSocketScheme = getWebSocketScheme(pending, contextPathURI);
+
+            final var contextPathURIWebSocket = new URI(
+                    webSocketScheme,
+                    contextPathURI.getUserInfo(),
+                    contextPathURI.getHost(),
+                    contextPathURI.getPort(),
+                    contextPathURI.getPath(),
+                    contextPathURI.getQuery(),
+                    contextPathURI.getFragment()
+            );
+
+            pending.uri(contextPathURIWebSocket);
+
+        } catch (final URISyntaxException ex) {
+            pending.error(ex);
+            pending.logf("WARNING! Failed to create WebSocket URI for %s at %s. Check your %s setting.",
+                    element.getElementRecord().definition().name(),
+                    contextPath,
+                    APP_OUTSIDE_URL
+            );
+        }
+
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(contextPath);
@@ -131,21 +183,73 @@ public class JakartaWebsocketLoader implements Loader {
         }
 
         configure(servletContextHandler, (s, context) -> {
-            for (var aClass : classes)
+            for (var aClass : classes) {
                 context.addEndpoint(aClass);
+                pending.logf("Registered %s as WebSocket endpoint.", aClass.getName());
+            }
         });
 
         getSequence().addHandler(servletContextHandler);
 
         try {
             servletContextHandler.start();
-        } catch (Exception e) {
+        } catch (Exception ex) {
+            pending.error(ex);
             getSequence().removeHandler(servletContextHandler);
-            throw new InternalError(e);
+            throw new InternalError(ex);
         }
 
-        return new DeploymentRecord(element, servletContextHandler);
+        return new JettyDeploymentRecord(element, servletContextHandler);
 
+    }
+
+    private static String getWebSocketScheme(final PendingDeployment pending, final URI contextPathURI) {
+
+        final var contextPathURIHost = contextPathURI.getHost();
+        final var contextPathURIScheme = contextPathURI.getScheme();
+        final var normalizedHost = contextPathURIHost != null ? contextPathURIHost.toLowerCase() : "";
+
+        final boolean isLocalHost =
+                normalizedHost.equals("localhost") ||
+                normalizedHost.equals("127.0.0.1") ||
+                normalizedHost.equals("::1") ||
+                normalizedHost.equals("[::1]");
+
+        if (contextPathURIScheme.equalsIgnoreCase("http")) {
+
+            if (!isLocalHost) {
+                pending.logf(
+                        "WARNING! You are serving a WebSocket over an unencrypted connection (http). " +
+                        "This is not secure and speaks Cthulhu's true name when used in production."
+                );
+            }
+
+            return "ws";
+
+        } else if (contextPathURIScheme.equalsIgnoreCase("https")) {
+            return "wss";
+        } else {
+
+            if (!isLocalHost) {
+                pending.logf(
+                        "WARNING! You are serving a WebSocket over an unknown connection (%s). " +
+                        "This is potentially not secure and speaks Cthulhu's true name when used in production.",
+                        contextPathURIScheme
+                );
+            }
+
+            return "ws";
+        }
+
+    }
+
+    public String getAppOutsideUrl() {
+        return appOutsideUrl;
+    }
+
+    @Inject
+    public void setAppOutsideUrl(@Named(APP_OUTSIDE_URL) String appOutsideUrl) {
+        this.appOutsideUrl = appOutsideUrl;
     }
 
     public Handler.Sequence getSequence() {

@@ -2,7 +2,7 @@ package dev.getelements.elements.sdk.local.internal;
 
 import dev.getelements.elements.common.app.ApplicationElementService;
 import dev.getelements.elements.common.app.StandardApplicationElementService;
-import dev.getelements.elements.rt.exception.ApplicationCodeNotFoundException;
+import dev.getelements.elements.sdk.model.exception.ApplicationCodeNotFoundException;
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementLoaderFactory;
 import dev.getelements.elements.sdk.ElementLoaderFactory.ClassLoaderConstructor;

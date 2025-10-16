@@ -5,7 +5,6 @@ import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.application.Application;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -49,7 +48,7 @@ public interface ApplicationDeploymentService {
      * {@link ApplicationElementRecord} as well as any URIs it exposes.
      *
      * @param status the {@link DeploymentStatus}
-     * @param applicationElementRecord the {@link ApplicationElementRecord}, may be null if the deployment is not {@link DeploymentStatus#DEPLOYED}
+     * @param applicationElementRecord the {@link ApplicationElementRecord}, may be null if the deployment is not {@link DeploymentStatus#CLEAN}
      * @param logs a set of very brief logs produced during deployment.
      * @param uris the set of URIs exposed by the deployment
      * @param errors a set of {@link java.net.URI}s served out of this deployment
@@ -110,10 +109,17 @@ public interface ApplicationDeploymentService {
         /**
          * The deployment has been deployed with success.
          */
-        DEPLOYED,
+        CLEAN,
 
         /**
-         * The deployment has failed.
+         * Indicates that the deployment completed, but there were warnings during the process which resulted in
+         * exceptions that were caught and handled.
+         */
+        UNSTABLE,
+
+        /**
+         * The deployment has failed due to one reason or another due to the inability to load the application or
+         * its elements.
          */
         FAILED
 

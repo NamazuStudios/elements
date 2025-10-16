@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.IllegalFormatException;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -108,6 +107,7 @@ public interface Loader {
          */
         public <ThrowableT extends Throwable> ThrowableT error(final ThrowableT throwable) {
             errors.accept(throwable);
+            logf("ERROR! %s: %s", throwable.getClass().getName(), throwable.getMessage());
             return throwable;
         }
 
