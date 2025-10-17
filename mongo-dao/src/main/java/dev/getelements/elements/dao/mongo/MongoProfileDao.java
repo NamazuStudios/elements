@@ -216,11 +216,12 @@ public class MongoProfileDao implements ProfileDao {
 
         final Query<MongoProfile> profileQuery = getDatastore().find(MongoProfile.class);
         final Query<MongoUser> userQuery = getDatastore().find(MongoUser.class);
+        final var pattern = compile(trimmedSearch);
 
         userQuery.filter(
                 or(
-                        regex("name", compile(trimmedSearch)),
-                        regex("email", compile(trimmedSearch))
+                        regex("name", pattern),
+                        regex("email", pattern)
                 )
         );
 
@@ -233,7 +234,7 @@ public class MongoProfileDao implements ProfileDao {
         return profileQuery.filter(
                 eq("active", true),
                 or(
-                        regex("displayName", compile(trimmedSearch)),
+                        regex("displayName", pattern),
                         in("user", userList)
                 )
         );

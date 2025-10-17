@@ -30,12 +30,11 @@ import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
-import static dev.morphia.query.filters.Filters.eq;
-import static dev.morphia.query.filters.Filters.exists;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.lang.String.format;
@@ -150,12 +149,6 @@ public class MongoItemDao implements ItemDao {
     @Override
     public Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query) {
 
-        if (StringUtils.isNotEmpty(query)) {
-            LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
-                    "string parameter.  This field is presently ignored and will return all values after filtering " +
-                    "by tags");
-        }
-
         final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class).filter(exists("name"));
 
         if (tags != null && !tags.isEmpty()) {
@@ -174,6 +167,12 @@ public class MongoItemDao implements ItemDao {
 
             mongoQuery.filter(eq("category", categoryEnum));
 
+        }
+
+        if (StringUtils.isNotEmpty(query)) {
+            mongoQuery.filter(
+                    Filters.regex("name", Pattern.compile(query))
+            );
         }
 
         return getMongoDBUtils().paginationFromQuery(
