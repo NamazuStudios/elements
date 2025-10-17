@@ -18,7 +18,8 @@ import java.util.Objects;
     @Index(fields = {
             @Field("user"),
             @Field("application"),
-            @Field("active")
+            @Field("active"),
+            @Field("displayName")
         }
     ),
     @Index(fields = @Field(value = "displayName", type = IndexType.TEXT))
@@ -28,6 +29,7 @@ public class MongoProfile {
     @Id
     private ObjectId objectId;
 
+    @Indexed
     @Property
     private boolean active;
 
@@ -43,6 +45,7 @@ public class MongoProfile {
     @Reference(ignoreMissing = true)
     private MongoLargeObject imageObject;
 
+    @Indexed
     @Property
     private String displayName;
 
