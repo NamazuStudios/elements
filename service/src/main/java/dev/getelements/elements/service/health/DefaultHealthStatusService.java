@@ -40,9 +40,10 @@ public class DefaultHealthStatusService implements HealthStatusService {
         return new HealthChecklist()
                 .with(this::checkDatabaseStatus)
                 .with(this::checkDiscoveryStatus)
-                .with(this::checkInstanceConnectionStatus)
-                .with(this::checkRoutingStatus)
-                .with(this::checkRemoteInvokerStatus)
+                //TODO: EL-193 Restore these with app node
+//                .with(this::checkInstanceConnectionStatus)
+//                .with(this::checkRoutingStatus)
+//                .with(this::checkRemoteInvokerStatus)
             .run();
     }
 
