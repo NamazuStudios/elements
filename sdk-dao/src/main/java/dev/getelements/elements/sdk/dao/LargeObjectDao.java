@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.largeobject.LargeObjectNotFoundException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -28,6 +29,15 @@ public interface LargeObjectDao {
     default LargeObject getLargeObject(String objectId) {
         return findLargeObject(objectId).orElseThrow(LargeObjectNotFoundException::new);
     }
+
+    /**
+     * Gets a pagination of large objects based on the specified criteria
+     * @param offset - Pagination offset
+     * @param count - Pagination max objects
+     * @param search - Matching substring in path or MIME type
+     * @return the pagination results, if any
+     */
+    Pagination<LargeObject> getLargeObjects(int offset, int count, String search);
 
     /**
      * Creates a new {@link LargeObject}.

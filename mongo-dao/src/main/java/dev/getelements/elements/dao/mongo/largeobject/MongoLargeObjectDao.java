@@ -2,27 +2,36 @@ package dev.getelements.elements.dao.mongo.largeobject;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filters;
 import org.bson.types.ObjectId;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import static dev.morphia.query.filters.Filters.and;
-import static dev.morphia.query.filters.Filters.eq;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 import jakarta.inject.Inject;
 import java.util.Date;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoLargeObjectDao implements LargeObjectDao {
@@ -48,6 +57,29 @@ public class MongoLargeObjectDao implements LargeObjectDao {
     }
 
     @Override
+    public Pagination<LargeObject> getLargeObjects(final int offset, final int count, final String search) {
+
+        final Query<MongoLargeObject> query = getDatastore().find(MongoLargeObject.class);
+
+        final String trimmedQueryString = nullToEmpty(search).trim();
+
+        if (!trimmedQueryString.isEmpty()) {
+            query.filter(
+                    or(
+                            Filters.regex("path", Pattern.compile(search)),
+                            Filters.regex("mimeType", Pattern.compile(search))
+                    )
+            );
+        }
+
+        return getMongoDBUtils().paginationFromQuery(query,
+                offset,
+                count,
+                u -> getDozerMapper().map(u, LargeObject.class),
+                new FindOptions());
+    }
+
+    @Override
     public LargeObject createLargeObject(final LargeObject largeObject) {
         getValidationHelper().validateModel(largeObject, ValidationGroups.Insert.class);
 
@@ -69,15 +101,16 @@ public class MongoLargeObjectDao implements LargeObjectDao {
         final var query = getDatastore().find(MongoLargeObject.class);
         query.filter(eq("_id", new ObjectId(largeObject.getId())));
 
+        final var options = new ModifyOptions().upsert(false).returnDocument(AFTER);
         final var mongoLargeObject = mongoDBUtils.perform(ds ->
-                query.modify(
+                query.modify(options,
                         set("mimeType", largeObject.getMimeType()),
                         set("url", largeObject.getUrl()),
                         set("path", largeObject.getPath()),
                         set("state", largeObject.getState()),
                         set("lastModified", new Date()),
                         set("accessPermissions", largeObject.getAccessPermissions())
-                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+                )
         );
 
         return transform(mongoLargeObject);

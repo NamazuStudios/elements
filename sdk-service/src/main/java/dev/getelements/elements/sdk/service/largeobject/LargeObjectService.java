@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.service.largeobject;
 
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.largeobject.LargeObjectNotFoundException;
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectFromUrlRequest;
@@ -31,7 +32,7 @@ public interface LargeObjectService {
     Optional<LargeObject> findLargeObject(String objectId);
 
     /**
-     * Gets an instnce of {@link LargeObject}.
+     * Gets an instance of {@link LargeObject}.
      *
      * @param objectId the object ID
      * @return the {@link LargeObject}, never null
@@ -40,6 +41,13 @@ public interface LargeObjectService {
     default LargeObject getLargeObject(String objectId) {
         return findLargeObject(objectId).orElseThrow(LargeObjectNotFoundException::new);
     }
+
+    /**
+     * Gets a list of large object ids and related info, but not the objects themselves.
+     *
+     * @return A pagination of large objects
+     */
+    Pagination<LargeObject> getLargeObjects(int offset, int count, String search);
 
     /**
      * Updates the large object's metadata only.
