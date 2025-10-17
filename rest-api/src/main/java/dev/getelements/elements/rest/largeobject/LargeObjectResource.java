@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest.largeobject;
 
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectRequest;
@@ -67,6 +68,16 @@ public class LargeObjectResource {
     @Operation(summary = "Get a LargeObject")
     public LargeObject getLargeObject(@PathParam("largeObjectId") final String largeObjectId) {
         return getLargeObjectService().getLargeObject(largeObjectId);
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Get a LargeObject")
+    public Pagination<LargeObject> getLargeObjects(
+            @QueryParam("offset")  @DefaultValue("0")  final int offset,
+            @QueryParam("count")   @DefaultValue("20") final int count,
+            @QueryParam("search") final String search) {
+        return getLargeObjectService().getLargeObjects(offset, count, search);
     }
 
     @DELETE
