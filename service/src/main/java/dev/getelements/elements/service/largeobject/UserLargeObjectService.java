@@ -2,6 +2,7 @@ package dev.getelements.elements.service.largeobject;
 
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectFromUrlRequest;
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectRequest;
@@ -39,6 +40,11 @@ public class UserLargeObjectService implements LargeObjectService {
         }
 
         return result.map(getLargeObjectCdnUtils()::setCdnUrlToObject);
+    }
+
+    @Override
+    public Pagination<LargeObject> getLargeObjects(final int offset, final int count, final String search) {
+        return getLargeObjectDao().getLargeObjects(offset, count, search);
     }
 
     @Override

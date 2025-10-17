@@ -1,8 +1,13 @@
 package dev.getelements.elements.rest.test;
 
+import dev.getelements.elements.rest.test.model.DistinctInventoryItemPagination;
+import dev.getelements.elements.rest.test.model.LargeObjectPagination;
+import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.UpdateLargeObjectRequest;
+import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -13,12 +18,16 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.MediaType;
 
+import java.util.Objects;
+
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
 import static dev.getelements.elements.rest.test.LargeObjectRequestFactory.DEFAULT_MIME_TYPE;
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
 
 public class SuperUserLargeObjectResourceTest {
 
@@ -108,10 +117,67 @@ public class SuperUserLargeObjectResourceTest {
                 .readEntity(LargeObject.class);
 
         assertNotNull(foundlargeObject);
-        assertEquals(foundlargeObject.getMimeType(), DEFAULT_MIME_TYPE);
+        assertEquals(DEFAULT_MIME_TYPE, foundlargeObject.getMimeType());
         assertTrue(foundlargeObject.getAccessPermissions().getRead().isWildcard());
         assertTrue(foundlargeObject.getAccessPermissions().getWrite().isWildcard());
         assertTrue(foundlargeObject.getAccessPermissions().getDelete().isWildcard());
+    }
+
+    @Test()
+    public void shouldGetLargeObjects() {
+
+        final var mimeType = "text/plain";
+        final var request = requestFactory.createRequestWithFullAccess();
+        request.setMimeType(mimeType);
+
+        final LargeObject savedlargeObject = client
+                .target(apiRoot + "/large_object")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE))
+                .readEntity(LargeObject.class);
+
+        final LargeObjectPagination foundlargeObjectsNoSearch = client
+                .target(apiRoot + "/large_object")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObjectPagination.class);
+
+        final LargeObjectPagination foundlargeObjectsDefaultMimeSearch = client
+                .target(apiRoot + "/large_object")
+                .queryParam("search", DEFAULT_MIME_TYPE)
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObjectPagination.class);
+
+        final LargeObjectPagination foundlargeObjectsNewMimeSearch = client
+                .target(apiRoot + "/large_object")
+                .queryParam("search", mimeType)
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObjectPagination.class);
+
+        final LargeObjectPagination foundlargeObjectsBadSearch = client
+                .target(apiRoot + "/large_object")
+                .queryParam("search", "anofinasodufnas9hfa9hsfdyabsdfouiygausgdfasugdfasufggfs")
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .get()
+                .readEntity(LargeObjectPagination.class);
+
+        assertNotNull(foundlargeObjectsNoSearch);
+        assertNotNull(foundlargeObjectsDefaultMimeSearch);
+        assertNotNull(foundlargeObjectsNewMimeSearch);
+        assertNotNull(foundlargeObjectsBadSearch);
+        assertTrue(foundlargeObjectsNoSearch.getTotal() > 0);
+        assertTrue(foundlargeObjectsNoSearch.getTotal() > foundlargeObjectsDefaultMimeSearch.getTotal());
+        assertEquals(1, foundlargeObjectsNewMimeSearch.getTotal());
+        assertEquals(0, foundlargeObjectsBadSearch.getTotal());
+        assertTrue(foundlargeObjectsDefaultMimeSearch.getObjects().stream().allMatch(o -> Objects.equals(o.getMimeType(), DEFAULT_MIME_TYPE)));
+        assertTrue(foundlargeObjectsNewMimeSearch.getObjects().stream().allMatch(o -> Objects.equals(o.getMimeType(), mimeType)));
     }
 
     @Test()

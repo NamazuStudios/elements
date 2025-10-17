@@ -17,9 +17,13 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 
+import java.util.regex.Pattern;
+
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
 public class MongoLeaderboardDao implements LeaderboardDao {
@@ -90,8 +94,22 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
     @Override
     public Pagination<Leaderboard> getLeaderboards(final int offset, final int count, final String search) {
-        // TODO Fix this Feature
-        return Pagination.empty();
+
+        final Query<MongoLeaderboard> mongoQuery = getDatastore().find(MongoLeaderboard.class).filter(exists("name"));
+
+        if (StringUtils.isNotEmpty(search)) {
+            mongoQuery.filter(
+                    Filters.regex("name", Pattern.compile(search))
+            );
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+                mongoQuery,
+                offset, count,
+                mongoLeaderboard -> getBeanMapper().map(mongoLeaderboard, Leaderboard.class),
+                new FindOptions()
+        );
+
     }
 
     @Override
