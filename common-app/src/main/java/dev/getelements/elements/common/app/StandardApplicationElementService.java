@@ -27,8 +27,6 @@ public class StandardApplicationElementService implements ApplicationElementServ
 
     private final Lock lock = new ReentrantLock();
 
-    private final ConcurrentMap<ApplicationId, Lock> locks = new ConcurrentHashMap<>();
-
     private final Map<ApplicationId, MutableElementRegistry> registries = new HashMap<>();
 
     private final Map<ApplicationId, ApplicationElementRecord> records = new HashMap<>();

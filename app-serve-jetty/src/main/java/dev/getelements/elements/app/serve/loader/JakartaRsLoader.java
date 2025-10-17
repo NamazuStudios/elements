@@ -17,6 +17,8 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -24,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.glassfish.jersey.server.ResourceConfig.forApplication;
 
 /**
@@ -40,7 +43,9 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
 
     private final Lock lock = new ReentrantLock();
 
-    private final List<DeploymentRecord> activeDeployments = new ArrayList<>();
+    private final List<JettyDeploymentRecord> activeDeployments = new ArrayList<>();
+
+    private String appOutsideUrl;
 
     private Sequence sequence;
 
@@ -49,7 +54,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
     private AuthFilterFeature authFilterFeature;
 
     @Override
-    public void load(final ApplicationElementRecord record, final Element element) {
+    public void load(final PendingDeployment pending, final ApplicationElementRecord record, final Element element) {
         try (var mon = Monitor.enter(lock)) {
 
             final var deployed = activeDeployments
@@ -57,6 +62,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                     .anyMatch(d -> d.element().equals(element));
 
             if (deployed) {
+                pending.logf("WARNING: Detected existing deployment for %s.", record.applicationId());
                 logger.warn("{}/{} is already deployed. Skipping.",
                         record.applicationId(),
                         element.getElementRecord().definition().name());
@@ -66,14 +72,21 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                         .map(Supplier::get)
                         .filter(a -> Application.class != a.getClass())
                         .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
-                        .map(a -> deploy(element, a))
+                        .map(a -> deploy(pending, element, a))
                         .ifPresent(activeDeployments::add);
             }
 
         }
     }
 
-    private DeploymentRecord deploy(final Element element, final Application application) {
+    private JettyDeploymentRecord deploy(final PendingDeployment pending,
+                                         final Element element,
+                                         final Application application) {
+
+        pending.logf(
+                "Starting REST deployment for %s.",
+                element.getElementRecord().definition().name()
+        );
 
         // *bruh*
         final var prefix = element
@@ -83,7 +96,16 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
                 .filter(Predicate.not(String::isBlank))
-                .orElseGet(element.getElementRecord().definition()::name);
+                .orElseGet(() -> {
+
+                    pending.logf(
+                            "Unable to determine application prefix for %s. Using default.",
+                            element.getElementRecord().definition().name()
+                    );
+
+                    return element.getElementRecord().definition().name();
+
+                });
 
         final var enableAuth = element
                 .getElementRecord()
@@ -94,15 +116,30 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                 .map(Boolean::parseBoolean)
                 .orElse(false);
 
-        final var contextPath = getHttpContextRoot()
-                .formatNormalized(APP_PREFIX_FORMAT, prefix);
+        pending.logf("Built-in Auth Enabled: %s", enableAuth);
+
+        final var contextPath = getHttpContextRoot().formatNormalized(APP_PREFIX_FORMAT, prefix);
+
+        try {
+            final var contextPathURI = new URI(getAppOutsideUrl()).resolve(contextPath);
+            pending.uri(contextPathURI);
+        } catch (final URISyntaxException ex) {
+            pending.error(ex);
+            pending.logf("WARNING! Failed to create WebSocket URI for %s at %s. Check your %s setting.",
+                    element.getElementRecord().definition().name(),
+                    contextPath,
+                    APP_OUTSIDE_URL
+            );
+        }
 
         final var config = forApplication(application).register(OpenApiResource.class);
         final var container = new ServletContainer(config);
         final var holder = new ServletHolder(container);
 
-        holder.setInitParameter("openApi.configuration.resourceClasses",
-                "io.swagger.v3.jaxrs2.integration.resources.OpenApiResource");
+        holder.setInitParameter(
+                "openApi.configuration.resourceClasses",
+                "io.swagger.v3.jaxrs2.integration.resources.OpenApiResource"
+        );
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(contextPath);
@@ -117,12 +154,22 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
         try {
             servletContextHandler.start();
         } catch (Exception ex) {
+            pending.error(ex);
             getSequence().removeHandler(servletContextHandler);
             throw new InternalException(ex);
         }
 
-        return new DeploymentRecord(element, servletContextHandler);
+        return new JettyDeploymentRecord(element, servletContextHandler);
 
+    }
+
+    public String getAppOutsideUrl() {
+        return appOutsideUrl;
+    }
+
+    @Inject
+    public void setAppOutsideUrl(@Named(APP_OUTSIDE_URL) String appOutsideUrl) {
+        this.appOutsideUrl = appOutsideUrl;
     }
 
     public Sequence getSequence() {

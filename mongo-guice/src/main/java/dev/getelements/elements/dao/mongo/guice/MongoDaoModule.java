@@ -36,7 +36,6 @@ import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.index.IndexableType;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.util.Publisher;
 import dev.morphia.Datastore;
 
 import java.security.MessageDigest;

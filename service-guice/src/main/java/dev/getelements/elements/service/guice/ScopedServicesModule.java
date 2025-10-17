@@ -119,6 +119,7 @@ public class ScopedServicesModule extends AbstractModule {
     }
 
     private void bindProviders() {
+
         bind(UsernamePasswordAuthService.class)
                 .toProvider(UsernamePasswordAuthServiceProvider.class)
                 .in(scope);
@@ -334,6 +335,11 @@ public class ScopedServicesModule extends AbstractModule {
         bind(CodegenService.class)
                 .toProvider(OpenApiCodegenServiceProvider.class)
                 .in(scope);
+
+        bind(ApplicationStatusService.class)
+                .toProvider(ApplicationStatusServiceProvider.class)
+                .in(scope);
+
     }
 
     private void bindAnonymous() {
