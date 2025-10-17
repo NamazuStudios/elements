@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static dev.getelements.elements.common.app.ApplicationDeploymentService.DeploymentRecord.fail;
+import static java.lang.String.format;
+
 public abstract class AbstractApplicationDeploymentService implements ApplicationDeploymentService {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractApplicationDeploymentService.class);
@@ -43,23 +46,44 @@ public abstract class AbstractApplicationDeploymentService implements Applicatio
         try {
             applicationElementRecord = getApplicationElementService().getOrLoadApplication(application);
         } catch (ApplicationCodeNotFoundException ex) {
-            logger.info("No code for application {} ({}).", application.getName(), application.getId());
-            final var logs = List.of("No application code found.");
-            return DeploymentRecord.fail(application, logs, ex);
+
+            final var logs = List.of(format("No application code found: %s - %s",
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage()
+            ));
+
+            try (final var mon = Monitor.enter(lock)) {
+                return deployments.computeIfAbsent(application.getId(), aid -> fail(application, logs, ex));
+            }
+
         } catch (Exception ex) {
+
             logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
-            final var logs = List.of("No application code found.");
-            return DeploymentRecord.fail(application, logs, ex);
+
+            final var logs = List.of(format("Unable to deploy: %s - %s",
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage()
+            ));
+
+            try (final var mon = Monitor.enter(lock)) {
+                return deployments.computeIfAbsent(application.getId(), aid -> fail(application, logs, ex));
+            }
+
         } catch (LinkageError ex) {
 
             logger.error("Unable to deploy application {} ({}).", application.getName(), application.getId(), ex);
 
             final var logs = List.of(
-                    "Caught LinkageError Deploying application: " + application.getId(),
+                    format("LinkageError during application deployment: %s - %s",
+                        ex.getClass().getSimpleName(),
+                        ex.getMessage()
+                    ),
                     "Check that @ElementPublic was added to all public facing interfaces and types."
             );
 
-            return DeploymentRecord.fail(application, logs, ex);
+            try (final var mon = Monitor.enter(lock)) {
+                return deployments.computeIfAbsent(application.getId(), aid -> fail(application, logs, ex));
+            }
 
         }
 

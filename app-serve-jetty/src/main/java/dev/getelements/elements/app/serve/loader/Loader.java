@@ -106,9 +106,16 @@ public interface Loader {
          * @return the same throwable
          */
         public <ThrowableT extends Throwable> ThrowableT error(final ThrowableT throwable) {
+
             errors.accept(throwable);
-            logf("ERROR! %s: %s", throwable.getClass().getName(), throwable.getMessage());
+
+            logf("ERROR! Caught Exception %s: - %s",
+                    throwable.getClass().getSimpleName(),
+                    throwable.getMessage()
+            );
+
             return throwable;
+
         }
 
     }

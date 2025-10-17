@@ -18,7 +18,9 @@ public interface ApplicationStatusMapper extends MapperRegistry.Mapper<Deploymen
     ApplicationStatus forward(DeploymentRecord source);
 
     default List<ElementMetadata> mapElementMetadata(final List<Element> source) {
-        return source.stream().map(ElementMetadata::from).toList();
+        return source == null
+                ? List.of()
+                : source.stream().map(ElementMetadata::from).toList();
     }
 
 }
