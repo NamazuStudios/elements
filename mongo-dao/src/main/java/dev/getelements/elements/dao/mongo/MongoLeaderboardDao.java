@@ -3,14 +3,11 @@ package dev.getelements.elements.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.result.DeleteResult;
-import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.sdk.dao.LeaderboardDao;
 import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.*;
-import dev.getelements.elements.sdk.model.goods.Item;
-import dev.getelements.elements.sdk.model.goods.ItemCategory;
 import dev.getelements.elements.sdk.model.leaderboard.Leaderboard;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
@@ -26,7 +23,6 @@ import org.bson.types.ObjectId;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
