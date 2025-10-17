@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.model.application;
 
-import dev.getelements.elements.sdk.record.ElementMetadata;
+import dev.getelements.elements.sdk.model.system.ElementMetadata;
 
 import java.net.URI;
 import java.util.List;

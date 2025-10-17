@@ -1,7 +1,8 @@
-package dev.getelements.elements.sdk.record;
+package dev.getelements.elements.sdk.model.system;
 
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementType;
+import dev.getelements.elements.sdk.record.*;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ import java.util.Map;
  */
 public record ElementMetadata(
         ElementType type,
-        ElementDefinitionRecord definition,
+        ElementDefinitionMetadata definition,
         List<ElementServiceRecord> services,
         List<ElementEventProducerRecord> producedEvents,
         List<ElementEventConsumerRecord<?>> consumedEvents,
@@ -48,7 +49,7 @@ public record ElementMetadata(
     public static ElementMetadata from(final ElementRecord element) {
         return new ElementMetadata(
                 element.type(),
-                element.definition(),
+                ElementDefinitionMetadata.from(element.definition()),
                 element.services(),
                 element.producedEvents(),
                 element.consumedEvents(),

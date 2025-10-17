@@ -11,7 +11,7 @@ public class ApplicationStatusServiceProvider implements Provider<ApplicationSta
 
     private User user;
 
-    private Provider<ApplicationStatusService> superUserApplicationServiceProvider;
+    private Provider<SuperUserApplicationStatusService> superUserApplicationServiceProvider;
 
     @Override
     public ApplicationStatusService get() {
@@ -31,12 +31,12 @@ public class ApplicationStatusServiceProvider implements Provider<ApplicationSta
         this.user = user;
     }
 
-    public Provider<ApplicationStatusService> getSuperUserApplicationServiceProvider() {
+    public Provider<SuperUserApplicationStatusService> getSuperUserApplicationServiceProvider() {
         return superUserApplicationServiceProvider;
     }
 
     @Inject
-    public void setSuperUserApplicationServiceProvider(Provider<ApplicationStatusService> superUserApplicationServiceProvider) {
+    public void setSuperUserApplicationServiceProvider(Provider<SuperUserApplicationStatusService> superUserApplicationServiceProvider) {
         this.superUserApplicationServiceProvider = superUserApplicationServiceProvider;
     }
 

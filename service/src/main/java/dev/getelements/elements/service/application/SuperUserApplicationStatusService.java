@@ -5,7 +5,7 @@ import dev.getelements.elements.common.app.ApplicationDeploymentService.Deployme
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.model.application.ApplicationStatus;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.record.ElementMetadata;
+import dev.getelements.elements.sdk.model.system.ElementMetadata;
 import dev.getelements.elements.sdk.service.application.ApplicationStatusService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;

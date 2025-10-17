@@ -1,6 +1,6 @@
 package dev.getelements.elements.rest.status;
 
-import dev.getelements.elements.sdk.record.ElementMetadata;
+import dev.getelements.elements.sdk.model.system.ElementMetadata;
 import dev.getelements.elements.sdk.service.application.ApplicationStatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.inject.Inject;
@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
-@Path("installed_elements")
+@Path("elements/system")
 public class SystemElementsResource {
 
     private ApplicationStatusService applicationStatusService;

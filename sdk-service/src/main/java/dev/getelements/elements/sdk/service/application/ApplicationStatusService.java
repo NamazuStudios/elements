@@ -3,7 +3,7 @@ package dev.getelements.elements.sdk.service.application;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.application.ApplicationStatus;
-import dev.getelements.elements.sdk.record.ElementMetadata;
+import dev.getelements.elements.sdk.model.system.ElementMetadata;
 
 import java.util.List;
 
