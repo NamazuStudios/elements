@@ -62,7 +62,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                     .anyMatch(d -> d.element().equals(element));
 
             if (deployed) {
-                pending.logf("WARNING: Detected existing deployment for %s.", record.applicationId());
+                pending.logWarningf("WARNING: Detected existing deployment for %s.", record.applicationId());
                 logger.warn("{}/{} is already deployed. Skipping.",
                         record.applicationId(),
                         element.getElementRecord().definition().name());
@@ -124,7 +124,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
             final var contextPathURI = new URI(getAppOutsideUrl()).resolve(contextPath);
             pending.uri(contextPathURI);
         } catch (final URISyntaxException ex) {
-            pending.error(ex);
+            pending.warning(ex);
             pending.logf("WARNING! Failed to create WebSocket URI for %s at %s. Check your %s setting.",
                     element.getElementRecord().definition().name(),
                     contextPath,
@@ -154,7 +154,6 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
         try {
             servletContextHandler.start();
         } catch (Exception ex) {
-            pending.error(ex);
             getSequence().removeHandler(servletContextHandler);
             throw new InternalException(ex);
         }
