@@ -4,12 +4,15 @@ import dev.getelements.elements.sdk.model.application.ApplicationStatus;
 import dev.getelements.elements.sdk.service.application.ApplicationStatusService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
+
+import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
 
 @Path("application_status")
 public class ApplicationStatusResource {

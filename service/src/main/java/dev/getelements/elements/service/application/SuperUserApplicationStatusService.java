@@ -8,8 +8,11 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.record.ElementMetadata;
 import dev.getelements.elements.sdk.service.application.ApplicationStatusService;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import java.util.List;
+
+import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
 
 public class SuperUserApplicationStatusService implements ApplicationStatusService {
 
@@ -60,7 +63,7 @@ public class SuperUserApplicationStatusService implements ApplicationStatusServi
     }
 
     @Inject
-    public void setDeploymentService(ApplicationDeploymentService deploymentService) {
+    public void setDeploymentService(@Named(APP_SERVE) ApplicationDeploymentService deploymentService) {
         this.deploymentService = deploymentService;
     }
 

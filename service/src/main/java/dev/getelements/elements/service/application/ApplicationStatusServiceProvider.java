@@ -17,7 +17,8 @@ public class ApplicationStatusServiceProvider implements Provider<ApplicationSta
     public ApplicationStatusService get() {
         return switch (getUser().getLevel()) {
             case SUPERUSER -> getSuperUserApplicationServiceProvider().get();
-            default -> forbidden(ApplicationStatusService.class);
+            default -> getSuperUserApplicationServiceProvider().get();
+//            default -> forbidden(ApplicationStatusService.class);
         };
     }
 
