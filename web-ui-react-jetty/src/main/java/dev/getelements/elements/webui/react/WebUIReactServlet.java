@@ -24,7 +24,7 @@ public class WebUIReactServlet extends StaticContentServlet {
 
     private static final String BASE_TAG = Pattern.quote("<base href=\"/\">");
 
-    public static final String RESOURCE_BASE = "dev/getelements/elements/webui/react";
+    public static final String RESOURCE_BASE = "static/public";
 
     private static final String INDEX_HTML = "/index.html";
 

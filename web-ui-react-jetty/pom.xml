@@ -87,6 +87,21 @@
                         </goals>
                     </execution>
 
+                    <execution>
+                        <id>copy-react-build</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <executable>cp</executable>
+                            <arguments>
+                                <argument>-r</argument>
+                                <argument>${project.basedir}/elements-web-ui/dist/.</argument>
+                                <argument>${project.build.outputDirectory}/static</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+
                 </executions>
             </plugin>
         </plugins>
