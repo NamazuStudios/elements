@@ -1,4 +1,4 @@
-package dev.getelements.elements.webui;
+package dev.getelements.elements.webui.react;
 
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
@@ -10,15 +10,15 @@ import org.slf4j.LoggerFactory;
 import java.net.URL;
 import java.util.Map;
 
-import static dev.getelements.elements.webui.WebUIAngularServlet.RESOURCE_BASE;
+import static dev.getelements.elements.webui.react.WebUIReactServlet.RESOURCE_BASE;
 
-public class WebUiModule extends PrivateModule {
+public class WebUiReactModule extends PrivateModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebUiModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebUiReactModule.class);
 
     private static final String WEB_UI_CONTEXT_ROOT = "/admin/*";
 
-    private static final Key<WebUIAngularServlet> WEB_UI_ANGULAR_SERVLET_KEY = Key.get(WebUIAngularServlet.class);
+    private static final Key<WebUIReactServlet> WEB_UI_REACT_SERVLET_KEY = Key.get(WebUIReactServlet.class);
 
     private static final URL resourceBase = Loader.getResource(RESOURCE_BASE);
 
@@ -28,8 +28,8 @@ public class WebUiModule extends PrivateModule {
         if (resourceBase == null) {
             logger.warn("No UI on classpath. Did you forget to build it?");
         } else {
-            expose(WEB_UI_ANGULAR_SERVLET_KEY);
-            bind(WEB_UI_ANGULAR_SERVLET_KEY).asEagerSingleton();
+            expose(WEB_UI_REACT_SERVLET_KEY);
+            bind(WEB_UI_REACT_SERVLET_KEY).asEagerSingleton();
         }
 
     }
@@ -45,7 +45,7 @@ public class WebUiModule extends PrivateModule {
             );
 
             logger.info("Using Resource Base {}", resourceBase);
-            bindings.serve(WEB_UI_CONTEXT_ROOT).with(WEB_UI_ANGULAR_SERVLET_KEY, params);
+            bindings.serve(WEB_UI_CONTEXT_ROOT).with(WEB_UI_REACT_SERVLET_KEY, params);
             bindings.useGlobalAuthFor(WEB_UI_CONTEXT_ROOT);
         }
 

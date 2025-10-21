@@ -1,4 +1,4 @@
-package dev.getelements.elements.webui;
+package dev.getelements.elements.webui.angular;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.jetty.StaticContentServlet;
@@ -10,7 +10,6 @@ import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.ee10.servlet.ResourceServlet;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

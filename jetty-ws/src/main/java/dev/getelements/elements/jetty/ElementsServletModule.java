@@ -6,7 +6,8 @@
     import dev.getelements.elements.rest.guice.RestAPIJerseyModule;
     import dev.getelements.elements.sdk.model.user.User;
     import dev.getelements.elements.servlet.security.*;
-    import dev.getelements.elements.webui.WebUiModule;
+    import dev.getelements.elements.webui.angular.WebUiAngularModule;
+    import dev.getelements.elements.webui.react.WebUiReactModule;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
 
@@ -131,8 +132,14 @@
                 module.accept(bindings);
             }
 
+            if (components.remove(web_ui_old)) {
+                final var module = new WebUiAngularModule();
+                install(module);
+                module.accept(bindings);
+            }
+
             if (components.remove(web_ui)) {
-                final var module = new WebUiModule();
+                final var module = new WebUiReactModule();
                 install(module);
                 module.accept(bindings);
             }
