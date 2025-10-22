@@ -78,7 +78,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
-function Router() {
+function Routes() {
   const { isAuthenticated } = useAuth();
 
   return (
@@ -129,7 +129,7 @@ function App() {
           <ThemeProvider defaultTheme="dark" storageKey="elements-admin-theme">
             <TooltipProvider>
               <Toaster />
-              <Router />
+              <Routes />
             </TooltipProvider>
           </ThemeProvider>
         </ResourceProvider>
