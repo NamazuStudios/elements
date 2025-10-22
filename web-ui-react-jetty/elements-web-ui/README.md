@@ -46,17 +46,29 @@ Elements Admin Editor provides a comprehensive web interface for interacting wit
 
 ## Configuration
 
-### Environment Variables
+### Runtime Configuration
 
-Required environment variables:
+The application reads its backend URL from a JSON configuration file at runtime. This allows the Java application to inject the correct URL when deploying.
+
+**Configuration File**: `/config/config.json`
+
+```json
+{
+  "apiUrl": "https://your-elements-backend.com"
+}
+```
+
+For development, you can use environment variables as a fallback:
 
 ```bash
-# Backend URL (required)
-ELEMENTS_BACKEND_URL=https://your-elements-backend.com
-
-# For frontend (if different from backend URL)
-VITE_ELEMENTS_BACKEND_URL=https://your-elements-backend.com
+# Backend URL fallback (optional, defaults to http://localhost:8080)
+ELEMENTS_BACKEND_URL=http://localhost:8080
 ```
+
+**Configuration Priority**:
+1. `/config/config.json` (if exists)
+2. `ELEMENTS_BACKEND_URL` environment variable
+3. Default: `http://localhost:8080`
 
 ### Backend Connection
 
@@ -64,6 +76,7 @@ The application acts as a proxy to your Elements backend service:
 - All API requests go through `/api/proxy/*` routes
 - Authentication is managed via cookies
 - The backend must support the Elements REST API structure
+- Backend URL is read from `/config/config.json` at runtime
 
 ## Development
 
@@ -89,9 +102,15 @@ The application will be available at `http://localhost:5000`
 # Create optimized production build
 npm run build
 
+# Create config file (done by your Java application at runtime)
+mkdir -p /config
+echo '{"apiUrl":"https://your-backend-url.com"}' > /config/config.json
+
 # Start production server
 npm run start
 ```
+
+**Note**: In production deployment alongside your Java application, the Java application should create `/config/config.json` with the appropriate `apiUrl` before starting the Node.js server.
 
 ## Project Structure
 
@@ -139,6 +158,9 @@ Each parameter type is independently managed to prevent naming conflicts.
 ### Authentication
 - `POST /api/auth/login` - Authenticate with Elements backend
 - `POST /api/auth/logout` - Clear authentication session
+
+### Configuration
+- `GET /api/config` - Get runtime configuration (returns `{ apiUrl: string }`)
 
 ### Proxy
 - `/api/proxy/*` - Proxy all requests to Elements backend (requires authentication)

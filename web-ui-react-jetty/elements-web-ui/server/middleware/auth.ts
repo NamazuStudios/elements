@@ -1,7 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
 
-const ELEMENTS_BACKEND_URL = process.env.ELEMENTS_BACKEND_URL || 'http://localhost:8080';
-
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   try {
     // Get session token from cookie or header

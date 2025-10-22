@@ -46,22 +46,28 @@ interface InstalledElementsSidebarProps {
   setLocation: (path: string) => void;
 }
 
-// Fix element URI by replacing localhost with actual backend URL
-function fixElementUri(uri: string | undefined): string {
-  if (!uri) return '';
-  
-  // Replace localhost:8080 with actual backend URL
-  const backendUrl = import.meta.env.VITE_ELEMENTS_BACKEND_URL || 'https://defold.cloud.namazustudios.com';
-  return uri.replace('http://localhost:8080', backendUrl);
-}
-
 export function InstalledElementsSidebar({ location, setLocation }: InstalledElementsSidebarProps) {
+  // Fetch backend URL from config
+  const { data: config } = useQuery<{ apiUrl: string }>({
+    queryKey: ['/api/config'],
+    staleTime: Infinity, // Config shouldn't change during runtime
+  });
+  
   // Fetch all applications with installed elements from the Elements backend
   const { data: applicationStatuses } = useQuery<ApplicationStatus[]>({
     queryKey: ['/api/proxy/api/rest/elements/application'],
     enabled: true,
     staleTime: 30000, // Cache for 30 seconds
   });
+
+  // Fix element URI by replacing localhost with actual backend URL
+  const fixElementUri = (uri: string | undefined): string => {
+    if (!uri) return '';
+    
+    // Use backend URL from config, fallback to localhost for development
+    const backendUrl = config?.apiUrl || 'http://localhost:8080';
+    return uri.replace('http://localhost:8080', backendUrl);
+  };
 
   // Filter applications with non-empty elements list (any status)
   const appsWithElements = applicationStatuses?.filter(

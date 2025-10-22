@@ -51,7 +51,7 @@ public class WebUIAngularServlet extends StaticContentServlet {
         super.init(servletConfig);
 
         try {
-            final var replacement =  format("<base href=\"%s/\">", getHttpContextRoot().normalize("admin"));
+            final var replacement =  format("<base href=\"%s/\">", getHttpContextRoot().normalize("old/admin"));
             this.index = loadIndex().replaceAll(BASE_TAG, replacement);
         } catch (IOException e) {
             throw new RuntimeException(e);

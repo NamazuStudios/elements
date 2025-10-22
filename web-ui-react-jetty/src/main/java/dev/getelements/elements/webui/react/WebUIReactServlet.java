@@ -11,8 +11,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -21,8 +24,6 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import static java.lang.String.format;
 
 public class WebUIReactServlet extends StaticContentServlet {
-
-    private static final String BASE_TAG = Pattern.quote("<base href=\"/\">");
 
     public static final String RESOURCE_BASE = "static/public";
 
@@ -47,16 +48,14 @@ public class WebUIReactServlet extends StaticContentServlet {
 
     @Override
     public void init(ServletConfig servletConfig) throws ServletException {
-
         super.init(servletConfig);
 
         try {
-            final var replacement =  format("<base href=\"%s/\">", getHttpContextRoot().normalize("admin"));
-            this.index = loadIndex().replaceAll(BASE_TAG, replacement);
+            this.index = loadIndex();
+            writeConfig();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     protected String loadIndex() throws IOException {
@@ -102,6 +101,28 @@ public class WebUIReactServlet extends StaticContentServlet {
 
     }
 
+    private void writeConfig() throws IOException {
+
+        final var configDir = new File(RESOURCE_BASE, "config");
+
+        if (!configDir.exists()) {
+            Files.createDirectories(configDir.toPath());
+        }
+
+        final var defaultUrl = "http://localhost:8080/api/rest";
+
+        //We don't need or want to generate a config in this case
+        if(getApiOutsideUrl() == null || getApiOutsideUrl().equals(defaultUrl)) {
+            return;
+        }
+
+        final var json = "{\n  \"apiUrl\": \"" + getApiOutsideUrl() + "\"\n}\n";
+
+        try (final var writer = new FileWriter(new File(configDir, "config.json"))) {
+            writer.write(json);
+        }
+
+    }
 
     public String getApiOutsideUrl() {
         return apiOutsideUrl;

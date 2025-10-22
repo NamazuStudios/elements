@@ -4,8 +4,7 @@ import { storage } from "./storage";
 import * as yaml from 'js-yaml';
 import { requireAuth, optionalAuth } from "./middleware/auth";
 import { loginLimiter, proxyLimiter } from "./middleware/rate-limit";
-
-const ELEMENTS_BACKEND_URL = process.env.ELEMENTS_BACKEND_URL || 'http://localhost:8080';
+import { getBackendUrl } from "./config";
 
 // Helper to sanitize error messages
 function sanitizeError(error: any): string {
@@ -37,6 +36,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: password,
       };
 
+      const ELEMENTS_BACKEND_URL = getBackendUrl();
+      
       if (isDev) {
         console.log('[LOGIN] Sending to:', `${ELEMENTS_BACKEND_URL}/api/rest/session`);
       }
@@ -144,6 +145,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isDev) {
         console.log('[VERIFY] Calling backend to verify session');
       }
+      
+      const ELEMENTS_BACKEND_URL = getBackendUrl();
+      
       // Verify session by calling the Elements backend session endpoint
       const response = await fetch(`${ELEMENTS_BACKEND_URL}/api/rest/session`, {
         method: 'POST',
@@ -181,9 +185,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Config endpoint - returns the backend URL for frontend use (public endpoint)
+  app.get('/api/config', (req: Request, res: Response) => {
+    res.json({
+      apiUrl: getBackendUrl(),
+    });
+  });
+
   // Version endpoint - returns Elements backend version (public endpoint)
   app.get('/api/version', async (req: Request, res: Response) => {
     try {
+      const ELEMENTS_BACKEND_URL = getBackendUrl();
+      
       const response = await fetch(`${ELEMENTS_BACKEND_URL}/api/rest/version`, {
         method: 'GET',
         headers: {
@@ -535,6 +548,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy all /api/proxy/* requests to the Elements backend
   app.all('/api/proxy/*', optionalAuth, proxyLimiter, async (req: Request, res: Response) => {
     try {
+      const ELEMENTS_BACKEND_URL = getBackendUrl();
+      
       // Extract the path after /api/proxy
       const elementsPath = req.path.replace('/api/proxy', '');
       
