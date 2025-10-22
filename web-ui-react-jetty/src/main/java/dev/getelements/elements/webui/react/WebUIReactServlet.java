@@ -11,8 +11,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -88,10 +86,9 @@ public class WebUIReactServlet extends StaticContentServlet {
 
         var bytes = index.getBytes(StandardCharsets.UTF_8);
         resp.setContentLength(bytes.length);
-        resp.getOutputStream().write(bytes);
-
         resp.setStatus(SC_OK);
-        resp.getWriter().print(index);
+        resp.setContentType("text/html; charset=UTF-8");
+        resp.getOutputStream().write(bytes);
     }
 
     protected void doGetConfig(final HttpServletRequest req,
@@ -103,12 +100,11 @@ public class WebUIReactServlet extends StaticContentServlet {
         final var config = new WebUIApplicationConfiguration();
         config.setApi(api);
 
-        final var json = getObjectMapper().writeValueAsString(config);
-
         resp.setStatus(SC_OK);
         resp.setContentType("application/json; charset=UTF-8");
-        resp.getWriter().print(json);
-
+        try (var out = resp.getOutputStream()) {
+            getObjectMapper().writeValue(out, config);
+        }
     }
 
     private InputStream getIndexInputStream() throws IOException {
