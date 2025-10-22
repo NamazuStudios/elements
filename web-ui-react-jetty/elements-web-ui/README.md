@@ -48,26 +48,25 @@ Elements Admin Editor provides a comprehensive web interface for interacting wit
 
 ### Runtime Configuration
 
-The application reads its backend URL from a JSON configuration file at runtime. This allows the Java application to inject the correct URL when deploying.
+The application reads its backend URL from a JSON configuration file at runtime, allowing the Java application to inject the correct URL when deploying.
 
-**Configuration File**: Served as static file at `/config.json`
-
-The frontend fetches configuration from `/config.json`:
-
-```json
-{
-  "apiUrl": "https://your-elements-backend.com"
-}
-```
-
-**Backend Configuration Priority** (for server-side proxy):
-1. `/config/config.json` (if exists)
+**Configuration Priority** (server-side):
+1. `/config/config.json` (created by Java application at runtime)
 2. `ELEMENTS_BACKEND_URL` environment variable
 3. Default: `http://localhost:8080`
 
-**Frontend Configuration**:
-- Fetches backend URL from `/config.json` (static file)
-- Falls back to `http://localhost:8080` if not available
+**Expected config format** (`/config/config.json`):
+```json
+{
+  "api": {
+    "url": "https://your-elements-backend.com/api/rest"
+  }
+}
+```
+
+**Frontend access**:
+- The frontend fetches config from `/admin/config.json` endpoint (served dynamically by Express)
+- The server automatically exposes the configuration in the same format
 
 ### Backend Connection
 
@@ -103,20 +102,15 @@ The application will be available at `http://localhost:5000/admin`
 # Create optimized production build
 npm run build
 
-# Create config files (done by your Java application at runtime)
-# Backend config (for server-side proxy)
-mkdir -p /config
-echo '{"apiUrl":"https://your-backend-url.com"}' > /config/config.json
-
-# Frontend config (served as static file from /config.json)
-echo '{"apiUrl":"https://your-backend-url.com"}' > dist/public/config.json
-
 # Start production server
 npm run start
+
+# Note: Your Java application should create /config/config.json before starting the Node.js server
+# Example: echo '{"api":{"url":"https://your-backend-url.com/api/rest"}}' > /config/config.json
 ```
 
 **Note**: In production deployment alongside your Java application:
-- The Java application should create both config files before starting the Node.js server
+- The Java application should create `/config/config.json` before starting the Node.js server
 - The application will be accessible at `{root_url}/admin`
 - Login will be at `{root_url}/admin/login`
 - Accessing the root URL will automatically redirect to `/admin`
@@ -150,7 +144,7 @@ Parses OpenAPI specifications and extracts:
 ### Dynamic Form Generator (`client/src/components/DynamicFormGenerator.tsx`)
 Renders forms with three distinct sections:
 - Path Parameters
-- Query Parameters  
+- Query Parameters
 - Request Body Fields
 
 Each parameter type is independently managed to prevent naming conflicts.
@@ -171,7 +165,7 @@ Each parameter type is independently managed to prevent naming conflicts.
 - `POST /admin/api/auth/logout` - Clear authentication session
 
 ### Configuration
-- `GET /admin/config.json` - Runtime configuration (returns `{ apiUrl: string }`)
+- `GET /admin/config.json` - Runtime configuration (returns `{ api: { url: string } }`)
 
 ### Proxy
 - `/admin/api/proxy/*` - Proxy all requests to Elements backend (requires authentication)
