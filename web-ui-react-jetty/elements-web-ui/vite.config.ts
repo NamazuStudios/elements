@@ -19,7 +19,6 @@ export default defineConfig({
         ]
         : []),
   ],
-  base: '/admin',
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
