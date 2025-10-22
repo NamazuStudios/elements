@@ -50,7 +50,9 @@ Elements Admin Editor provides a comprehensive web interface for interacting wit
 
 The application reads its backend URL from a JSON configuration file at runtime. This allows the Java application to inject the correct URL when deploying.
 
-**Configuration File**: `/config/config.json`
+**Configuration File**: Served as static file at `/config.json`
+
+The frontend fetches configuration from `/config.json`:
 
 ```json
 {
@@ -58,17 +60,14 @@ The application reads its backend URL from a JSON configuration file at runtime.
 }
 ```
 
-For development, you can use environment variables as a fallback:
-
-```bash
-# Backend URL fallback (optional, defaults to http://localhost:8080)
-ELEMENTS_BACKEND_URL=http://localhost:8080
-```
-
-**Configuration Priority**:
+**Backend Configuration Priority** (for server-side proxy):
 1. `/config/config.json` (if exists)
 2. `ELEMENTS_BACKEND_URL` environment variable
 3. Default: `http://localhost:8080`
+
+**Frontend Configuration**:
+- Fetches backend URL from `/config.json` (static file)
+- Falls back to `http://localhost:8080` if not available
 
 ### Backend Connection
 
@@ -94,7 +93,9 @@ npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:5000`
+The application will be available at `http://localhost:5000/admin`
+- Login page: `http://localhost:5000/admin/login`
+- Root (`/`) automatically redirects to `/admin`
 
 ### Build for Production
 
@@ -102,15 +103,23 @@ The application will be available at `http://localhost:5000`
 # Create optimized production build
 npm run build
 
-# Create config file (done by your Java application at runtime)
+# Create config files (done by your Java application at runtime)
+# Backend config (for server-side proxy)
 mkdir -p /config
 echo '{"apiUrl":"https://your-backend-url.com"}' > /config/config.json
+
+# Frontend config (served as static file from /config.json)
+echo '{"apiUrl":"https://your-backend-url.com"}' > dist/public/config.json
 
 # Start production server
 npm run start
 ```
 
-**Note**: In production deployment alongside your Java application, the Java application should create `/config/config.json` with the appropriate `apiUrl` before starting the Node.js server.
+**Note**: In production deployment alongside your Java application:
+- The Java application should create both config files before starting the Node.js server
+- The application will be accessible at `{root_url}/admin`
+- Login will be at `{root_url}/admin/login`
+- Accessing the root URL will automatically redirect to `/admin`
 
 ## Project Structure
 
@@ -155,18 +164,20 @@ Each parameter type is independently managed to prevent naming conflicts.
 
 ## API Endpoints
 
+**Base Path**: All endpoints are available under `/admin`
+
 ### Authentication
-- `POST /api/auth/login` - Authenticate with Elements backend
-- `POST /api/auth/logout` - Clear authentication session
+- `POST /admin/api/auth/login` - Authenticate with Elements backend
+- `POST /admin/api/auth/logout` - Clear authentication session
 
 ### Configuration
-- `GET /api/config` - Get runtime configuration (returns `{ apiUrl: string }`)
+- `GET /admin/config.json` - Runtime configuration (returns `{ apiUrl: string }`)
 
 ### Proxy
-- `/api/proxy/*` - Proxy all requests to Elements backend (requires authentication)
+- `/admin/api/proxy/*` - Proxy all requests to Elements backend (requires authentication)
 
 ### Utility
-- `GET /api/version` - Get Elements backend version
+- `GET /admin/api/version` - Get Elements backend version
 
 ## Security Features
 

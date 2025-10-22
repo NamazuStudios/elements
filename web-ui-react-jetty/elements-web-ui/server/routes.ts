@@ -185,12 +185,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Config endpoint - returns the backend URL for frontend use (public endpoint)
-  app.get('/api/config', (req: Request, res: Response) => {
+  // Serve config.json as static file (public endpoint)
+  // Available at both /config.json and /admin/config.json
+  const serveConfig = (req: Request, res: Response) => {
     res.json({
       apiUrl: getBackendUrl(),
     });
-  });
+  };
+  app.get('/config.json', serveConfig);
+  app.get('/admin/config.json', serveConfig);
 
   // Version endpoint - returns Elements backend version (public endpoint)
   app.get('/api/version', async (req: Request, res: Response) => {

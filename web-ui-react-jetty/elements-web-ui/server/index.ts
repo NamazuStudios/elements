@@ -4,19 +4,20 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { apiLimiter } from "./middleware/rate-limit";
 
-const app = express();
+const mainApp = express();
+const adminApp = express();
 
-// Trust proxy for accurate IP detection when behind reverse proxy (Replit)
-app.set('trust proxy', 1);
+// Trust proxy for accurate IP detection when behind reverse proxy
+mainApp.set('trust proxy', 1);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+adminApp.use(express.json());
+adminApp.use(express.urlencoded({ extended: false }));
+adminApp.use(cookieParser());
 
 // Apply rate limiting to all API routes
-app.use('/api', apiLimiter);
+adminApp.use('/api', apiLimiter);
 
-app.use((req, res, next) => {
+adminApp.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
@@ -53,9 +54,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  const server = await registerRoutes(adminApp);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  adminApp.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
@@ -63,13 +64,21 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Mount admin app at /admin
+  mainApp.use('/admin', adminApp);
+  
+  // Redirect root to /admin
+  mainApp.get('/', (_req: Request, res: Response) => {
+    res.redirect('/admin');
+  });
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  if (mainApp.get("env") === "development") {
+    await setupVite(adminApp, server);
   } else {
-    serveStatic(app);
+    serveStatic(adminApp);
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

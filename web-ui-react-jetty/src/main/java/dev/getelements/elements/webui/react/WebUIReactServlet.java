@@ -14,14 +14,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import static dev.getelements.elements.sdk.model.Constants.API_OUTSIDE_URL;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
-import static java.lang.String.format;
 
 public class WebUIReactServlet extends StaticContentServlet {
 
@@ -52,15 +52,20 @@ public class WebUIReactServlet extends StaticContentServlet {
 
         try {
             this.index = loadIndex();
-            writeConfig();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     protected String loadIndex() throws IOException {
-        try (var input = WebUIReactServlet.class.getResourceAsStream(INDEX_HTML_RESOURCE)) {
-            final var bytes = input.readAllBytes();
+
+        try(final var stream = getIndexInputStream()) {
+
+            if (stream == null) {
+                throw new IOException("index.html not found in " + INDEX_HTML_RESOURCE);
+            }
+
+            final var bytes = stream.readAllBytes();
             return new String(bytes, StandardCharsets.UTF_8);
         }
     }
@@ -80,6 +85,11 @@ public class WebUIReactServlet extends StaticContentServlet {
 
     protected void doGetIndex(final HttpServletRequest req,
                               final HttpServletResponse resp) throws IOException {
+
+        var bytes = index.getBytes(StandardCharsets.UTF_8);
+        resp.setContentLength(bytes.length);
+        resp.getOutputStream().write(bytes);
+
         resp.setStatus(SC_OK);
         resp.getWriter().print(index);
     }
@@ -96,32 +106,25 @@ public class WebUIReactServlet extends StaticContentServlet {
         final var json = getObjectMapper().writeValueAsString(config);
 
         resp.setStatus(SC_OK);
-        resp.setContentType("application/json");
+        resp.setContentType("application/json; charset=UTF-8");
         resp.getWriter().print(json);
 
     }
 
-    private void writeConfig() throws IOException {
+    private InputStream getIndexInputStream() throws IOException {
 
-        final var configDir = new File(RESOURCE_BASE, "config");
+        var stream = WebUIReactServlet.class.getResourceAsStream(INDEX_HTML_RESOURCE);
 
-        if (!configDir.exists()) {
-            Files.createDirectories(configDir.toPath());
+        if (stream == null) {
+
+            var path = getServletContext().getRealPath(INDEX_HTML);
+
+            if (path != null) {
+                return Files.newInputStream(Path.of(path));
+            }
         }
 
-        final var defaultUrl = "http://localhost:8080/api/rest";
-
-        //We don't need or want to generate a config in this case
-        if(getApiOutsideUrl() == null || getApiOutsideUrl().equals(defaultUrl)) {
-            return;
-        }
-
-        final var json = "{\n  \"apiUrl\": \"" + getApiOutsideUrl() + "\"\n}\n";
-
-        try (final var writer = new FileWriter(new File(configDir, "config.json"))) {
-            writer.write(json);
-        }
-
+        return stream;
     }
 
     public String getApiOutsideUrl() {
