@@ -144,7 +144,7 @@ Parses OpenAPI specifications and extracts:
 ### Dynamic Form Generator (`client/src/components/DynamicFormGenerator.tsx`)
 Renders forms with three distinct sections:
 - Path Parameters
-- Query Parameters
+- Query Parameters  
 - Request Body Fields
 
 Each parameter type is independently managed to prevent naming conflicts.

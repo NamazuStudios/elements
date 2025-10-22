@@ -102,6 +102,7 @@ public class WebUIReactServlet extends StaticContentServlet {
 
         resp.setStatus(SC_OK);
         resp.setContentType("application/json; charset=UTF-8");
+
         try (var out = resp.getOutputStream()) {
             getObjectMapper().writeValue(out, config);
         }
