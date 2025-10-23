@@ -22,6 +22,9 @@ export class ApiClient {
     const config = await getApiConfig();
     if (config.mode === 'production' && this.sessionToken) {
       (headers as Record<string, string>)['Elements-SessionSecret'] = this.sessionToken;
+      console.log('[API] Sending request with session token to:', endpoint);
+    } else if (config.mode === 'production' && !this.sessionToken) {
+      console.warn('[API] Production mode but no session token! Request to:', endpoint);
     }
 
     // Get the correct API path based on production vs development
@@ -40,7 +43,10 @@ export class ApiClient {
         if (!suppressAuthRedirect) {
           // Session expired, redirect to login with correct base path
           const basePath = import.meta.env.BASE_URL || '/';
-          const loginPath = basePath === '/' ? '/login' : `${basePath}login`;
+          // Ensure proper path formation: /admin/ → /admin/login, / → /login
+          const loginPath = basePath.endsWith('/')
+              ? `${basePath}login`
+              : `${basePath}/login`;
           window.location.href = loginPath;
           throw new Error('Session expired. Please login again.');
         }
@@ -130,9 +136,15 @@ export class ApiClient {
     // If calling Elements backend directly, extract and store session token
     if (isProduction) {
       // Extract session token from response
+      console.log('[LOGIN] Response data:', responseData);
       const sessionToken = responseData.session?.sessionSecret;
+      console.log('[LOGIN] Extracted session token:', sessionToken ? 'present' : 'MISSING');
+
       if (sessionToken) {
         this.setSessionToken(sessionToken);
+        console.log('[LOGIN] Session token stored');
+      } else {
+        console.error('[LOGIN] No session token in response!');
       }
 
       return {
