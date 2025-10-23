@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Database, RefreshCw, Info, ExternalLink } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { getApiPath } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ElementApiExplorer() {
@@ -84,17 +85,18 @@ export default function ElementApiExplorer() {
   // Fetch OpenAPI spec from element path
   // Include appId and elementName in the query key to force refetch when switching elements
   const { data: spec, isLoading: specLoading, error: specError, refetch: refetchSpec } = useQuery({
-    queryKey: [`/api/proxy${elementPath}/openapi.yaml`, appId, elementName],
+    queryKey: [`${elementPath}/openapi.yaml`, appId, elementName],
     queryFn: async () => {
       if (!elementPath) throw new Error('No element path provided');
       
-      // No custom token needed - authentication uses cookies
-      // Try YAML first
-      let response = await fetch(`/api/proxy${elementPath}/openapi.yaml`);
+      // Try YAML first, using getApiPath to handle production vs development
+      const yamlPath = await getApiPath(`${elementPath}/openapi.yaml`);
+      let response = await fetch(yamlPath, { credentials: 'include' });
       
       // If YAML fails, try JSON
       if (!response.ok) {
-        response = await fetch(`/api/proxy${elementPath}/openapi.json`);
+        const jsonPath = await getApiPath(`${elementPath}/openapi.json`);
+        response = await fetch(jsonPath, { credentials: 'include' });
       }
       
       if (!response.ok) {
@@ -117,8 +119,8 @@ export default function ElementApiExplorer() {
   }, [selectedResource?.resourceName]);
 
   // Build full path for API requests
-  const buildFullPath = (path: string) => {
-    return `/api/proxy${elementPath}${path}`;
+  const buildFullPath = async (path: string) => {
+    return await getApiPath(`${elementPath}${path}`);
   };
 
   // Create mutation
@@ -139,7 +141,7 @@ export default function ElementApiExplorer() {
         .join('&');
       const fullPath = queryString ? `${path}?${queryString}` : path;
       
-      const response = await apiRequest('POST', buildFullPath(fullPath), data.body);
+      const response = await apiRequest('POST', await buildFullPath(fullPath), data.body);
       let responseData;
       try {
         responseData = await response.json();
@@ -154,11 +156,12 @@ export default function ElementApiExplorer() {
       });
       return responseData;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: 'Success', description: 'Item created successfully' });
       setCreateDialogOpen(false);
       if (selectedResource?.list) {
-        queryClient.invalidateQueries({ queryKey: [buildFullPath(selectedResource.list.path)] });
+        const listPath = await buildFullPath(selectedResource.list.path);
+        queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
     onError: (error: any) => {
@@ -190,7 +193,7 @@ export default function ElementApiExplorer() {
         .join('&');
       const fullPath = queryString ? `${path}?${queryString}` : path;
       
-      const response = await apiRequest('PUT', buildFullPath(fullPath), data.body);
+      const response = await apiRequest('PUT', await buildFullPath(fullPath), data.body);
       let responseData;
       try {
         responseData = await response.json();
@@ -205,12 +208,13 @@ export default function ElementApiExplorer() {
       });
       return responseData;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: 'Success', description: 'Item updated successfully' });
       setEditDialogOpen(false);
       setSelectedItem(null);
       if (selectedResource?.list) {
-        queryClient.invalidateQueries({ queryKey: [buildFullPath(selectedResource.list.path)] });
+        const listPath = await buildFullPath(selectedResource.list.path);
+        queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
     onError: (error: any) => {
@@ -247,7 +251,7 @@ export default function ElementApiExplorer() {
         path = path.replace(`{${param}}`, encodeURIComponent(value));
       }
       
-      const response = await apiRequest('DELETE', buildFullPath(path));
+      const response = await apiRequest('DELETE', await buildFullPath(path));
       let responseData;
       try {
         responseData = await response.json();
@@ -262,12 +266,13 @@ export default function ElementApiExplorer() {
       });
       return responseData;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: 'Success', description: 'Item deleted successfully' });
       setDeleteDialogOpen(false);
       setSelectedItem(null);
       if (selectedResource?.list) {
-        queryClient.invalidateQueries({ queryKey: [buildFullPath(selectedResource.list.path)] });
+        const listPath = await buildFullPath(selectedResource.list.path);
+        queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
     onError: (error: any) => {

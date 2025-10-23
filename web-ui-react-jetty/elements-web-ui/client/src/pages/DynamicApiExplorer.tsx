@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Database } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { getApiPath } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DynamicApiExplorer() {
@@ -33,10 +34,11 @@ export default function DynamicApiExplorer() {
 
   // Fetch OpenAPI spec from Elements backend (YAML endpoint, converted to JSON by our proxy)
   const { data: spec, isLoading: specLoading, error: specError } = useQuery({
-    queryKey: ['/api/proxy/api/rest/openapi.yaml'],
+    queryKey: ['/api/rest/openapi.yaml'],
     queryFn: async () => {
-      // No custom token needed - authentication uses cookies
-      const response = await fetch('/api/proxy/api/rest/openapi.yaml');
+      // Use getApiPath to handle production vs development mode
+      const specPath = await getApiPath('/api/rest/openapi.yaml');
+      const response = await fetch(specPath, { credentials: 'include' });
       if (!response.ok) {
         throw new Error(`Failed to fetch OpenAPI spec: ${response.status} ${response.statusText}`);
       }
@@ -55,9 +57,9 @@ export default function DynamicApiExplorer() {
       const createOp = selectedResource.create[0]; // Use first create operation
       
       // Build URL with path parameters
-      let url = `/api/proxy/api/rest${createOp.path}`;
+      let path = `/api/rest${createOp.path}`;
       for (const [key, value] of Object.entries(data.pathParams)) {
-        url = url.replace(`{${key}}`, encodeURIComponent(value));
+        path = path.replace(`{${key}}`, encodeURIComponent(value));
       }
       
       // Add query parameters
@@ -65,9 +67,10 @@ export default function DynamicApiExplorer() {
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
       if (queryString) {
-        url += `?${queryString}`;
+        path += `?${queryString}`;
       }
       
+      const url = await getApiPath(path);
       const response = await apiRequest('POST', url, data.body);
       let responseData;
       try {
@@ -83,11 +86,12 @@ export default function DynamicApiExplorer() {
       });
       return responseData;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: 'Success', description: 'Item created successfully' });
       setCreateDialogOpen(false);
       if (selectedResource?.list) {
-        queryClient.invalidateQueries({ queryKey: [`/api/proxy/api/rest${selectedResource.list.path}`] });
+        const listPath = await getApiPath(`/api/rest${selectedResource.list.path}`);
+        queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
     onError: (error: any) => {
@@ -106,9 +110,9 @@ export default function DynamicApiExplorer() {
       const updateOp = selectedResource.update[0]; // Use first update operation
       
       // Build URL with path parameters (from form data, not selectedItem)
-      let url = `/api/proxy/api/rest${updateOp.path}`;
+      let path = `/api/rest${updateOp.path}`;
       for (const [key, value] of Object.entries(data.pathParams)) {
-        url = url.replace(`{${key}}`, encodeURIComponent(value));
+        path = path.replace(`{${key}}`, encodeURIComponent(value));
       }
       
       // Add query parameters
@@ -116,9 +120,10 @@ export default function DynamicApiExplorer() {
         .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
         .join('&');
       if (queryString) {
-        url += `?${queryString}`;
+        path += `?${queryString}`;
       }
       
+      const url = await getApiPath(path);
       const response = await apiRequest('PUT', url, data.body);
       let responseData;
       try {
@@ -134,12 +139,13 @@ export default function DynamicApiExplorer() {
       });
       return responseData;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: 'Success', description: 'Item updated successfully' });
       setEditDialogOpen(false);
       setSelectedItem(null);
       if (selectedResource?.list) {
-        queryClient.invalidateQueries({ queryKey: [`/api/proxy/api/rest${selectedResource.list.path}`] });
+        const listPath = await getApiPath(`/api/rest${selectedResource.list.path}`);
+        queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
     onError: (error: any) => {
@@ -178,7 +184,8 @@ export default function DynamicApiExplorer() {
         path = path.replace(`{${param}}`, encodeURIComponent(value));
       }
       
-      const response = await apiRequest('DELETE', `/api/proxy/api/rest${path}`);
+      const url = await getApiPath(`/api/rest${path}`);
+      const response = await apiRequest('DELETE', url);
       let responseData;
       try {
         responseData = await response.json();
@@ -193,12 +200,13 @@ export default function DynamicApiExplorer() {
       });
       return responseData;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({ title: 'Success', description: 'Item deleted successfully' });
       setDeleteDialogOpen(false);
       setSelectedItem(null);
       if (selectedResource?.list) {
-        queryClient.invalidateQueries({ queryKey: [`/api/proxy/api/rest${selectedResource.list.path}`] });
+        const listPath = await getApiPath(`/api/rest${selectedResource.list.path}`);
+        queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
     onError: (error: any) => {

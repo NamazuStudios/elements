@@ -87,7 +87,7 @@ function Routes() {
         {isAuthenticated ? <Redirect to="/dashboard" /> : <LoginPage />}
       </Route>
       <Route path="/">
-        <Redirect to="/dashboard" />
+        {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
       </Route>
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />

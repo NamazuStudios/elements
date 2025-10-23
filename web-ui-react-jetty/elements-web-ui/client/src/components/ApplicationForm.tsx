@@ -127,15 +127,19 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
       // Add default values for type-specific fields
       const configWithDefaults = { ...config };
       if (type === 'GooglePlay') {
-        configWithDefaults.jsonKey = configWithDefaults.jsonKey || {};
+        // Ensure jsonKey is an object, not a string (if it's a string, parsing failed)
+        if (typeof configWithDefaults.jsonKey === 'string') {
+          configWithDefaults.jsonKey = {};
+        } else {
+          configWithDefaults.jsonKey = configWithDefaults.jsonKey || {};
+        }
         configWithDefaults.productBundles = configWithDefaults.productBundles || [];
       } else if (type === 'iOS') {
         configWithDefaults.productBundles = configWithDefaults.productBundles || [];
       }
       
-      // Add type, id (null for create), and parent reference to the configuration
+      // Add type and parent reference to the configuration (don't include id for create)
       const configWithMetadata = {
-        id: null,
         ...configWithDefaults,
         type: getConfigurationClass(type),
         parent: { id: appId }
@@ -160,7 +164,12 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
       // Add default values for type-specific fields
       const configWithDefaults = { ...config };
       if (type === 'GooglePlay') {
-        configWithDefaults.jsonKey = configWithDefaults.jsonKey || {};
+        // Ensure jsonKey is an object, not a string (if it's a string, parsing failed)
+        if (typeof configWithDefaults.jsonKey === 'string') {
+          configWithDefaults.jsonKey = {};
+        } else {
+          configWithDefaults.jsonKey = configWithDefaults.jsonKey || {};
+        }
         configWithDefaults.productBundles = configWithDefaults.productBundles || [];
       } else if (type === 'iOS') {
         configWithDefaults.productBundles = configWithDefaults.productBundles || [];

@@ -379,7 +379,7 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
                     onClick={() => removeMetadataEntry(index)}
                     data-testid={`button-remove-metadata-${index}`}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 w-4" />
                   </Button>
                 </div>
               ))}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { Plus, Trash2, Search } from 'lucide-react';
 import { TagsInput } from '@/components/TagsInput';
 import { MetadataEditor } from '@/components/MetadataEditor';
 import { ResourceSearchDialog } from '@/components/ResourceSearchDialog';
+import { useToast } from '@/hooks/use-toast';
 
 type ConfigurationType = 
   | 'Facebook'
@@ -83,19 +85,37 @@ export function ApplicationConfigurationEditor({
   );
 }
 
+// Validation: name must match pattern [^_]\w+ (no leading underscore, word characters only)
+function validateConfigName(name: string): boolean {
+  if (!name) return true; // Empty is valid (optional field)
+  const pattern = /^[^_]\w*$/; // First char not underscore, then word chars (letters, digits, underscores)
+  return pattern.test(name);
+}
+
 function CommonConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
+  const nameValue = value.name || '';
+  const isNameValid = validateConfigName(nameValue);
+  const showNameError = nameValue && !isNameValid;
+
   return (
     <>
       <div className="space-y-2">
         <Label htmlFor="config-name">Name</Label>
         <Input
           id="config-name"
-          value={value.name || ''}
+          value={nameValue}
           onChange={(e) => onChange('name', e.target.value)}
-          placeholder="Configuration name"
+          placeholder="myConfig123"
           data-testid="input-config-name"
+          className={showNameError ? 'border-destructive' : ''}
         />
-        <p className="text-sm text-muted-foreground">Optional name for this configuration</p>
+        {showNameError ? (
+          <p className="text-sm text-destructive" data-testid="error-config-name">
+            Name must start with a letter or digit, and contain only letters, digits, or underscores (no spaces or special characters)
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Optional. Must start with a letter/digit, use only letters, digits, underscores</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -201,6 +221,37 @@ function FirebaseConfigFields({ value, onChange }: { value: any; onChange: (fiel
 }
 
 function GooglePlayConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
+  const [jsonKeyError, setJsonKeyError] = useState<string | null>(null);
+  
+  const jsonKeyValue = typeof value.jsonKey === 'string' 
+    ? value.jsonKey 
+    : JSON.stringify(value.jsonKey || {}, null, 2);
+
+  const handleJsonKeyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textValue = e.target.value;
+    
+    // If empty, set to empty object
+    if (!textValue.trim()) {
+      onChange('jsonKey', {});
+      setJsonKeyError(null);
+      return;
+    }
+    
+    try {
+      const parsed = JSON.parse(textValue);
+      if (typeof parsed !== 'object' || parsed === null) {
+        setJsonKeyError('JSON key must be an object, not a primitive value');
+        onChange('jsonKey', textValue); // Store as string temporarily to show error
+      } else {
+        onChange('jsonKey', parsed);
+        setJsonKeyError(null);
+      }
+    } catch (error) {
+      setJsonKeyError('Invalid JSON format');
+      onChange('jsonKey', textValue); // Store as string temporarily to show error
+    }
+  };
+
   return (
     <>
       <CommonConfigFields value={value} onChange={onChange} />
@@ -218,24 +269,23 @@ function GooglePlayConfigFields({ value, onChange }: { value: any; onChange: (fi
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="jsonKey">Google Play JSON Key</Label>
+        <Label htmlFor="jsonKey">Google Play JSON Key (Optional)</Label>
         <Textarea
           id="jsonKey"
-          value={typeof value.jsonKey === 'string' ? value.jsonKey : JSON.stringify(value.jsonKey || {}, null, 2)}
-          onChange={(e) => {
-            try {
-              const parsed = JSON.parse(e.target.value);
-              onChange('jsonKey', parsed);
-            } catch {
-              onChange('jsonKey', e.target.value);
-            }
-          }}
-          placeholder="Paste Google Play service account JSON key"
+          value={jsonKeyValue}
+          onChange={handleJsonKeyChange}
+          placeholder='{"type": "service_account", "project_id": "..."}'
           rows={8}
-          className="font-mono text-sm"
+          className={`font-mono text-sm ${jsonKeyError ? 'border-destructive' : ''}`}
           data-testid="textarea-jsonKey"
         />
-        <p className="text-sm text-muted-foreground">Google Play service account JSON key</p>
+        {jsonKeyError ? (
+          <p className="text-sm text-destructive" data-testid="error-jsonKey">
+            {jsonKeyError}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Google Play service account JSON key (leave empty if not using)</p>
+        )}
       </div>
 
       <ProductBundlesField value={value.productBundles || []} onChange={(bundles) => onChange('productBundles', bundles)} />
@@ -455,25 +505,118 @@ function MatchmakingConfigFields({ value, onChange }: { value: any; onChange: (f
 }
 
 function ProductBundlesField({ value, onChange }: { value: any[]; onChange: (bundles: any[]) => void }) {
-  const [bundles, setBundles] = useState<any[]>(value || []);
+  // Initialize bundles with metadataEntries converted from metadata
+  const [bundles, setBundles] = useState<any[]>(
+    (value || []).map(bundle => ({
+      ...bundle,
+      metadataEntries: bundle.metadata 
+        ? Object.entries(bundle.metadata).map(([key, val]) => ({ 
+            key, 
+            value: typeof val === 'string' ? val : JSON.stringify(val) 
+          }))
+        : []
+    }))
+  );
+  const [itemSearchOpen, setItemSearchOpen] = useState(false);
+  const [editingReward, setEditingReward] = useState<{ bundleIndex: number; rewardIndex: number } | null>(null);
+  const { toast } = useToast();
+
+  // Convert metadataEntries to metadata and call onChange
+  const handleBundlesChange = (updatedBundles: any[]) => {
+    const bundlesWithMetadata = updatedBundles.map(bundle => {
+      const metadata = (bundle.metadataEntries || []).reduce((acc: any, entry: any) => {
+        if (entry.key && entry.value) {
+          try {
+            acc[entry.key] = JSON.parse(entry.value);
+          } catch {
+            acc[entry.key] = entry.value;
+          }
+        }
+        return acc;
+      }, {});
+      
+      const { metadataEntries, ...rest } = bundle;
+      return { ...rest, metadata };
+    });
+    onChange(bundlesWithMetadata);
+  };
 
   const handleAdd = () => {
-    const newBundles = [...bundles, { productId: '', displayName: '', description: '', productBundleRewards: [], metadata: {}, display: true }];
+    const newBundles = [...bundles, { productId: '', displayName: '', description: '', productBundleRewards: [], metadataEntries: [], display: true }];
     setBundles(newBundles);
-    onChange(newBundles);
+    handleBundlesChange(newBundles);
   };
 
   const handleRemove = (index: number) => {
     const newBundles = bundles.filter((_, i) => i !== index);
     setBundles(newBundles);
-    onChange(newBundles);
+    handleBundlesChange(newBundles);
   };
 
   const handleChange = (index: number, field: string, fieldValue: any) => {
     const newBundles = [...bundles];
     newBundles[index] = { ...newBundles[index], [field]: fieldValue };
     setBundles(newBundles);
-    onChange(newBundles);
+    handleBundlesChange(newBundles);
+  };
+
+  const handleAddReward = (bundleIndex: number) => {
+    const newBundles = [...bundles];
+    const currentRewards = newBundles[bundleIndex].productBundleRewards || [];
+    newBundles[bundleIndex].productBundleRewards = [...currentRewards, { itemId: '', quantity: 1 }];
+    setBundles(newBundles);
+    handleBundlesChange(newBundles);
+  };
+
+  const handleRemoveReward = (bundleIndex: number, rewardIndex: number) => {
+    const newBundles = [...bundles];
+    newBundles[bundleIndex].productBundleRewards = newBundles[bundleIndex].productBundleRewards.filter((_: any, i: number) => i !== rewardIndex);
+    setBundles(newBundles);
+    handleBundlesChange(newBundles);
+  };
+
+  const handleRewardChange = (bundleIndex: number, rewardIndex: number, field: string, fieldValue: any) => {
+    const newBundles = [...bundles];
+    newBundles[bundleIndex].productBundleRewards[rewardIndex] = { 
+      ...newBundles[bundleIndex].productBundleRewards[rewardIndex], 
+      [field]: fieldValue 
+    };
+    setBundles(newBundles);
+    handleBundlesChange(newBundles);
+  };
+
+  const handleItemSelect = (item: any) => {
+    if (editingReward) {
+      handleRewardChange(editingReward.bundleIndex, editingReward.rewardIndex, 'itemId', item.id);
+    }
+    setItemSearchOpen(false);
+    setEditingReward(null);
+  };
+
+  const addMetadataEntry = (bundleIndex: number) => {
+    const bundle = bundles[bundleIndex];
+    const entries = bundle.metadataEntries || [];
+    const newBundles = [...bundles];
+    newBundles[bundleIndex].metadataEntries = [...entries, { key: '', value: '' }];
+    setBundles(newBundles);
+    handleBundlesChange(newBundles);
+  };
+
+  const removeMetadataEntry = (bundleIndex: number, entryIndex: number) => {
+    const newBundles = [...bundles];
+    const entries = newBundles[bundleIndex].metadataEntries || [];
+    newBundles[bundleIndex].metadataEntries = entries.filter((_: any, i: number) => i !== entryIndex);
+    setBundles(newBundles);
+    handleBundlesChange(newBundles);
+  };
+
+  const updateMetadataEntry = (bundleIndex: number, entryIndex: number, field: 'key' | 'value', value: string) => {
+    const newBundles = [...bundles];
+    const entries = [...(newBundles[bundleIndex].metadataEntries || [])];
+    entries[entryIndex] = { ...entries[entryIndex], [field]: value };
+    newBundles[bundleIndex].metadataEntries = entries;
+    setBundles(newBundles);
+    handleBundlesChange(newBundles);
   };
 
   return (
@@ -498,7 +641,7 @@ function ProductBundlesField({ value, onChange }: { value: any[]; onChange: (bun
           {bundles.map((bundle, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-                <CardTitle className="text-sm">Bundle {index + 1}</CardTitle>
+                <CardTitle className="text-sm">Bundle {index + 1}: {bundle.displayName || bundle.productId || 'New Bundle'}</CardTitle>
                 <Button
                   type="button"
                   variant="ghost"
@@ -510,29 +653,186 @@ function ProductBundlesField({ value, onChange }: { value: any[]; onChange: (bun
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input
-                  placeholder="Product ID (SKU)"
-                  value={bundle.productId || ''}
-                  onChange={(e) => handleChange(index, 'productId', e.target.value)}
-                  data-testid={`input-bundle-productId-${index}`}
-                />
-                <Input
-                  placeholder="Display Name"
-                  value={bundle.displayName || ''}
-                  onChange={(e) => handleChange(index, 'displayName', e.target.value)}
-                  data-testid={`input-bundle-displayName-${index}`}
-                />
-                <Input
-                  placeholder="Description"
-                  value={bundle.description || ''}
-                  onChange={(e) => handleChange(index, 'description', e.target.value)}
-                  data-testid={`input-bundle-description-${index}`}
-                />
+                <div className="space-y-2">
+                  <Label>Product ID (SKU) *</Label>
+                  <Input
+                    placeholder="e.g., com.myapp.coins.100"
+                    value={bundle.productId || ''}
+                    onChange={(e) => handleChange(index, 'productId', e.target.value)}
+                    data-testid={`input-bundle-productId-${index}`}
+                  />
+                  <p className="text-xs text-muted-foreground">Platform-specific product identifier</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Display Name</Label>
+                  <Input
+                    placeholder="e.g., 100 Gold Coins"
+                    value={bundle.displayName || ''}
+                    onChange={(e) => handleChange(index, 'displayName', e.target.value)}
+                    data-testid={`input-bundle-displayName-${index}`}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    placeholder="Description of this product bundle"
+                    value={bundle.description || ''}
+                    onChange={(e) => handleChange(index, 'description', e.target.value)}
+                    data-testid={`input-bundle-description-${index}`}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`bundle-display-${index}`}
+                    checked={bundle.display !== false}
+                    onChange={(e) => handleChange(index, 'display', e.target.checked)}
+                    data-testid={`checkbox-bundle-display-${index}`}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor={`bundle-display-${index}`} className="text-sm font-normal">
+                    Display to end users
+                  </Label>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Product Bundle Rewards *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddReward(index)}
+                      data-testid={`button-add-reward-${index}`}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Reward
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Items issued upon purchase</p>
+                  {(!bundle.productBundleRewards || bundle.productBundleRewards.length === 0) ? (
+                    <p className="text-sm text-muted-foreground italic">No rewards configured</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {bundle.productBundleRewards.map((reward: any, rewardIndex: number) => (
+                        <div key={rewardIndex} className="flex gap-2 items-start p-2 rounded border">
+                          <div className="flex-1 space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Item ID"
+                                value={reward.itemId || ''}
+                                onChange={(e) => handleRewardChange(index, rewardIndex, 'itemId', e.target.value)}
+                                data-testid={`input-reward-itemId-${index}-${rewardIndex}`}
+                                className="flex-1"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingReward({ bundleIndex: index, rewardIndex });
+                                  setItemSearchOpen(true);
+                                }}
+                                data-testid={`button-search-item-${index}-${rewardIndex}`}
+                              >
+                                <Search className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <Input
+                              type="number"
+                              placeholder="Quantity"
+                              value={reward.quantity || 1}
+                              onChange={(e) => handleRewardChange(index, rewardIndex, 'quantity', parseInt(e.target.value) || 1)}
+                              data-testid={`input-reward-quantity-${index}-${rewardIndex}`}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveReward(index, rewardIndex)}
+                            data-testid={`button-remove-reward-${index}-${rewardIndex}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Metadata</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addMetadataEntry(index)}
+                      data-testid={`button-add-metadata-${index}`}
+                    >
+                      <Plus className="h-3 w-3 mr-2" />
+                      Add Entry
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Application-specific metadata key-value pairs (optional)</p>
+                  <div className="space-y-2">
+                    {(bundle.metadataEntries || []).map((entry: any, entryIndex: number) => (
+                      <div key={entryIndex} className="flex gap-2 items-start">
+                        <Input
+                          placeholder="Key"
+                          value={entry.key}
+                          onChange={(e) => updateMetadataEntry(index, entryIndex, 'key', e.target.value)}
+                          className="flex-1"
+                          data-testid={`input-metadata-key-${index}-${entryIndex}`}
+                        />
+                        <Input
+                          placeholder="Value (JSON or text)"
+                          value={entry.value}
+                          onChange={(e) => updateMetadataEntry(index, entryIndex, 'value', e.target.value)}
+                          className="flex-1"
+                          data-testid={`input-metadata-value-${index}-${entryIndex}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeMetadataEntry(index, entryIndex)}
+                          data-testid={`button-remove-metadata-${index}-${entryIndex}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {(!bundle.metadataEntries || bundle.metadataEntries.length === 0) && (
+                      <p className="text-sm text-muted-foreground italic">No metadata entries. Click "Add Entry" to add key-value pairs.</p>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+      
+      <ResourceSearchDialog
+        open={itemSearchOpen}
+        onOpenChange={setItemSearchOpen}
+        resourceType="item"
+        endpoint="/api/rest/item"
+        title="Select Item"
+        description="Search and select an item to reward in this product bundle"
+        displayFields={[
+          { key: 'id', label: 'Item ID' },
+          { key: 'name', label: 'Name' },
+          { key: 'description', label: 'Description' },
+        ]}
+        onSelect={(resourceId, resource) => handleItemSelect(resource)}
+      />
     </div>
   );
 }

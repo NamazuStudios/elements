@@ -15,9 +15,21 @@ interface ApplicationConfigurationDialogProps {
   onSave: (config: { type: ConfigurationType | null; value: any }) => Promise<void>;
 }
 
+// Validation: name must match pattern [^_]\w+ (no leading underscore, word characters only)
+function validateConfigName(name: string): boolean {
+  if (!name) return true; // Empty is valid (optional field)
+  const pattern = /^[^_]\w*$/; // First char not underscore, then word chars (letters, digits, underscores)
+  return pattern.test(name);
+}
+
 // Synchronous validation function to check if configuration is valid
 function validateConfiguration(configurationType: ConfigurationType | null, value: any): boolean {
   if (!configurationType) {
+    return false;
+  }
+  
+  // Validate name field (common to all configurations)
+  if (!validateConfigName(value.name)) {
     return false;
   }
   
@@ -31,7 +43,11 @@ function validateConfiguration(configurationType: ConfigurationType | null, valu
     const maxProfiles = value.maxProfiles;
     return maxProfiles !== undefined && maxProfiles !== null && maxProfiles !== '' && maxProfiles >= 2;
   } else if (configurationType === 'GooglePlay') {
-    return true; // No required fields
+    // jsonKey must be an object (not a string) if provided
+    if (value.jsonKey && typeof value.jsonKey === 'string') {
+      return false; // Invalid JSON - stored as string means parse failed
+    }
+    return true; // No required fields beyond name validation and valid jsonKey
   }
   
   return false;
@@ -74,11 +90,28 @@ export function ApplicationConfigurationDialog({
       });
       // Close dialog after showing success toast
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving configuration:', error);
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to save configuration';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // If there are additional details, append them
+      if (error?.details) {
+        const details = Array.isArray(error.details) 
+          ? error.details.join(', ') 
+          : typeof error.details === 'string' 
+            ? error.details 
+            : JSON.stringify(error.details);
+        errorMessage += `: ${details}`;
+      }
+      
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save configuration',
+        description: errorMessage,
         variant: 'destructive',
       });
       // Dialog stays open on error so user can retry

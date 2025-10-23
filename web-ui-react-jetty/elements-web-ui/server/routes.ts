@@ -621,9 +621,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Sanitize error responses to avoid leaking internal details
         if (!response.ok) {
           console.error(`Backend error (${response.status}) for ${req.method} ${elementsPath}`);
-          // Only forward generic error info, not full backend details
+          console.error('Full error response:', JSON.stringify(data, null, 2));
+          // Forward error info, including validation details if present
           const sanitizedError = {
             error: data.error || data.message || 'Request failed',
+            message: data.message,
+            details: data.details || data.errors || data.validationErrors,
             status: response.status,
           };
           return res.json(sanitizedError);
