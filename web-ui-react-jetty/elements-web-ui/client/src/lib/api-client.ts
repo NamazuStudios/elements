@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/proxy';
+import { getApiPath } from './config';
 
 export class ApiClient {
   // Cookies are now managed by the browser, no need for localStorage
@@ -11,8 +11,11 @@ export class ApiClient {
       ...fetchOptions.headers,
     };
 
+    // Get the correct API path based on production vs development
+    const fullPath = await getApiPath(endpoint);
+
     // Credentials: 'include' ensures cookies are sent with requests
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(fullPath, {
       ...fetchOptions,
       headers,
       credentials: 'include', // Send cookies with all requests
@@ -71,38 +74,20 @@ export class ApiClient {
   }
 
   async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string } }> {
-    // Try to get backend URL from config
-    let backendUrl: string | null = null;
-    let useProxy = false;
+    // Use the config system to determine production vs development mode
+    const { getApiConfig } = await import('./config');
+    const config = await getApiConfig();
 
-    try {
-      const configResponse = await fetch('./config.json');
-      if (configResponse.ok) {
-        const config = await configResponse.json();
-        if (config?.api?.url) {
-          // When served by Java, the config URL is the absolute backend URL
-          // Use relative path to avoid CORS (same origin)
-          const fullUrl = config.api.url;
-          // Extract just the path portion for same-origin calls
-          const url = new URL(fullUrl);
-          backendUrl = url.pathname; // e.g., "/api/rest"
-        }
-      }
-    } catch (error) {
-      // Config not available, use proxy (development mode)
-      useProxy = true;
-    }
+    const isProduction = config.mode === 'production';
 
     // Determine endpoint and request format
-    const loginEndpoint = useProxy
-        ? '/api/auth/login'
-        : backendUrl
-            ? `${backendUrl}/session`
-            : '/api/auth/login';
+    const loginEndpoint = isProduction
+        ? `${config.baseUrl}/session`
+        : '/api/auth/login';
 
-    const requestBody = useProxy
-        ? { username, password, rememberMe }
-        : { userId: username, password: password };
+    const requestBody = isProduction
+        ? { userId: username, password: password }
+        : { username, password, rememberMe };
 
     const response = await fetch(loginEndpoint, {
       method: 'POST',
@@ -128,7 +113,7 @@ export class ApiClient {
     const responseData = await response.json();
 
     // If calling Elements backend directly, format response to match proxy format
-    if (!useProxy && backendUrl) {
+    if (isProduction) {
       return {
         success: true,
         session: {
@@ -165,3 +150,6 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
+// Re-export helpers for direct use
+export { getApiPath, getApiConfig } from './config';
