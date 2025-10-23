@@ -1,11 +1,12 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getApiPath } from "./config";
+import { getApiPath, getApiConfig } from "./config";
+import { apiClient } from "./api-client";
 
 async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
-  }
+    if (!res.ok) {
+        const text = (await res.text()) || res.statusText;
+        throw new Error(`${res.status}: ${text}`);
+    }
 }
 
 export async function apiRequest(
@@ -13,59 +14,76 @@ export async function apiRequest(
     url: string,
     data?: unknown | undefined,
 ): Promise<Response> {
-  const headers: HeadersInit = {};
+    const headers: Record<string, string> = {};
 
-  if (data) {
-    headers["Content-Type"] = "application/json";
-  }
+    if (data) {
+        headers["Content-Type"] = "application/json";
+    }
 
-  // Get the correct API path based on production vs development
-  const fullPath = await getApiPath(url);
+    // In production mode, add session token header
+    const config = await getApiConfig();
+    const sessionToken = apiClient.getSessionToken();
+    if (config.mode === 'production' && sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+    }
 
-  const res = await fetch(fullPath, {
-    method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+    // Get the correct API path based on production vs development
+    const fullPath = await getApiPath(url);
 
-  await throwIfResNotOk(res);
-  return res;
+    const res = await fetch(fullPath, {
+        method,
+        headers,
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+    });
+
+    await throwIfResNotOk(res);
+    return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
+    on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
     ({ on401: unauthorizedBehavior }) =>
         async ({ queryKey }) => {
-          // Get the correct API path based on production vs development
-          const queryPath = queryKey.join("/") as string;
-          const fullPath = await getApiPath(queryPath);
+            const headers: Record<string, string> = {};
 
-          const res = await fetch(fullPath, {
-            credentials: "include",
-          });
+            // In production mode, add session token header
+            const config = await getApiConfig();
+            const sessionToken = apiClient.getSessionToken();
+            if (config.mode === 'production' && sessionToken) {
+                headers['Elements-SessionSecret'] = sessionToken;
+            }
 
-          if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-            return null;
-          }
+            // Get the correct API path based on production vs development
+            const queryPath = queryKey.join("/") as string;
+            const fullPath = await getApiPath(queryPath);
 
-          await throwIfResNotOk(res);
-          return await res.json();
+            const res = await fetch(fullPath, {
+                headers,
+                credentials: "include",
+            });
+
+            if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+                return null;
+            }
+
+            await throwIfResNotOk(res);
+            return await res.json();
         };
 
 export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+    defaultOptions: {
+        queries: {
+            queryFn: getQueryFn({ on401: "throw" }),
+            refetchInterval: false,
+            refetchOnWindowFocus: false,
+            staleTime: Infinity,
+            retry: false,
+        },
+        mutations: {
+            retry: false,
+        },
     },
-    mutations: {
-      retry: false,
-    },
-  },
 });

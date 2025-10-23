@@ -1,8 +1,15 @@
-import { getApiPath } from './config';
+import { getApiPath, getApiConfig } from './config';
 
 export class ApiClient {
-  // Cookies are now managed by the browser, no need for localStorage
-  // Session token is stored in HTTP-only cookie and sent automatically
+  private sessionToken: string | null = null;
+
+  setSessionToken(token: string | null) {
+    this.sessionToken = token;
+  }
+
+  getSessionToken(): string | null {
+    return this.sessionToken;
+  }
 
   async request<T>(endpoint: string, options: RequestInit & { suppressAuthRedirect?: boolean } = {}): Promise<T> {
     const { suppressAuthRedirect, ...fetchOptions } = options;
@@ -10,6 +17,12 @@ export class ApiClient {
       'Content-Type': 'application/json',
       ...fetchOptions.headers,
     };
+
+    // In production mode, send session token as header
+    const config = await getApiConfig();
+    if (config.mode === 'production' && this.sessionToken) {
+      (headers as Record<string, string>)['Elements-SessionSecret'] = this.sessionToken;
+    }
 
     // Get the correct API path based on production vs development
     const fullPath = await getApiPath(endpoint);
@@ -25,8 +38,10 @@ export class ApiClient {
       // Handle session expiry/invalid tokens
       if (response.status === 401 || response.status === 403) {
         if (!suppressAuthRedirect) {
-          // Session expired, redirect to login
-          window.location.href = '/login';
+          // Session expired, redirect to login with correct base path
+          const basePath = import.meta.env.BASE_URL || '/';
+          const loginPath = basePath === '/' ? '/login' : `${basePath}login`;
+          window.location.href = loginPath;
           throw new Error('Session expired. Please login again.');
         }
         // During discovery or when suppressed, just throw with status
@@ -112,8 +127,14 @@ export class ApiClient {
 
     const responseData = await response.json();
 
-    // If calling Elements backend directly, format response to match proxy format
+    // If calling Elements backend directly, extract and store session token
     if (isProduction) {
+      // Extract session token from response
+      const sessionToken = responseData.session?.sessionSecret;
+      if (sessionToken) {
+        this.setSessionToken(sessionToken);
+      }
+
       return {
         success: true,
         session: {
@@ -127,6 +148,9 @@ export class ApiClient {
   }
 
   async logout(): Promise<void> {
+    // Clear session token
+    this.setSessionToken(null);
+
     await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
