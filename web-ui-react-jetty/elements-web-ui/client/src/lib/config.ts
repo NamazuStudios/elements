@@ -43,9 +43,9 @@ export async function getApiPath(path: string): Promise<string> {
 
     // If path already starts with /api/proxy, strip it in production mode
     if (config.mode === 'production' && path.startsWith('/api/proxy')) {
-        // Remove /api/proxy prefix and use the backend base URL
-        const strippedPath = path.replace('/api/proxy', '');
-        return `${config.baseUrl}${strippedPath}`;
+        // Remove /api/proxy prefix - the rest is already the correct path
+        // e.g., "/api/proxy/api/rest/health" → "/api/rest/health"
+        return path.replace('/api/proxy', '');
     }
 
     // If path starts with absolute /api/rest, use it as-is in production
@@ -53,7 +53,7 @@ export async function getApiPath(path: string): Promise<string> {
         return path;
     }
 
-    // For development, prefix with /api/proxy
+    // For development, prefix with /api/proxy if not already present
     if (config.mode === 'development' && !path.startsWith('/api/proxy')) {
         return `${config.baseUrl}${path}`;
     }
