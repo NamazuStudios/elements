@@ -51,7 +51,7 @@ public class WebUIAngularServlet extends StaticContentServlet {
         super.init(servletConfig);
 
         try {
-            final var replacement =  format("<base href=\"%s/\">", getHttpContextRoot().normalize("old/admin"));
+            final var replacement = "<base href=\"/old/admin/\">";
             this.index = loadIndex().replaceAll(BASE_TAG, replacement);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -82,6 +82,7 @@ public class WebUIAngularServlet extends StaticContentServlet {
     protected void doGetIndex(final HttpServletRequest req,
                               final HttpServletResponse resp) throws IOException {
         resp.setStatus(SC_OK);
+        resp.setContentType("text/html; charset=UTF-8");
         resp.getWriter().print(index);
     }
 

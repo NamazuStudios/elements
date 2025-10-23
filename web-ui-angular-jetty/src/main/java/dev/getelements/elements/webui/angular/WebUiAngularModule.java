@@ -16,7 +16,7 @@ public class WebUiAngularModule extends PrivateModule {
 
     private static final Logger logger = LoggerFactory.getLogger(WebUiAngularModule.class);
 
-    private static final String WEB_UI_CONTEXT_ROOT = "old/admin/*";
+    private static final String WEB_UI_CONTEXT_ROOT = "/old/admin/*";
 
     private static final Key<WebUIAngularServlet> WEB_UI_ANGULAR_SERVLET_KEY = Key.get(WebUIAngularServlet.class);
 
