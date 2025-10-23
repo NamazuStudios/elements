@@ -31,7 +31,7 @@ export class ApiClient {
         error.status = response.status;
         throw error;
       }
-      
+
       // Get error message from response (read as text first, then try to parse as JSON)
       let errorMessage = '';
       try {
@@ -47,7 +47,7 @@ export class ApiClient {
       } catch {
         errorMessage = `API Error: ${response.status}`;
       }
-      
+
       // Create error with status code and message
       const error = new Error(errorMessage || `API Error: ${response.status}`) as Error & { status: number };
       error.status = response.status;
@@ -66,33 +66,43 @@ export class ApiClient {
         return undefined as T;
       }
     }
-    
+
     return undefined as T;
   }
 
   async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string } }> {
     // Try to get backend URL from config
     let backendUrl: string | null = null;
+    let useProxy = false;
+
     try {
       const configResponse = await fetch('./config.json');
       if (configResponse.ok) {
         const config = await configResponse.json();
-        backendUrl = config?.api?.url;
+        if (config?.api?.url) {
+          // When served by Java, the config URL is the absolute backend URL
+          // Use relative path to avoid CORS (same origin)
+          const fullUrl = config.api.url;
+          // Extract just the path portion for same-origin calls
+          const url = new URL(fullUrl);
+          backendUrl = url.pathname; // e.g., "/api/rest"
+        }
       }
     } catch (error) {
-      // Config not available, will use proxy
-      console.log('Config not available, using proxy endpoint');
+      // Config not available, use proxy (development mode)
+      useProxy = true;
     }
 
-    // If we have a backend URL, call Elements backend directly
-    // Otherwise, use the Node.js proxy (development mode)
-    const loginEndpoint = backendUrl 
-      ? `${backendUrl}/session`
-      : '/api/auth/login';
-    
-    const requestBody = backendUrl
-      ? { userId: username, password: password }
-      : { username, password, rememberMe };
+    // Determine endpoint and request format
+    const loginEndpoint = useProxy
+        ? '/api/auth/login'
+        : backendUrl
+            ? `${backendUrl}/session`
+            : '/api/auth/login';
+
+    const requestBody = useProxy
+        ? { username, password, rememberMe }
+        : { userId: username, password: password };
 
     const response = await fetch(loginEndpoint, {
       method: 'POST',
@@ -116,9 +126,9 @@ export class ApiClient {
     }
 
     const responseData = await response.json();
-    
+
     // If calling Elements backend directly, format response to match proxy format
-    if (backendUrl) {
+    if (!useProxy && backendUrl) {
       return {
         success: true,
         session: {
