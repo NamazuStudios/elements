@@ -5,6 +5,7 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSDownloadStream;
 import com.mongodb.client.gridfs.GridFSUploadStream;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
@@ -16,6 +17,8 @@ import dev.getelements.elements.sdk.cluster.path.Path;
 import org.bson.BsonString;
 
 import jakarta.inject.Inject;
+import org.bson.Document;
+
 import java.io.OutputStream;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -39,7 +42,19 @@ public class GridFSLargeObjectBucket implements LargeObjectBucket {
         final var normalized = new Path(largeObject.getPath()).toPathWithoutContext();
 
         try {
-            GridFSUploadStream stream = getGridFSBucket().openUploadStream(gridFsFileId, normalized.toNormalizedPathString());
+            final Document metadata = new Document()
+                    .append("originalFilename", largeObject.getOriginalFilename())
+                    .append("mimeType", largeObject.getMimeType());
+
+            final GridFSUploadOptions options = new GridFSUploadOptions()
+                    .metadata(metadata);
+
+            final GridFSUploadStream stream = getGridFSBucket().openUploadStream(
+                    gridFsFileId,
+                    normalized.toNormalizedPathString(),
+                    options
+            );
+
             setUploaded(largeObject);
             return stream;
         } catch (MongoWriteException ex) {

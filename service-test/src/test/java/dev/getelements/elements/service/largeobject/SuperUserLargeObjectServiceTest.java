@@ -129,7 +129,7 @@ public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase 
     public void shouldWriteLargeObjectContent() throws IOException {
         when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
 
-        OutputStream result = superUserLargeObjectService.writeLargeObjectContent(TEST_ID);
+        OutputStream result = superUserLargeObjectService.writeLargeObjectContent(TEST_ID, "shouldWriteLargeObjectContent");
 
         assertTrue(result instanceof FileOutputStream);
     }

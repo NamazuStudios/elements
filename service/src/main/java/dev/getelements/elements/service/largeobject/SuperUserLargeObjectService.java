@@ -109,7 +109,14 @@ public class SuperUserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
+    public OutputStream writeLargeObjectContent(final String objectId, final String originalFileName) throws IOException {
+
+        if(originalFileName != null) {
+            final var largeObject = getLargeObject(objectId);
+            largeObject.setOriginalFilename(originalFileName);
+            getLargeObjectDao().updateLargeObject(largeObject);
+        }
+
         return getLargeObjectBucket().writeObject(objectId);
     }
 

@@ -38,11 +38,14 @@ public class LargeObject {
     @Schema(description = "Permission associated with LargeObject.")
     private AccessPermissions accessPermissions;
 
-    @Schema(description = "Current state of large object")
+    @Schema(description = "Current state of large object.")
     private LargeObjectState state;
 
-    @Schema(description = "Date of last modification")
+    @Schema(description = "Date of last modification.")
     private Date lastModified;
+
+    @Schema(description = "The original name of the file.")
+    private String originalFilename;
 
     public LargeObject() {
         this.state = LargeObjectState.EMPTY;
@@ -104,17 +107,25 @@ public class LargeObject {
         this.lastModified = lastModified;
     }
 
+    public String getOriginalFilename() {
+        return originalFilename;
+    }
+
+    public void setOriginalFilename(String originalFilename) {
+        this.originalFilename = originalFilename;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LargeObject that = (LargeObject) o;
-        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && Objects.equals(accessPermissions, that.accessPermissions) && state == that.state && Objects.equals(lastModified, that.lastModified);
+        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && Objects.equals(accessPermissions, that.accessPermissions) && state == that.state && Objects.equals(lastModified, that.lastModified) && Objects.equals(originalFilename, that.originalFilename);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, url, path, mimeType, accessPermissions, state, lastModified);
+        return Objects.hash(id, url, path, mimeType, accessPermissions, state, lastModified, originalFilename);
     }
 
     @Override
@@ -127,6 +138,7 @@ public class LargeObject {
                 ", accessPermissions=" + accessPermissions +
                 ", state=" + state +
                 ", lastModified=" + lastModified +
+                ", originalFilename='" + originalFilename + '\'' +
                 '}';
     }
 }

@@ -99,7 +99,7 @@ public class UserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
+    public OutputStream writeLargeObjectContent(final String objectId, String originalFileName) throws IOException {
         final var largeObject = getLargeObject(objectId);
 
         if (!getAccessPermissionsUtils().hasWriteAccess(largeObject.getAccessPermissions())) {

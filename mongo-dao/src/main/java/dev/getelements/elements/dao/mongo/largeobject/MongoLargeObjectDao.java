@@ -66,6 +66,7 @@ public class MongoLargeObjectDao implements LargeObjectDao {
         if (!trimmedQueryString.isEmpty()) {
             query.filter(
                     or(
+                            Filters.regex("originalFilename", Pattern.compile(search)),
                             Filters.regex("path", Pattern.compile(search)),
                             Filters.regex("mimeType", Pattern.compile(search))
                     )
@@ -109,7 +110,8 @@ public class MongoLargeObjectDao implements LargeObjectDao {
                         set("path", largeObject.getPath()),
                         set("state", largeObject.getState()),
                         set("lastModified", new Date()),
-                        set("accessPermissions", largeObject.getAccessPermissions())
+                        set("accessPermissions", largeObject.getAccessPermissions()),
+                        set("originalFilename", largeObject.getOriginalFilename())
                 )
         );
 
