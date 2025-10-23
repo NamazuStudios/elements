@@ -100,6 +100,7 @@ export class ApiClient {
     const config = await getApiConfig();
 
     const isProduction = config.mode === 'production';
+    console.log('[LOGIN] Mode:', config.mode, '| Production?', isProduction);
 
     // Determine endpoint and request format
     const loginEndpoint = isProduction
@@ -136,15 +137,24 @@ export class ApiClient {
     // If calling Elements backend directly, extract and store session token
     if (isProduction) {
       // Extract session token from response
-      console.log('[LOGIN] Response data:', responseData);
-      const sessionToken = responseData.session?.sessionSecret;
-      console.log('[LOGIN] Extracted session token:', sessionToken ? 'present' : 'MISSING');
+      console.log('[LOGIN] Full response data:', JSON.stringify(responseData, null, 2));
+
+      // Try multiple possible paths for session token
+      let sessionToken = responseData.session?.sessionSecret
+          || responseData.sessionSecret
+          || responseData.token;
+
+      console.log('[LOGIN] Session token paths checked:');
+      console.log('  - responseData.session?.sessionSecret:', responseData.session?.sessionSecret);
+      console.log('  - responseData.sessionSecret:', responseData.sessionSecret);
+      console.log('  - responseData.token:', responseData.token);
+      console.log('[LOGIN] Final extracted token:', sessionToken ? 'PRESENT (' + sessionToken.substring(0, 10) + '...)' : 'MISSING');
 
       if (sessionToken) {
         this.setSessionToken(sessionToken);
-        console.log('[LOGIN] Session token stored');
+        console.log('[LOGIN] ✓ Session token stored in apiClient');
       } else {
-        console.error('[LOGIN] No session token in response!');
+        console.error('[LOGIN] ✗ No session token found in response!');
       }
 
       return {
@@ -160,13 +170,25 @@ export class ApiClient {
   }
 
   async logout(): Promise<void> {
-    // Clear session token
-    this.setSessionToken(null);
+    const config = await getApiConfig();
+    const isProduction = config.mode === 'production';
 
-    await fetch('/api/auth/logout', {
-      method: 'POST',
+    // In production, call Elements backend logout; in dev, call proxy
+    const logoutEndpoint = isProduction
+        ? `${config.baseUrl}/session`
+        : '/api/auth/logout';
+
+    // Send DELETE request to logout
+    await fetch(logoutEndpoint, {
+      method: 'DELETE',
+      headers: isProduction && this.sessionToken
+          ? { 'Elements-SessionSecret': this.sessionToken }
+          : {},
       credentials: 'include',
     });
+
+    // Clear session token after logout
+    this.setSessionToken(null);
   }
 
   async verifySession(): Promise<{ level: string; username: string }> {
