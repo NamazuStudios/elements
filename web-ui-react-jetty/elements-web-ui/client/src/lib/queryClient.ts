@@ -47,18 +47,33 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
     ({ on401: unauthorizedBehavior }) =>
         async ({ queryKey }) => {
+            // Build headers object
             const headers: Record<string, string> = {};
 
-            // In production mode, add session token header
+            // Get config and session token
             const config = await getApiConfig();
             const sessionToken = apiClient.getSessionToken();
-            if (config.mode === 'production' && sessionToken) {
-                headers['Elements-SessionSecret'] = sessionToken;
+
+            console.log('[QUERY] Fetching:', queryKey);
+            console.log('[QUERY] Config mode:', config.mode);
+            console.log('[QUERY] Session token present?', !!sessionToken);
+
+            // In production mode, add session token header
+            if (config.mode === 'production') {
+                if (sessionToken) {
+                    headers['Elements-SessionSecret'] = sessionToken;
+                    console.log('[QUERY] ✓ Added Elements-SessionSecret header');
+                } else {
+                    console.warn('[QUERY] ✗ Production mode but NO session token! Request will likely fail.');
+                }
             }
 
             // Get the correct API path based on production vs development
             const queryPath = queryKey.join("/") as string;
             const fullPath = await getApiPath(queryPath);
+
+            console.log('[QUERY] Full path:', fullPath);
+            console.log('[QUERY] Headers:', headers);
 
             const res = await fetch(fullPath, {
                 headers,

@@ -11,7 +11,21 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
         return cachedConfig;
     }
 
-    console.log('[CONFIG] Loading config.json...');
+    // Check if running in Replit development environment
+    // In Replit, the BASE_URL is typically '/' and we have the Node.js proxy available
+    const isReplitDev = import.meta.env.BASE_URL === '/' || import.meta.env.DEV;
+
+    if (isReplitDev) {
+        console.log('[CONFIG] Replit development mode detected (BASE_URL:', import.meta.env.BASE_URL, ', DEV:', import.meta.env.DEV, ')');
+        cachedConfig = {
+            baseUrl: '/api/proxy',
+            mode: 'development'
+        };
+        console.log('[CONFIG] ✓ Using development proxy. Base URL:', cachedConfig.baseUrl);
+        return cachedConfig;
+    }
+
+    console.log('[CONFIG] Production mode - loading config.json...');
     try {
         const configResponse = await fetch('./config.json');
         console.log('[CONFIG] config.json response status:', configResponse.status);
@@ -36,12 +50,12 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
         console.log('[CONFIG] Failed to load config.json:', error);
     }
 
-    // Development mode: use Node.js proxy
+    // Fallback to development mode
     cachedConfig = {
         baseUrl: '/api/proxy',
         mode: 'development'
     };
-    console.log('[CONFIG] ✓ Development mode. Base URL:', cachedConfig.baseUrl);
+    console.log('[CONFIG] ✓ Fallback to development mode. Base URL:', cachedConfig.baseUrl);
     return cachedConfig;
 }
 
