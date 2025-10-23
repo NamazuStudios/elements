@@ -5,8 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Eye, EyeOff } from 'lucide-react';
+import { Settings as SettingsIcon, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface VisibilitySettings {
   resources: Record<string, boolean>;
@@ -38,6 +39,7 @@ const RESOURCES_BY_CATEGORY: Record<string, string[]> = {
 
 export default function Settings() {
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<AppSettings>({
     visibility: {
       resources: {},
@@ -127,6 +129,35 @@ export default function Settings() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <Label htmlFor="theme">Appearance</Label>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant={theme === 'light' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('light')}
+                  data-testid="button-theme-light"
+                  className="flex items-center gap-2"
+                >
+                  <Sun className="w-4 h-4" />
+                  Light
+                </Button>
+                <Button
+                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('dark')}
+                  data-testid="button-theme-dark"
+                  className="flex items-center gap-2"
+                >
+                  <Moon className="w-4 h-4" />
+                  Dark
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Choose the theme for the admin interface
+              </p>
+            </div>
+
             <div className="space-y-3">
               <Label htmlFor="results-per-page">Results per page</Label>
               <Input

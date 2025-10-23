@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink } from 'lucide-react';
+import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { getApiPath } from '@/lib/config';
 
 interface AccessPermissions {
   read: {
@@ -35,6 +36,7 @@ interface LargeObject {
   id: string;
   url: string | null;
   path: string;
+  originalFilename?: string | null;  // Note: lowercase 'n' to match Java property name
   mimeType: string | null;
   accessPermissions: AccessPermissions;
   state: string;
@@ -53,13 +55,26 @@ export default function LargeObjects() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [objectUrl, setObjectUrl] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 20;
 
   const { data: response, isLoading, error } = useQuery<LargeObjectResponse>({
-    queryKey: ['/api/proxy/api/rest/large_object'],
+    queryKey: ['/api/proxy/api/rest/large_object', currentPage, searchQuery],
+    queryFn: async () => {
+      let url = `/api/proxy/api/rest/large_object?offset=${currentPage * pageSize}&limit=${pageSize}`;
+      if (searchQuery.trim()) {
+        url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+      }
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch');
+      return response.json();
+    },
     retry: false,
   });
 
   const objects = response?.objects || [];
+  const totalPages = response ? Math.ceil(response.total / pageSize) : 0;
 
   interface SubjectRequest {
     wildcard: boolean;
@@ -81,6 +96,7 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -104,6 +120,7 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -127,6 +144,7 @@ export default function LargeObjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      setCurrentPage(0);
       toast({ title: 'Success', description: 'Large object deleted successfully' });
     },
     onError: (error: any) => {
@@ -178,6 +196,7 @@ export default function LargeObjects() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${createdObject.id}` 
@@ -239,9 +258,17 @@ export default function LargeObjects() {
     }
   };
 
+  const getCdnUrl = async (objectId: string): Promise<string> => {
+    const cdnPath = await getApiPath(`/cdn/object/${objectId}`);
+    return cdnPath;
+  };
+
   const handleDownload = async (objectId: string, fileName?: string) => {
     try {
-      const response = await fetch(`/api/proxy/api/rest/large_object/${objectId}/content`);
+      const cdnUrl = await getCdnUrl(objectId);
+      // Add ?download=true to trigger attachment disposition
+      const downloadUrl = `${cdnUrl}?download=true`;
+      const response = await fetch(downloadUrl);
 
       if (!response.ok) throw new Error('Download failed');
 
@@ -262,6 +289,16 @@ export default function LargeObjects() {
       });
     }
   };
+
+  const isImageType = (mimeType?: string | null): boolean => {
+    if (!mimeType) return false;
+    return mimeType.startsWith('image/');
+  };
+
+  const [previewDialog, setPreviewDialog] = useState<{ open: boolean; object: LargeObject | null }>({
+    open: false,
+    object: null,
+  });
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return 'Unknown';
@@ -354,19 +391,39 @@ export default function LargeObjects() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HardDrive className="w-5 h-5" />
-            Stored Objects
-          </CardTitle>
-          <CardDescription>All large objects in storage</CardDescription>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <HardDrive className="w-5 h-5" />
+                Stored Objects
+              </CardTitle>
+              <CardDescription>
+                {response ? `${response.total} object${response.total !== 1 ? 's' : ''} in storage` : 'All large objects in storage'}
+              </CardDescription>
+            </div>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search objects..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(0);
+                }}
+                className="pl-9"
+                data-testid="input-search-objects"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {error ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Listing large objects is not supported. Upload objects and use their IDs to download or delete them.
-            </div>
-          ) : isLoading ? (
+          {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading objects...</div>
+          ) : error ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Failed to load large objects. Please try again.
+            </div>
           ) : !objects || objects.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No large objects found</div>
           ) : (
@@ -374,7 +431,7 @@ export default function LargeObjects() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Path</TableHead>
+                  <TableHead>File Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>State</TableHead>
                   <TableHead>Last Modified</TableHead>
@@ -384,11 +441,11 @@ export default function LargeObjects() {
               <TableBody>
                 {objects.map((obj) => (
                   <TableRow key={obj.id}>
-                    <TableCell className="font-mono text-sm" data-testid={`cell-id-${obj.id}`}>
-                      {obj.id.substring(0, 12)}...
+                    <TableCell className="font-mono text-xs" data-testid={`cell-id-${obj.id}`}>
+                      {obj.id}
                     </TableCell>
-                    <TableCell data-testid={`cell-path-${obj.id}`} className="max-w-xs truncate">
-                      {obj.path}
+                    <TableCell data-testid={`cell-filename-${obj.id}`} className="max-w-xs truncate">
+                      {obj.originalFilename || obj.path.split('/').pop() || obj.path}
                     </TableCell>
                     <TableCell>
                       {obj.mimeType ? (
@@ -409,10 +466,20 @@ export default function LargeObjects() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {isImageType(obj.mimeType) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPreviewDialog({ open: true, object: obj })}
+                            data-testid={`button-preview-${obj.id}`}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleDownload(obj.id, obj.path.split('/').pop())}
+                          onClick={() => handleDownload(obj.id, obj.originalFilename || obj.path.split('/').pop())}
                           data-testid={`button-download-${obj.id}`}
                         >
                           <Download className="w-4 h-4" />
@@ -421,7 +488,10 @@ export default function LargeObjects() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(obj.url || '', '_blank')}
+                            onClick={async () => {
+                              const url = await getCdnUrl(obj.id);
+                              window.open(url, '_blank');
+                            }}
                             data-testid={`button-open-url-${obj.id}`}
                           >
                             <ExternalLink className="w-4 h-4" />
@@ -446,8 +516,113 @@ export default function LargeObjects() {
               </TableBody>
             </Table>
           )}
+          
+          {response && response.total > pageSize && (
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, response.total)} of {response.total}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                  disabled={currentPage === 0}
+                  data-testid="button-prev-page"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage + 1} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                  disabled={currentPage >= totalPages - 1}
+                  data-testid="button-next-page"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={previewDialog.open} onOpenChange={(open) => setPreviewDialog({ open, object: null })}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Image Preview</DialogTitle>
+            <DialogDescription>
+              {previewDialog.object?.originalFilename || previewDialog.object?.path.split('/').pop() || 'Object Preview'}
+            </DialogDescription>
+          </DialogHeader>
+          {previewDialog.object && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-center bg-muted rounded-lg p-4 max-h-[50vh] overflow-hidden">
+                <img
+                  src={`/api/proxy/cdn/object/${previewDialog.object.id}`}
+                  alt={previewDialog.object.originalFilename || previewDialog.object.path}
+                  className="max-w-full max-h-[50vh] w-auto h-auto object-contain"
+                  data-testid={`img-preview-${previewDialog.object.id}`}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground">ID</p>
+                  <p className="font-mono text-xs break-all" data-testid="text-preview-id">
+                    {previewDialog.object.id}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">MIME Type</p>
+                  <p data-testid="text-preview-mime">{previewDialog.object.mimeType}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">State</p>
+                  <Badge variant={previewDialog.object.state === 'UPLOADED' ? 'default' : 'outline'}>
+                    {previewDialog.object.state}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Last Modified</p>
+                  <p data-testid="text-preview-modified">
+                    {previewDialog.object.lastModified
+                      ? new Date(previewDialog.object.lastModified).toLocaleString()
+                      : '—'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => previewDialog.object && handleDownload(previewDialog.object.id, previewDialog.object.originalFilename || previewDialog.object.path.split('/').pop())}
+                  data-testid="button-preview-download"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if (previewDialog.object) {
+                      const cdnUrl = await getCdnUrl(previewDialog.object.id);
+                      window.open(cdnUrl, '_blank');
+                    }
+                  }}
+                  data-testid="button-preview-open"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open in New Tab
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

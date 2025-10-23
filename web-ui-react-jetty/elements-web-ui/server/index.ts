@@ -10,7 +10,16 @@ const adminApp = express();
 // Trust proxy for accurate IP detection when behind reverse proxy
 mainApp.set('trust proxy', 1);
 
-adminApp.use(express.json());
+// Conditional body parsing - skip for multipart requests
+adminApp.use((req, res, next) => {
+  const contentType = req.headers['content-type'];
+  if (contentType?.includes('multipart/form-data')) {
+    // Skip body parsing for multipart - keep raw body
+    express.raw({ type: 'multipart/form-data', limit: '50mb' })(req, res, next);
+  } else {
+    express.json()(req, res, next);
+  }
+});
 adminApp.use(express.urlencoded({ extended: false }));
 adminApp.use(cookieParser());
 

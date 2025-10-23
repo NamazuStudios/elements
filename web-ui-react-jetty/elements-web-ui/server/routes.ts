@@ -5,6 +5,11 @@ import * as yaml from 'js-yaml';
 import { requireAuth, optionalAuth } from "./middleware/auth";
 import { loginLimiter, proxyLimiter } from "./middleware/rate-limit";
 import { getBackendUrl } from "./config";
+import multer from 'multer';
+import FormData from 'form-data';
+
+// Set up multer for memory storage (temporary)
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Helper to sanitize error messages
 function sanitizeError(error: any): string {
@@ -589,9 +594,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers['Elements-SessionSecret'] = sessionToken;
       }
       
-      // Only set Content-Type for requests with a body
-      if (req.method !== 'GET' && req.method !== 'HEAD') {
+      // Check if this is a multipart/form-data request
+      const isMultipart = req.headers['content-type']?.includes('multipart/form-data');
+      
+      // Only set Content-Type for JSON requests (not multipart)
+      if (req.method !== 'GET' && req.method !== 'HEAD' && !isMultipart) {
         headers['Content-Type'] = 'application/json';
+      } else if (isMultipart && req.headers['content-type']) {
+        // Forward the multipart content-type with boundary
+        headers['Content-Type'] = req.headers['content-type'];
       }
       
       // Forward Accept header if present
@@ -599,12 +610,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers['Accept'] = req.headers.accept;
       }
 
-      // Make request to Elements backend
-      const response = await fetch(targetUrl, {
-        method: req.method,
-        headers,
-        body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
-      });
+      // Handle body based on content type
+      let response: globalThis.Response;
+      
+      if (isMultipart) {
+        // For multipart requests, forward the raw body directly
+        try {
+          if (isDev) {
+            console.log('[MULTIPART] Forwarding raw multipart body, size:', (req.body as Buffer)?.length || 0);
+          }
+
+          const response = await fetch(targetUrl, {
+            method: req.method,
+            headers: {
+              ...headers,
+              'Content-Type': req.headers['content-type']!, // Forward exact Content-Type with boundary
+            },
+            body: req.body, // Raw buffer from express.raw()
+            duplex: 'half' as any,
+          });
+
+          // Handle response
+          res.status(response.status);
+          const contentType = response.headers.get('content-type');
+          
+          if (contentType?.includes('application/json')) {
+            const data = await response.json();
+            if (!response.ok) {
+              console.error(`Backend error (${response.status}) for ${req.method} ${elementsPath}`);
+              console.error('Backend error response:', JSON.stringify(data, null, 2));
+            }
+            res.json(data);
+          } else {
+            const text = await response.text();
+            if (!response.ok) {
+              console.error(`Backend error (${response.status}) for ${req.method} ${elementsPath}`);
+              console.error('Backend error text:', text);
+            }
+            res.send(text);
+          }
+          
+          return;
+        } catch (error) {
+          console.error('Error forwarding multipart:', error);
+          return res.status(500).json({ error: 'Failed to forward multipart request' });
+        }
+      } else {
+        // For non-multipart requests, use regular JSON body
+        const bodyToSend = req.method !== 'GET' && req.method !== 'HEAD' 
+          ? JSON.stringify(req.body) 
+          : undefined;
+
+        response = await fetch(targetUrl, {
+          method: req.method,
+          headers,
+          body: bodyToSend,
+        });
+      }
+
+      // Handle non-multipart response
 
       // Forward response status
       res.status(response.status);
@@ -614,6 +678,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if this is a YAML file based on path or content-type
       const isYamlEndpoint = elementsPath.endsWith('.yaml') || elementsPath.endsWith('.yml');
+      
+      // Check if this is binary content (images, files, etc.)
+      const isBinaryContent = contentType && (
+        contentType.startsWith('image/') ||
+        contentType.startsWith('application/octet-stream') ||
+        contentType.startsWith('application/pdf') ||
+        contentType.startsWith('video/') ||
+        contentType.startsWith('audio/')
+      );
       
       if (contentType?.includes('application/json')) {
         const data = await response.json();
@@ -644,6 +717,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error(`Failed to parse YAML from ${elementsPath}`);
           res.status(500).json({ error: 'Invalid YAML response' });
         }
+      } else if (isBinaryContent) {
+        // Handle binary content (images, files, etc.) - stream raw bytes
+        // Forward important headers
+        if (contentType) {
+          res.setHeader('Content-Type', contentType);
+        }
+        const contentDisposition = response.headers.get('content-disposition');
+        if (contentDisposition) {
+          res.setHeader('Content-Disposition', contentDisposition);
+        }
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) {
+          res.setHeader('Content-Length', contentLength);
+        }
+        
+        // Stream the binary data
+        const buffer = await response.arrayBuffer();
+        res.send(Buffer.from(buffer));
       } else {
         const text = await response.text();
         

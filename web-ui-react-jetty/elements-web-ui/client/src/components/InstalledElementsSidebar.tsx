@@ -103,6 +103,18 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              {/* Core Elements - system elements and services */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setLocation('/core-elements')}
+                  isActive={location === '/core-elements'}
+                  data-testid="link-core-elements"
+                >
+                  <Icons.Box className="w-4 h-4" />
+                  <span>Core Elements</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Installed Elements - each element gets its own API explorer */}
               {appsWithElements.map((appStatus) => {
                 // Determine status badge variant

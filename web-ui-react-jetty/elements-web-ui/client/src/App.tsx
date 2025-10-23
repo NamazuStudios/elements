@@ -17,6 +17,7 @@ import Settings from "@/pages/Settings";
 import InstalledElements from "@/pages/InstalledElements";
 import DynamicApiExplorer from "@/pages/DynamicApiExplorer";
 import ElementApiExplorer from "@/pages/ElementApiExplorer";
+import CoreElements from "@/pages/CoreElements";
 import NotFound from "@/pages/not-found";
 
 function ResourceRoute() {
@@ -100,6 +101,9 @@ function Routes() {
       </Route>
       <Route path="/dynamic-api-explorer">
         <ProtectedRoute component={DynamicApiExplorer} />
+      </Route>
+      <Route path="/core-elements">
+        <ProtectedRoute component={CoreElements} />
       </Route>
       <Route path="/element-api-explorer">
         <ProtectedRoute component={ElementApiExplorer} />
