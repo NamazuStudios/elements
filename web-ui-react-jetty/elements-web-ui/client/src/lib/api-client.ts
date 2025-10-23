@@ -71,13 +71,36 @@ export class ApiClient {
   }
 
   async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string } }> {
-    const response = await fetch('/api/auth/login', {
+    // Try to get backend URL from config
+    let backendUrl: string | null = null;
+    try {
+      const configResponse = await fetch('./config.json');
+      if (configResponse.ok) {
+        const config = await configResponse.json();
+        backendUrl = config?.api?.url;
+      }
+    } catch (error) {
+      // Config not available, will use proxy
+      console.log('Config not available, using proxy endpoint');
+    }
+
+    // If we have a backend URL, call Elements backend directly
+    // Otherwise, use the Node.js proxy (development mode)
+    const loginEndpoint = backendUrl 
+      ? `${backendUrl}/session`
+      : '/api/auth/login';
+    
+    const requestBody = backendUrl
+      ? { userId: username, password: password }
+      : { username, password, rememberMe };
+
+    const response = await fetch(loginEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include', // Allow setting cookies
-      body: JSON.stringify({ username, password, rememberMe }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -92,7 +115,20 @@ export class ApiClient {
       throw new Error(errorMessage);
     }
 
-    return response.json();
+    const responseData = await response.json();
+    
+    // If calling Elements backend directly, format response to match proxy format
+    if (backendUrl) {
+      return {
+        success: true,
+        session: {
+          userId: responseData.session?.user?.name || username,
+          level: responseData.session?.user?.level || 'SUPERUSER',
+        },
+      };
+    }
+
+    return responseData;
   }
 
   async logout(): Promise<void> {
