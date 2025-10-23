@@ -7,13 +7,19 @@ let cachedConfig: { baseUrl: string; mode: 'production' | 'development' } | null
 export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'production' | 'development' }> {
     // Return cached config if already loaded
     if (cachedConfig) {
+        console.log('[CONFIG] Returning cached config:', cachedConfig);
         return cachedConfig;
     }
 
+    console.log('[CONFIG] Loading config.json...');
     try {
         const configResponse = await fetch('./config.json');
+        console.log('[CONFIG] config.json response status:', configResponse.status);
+
         if (configResponse.ok) {
             const config = await configResponse.json();
+            console.log('[CONFIG] Loaded config:', config);
+
             if (config?.api?.url) {
                 // Production mode: Extract path from backend URL
                 // e.g., "http://backend:8080/api/rest" -> "/api/rest"
@@ -22,11 +28,12 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
                     baseUrl: url.pathname,
                     mode: 'production'
                 };
+                console.log('[CONFIG] ✓ Production mode detected. Base URL:', cachedConfig.baseUrl);
                 return cachedConfig;
             }
         }
     } catch (error) {
-        // Config not available, use development proxy
+        console.log('[CONFIG] Failed to load config.json:', error);
     }
 
     // Development mode: use Node.js proxy
@@ -34,6 +41,7 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
         baseUrl: '/api/proxy',
         mode: 'development'
     };
+    console.log('[CONFIG] ✓ Development mode. Base URL:', cachedConfig.baseUrl);
     return cachedConfig;
 }
 
