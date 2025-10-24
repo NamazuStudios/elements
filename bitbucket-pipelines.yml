@@ -63,6 +63,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
+            - make build 
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch
