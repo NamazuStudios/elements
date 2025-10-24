@@ -38,7 +38,7 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.wildcardLargeObject()));
         when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
 
-        OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID, "shouldWriteContent");
+        OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
         assertTrue(outputStream instanceof FileOutputStream);
     }
@@ -48,7 +48,7 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.wildcardLargeObject()));
         when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
 
-        OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID, "shouldNotAllowToWriteContent");
+        OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
         assertTrue(outputStream instanceof FileOutputStream);
     }
@@ -63,7 +63,7 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
         when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
 
-        OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID, "shouldNotAllowToWriteContentByNonPermittedUser");
+        OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
         assertTrue(outputStream instanceof FileOutputStream);
     }

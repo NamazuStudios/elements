@@ -25,7 +25,7 @@ public class AnonymousLargeObjectServiceTest extends LargeObjectServiceTestBase{
 
     @Test(expectedExceptions = {ForbiddenException.class})
     public void shouldNotAllowToWrite() throws IOException {
-        anonLargeObjectService.writeLargeObjectContent(TEST_ID, "shouldNotAllowToWrite");
+        anonLargeObjectService.writeLargeObjectContent(TEST_ID);
     }
 
     @Test(expectedExceptions = {ForbiddenException.class})

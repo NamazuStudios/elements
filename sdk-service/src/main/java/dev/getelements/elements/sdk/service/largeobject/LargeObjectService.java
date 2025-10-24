@@ -169,6 +169,10 @@ public interface LargeObjectService {
      */
     OutputStream writeLargeObjectContent(String objectId, String originalFileName) throws IOException;
 
+    default OutputStream writeLargeObjectContent(String objectId) throws IOException {
+        return writeLargeObjectContent(objectId, null);
+    }
+
     LargeObject saveOrUpdateLargeObject(LargeObject largeObject);
 
 }
