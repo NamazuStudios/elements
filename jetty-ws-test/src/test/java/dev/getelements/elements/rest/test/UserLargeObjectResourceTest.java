@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.sdk.model.largeobject.CreateLargeObjectRequest;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -153,11 +154,14 @@ public class UserLargeObjectResourceTest {
                 .post(Entity.entity(createRequest, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        multipart.field("file", loStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+
         final LargeObject objectWithContent = client
                 .target(apiRoot + "/large_object/" + savedlargeObject.getId() + "/content")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
-                .put(Entity.entity(loStream, MediaType.APPLICATION_OCTET_STREAM))
+                .put(Entity.entity(multipart, multipart.getMediaType()))
                 .readEntity(LargeObject.class);
 
         assertNotNull(objectWithContent);
@@ -178,11 +182,14 @@ public class UserLargeObjectResourceTest {
                 .post(Entity.entity(createRequest, MediaType.APPLICATION_JSON_TYPE))
                 .readEntity(LargeObject.class);
 
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        multipart.field("file", loStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+
         final int status = client
                 .target(apiRoot + "/large_object/" + savedlargeObject.getId() + "/content")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
-                .put(Entity.entity(loStream, MediaType.APPLICATION_OCTET_STREAM))
+                .put(Entity.entity(multipart, multipart.getMediaType()))
                 .getStatus();
 
         assertEquals(status, 403);
