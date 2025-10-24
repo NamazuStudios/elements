@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.4.0-SNAPSHOT</version>
+        <version>3.4.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>jetty-ws</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.4.0-SNAPSHOT</version>
+    <version>3.4.1-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
