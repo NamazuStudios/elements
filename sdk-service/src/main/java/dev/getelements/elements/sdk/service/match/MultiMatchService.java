@@ -24,7 +24,7 @@ public interface MultiMatchService {
      * @param offset the offset
      * @param count the count
      *
-     * @return a {@link Pagination <MultiMatch>} instance containing the requested data
+     * @return a {@link Pagination} instance containing the requested data
      */
     Pagination<MultiMatch> getMatches(int offset, int count);
 
@@ -34,7 +34,7 @@ public interface MultiMatchService {
      * @param offset the offset
      * @param count the count
      *
-     * @return a {@link Pagination<MultiMatch>} instance containing the requested data
+     * @return a {@link Pagination} instance containing the requested data
      */
     Pagination<MultiMatch> getMatches(int offset, int count, String search);
 
