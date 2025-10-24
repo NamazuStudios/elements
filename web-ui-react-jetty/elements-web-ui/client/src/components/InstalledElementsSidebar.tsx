@@ -151,11 +151,11 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                       </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {appStatus.elements?.map((element, idx) => {
+                        {appStatus.elements?.filter(element => element != null).map((element, idx) => {
                           // Use serve.prefix as the display name, fallback to definition.name
-                          const servePrefix = element.attributes?.['dev.getelements.elements.app.serve.prefix'];
-                          const displayName = servePrefix || element.definition?.name?.split('.').pop() || `Element ${idx}`;
-                          const elementIdentifier = element.definition?.name || `element-${idx}`;
+                          const servePrefix = element?.attributes?.['dev.getelements.elements.app.serve.prefix'];
+                          const displayName = servePrefix || element?.definition?.name?.split('.').pop() || `Element ${idx}`;
+                          const elementIdentifier = element?.definition?.name || `element-${idx}`;
                           
                           // Find URI for this element based on serve prefix
                           // Try HTTP/HTTPS first (for OpenAPI), then fall back to WebSocket URIs

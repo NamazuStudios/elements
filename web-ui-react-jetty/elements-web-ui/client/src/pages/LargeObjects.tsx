@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,10 +57,27 @@ export default function LargeObjects() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 20;
+  
+  // Read pagination limit from settings
+  const getPageSize = () => {
+    const saved = localStorage.getItem('admin-results-per-page');
+    return saved ? parseInt(saved, 10) : 20;
+  };
+  const [pageSize, setPageSize] = useState(getPageSize());
+  
+  // Update pageSize when localStorage changes (e.g., when settings are saved)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setPageSize(getPageSize());
+      setCurrentPage(0); // Reset to first page when page size changes
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const { data: response, isLoading, error } = useQuery<LargeObjectResponse>({
-    queryKey: ['/api/proxy/api/rest/large_object', currentPage, searchQuery],
+    queryKey: ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize],
     queryFn: async () => {
       let url = `/api/proxy/api/rest/large_object?offset=${currentPage * pageSize}&limit=${pageSize}`;
       if (searchQuery.trim()) {

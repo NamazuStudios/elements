@@ -44,9 +44,9 @@ export class ApiClient {
           // Session expired, redirect to login with correct base path
           const basePath = import.meta.env.BASE_URL || '/';
           // Ensure proper path formation: /admin/ → /admin/login, / → /login
-          const loginPath = basePath.endsWith('/')
-              ? `${basePath}login`
-              : `${basePath}/login`;
+          const loginPath = basePath.endsWith('/') 
+            ? `${basePath}login` 
+            : `${basePath}/login`;
           window.location.href = loginPath;
           throw new Error('Session expired. Please login again.');
         }
@@ -55,7 +55,7 @@ export class ApiClient {
         error.status = response.status;
         throw error;
       }
-
+      
       // Get error message from response (read as text first, then try to parse as JSON)
       let errorMessage = '';
       try {
@@ -71,7 +71,7 @@ export class ApiClient {
       } catch {
         errorMessage = `API Error: ${response.status}`;
       }
-
+      
       // Create error with status code and message
       const error = new Error(errorMessage || `API Error: ${response.status}`) as Error & { status: number };
       error.status = response.status;
@@ -90,7 +90,7 @@ export class ApiClient {
         return undefined as T;
       }
     }
-
+    
     return undefined as T;
   }
 
@@ -98,18 +98,18 @@ export class ApiClient {
     // Use the config system to determine production vs development mode
     const { getApiConfig } = await import('./config');
     const config = await getApiConfig();
-
+    
     const isProduction = config.mode === 'production';
     console.log('[LOGIN] Mode:', config.mode, '| Production?', isProduction);
-
+    
     // Determine endpoint and request format
     const loginEndpoint = isProduction
-        ? `${config.baseUrl}/session`
-        : '/api/auth/login';
-
+      ? `${config.baseUrl}/session`
+      : '/api/auth/login';
+    
     const requestBody = isProduction
-        ? { userId: username, password: password }
-        : { username, password, rememberMe };
+      ? { userId: username, password: password }
+      : { username, password, rememberMe };
 
     const response = await fetch(loginEndpoint, {
       method: 'POST',
@@ -133,30 +133,30 @@ export class ApiClient {
     }
 
     const responseData = await response.json();
-
+    
     // If calling Elements backend directly, extract and store session token
     if (isProduction) {
       // Extract session token from response
       console.log('[LOGIN] Full response data:', JSON.stringify(responseData, null, 2));
-
+      
       // Try multiple possible paths for session token
-      let sessionToken = responseData.session?.sessionSecret
-          || responseData.sessionSecret
-          || responseData.token;
-
+      let sessionToken = responseData.session?.sessionSecret 
+        || responseData.sessionSecret 
+        || responseData.token;
+      
       console.log('[LOGIN] Session token paths checked:');
       console.log('  - responseData.session?.sessionSecret:', responseData.session?.sessionSecret);
       console.log('  - responseData.sessionSecret:', responseData.sessionSecret);
       console.log('  - responseData.token:', responseData.token);
       console.log('[LOGIN] Final extracted token:', sessionToken ? 'PRESENT (' + sessionToken.substring(0, 10) + '...)' : 'MISSING');
-
+      
       if (sessionToken) {
         this.setSessionToken(sessionToken);
         console.log('[LOGIN] ✓ Session token stored in apiClient');
       } else {
         console.error('[LOGIN] ✗ No session token found in response!');
       }
-
+      
       return {
         success: true,
         session: {
@@ -172,21 +172,21 @@ export class ApiClient {
   async logout(): Promise<void> {
     const config = await getApiConfig();
     const isProduction = config.mode === 'production';
-
+    
     // In production, call Elements backend logout; in dev, call proxy
     const logoutEndpoint = isProduction
-        ? `${config.baseUrl}/session`
-        : '/api/auth/logout';
-
+      ? `${config.baseUrl}/session`
+      : '/api/auth/logout';
+    
     // Send DELETE request to logout
     await fetch(logoutEndpoint, {
       method: 'DELETE',
-      headers: isProduction && this.sessionToken
-          ? { 'Elements-SessionSecret': this.sessionToken }
-          : {},
+      headers: isProduction && this.sessionToken 
+        ? { 'Elements-SessionSecret': this.sessionToken }
+        : {},
       credentials: 'include',
     });
-
+    
     // Clear session token after logout
     this.setSessionToken(null);
   }
