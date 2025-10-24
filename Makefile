@@ -24,7 +24,7 @@ build:
 	@echo "Building all modules with full install..."
 	mvn --no-transfer-progress -B -U -Pgithub-publish install
 
-deploy: clean
+deploy:
 	mvn --no-transfer-progress -B -U -Pcentral-publish deploy
 
 docker:
