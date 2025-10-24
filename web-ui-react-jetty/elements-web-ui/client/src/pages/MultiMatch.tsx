@@ -106,7 +106,7 @@ export default function MultiMatchPage() {
     queryFn: async () => {
       const params = new URLSearchParams({
         offset: offset.toString(),
-        total: count.toString(),
+        count: count.toString(),
       });
       if (searchTerm) {
         params.append('search', searchTerm);

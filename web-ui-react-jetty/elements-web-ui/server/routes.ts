@@ -578,6 +578,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (isDev) {
         console.log(`[PROXY] ${req.method} ${elementsPath}`);
+        console.log(`[PROXY] Query params:`, req.query);
+        console.log(`[PROXY] Query string:`, queryString);
+        console.log(`[PROXY] Target URL:`, targetUrl);
         console.log(`[PROXY] Custom token: ${customToken ? 'present' : 'none'}`);
         console.log(`[PROXY] Cookie token: ${(req as any).sessionToken ? 'present' : 'none'}`);
         console.log(`[PROXY] Using token: ${sessionToken ? 'present' : 'none'}`);
@@ -672,6 +675,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Forward response status
       res.status(response.status);
+      
+      // Set cache control headers to prevent browser caching of API responses
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       
       // Get response body
       const contentType = response.headers.get('content-type');

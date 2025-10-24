@@ -116,7 +116,7 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
               </SidebarMenuItem>
 
               {/* Installed Elements - each element gets its own API explorer */}
-              {appsWithElements.map((appStatus) => {
+              {appsWithElements.filter(appStatus => appStatus?.application).map((appStatus) => {
                 // Determine status badge variant
                 const statusVariant = appStatus.status === 'CLEAN' 
                   ? 'default' 
@@ -130,7 +130,7 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
                           className="w-full"
-                          data-testid={`link-app-${appStatus.application.name?.toLowerCase().replace(/\s+/g, '-')}`}
+                          data-testid={`link-app-${appStatus.application?.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`}
                         >
                           <Icons.AppWindow className="w-4 h-4" />
                           <div className="flex flex-col items-start flex-1 min-w-0">

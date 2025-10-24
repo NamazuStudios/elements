@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,29 +63,32 @@ export default function LargeObjects() {
     const saved = localStorage.getItem('admin-results-per-page');
     return saved ? parseInt(saved, 10) : 20;
   };
-  const [pageSize, setPageSize] = useState(getPageSize());
   
-  // Update pageSize when localStorage changes (e.g., when settings are saved)
+  // Check localStorage on every query to ensure we use the latest setting
+  const pageSize = getPageSize();
+  
+  // Reset to page 0 when page size changes to avoid empty pages
+  const prevPageSizeRef = useRef(pageSize);
   useEffect(() => {
-    const handleStorageChange = () => {
-      setPageSize(getPageSize());
-      setCurrentPage(0); // Reset to first page when page size changes
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+    if (prevPageSizeRef.current !== pageSize) {
+      setCurrentPage(0);
+      prevPageSizeRef.current = pageSize;
+    }
+  }, [pageSize]);
 
   const { data: response, isLoading, error } = useQuery<LargeObjectResponse>({
     queryKey: ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize],
     queryFn: async () => {
-      let url = `/api/proxy/api/rest/large_object?offset=${currentPage * pageSize}&limit=${pageSize}`;
+      let url = `/api/proxy/api/rest/large_object?offset=${currentPage * pageSize}&count=${pageSize}`;
       if (searchQuery.trim()) {
         url += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
+      console.log('[LARGE_OBJECTS] Fetching with pageSize:', pageSize, 'URL:', url);
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch');
-      return response.json();
+      const data = await response.json();
+      console.log('[LARGE_OBJECTS] Received', data.objects?.length, 'objects');
+      return data;
     },
     retry: false,
   });
