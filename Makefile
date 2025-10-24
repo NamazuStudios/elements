@@ -22,7 +22,7 @@ build:
 	@echo "Cleaning all modules..."
 	mvn --no-transfer-progress -B clean
 	@echo "Building all modules with full install..."
-	mvn --no-transfer-progress -B -U -Pgithub-publish -pl , -am install
+	mvn --no-transfer-progress -B -U -Pgithub-publish install
 
 deploy: clean
 	mvn --no-transfer-progress -B -U -Pcentral-publish deploy
