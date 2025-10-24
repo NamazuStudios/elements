@@ -18,8 +18,11 @@ help:
 clean:
 	mvn --no-transfer-progress -B clean
 
-build: clean
-	mvn --no-transfer-progress -B -U -Pgithub-publish install
+build:
+	@echo "Cleaning all modules..."
+	mvn --no-transfer-progress -B clean
+	@echo "Building all modules with full install..."
+	mvn --no-transfer-progress -B -U -Pgithub-publish -pl , -am install
 
 deploy: clean
 	mvn --no-transfer-progress -B -U -Pcentral-publish deploy

@@ -100,10 +100,10 @@
         <module>rpc-api-guice</module>
         <module>rpc-api-jetty</module>
         <module>mongo-guice</module>
-        <module>jetty-ws</module>
-        <module>jetty-ws-test</module>
         <module>web-ui-angular-jetty</module>
         <module>web-ui-react-jetty</module>
+        <module>jetty-ws</module>
+        <module>jetty-ws-test</module>
         <module>sdk</module>
         <module>sdk-spi</module>
         <module>sdk-spi-guice</module>
