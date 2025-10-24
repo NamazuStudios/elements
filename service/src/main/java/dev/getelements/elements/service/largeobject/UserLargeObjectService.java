@@ -99,11 +99,17 @@ public class UserLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public OutputStream writeLargeObjectContent(final String objectId) throws IOException {
+    public OutputStream writeLargeObjectContent(final String objectId, String originalFileName) throws IOException {
+
         final var largeObject = getLargeObject(objectId);
 
         if (!getAccessPermissionsUtils().hasWriteAccess(largeObject.getAccessPermissions())) {
             throw new ForbiddenException("User not allowed to write content");
+        }
+
+        if(originalFileName != null) {
+            largeObject.setOriginalFilename(originalFileName);
+            getLargeObjectDao().updateLargeObject(largeObject);
         }
 
         return getLargeObjectBucket().writeObject(objectId);

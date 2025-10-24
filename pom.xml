@@ -103,6 +103,7 @@
         <module>jetty-ws</module>
         <module>jetty-ws-test</module>
         <module>web-ui-angular-jetty</module>
+        <module>web-ui-react-jetty</module>
         <module>sdk</module>
         <module>sdk-spi</module>
         <module>sdk-spi-guice</module>
@@ -532,6 +533,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>web-ui-angular-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>web-ui-react-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

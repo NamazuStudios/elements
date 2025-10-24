@@ -36,6 +36,9 @@ public class MongoLargeObject {
     @Property
     private AccessPermissions accessPermissions;
 
+    @Property
+    private String originalFilename;
+
     public ObjectId getId() {
         return id;
     }
@@ -92,17 +95,25 @@ public class MongoLargeObject {
         this.lastModified = lastModified;
     }
 
+    public String getOriginalFilename() {
+        return originalFilename;
+    }
+
+    public void setOriginalFilename(String originalFilename) {
+        this.originalFilename = originalFilename;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoLargeObject that = (MongoLargeObject) o;
-        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && state == that.state && Objects.equals(lastModified, that.lastModified) && Objects.equals(accessPermissions, that.accessPermissions);
+        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && Objects.equals(path, that.path) && Objects.equals(mimeType, that.mimeType) && state == that.state && Objects.equals(lastModified, that.lastModified) && Objects.equals(accessPermissions, that.accessPermissions) && Objects.equals(originalFilename, that.originalFilename);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, url, path, mimeType, state, lastModified, accessPermissions);
+        return Objects.hash(id, url, path, mimeType, state, lastModified, accessPermissions, originalFilename);
     }
 
     @Override
@@ -115,6 +126,7 @@ public class MongoLargeObject {
                 ", state=" + state +
                 ", lastModified=" + lastModified +
                 ", accessPermissions=" + accessPermissions +
+                ", originalFilename='" + originalFilename + '\'' +
                 '}';
     }
 }

@@ -1,4 +1,4 @@
-package dev.getelements.elements.webui;
+package dev.getelements.elements.webui.angular;
 
 import java.util.Objects;
 

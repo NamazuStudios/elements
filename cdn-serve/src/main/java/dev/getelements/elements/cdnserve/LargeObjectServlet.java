@@ -3,6 +3,7 @@ package dev.getelements.elements.cdnserve;
 import dev.getelements.elements.sdk.model.exception.BaseException;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.service.largeobject.LargeObjectService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,6 @@ public class LargeObjectServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest req,
                          final HttpServletResponse resp) throws ServletException, IOException {
-
         final String pathInfo = req.getPathInfo();
 
         if (pathInfo == null) {
@@ -36,6 +36,17 @@ public class LargeObjectServlet extends HttpServlet {
 
         final String largeObjectId = pathInfo.substring(1);
         final LargeObjectService service = getLargeObjectServiceProvider().get();
+        final LargeObject largeObject = service.findLargeObject(largeObjectId)
+                .orElseThrow(NotFoundException::new);
+        final boolean isDownload = "true".equals(req.getParameter("download"));
+
+        if (isDownload) {
+            resp.setHeader("Content-Disposition", "attachment; filename=\"" + largeObject.getOriginalFilename() + "\"");
+        } else {
+            resp.setHeader("Content-Disposition", "inline; filename=\"" + largeObject.getOriginalFilename() + "\"");
+        }
+
+        resp.setContentType(largeObject.getMimeType());
 
         try (var input = service.readLargeObjectContent(largeObjectId)) {
             input.transferTo(resp.getOutputStream());

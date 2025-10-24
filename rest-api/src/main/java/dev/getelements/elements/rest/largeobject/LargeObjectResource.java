@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -51,12 +54,16 @@ public class LargeObjectResource {
     @PUT
     @Path("{largeObjectId}/content")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation(summary = "Updates a LargeObject content")
     public LargeObject updateLargeObjectContents(
             @PathParam("largeObjectId") final String largeObjectId,
-            final InputStream inputStream) {
+            @FormDataParam("file") InputStream inputStream,
+            @FormDataParam("file") FormDataContentDisposition fileDetails) {
         try {
-            return getLargeObjectService().updateLargeObject(largeObjectId, inputStream);
+            final var originalFilename = fileDetails.getFileName();
+
+            return getLargeObjectService().updateLargeObject(largeObjectId, inputStream, originalFilename);
         } catch (IOException e) {
             throw new InternalException("Caught exception processing upload.");
         }

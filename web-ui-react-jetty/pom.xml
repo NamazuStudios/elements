@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>eci-elements</artifactId>
+        <groupId>dev.getelements.elements</groupId>
+        <version>3.4.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>web-ui-react-jetty</artifactId>
+    <name>${project.artifactId}</name>
+    <version>3.4.0-SNAPSHOT</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-deploy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-jetty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>common-servlet-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+
+                    <execution>
+                        <id>exec-npm-ci</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/elements-web-ui</workingDirectory>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>ci</argument>
+                            </arguments>
+                        </configuration>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>exec-npm-build</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <workingDirectory>${project.basedir}/elements-web-ui</workingDirectory>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>build</argument>
+                            </arguments>
+                            <environmentVariables>
+                                <NODE_ENV>production</NODE_ENV>
+                            </environmentVariables>
+                        </configuration>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+
+                    <execution>
+                        <id>copy-react-build</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <executable>cp</executable>
+                            <arguments>
+                                <argument>-r</argument>
+                                <argument>${project.basedir}/elements-web-ui/dist/.</argument>
+                                <argument>${project.build.outputDirectory}/static</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+
+</project>
+

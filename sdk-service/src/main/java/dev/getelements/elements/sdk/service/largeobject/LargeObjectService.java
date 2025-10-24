@@ -68,9 +68,10 @@ public interface LargeObjectService {
      */
     default LargeObject updateLargeObject(
             final String objectId,
-            final InputStream inputStream) throws IOException {
+            final InputStream inputStream,
+            final String originalFileName) throws IOException {
 
-        try (var output = writeLargeObjectContent(objectId)) {
+        try (var output = writeLargeObjectContent(objectId, originalFileName)) {
             inputStream.transferTo(output);
         }
 
@@ -90,11 +91,12 @@ public interface LargeObjectService {
     default LargeObject updateLargeObject(
             final String objectId,
             final UpdateLargeObjectRequest updateLargeObjectRequest,
-            final InputStream inputStream) throws IOException {
+            final InputStream inputStream,
+            final String originalFileName) throws IOException {
 
         final var object = updateLargeObject(objectId, updateLargeObjectRequest);
 
-        try (var output = writeLargeObjectContent(object.getId())) {
+        try (var output = writeLargeObjectContent(object.getId(), originalFileName)) {
             inputStream.transferTo(output);
         }
 
@@ -133,7 +135,7 @@ public interface LargeObjectService {
 
         final var object = createLargeObject(createLargeObjectRequest);
 
-        try (var output = writeLargeObjectContent(object.getId())) {
+        try (var output = writeLargeObjectContent(object.getId(), null)) {
             inputStream.transferTo(output);
         }
 
@@ -165,7 +167,11 @@ public interface LargeObjectService {
      * @return an OutputStream used to write the object's contents.
      * @throws IOException
      */
-    OutputStream writeLargeObjectContent(String objectId) throws IOException;
+    OutputStream writeLargeObjectContent(String objectId, String originalFileName) throws IOException;
+
+    default OutputStream writeLargeObjectContent(String objectId) throws IOException {
+        return writeLargeObjectContent(objectId, null);
+    }
 
     LargeObject saveOrUpdateLargeObject(LargeObject largeObject);
 

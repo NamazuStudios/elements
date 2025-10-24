@@ -68,7 +68,7 @@ public class AnonLargeObjectService implements LargeObjectService {
     }
 
     @Override
-    public OutputStream writeLargeObjectContent(String objectId) throws IOException {
+    public OutputStream writeLargeObjectContent(String objectId, String originalFileName) throws IOException {
         throw new ForbiddenException();
     }
 
