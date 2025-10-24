@@ -19,7 +19,7 @@ clean:
 	mvn --no-transfer-progress -B clean
 
 build: clean
-	mvn --no-transfer-progress -B -U -Pgithub-publish -U install
+	mvn --no-transfer-progress -B -U -Pgithub-publish install
 
 deploy: clean
 	mvn --no-transfer-progress -B -U -Pcentral-publish deploy
