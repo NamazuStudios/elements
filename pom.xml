@@ -100,7 +100,6 @@
         <module>rpc-api-guice</module>
         <module>rpc-api-jetty</module>
         <module>mongo-guice</module>
-        <module>web-ui-angular-jetty</module>
         <module>web-ui-react-jetty</module>
         <module>jetty-ws</module>
         <module>jetty-ws-test</module>
@@ -528,11 +527,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-simple-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>web-ui-angular-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

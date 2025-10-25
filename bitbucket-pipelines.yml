@@ -31,9 +31,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup_release
-            - make build
             - make deploy
-            - make docker docker_hub
             - make docker
             - make javadoc
           after-script:
@@ -63,8 +61,6 @@ pipelines:
           runs-on:
             - "linux"
             - "self.hosted"
-          caches:
-            - maven
           script:
             - make setup
             - make detach tag
@@ -73,6 +69,7 @@ pipelines:
             - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
             - make push push_tags publish_github publish_github_tags
           after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
     "stealth/*":
       - step:
@@ -104,6 +101,7 @@ pipelines:
             - make docker
             - make publish_github
           after-script:
+            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
   default:
     - step:
@@ -124,4 +122,3 @@ pipelines:
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
-

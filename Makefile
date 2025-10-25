@@ -18,21 +18,11 @@ help:
 clean:
 	mvn --no-transfer-progress -B clean
 
-# Full build: compile, package, test, install to local repo
-build:
-	@echo "Cleaning all modules..."
-	mvn --no-transfer-progress -B clean
+build: clean
+	mvn --no-transfer-progress -B -Pgithub-publish install
 
-	@echo "Building all modules with full install and snapshot updates..."
-	mvn --no-transfer-progress -B -U -Pgithub-publish install
-
-	@echo "Rebuilding web-ui-angular-jetty to guarantee Angular assets..."
-	mvn --no-transfer-progress -B -pl web-ui-angular-jetty -am install
-
-# Deploy to remote repository
-deploy:
-	@echo "Deploying artifacts to central repo..."
-	mvn --no-transfer-progress -B -U -Pcentral-publish deploy
+deploy: clean
+	mvn --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:
 	make -C docker-config internal

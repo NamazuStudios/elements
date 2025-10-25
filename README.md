@@ -78,7 +78,7 @@ source software, so everything should work out of the box.  However, there are
 a few exceptions that we have handled by either including as submodules or 
 provided separately.
 
-* Note that the web-ui-angular project uses npm for dependency management. A maven
+* Note that the web-ui-react project uses npm for dependency management. A maven
 build spec triggers the build and is referenced in the master maven build, so it 
 should all "just work" when you do a build.
 
@@ -181,7 +181,7 @@ The following are internal libraries which make up the implementation of Element
   perform any sort of direct-database access, disaster recovery, or other 
   low-level administrative functions that can't or shouldn't be handled by the
   web-based UI
-- **web-ui-angular** - The source for the Elements CMS User Interface.
+- **web-ui-react** - The source for the Elements CMS User Interface.
 
 ### Deprecated Packages
 
