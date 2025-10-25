@@ -18,11 +18,6 @@ definitions:
 clone:
   depth: full
 
-caches:
-  - ~/.m2/repository
-  - ~/.npm
-  - elements-web-ui/node_modules
-
 pipelines:
   tags:
     "*":
