@@ -131,7 +131,13 @@ export default function ElementApiExplorer() {
 
   // Build full path for API requests
   const buildFullPath = async (path: string) => {
-    return await getApiPath(`${elementPath}${path}`);
+    const combinedPath = `${elementPath}${path}`;
+    const fullPath = await getApiPath(combinedPath);
+    console.log('[ELEMENT] buildFullPath input:', path);
+    console.log('[ELEMENT] elementPath:', elementPath);
+    console.log('[ELEMENT] combined:', combinedPath);
+    console.log('[ELEMENT] final fullPath:', fullPath);
+    return fullPath;
   };
 
   // Create mutation

@@ -63,23 +63,33 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
 export async function getApiPath(path: string): Promise<string> {
   const config = await getApiConfig();
   
+  console.log('[getApiPath] Input path:', path);
+  console.log('[getApiPath] Mode:', config.mode);
+  console.log('[getApiPath] Base URL:', config.baseUrl);
+  
   // If path already starts with /api/proxy, strip it in production mode
   if (config.mode === 'production' && path.startsWith('/api/proxy')) {
     // Remove /api/proxy prefix - the rest is already the correct path
     // e.g., "/api/proxy/api/rest/health" → "/api/rest/health"
-    return path.replace('/api/proxy', '');
+    const result = path.replace('/api/proxy', '');
+    console.log('[getApiPath] Production: Stripped /api/proxy → ', result);
+    return result;
   }
   
   // If path starts with absolute /api/rest or /app/rest, use it as-is in production
   if (config.mode === 'production' && (path.startsWith('/api/rest') || path.startsWith('/app/'))) {
+    console.log('[getApiPath] Production: Using path as-is → ', path);
     return path;
   }
   
   // For development, prefix with /api/proxy if not already present
   if (config.mode === 'development' && !path.startsWith('/api/proxy')) {
-    return `${config.baseUrl}${path}`;
+    const result = `${config.baseUrl}${path}`;
+    console.log('[getApiPath] Development: Adding proxy prefix → ', result);
+    return result;
   }
   
+  console.log('[getApiPath] Fallback: Returning path as-is → ', path);
   return path;
 }
 
