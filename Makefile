@@ -23,7 +23,7 @@ build:
 	@echo "Cleaning all modules..."
 	mvn --no-transfer-progress -B clean
 	@echo "Building all modules with full install..."
-	mvn --no-transfer-progress -B -U -Pgithub-publish install -T 1C
+	mvn --no-transfer-progress -B -U -Pgithub-publish install
 
 # Deploy to remote repository
 deploy:
