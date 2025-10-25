@@ -64,8 +64,7 @@ pipelines:
             - "linux"
             - "self.hosted"
           caches:
-            - maven-repo
-            - npm-cache
+            - maven
           script:
             - make setup
             - make detach tag
@@ -98,8 +97,7 @@ pipelines:
             - "linux"
             - "self.hosted"
           caches:
-            - maven-repo
-            - npm-cache
+            - maven
           script:
             - make setup
             - make build
