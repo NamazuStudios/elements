@@ -22,8 +22,12 @@ clean:
 build:
 	@echo "Cleaning all modules..."
 	mvn --no-transfer-progress -B clean
-	@echo "Building all modules with full install..."
+
+	@echo "Building all modules with full install and snapshot updates..."
 	mvn --no-transfer-progress -B -U -Pgithub-publish install
+
+	@echo "Rebuilding web-ui-angular-jetty to guarantee Angular assets..."
+	mvn --no-transfer-progress -B -pl web-ui-angular-jetty -am install
 
 # Deploy to remote repository
 deploy:
