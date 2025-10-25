@@ -137,24 +137,16 @@ export class ApiClient {
     // If calling Elements backend directly, extract and store session token
     if (isProduction) {
       // Extract session token from response
-      console.log('[LOGIN] Full response data:', JSON.stringify(responseData, null, 2));
-      
       // Try multiple possible paths for session token
       let sessionToken = responseData.session?.sessionSecret 
         || responseData.sessionSecret 
         || responseData.token;
       
-      console.log('[LOGIN] Session token paths checked:');
-      console.log('  - responseData.session?.sessionSecret:', responseData.session?.sessionSecret);
-      console.log('  - responseData.sessionSecret:', responseData.sessionSecret);
-      console.log('  - responseData.token:', responseData.token);
-      console.log('[LOGIN] Final extracted token:', sessionToken ? 'PRESENT (' + sessionToken.substring(0, 10) + '...)' : 'MISSING');
-      
       if (sessionToken) {
         this.setSessionToken(sessionToken);
-        console.log('[LOGIN] ✓ Session token stored in apiClient');
+        console.log('[LOGIN] ✓ Session token stored');
       } else {
-        console.error('[LOGIN] ✗ No session token found in response!');
+        console.error('[LOGIN] ✗ No session token found in response');
       }
       
       return {

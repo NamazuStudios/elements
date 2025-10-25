@@ -13,6 +13,7 @@ import { Loader2, Database, RefreshCw, Info, ExternalLink } from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { getApiPath } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import * as yaml from 'js-yaml';
 
 export default function ElementApiExplorer() {
   const [selectedResource, setSelectedResource] = useState<ResourceOperations | null>(null);
@@ -108,8 +109,7 @@ export default function ElementApiExplorer() {
       if (contentType.includes('yaml') || contentType.includes('yml')) {
         // Parse YAML response
         const yamlText = await response.text();
-        const jsYaml = await import('js-yaml');
-        return jsYaml.load(yamlText);
+        return yaml.load(yamlText);
       } else {
         // Parse JSON response
         return response.json();
