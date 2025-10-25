@@ -18,22 +18,12 @@ help:
 clean:
 	mvn --no-transfer-progress -B clean
 
-# Just compile all modules
-compile:
-	@echo "Compiling all modules..."
-	mvn --no-transfer-progress -B -U clean compile -T 1C
-
-# Compile + package (creates jars/wars but doesn't install to local repo)
-package:
-	@echo "Packaging all modules..."
-	mvn --no-transfer-progress -B -U package -Pgithub-publish -T 1C
-
 # Full build: compile, package, test, install to local repo
 build:
 	@echo "Cleaning all modules..."
 	mvn --no-transfer-progress -B clean
 	@echo "Building all modules with full install..."
-	mvn --no-transfer-progress -B -U -Pgithub-publish install
+	mvn --no-transfer-progress -B -U -Pgithub-publish install -T 1C
 
 # Deploy to remote repository
 deploy:

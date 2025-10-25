@@ -24,8 +24,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup_release
-            - make compile
-            - make package
+            - make build
             - make deploy
             - make docker
             - make javadoc
@@ -42,8 +41,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
-            - make compile
-            - make package
+            - make build
             - make deploy
             - make publish_github
             - make detach release
@@ -61,8 +59,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
-            - make compile
-            - make package
+            - make build
             - make deploy
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
@@ -81,8 +78,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
-            - make compile
-            - make package
+            - make build
           after-script:
             - pipe: atlassian/checkstyle-report:0.3.0
 
@@ -99,8 +95,7 @@ pipelines:
             - maven
           script:
             - make setup
-            - make compile
-            - make package
+            - make build
             - make deploy
             - make docker
             - make publish_github
@@ -120,8 +115,7 @@ pipelines:
           - maven
         script:
           - make setup
-          - make compile
-          - make package
+          - make build
           - make deploy
           - make docker
           - make publish_github
