@@ -17,6 +17,7 @@ import * as yaml from 'js-yaml';
 
 export default function ElementApiExplorer() {
   const [selectedResource, setSelectedResource] = useState<ResourceOperations | null>(null);
+  const [showElementInfo, setShowElementInfo] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -435,6 +436,24 @@ export default function ElementApiExplorer() {
             )}
           </CardContent>
         </Card>
+
+        {currentAppStatus?.logs && currentAppStatus.logs.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Application Logs</CardTitle>
+              <CardDescription>Recent logs from the Elements application</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1 max-h-96 overflow-y-auto">
+                {currentAppStatus.logs.map((log: any, idx: number) => (
+                  <div key={idx} className="p-2 bg-muted rounded text-xs font-mono">
+                    {typeof log === 'string' ? log : JSON.stringify(log)}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   }
@@ -486,6 +505,26 @@ export default function ElementApiExplorer() {
 
       <div className="flex flex-1 overflow-hidden">
         <div className="w-64 border-r overflow-y-auto p-4">
+          {currentElement && (
+            <>
+              <button
+                onClick={() => {
+                  setShowElementInfo(true);
+                  setSelectedResource(null);
+                }}
+                className={`w-full text-left px-3 py-2 rounded text-sm mb-4 hover-elevate ${
+                  showElementInfo ? 'bg-accent' : ''
+                }`}
+                data-testid="button-element-info"
+              >
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  <span className="font-medium">Element Info</span>
+                </div>
+              </button>
+              <div className="border-b mb-3"></div>
+            </>
+          )}
           <h2 className="font-semibold mb-3 text-sm uppercase tracking-wider">Resources</h2>
           <div className="space-y-1">
             {resources.length === 0 && (
@@ -497,9 +536,12 @@ export default function ElementApiExplorer() {
               return (
                 <button
                   key={resource.resourceName}
-                  onClick={() => setSelectedResource(resource)}
+                  onClick={() => {
+                    setSelectedResource(resource);
+                    setShowElementInfo(false);
+                  }}
                   className={`w-full text-left px-3 py-2 rounded text-sm hover-elevate ${
-                    selectedResource?.resourceName === resource.resourceName ? 'bg-accent' : ''
+                    selectedResource?.resourceName === resource.resourceName && !showElementInfo ? 'bg-accent' : ''
                   }`}
                   data-testid={`button-resource-${resource.resourceName.toLowerCase().replace(/\s+/g, '-')}`}
                 >
@@ -522,7 +564,139 @@ export default function ElementApiExplorer() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {selectedResource ? (
+          {showElementInfo && currentElement ? (
+            <div className="p-6 space-y-6">
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold mb-2">Element Information</h2>
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex gap-2">
+                        <span className="font-medium">Type:</span>
+                        <span className="text-muted-foreground">{currentElement.type || 'Unknown'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="font-medium">Full Name:</span>
+                        <span className="text-muted-foreground font-mono text-xs">{currentElement.definition?.name || 'Unknown'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="font-medium">Loader:</span>
+                        <span className="text-muted-foreground font-mono text-xs">{currentElement.definition?.loader || 'Unknown'}</span>
+                      </div>
+                      {currentElement.attributes?.['dev.getelements.elements.app.serve.prefix'] && (
+                        <div className="flex gap-2">
+                          <span className="font-medium">Serve Prefix:</span>
+                          <span className="text-muted-foreground font-mono text-xs">{currentElement.attributes['dev.getelements.elements.app.serve.prefix']}</span>
+                        </div>
+                      )}
+                      {currentAppStatus?.status && (
+                        <div className="flex gap-2">
+                          <span className="font-medium">Status:</span>
+                          <Badge 
+                            variant={currentAppStatus.status === 'CLEAN' ? 'default' : currentAppStatus.status === 'UNSTABLE' ? 'secondary' : 'destructive'}
+                            className="text-[10px]"
+                          >
+                            {currentAppStatus.status}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {currentAppStatus?.uris && currentAppStatus.uris.length > 0 && (() => {
+                    const servePrefix = currentElement.attributes?.['dev.getelements.elements.app.serve.prefix'];
+                    const elementUris = servePrefix 
+                      ? currentAppStatus.uris.filter((uri: string) => uri.includes(`/${servePrefix}`))
+                      : currentAppStatus.uris;
+                    
+                    if (elementUris.length > 0) {
+                      return (
+                        <div>
+                          <h3 className="text-md font-semibold mb-2">Element URIs</h3>
+                          <div className="space-y-2">
+                            {elementUris.map((uri: string, idx: number) => (
+                              <div key={idx} className="p-3 bg-muted rounded-md flex items-start gap-2">
+                                <code className="text-xs break-all flex-1">{uri}</code>
+                                {uri.startsWith('ws://') || uri.startsWith('wss://') ? (
+                                  <Badge variant="secondary" className="text-[10px] shrink-0">WebSocket</Badge>
+                                ) : (
+                                  <Badge variant="default" className="text-[10px] shrink-0">HTTP</Badge>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {currentElement.services && currentElement.services.length > 0 && (
+                    <div>
+                      <h3 className="text-md font-semibold mb-2">Services</h3>
+                      <div className="space-y-2">
+                        {currentElement.services.map((service: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-muted rounded-md">
+                            <div className="font-medium text-xs font-mono">{service.export?.exposed?.[0] || 'Service'}</div>
+                            <div className="text-xs text-muted-foreground font-mono mt-1">{service.implementation?.type}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {currentElement.producedEvents && currentElement.producedEvents.length > 0 && (
+                    <div>
+                      <h3 className="text-md font-semibold mb-2">Produced Events</h3>
+                      <div className="space-y-2">
+                        {currentElement.producedEvents.map((event: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-muted rounded-md">
+                            <div className="font-medium">{event.name}</div>
+                            <div className="text-sm text-muted-foreground">{event.type}</div>
+                            {event.description && (
+                              <div className="text-xs text-muted-foreground mt-1">{event.description}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {currentElement.attributes && Object.keys(currentElement.attributes).length > 0 && (
+                    <div>
+                      <h3 className="text-md font-semibold mb-2">Attributes</h3>
+                      <div className="space-y-1">
+                        {Object.entries(currentElement.attributes).map(([key, value]) => (
+                          <div key={key} className="flex gap-2 text-xs">
+                            <span className="font-medium font-mono">{key}:</span>
+                            <span className="text-muted-foreground font-mono">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {currentAppStatus?.logs && currentAppStatus.logs.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Application Logs</CardTitle>
+                    <CardDescription>Recent logs from the Elements application</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-1 max-h-96 overflow-y-auto">
+                      {currentAppStatus.logs.map((log: any, idx: number) => (
+                        <div key={idx} className="p-2 bg-muted rounded text-xs font-mono">
+                          {typeof log === 'string' ? log : JSON.stringify(log)}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : selectedResource ? (
             <div className="space-y-6 p-6">
               <DynamicResourceView
                 resource={selectedResource}
