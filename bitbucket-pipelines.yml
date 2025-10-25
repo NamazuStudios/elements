@@ -1,10 +1,3 @@
-#  Template maven-build
-
-#  This template allows you to test and build your Java project with Maven.
-#  The workflow allows running tests, code checkstyle and security scans on the default branch.
-
-# Prerequisites: pom.xml and appropriate project structure should exist in the repository.
-
 image:
   name: elementalcomputing/elements-web-services-ci:01993b3c8062b910c0bf1e8eb5ec7940457eaab2
   username: $DOCKER_HUB_USER
@@ -23,7 +16,7 @@ pipelines:
     "*":
       - step:
           size: 4x
-          name: Build Tags
+          name: Build and Deploy Tags
           services:
             - docker
           runs-on:
@@ -31,65 +24,72 @@ pipelines:
             - "self.hosted"
           script:
             - make setup_release
-            - make build
+            - make compile
+            - make package
             - make deploy
             - make docker
             - make javadoc
           after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
+
   branches:
     "release/*":
       - step:
           size: 4x
-          name: Build and Test - Release
+          name: Build and Deploy - Release
           runs-on:
             - "linux"
             - "self.hosted"
           script:
             - make setup
+            - make compile
+            - make package
+            - make deploy
             - make publish_github
             - make detach release
             - make COMMIT_MSG="Release:" commit tag
             - make push_tags publish_github_tags
           after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
+
     "development/*":
       - step:
           size: 4x
-          name: Build and Test - Development
+          name: Build and Deploy - Development
           runs-on:
             - "linux"
             - "self.hosted"
           script:
             - make setup
-            - make build
+            - make compile
+            - make package
+            - make deploy
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch
             - make COMMIT_MSG="[ci skip] Setting Next Version:" commit
             - make push push_tags publish_github publish_github_tags
           after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
+
     "stealth/*":
       - step:
           size: 4x
-          name: Build and Test - Stealth
+          name: Build Only - Stealth
           runs-on:
             - "linux"
             - "self.hosted"
           script:
             - make setup
-            - make build
+            - make compile
+            - make package
           after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
+
     main:
       - step:
           size: 4x
-          name: Build and Test
+          name: Build and Deploy - Main
           services:
             - docker
           runs-on:
@@ -99,16 +99,18 @@ pipelines:
             - maven
           script:
             - make setup
-            - make build
+            - make compile
+            - make package
+            - make deploy
             - make docker
             - make publish_github
           after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
+
   default:
     - step:
         size: 4x
-        name: Build and Test
+        name: Build and Deploy - Default
         services:
           - docker
         runs-on:
@@ -118,9 +120,10 @@ pipelines:
           - maven
         script:
           - make setup
-          - make build
+          - make compile
+          - make package
+          - make deploy
           - make docker
           - make publish_github
         after-script:
-          # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
           - pipe: atlassian/checkstyle-report:0.3.0
