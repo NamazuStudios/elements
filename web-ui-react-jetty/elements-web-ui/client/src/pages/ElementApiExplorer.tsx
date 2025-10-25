@@ -102,7 +102,18 @@ export default function ElementApiExplorer() {
       if (!response.ok) {
         throw new Error(`Failed to fetch OpenAPI spec: ${response.status} ${response.statusText}`);
       }
-      return response.json();
+      
+      // Check content type to determine how to parse
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('yaml') || contentType.includes('yml')) {
+        // Parse YAML response
+        const yamlText = await response.text();
+        const jsYaml = await import('js-yaml');
+        return jsYaml.load(yamlText);
+      } else {
+        // Parse JSON response
+        return response.json();
+      }
     },
     enabled: !!elementPath,
     staleTime: 0, // Always fetch fresh data

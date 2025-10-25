@@ -70,8 +70,8 @@ export async function getApiPath(path: string): Promise<string> {
     return path.replace('/api/proxy', '');
   }
   
-  // If path starts with absolute /api/rest, use it as-is in production
-  if (config.mode === 'production' && path.startsWith('/api/rest')) {
+  // If path starts with absolute /api/rest or /app/rest, use it as-is in production
+  if (config.mode === 'production' && (path.startsWith('/api/rest') || path.startsWith('/app/'))) {
     return path;
   }
   
