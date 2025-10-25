@@ -19,13 +19,9 @@ clone:
   depth: full
 
 caches:
-  - key: maven-repo
-    paths:
-      - ~/.m2/repository
-  - key: npm-cache
-    paths:
-      - ~/.npm
-      - elements-web-ui/node_modules
+  - ~/.m2/repository
+  - ~/.npm
+  - elements-web-ui/node_modules
 
 pipelines:
   tags:
