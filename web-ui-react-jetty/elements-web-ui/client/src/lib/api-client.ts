@@ -44,9 +44,9 @@ export class ApiClient {
           // Session expired, redirect to login with correct base path
           const basePath = import.meta.env.BASE_URL || '/';
           // Ensure proper path formation: /admin/ → /admin/login, / → /login
-          const loginPath = basePath.endsWith('/') 
-            ? `${basePath}login` 
-            : `${basePath}/login`;
+          const loginPath = basePath.endsWith('/')
+              ? `${basePath}login`
+              : `${basePath}/login`;
           window.location.href = loginPath;
           throw new Error('Session expired. Please login again.');
         }
@@ -55,7 +55,7 @@ export class ApiClient {
         error.status = response.status;
         throw error;
       }
-      
+
       // Get error message from response (read as text first, then try to parse as JSON)
       let errorMessage = '';
       try {
@@ -71,7 +71,7 @@ export class ApiClient {
       } catch {
         errorMessage = `API Error: ${response.status}`;
       }
-      
+
       // Create error with status code and message
       const error = new Error(errorMessage || `API Error: ${response.status}`) as Error & { status: number };
       error.status = response.status;
@@ -90,7 +90,7 @@ export class ApiClient {
         return undefined as T;
       }
     }
-    
+
     return undefined as T;
   }
 
@@ -98,14 +98,14 @@ export class ApiClient {
     // Use the config system to determine production vs development mode
     const { getApiConfig, getApiPath } = await import('./config');
     const config = await getApiConfig();
-    
+
     console.log('[LOGIN] Mode:', config.mode);
     console.log('[LOGIN] Config baseUrl:', config.baseUrl);
-    
+
     // Always use /api/rest/session - getApiPath will add proxy prefix in development
     const loginEndpoint = await getApiPath('/api/rest/session');
     console.log('[LOGIN] Login endpoint:', loginEndpoint);
-    
+
     const requestBody = { userId: username, password: password };
 
     const response = await fetch(loginEndpoint, {
@@ -130,25 +130,25 @@ export class ApiClient {
     }
 
     const responseData = await response.json();
-    
+
     // Extract session token from response and store it
     // Try multiple possible paths for session token
-    let sessionToken = responseData.session?.sessionSecret 
-      || responseData.sessionSecret 
-      || responseData.token;
-    
+    let sessionToken = responseData.session?.sessionSecret
+        || responseData.sessionSecret
+        || responseData.token;
+
     if (sessionToken) {
       this.setSessionToken(sessionToken);
       console.log('[LOGIN] ✓ Session token stored');
     } else {
       console.error('[LOGIN] ✗ No session token found in response');
     }
-    
+
     return {
       success: true,
       session: {
         userId: responseData.session?.user?.name || username,
-        level: responseData.session?.user?.level || 'SUPERUSER',
+        level: responseData.session?.user?.level,
       },
     };
   }
@@ -156,16 +156,16 @@ export class ApiClient {
   async logout(): Promise<void> {
     // Always use /api/rest/session - getApiPath will add proxy prefix in development
     const logoutEndpoint = await getApiPath('/api/rest/session');
-    
+
     // Send DELETE request to logout with session token header
     await fetch(logoutEndpoint, {
       method: 'DELETE',
-      headers: this.sessionToken 
-        ? { 'Elements-SessionSecret': this.sessionToken }
-        : {},
+      headers: this.sessionToken
+          ? { 'Elements-SessionSecret': this.sessionToken }
+          : {},
       credentials: 'include',
     });
-    
+
     // Clear session token after logout
     this.setSessionToken(null);
   }
@@ -173,7 +173,7 @@ export class ApiClient {
   async verifySession(): Promise<{ level: string; username: string }> {
     // Verify by calling /api/rest/session with POST and session token
     const verifyEndpoint = await getApiPath('/api/rest/session');
-    
+
     const response = await fetch(verifyEndpoint, {
       method: 'POST',
       headers: {
@@ -190,7 +190,7 @@ export class ApiClient {
 
     const data = await response.json();
     return {
-      level: data.session?.user?.level || 'SUPERUSER',
+      level: data.session?.user?.level,
       username: data.session?.user?.name || '',
     };
   }

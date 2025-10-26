@@ -34,8 +34,8 @@ export default function LoginPage() {
     try {
       await login(username, password, rememberMe);
       toast({
-        title: 'Success',
-        description: 'Successfully authenticated as SUPERUSER',
+        title: 'Access Granted',
+        description: 'Welcome to the Elements Admin Dashboard',
       });
     } catch (error) {
       toast({
@@ -49,92 +49,92 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-3">
-          <div className="flex items-center justify-center mb-2">
-            <div className="flex items-center justify-center w-32 h-32">
-              <img src={logoPath} alt="Namazu Elements" className="w-full h-full" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl text-center">Namazu Elements</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to access the admin dashboard
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                data-testid="input-username"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  data-testid="input-password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pr-12"
-                  autoComplete="current-password"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowPassword(!showPassword)}
-                    data-testid="button-toggle-password"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-3">
+            <div className="flex items-center justify-center mb-2">
+              <div className="flex items-center justify-center w-32 h-32">
+                <img src={logoPath} alt="Namazu Elements" className="w-full h-full" />
               </div>
             </div>
+            <CardTitle className="text-2xl text-center">Namazu Elements</CardTitle>
+            <CardDescription className="text-center">
+              Sign in to access the admin dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                    id="username"
+                    data-testid="input-username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                />
+              </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="remember-me"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                data-testid="checkbox-remember-me"
-              />
-              <Label
-                htmlFor="remember-me"
-                className="text-sm font-normal cursor-pointer"
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                      id="password"
+                      data-testid="input-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-12"
+                      autoComplete="current-password"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPassword(!showPassword)}
+                        data-testid="button-toggle-password"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    data-testid="checkbox-remember-me"
+                />
+                <Label
+                    htmlFor="remember-me"
+                    className="text-sm font-normal cursor-pointer"
+                >
+                  Remember me on this device
+                </Label>
+              </div>
+
+              <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading}
+                  data-testid="button-login"
               >
-                Remember me on this device
-              </Label>
-            </div>
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-              data-testid="button-login"
-            >
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-      
-      <p className="text-xs text-muted-foreground text-center mt-4 max-w-md">
-        This system uses cookies to maintain your session and ensure security.
-        By signing in, you consent to this use.
-      </p>
-    </div>
+        <p className="text-xs text-muted-foreground text-center mt-4 max-w-md">
+          This system uses cookies to maintain your session and ensure security.
+          By signing in, you consent to this use.
+        </p>
+      </div>
   );
 }
