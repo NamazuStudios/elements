@@ -61,15 +61,17 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
     queryKey: ['/api/rest/inventory/advanced', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const response = await apiClient.request<any>('/api/rest/inventory/advanced');
+      const params = new URLSearchParams();
+      if (userId) params.set('userId', userId);
+      const url = `/api/rest/inventory/advanced${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('[INVENTORY] Fetching fungible for userId:', userId, 'URL:', url);
+      const response = await apiClient.request<any>(url);
+      console.log('[INVENTORY] Fungible response:', response);
       if (response && typeof response === 'object' && 'objects' in response) {
-        const items = response.objects || [];
-        // Filter by userId since that's what we use to create inventory
-        return items.filter((item: any) => {
-          const itemUserId = item.user?.id || item.user || item.userId;
-          return itemUserId === userId;
-        });
+        console.log('[INVENTORY] Fungible objects count:', response.objects?.length || 0);
+        return response.objects || [];
       }
+      console.log('[INVENTORY] Fungible no objects found in response');
       return [];
     },
   });
@@ -79,15 +81,17 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
     queryKey: ['/api/rest/inventory/distinct', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const response = await apiClient.request<any>('/api/rest/inventory/distinct');
+      const params = new URLSearchParams();
+      if (userId) params.set('userId', userId);
+      const url = `/api/rest/inventory/distinct${params.toString() ? `?${params.toString()}` : ''}`;
+      console.log('[INVENTORY] Fetching distinct for userId:', userId, 'URL:', url);
+      const response = await apiClient.request<any>(url);
+      console.log('[INVENTORY] Distinct response:', response);
       if (response && typeof response === 'object' && 'objects' in response) {
-        const items = response.objects || [];
-        // Filter by userId since that's what we use to create inventory
-        return items.filter((item: any) => {
-          const itemUserId = item.user?.id || item.user || item.userId;
-          return itemUserId === userId;
-        });
+        console.log('[INVENTORY] Distinct objects count:', response.objects?.length || 0);
+        return response.objects || [];
       }
+      console.log('[INVENTORY] Distinct no objects found in response');
       return [];
     },
   });
@@ -101,6 +105,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
     const itemDesc = (item.item?.description || '').toLowerCase();
     return itemName.includes(searchLower) || itemId.includes(searchLower) || itemDesc.includes(searchLower);
   });
+  console.log('[INVENTORY] Fungible data:', fungibleInventoryData, 'Filtered:', fungibleInventory);
 
   const distinctInventory = (distinctInventoryData || []).filter((item: any) => {
     if (!distinctSearch) return true;
@@ -110,6 +115,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
     const itemDesc = (item.item?.description || '').toLowerCase();
     return itemName.includes(searchLower) || itemId.includes(searchLower) || itemDesc.includes(searchLower);
   });
+  console.log('[INVENTORY] Distinct data:', distinctInventoryData, 'Filtered:', distinctInventory);
 
   // Create fungible inventory mutation
   const createFungibleMutation = useMutation({

@@ -46,21 +46,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe);
-
+      
       // Use the session data returned from login response
       const level = response.session?.level;
       const userId = response.session?.userId || username;
-
+      
       // SECURITY: Only allow SUPERUSER level to access admin interface
       if (level !== 'SUPERUSER') {
         setIsAuthenticated(false);
         throw new Error('Access denied. Only SUPERUSER level accounts can access the admin interface.');
       }
-
+      
       setUserLevel(level);
       setUsername(userId);
       setIsAuthenticated(true);
-
+      
       // If "remember me" is checked, store user info in localStorage
       // This allows the UI to restore the logged-in state on page refresh
       // The actual authentication is handled by HTTP-only cookies
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Logout error:', error);
     }
-
+    
     // Clear local state and localStorage
     localStorage.removeItem('elements-user');
     setIsAuthenticated(false);
@@ -96,9 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-      <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, logout, isLoading }}>
-        {children}
-      </AuthContext.Provider>
+    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, logout, isLoading }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
