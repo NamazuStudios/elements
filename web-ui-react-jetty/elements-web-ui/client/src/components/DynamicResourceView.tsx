@@ -81,20 +81,23 @@ export function DynamicResourceView({
 
   // Analyze security requirements from OpenAPI spec
   const getSecurityRequirements = () => {
-    // Check operation-specific security
+    // Check operation-specific security first
     const operationSecurity = resource.list?.operation?.security;
 
-    // If operation has no security property (undefined), treat as no auth required
-    if (operationSecurity === undefined) return null;
+    // If operation has empty security array, explicitly no auth required
+    if (operationSecurity && operationSecurity.length === 0) return null;
 
-    // If operation has empty security array, treat as no auth required
-    if (operationSecurity.length === 0) return null;
+    // Use operation security if defined, otherwise fall back to global spec security
+    const securityToUse = operationSecurity !== undefined ? operationSecurity : spec?.security;
+
+    // If no security at all, treat as no auth required
+    if (!securityToUse || securityToUse.length === 0) return null;
 
     // Get security schemes from components
     const securitySchemes = spec?.components?.securitySchemes || {};
 
     // Parse security requirements
-    const requirements = operationSecurity.flatMap((secReq: { [key: string]: string[] }) =>
+    const requirements = securityToUse.flatMap((secReq: { [key: string]: string[] }) =>
         Object.keys(secReq).map(schemeName => ({
           name: schemeName,
           scheme: securitySchemes[schemeName],

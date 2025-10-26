@@ -63,6 +63,7 @@ interface OpenAPISpec {
       [key: string]: any;
     };
   };
+  security?: Array<{ [key: string]: string[] }>;
 }
 
 interface ElementApiTesterProps {
@@ -234,7 +235,12 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
       : null;
 
   // Check if the current operation requires authentication
-  const requiresAuth = currentOperation?.security?.some((secReq: { [key: string]: string[] }) =>
+  // Use operation-level security if defined, otherwise fall back to global security
+  const securityToCheck = currentOperation?.security !== undefined
+      ? currentOperation.security
+      : openApiSpec?.security;
+
+  const requiresAuth = securityToCheck?.some((secReq: { [key: string]: string[] }) =>
       Object.keys(secReq).some(schemeName => schemeName === 'session_secret')
   );
 
