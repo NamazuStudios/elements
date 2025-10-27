@@ -8,10 +8,10 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.4.11-SNAPSHOT</version>
+        <version>3.4.12-SNAPSHOT</version>
     </parent>
 
-    <version>3.4.11-SNAPSHOT</version>
+    <version>3.4.12-SNAPSHOT</version>
     <artifactId>sdk-local-test</artifactId>
     <name>${project.artifactId}</name>
     <groupId>dev.getelements.elements</groupId>

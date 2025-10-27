@@ -96,27 +96,24 @@ export class ApiClient {
 
   async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string } }> {
     // Use the config system to determine production vs development mode
-    const { getApiConfig } = await import('./config');
+    const { getApiConfig, getApiPath } = await import('./config');
     const config = await getApiConfig();
     
-    const isProduction = config.mode === 'production';
-    console.log('[LOGIN] Mode:', config.mode, '| Production?', isProduction);
+    console.log('[LOGIN] Mode:', config.mode);
+    console.log('[LOGIN] Config baseUrl:', config.baseUrl);
     
-    // Determine endpoint and request format
-    const loginEndpoint = isProduction
-      ? `${config.baseUrl}/session`
-      : '/api/auth/login';
+    // Always use /api/rest/session - getApiPath will add proxy prefix in development
+    const loginEndpoint = await getApiPath('/api/rest/session');
+    console.log('[LOGIN] Login endpoint:', loginEndpoint);
     
-    const requestBody = isProduction
-      ? { userId: username, password: password }
-      : { username, password, rememberMe };
+    const requestBody = { userId: username, password: password };
 
     const response = await fetch(loginEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // Allow setting cookies
+      credentials: 'include',
       body: JSON.stringify(requestBody),
     });
 
@@ -134,54 +131,36 @@ export class ApiClient {
 
     const responseData = await response.json();
     
-    // If calling Elements backend directly, extract and store session token
-    if (isProduction) {
-      // Extract session token from response
-      console.log('[LOGIN] Full response data:', JSON.stringify(responseData, null, 2));
-      
-      // Try multiple possible paths for session token
-      let sessionToken = responseData.session?.sessionSecret 
-        || responseData.sessionSecret 
-        || responseData.token;
-      
-      console.log('[LOGIN] Session token paths checked:');
-      console.log('  - responseData.session?.sessionSecret:', responseData.session?.sessionSecret);
-      console.log('  - responseData.sessionSecret:', responseData.sessionSecret);
-      console.log('  - responseData.token:', responseData.token);
-      console.log('[LOGIN] Final extracted token:', sessionToken ? 'PRESENT (' + sessionToken.substring(0, 10) + '...)' : 'MISSING');
-      
-      if (sessionToken) {
-        this.setSessionToken(sessionToken);
-        console.log('[LOGIN] ✓ Session token stored in apiClient');
-      } else {
-        console.error('[LOGIN] ✗ No session token found in response!');
-      }
-      
-      return {
-        success: true,
-        session: {
-          userId: responseData.session?.user?.name || username,
-          level: responseData.session?.user?.level || 'SUPERUSER',
-        },
-      };
+    // Extract session token from response and store it
+    // Try multiple possible paths for session token
+    let sessionToken = responseData.session?.sessionSecret 
+      || responseData.sessionSecret 
+      || responseData.token;
+    
+    if (sessionToken) {
+      this.setSessionToken(sessionToken);
+      console.log('[LOGIN] ✓ Session token stored');
+    } else {
+      console.error('[LOGIN] ✗ No session token found in response');
     }
-
-    return responseData;
+    
+    return {
+      success: true,
+      session: {
+        userId: responseData.session?.user?.name || username,
+        level: responseData.session?.user?.level,
+      },
+    };
   }
 
   async logout(): Promise<void> {
-    const config = await getApiConfig();
-    const isProduction = config.mode === 'production';
+    // Always use /api/rest/session - getApiPath will add proxy prefix in development
+    const logoutEndpoint = await getApiPath('/api/rest/session');
     
-    // In production, call Elements backend logout; in dev, call proxy
-    const logoutEndpoint = isProduction
-      ? `${config.baseUrl}/session`
-      : '/api/auth/logout';
-    
-    // Send DELETE request to logout
+    // Send DELETE request to logout with session token header
     await fetch(logoutEndpoint, {
       method: 'DELETE',
-      headers: isProduction && this.sessionToken 
+      headers: this.sessionToken 
         ? { 'Elements-SessionSecret': this.sessionToken }
         : {},
       credentials: 'include',
@@ -192,18 +171,28 @@ export class ApiClient {
   }
 
   async verifySession(): Promise<{ level: string; username: string }> {
-    const response = await fetch('/api/auth/verify', {
+    // Verify by calling /api/rest/session with POST and session token
+    const verifyEndpoint = await getApiPath('/api/rest/session');
+    
+    const response = await fetch(verifyEndpoint, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(this.sessionToken ? { 'Elements-SessionSecret': this.sessionToken } : {}),
       },
-      credentials: 'include', // Send cookies
+      credentials: 'include',
+      body: JSON.stringify({}),
     });
 
     if (!response.ok) {
       throw new Error('Session verification failed');
     }
 
-    return response.json();
+    const data = await response.json();
+    return {
+      level: data.session?.user?.level,
+      username: data.session?.user?.name || '',
+    };
   }
 }
 
