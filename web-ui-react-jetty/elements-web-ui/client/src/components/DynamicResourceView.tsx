@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Pencil, Trash2, ExternalLink, Info, Lock, User } from 'lucide-react';
 import { ResourceOperations } from '@/lib/openapi-analyzer';
+import { getApiPath, apiClient } from '@/lib/api-client';
 
 interface DynamicResourceViewProps {
   resource: ResourceOperations;
@@ -58,9 +59,9 @@ export function DynamicResourceView({
     queryParams.set('count', pageSize.toString());
   }
 
-  // Build the base path and full URL
+  // Build the base path (without environment-specific prefix yet)
   const basePath = resource.list?.path ? `${baseUrl}${resource.list.path}` : '';
-  const fullUrl = `${basePath}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const pathWithQuery = `${basePath}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
   // Determine expected response content type from OpenAPI spec
   const getResponseContentType = () => {
@@ -80,20 +81,23 @@ export function DynamicResourceView({
 
   // Analyze security requirements from OpenAPI spec
   const getSecurityRequirements = () => {
-    // Check operation-specific security
+    // Check operation-specific security first
     const operationSecurity = resource.list?.operation?.security;
     
-    // If operation has no security property (undefined), treat as no auth required
-    if (operationSecurity === undefined) return null;
+    // If operation has empty security array, explicitly no auth required
+    if (operationSecurity && operationSecurity.length === 0) return null;
     
-    // If operation has empty security array, treat as no auth required
-    if (operationSecurity.length === 0) return null;
+    // Use operation security if defined, otherwise fall back to global spec security
+    const securityToUse = operationSecurity !== undefined ? operationSecurity : spec?.security;
+    
+    // If no security at all, treat as no auth required
+    if (!securityToUse || securityToUse.length === 0) return null;
     
     // Get security schemes from components
     const securitySchemes = spec?.components?.securitySchemes || {};
     
     // Parse security requirements
-    const requirements = operationSecurity.flatMap((secReq: { [key: string]: string[] }) => 
+    const requirements = securityToUse.flatMap((secReq: { [key: string]: string[] }) => 
       Object.keys(secReq).map(schemeName => ({
         name: schemeName,
         scheme: securitySchemes[schemeName],
@@ -121,15 +125,18 @@ export function DynamicResourceView({
   // Determine which token to use
   const getAuthToken = () => {
     if (!requiresAuth) return '';
-    // Only use custom token if explicitly enabled - otherwise rely on cookies
+    // Use custom token if explicitly enabled, otherwise use current session token
     if (useCustomToken) return customToken;
-    return ''; // No token needed - authentication uses cookies
+    return apiClient.getSessionToken() || '';
   };
 
   // Fetch data from list endpoint - use basePath in queryKey for consistent cache invalidation
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [basePath, page, pageSize, useCustomToken, customToken],
     queryFn: async () => {
+      // Use getApiPath to handle production vs development mode
+      const fullUrl = await getApiPath(pathWithQuery);
+      
       const headers: Record<string, string> = {};
       const token = getAuthToken();
       if (token) {
