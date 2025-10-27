@@ -61,10 +61,16 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
     queryKey: ['/api/rest/inventory/advanced', userId],
     enabled: !!userId,
     queryFn: async () => {
+      console.log('[INVENTORY-DEBUG] Starting fungible fetch for userId:', userId);
       const params = new URLSearchParams();
-      if (userId) params.set('userId', userId);
-      const url = `/api/rest/inventory/advanced${params.toString() ? `?${params.toString()}` : ''}`;
-      console.log('[INVENTORY] Fetching fungible for userId:', userId, 'URL:', url);
+      if (userId) {
+        params.set('userId', userId);
+        console.log('[INVENTORY-DEBUG] Set userId param:', userId);
+      }
+      const paramString = params.toString();
+      console.log('[INVENTORY-DEBUG] Params string:', paramString);
+      const url = `/api/rest/inventory/advanced${paramString ? `?${paramString}` : ''}`;
+      console.log('[INVENTORY-DEBUG] Final URL:', url);
       const response = await apiClient.request<any>(url);
       console.log('[INVENTORY] Fungible response:', response);
       if (response && typeof response === 'object' && 'objects' in response) {
@@ -81,10 +87,16 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
     queryKey: ['/api/rest/inventory/distinct', userId],
     enabled: !!userId,
     queryFn: async () => {
+      console.log('[INVENTORY-DEBUG] Starting distinct fetch for userId:', userId);
       const params = new URLSearchParams();
-      if (userId) params.set('userId', userId);
-      const url = `/api/rest/inventory/distinct${params.toString() ? `?${params.toString()}` : ''}`;
-      console.log('[INVENTORY] Fetching distinct for userId:', userId, 'URL:', url);
+      if (userId) {
+        params.set('userId', userId);
+        console.log('[INVENTORY-DEBUG] Set userId param:', userId);
+      }
+      const paramString = params.toString();
+      console.log('[INVENTORY-DEBUG] Params string:', paramString);
+      const url = `/api/rest/inventory/distinct${paramString ? `?${paramString}` : ''}`;
+      console.log('[INVENTORY-DEBUG] Final URL:', url);
       const response = await apiClient.request<any>(url);
       console.log('[INVENTORY] Distinct response:', response);
       if (response && typeof response === 'object' && 'objects' in response) {
