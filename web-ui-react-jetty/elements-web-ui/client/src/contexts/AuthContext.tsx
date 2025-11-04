@@ -25,9 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
-        setUsername(userData.username);
-        setUserLevel(userData.level);
-        setIsAuthenticated(true);
+        // SECURITY: Only restore session if user is SUPERUSER
+        if (userData.level === 'SUPERUSER') {
+          setUsername(userData.username);
+          setUserLevel(userData.level);
+          setIsAuthenticated(true);
+        } else {
+          // Clear non-SUPERUSER stored data
+          localStorage.removeItem('elements-user');
+        }
       } catch (error) {
         console.error('Failed to parse stored user data:', error);
         localStorage.removeItem('elements-user');
@@ -42,8 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe);
       
       // Use the session data returned from login response
-      const level = response.session?.level || 'SUPERUSER';
+      const level = response.session?.level;
       const userId = response.session?.userId || username;
+      
+      // SECURITY: Only allow SUPERUSER level to access admin interface
+      if (level !== 'SUPERUSER') {
+        setIsAuthenticated(false);
+        throw new Error('Access denied. Only SUPERUSER level accounts can access the admin interface.');
+      }
       
       setUserLevel(level);
       setUsername(userId);

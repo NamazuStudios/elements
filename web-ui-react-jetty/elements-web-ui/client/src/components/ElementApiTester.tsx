@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Play, FileCode, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Play, FileCode, CheckCircle, XCircle, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { fixElementUri } from '@/lib/openapi-utils';
+import { apiClient } from '@/lib/api-client';
 
 interface OpenAPIPath {
   [method: string]: {
@@ -25,6 +26,7 @@ interface OpenAPIPath {
     summary?: string;
     description?: string;
     operationId?: string;
+    security?: Array<{ [key: string]: string[] }>;
     parameters?: Array<{
       name: string;
       in: string;
@@ -56,6 +58,12 @@ interface OpenAPISpec {
   paths: {
     [path: string]: OpenAPIPath;
   };
+  components?: {
+    securitySchemes?: {
+      [key: string]: any;
+    };
+  };
+  security?: Array<{ [key: string]: string[] }>;
 }
 
 interface ElementApiTesterProps {
@@ -71,6 +79,8 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
   const [queryParams, setQueryParams] = useState<Record<string, string>>({});
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [response, setResponse] = useState<{ status: number; data: any } | null>(null);
+  const [useCustomToken, setUseCustomToken] = useState(false);
+  const [customToken, setCustomToken] = useState('');
 
   // Fetch OpenAPI spec for this element
   const { data: openApiSpec, isLoading: isLoadingSpec } = useQuery<OpenAPISpec>({
@@ -159,11 +169,21 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
         url += `?${queryString}`;
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authentication header if required
+      if (requiresAuth) {
+        const token = useCustomToken ? customToken : apiClient.getSessionToken();
+        if (token) {
+          headers['Elements-SessionSecret'] = token;
+        }
+      }
+
       const options: RequestInit = {
         method: selectedMethod.toUpperCase(),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       };
 
       // Add request body for POST, PUT, PATCH
@@ -213,6 +233,16 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
   const currentOperation = selectedPath && selectedMethod && openApiSpec
     ? openApiSpec.paths[selectedPath]?.[selectedMethod.toLowerCase()]
     : null;
+
+  // Check if the current operation requires authentication
+  // Use operation-level security if defined, otherwise fall back to global security
+  const securityToCheck = currentOperation?.security !== undefined 
+    ? currentOperation.security 
+    : openApiSpec?.security;
+  
+  const requiresAuth = securityToCheck?.some((secReq: { [key: string]: string[] }) => 
+    Object.keys(secReq).some(schemeName => schemeName === 'session_secret')
+  );
 
   // Extract parameters
   const pathParameters = currentOperation?.parameters?.filter(p => p.in === 'path') || [];
@@ -385,6 +415,65 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
                   className="font-mono text-sm min-h-[120px]"
                   data-testid="textarea-request-body"
                 />
+              </CardContent>
+            </Card>
+          )}
+
+          {requiresAuth && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Authentication Required
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  This endpoint requires authentication via Elements-SessionSecret header
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="use-current-session-tester"
+                      checked={!useCustomToken}
+                      onChange={() => setUseCustomToken(false)}
+                      className="cursor-pointer"
+                      data-testid="radio-use-current-session"
+                    />
+                    <Label htmlFor="use-current-session-tester" className="cursor-pointer flex items-center gap-1 text-sm">
+                      Use Current Session
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      id="use-custom-token-tester"
+                      checked={useCustomToken}
+                      onChange={() => setUseCustomToken(true)}
+                      className="cursor-pointer"
+                      data-testid="radio-use-custom-token"
+                    />
+                    <Label htmlFor="use-custom-token-tester" className="cursor-pointer text-sm">
+                      Override with Custom Token
+                    </Label>
+                  </div>
+                </div>
+                
+                {useCustomToken && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom-token-tester" className="text-xs">Session Token</Label>
+                    <Input
+                      id="custom-token-tester"
+                      type="text"
+                      placeholder="Enter session token..."
+                      value={customToken}
+                      onChange={(e) => setCustomToken(e.target.value)}
+                      className="font-mono text-xs"
+                      data-testid="input-custom-token"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

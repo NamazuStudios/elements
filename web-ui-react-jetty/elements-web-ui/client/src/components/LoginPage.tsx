@@ -34,8 +34,8 @@ export default function LoginPage() {
     try {
       await login(username, password, rememberMe);
       toast({
-        title: 'Success',
-        description: 'Successfully authenticated as SUPERUSER',
+        title: 'Access Granted',
+        description: 'Welcome to the Elements Admin Dashboard',
       });
     } catch (error) {
       toast({

@@ -38,9 +38,7 @@ public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryI
                                                        final String userId,
                                                        final String query) {
         final User user = isCurrentUser(userId) ? getUser() : getUserDao().getUser(userId);
-        return isCurrentUser(userId) ?
-                getInventoryItemDao().getInventoryItems(offset, count, user, query) :
-                getInventoryItemDao().getUserPublicInventoryItems(offset, count, user);
+        return getInventoryItemDao().getInventoryItems(offset, count, user, query);
     }
 
     @Override

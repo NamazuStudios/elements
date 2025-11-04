@@ -56,7 +56,6 @@ export const getQueryFn: <T>(options: {
     
     console.log('[QUERY] Fetching:', queryKey);
     console.log('[QUERY] Config mode:', config.mode);
-    console.log('[QUERY] Session token present?', !!sessionToken);
     
     // In production mode, add session token header
     if (config.mode === 'production') {
