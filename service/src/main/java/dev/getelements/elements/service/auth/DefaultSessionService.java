@@ -34,8 +34,8 @@ public class DefaultSessionService implements SessionService {
     }
 
     @Override
-    public void blacklistSession(final String userId, final String sessionSecret) {
-        getSessionDao().blacklist(userId, sessionSecret);
+    public void blacklistSession(final String sessionSecret) {
+        getSessionDao().blacklist(sessionSecret);
     }
 
     public SessionDao getSessionDao() {

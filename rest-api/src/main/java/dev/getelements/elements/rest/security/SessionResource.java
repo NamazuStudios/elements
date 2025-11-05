@@ -13,24 +13,13 @@ import jakarta.ws.rs.PathParam;
 @Path("session")
 public class SessionResource {
 
-    private User user;
-
     private SessionService sessionService;
 
     @DELETE
     @Operation(summary = "Destroys the Session")
     @Path("{sessionSecret}")
     public void blacklistSession(@PathParam("sessionSecret") final String sessionSecret) {
-        getSessionService().blacklistSession(user.getId(), sessionSecret);
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    @Inject
-    public void setUser(User user) {
-        this.user = user;
+        getSessionService().blacklistSession(sessionSecret);
     }
 
     public SessionService getSessionService() {
