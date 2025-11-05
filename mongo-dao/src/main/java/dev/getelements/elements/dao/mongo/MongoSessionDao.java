@@ -187,7 +187,7 @@ public class MongoSessionDao implements SessionDao {
     }
 
     @Override
-    public void blacklist(final String userId, final String sessionSecret) {
+    public void blacklist(final String sessionSecret) {
 
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;

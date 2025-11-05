@@ -29,9 +29,8 @@ public interface SessionService {
      * Blacklists the {@link Session} instance currently in-use for the specific user id as returned by
      * {@link User#getId()}
      *
-     * @param userId the user is
      * @param sessionSecret the session secret
      */
-    void blacklistSession(final String userId, String sessionSecret);
+    void blacklistSession(String sessionSecret);
 
 }

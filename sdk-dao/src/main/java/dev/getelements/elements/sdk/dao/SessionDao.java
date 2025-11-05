@@ -41,9 +41,8 @@ public interface SessionDao {
     /**
      * Deletes the {@link Session} instance.  The secret is determined by {@link SessionCreation#getSessionSecret()}.
      *
-     * @param userId        the user ID owning the session
      * @param sessionSecret the session secret
      */
-    void blacklist(String userId, String sessionSecret);
+    void blacklist(String sessionSecret);
 
 }
