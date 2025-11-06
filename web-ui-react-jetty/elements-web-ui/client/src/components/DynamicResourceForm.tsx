@@ -130,6 +130,9 @@ export function DynamicResourceForm({
         if (mode === 'create' && (groups.insert === 'null' || groups.create === 'null')) {
           continue; // Skip this field for create mode
         }
+        if (mode === 'update' && groups.update === 'null') {
+          continue; // Skip this field for update mode (must be null)
+        }
       }
       
       // Special case: Metadata Spec properties field should accept array and be required
@@ -438,6 +441,16 @@ export function DynamicResourceForm({
         continue;
       }
       
+      // Skip fields that must be null in update mode
+      if (field?.validationGroups) {
+        if (mode === 'update' && field.validationGroups.update === 'null') {
+          continue;
+        }
+        if (mode === 'create' && (field.validationGroups.insert === 'null' || field.validationGroups.create === 'null')) {
+          continue;
+        }
+      }
+      
       // Skip id field in update mode (it's already in the URL path)
       if (key === 'id' && mode === 'update') {
         continue;
@@ -630,6 +643,16 @@ export function DynamicResourceForm({
         : dependentValue === showWhen;
       
       if (!shouldShow) {
+        return null;
+      }
+    }
+    
+    // Hide fields that must be null in update mode
+    if (field.validationGroups) {
+      if (mode === 'update' && field.validationGroups.update === 'null') {
+        return null;
+      }
+      if (mode === 'create' && (field.validationGroups.insert === 'null' || field.validationGroups.create === 'null')) {
         return null;
       }
     }
