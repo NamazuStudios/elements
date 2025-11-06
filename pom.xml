@@ -5,7 +5,11 @@
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <name>Namazu Elements</name>
+<<<<<<< Updated upstream
     <version>3.4.0-SNAPSHOT</version>
+=======
+    <version>3.5.0-SNAPSHOT</version>
+>>>>>>> Stashed changes
     <packaging>pom</packaging>
 
     <scm>

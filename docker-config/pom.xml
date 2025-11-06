@@ -7,14 +7,22 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
+<<<<<<< Updated upstream
         <version>3.4.0-SNAPSHOT</version>
+=======
+        <version>3.5.0-SNAPSHOT</version>
+>>>>>>> Stashed changes
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <artifactId>docker-config</artifactId>
     <name>${project.artifactId}</name>
+<<<<<<< Updated upstream
     <version>3.4.0-SNAPSHOT</version>
+=======
+    <version>3.5.0-SNAPSHOT</version>
+>>>>>>> Stashed changes
 
     <modules>
         <module>elements-base</module>
