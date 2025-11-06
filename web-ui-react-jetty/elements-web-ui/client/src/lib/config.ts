@@ -84,14 +84,21 @@ export async function getApiPath(path: string): Promise<string> {
   }
   
   // If path starts with absolute /api/rest or /app/, use it as-is in production
+  // This preserves query parameters and full path structure
   if (config.mode === 'production' && (path.startsWith('/api/rest') || path.startsWith('/app/'))) {
-    console.log('[getApiPath] Production: Using path as-is → ', path);
+    console.log('[getApiPath] Production: Using path as-is (preserving query params) → ', path);
     return path;
   }
   
   // For development, prefix with /api/proxy if not already present
   if (config.mode === 'development' && !path.startsWith('/api/proxy')) {
-    const result = `${config.baseUrl}${path}`;
+    // Normalize relative paths (./path -> /path)
+    let normalizedPath = path.startsWith('./') ? path.substring(1) : path;
+    // Ensure path starts with / for proper concatenation
+    if (!normalizedPath.startsWith('/')) {
+      normalizedPath = '/' + normalizedPath;
+    }
+    const result = `${config.baseUrl}${normalizedPath}`;
     console.log('[getApiPath] Development: Adding proxy prefix → ', result);
     return result;
   }
