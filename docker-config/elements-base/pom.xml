@@ -6,11 +6,7 @@
     <parent>
         <artifactId>docker-config</artifactId>
         <groupId>dev.getelements.elements</groupId>
-<<<<<<< Updated upstream
         <version>3.4.0-SNAPSHOT</version>
-=======
-        <version>3.5.0-SNAPSHOT</version>
->>>>>>> Stashed changes
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -18,11 +14,7 @@
 
     <artifactId>elements-base</artifactId>
     <name>${project.artifactId}</name>
-<<<<<<< Updated upstream
     <version>3.4.0-SNAPSHOT</version>
-=======
-    <version>3.5.0-SNAPSHOT</version>
->>>>>>> Stashed changes
 
 </project>
 

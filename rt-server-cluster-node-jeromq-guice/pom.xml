@@ -8,20 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-<<<<<<< Updated upstream
         <version>3.4.0-SNAPSHOT</version>
-=======
-        <version>3.5.0-SNAPSHOT</version>
->>>>>>> Stashed changes
     </parent>
 
     <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
     <name>${project.artifactId}</name>
-<<<<<<< Updated upstream
     <version>3.4.0-SNAPSHOT</version>
-=======
-    <version>3.5.0-SNAPSHOT</version>
->>>>>>> Stashed changes
     <url>https://namazustudios.com</url>
 
     <dependencies>
