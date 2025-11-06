@@ -1,6 +1,7 @@
 package dev.getelements.elements.config;
 
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord;
 import dev.getelements.elements.sdk.util.Environment;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.FieldInfo;
@@ -14,12 +15,17 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static dev.getelements.elements.sdk.model.Constants.*;
+import static dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord.REDACTED;
 import static java.lang.String.format;
 import static java.lang.System.getProperties;
 import static java.lang.System.getenv;
@@ -49,6 +55,8 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
     private final Properties properties;
 
     private final Properties defaultProperties;
+
+    private final List<ElementDefaultAttributeRecord> defaultAttributeRecords;
 
     /**
      * Uses all default configuration.  This scans the classpath using the {@link ClassLoader} from
@@ -186,6 +194,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
     public DefaultConfigurationSupplier(final Properties properties) {
         final var classLoader = getClass().getClassLoader();
 
+        defaultAttributeRecords = scanForDefaultAttributes(classLoader);
         defaultProperties = scanForDefaults(classLoader);
         this.properties = new Properties(defaultProperties);
         this.properties.putAll(properties);
@@ -196,24 +205,39 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
             e.getKey().toString().startsWith(PROPERTY_PREFIX) ||
             e.getKey().toString().startsWith(ENVIRONMENT_PREFIX);
 
+        final var redacted = defaultAttributeRecords
+                .stream()
+                .filter(ElementDefaultAttributeRecord::sensitive)
+                .map(ElementDefaultAttributeRecord::name)
+                .collect(Collectors.toSet());
+
         sb.append("\nApplication Properties:\n");
         properties
             .entrySet()
             .stream()
             .filter(filter)
-            .forEach(e -> sb.append(format("\t%s=%s\n", e.getKey(), e.getValue())));
+            .forEach(e -> sb.append(format("\t%s=%s\n",
+                    e.getKey(),
+                    redacted.contains(e.getKey()) ? REDACTED : e.getValue())));
 
         sb.append("Default Properties:\n");
-        defaultProperties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
+        defaultProperties
+                .entrySet()
+                .forEach(e -> sb.append(format("\t%s=%s\n",
+                        e.getKey(),
+                        redacted.contains(e.getKey()) ? REDACTED : e.getValue())));
 
         sb.append("System Properties (Included in Application Properties):\n");
         properties
             .entrySet()
             .stream()
             .filter(filter.negate())
-            .forEach(e -> sb.append(format("\t%s=%s\n", e.getKey(), e.getValue())));
+            .forEach(e -> sb.append(format("\t%s=%s\n",
+                    e.getKey(),
+                    redacted.contains(e.getKey()) ? REDACTED : e.getValue())));
 
-        logger.info("{}\n", sb.toString());
+        logger.info("{}\n", sb);
+
     }
 
     @Override
@@ -221,6 +245,38 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         final Properties properties = new Properties(defaultProperties);
         properties.putAll(this.properties);
         return properties;
+    }
+
+    private List<ElementDefaultAttributeRecord> scanForDefaultAttributes(final ClassLoader classLoader) {
+
+        final var result = new ClassGraph()
+                .overrideClassLoaders(classLoader)
+                .ignoreParentClassLoaders()
+                .enableClassInfo()
+                .acceptPackages("dev.getelements")
+                .enableFieldInfo()
+                .enableClassInfo()
+                .enableAnnotationInfo()
+                .scan();
+
+        try (result) {
+
+            return result.getClassesWithFieldAnnotation(ElementDefaultAttribute.class)
+                    .stream()
+                    .flatMap(classInfo -> classInfo
+                            .getDeclaredFieldInfo()
+                            .stream()
+                            .filter(fieldInfo ->
+                                    fieldInfo.hasAnnotation(ElementDefaultAttribute.class) &&
+                                            fieldInfo.isStatic() &&
+                                            fieldInfo.isFinal())
+                            .map(FieldInfo::loadClassAndGetField)
+                    )
+                    .map(ElementDefaultAttributeRecord::from)
+                    .toList();
+
+        }
+
     }
 
     private Properties scanForDefaults(final ClassLoader classLoader) {
@@ -238,31 +294,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         try (result) {
 
             final Properties defaultProperties = new Properties();
-
-            result.getClassesWithFieldAnnotation(ElementDefaultAttribute.class)
-                    .stream()
-                    .flatMap(classInfo -> classInfo
-                            .getDeclaredFieldInfo()
-                            .stream()
-                            .filter(fieldInfo ->
-                                    fieldInfo.hasAnnotation(ElementDefaultAttribute.class) &&
-                                    fieldInfo.isStatic() &&
-                                    fieldInfo.isFinal())
-                            .map(FieldInfo::loadClassAndGetField)
-                    )
-                    .forEach(field -> {
-
-                        field.setAccessible(true);
-
-                        try {
-                            final var key = field.get(null).toString();
-                            final var value = field.getAnnotation(ElementDefaultAttribute.class).value();
-                            defaultProperties.put(key, value);
-                        } catch (IllegalAccessException ex) {
-                            logger.error("Could not get default property.", ex);
-                        }
-
-                    });
+            defaultAttributeRecords.forEach(record -> defaultProperties.put(record.name(), record.value()));
 
             final var moduleDefaultClassInfo = result.getClassesImplementing(ModuleDefaults.class);
 

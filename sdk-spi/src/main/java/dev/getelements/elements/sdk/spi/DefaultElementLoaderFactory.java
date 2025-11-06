@@ -216,16 +216,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                                     fieldInfo.isFinal())
                             .map(FieldInfo::loadClassAndGetField)
                     )
-                    .map(field -> {
-                        try {
-                            final var value = field.get(null).toString();
-                            final var annotation = field.getAnnotation(ElementDefaultAttribute.class);
-                            field.setAccessible(true);
-                            return new ElementDefaultAttributeRecord(value, annotation.value());
-                        } catch (IllegalAccessException ex) {
-                            throw new SdkException(ex);
-                        }
-                    })
+                    .map(ElementDefaultAttributeRecord::from)
                     .collect(toList());
 
         }
