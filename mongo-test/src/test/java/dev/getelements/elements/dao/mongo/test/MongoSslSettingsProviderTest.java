@@ -4,22 +4,18 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.mongodb.connection.SslSettings;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
-import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
-import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CA;
-import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CLIENT_CERTIFICATE;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.*;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
-import static org.testng.AssertJUnit.assertFalse;
 
 
 public class MongoSslSettingsProviderTest {
-
 
     @Test
     public void testWithSslEnabledSecure() {
@@ -43,7 +39,7 @@ public class MongoSslSettingsProviderTest {
 
         assertTrue(sslSettings.isEnabled());
         assertTrue(sslSettings.isInvalidHostNameAllowed());
-        assertNotNull(sslSettings.getContext());
+        Assert.assertNotNull(sslSettings.getContext());
 
     }
 
@@ -56,7 +52,7 @@ public class MongoSslSettingsProviderTest {
 
         assertTrue(sslSettings.isEnabled());
         assertFalse(sslSettings.isInvalidHostNameAllowed());
-        assertNotNull(sslSettings.getContext());
+        Assert.assertNotNull(sslSettings.getContext());
 
     }
 
@@ -68,7 +64,7 @@ public class MongoSslSettingsProviderTest {
                 .getInstance(SslSettings.class);
 
         assertFalse(sslSettings.isEnabled());
-        assertNull(sslSettings.getContext());
+        Assert.assertNull(sslSettings.getContext());
 
     }
 
@@ -80,7 +76,7 @@ public class MongoSslSettingsProviderTest {
                 .getInstance(SslSettings.class);
 
         assertFalse(sslSettings.isEnabled());
-        assertNull(sslSettings.getContext());
+        Assert.assertNull(sslSettings.getContext());
 
     }
 
@@ -113,8 +109,6 @@ public class MongoSslSettingsProviderTest {
                 return properties;
             }));
 
-            bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
-
         }
 
     }
@@ -139,8 +133,6 @@ public class MongoSslSettingsProviderTest {
                 properties.put(MONGO_CLIENT_URI, uri);
                 return properties;
             }));
-
-            bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
 
         }
 

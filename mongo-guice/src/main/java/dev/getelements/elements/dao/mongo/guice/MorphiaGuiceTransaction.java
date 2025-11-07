@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.Injector;
 import com.mongodb.MongoException;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.TooBusyException;
@@ -9,6 +10,7 @@ import dev.getelements.elements.sdk.util.LazyValue;
 import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import dev.morphia.transactions.MorphiaSession;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import java.util.Random;
 
@@ -19,7 +21,13 @@ import static java.lang.Thread.sleep;
 
 public class MorphiaGuiceTransaction implements Transaction {
 
-    private static final long MAX_RETRIES = 32;
+    @ElementDefaultAttribute(
+            value = "32",
+            description = "Defines the number of times a transaction will try before failing."
+    )
+    public static final String MAX_RETRIES = "dev.getelements.elements.mongo.transaction.retry.count";
+
+    private int maxRetries;
 
     private long failures = 0;
 
@@ -44,7 +52,7 @@ public class MorphiaGuiceTransaction implements Transaction {
     @Override
     public void commit() {
 
-        if (failures > MAX_RETRIES) {
+        if (failures > getMaxRetries()) {
             throw new TooBusyException("Maximum number of retries reached");
         }
 
@@ -59,7 +67,7 @@ public class MorphiaGuiceTransaction implements Transaction {
 
     private void retryCommitUntilSuccessOrFailure() {
 
-        while (failures < MAX_RETRIES) {
+        while (failures < getMaxRetries()) {
             try {
                 final var delay = calculateNextDelay();
                 sleep(delay);
@@ -109,6 +117,15 @@ public class MorphiaGuiceTransaction implements Transaction {
     @Override
     public void close() {
         getMorphiaSession().close();
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    @Inject
+    public void setMaxRetries(@Named(MAX_RETRIES) int maxRetries) {
+        this.maxRetries = maxRetries;
     }
 
     public Injector getInjector() {

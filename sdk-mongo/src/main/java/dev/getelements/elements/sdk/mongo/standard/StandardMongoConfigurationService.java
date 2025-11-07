@@ -22,50 +22,6 @@ import java.security.cert.CertificateException;
 
 public class StandardMongoConfigurationService implements MongoConfigurationService {
 
-    @ElementDefaultAttribute(value = "mongodb://localhost", description = "The MongoDB Client URI.")
-    public static final String MONGO_CLIENT_URI = "dev.getelements.elements.mongo.uri";
-
-    @ElementDefaultAttribute(value = "PKCS12", description = "The format of the TLS/SSL keys.")
-    public static final String FORMAT = "dev.getelements.elements.mongo.tls.format";
-
-    @ElementDefaultAttribute(
-            supplier = StandardTrustManagerFactoryAlgorithmSupplier.class,
-            description = "Specifies the TrustManagerFactory algorithm to use. (Defaults to System Default)"
-    )
-    public static final String TRUST_ALGORITHM =  "dev.getelements.elements.mongo.tls.trust.algorithm";
-
-    @ElementDefaultAttribute(
-            supplier = StandardKeyManagerFactoryAlgorithmSupplier.class,
-            description = "Specifies the KeyManagerFactory algorithm to use. (Defaults to System Default)"
-    )
-    public static final String KEY_ALGORITHM =  "dev.getelements.elements.mongo.tls.key.algorithm";
-
-    @ElementDefaultAttribute(
-            description = "The path to the Certificate Authority (CA) file. (May be Blank)."
-    )
-    public static final String CA = "dev.getelements.elements.mongo.tls.ca";
-
-    @ElementDefaultAttribute(
-            sensitive = true,
-            description = "The passphrase for the Certificate Authority (CA) file. (May be Blank)."
-    )
-    public static final String CA_PASSPHRASE = "dev.getelements.elements.mongo.tls.ca.passphrase";
-
-    @ElementDefaultAttribute(
-            sensitive = true,
-            description = "The path to the client certificate file."
-    )
-    public static final String CLIENT_CERTIFICATE = "dev.getelements.elements.mongo.tls.client.certificate";
-
-    @ElementDefaultAttribute(
-            sensitive = true,
-            description = "The passphrase for the client certificate file."
-    )
-    public static final String CLIENT_CERTIFICATE_PASSPHRASE = "dev.getelements.elements.mongo.tls.client.certificate.passphrase";
-
-    @ElementDefaultAttribute(value = "TLS", description = "The TLS/SSL protocol to use.")
-    public static final String SSL_PROTOCOL = "dev.getelements.elements.mongo.tls.protocol";
-
     private static final Logger logger = LoggerFactory.getLogger(StandardMongoConfigurationService.class);
 
     private String mongoDbUri;
@@ -130,7 +86,10 @@ public class StandardMongoConfigurationService implements MongoConfigurationServ
             kmf.init(certificate, getClientCertificatePassphrase().toCharArray());
 
             logger.info("Enabled TLS/SSL.");
-            return new MongoSslConfiguration(kmf.getKeyManagers(), tmf.getTrustManagers());
+            return new MongoSslConfiguration(
+                    kmf.getKeyManagers(),
+                    tmf.getTrustManagers(),
+                    getSslProtocol());
 
         } catch (IOException |
                  NoSuchAlgorithmException |

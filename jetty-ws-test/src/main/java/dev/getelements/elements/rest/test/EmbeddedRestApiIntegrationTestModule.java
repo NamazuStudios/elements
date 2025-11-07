@@ -12,10 +12,10 @@ import dev.getelements.elements.sdk.model.application.Application;
 import java.util.Properties;
 
 import static com.google.inject.name.Names.named;
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.rest.test.ClientContext.CONTEXT_APPLICATION;
 import static dev.getelements.elements.rest.test.TestUtils.*;
 import static dev.getelements.elements.sdk.model.Constants.HTTP_PORT;
+import static dev.getelements.elements.sdk.mongo.standard.StandardMongoConfigurationService.MONGO_CLIENT_URI;
 import static java.lang.String.format;
 
 public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {

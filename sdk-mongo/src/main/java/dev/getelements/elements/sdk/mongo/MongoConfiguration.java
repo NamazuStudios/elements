@@ -21,7 +21,8 @@ public record MongoConfiguration(
     }
 
     /**
-     * Finds the SSL configuration for the MongoDB connection, if any.
+     * Finds the SSL configuration for the MongoDB connection, if any. May be empty if SSL is not configured and the
+     * connection is not using SSL.
      *
      * @return the {@link MongoSslConfiguration} if SSL is configured, empty otherwise
      */

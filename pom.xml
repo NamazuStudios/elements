@@ -578,6 +578,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-mongo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test-element</artifactId>
                 <version>${project.version}</version>
             </dependency>

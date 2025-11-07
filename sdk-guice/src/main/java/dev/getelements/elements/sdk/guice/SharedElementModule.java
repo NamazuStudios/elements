@@ -19,7 +19,7 @@ import static com.google.inject.name.Names.named;
  */
 public class SharedElementModule extends PrivateModule {
 
-    private final Package aPackage;
+    protected final Package aPackage;
 
     public SharedElementModule(final String packageName) {
         this(ElementReflectionUtils.getInstance().getPackageForElementsAnnotations(packageName));

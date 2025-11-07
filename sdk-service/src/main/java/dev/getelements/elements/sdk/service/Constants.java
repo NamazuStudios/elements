@@ -37,49 +37,73 @@ public interface Constants {
     /**
      * Used to specify the RPC provider for bsc blockchain.
      */
-    @ElementDefaultAttribute("https://data-seed-prebsc-1-s1.binance.org:8545")
+    @ElementDefaultAttribute(
+            value = "https://data-seed-prebsc-1-s1.binance.org:8545",
+            description = "The RPC provider URL for the BSC blockchain."
+    )
     String BSC_RPC_PROVIDER = "dev.getelements.elements.blockchain.bsc.provider";
 
     /**
      * Used to specify the session timeout, in seconds
      */
-    @ElementDefaultAttribute("172800")
+    @ElementDefaultAttribute(
+            value = "172800",
+            description = "The session timeout duration, in seconds."
+    )
     String SESSION_TIMEOUT_SECONDS = "dev.getelements.elements.session.timeout.seconds";
 
     /**
      * Used to specify the mock session timeout.
      */
-    @ElementDefaultAttribute("3600")
+    @ElementDefaultAttribute(
+            value = "3600",
+            description = "The mock session timeout duration, in seconds."
+    )
     String MOCK_SESSION_TIMEOUT_SECONDS = "dev.getelements.elements.mock.session.timeout.seconds";
 
     /**
      * Used to specify the host for neo blockchain.
      */
-    @ElementDefaultAttribute("http://127.0.0.1")
+    @ElementDefaultAttribute(
+            value = "http://127.0.0.1",
+            description = "The host URL for the NEO blockchain."
+    )
     String NEO_BLOCKCHAIN_HOST = "dev.getelements.elements.blockchain.neo.host";
 
     /**
      * Used to specify the port for neo blockchain.
      */
-    @ElementDefaultAttribute("50012")
+    @ElementDefaultAttribute(
+            value = "50012",
+            description = "The port for the NEO blockchain."
+    )
     String NEO_BLOCKCHAIN_PORT = "dev.getelements.elements.blockchain.neo.port";
 
     /**
      * Used to specify the file path for static content.
      */
-    @ElementDefaultAttribute("content")
+    @ElementDefaultAttribute(
+            value = "content",
+            description = "The file path for static content storage."
+    )
     String CDN_FILE_DIRECTORY = "dev.getelements.elements.cdnserve.storage.directory";
 
     /**
      * Used to specify the endpoint file path for cloning static content.
      */
-    @ElementDefaultAttribute("clone")
+    @ElementDefaultAttribute(
+            value = "clone",
+            description = "The endpoint for cloning static content."
+    )
     String CDN_CLONE_ENDPOINT = "dev.getelements.elements.cdnserve.endpoint.clone";
 
     /**
      * Used to specify the endpoint for serving static content.
      */
-    @ElementDefaultAttribute("serve")
+    @ElementDefaultAttribute(
+            value = "serve",
+            description = "The endpoint for serving static content."
+    )
     String CDN_SERVE_ENDPOINT = "dev.getelements.elements.cdnserve.endpoint.serve";
 
 }

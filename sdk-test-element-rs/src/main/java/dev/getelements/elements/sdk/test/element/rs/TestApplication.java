@@ -20,10 +20,10 @@ public class TestApplication extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(TestApplication.class);
 
-    @ElementDefaultAttribute("true")
+    @ElementDefaultAttribute(value = "true", description = "Enabled by default for this Element.")
     public static final String AUTH_ENABLED = "dev.getelements.elements.auth.enabled";
 
-    @ElementDefaultAttribute("myapp")
+    @ElementDefaultAttribute(value = "myapp", description = "The application serve prefix for this Element.")
     public static final String APP_SERVE_PREFIX = "dev.getelements.elements.app.serve.prefix";
 
     @Override

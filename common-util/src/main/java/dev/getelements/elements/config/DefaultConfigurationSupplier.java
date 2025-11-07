@@ -237,6 +237,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
                     redacted.contains(e.getKey()) ? REDACTED : e.getValue())));
 
         sb.append("All Known Default Attributes:\n");
+
         defaultAttributeRecords
                 .forEach(attr -> sb.append("\t%s=%s - %s\n".formatted(
                         attr.name(),
