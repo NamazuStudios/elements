@@ -37,6 +37,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 
 /**
  * MongoDB implementation of {@link UserDao}.
@@ -133,7 +134,7 @@ public class MongoUserDao implements UserDao {
 
     @Override
     public Pagination<User> getUsers(final int offset, final int count) {
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class).filter(exists("name"));
         return paginationFromQuery(query, offset, count);
     }
 
@@ -146,7 +147,7 @@ public class MongoUserDao implements UserDao {
             throw new InvalidDataException("queryString must be specified.");
         }
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class).filter(exists("name"));
 
         query.filter(
                 or(
@@ -561,11 +562,11 @@ public class MongoUserDao implements UserDao {
 
         final var builder = new UpdateBuilder()
                 .with(
-                        set("name", ""),
-                        set("email", ""),
-                        set("primaryPhoneNb", ""),
-                        set("firstName", ""),
-                        set("lastName", "")
+                        unset("name"),
+                        unset("email"),
+                        unset("primaryPhoneNb"),
+                        unset("firstName"),
+                        unset("lastName")
                 )
                 .with(getMongoPasswordUtils()::scramblePassword);
 
