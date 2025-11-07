@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.mongo.test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.Key;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.ElementRegistry;
@@ -10,8 +11,9 @@ import org.testng.annotations.Test;
 
 import java.util.Properties;
 
+import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.*;
-import static java.lang.String.format;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -22,11 +24,8 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledSecure() {
 
         final var registry = Guice
-                .createInjector(
-                        new MongoSdkTestElementModule(),
-                        new SslEnabledModule(false)
-                )
-                .getInstance(ElementRegistry.class);
+                .createInjector(new SslEnabledModule(false))
+                .getInstance(Key.get(ElementRegistry.class, named(ROOT)));
 
         final var mongoConfiguration = registry
                 .find("dev.getelements.elements.sdk.mongo")
@@ -36,60 +35,88 @@ public class MongoSslSettingsProviderTest {
                 .getInstance(MongoConfigurationService.class)
                 .getMongoConfiguration();
 
-        assertTrue(mongoConfiguration.findSessionConfiguration().isPresent());;
+        assertTrue(mongoConfiguration.findSslConfiguration().isPresent());;
         assertFalse(mongoConfiguration.sslConfiguration().sslInvalidHostNamesAllowed());
 
     }
 
-//    @Test
-//    public void testWithSslEnabledInsecure() {
-//
-//        final var sslSettings = Guice
-//                .createInjector(new SslEnabledModule(true))
-//                .getInstance(SslSettings.class);
-//
-//        assertTrue(sslSettings.isEnabled());
-//        assertTrue(sslSettings.isInvalidHostNameAllowed());
-//        Assert.assertNotNull(sslSettings.getContext());
-//
-//    }
-//
-//    @Test
-//    public void testWithSslEnabledDefault() {
-//
-//        final var sslSettings = Guice
-//                .createInjector(new SslEnabledModule())
-//                .getInstance(SslSettings.class);
-//
-//        assertTrue(sslSettings.isEnabled());
-//        assertFalse(sslSettings.isInvalidHostNameAllowed());
-//        Assert.assertNotNull(sslSettings.getContext());
-//
-//    }
-//
-//    @Test
-//    public void testWithSslDisabledExplicit() {
-//
-//        final var sslSettings = Guice
-//                .createInjector(new SslDisabledModule(true))
-//                .getInstance(SslSettings.class);
-//
-//        assertFalse(sslSettings.isEnabled());
-//        Assert.assertNull(sslSettings.getContext());
-//
-//    }
-//
-//    @Test
-//    public void testWithSslDisabledImplicit() {
-//
-//        final var sslSettings = Guice
-//                .createInjector(new SslDisabledModule(false))
-//                .getInstance(SslSettings.class);
-//
-//        assertFalse(sslSettings.isEnabled());
-//        Assert.assertNull(sslSettings.getContext());
-//
-//    }
+    @Test
+    public void testWithSslEnabledInsecure() {
+
+        final var registry = Guice
+                .createInjector(new SslEnabledModule(true))
+                .getInstance(Key.get(ElementRegistry.class, named(ROOT)));
+
+        final var mongoConfiguration = registry
+                .find("dev.getelements.elements.sdk.mongo")
+                .findFirst()
+                .get()
+                .getServiceLocator()
+                .getInstance(MongoConfigurationService.class)
+                .getMongoConfiguration();
+
+        assertTrue(mongoConfiguration.findSslConfiguration().isPresent());
+        assertTrue(mongoConfiguration.sslConfiguration().sslInvalidHostNamesAllowed());
+
+    }
+
+    @Test
+    public void testWithSslEnabledDefault() {
+
+        final var registry = Guice
+                .createInjector(new SslEnabledModule())
+                .getInstance(Key.get(ElementRegistry.class, named(ROOT)));
+
+        final var mongoConfiguration = registry
+                .find("dev.getelements.elements.sdk.mongo")
+                .findFirst()
+                .get()
+                .getServiceLocator()
+                .getInstance(MongoConfigurationService.class)
+                .getMongoConfiguration();
+
+        assertTrue(mongoConfiguration.findSslConfiguration().isPresent());
+        assertFalse(mongoConfiguration.sslConfiguration().sslInvalidHostNamesAllowed());
+
+    }
+
+    @Test
+    public void testWithSslDisabledExplicit() {
+
+        final var registry = Guice
+                .createInjector(new SslDisabledModule(true))
+                .getInstance(Key.get(ElementRegistry.class, named(ROOT)));
+
+        final var mongoConfiguration = registry
+                .find("dev.getelements.elements.sdk.mongo")
+                .findFirst()
+                .get()
+                .getServiceLocator()
+                .getInstance(MongoConfigurationService.class)
+                .getMongoConfiguration();
+
+        assertTrue(mongoConfiguration.findSslConfiguration().isEmpty());
+
+    }
+
+    @Test
+    public void testWithSslDisabledImplicit() {
+
+        final var registry = Guice
+                .createInjector(new SslDisabledModule(false))
+                .getInstance(Key.get(ElementRegistry.class, named(ROOT)));
+
+        final var mongoConfiguration = registry
+                .find("dev.getelements.elements.sdk.mongo")
+                .findFirst()
+                .get()
+                .getServiceLocator()
+                .getInstance(MongoConfigurationService.class)
+                .getMongoConfiguration();
+
+        assertTrue(mongoConfiguration.findSslConfiguration().isEmpty());
+
+    }
 
     public static class SslEnabledModule extends AbstractModule {
 
@@ -110,7 +137,9 @@ public class MongoSslSettingsProviderTest {
 
             final var uri = insecure == null
                     ? "mongodb://localhost/?tls=true"
-                    : format("mongodb://localhost/?tls=true&tlsinsecure=%s", insecure);
+                    : "mongodb://localhost/?tls=true&tlsinsecure=%s".formatted(insecure);
+
+            install(new MongoSdkTestElementModule());
 
             install(new ConfigurationModule(() -> {
                 final var properties = new Properties(new DefaultConfigurationSupplier().get());
@@ -138,6 +167,8 @@ public class MongoSslSettingsProviderTest {
             final var uri = explicit
                     ? "mongodb://localhost/?tls=true"
                     : "mongodb://localhost";
+
+            install(new MongoSdkTestElementModule());
 
             install(new ConfigurationModule(() -> {
                 final var properties = new Properties(new DefaultConfigurationSupplier().get());

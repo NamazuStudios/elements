@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.mongo;
 
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.mongo.standard.StandardKeyManagerFactoryAlgorithmSupplier;
 import dev.getelements.elements.sdk.mongo.standard.StandardTrustManagerFactoryAlgorithmSupplier;
 
@@ -8,6 +9,7 @@ import dev.getelements.elements.sdk.mongo.standard.StandardTrustManagerFactoryAl
  * Interface which reads the Namazu Elements system configuration and provides configuration required to connect to
  * MongoDB. This enables clients to connect directly to MongoDB.
  */
+@ElementServiceExport
 public interface MongoConfigurationService {
 
     @ElementDefaultAttribute(value = "mongodb://localhost", description = "The MongoDB Client URI.")

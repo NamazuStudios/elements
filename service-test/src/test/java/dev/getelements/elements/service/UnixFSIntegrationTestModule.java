@@ -18,7 +18,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.ArrayList;
 
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static java.lang.String.format;
 
 public class UnixFSIntegrationTestModule extends AbstractIntegrationTestModule {

@@ -4,25 +4,17 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.connection.SslSettings;
 import dev.getelements.elements.dao.mongo.codec.TimestampCodec;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
-import dev.getelements.elements.sdk.mongo.MongoSslConfiguration;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
-
-import java.util.Optional;
-
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
 /**
@@ -32,7 +24,9 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoClientProvider.class);
 
-    private ElementRegistry registry;
+    private String mongoDbUri;
+
+    private SslSettings sslSettings;
 
     @Override
     public MongoClient get() {
@@ -41,15 +35,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     private MongoClient getWithClientUri() {
 
-        final var configuration = getRegistry()
-                .find("dev.getlements.elements.sdk.mongo")
-                .findFirst()
-                .get()
-                .getServiceLocator()
-                .getInstance(MongoConfigurationService.class)
-                .getMongoConfiguration();
-
-        logger.info("Using Connection String {}", configuration.connectionString());
+        logger.info("Using Connection String {}", getMongoDbUri());
 
         final var registry = fromRegistries(
             fromCodecs(new TimestampCodec()),
@@ -58,33 +44,33 @@ public class MongoClientProvider implements Provider<MongoClient> {
                     fromProviders(PojoCodecProvider.builder().automatic(true).build()))
         );
 
-        final var connectionString = new ConnectionString(configuration.connectionString());
-
-        final var sslSettings = configuration.findSessionConfiguration()
-                .map(MongoSslConfiguration::newSslContext)
-                .map(sslContext -> SslSettings.builder()
-                        .enabled(true)
-                        .context(sslContext)
-                        .applyConnectionString(connectionString)
-                        .build())
-                .orElseGet(() -> SslSettings.builder().enabled(false).build());
+        final var connectionString = new ConnectionString(getMongoDbUri());
 
         final var settingsBuilder = MongoClientSettings.builder()
                 .codecRegistry(registry)
                 .applyConnectionString(connectionString)
-                .applyToSslSettings(builder -> builder.applySettings(sslSettings));
+                .applyToSslSettings(builder -> builder.applySettings(getSslSettings()));
 
         return MongoClients.create(settingsBuilder.build());
 
     }
 
-    public ElementRegistry getRegistry() {
-        return registry;
+    public String getMongoDbUri() {
+        return mongoDbUri;
     }
 
     @Inject
-    public void setRegistry(ElementRegistry registry) {
-        this.registry = registry;
+    public void setMongoDbUri(@Named(MONGO_CLIENT_URI) String mongoDbUri) {
+        this.mongoDbUri = mongoDbUri;
+    }
+
+    public SslSettings getSslSettings() {
+        return sslSettings;
+    }
+
+    @Inject
+    public void setSslSettings(SslSettings sslSettings) {
+        this.sslSettings = sslSettings;
     }
 
 }

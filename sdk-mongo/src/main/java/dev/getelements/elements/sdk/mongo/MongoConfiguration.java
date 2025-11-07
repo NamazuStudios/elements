@@ -26,7 +26,7 @@ public record MongoConfiguration(
      *
      * @return the {@link MongoSslConfiguration} if SSL is configured, empty otherwise
      */
-    public Optional<MongoSslConfiguration> findSessionConfiguration() {
+    public Optional<MongoSslConfiguration> findSslConfiguration() {
         return Optional.ofNullable(sslConfiguration);
     }
 

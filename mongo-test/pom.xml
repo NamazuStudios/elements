@@ -39,17 +39,14 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-common</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>guice</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common-util</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ru.vyarus</groupId>
@@ -59,24 +56,21 @@
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
         </dependency>
-            <dependency>
-                <groupId>org.glassfish</groupId>
-                <artifactId>jakarta.el</artifactId>
-            </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.el</artifactId>
+        </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-dao</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.morphia.morphia</groupId>
             <artifactId>morphia-core</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-mongo-test</artifactId>
         </dependency>
     </dependencies>
-
 </project>

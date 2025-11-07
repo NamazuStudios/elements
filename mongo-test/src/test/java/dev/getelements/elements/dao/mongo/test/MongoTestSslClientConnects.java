@@ -2,14 +2,16 @@ package dev.getelements.elements.dao.mongo.test;
 
 import com.google.inject.AbstractModule;
 import com.mongodb.client.MongoClient;
+import com.mongodb.connection.SslSettings;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.provider.MongoClientProvider;
+import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.mongo.test.MongoTestSslCertificates;
-import jakarta.inject.Inject;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import jakarta.inject.Inject;
 import java.util.Properties;
 
 import static dev.getelements.elements.dao.mongo.test.MongoTestInstance.ELEMENTS_TESTED_VERSION;
@@ -63,6 +65,7 @@ public class MongoTestSslClientConnects {
             }));
 
             bind(MongoClient.class).toProvider(MongoClientProvider.class);
+            bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
 
         }
 

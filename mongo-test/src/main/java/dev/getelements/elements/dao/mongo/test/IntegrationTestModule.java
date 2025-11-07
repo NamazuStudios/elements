@@ -1,7 +1,11 @@
 package dev.getelements.elements.dao.mongo.test;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
@@ -9,10 +13,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModu
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.guice.ConfigurationModule;
-import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.security.SecureRandomPasswordGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
