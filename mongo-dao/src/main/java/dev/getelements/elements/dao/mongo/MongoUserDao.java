@@ -134,7 +134,9 @@ public class MongoUserDao implements UserDao {
 
     @Override
     public Pagination<User> getUsers(final int offset, final int count) {
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class).filter(exists("name"));
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class)
+                .filter(exists("linkedAccounts"));
+
         return paginationFromQuery(query, offset, count);
     }
 
@@ -147,9 +149,10 @@ public class MongoUserDao implements UserDao {
             throw new InvalidDataException("queryString must be specified.");
         }
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class).filter(exists("name"));
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         query.filter(
+                exists("linkedAccounts"),
                 or(
                         Filters.regex("name", Pattern.compile(queryString)),
                         Filters.regex("email", Pattern.compile(queryString))
