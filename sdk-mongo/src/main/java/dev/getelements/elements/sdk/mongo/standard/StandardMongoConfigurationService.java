@@ -85,11 +85,15 @@ public class StandardMongoConfigurationService implements MongoConfigurationServ
             final var kmf = KeyManagerFactory.getInstance(getKeyAlgorithm());
             kmf.init(certificate, getClientCertificatePassphrase().toCharArray());
 
+            final var sslInvalidHostnameAllowed = connectString.getSslInvalidHostnameAllowed();
+
             logger.info("Enabled TLS/SSL.");
             return new MongoSslConfiguration(
                     kmf.getKeyManagers(),
                     tmf.getTrustManagers(),
-                    getSslProtocol());
+                    getSslProtocol(),
+                    sslInvalidHostnameAllowed != null && sslInvalidHostnameAllowed
+            );
 
         } catch (IOException |
                  NoSuchAlgorithmException |

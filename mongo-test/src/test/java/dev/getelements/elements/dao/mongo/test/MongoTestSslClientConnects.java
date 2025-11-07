@@ -5,6 +5,7 @@ import com.mongodb.client.MongoClient;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.provider.MongoClientProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
+import dev.getelements.elements.sdk.mongo.test.MongoTestSslCertificates;
 import jakarta.inject.Inject;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;

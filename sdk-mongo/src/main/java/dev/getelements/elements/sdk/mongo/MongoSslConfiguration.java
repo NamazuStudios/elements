@@ -14,7 +14,11 @@ import java.security.SecureRandom;
  * @param keyManager one or more KeyManagers to use for SSL connections these contain the client key material
  * @param trustManager one or more TrustManagers to use for SSL connections these contain the trusted CA certificates
  */
-public record MongoSslConfiguration(KeyManager[] keyManager, TrustManager[] trustManager, String sslProtocol) {
+public record MongoSslConfiguration(
+        KeyManager[] keyManager,
+        TrustManager[] trustManager,
+        String sslProtocol,
+        boolean sslInvalidHostNamesAllowed) {
 
     /**
      * Creates a new {@link SSLContext} from the SSL configuration.

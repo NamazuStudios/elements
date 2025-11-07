@@ -1,8 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
-import dev.getelements.elements.sdk.util.TemporaryFiles;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import dev.getelements.elements.sdk.mongo.test.MongoTestSslCertificates;
 
 import java.io.IOException;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -11,10 +9,6 @@ import static java.lang.String.format;
 import static java.nio.file.Files.setPosixFilePermissions;
 
 public class SslCliMongoTestInstance extends CliMongoTestInstance {
-
-    private static final Logger logger = LoggerFactory.getLogger(SslCliMongoTestInstance.class);
-
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(SslCliMongoTestInstance.class);
 
     public SslCliMongoTestInstance(final int port, final String version) {
         super(port, version);
