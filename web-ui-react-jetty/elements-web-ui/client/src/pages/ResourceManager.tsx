@@ -675,6 +675,18 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
             </Badge>
           )}
           <Button 
+            onClick={async () => {
+              await queryClient.invalidateQueries({ queryKey: [endpoint] });
+            }} 
+            variant="outline" 
+            size="sm"
+            disabled={isFetching}
+            data-testid="button-refresh-resources"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button 
             onClick={() => {
               const draftData = loadDraft();
               setSelectedItem(null);

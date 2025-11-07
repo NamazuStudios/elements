@@ -18,17 +18,19 @@ export class ApiClient {
       ...fetchOptions.headers,
     };
 
-    // In production mode, send session token as header
+    // Send session token as header in both development and production
     const config = await getApiConfig();
-    if (config.mode === 'production' && this.sessionToken) {
+    console.log('[API] Request endpoint:', endpoint);
+    if (this.sessionToken) {
       (headers as Record<string, string>)['Elements-SessionSecret'] = this.sessionToken;
       console.log('[API] Sending request with session token to:', endpoint);
-    } else if (config.mode === 'production' && !this.sessionToken) {
-      console.warn('[API] Production mode but no session token! Request to:', endpoint);
+    } else {
+      console.warn('[API] No session token available for request to:', endpoint);
     }
 
     // Get the correct API path based on production vs development
     const fullPath = await getApiPath(endpoint);
+    console.log('[API] Full path after getApiPath:', fullPath);
 
     // Credentials: 'include' ensures cookies are sent with requests
     const response = await fetch(fullPath, {

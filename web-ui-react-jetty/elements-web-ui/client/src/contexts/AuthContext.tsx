@@ -20,7 +20,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // On initial load, check localStorage for "remember me" user info
-    // The actual authentication is cookie-based (sent automatically)
     const storedUser = localStorage.getItem('elements-user');
     if (storedUser) {
       try {
@@ -30,6 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUsername(userData.username);
           setUserLevel(userData.level);
           setIsAuthenticated(true);
+          
+          // Restore session token to apiClient if available
+          if (userData.sessionToken) {
+            apiClient.setSessionToken(userData.sessionToken);
+            console.log('[AUTH] Restored session token from localStorage');
+          }
         } else {
           // Clear non-SUPERUSER stored data
           localStorage.removeItem('elements-user');
@@ -61,13 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUsername(userId);
       setIsAuthenticated(true);
       
-      // If "remember me" is checked, store user info in localStorage
+      // If "remember me" is checked, store user info and session token in localStorage
       // This allows the UI to restore the logged-in state on page refresh
-      // The actual authentication is handled by HTTP-only cookies
       if (rememberMe) {
+        const sessionToken = apiClient.getSessionToken();
         localStorage.setItem('elements-user', JSON.stringify({
           username: userId,
-          level: level
+          level: level,
+          sessionToken: sessionToken
         }));
       } else {
         // Clear any existing stored user
