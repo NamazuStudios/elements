@@ -75,7 +75,7 @@ public class MongoBoolParserTest {
 
     @Test
     public void testNameQuery() {
-        final var query = getBooleanQueryParser().parse(MongoDistinctInventoryItem.class, ".name.item:test").get();
+        final var query = getBooleanQueryParser().parse(MongoDistinctInventoryItem.class, "item.name:test").get();
         final var explanation = query.explain();
         query.first();
         logger.info("Query {} - {}", query, explanation);
