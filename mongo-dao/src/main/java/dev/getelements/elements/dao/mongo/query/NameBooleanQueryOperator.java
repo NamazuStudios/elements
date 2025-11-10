@@ -5,13 +5,14 @@ import dev.morphia.mapping.Mapper;
 import dev.morphia.query.Query;
 
 import jakarta.inject.Inject;
-import java.util.Optional;
 
-import static dev.morphia.query.filters.Filters.eq;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static dev.morphia.query.filters.Filters.*;
 
 public class NameBooleanQueryOperator implements BooleanQueryOperator {
-
-    public static final String PREFIX = ".name.";
 
     private Mapper mapper;
 
@@ -19,40 +20,104 @@ public class NameBooleanQueryOperator implements BooleanQueryOperator {
 
     @Override
     public <QueryT> boolean matches(final Query<QueryT> query, final String fieldSpecification) {
-        return fieldSpecification.startsWith(PREFIX);
+        return fieldSpecification.equals("name") || fieldSpecification.endsWith(".name");
     }
 
     @Override
     public <QueryT> Evaluation evaluate(final Query<QueryT> query, final String fieldSpecification) {
         return new Evaluation() {
 
-            final String field = fieldSpecification.substring(PREFIX.length());
+            // Remove a single trailing ".name" or "name"
+            // e.g., "projects.name" -> "projects", "name" -> ""
+            final String containerField = fieldSpecification.replaceFirst("\\.?name$", "");
 
             @Override
             public String getField() {
-                return field;
+
+                if (containerField.isEmpty()) {
+                    final var rootModel = getMapper().getEntityModel(query.getEntityClass());
+                    final var nameProp = rootModel.getProperty("name");
+                    return nameProp != null ? nameProp.getMappedName() : "name";
+                }
+
+                return containerField;
             }
 
             @Override
             public Optional<Object> getValue(final Object input) {
 
-                final var propertyModel = getMapper()
-                        .getEntityModel(query.getEntityClass())
-                        .getProperty(field);
+                final var entityModel = getMapper().getEntityModel(query.getEntityClass());
+
+                // containerField is the field BEFORE ".name" ("" if top-level)
+                final String containerField = fieldSpecification.replaceFirst("\\.?name$", "");
+
+                // Compile "contains" regex once (case-insensitive)
+                final var pattern = Pattern.compile(
+                        Pattern.quote(input.toString()), Pattern.CASE_INSENSITIVE);
+
+                if (containerField.isEmpty()) {
+                    // Root-level name: return a Filter to apply directly to base query.
+                    final var rootNameProp = entityModel.getProperty("name");
+
+                    if (rootNameProp == null) {
+                        return Optional.empty();
+                    }
+
+                    final var storedRootName = rootNameProp.getMappedName();
+
+                    return Optional.of(regex(storedRootName, pattern)); // <— Filter
+                }
+
+                // Nested case: resolve the property and element type
+                final var propertyModel = entityModel.getProperty(containerField);
 
                 if (propertyModel == null) {
                     return Optional.empty();
                 }
 
-                final var collectionType = propertyModel.getType();
-                final var subquery = getDatastore().find(collectionType);
-                subquery.filter(eq("name", input));
+                final var typeData = propertyModel.getTypeData();
+                final Class<?> elementType = typeData.getTypeParameters().isEmpty()
+                        ? typeData.getType()
+                        : typeData.getTypeParameters().getFirst().getType();
 
-                final var referent = subquery.first();
-                return Optional.ofNullable(referent);
+                // Does the element have a "name" field?
+                final var elementModel = getMapper().getEntityModel(elementType);
+                final var nameProp = elementModel.getProperty("name");
 
+                if (nameProp == null) {
+                    return Optional.empty();
+                }
+
+                // If this is a reference property:
+                if (propertyModel.isReference()) {
+
+                    // Find ALL matching referents by name (contains)
+                    try(final var matchIterator = getDatastore()
+                            .find(elementType)
+                            .filter(regex(nameProp.getMappedName(), pattern))
+                            .iterator()) {
+
+                        final var matches = matchIterator.toList();
+                        return matches.isEmpty() ? Optional.empty() : Optional.of(matches);
+                    }
+
+                }
+
+                // If the property is a collection or array
+                final var isCollectionLike =
+                        Collection.class.isAssignableFrom(propertyModel.getType()) ||
+                                propertyModel.getType().isArray();
+
+                // Embedded cases
+                if (isCollectionLike) {
+                    // array of embedded docs -> elemMatch on the container field
+                    // NOTE: elemMatch expects a filter on the element's fields:
+                    return Optional.of(elemMatch(containerField, regex("name", pattern))); // <— Filter
+                } else {
+                    // single embedded doc -> regex on "<container>.name"
+                    return Optional.of(regex(containerField + ".name", pattern)); // <— Filter
+                }
             }
-
         };
     }
 
