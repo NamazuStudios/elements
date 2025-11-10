@@ -20,6 +20,7 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -88,7 +89,12 @@ public class MongoApplicationDao implements ApplicationDao {
     @Override
     public Pagination<Application> getActiveApplications(final int offset, final int count, final String search) {
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
-        query.filter(exists("name"));
+
+        query.filter(
+                exists("name"),
+                regex("name", Pattern.compile(search))
+        );
+
         return mongoDBUtils.paginationFromQuery(query, offset, count, this::transform, new FindOptions());
     }
 
