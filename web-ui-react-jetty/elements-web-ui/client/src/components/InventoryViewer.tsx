@@ -6,14 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Loader2, Package, Trash2, AlertCircle, Plus, Check, ChevronsUpDown, Pencil } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Loader2, Package, Trash2, AlertCircle, Plus, Pencil } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api-client';
 import { queryClient } from '@/lib/queryClient';
-import { cn } from '@/lib/utils';
+import { ItemSearchDialog } from './ItemSearchDialog';
 
 interface InventoryViewerProps {
   userId: string;
@@ -26,11 +25,27 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
   const [fungibleSearch, setFungibleSearch] = useState<string>('');
   const [distinctSearch, setDistinctSearch] = useState<string>('');
 
+  // Pagination state - page number only (items per page from global settings)
+  const [fungiblePage, setFungiblePage] = useState(0);
+  const [distinctPage, setDistinctPage] = useState(0);
+
+  // Read pagination limit from global settings
+  const getPageSize = () => {
+    const saved = localStorage.getItem('admin-results-per-page');
+    return saved ? parseInt(saved, 10) : 20;
+  };
+  
+  const itemsPerPage = getPageSize();
+
   // State for creating inventory
   const [createFungibleOpen, setCreateFungibleOpen] = useState(false);
   const [createDistinctOpen, setCreateDistinctOpen] = useState(false);
-  const [itemSearchOpen, setItemSearchOpen] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [fungibleItemSearchOpen, setFungibleItemSearchOpen] = useState(false);
+  const [distinctItemSearchOpen, setDistinctItemSearchOpen] = useState(false);
+  const [selectedFungibleItemId, setSelectedFungibleItemId] = useState<string>('');
+  const [selectedFungibleItemName, setSelectedFungibleItemName] = useState<string>('');
+  const [selectedDistinctItemId, setSelectedDistinctItemId] = useState<string>('');
+  const [selectedDistinctItemName, setSelectedDistinctItemName] = useState<string>('');
   const [fungibleQuantity, setFungibleQuantity] = useState<string>('1');
   const [distinctMetadata, setDistinctMetadata] = useState<Array<{ key: string; value: string }>>([]);
 
@@ -42,92 +57,48 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
   const [editFungibleQuantity, setEditFungibleQuantity] = useState<string>('1');
   const [editDistinctMetadata, setEditDistinctMetadata] = useState<Array<{ key: string; value: string }>>([]);
 
-  // Fetch items for the dropdown
-  const { data: itemsResponse, isLoading: itemsLoading } = useQuery({
-    queryKey: ['/api/rest/item'],
-    queryFn: async () => {
-      return await apiClient.request<any>('/api/rest/item');
-    },
-  });
-
-  const itemsList = itemsResponse?.objects || [];
-  
-  // Filter items by category
-  const fungibleItems = itemsList.filter((item: any) => item.category === 'FUNGIBLE');
-  const distinctItems = itemsList.filter((item: any) => item.category === 'DISTINCT');
-
   // Fetch Advanced (Fungible) Inventory
-  const { data: fungibleInventoryData, isLoading: fungibleLoading, error: fungibleError } = useQuery({
-    queryKey: ['/api/rest/inventory/advanced', userId],
+  const { data: fungibleResponse, isLoading: fungibleLoading, error: fungibleError } = useQuery({
+    queryKey: ['/api/rest/inventory/advanced', userId, fungiblePage, itemsPerPage, fungibleSearch],
     enabled: !!userId,
     queryFn: async () => {
-      console.log('[INVENTORY-DEBUG] Starting fungible fetch for userId:', userId);
       const params = new URLSearchParams();
-      if (userId) {
-        params.set('userId', userId);
-        console.log('[INVENTORY-DEBUG] Set userId param:', userId);
-      }
-      const paramString = params.toString();
-      console.log('[INVENTORY-DEBUG] Params string:', paramString);
-      const url = `/api/rest/inventory/advanced${paramString ? `?${paramString}` : ''}`;
-      console.log('[INVENTORY-DEBUG] Final URL:', url);
+      if (userId) params.set('userId', userId);
+      params.set('offset', (fungiblePage * itemsPerPage).toString());
+      params.set('count', itemsPerPage.toString());
+      if (fungibleSearch) params.set('search', `item.name:${fungibleSearch}`);
+      
+      const url = `/api/rest/inventory/advanced?${params.toString()}`;
       const response = await apiClient.request<any>(url);
-      console.log('[INVENTORY] Fungible response:', response);
-      if (response && typeof response === 'object' && 'objects' in response) {
-        console.log('[INVENTORY] Fungible objects count:', response.objects?.length || 0);
-        return response.objects || [];
-      }
-      console.log('[INVENTORY] Fungible no objects found in response');
-      return [];
+      return response;
     },
   });
 
   // Fetch Distinct Inventory
-  const { data: distinctInventoryData, isLoading: distinctLoading, error: distinctError } = useQuery({
-    queryKey: ['/api/rest/inventory/distinct', userId],
+  const { data: distinctResponse, isLoading: distinctLoading, error: distinctError } = useQuery({
+    queryKey: ['/api/rest/inventory/distinct', userId, distinctPage, itemsPerPage, distinctSearch],
     enabled: !!userId,
     queryFn: async () => {
-      console.log('[INVENTORY-DEBUG] Starting distinct fetch for userId:', userId);
       const params = new URLSearchParams();
-      if (userId) {
-        params.set('userId', userId);
-        console.log('[INVENTORY-DEBUG] Set userId param:', userId);
-      }
-      const paramString = params.toString();
-      console.log('[INVENTORY-DEBUG] Params string:', paramString);
-      const url = `/api/rest/inventory/distinct${paramString ? `?${paramString}` : ''}`;
-      console.log('[INVENTORY-DEBUG] Final URL:', url);
+      if (userId) params.set('userId', userId);
+      params.set('offset', (distinctPage * itemsPerPage).toString());
+      params.set('count', itemsPerPage.toString());
+      if (distinctSearch) params.set('search', `item.name:${distinctSearch}`);
+      
+      const url = `/api/rest/inventory/distinct?${params.toString()}`;
       const response = await apiClient.request<any>(url);
-      console.log('[INVENTORY] Distinct response:', response);
-      if (response && typeof response === 'object' && 'objects' in response) {
-        console.log('[INVENTORY] Distinct objects count:', response.objects?.length || 0);
-        return response.objects || [];
-      }
-      console.log('[INVENTORY] Distinct no objects found in response');
-      return [];
+      return response;
     },
   });
 
-  // Filter inventory based on search
-  const fungibleInventory = (fungibleInventoryData || []).filter((item: any) => {
-    if (!fungibleSearch) return true;
-    const searchLower = fungibleSearch.toLowerCase();
-    const itemName = (item.item?.displayName || item.item?.name || '').toLowerCase();
-    const itemId = (item.item?.id || '').toLowerCase();
-    const itemDesc = (item.item?.description || '').toLowerCase();
-    return itemName.includes(searchLower) || itemId.includes(searchLower) || itemDesc.includes(searchLower);
-  });
-  console.log('[INVENTORY] Fungible data:', fungibleInventoryData, 'Filtered:', fungibleInventory);
+  // Extract inventory data and pagination info
+  const fungibleInventory = fungibleResponse?.objects || [];
+  const fungibleTotal = fungibleResponse?.total || 0;
+  const fungibleTotalPages = Math.ceil(fungibleTotal / itemsPerPage);
 
-  const distinctInventory = (distinctInventoryData || []).filter((item: any) => {
-    if (!distinctSearch) return true;
-    const searchLower = distinctSearch.toLowerCase();
-    const itemName = (item.item?.displayName || item.item?.name || '').toLowerCase();
-    const itemId = (item.item?.id || item.id || '').toLowerCase();
-    const itemDesc = (item.item?.description || '').toLowerCase();
-    return itemName.includes(searchLower) || itemId.includes(searchLower) || itemDesc.includes(searchLower);
-  });
-  console.log('[INVENTORY] Distinct data:', distinctInventoryData, 'Filtered:', distinctInventory);
+  const distinctInventory = distinctResponse?.objects || [];
+  const distinctTotal = distinctResponse?.total || 0;
+  const distinctTotalPages = Math.ceil(distinctTotal / itemsPerPage);
 
   // Create fungible inventory mutation
   const createFungibleMutation = useMutation({
@@ -144,7 +115,8 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
         description: 'Fungible inventory item created successfully',
       });
       setCreateFungibleOpen(false);
-      setSelectedItemId('');
+      setSelectedFungibleItemId('');
+      setSelectedFungibleItemName('');
       setFungibleQuantity('1');
     },
     onError: (error: Error) => {
@@ -171,7 +143,8 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
         description: 'Distinct inventory item created successfully',
       });
       setCreateDistinctOpen(false);
-      setSelectedItemId('');
+      setSelectedDistinctItemId('');
+      setSelectedDistinctItemName('');
       setDistinctMetadata([]);
     },
     onError: (error: Error) => {
@@ -194,7 +167,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
       return;
     }
 
-    if (!selectedItemId) {
+    if (!selectedFungibleItemId) {
       toast({
         title: 'Error',
         description: 'Please select an item',
@@ -215,7 +188,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
 
     createFungibleMutation.mutate({
       userId,
-      itemId: selectedItemId,
+      itemId: selectedFungibleItemId,
       quantity,
     });
   };
@@ -230,7 +203,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
       return;
     }
 
-    if (!selectedItemId) {
+    if (!selectedDistinctItemId) {
       toast({
         title: 'Error',
         description: 'Please select an item',
@@ -252,7 +225,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
 
     createDistinctMutation.mutate({
       userId,
-      itemId: selectedItemId,
+      itemId: selectedDistinctItemId,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     });
   };
@@ -437,7 +410,7 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
 
       {/* Fungible Inventory Tab */}
       <TabsContent value="fungible" className="mt-4">
-        <div className="mb-4 flex gap-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
           <Button
             onClick={() => setCreateFungibleOpen(true)}
             data-testid="button-create-fungible"
@@ -448,87 +421,139 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
           <Input
             placeholder="Search fungible inventory..."
             value={fungibleSearch}
-            onChange={(e) => setFungibleSearch(e.target.value)}
+            onChange={(e) => {
+              setFungibleSearch(e.target.value);
+              setFungiblePage(0);
+            }}
             className="max-w-sm"
             data-testid="input-search-fungible"
           />
         </div>
-        {fungibleLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : fungibleError ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load fungible inventory: {(fungibleError as Error).message}
-            </AlertDescription>
-          </Alert>
-        ) : fungibleInventory && fungibleInventory.length > 0 ? (
-          <div className="space-y-3">
-            {fungibleInventory.map((item: any) => (
-              <Card key={item.id} data-testid={`card-fungible-${item.id}`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-base">
-                        {item.item?.displayName || item.item?.name || 'Unknown Item'}
-                      </CardTitle>
-                      {item.item?.description && (
-                        <CardDescription className="mt-1">{item.item.description}</CardDescription>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditFungible(item)}
-                        data-testid={`button-edit-fungible-${item.id}`}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteFungibleMutation.mutate(item.id)}
-                        disabled={deleteFungibleMutation.isPending}
-                        data-testid={`button-delete-fungible-${item.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Quantity:</span>{' '}
-                      <Badge variant="secondary" data-testid={`text-quantity-${item.id}`}>
-                        {item.quantity}
-                      </Badge>
-                    </div>
-                    {item.item?.id && (
-                      <div>
-                        <span className="text-muted-foreground">Item ID:</span>{' '}
-                        <code className="text-xs bg-muted px-1 rounded">{item.item.id}</code>
+        <ScrollArea className="h-[500px]">
+          {fungibleLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : fungibleError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load fungible inventory: {(fungibleError as Error).message}
+              </AlertDescription>
+            </Alert>
+          ) : fungibleInventory && fungibleInventory.length > 0 ? (
+            <div className="space-y-3 pr-4">
+              {fungibleInventory.map((item: any) => (
+                <Card key={item.id} data-testid={`card-fungible-${item.id}`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-base">
+                          {item.item?.displayName || item.item?.name || 'Unknown Item'}
+                        </CardTitle>
+                        {item.item?.description && (
+                          <CardDescription className="mt-1">{item.item.description}</CardDescription>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Package className="w-12 h-12 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No fungible inventory items found</p>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditFungible(item)}
+                          data-testid={`button-edit-fungible-${item.id}`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteFungibleMutation.mutate(item.id)}
+                          disabled={deleteFungibleMutation.isPending}
+                          data-testid={`button-delete-fungible-${item.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Quantity:</span>{' '}
+                          <Badge variant="secondary" data-testid={`text-quantity-${item.id}`}>
+                            {item.quantity}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1.5 text-xs">
+                        {item.id && (
+                          <div>
+                            <span className="text-muted-foreground">Inventory Item ID:</span>{' '}
+                            <code className="bg-muted px-1 rounded">{item.id}</code>
+                          </div>
+                        )}
+                        {item.item?.id && (
+                          <div>
+                            <span className="text-muted-foreground">Item ID:</span>{' '}
+                            <code className="bg-muted px-1 rounded">{item.item.id}</code>
+                          </div>
+                        )}
+                        {item.item?.name && (
+                          <div>
+                            <span className="text-muted-foreground">Item Name:</span>{' '}
+                            <code className="bg-muted px-1 rounded">{item.item.name}</code>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Package className="w-12 h-12 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">No fungible inventory items found</p>
+            </div>
+          )}
+        </ScrollArea>
+        {fungibleTotal > 0 && (
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {fungiblePage * itemsPerPage + 1} to{' '}
+              {Math.min((fungiblePage + 1) * itemsPerPage, fungibleTotal)} of {fungibleTotal} items
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFungiblePage(Math.max(0, fungiblePage - 1))}
+                disabled={fungiblePage === 0}
+                data-testid="button-fungible-prev"
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {fungiblePage + 1} of {fungibleTotalPages || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFungiblePage(fungiblePage + 1)}
+                disabled={fungiblePage >= fungibleTotalPages - 1}
+                data-testid="button-fungible-next"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         )}
       </TabsContent>
 
       {/* Distinct Inventory Tab */}
       <TabsContent value="distinct" className="mt-4">
-        <div className="mb-4 flex gap-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
           <Button
             onClick={() => setCreateDistinctOpen(true)}
             data-testid="button-create-distinct"
@@ -539,84 +564,134 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
           <Input
             placeholder="Search distinct inventory..."
             value={distinctSearch}
-            onChange={(e) => setDistinctSearch(e.target.value)}
+            onChange={(e) => {
+              setDistinctSearch(e.target.value);
+              setDistinctPage(0);
+            }}
             className="max-w-sm"
             data-testid="input-search-distinct"
           />
         </div>
-        {distinctLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : distinctError ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load distinct inventory: {(distinctError as Error).message}
-            </AlertDescription>
-          </Alert>
-        ) : distinctInventory && distinctInventory.length > 0 ? (
-          <div className="space-y-3">
-            {distinctInventory.map((item: any) => (
-              <Card key={item.id} data-testid={`card-distinct-${item.id}`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-base">
-                        {item.item?.displayName || item.item?.name || 'Unknown Item'}
-                      </CardTitle>
-                      {item.item?.description && (
-                        <CardDescription className="mt-1">{item.item.description}</CardDescription>
+        <ScrollArea className="h-[500px]">
+          {distinctLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : distinctError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load distinct inventory: {(distinctError as Error).message}
+              </AlertDescription>
+            </Alert>
+          ) : distinctInventory && distinctInventory.length > 0 ? (
+            <div className="space-y-3 pr-4">
+              {distinctInventory.map((item: any) => (
+                <Card key={item.id} data-testid={`card-distinct-${item.id}`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-base">
+                          {item.item?.displayName || item.item?.name || 'Unknown Item'}
+                        </CardTitle>
+                        {item.item?.description && (
+                          <CardDescription className="mt-1">{item.item.description}</CardDescription>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditDistinct(item)}
+                          data-testid={`button-edit-distinct-${item.id}`}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteDistinctMutation.mutate(item.id)}
+                          disabled={deleteDistinctMutation.isPending}
+                          data-testid={`button-delete-distinct-${item.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-1 gap-1.5 text-xs">
+                        {item.id && (
+                          <div>
+                            <span className="text-muted-foreground">Inventory Item ID:</span>{' '}
+                            <code className="bg-muted px-1 rounded">{item.id}</code>
+                          </div>
+                        )}
+                        {item.item?.id && (
+                          <div>
+                            <span className="text-muted-foreground">Item ID:</span>{' '}
+                            <code className="bg-muted px-1 rounded">{item.item.id}</code>
+                          </div>
+                        )}
+                        {item.item?.name && (
+                          <div>
+                            <span className="text-muted-foreground">Item Name:</span>{' '}
+                            <code className="bg-muted px-1 rounded">{item.item.name}</code>
+                          </div>
+                        )}
+                      </div>
+                      {item.metadata && Object.keys(item.metadata).length > 0 && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Metadata:</span>
+                          <div className="mt-1 bg-muted rounded-md p-2">
+                            <pre className="text-xs overflow-auto max-h-32">
+                              {JSON.stringify(item.metadata, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditDistinct(item)}
-                        data-testid={`button-edit-distinct-${item.id}`}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteDistinctMutation.mutate(item.id)}
-                        disabled={deleteDistinctMutation.isPending}
-                        data-testid={`button-delete-distinct-${item.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {item.item?.id && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Item ID:</span>{' '}
-                        <code className="text-xs bg-muted px-1 rounded">{item.item.id}</code>
-                      </div>
-                    )}
-                    {item.metadata && Object.keys(item.metadata).length > 0 && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Metadata:</span>
-                        <div className="mt-1 bg-muted rounded-md p-2">
-                          <pre className="text-xs overflow-auto max-h-32">
-                            {JSON.stringify(item.metadata, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Package className="w-12 h-12 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground">No distinct inventory items found</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Package className="w-12 h-12 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">No distinct inventory items found</p>
+            </div>
+          )}
+        </ScrollArea>
+        {distinctTotal > 0 && (
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-muted-foreground">
+              Showing {distinctPage * itemsPerPage + 1} to{' '}
+              {Math.min((distinctPage + 1) * itemsPerPage, distinctTotal)} of {distinctTotal} items
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDistinctPage(Math.max(0, distinctPage - 1))}
+                disabled={distinctPage === 0}
+                data-testid="button-distinct-prev"
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {distinctPage + 1} of {distinctTotalPages || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDistinctPage(distinctPage + 1)}
+                disabled={distinctPage >= distinctTotalPages - 1}
+                data-testid="button-distinct-next"
+              >
+                Next
+              </Button>
+            </div>
           </div>
         )}
       </TabsContent>
@@ -625,8 +700,8 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
       <Dialog open={createFungibleOpen} onOpenChange={(open) => {
         setCreateFungibleOpen(open);
         if (!open) {
-          setItemSearchOpen(false);
-          setSelectedItemId('');
+          setSelectedFungibleItemId('');
+          setSelectedFungibleItemName('');
           setFungibleQuantity('1');
         }
       }}>
@@ -638,60 +713,14 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
             {/* Item Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Item *</label>
-              <Popover open={itemSearchOpen} onOpenChange={setItemSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className={cn(
-                      'w-full justify-between',
-                      !selectedItemId && 'text-muted-foreground'
-                    )}
-                    data-testid="button-item-picker"
-                  >
-                    {selectedItemId
-                      ? fungibleItems?.find((item: any) => item.id === selectedItemId)?.name || selectedItemId
-                      : 'Select item...'}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0">
-                  <Command>
-                    <CommandInput placeholder="Search fungible items..." data-testid="input-item-search" />
-                    <CommandList>
-                      <CommandEmpty>
-                        {itemsLoading ? 'Loading items...' : 'No fungible items found.'}
-                      </CommandEmpty>
-                      <CommandGroup>
-                        {fungibleItems?.map((item: any) => (
-                          <CommandItem
-                            key={item.id}
-                            value={item.name || item.id}
-                            onSelect={() => {
-                              setSelectedItemId(item.id);
-                              setItemSearchOpen(false);
-                            }}
-                            data-testid={`option-item-${item.id}`}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                item.id === selectedItemId ? 'opacity-100' : 'opacity-0'
-                              )}
-                            />
-                            <div className="flex flex-col">
-                              <span className="font-medium">{item.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {item.category} • {item.id}
-                              </span>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Button
+                variant="outline"
+                onClick={() => setFungibleItemSearchOpen(true)}
+                className="w-full justify-start"
+                data-testid="button-item-picker"
+              >
+                {selectedFungibleItemName || 'Select item...'}
+              </Button>
             </div>
 
             {/* Quantity Input */}
@@ -734,8 +763,8 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
       <Dialog open={createDistinctOpen} onOpenChange={(open) => {
         setCreateDistinctOpen(open);
         if (!open) {
-          setItemSearchOpen(false);
-          setSelectedItemId('');
+          setSelectedDistinctItemId('');
+          setSelectedDistinctItemName('');
           setDistinctMetadata([]);
         }
       }}>
@@ -747,60 +776,14 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
             {/* Item Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Item *</label>
-              <Popover open={itemSearchOpen} onOpenChange={setItemSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className={cn(
-                      'w-full justify-between',
-                      !selectedItemId && 'text-muted-foreground'
-                    )}
-                    data-testid="button-item-picker-distinct"
-                  >
-                    {selectedItemId
-                      ? distinctItems?.find((item: any) => item.id === selectedItemId)?.name || selectedItemId
-                      : 'Select item...'}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0">
-                  <Command>
-                    <CommandInput placeholder="Search distinct items..." data-testid="input-item-search-distinct" />
-                    <CommandList>
-                      <CommandEmpty>
-                        {itemsLoading ? 'Loading items...' : 'No distinct items found.'}
-                      </CommandEmpty>
-                      <CommandGroup>
-                        {distinctItems?.map((item: any) => (
-                          <CommandItem
-                            key={item.id}
-                            value={item.name || item.id}
-                            onSelect={() => {
-                              setSelectedItemId(item.id);
-                              setItemSearchOpen(false);
-                            }}
-                            data-testid={`option-item-distinct-${item.id}`}
-                          >
-                            <Check
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                item.id === selectedItemId ? 'opacity-100' : 'opacity-0'
-                              )}
-                            />
-                            <div className="flex flex-col">
-                              <span className="font-medium">{item.name}</span>
-                              <span className="text-xs text-muted-foreground">
-                                {item.category} • {item.id}
-                              </span>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Button
+                variant="outline"
+                onClick={() => setDistinctItemSearchOpen(true)}
+                className="w-full justify-start"
+                data-testid="button-item-picker-distinct"
+              >
+                {selectedDistinctItemName || 'Select item...'}
+              </Button>
             </div>
 
             {/* Metadata Editor */}
@@ -1054,6 +1037,43 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Item Search Dialogs */}
+      <ItemSearchDialog
+        open={fungibleItemSearchOpen}
+        onOpenChange={(open) => {
+          setFungibleItemSearchOpen(open);
+          if (!open && !selectedFungibleItemId) {
+            // Reset if dialog closed without selection
+            setSelectedFungibleItemName('');
+          }
+        }}
+        onSelect={(itemId, item) => {
+          setSelectedFungibleItemId(itemId);
+          setSelectedFungibleItemName(item.name || item.displayName || itemId);
+        }}
+        category="FUNGIBLE"
+        title="Search Fungible Items"
+        description="Select a fungible item to add to inventory"
+      />
+
+      <ItemSearchDialog
+        open={distinctItemSearchOpen}
+        onOpenChange={(open) => {
+          setDistinctItemSearchOpen(open);
+          if (!open && !selectedDistinctItemId) {
+            // Reset if dialog closed without selection
+            setSelectedDistinctItemName('');
+          }
+        }}
+        onSelect={(itemId, item) => {
+          setSelectedDistinctItemId(itemId);
+          setSelectedDistinctItemName(item.name || item.displayName || itemId);
+        }}
+        category="DISTINCT"
+        title="Search Distinct Items"
+        description="Select a distinct item to add to inventory"
+      />
     </Tabs>
   );
 }
