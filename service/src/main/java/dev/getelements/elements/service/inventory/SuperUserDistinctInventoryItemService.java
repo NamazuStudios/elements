@@ -101,7 +101,9 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             }
         }
 
-        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId, !isCurrentUser(userId), query);
+        var publicOnly = !isCurrentUser(userId) && !isSuperUser();
+
+        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId, publicOnly, query);
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
         return items;
     }
@@ -136,6 +138,10 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
 
     private boolean isCurrentUser(String userId) {
         return isBlank(userId) || getUser().getId().equals(userId);
+    }
+
+    private boolean isSuperUser() {
+        return getUser().getLevel() == User.Level.SUPERUSER;
     }
 
     public ItemDao getItemDao() {
