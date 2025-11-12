@@ -36,9 +36,21 @@ export default function DynamicApiExplorer() {
   const { data: spec, isLoading: specLoading, error: specError } = useQuery({
     queryKey: ['/api/rest/openapi.yaml'],
     queryFn: async () => {
+      // Get session token for authentication
+      const { apiClient: client } = await import('@/lib/api-client');
+      const sessionToken = client.getSessionToken();
+      
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+      
       // Use getApiPath to handle production vs development mode
       const specPath = await getApiPath('/api/rest/openapi.yaml');
-      const response = await fetch(specPath, { credentials: 'include' });
+      const response = await fetch(specPath, { 
+        credentials: 'include',
+        headers
+      });
       if (!response.ok) {
         throw new Error(`Failed to fetch OpenAPI spec: ${response.status} ${response.statusText}`);
       }
