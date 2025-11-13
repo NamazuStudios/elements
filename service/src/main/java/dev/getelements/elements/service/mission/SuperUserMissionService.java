@@ -6,12 +6,12 @@ import dev.getelements.elements.sdk.service.mission.MissionService;
 public class SuperUserMissionService extends AnonMissionService implements MissionService {
 
     @Override
-    public Mission updateMission(Mission mission) { return missionDao.updateMission(mission); }
+    public Mission updateMission(final String missionNameOrId, final Mission mission) { return missionDao.updateMission(missionNameOrId, mission); }
 
     @Override
-    public Mission createMission(Mission mission) { return missionDao.createMission(mission); }
+    public Mission createMission(final Mission mission) { return missionDao.createMission(mission); }
 
     @Override
-    public void deleteMission(String missionNameOrId) { missionDao.deleteMission(missionNameOrId); }
+    public void deleteMission(final String missionNameOrId) { missionDao.deleteMission(missionNameOrId); }
 
 }

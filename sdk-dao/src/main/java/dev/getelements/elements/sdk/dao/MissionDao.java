@@ -65,7 +65,7 @@ public interface MissionDao {
      * @return the {@link Mission} as it was written into the database
      * @throws InvalidDataException if the state of the passed in Mission is invalid
      */
-    Mission updateMission(Mission mission);
+    Mission updateMission(String missionNameOrId, Mission mission);
 
     /**
      * Creates a mission.  The value of {@link Mission#getId()} will be ignored.
