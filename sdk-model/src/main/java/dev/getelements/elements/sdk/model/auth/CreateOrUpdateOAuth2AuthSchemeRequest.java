@@ -11,12 +11,7 @@ import java.util.Objects;
 @Schema(description = "Represents a request to update an Auth Scheme for an Application.")
 public class CreateOrUpdateOAuth2AuthSchemeRequest {
 
-    @Null(groups = ValidationGroups.Insert.class)
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Schema(description = "The unique ID of the auth scheme.")
-    private String id;
-
-    @NotNull
+    @NotNull(groups = ValidationGroups.Insert.class)
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
             "If using the same OAuth2 provider (e.g. Steam), it is recommended to suffix the name for each application " +
             "when using multitenancy, e.g. steam_game1, steam_game2, etc.")
@@ -34,15 +29,6 @@ public class CreateOrUpdateOAuth2AuthSchemeRequest {
 
     @Schema(description = "Determines how to map the user id in the response. For example \"response.params.steamid\"")
     private String responseIdMapping;
-
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -89,11 +75,11 @@ public class CreateOrUpdateOAuth2AuthSchemeRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OAuth2AuthScheme that = (OAuth2AuthScheme) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getParams(), that.getParams()) && Objects.equals(getValidationUrl(), that.getValidationUrl()) && Objects.equals(getResponseIdMapping(), that.getResponseIdMapping());
+        return Objects.equals(getName(), that.getName()) && Objects.equals(getHeaders(), that.getHeaders()) && Objects.equals(getParams(), that.getParams()) && Objects.equals(getValidationUrl(), that.getValidationUrl()) && Objects.equals(getResponseIdMapping(), that.getResponseIdMapping());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getValidationUrl(), getHeaders(), getParams(), getResponseIdMapping());
+        return Objects.hash(getName(), getValidationUrl(), getHeaders(), getParams(), getResponseIdMapping());
     }
 }

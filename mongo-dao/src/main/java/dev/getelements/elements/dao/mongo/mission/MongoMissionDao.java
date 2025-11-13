@@ -25,6 +25,7 @@ import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,22 +161,23 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public Mission updateMission(final Mission mission) {
+    public Mission updateMission(final String missionNameOrId, final Mission mission) {
 
         getValidationHelper().validateModel(mission, Update.class);
         normalize(mission);
 
-        if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
+        if ((mission.getSteps() == null || mission.getSteps().isEmpty()) && mission.getFinalRepeatStep() == null) {
             throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
         }
 
         final var mongoMission = checkMission(mission);
+        final var query = getDatastore().find(MongoMission.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
-
-        final var query = getDatastore()
-            .find(MongoMission.class)
-            .filter(eq("_id", objectId));
+        if (ObjectId.isValid(missionNameOrId)) {
+            query.filter(eq("_id", new ObjectId(missionNameOrId)));
+        } else {
+            query.filter(eq("name", missionNameOrId));
+        }
 
         final var builder = new UpdateBuilder();
 
@@ -228,7 +230,7 @@ public class MongoMissionDao implements MissionDao {
 
         getValidationHelper().validateModel(mission, Insert.class);
 
-        if ((mission.getSteps() == null || mission.getSteps().size() == 0) && mission.getFinalRepeatStep() == null) {
+        if ((mission.getSteps() == null || mission.getSteps().isEmpty()) && mission.getFinalRepeatStep() == null) {
             throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
         }
 
@@ -310,8 +312,8 @@ public class MongoMissionDao implements MissionDao {
 
     }
 
-    private void normalize(Mission item) {
-        item.validateTags();
+    private void normalize(final Mission mission) {
+        mission.validateTags();
     }
 
     public Datastore getDatastore() {

@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useResources } from '@/contexts/ResourceContext';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import logoPath from '@assets/elements-logo-square (1)_1760052619243.png';
 import { InstalledElementsSidebar } from './InstalledElementsSidebar';
 
@@ -44,7 +45,12 @@ const iconMap: Record<string, any> = {
   HardDrive: Icons.HardDrive,
 };
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  openGroups: Record<string, boolean>;
+  setOpenGroups: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+}
+
+export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
   const { resources } = useResources();
   const [location, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
@@ -164,7 +170,11 @@ export function AppSidebar() {
                   if (!items || items.length === 0) return null;
 
                   return (
-                    <Collapsible key={category} defaultOpen={false} className="group/subcollapsible mt-4">
+                    <Collapsible 
+                      key={category} 
+                      open={openGroups[category] ?? false}
+                      onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [category]: isOpen }))}
+                      className="group/subcollapsible mt-4">
                       <div className="px-2">
                         <CollapsibleTrigger className="flex w-full items-center justify-between text-xs uppercase tracking-wider text-sidebar-foreground/70 hover-elevate rounded-md px-2 py-1">
                           {category}

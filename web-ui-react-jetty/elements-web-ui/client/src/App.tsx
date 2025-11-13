@@ -43,18 +43,14 @@ function ResourceRoute() {
   }
   
   return (
-    <ProtectedRoute 
-      component={() => (
-        <ResourceManager 
-          resourceName={resource.name} 
-          endpoint={resource.endpoint} 
-        />
-      )} 
+    <ResourceManager 
+      resourceName={resource.name} 
+      endpoint={resource.endpoint} 
     />
   );
 }
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+function Routes() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -69,59 +65,60 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   }
 
   if (!isAuthenticated) {
-    return <Redirect to="/login" />;
+    return (
+      <Switch>
+        <Route path="/login">
+          <LoginPage />
+        </Route>
+        <Route>
+          <Redirect to="/login" />
+        </Route>
+      </Switch>
+    );
   }
 
   return (
     <DashboardLayout>
-      <Component />
+      <Switch>
+        <Route path="/login">
+          <Redirect to="/dashboard" />
+        </Route>
+        <Route path="/">
+          <Redirect to="/dashboard" />
+        </Route>
+        <Route path="/dashboard">
+          <Dashboard />
+        </Route>
+        <Route path="/settings">
+          <Settings />
+        </Route>
+        <Route path="/installed-elements">
+          <InstalledElements />
+        </Route>
+        <Route path="/dynamic-api-explorer">
+          <DynamicApiExplorer />
+        </Route>
+        <Route path="/core-elements">
+          <CoreElements />
+        </Route>
+        <Route path="/element-api-explorer">
+          <ElementApiExplorer />
+        </Route>
+        <Route path="/resource/large-objects">
+          <LargeObjects />
+        </Route>
+        <Route path="/resource/matchmaking">
+          <MultiMatch />
+        </Route>
+        <Route path="/resource/vaults">
+          <Vaults />
+        </Route>
+        <Route path="/resource/:resourceId">
+          <ResourceRoute />
+        </Route>
+        <Route component={NotFound} />
+      </Switch>
     </DashboardLayout>
-  );
-}
-
-function Routes() {
-  const { isAuthenticated } = useAuth();
-
-  return (
-    <Switch>
-      <Route path="/login">
-        {isAuthenticated ? <Redirect to="/dashboard" /> : <LoginPage />}
-      </Route>
-      <Route path="/">
-        {isAuthenticated ? <Redirect to="/dashboard" /> : <Redirect to="/login" />}
-      </Route>
-      <Route path="/dashboard">
-        <ProtectedRoute component={Dashboard} />
-      </Route>
-      <Route path="/settings">
-        <ProtectedRoute component={Settings} />
-      </Route>
-      <Route path="/installed-elements">
-        <ProtectedRoute component={InstalledElements} />
-      </Route>
-      <Route path="/dynamic-api-explorer">
-        <ProtectedRoute component={DynamicApiExplorer} />
-      </Route>
-      <Route path="/core-elements">
-        <ProtectedRoute component={CoreElements} />
-      </Route>
-      <Route path="/element-api-explorer">
-        <ProtectedRoute component={ElementApiExplorer} />
-      </Route>
-      <Route path="/resource/large-objects">
-        <ProtectedRoute component={LargeObjects} />
-      </Route>
-      <Route path="/resource/matchmaking">
-        <ProtectedRoute component={MultiMatch} />
-      </Route>
-      <Route path="/resource/vaults">
-        <ProtectedRoute component={Vaults} />
-      </Route>
-      <Route path="/resource/:resourceId">
-        <ResourceRoute />
-      </Route>
-      <Route component={NotFound} />
-    </Switch>
   );
 }
 

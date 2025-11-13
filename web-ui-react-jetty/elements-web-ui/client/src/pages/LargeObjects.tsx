@@ -128,7 +128,6 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -152,7 +151,6 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -172,11 +170,48 @@ export default function LargeObjects() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiRequest('DELETE', `/api/proxy/api/rest/large_object/${id}`);
-      return response;
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
+    onSuccess: (deletedId) => {
+      // Check if we need to adjust pagination after deletion
+      const queryKey = ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize];
+      const currentData = queryClient.getQueryData(queryKey) as LargeObjectResponse | undefined;
+      
+      // If we're deleting the last item on this page and it's not the first page, go back one page
+      if (currentData && currentData.objects.length === 1 && currentPage > 0) {
+        setCurrentPage(Math.max(0, currentPage - 1));
+      }
+      
+      // Update all cached pages for this resource
+      queryClient.setQueriesData(
+        { queryKey: ['/api/proxy/api/rest/large_object'] },
+        (oldData: any) => {
+          if (!oldData || typeof oldData.total !== 'number') {
+            return oldData; // Skip non-paginated responses
+          }
+          
+          // Remove the deleted item if it's in this page
+          if (Array.isArray(oldData.objects)) {
+            const filteredObjects = oldData.objects.filter((obj: any) => obj.id !== deletedId);
+            
+            // Only update if something was actually removed
+            if (filteredObjects.length < oldData.objects.length) {
+              return {
+                ...oldData,
+                objects: filteredObjects,
+                total: Math.max(0, oldData.total - 1),
+              };
+            }
+          }
+          
+          // If item not in this page, just decrement the total
+          return {
+            ...oldData,
+            total: Math.max(0, oldData.total - 1),
+          };
+        }
+      );
+      
       toast({ title: 'Success', description: 'Large object deleted successfully' });
     },
     onError: (error: any) => {
@@ -218,9 +253,18 @@ export default function LargeObjects() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
+      // Add authentication header
+      const headers: HeadersInit = {};
+      const sessionToken = apiClient.getSessionToken();
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+
       const uploadResponse = await fetch(`/api/proxy/api/rest/large_object/${createdObject.id}/content`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
+        headers,
       });
 
       if (!uploadResponse.ok) {
@@ -228,7 +272,6 @@ export default function LargeObjects() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${createdObject.id}` 
@@ -516,7 +559,7 @@ export default function LargeObjects() {
                   <TableHead>Type</TableHead>
                   <TableHead>State</TableHead>
                   <TableHead>Last Modified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[140px] text-center sticky right-0 bg-background border-l z-10">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -545,8 +588,8 @@ export default function LargeObjects() {
                         ? new Date(obj.lastModified).toLocaleDateString()
                         : <span className="text-muted-foreground">—</span>}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <TableCell className="w-[140px] sticky right-0 bg-background border-l z-10">
+                      <div className="flex items-center justify-center gap-1">
                         {isImageType(obj.mimeType) && (
                           <Button
                             size="sm"

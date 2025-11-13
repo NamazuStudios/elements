@@ -56,7 +56,7 @@ public class BuildPropertiesVersionService implements VersionService {
     }
 
     public static void logVersion() {
-        logger.info("ECI Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
+        logger.info("Namazu Elements (tm) Version {}.  Revision {}.  Timestamp {}.", VERSION, REVISION, TIMESTAMP);
     }
 
 }

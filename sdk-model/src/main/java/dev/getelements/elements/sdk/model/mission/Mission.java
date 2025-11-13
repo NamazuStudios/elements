@@ -27,7 +27,7 @@ public class Mission implements Serializable, Taggable {
 
     @Schema(description = "The unique ID of the mission")
     @Null(groups={Create.class, Insert.class})
-    @NotNull(groups={Update.class, Read.class})
+    @NotNull(groups={Read.class})
     private String id;
 
     @Schema(description = "The name of the mission")

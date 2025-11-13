@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { queryClient } from '@/lib/queryClient';
@@ -62,8 +62,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     const saved = localStorage.getItem('admin-results-per-page');
     return saved ? parseInt(saved, 10) : 20;
   });
-  const [paginationInfo, setPaginationInfo] = useState<{ total: number; offset: number; count: number } | null>(null);
-
+  
+  // Track previous endpoint to detect resource changes
+  const prevEndpointRef = useRef<string | null>(null);
+  const isResourceChange = prevEndpointRef.current !== endpoint;
+  useEffect(() => {
+    prevEndpointRef.current = endpoint;
+  }, [endpoint]);
+  
   // Fetch metadata specs for ID resolution (only for Metadata resource)
   const { data: metadataSpecsResponse } = useQuery<{ objects: any[] }>({
     queryKey: ['/api/rest/metadata_spec'],
@@ -80,6 +86,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     });
     return lookup;
   }, [metadataSpecsResponse]);
+
+  // Reset pagination when resource changes
+  useEffect(() => {
+    if (!endpoint) return;
+    setOffset(0);
+    // Cancel any in-flight queries for the old resource
+    queryClient.cancelQueries({ queryKey: [endpoint], exact: false });
+  }, [resourceName, endpoint]);
 
   // Debounce search input to avoid refetching on every keystroke
   useEffect(() => {
@@ -162,14 +176,41 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     setDraftRefreshKey(prev => prev + 1);
   };
 
+  // Normalize resource payload to ensure consistent data shape
+  const normalizeResourcePayload = (data: Record<string, any>): Record<string, any> => {
+    const normalized = { ...data };
+    
+    // Normalize metadataSpec field - extract ID from object if needed
+    if (normalized.metadataSpec && typeof normalized.metadataSpec === 'object' && 'id' in normalized.metadataSpec) {
+      normalized.metadataSpec = normalized.metadataSpec.id;
+    }
+    
+    // Use schema to normalize object fields that should be strings (IDs)
+    if (schema && schema.fields) {
+      for (const field of schema.fields) {
+        const value = normalized[field.name];
+        
+        // If schema expects a string but value is an object with an id, convert to ID
+        if (field.type === 'string' && value && typeof value === 'object' && 'id' in value) {
+          normalized[field.name] = value.id;
+        }
+      }
+    }
+    
+    return normalized;
+  };
+
   // Validate JSON against schema
   const validateJsonAgainstSchema = (jsonData: any): string[] => {
     if (!schema) return [];
     
+    // Normalize data before validation
+    const normalizedData = normalizeResourcePayload(jsonData);
+    
     const errors: string[] = [];
     
     for (const field of schema.fields) {
-      const value = jsonData[field.name];
+      const value = normalizedData[field.name];
       
       // Check required fields
       if (field.required && (value === undefined || value === null || value === '')) {
@@ -183,7 +224,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       // Array validation - check BEFORE primitive types
       if (field.isArray) {
         if (!Array.isArray(value)) {
-          errors.push(`Field "${field.name}" must be an array`);
+          errors.push(`Field "${field.name}" must be an array (got ${typeof value}: ${JSON.stringify(value).substring(0, 50)}...)`);
         }
         // Skip primitive type validation for arrays
         continue;
@@ -265,17 +306,13 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       });
     }
     
-    // For Metadata resource, convert metadataSpec from { id: "..." } to string ID
-    if (resourceName === 'Metadata' && formData.metadataSpec && typeof formData.metadataSpec === 'object' && formData.metadataSpec.id) {
-      formData.metadataSpec = formData.metadataSpec.id;
-    }
-    
     return formData;
   };
 
-  const { data: items, isLoading, isFetching, error } = useQuery({
+  const { data, isLoading, isFetching, error } = useQuery({
     queryKey: [endpoint, offset, count, searchTerm],
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching new data
+    // Only keep previous data when paginating within the same resource, not when switching resources
+    placeholderData: isResourceChange ? undefined : (previousData) => previousData,
     queryFn: async () => {
       // Build query parameters for pagination and search
       const params = new URLSearchParams({
@@ -291,31 +328,36 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       
       // Elements API returns paginated data: {offset, total, objects: [...]} or {offset, total, content: [...]}
       if (response && typeof response === 'object') {
-        // Store pagination info if response has total field
+        let items: any[] = [];
+        let pagination: { total: number; offset: number; count: number } | null = null;
+        
+        // Extract pagination info if present
         if ('total' in response) {
-          setPaginationInfo({
+          pagination = {
             total: response.total,
             offset: response.offset || 0,
             count: response.count || count,
-          });
-        } else {
-          // Clear pagination info for non-paginated responses
-          setPaginationInfo(null);
+          };
         }
         
         // Extract items from response
         if ('objects' in response) {
-          return response.objects || [];
+          items = response.objects || [];
         } else if ('content' in response) {
-          return response.content || [];
+          items = response.content || [];
         }
+        
+        return { items, pagination };
       }
       
-      // Fallback for non-paginated responses - clear pagination info
-      setPaginationInfo(null);
-      return Array.isArray(response) ? response : [];
+      // Fallback for non-paginated responses
+      return { items: Array.isArray(response) ? response : [], pagination: null };
     },
   });
+
+  // Extract items and pagination from query data
+  const items = data?.items || [];
+  const paginationInfo = data?.pagination || null;
 
   // Combine items with draft (draft appears at top)
   const itemsWithDraft = useMemo(() => {
@@ -329,12 +371,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { _configurations, ...dataWithoutConfigs } = data;
+      const { _configurations, id, ...rest } = data;
       
       if (dialogMode === 'create') {
+        // For create, exclude id and _configurations only
+        const createData = rest;
         const createdItem = await apiClient.request(endpoint, { 
           method: 'POST',
-          body: JSON.stringify(dataWithoutConfigs),
+          body: JSON.stringify(createData),
         }) as any;
         
         // For Applications, create configurations if they were copied
@@ -403,13 +447,30 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         
         return createdItem;
       } else {
-        const itemId = selectedItem?.id || dataWithoutConfigs.id;
+        const itemId = selectedItem?.id || id;
         if (!itemId) {
           throw new Error('Cannot update: No ID found for the selected item');
         }
+        
+        // Filter data based on the update schema
+        const updateData: any = {};
+        const updateSchema = await getResourceSchema(resourceName, 'update');
+        
+        if (updateSchema && updateSchema.fields) {
+          // Only include fields that are in the update schema and not readOnly
+          for (const field of updateSchema.fields) {
+            if (!field.readOnly && !field.uiOnly && field.name in rest) {
+              updateData[field.name] = rest[field.name];
+            }
+          }
+        } else {
+          // Fallback: if no schema, just exclude id
+          Object.assign(updateData, rest);
+        }
+        
         return await apiClient.request(`${endpoint}/${itemId}`, { 
           method: 'PUT',
-          body: JSON.stringify(dataWithoutConfigs),
+          body: JSON.stringify(updateData),
         });
       }
     },
@@ -479,12 +540,66 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiClient.request(`${endpoint}/${id}`, { method: 'DELETE' });
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (deletedId) => {
+      // Check if we need to adjust pagination after deletion
+      // If we're on a page with only 1 item and it's not the first page, go back one page
+      if (paginationInfo && items && items.length === 1 && offset > 0) {
+        setOffset(Math.max(0, offset - count));
+      }
+      
+      // Update all cached pages for this resource
+      queryClient.setQueriesData(
+        { queryKey: [endpoint] },
+        (oldData: any) => {
+          if (!oldData || typeof oldData.total !== 'number') {
+            return oldData; // Skip non-paginated responses
+          }
+          
+          // Get the items array (could be in objects, content, or at root)
+          let items = oldData.objects || oldData.content || oldData;
+          
+          // Remove the deleted item if it's in this page
+          if (Array.isArray(items)) {
+            const filteredItems = items.filter((item: any) => item.id !== deletedId);
+            
+            // Only update if something was actually removed
+            if (filteredItems.length < items.length) {
+              return {
+                ...oldData,
+                ...(oldData.objects ? { objects: filteredItems } : 
+                    oldData.content ? { content: filteredItems } : 
+                    filteredItems),
+                total: Math.max(0, oldData.total - 1),
+              };
+            }
+          }
+          
+          // If item not in this page, just decrement the total
+          return {
+            ...oldData,
+            total: Math.max(0, oldData.total - 1),
+          };
+        }
+      );
+      
+      // Invalidate to refetch with correct server-side total
       queryClient.invalidateQueries({ queryKey: [endpoint] });
+      
+      // Helper function to singularize resource name
+      const getSingularName = (name: string) => {
+        // Handle special cases
+        if (name === 'Metadata') return 'Metadata';
+        // Default: remove trailing 's' if present
+        return name.endsWith('s') ? name.slice(0, -1) : name;
+      };
+      
+      const singularName = getSingularName(resourceName);
+      
       toast({
         title: 'Success',
-        description: `${resourceName} deleted successfully`,
+        description: `${singularName} deleted successfully`,
       });
       // Skip auto-save on delete (no need to save draft)
       closeDialog(true);
@@ -625,6 +740,13 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           return filteredKeys;
         }
         
+        // Custom column filtering for Smart Contracts resource
+        if (resourceName === 'Smart Contracts') {
+          // Remove addresses and metadata columns
+          const filteredKeys = keys.filter(k => k !== 'addresses' && k !== 'metadata');
+          return filteredKeys;
+        }
+        
     return keys;
   }, [items, resourceName]);
 
@@ -755,7 +877,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {itemsWithDraft && itemsWithDraft.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <RefreshCw className="w-8 h-8 mx-auto mb-4 text-muted-foreground animate-spin" />
+              <p className="text-muted-foreground">Loading {resourceName.toLowerCase()}...</p>
+            </div>
+          ) : itemsWithDraft && itemsWithDraft.length > 0 ? (
             <div className="border rounded-md overflow-x-auto">
               <table className="w-full caption-bottom text-sm">
                 <thead className="[&_tr]:border-b">
@@ -829,6 +956,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             } else {
                               cellValue = `${seconds} second${seconds !== 1 ? 's' : ''}`;
                             }
+                          }
+                        }
+                        
+                        // Custom rendering for Smart Contracts resource
+                        if (resourceName === 'Smart Contracts') {
+                          if (col === 'vault' && typeof cellValue === 'object' && cellValue !== null) {
+                            // Show vault displayName instead of full object
+                            cellValue = cellValue?.displayName || cellValue?.id || '';
                           }
                         }
                         
@@ -955,9 +1090,11 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             }
                           } else {
                             // For other resources, use item from list directly
+                            // For Missions, convert API format to form format (especially rewards)
+                            const formData = resourceName === 'Missions' ? convertJsonToFormData(item) : item;
                             setSelectedItem(item);
-                            setCurrentFormData(item);
-                            setFormInitialData(item);
+                            setCurrentFormData(formData);
+                            setFormInitialData(formData);
                             setJsonText(JSON.stringify(item, null, 2));
                             setJsonError('');
                             setDialogMode('edit');
@@ -1326,8 +1463,21 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                           }
                           
                           setValidationErrors([]);
-                          setSelectedItem(parsed);
-                          saveMutation.mutate(parsed);
+                          // Normalize data before submission
+                          let normalizedData = normalizeResourcePayload(parsed);
+                          
+                          // For update mode, preserve the original ID if not in the JSON
+                          if (dialogMode === 'edit' && !normalizedData.id && selectedItem?.id) {
+                            normalizedData = { ...normalizedData, id: selectedItem.id };
+                          }
+                          
+                          // For Metadata resource, convert metadataSpec back to object format for backend
+                          if (resourceName === 'Metadata' && normalizedData.metadataSpec && typeof normalizedData.metadataSpec === 'string') {
+                            normalizedData = { ...normalizedData, metadataSpec: { id: normalizedData.metadataSpec } };
+                          }
+                          
+                          setSelectedItem(normalizedData);
+                          saveMutation.mutate(normalizedData);
                         } catch (error) {
                           setJsonError(error instanceof Error ? error.message : 'Invalid JSON');
                           setValidationErrors([]);

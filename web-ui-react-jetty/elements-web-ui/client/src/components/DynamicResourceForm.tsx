@@ -469,12 +469,18 @@ export function DynamicResourceForm({
           cleanedData[key] = value;
         }
       } else if (key === 'metadataSpec') {
-        // For Metadata resource, convert metadataSpec from string ID to object with id field
+        // Extract the ID whether it's a string or object
+        let specId = value;
+        if (typeof value === 'object' && value !== null) {
+          specId = value.id || value;
+        }
+        
+        // For Metadata resource, convert metadataSpec to object with id field
         // For other resources (Items, etc.), keep as string ID
         if (isMetadataResource) {
-          cleanedData[key] = { id: value };
-        } else if (value) {
-          cleanedData[key] = value;
+          cleanedData[key] = { id: specId };
+        } else if (specId) {
+          cleanedData[key] = specId;
         }
       } else if (value !== '' && value !== null && value !== undefined) {
         cleanedData[key] = value;

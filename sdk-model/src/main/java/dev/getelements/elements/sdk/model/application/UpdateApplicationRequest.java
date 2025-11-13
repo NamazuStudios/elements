@@ -10,8 +10,6 @@ import java.util.Map;
 @Schema
 public class UpdateApplicationRequest {
 
-    private String id;
-
     @NotNull
     @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
     private String name;
