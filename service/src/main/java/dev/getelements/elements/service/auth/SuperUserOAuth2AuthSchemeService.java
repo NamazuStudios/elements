@@ -36,7 +36,6 @@ public class SuperUserOAuth2AuthSchemeService implements OAuth2AuthSchemeService
 
         final var authScheme = new OAuth2AuthScheme();
 
-        authScheme.setId(authSchemeRequest.getId());
         authScheme.setName(authSchemeRequest.getName());
         authScheme.setHeaders(authSchemeRequest.getHeaders());
         authScheme.setParams(authSchemeRequest.getParams());
@@ -59,11 +58,8 @@ public class SuperUserOAuth2AuthSchemeService implements OAuth2AuthSchemeService
 
         getValidationHelper().validateModel(authSchemeRequest, ValidationGroups.Update.class);
 
-        final var id = authSchemeId.isEmpty() ? authSchemeRequest.getId() : authSchemeId;
-        final var authScheme = getAuthSchemeDao().getAuthScheme(id);
+        final var authScheme = getAuthSchemeDao().getAuthScheme(authSchemeId);
 
-        authScheme.setId(id);
-        authScheme.setName(authSchemeRequest.getName());
         authScheme.setHeaders(authSchemeRequest.getHeaders());
         authScheme.setParams(authSchemeRequest.getParams());
         authScheme.setValidationUrl(authSchemeRequest.getValidationUrl());
