@@ -119,6 +119,7 @@ public class MongoDaoModule extends PrivateModule {
         final var booleanQueryOperatorSet = Multibinder.newSetBinder(binder(), BooleanQueryOperator.class);
         booleanQueryOperatorSet.addBinding().to(NameBooleanQueryOperator.class).asEagerSingleton();
         booleanQueryOperatorSet.addBinding().to(ReferenceBooleanQueryOperator.class).asEagerSingleton();
+        booleanQueryOperatorSet.addBinding().to(ForwardNameBooleanQueryOperator.class).asEagerSingleton();
 
         final var indexableByType = newMapBinder(binder(), IndexableType.class, Indexable.class);
         indexableByType.addBinding(METADATA).to(MongoIndexable.Metadata.class);

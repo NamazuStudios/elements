@@ -62,23 +62,31 @@ public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
             final FilterConsumer consumer,
             final StringToken node) {
 
-        final var operator = operators
-                .stream()
+        final var operator = operators.stream()
                 .filter(o -> o.matches(base, node.getField()))
-                .findFirst().orElse(DEFAULT);
+                .findFirst()
+                .orElse(DEFAULT);
 
         final var evaluation = operator.evaluate(base, node.getField());
         final var field = evaluation.getField();
-        final var value = evaluation.getValue(node.getValue());
+        final var valueOpt = evaluation.getValue(node.getValue());
 
-        if (value.isPresent()) {
-            consumer.filter(eq(field, value.get()));
-        } else {
+        if (valueOpt.isEmpty()) {
             consumer.filter(eq("_id", null));
+            return base;
+        }
+
+        final Object v = valueOpt.get();
+
+        if (v instanceof Filter f) {
+            consumer.filter(f);                      // direct filter (regex/elemMatch/etc.)
+        } else if (v instanceof java.util.Collection<?> c) {
+            consumer.filter(in(field, c));           // multi-match via $in
+        } else {
+            consumer.filter(eq(field, v));           // single match
         }
 
         return base;
-
     }
 
     private <QueryT> Query<QueryT> translate(

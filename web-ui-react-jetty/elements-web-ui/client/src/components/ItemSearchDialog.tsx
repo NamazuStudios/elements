@@ -13,21 +13,30 @@ import { Search, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiRequest } from '@/lib/queryClient';
 
-interface UserSearchDialogProps {
+interface ItemSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (userId: string, user: any) => void;
-  currentUserId?: string;
+  onSelect: (itemId: string, item: any) => void;
+  category?: 'FUNGIBLE' | 'DISTINCT';
+  title?: string;
+  description?: string;
 }
 
-export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }: UserSearchDialogProps) {
+export function ItemSearchDialog({
+  open,
+  onOpenChange,
+  onSelect,
+  category,
+  title = 'Search Items',
+  description = 'Search for an item',
+}: ItemSearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const limit = 20;
   const offset = page * limit;
 
-  const { data, isLoading} = useQuery({
-    queryKey: ['/api/rest/user', offset, limit, searchQuery],
+  const { data, isLoading } = useQuery({
+    queryKey: ['/api/rest/item', offset, limit, searchQuery, category],
     queryFn: async () => {
       const params = new URLSearchParams({
         offset: offset.toString(),
@@ -36,35 +45,36 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
       if (searchQuery) {
         params.append('search', searchQuery);
       }
-      const response = await apiRequest('GET', `/api/proxy/api/rest/user?${params}`);
+      if (category) {
+        params.append('category', category);
+      }
+      const response = await apiRequest('GET', `/api/proxy/api/rest/item?${params}`);
       return response.json();
     },
     enabled: open,
   });
 
-  const handleSelect = (userId: string, user: any) => {
-    onSelect(userId, user);
+  const handleSelect = (itemId: string, item: any) => {
+    onSelect(itemId, item);
     onOpenChange(false);
     setSearchQuery('');
     setPage(0);
   };
 
   // Handle paginated response from Elements API
-  // The API returns: { offset, total, approximation, objects: [...] }
-  const userList = Array.isArray(data) 
+  const itemList = Array.isArray(data) 
     ? data 
     : ((data as any)?.objects || []);
+  
   const totalCount = (data as any)?.total || 0;
-  const hasMore = totalCount ? (page + 1) * limit < totalCount : userList.length >= limit;
+  const hasMore = totalCount ? (page + 1) * limit < totalCount : itemList.length >= limit;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Search Users</DialogTitle>
-          <DialogDescription>
-            Search for a user to associate with this vault
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -72,14 +82,14 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by name, description, or ID..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setPage(0);
               }}
               className="pl-9"
-              data-testid="input-search-user"
+              data-testid="input-search-item"
             />
           </div>
 
@@ -89,36 +99,38 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
-            ) : userList.length === 0 ? (
+            ) : itemList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <p>No users found</p>
+                <p>No items found</p>
               </div>
             ) : (
               <div className="p-2 space-y-1">
-                {userList.map((user: any) => (
+                {itemList.map((item: any) => (
                   <Button
-                    key={user.id}
+                    key={item.id}
                     variant="ghost"
                     className="w-full justify-start hover-elevate p-3"
-                    onClick={() => handleSelect(user.id, user)}
-                    data-testid={`button-select-user-${user.id}`}
+                    onClick={() => handleSelect(item.id, item)}
+                    data-testid={`button-select-item-${item.id}`}
                   >
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full text-left text-sm">
                       <div>
                         <span className="text-muted-foreground">Name: </span>
-                        <span className="font-medium">{user.name || user.firstName || 'N/A'}</span>
+                        <span className="font-medium">{item.name || item.displayName || 'N/A'}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Email: </span>
-                        <span>{user.email || 'N/A'}</span>
+                        <span className="text-muted-foreground">Category: </span>
+                        <span>{item.category || 'N/A'}</span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Level: </span>
-                        <span>{user.level || 'N/A'}</span>
-                      </div>
-                      <div className="truncate">
+                      {item.description && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Description: </span>
+                          <span className="text-xs">{item.description}</span>
+                        </div>
+                      )}
+                      <div className="truncate col-span-2">
                         <span className="text-muted-foreground">ID: </span>
-                        <span className="text-xs">{user.id}</span>
+                        <span className="text-xs">{item.id}</span>
                       </div>
                     </div>
                   </Button>
@@ -128,14 +140,14 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
           </ScrollArea>
 
           {/* Pagination */}
-          {!isLoading && userList.length > 0 && (
+          {!isLoading && itemList.length > 0 && (
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(Math.max(0, page - 1))}
                 disabled={page === 0}
-                data-testid="button-previous-page"
+                data-testid="button-previous-page-item"
               >
                 Previous
               </Button>
@@ -148,7 +160,7 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
                 size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={!hasMore}
-                data-testid="button-next-page"
+                data-testid="button-next-page-item"
               >
                 Next
               </Button>
