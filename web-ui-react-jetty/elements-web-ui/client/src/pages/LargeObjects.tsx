@@ -128,7 +128,6 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -152,7 +151,6 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -172,11 +170,44 @@ export default function LargeObjects() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiRequest('DELETE', `/api/proxy/api/rest/large_object/${id}`);
-      return response;
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
+    onSuccess: (deletedId) => {
+      // Always update the cache for the current page first
+      const queryKey = ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize];
+      const currentData = queryClient.getQueryData(queryKey) as LargeObjectResponse | undefined;
+      
+      if (currentData) {
+        // Remove the deleted item from the current page
+        const updatedObjects = currentData.objects.filter((obj) => obj.id !== deletedId);
+        
+        // Update the cache with the filtered data and decremented total
+        queryClient.setQueryData(queryKey, {
+          ...currentData,
+          objects: updatedObjects,
+          total: currentData.total - 1,
+        });
+        
+        // Update the total count in ALL cached pages to keep them in sync
+        queryClient.setQueriesData(
+          { queryKey: ['/api/proxy/api/rest/large_object'] },
+          (oldData: any) => {
+            if (oldData && typeof oldData.total === 'number') {
+              return {
+                ...oldData,
+                total: oldData.total - 1,
+              };
+            }
+            return oldData;
+          }
+        );
+        
+        // If we deleted the last item on this page and it's not the first page, go back one page
+        if (updatedObjects.length === 0 && currentPage > 0) {
+          setCurrentPage(Math.max(0, currentPage - 1));
+        }
+      }
+      
       toast({ title: 'Success', description: 'Large object deleted successfully' });
     },
     onError: (error: any) => {
@@ -218,9 +249,18 @@ export default function LargeObjects() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
+      // Add authentication header
+      const headers: HeadersInit = {};
+      const sessionToken = apiClient.getSessionToken();
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+
       const uploadResponse = await fetch(`/api/proxy/api/rest/large_object/${createdObject.id}/content`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
+        headers,
       });
 
       if (!uploadResponse.ok) {
@@ -228,7 +268,6 @@ export default function LargeObjects() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${createdObject.id}` 

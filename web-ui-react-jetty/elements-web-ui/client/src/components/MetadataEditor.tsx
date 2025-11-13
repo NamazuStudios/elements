@@ -245,7 +245,7 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
               type="text"
               value={currentValue || ''}
               onChange={(e) => handleValueChange(property.name, e.target.value, parentPath)}
-              placeholder={property.placeholder || `Enter ${property.displayName.toLowerCase()}`}
+              placeholder={property.placeholder || `Enter ${(property.displayName || property.name).toLowerCase()}`}
               data-testid={`input-metadata-${property.name}`}
               className={hasError ? 'border-destructive' : ''}
             />
@@ -274,7 +274,7 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
                   handleValueChange(property.name, isNaN(parsed) ? null : parsed, parentPath);
                 }
               }}
-              placeholder={property.placeholder || `Enter ${property.displayName.toLowerCase()}`}
+              placeholder={property.placeholder || `Enter ${(property.displayName || property.name).toLowerCase()}`}
               data-testid={`input-metadata-${property.name}`}
               className={hasError ? 'border-destructive' : ''}
             />
@@ -355,7 +355,7 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
               {property.properties.map((nestedProp) => (
                 <div key={nestedProp.name} className="space-y-2">
                   <Label>
-                    {nestedProp.displayName}
+                    {nestedProp.displayName || nestedProp.name}
                     {nestedProp.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   {renderField(nestedProp, fieldPath)}
@@ -492,7 +492,7 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
           {selectedSpec.properties.map((property) => (
             <div key={property.name} className="space-y-2">
               <Label htmlFor={`metadata-${property.name}`}>
-                {property.displayName}
+                {property.displayName || property.name}
                 {property.required && <span className="text-destructive ml-1">*</span>}
               </Label>
               {renderField(property)}

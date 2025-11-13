@@ -162,14 +162,29 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     setDraftRefreshKey(prev => prev + 1);
   };
 
+  // Normalize resource payload to ensure consistent data shape
+  const normalizeResourcePayload = (data: Record<string, any>): Record<string, any> => {
+    const normalized = { ...data };
+    
+    // Normalize metadataSpec field - extract ID from object if needed
+    if (normalized.metadataSpec && typeof normalized.metadataSpec === 'object' && 'id' in normalized.metadataSpec) {
+      normalized.metadataSpec = normalized.metadataSpec.id;
+    }
+    
+    return normalized;
+  };
+
   // Validate JSON against schema
   const validateJsonAgainstSchema = (jsonData: any): string[] => {
     if (!schema) return [];
     
+    // Normalize data before validation
+    const normalizedData = normalizeResourcePayload(jsonData);
+    
     const errors: string[] = [];
     
     for (const field of schema.fields) {
-      const value = jsonData[field.name];
+      const value = normalizedData[field.name];
       
       // Check required fields
       if (field.required && (value === undefined || value === null || value === '')) {
@@ -183,7 +198,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       // Array validation - check BEFORE primitive types
       if (field.isArray) {
         if (!Array.isArray(value)) {
-          errors.push(`Field "${field.name}" must be an array`);
+          errors.push(`Field "${field.name}" must be an array (got ${typeof value}: ${JSON.stringify(value).substring(0, 50)}...)`);
         }
         // Skip primitive type validation for arrays
         continue;
@@ -265,11 +280,6 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       });
     }
     
-    // For Metadata resource, convert metadataSpec from { id: "..." } to string ID
-    if (resourceName === 'Metadata' && formData.metadataSpec && typeof formData.metadataSpec === 'object' && formData.metadataSpec.id) {
-      formData.metadataSpec = formData.metadataSpec.id;
-    }
-    
     return formData;
   };
 
@@ -329,12 +339,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { _configurations, ...dataWithoutConfigs } = data;
+      const { _configurations, id, name, ...dataWithoutConfigsAndId } = data;
       
       if (dialogMode === 'create') {
+        // Include name for create requests
+        const createData = name ? { name, ...dataWithoutConfigsAndId } : dataWithoutConfigsAndId;
         const createdItem = await apiClient.request(endpoint, { 
           method: 'POST',
-          body: JSON.stringify(dataWithoutConfigs),
+          body: JSON.stringify(createData),
         }) as any;
         
         // For Applications, create configurations if they were copied
@@ -403,13 +415,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         
         return createdItem;
       } else {
-        const itemId = selectedItem?.id || dataWithoutConfigs.id;
+        const itemId = selectedItem?.id || id;
         if (!itemId) {
           throw new Error('Cannot update: No ID found for the selected item');
         }
+        // Exclude id and name from update request body (only in URL path)
         return await apiClient.request(`${endpoint}/${itemId}`, { 
           method: 'PUT',
-          body: JSON.stringify(dataWithoutConfigs),
+          body: JSON.stringify(dataWithoutConfigsAndId),
         });
       }
     },
@@ -479,12 +492,63 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiClient.request(`${endpoint}/${id}`, { method: 'DELETE' });
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [endpoint] });
+    onSuccess: (deletedId) => {
+      // Check if we need to adjust pagination after deletion
+      // If we're on a page with only 1 item and it's not the first page, go back one page
+      if (paginationInfo && items && items.length === 1 && offset > 0) {
+        setOffset(Math.max(0, offset - count));
+      }
+      
+      // Update all cached pages for this resource
+      queryClient.setQueriesData(
+        { queryKey: [endpoint] },
+        (oldData: any) => {
+          if (!oldData || typeof oldData.total !== 'number') {
+            return oldData; // Skip non-paginated responses
+          }
+          
+          // Get the items array (could be in objects, content, or at root)
+          let items = oldData.objects || oldData.content || oldData;
+          
+          // Remove the deleted item if it's in this page
+          if (Array.isArray(items)) {
+            const filteredItems = items.filter((item: any) => item.id !== deletedId);
+            
+            // Only update if something was actually removed
+            if (filteredItems.length < items.length) {
+              return {
+                ...oldData,
+                ...(oldData.objects ? { objects: filteredItems } : 
+                    oldData.content ? { content: filteredItems } : 
+                    filteredItems),
+                total: Math.max(0, oldData.total - 1),
+              };
+            }
+          }
+          
+          // If item not in this page, just decrement the total
+          return {
+            ...oldData,
+            total: Math.max(0, oldData.total - 1),
+          };
+        }
+      );
+      
+      // Helper function to singularize resource name
+      const getSingularName = (name: string) => {
+        // Handle special cases
+        if (name === 'Metadata') return 'Metadata';
+        // Default: remove trailing 's' if present
+        return name.endsWith('s') ? name.slice(0, -1) : name;
+      };
+      
+      const singularName = getSingularName(resourceName);
+      
       toast({
         title: 'Success',
-        description: `${resourceName} deleted successfully`,
+        description: `${singularName} deleted successfully`,
       });
       // Skip auto-save on delete (no need to save draft)
       closeDialog(true);
@@ -1326,8 +1390,21 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                           }
                           
                           setValidationErrors([]);
-                          setSelectedItem(parsed);
-                          saveMutation.mutate(parsed);
+                          // Normalize data before submission
+                          let normalizedData = normalizeResourcePayload(parsed);
+                          
+                          // For update mode, preserve the original ID if not in the JSON
+                          if (dialogMode === 'edit' && !normalizedData.id && selectedItem?.id) {
+                            normalizedData = { ...normalizedData, id: selectedItem.id };
+                          }
+                          
+                          // For Metadata resource, convert metadataSpec back to object format for backend
+                          if (resourceName === 'Metadata' && normalizedData.metadataSpec && typeof normalizedData.metadataSpec === 'string') {
+                            normalizedData = { ...normalizedData, metadataSpec: { id: normalizedData.metadataSpec } };
+                          }
+                          
+                          setSelectedItem(normalizedData);
+                          saveMutation.mutate(normalizedData);
                         } catch (error) {
                           setJsonError(error instanceof Error ? error.message : 'Invalid JSON');
                           setValidationErrors([]);
