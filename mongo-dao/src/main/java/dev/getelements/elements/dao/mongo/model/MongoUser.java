@@ -12,6 +12,14 @@ import java.util.Set;
  * Created by patricktwohig on 3/31/15.
  */
 @Entity(value = "user", useDiscriminator = false)
+@Indexes({
+        @Index(
+                fields = {@Field("linkedAccounts")},
+                options = @IndexOptions(
+                        partialFilter = "{ linkedAccounts: { $exists: true } }"
+                )
+        )
+})
 public class MongoUser {
 
     @Id

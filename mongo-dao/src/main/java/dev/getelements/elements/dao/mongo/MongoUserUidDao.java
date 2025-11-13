@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.MongoUserUid;
@@ -22,6 +23,7 @@ import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -43,6 +45,8 @@ public class MongoUserUidDao implements UserUidDao {
     private MapperRegistry dozerMapperRegistry;
 
     private MongoUserDao mongoUserDao;
+
+    private Provider<Transaction> transactionProvider;
 
     @Override
     public Pagination<UserUid> getUserUids(int offset, int count, String search) {
@@ -150,36 +154,38 @@ public class MongoUserUidDao implements UserUidDao {
     }
 
     @Override
-    public void softDeleteUserUidsForUserId(User user) {
+    public void softDeleteUserUidsForUserId(final User user) {
 
-        //Remove all UserUIDs for User
-        final var mongoUser = getDozerMapperRegistry().map(user, MongoUser.class);
+        getTransactionProvider().get().performAndClose(txn -> {
 
-        getDatastore().find(MongoUserUid.class)
-                .filter(
-                        eq("user", mongoUser)
-                ).delete(new DeleteOptions().multi(true));
+            //Remove all UserUIDs for User
+            final var mongoUser = getDozerMapperRegistry().map(user, MongoUser.class);
 
-        //Clear all linkedAccounts
-        final var objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
-        final var query = getDatastore().find(MongoUser.class);
+            getDatastore().find(MongoUserUid.class)
+                    .filter(
+                            eq("user", mongoUser)
+                    ).delete(new DeleteOptions().multi(true));
 
-        query.filter(
-                and(
-                        eq("_id", objectId)
-                )
-        );
+            //Clear all linkedAccounts
+            final var objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
+            final var query = getDatastore().find(MongoUser.class);
 
-        final var builder = new UpdateBuilder();
+            query.filter(
+                    and(
+                            eq("_id", objectId)
+                    )
+            );
 
-        builder.with(
-                unset("linkedAccounts")
-        );
+            final var builder = new UpdateBuilder();
 
-        getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(false))
-        );
+            builder.with(
+                    unset("linkedAccounts")
+            );
 
+            return getMongoDBUtils().perform(ds ->
+                    builder.execute(query, new ModifyOptions().upsert(false))
+            );
+        });
     }
 
     private Pagination<UserUid> paginationFromQuery(final Query<MongoUserUid> query, final int offset, final int count) {
@@ -208,29 +214,33 @@ public class MongoUserUidDao implements UserUidDao {
 
     private void addLinkedAccount(final MongoUser user, final UserUid userUid) {
 
-        if(user.getLinkedAccounts() == null) {
-            user.setLinkedAccounts(new HashSet<>());
-        }
+        getTransactionProvider().get().performAndClose(txn -> {
 
-        user.getLinkedAccounts().add(userUid.getScheme());
+            if (user.getLinkedAccounts() == null) {
+                user.setLinkedAccounts(new HashSet<>());
+            }
 
-        final var query = getDatastore().find(MongoUser.class);
+            user.getLinkedAccounts().add(userUid.getScheme());
 
-        query.filter(
-                and(
-                        eq("_id", user.getObjectId())
-                )
-        );
+            final var query = getDatastore().find(MongoUser.class);
 
-        final var builder = new UpdateBuilder();
+            query.filter(
+                    and(
+                            eq("_id", user.getObjectId())
+                    )
+            );
 
-        builder.with(
-                set("linkedAccounts", user.getLinkedAccounts())
-        );
+            final var builder = new UpdateBuilder();
 
-        getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(true))
-        );
+            builder.with(
+                    set("linkedAccounts", user.getLinkedAccounts())
+            );
+
+            return getMongoDBUtils().perform(ds ->
+                    builder.execute(query, new ModifyOptions().upsert(true))
+            );
+        });
+
     }
 
     public Datastore getDatastore() {
@@ -276,6 +286,15 @@ public class MongoUserUidDao implements UserUidDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 
 }

@@ -114,11 +114,11 @@ public class MongoDeleteUserTest {
 
         //User is present so as not to break connections, but is fully scrubbed
         assertTrue(u.isPresent());
-        assertTrue(u.get().getName().isEmpty());
-        assertTrue(u.get().getFirstName().isEmpty());
-        assertTrue(u.get().getLastName().isEmpty());
-        assertTrue(u.get().getPrimaryPhoneNb().isEmpty());
-        assertTrue(u.get().getEmail().isEmpty());
+        assertNull(u.get().getName());
+        assertNull(u.get().getFirstName());
+        assertNull(u.get().getLastName());
+        assertNull(u.get().getPrimaryPhoneNb());
+        assertNull(u.get().getEmail());
     }
 
     @Test(dependsOnMethods = "deleteUser", dataProvider = "userIdProvider")
