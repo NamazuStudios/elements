@@ -166,8 +166,8 @@ public class JakartaWebsocketLoader implements Loader {
             pending.uri(contextPathURIWebSocket);
 
         } catch (final URISyntaxException ex) {
-            pending.error(ex);
-            pending.logf("WARNING! Failed to create WebSocket URI for %s at %s. Check your %s setting.",
+            pending.warning(ex);
+            pending.logWarningf("WARNING! Failed to create WebSocket URI for %s at %s. Check your %s setting.",
                     element.getElementRecord().definition().name(),
                     contextPath,
                     APP_OUTSIDE_URL
@@ -218,7 +218,7 @@ public class JakartaWebsocketLoader implements Loader {
         if (contextPathURIScheme.equalsIgnoreCase("http")) {
 
             if (!isLocalHost) {
-                pending.logf(
+                pending.logWarning(
                         "WARNING! You are serving a WebSocket over an unencrypted connection (http). " +
                         "This is not secure and speaks Cthulhu's true name when used in production."
                 );
@@ -231,7 +231,7 @@ public class JakartaWebsocketLoader implements Loader {
         } else {
 
             if (!isLocalHost) {
-                pending.logf(
+                pending.logWarningf(
                         "WARNING! You are serving a WebSocket over an unknown connection (%s). " +
                         "This is potentially not secure and speaks Cthulhu's true name when used in production.",
                         contextPathURIScheme
