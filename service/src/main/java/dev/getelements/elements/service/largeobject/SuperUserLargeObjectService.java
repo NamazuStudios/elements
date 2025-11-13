@@ -97,6 +97,9 @@ public class SuperUserLargeObjectService implements LargeObjectService {
             getLargeObjectBucket().deleteLargeObject(objectId);
         } catch (IOException e) {
             throw new InternalException("Caught IO Exception processing request.");
+        } catch (RuntimeException e) {
+            // This will happen if it can't find an object with the corresponding id.
+            // We still want to delete the record from the db though, so we need to catch this and then proceed.
         }
 
         largeObjectDao.deleteLargeObject(objectId);

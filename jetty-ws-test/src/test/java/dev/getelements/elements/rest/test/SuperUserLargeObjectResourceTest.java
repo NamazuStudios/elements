@@ -200,14 +200,13 @@ public class SuperUserLargeObjectResourceTest {
                 .readEntity(LargeObject.class);
 
         //delete
-        LargeObject deletedlargeObject = client.target(apiRoot + "/large_object/" + foundlargeObject.getId())
+        client.target(apiRoot + "/large_object/" + foundlargeObject.getId())
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
-                .delete()
-                .readEntity(LargeObject.class);
+                .delete();
 
         final LargeObject foundDeletedlargeObject = client
-                .target(apiRoot + "/large_object/" + deletedlargeObject.getId())
+                .target(apiRoot + "/large_object/" + foundlargeObject.getId())
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .get()

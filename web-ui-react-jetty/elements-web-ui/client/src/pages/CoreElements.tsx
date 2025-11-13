@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Loader2, ChevronDown, ExternalLink, Box, Radio, Code } from 'lucide-react';
+import { Loader2, ChevronDown, ExternalLink, Box, Radio, Code, RefreshCw } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ElementService {
@@ -67,7 +68,7 @@ export default function CoreElements() {
   });
 
   // Fetch Core Elements system data
-  const { data: systemData, isLoading, error } = useQuery<SystemElements | ElementData[]>({
+  const { data: systemData, isLoading, isFetching, error } = useQuery<SystemElements | ElementData[]>({
     queryKey: ['/api/proxy/api/rest/elements/system'],
     staleTime: 60000, // Cache for 1 minute
   });
@@ -154,12 +155,26 @@ export default function CoreElements() {
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Core Elements</h1>
-        <p className="text-muted-foreground mt-1">
-          System Elements and their exposed services
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Core Elements</h1>
+          <p className="text-muted-foreground mt-1">
+            System Elements and their exposed services
 {versionData?.version && ` (v${versionData.version})`}
-        </p>
+          </p>
+        </div>
+        <Button 
+          onClick={async () => {
+            await queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/elements/system'] });
+          }} 
+          variant="outline" 
+          size="sm"
+          disabled={isFetching}
+          data-testid="button-refresh-elements"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {elementEntries.length === 0 ? (

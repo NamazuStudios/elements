@@ -54,8 +54,8 @@ import static java.lang.String.format;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "ECI Elements",
-                description = "ECI Elements Core APIs",
+                title = "Namazu Elements",
+                description = "Namazu Elements Core APIs",
                 contact = @Contact(
                         url = "https://namazustudios.com",
                         email = "info@namazustudios.com",
@@ -63,8 +63,8 @@ import static java.lang.String.format;
                 )
         ),
         externalDocs = @ExternalDocumentation(
-                url = "https://manual.getelements.dev",
-                description = "Please see the ECI Elements Manual for more information."
+                url = "https://namazustudios.com/docs",
+                description = "Please see the Namazu Elements Manual for more information."
         ),
         security = {
                 @SecurityRequirement(name = AUTH_BEARER),

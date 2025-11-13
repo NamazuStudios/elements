@@ -81,13 +81,9 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
   'application/ApplicationUpdateRequest': {
     name: 'ApplicationUpdateRequest',
     fields: [
-      { name: 'id', type: 'string', required: true, isArray: false, isMap: false, validationGroups: { update: 'notNull' } },
-      { name: 'name', type: 'string', required: false, isArray: false, isMap: false },
+      { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
       { name: 'description', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'gitBranch', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'scriptRepoUrl', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'attributes', type: 'object', required: false, isArray: false, isMap: true },
-      { name: 'applicationConfiguration', type: 'object', required: false, isArray: true, isMap: false },
     ],
   },
 
@@ -187,8 +183,8 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
   'profile/ProfileCreateRequest': {
     name: 'ProfileCreateRequest',
     fields: [
-      { name: 'user', type: 'string', required: true, isArray: false, isMap: false, description: 'User ID' },
-      { name: 'application', type: 'string', required: true, isArray: false, isMap: false, description: 'Application ID' },
+      { name: 'user', type: 'object', required: true, isArray: false, isMap: false, description: 'User reference with id' },
+      { name: 'application', type: 'object', required: true, isArray: false, isMap: false, description: 'Application reference with id' },
       { name: 'displayName', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'imageUrl', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: false, isArray: false, isMap: false },
@@ -198,8 +194,8 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     name: 'ProfileUpdateRequest',
     fields: [
       { name: 'id', type: 'string', required: true, isArray: false, isMap: false, validationGroups: { update: 'notNull' } },
-      { name: 'user', type: 'string', required: false, isArray: false, isMap: false, description: 'User ID' },
-      { name: 'application', type: 'string', required: false, isArray: false, isMap: false, description: 'Application ID' },
+      { name: 'user', type: 'object', required: false, isArray: false, isMap: false, description: 'User reference with id' },
+      { name: 'application', type: 'object', required: false, isArray: false, isMap: false, description: 'Application reference with id' },
       { name: 'displayName', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'imageUrl', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: false, isArray: false, isMap: false },

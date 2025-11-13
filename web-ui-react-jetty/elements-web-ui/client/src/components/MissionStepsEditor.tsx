@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash2, Plus, GripVertical, X, ChevronDown, Search } from 'lucide-react';
 import { ResourceSearchDialog } from '@/components/ResourceSearchDialog';
+import { apiClient } from '@/lib/api-client';
 
 export interface MissionStepReward {
   itemId: string;  // Internal representation for the form
@@ -36,16 +37,7 @@ export function MissionStepsEditor({ value, onChange }: MissionStepsEditorProps)
   const { data: items = [] } = useQuery<any[]>({
     queryKey: ['/api/rest/item'],
     queryFn: async () => {
-      const res = await fetch('/api/proxy/api/rest/item', {
-        credentials: 'include',
-      });
-      
-      if (!res.ok) {
-        const text = (await res.text()) || res.statusText;
-        throw new Error(`${res.status}: ${text}`);
-      }
-      
-      const response = await res.json();
+      const response = await apiClient.request<any>('/api/rest/item');
       
       // Elements API returns paginated data: {offset, total, objects: [...]} or {offset, total, content: [...]}
       if (response && typeof response === 'object') {

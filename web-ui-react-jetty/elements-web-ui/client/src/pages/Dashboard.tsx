@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge';
-import { ServerCog, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ServerCog, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface HealthStatus {
@@ -16,7 +18,7 @@ interface HealthStatus {
 }
 
 export default function Dashboard() {
-  const { data: healthStatus, isLoading: isHealthLoading, error: healthError } = useQuery<HealthStatus>({
+  const { data: healthStatus, isLoading: isHealthLoading, isFetching: isHealthFetching, error: healthError } = useQuery<HealthStatus>({
     queryKey: ['/api/proxy/api/rest/health'],
     refetchInterval: 30000, // Refetch every 30 seconds
     retry: false, // Don't retry on failure for health checks
@@ -32,11 +34,27 @@ export default function Dashboard() {
 
   const healthColor = getHealthColor();
 
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/health'] });
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Overview of your Elements platform</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Overview of your Elements platform</p>
+        </div>
+        <Button 
+          onClick={handleRefresh} 
+          variant="outline" 
+          size="sm"
+          disabled={isHealthFetching}
+          data-testid="button-refresh-health"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isHealthFetching ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       <div className="max-w-2xl">

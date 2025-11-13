@@ -3,6 +3,7 @@ import { AppSidebar } from './AppSidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
+import { useState } from 'react';
 import * as Icons from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -12,6 +13,9 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { username, logout } = useAuth();
   const [, setLocation] = useLocation();
+  
+  // Track which category groups are open - lifted to persist across navigation
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const style = {
     '--sidebar-width': '16rem',
@@ -20,7 +24,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider defaultOpen style={style as React.CSSProperties}>
       <div className="flex h-screen w-full">
-        <AppSidebar />
+        <AppSidebar openGroups={openGroups} setOpenGroups={setOpenGroups} />
         <div className="flex flex-col flex-1 overflow-hidden">
           <header className="flex items-center gap-4 border-b px-6 py-3">
             <SidebarTrigger data-testid="button-sidebar-toggle" />

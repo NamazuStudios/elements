@@ -179,7 +179,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
         final Query<MongoLeaderboard> query = datastore.find(MongoLeaderboard.class);
 
-        query.filter(Filters.eq("active", true));
+        query.filter(Filters.exists("name"));
 
         try {
             query.filter(Filters.eq("_id", new ObjectId(leaderboardNameOrId)));

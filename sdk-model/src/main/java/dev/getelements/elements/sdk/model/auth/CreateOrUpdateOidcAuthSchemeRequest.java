@@ -11,11 +11,6 @@ import java.util.Objects;
 @Schema(description = "Represents a request to update an Auth Scheme for an Application.")
 public class CreateOrUpdateOidcAuthSchemeRequest {
 
-    @Null(groups = ValidationGroups.Insert.class)
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Schema(description = "The unique ID of the auth scheme.")
-    private String id;
-
     @NotNull
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
             "When validating from an external source (e.g. Google or Apple SSO), must match the 'iss' property of the decoded JWT.")
@@ -30,14 +25,6 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
 
     @Schema(description = "The JWK format. Defaults to application/json")
     private String mediaType = "application/json";
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getIssuer() {
         return issuer;
@@ -76,12 +63,12 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateOrUpdateOidcAuthSchemeRequest that = (CreateOrUpdateOidcAuthSchemeRequest) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        return Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(getIssuer(), getKeys(), getKeysUrl(), getMediaType());
     }
 
 }

@@ -9,10 +9,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { getApiPath } from '@/lib/config';
+import { apiClient } from '@/lib/api-client';
 
 interface AccessPermissions {
   read: {
@@ -76,7 +77,7 @@ export default function LargeObjects() {
     }
   }, [pageSize]);
 
-  const { data: response, isLoading, error } = useQuery<LargeObjectResponse>({
+  const { data: response, isLoading, isFetching, error } = useQuery<LargeObjectResponse>({
     queryKey: ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize],
     queryFn: async () => {
       let url = `/api/proxy/api/rest/large_object?offset=${currentPage * pageSize}&count=${pageSize}`;
@@ -84,7 +85,18 @@ export default function LargeObjects() {
         url += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
       console.log('[LARGE_OBJECTS] Fetching with pageSize:', pageSize, 'URL:', url);
-      const response = await fetch(url);
+      
+      // Add authentication header
+      const headers: HeadersInit = {};
+      const sessionToken = apiClient.getSessionToken();
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+      
+      const response = await fetch(url, { 
+        credentials: 'include',
+        headers 
+      });
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
       console.log('[LARGE_OBJECTS] Received', data.objects?.length, 'objects');
@@ -116,7 +128,6 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -140,7 +151,6 @@ export default function LargeObjects() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -160,11 +170,48 @@ export default function LargeObjects() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiRequest('DELETE', `/api/proxy/api/rest/large_object/${id}`);
-      return response;
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
+    onSuccess: (deletedId) => {
+      // Check if we need to adjust pagination after deletion
+      const queryKey = ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize];
+      const currentData = queryClient.getQueryData(queryKey) as LargeObjectResponse | undefined;
+      
+      // If we're deleting the last item on this page and it's not the first page, go back one page
+      if (currentData && currentData.objects.length === 1 && currentPage > 0) {
+        setCurrentPage(Math.max(0, currentPage - 1));
+      }
+      
+      // Update all cached pages for this resource
+      queryClient.setQueriesData(
+        { queryKey: ['/api/proxy/api/rest/large_object'] },
+        (oldData: any) => {
+          if (!oldData || typeof oldData.total !== 'number') {
+            return oldData; // Skip non-paginated responses
+          }
+          
+          // Remove the deleted item if it's in this page
+          if (Array.isArray(oldData.objects)) {
+            const filteredObjects = oldData.objects.filter((obj: any) => obj.id !== deletedId);
+            
+            // Only update if something was actually removed
+            if (filteredObjects.length < oldData.objects.length) {
+              return {
+                ...oldData,
+                objects: filteredObjects,
+                total: Math.max(0, oldData.total - 1),
+              };
+            }
+          }
+          
+          // If item not in this page, just decrement the total
+          return {
+            ...oldData,
+            total: Math.max(0, oldData.total - 1),
+          };
+        }
+      );
+      
       toast({ title: 'Success', description: 'Large object deleted successfully' });
     },
     onError: (error: any) => {
@@ -206,9 +253,18 @@ export default function LargeObjects() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
+      // Add authentication header
+      const headers: HeadersInit = {};
+      const sessionToken = apiClient.getSessionToken();
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+
       const uploadResponse = await fetch(`/api/proxy/api/rest/large_object/${createdObject.id}/content`, {
         method: 'PUT',
         body: formData,
+        credentials: 'include',
+        headers,
       });
 
       if (!uploadResponse.ok) {
@@ -216,7 +272,6 @@ export default function LargeObjects() {
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
-      setCurrentPage(0);
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${createdObject.id}` 
@@ -283,16 +338,28 @@ export default function LargeObjects() {
     return cdnPath;
   };
 
+  const fetchObjectAsBlob = async (objectId: string, download: boolean = false): Promise<Blob> => {
+    const cdnPath = `/cdn/object/${objectId}${download ? '?download=true' : ''}`;
+    const fullPath = await getApiPath(cdnPath);
+    
+    const sessionToken = apiClient.getSessionToken();
+    const headers: Record<string, string> = {};
+    if (sessionToken) {
+      headers['Elements-SessionSecret'] = sessionToken;
+    }
+    
+    const response = await fetch(fullPath, { headers });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch object: ${response.statusText}`);
+    }
+    
+    return await response.blob();
+  };
+
   const handleDownload = async (objectId: string, fileName?: string) => {
     try {
-      const cdnUrl = await getCdnUrl(objectId);
-      // Add ?download=true to trigger attachment disposition
-      const downloadUrl = `${cdnUrl}?download=true`;
-      const response = await fetch(downloadUrl);
-
-      if (!response.ok) throw new Error('Download failed');
-
-      const blob = await response.blob();
+      const blob = await fetchObjectAsBlob(objectId, true);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -315,7 +382,7 @@ export default function LargeObjects() {
     return mimeType.startsWith('image/');
   };
 
-  const [previewDialog, setPreviewDialog] = useState<{ open: boolean; object: LargeObject | null }>({
+  const [previewDialog, setPreviewDialog] = useState<{ open: boolean; object: LargeObject | null; imageUrl?: string }>({
     open: false,
     object: null,
   });
@@ -327,6 +394,29 @@ export default function LargeObjects() {
     return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
   };
 
+  const handlePreview = async (obj: LargeObject) => {
+    try {
+      const blob = await fetchObjectAsBlob(obj.id);
+      const imageUrl = window.URL.createObjectURL(blob);
+      setPreviewDialog({ open: true, object: obj, imageUrl });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load image preview',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Cleanup blob URLs when dialog closes
+  useEffect(() => {
+    return () => {
+      if (previewDialog.imageUrl) {
+        window.URL.revokeObjectURL(previewDialog.imageUrl);
+      }
+    };
+  }, [previewDialog.imageUrl]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -334,14 +424,27 @@ export default function LargeObjects() {
           <h1 className="text-2xl font-semibold">Large Objects</h1>
           <p className="text-muted-foreground mt-1">Manage file storage and large binary objects</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-large-object">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Object
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={async () => {
+              await queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+            }} 
+            variant="outline" 
+            size="sm"
+            disabled={isFetching}
+            data-testid="button-refresh-objects"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-large-object">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Object
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Upload Large Object</DialogTitle>
               <DialogDescription>
@@ -406,7 +509,8 @@ export default function LargeObjects() {
               </TabsContent>
             </Tabs>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -455,7 +559,7 @@ export default function LargeObjects() {
                   <TableHead>Type</TableHead>
                   <TableHead>State</TableHead>
                   <TableHead>Last Modified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[140px] text-center sticky right-0 bg-background border-l z-10">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -484,13 +588,13 @@ export default function LargeObjects() {
                         ? new Date(obj.lastModified).toLocaleDateString()
                         : <span className="text-muted-foreground">—</span>}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <TableCell className="w-[140px] sticky right-0 bg-background border-l z-10">
+                      <div className="flex items-center justify-center gap-1">
                         {isImageType(obj.mimeType) && (
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setPreviewDialog({ open: true, object: obj })}
+                            onClick={() => handlePreview(obj)}
                             data-testid={`button-preview-${obj.id}`}
                           >
                             <Eye className="w-4 h-4" />
@@ -573,7 +677,12 @@ export default function LargeObjects() {
       </Card>
 
       {/* Image Preview Dialog */}
-      <Dialog open={previewDialog.open} onOpenChange={(open) => setPreviewDialog({ open, object: null })}>
+      <Dialog open={previewDialog.open} onOpenChange={(open) => {
+        if (!open && previewDialog.imageUrl) {
+          window.URL.revokeObjectURL(previewDialog.imageUrl);
+        }
+        setPreviewDialog({ open, object: null });
+      }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Image Preview</DialogTitle>
@@ -581,11 +690,11 @@ export default function LargeObjects() {
               {previewDialog.object?.originalFilename || previewDialog.object?.path.split('/').pop() || 'Object Preview'}
             </DialogDescription>
           </DialogHeader>
-          {previewDialog.object && (
+          {previewDialog.object && previewDialog.imageUrl && (
             <div className="space-y-4">
               <div className="flex items-center justify-center bg-muted rounded-lg p-4 max-h-[50vh] overflow-hidden">
                 <img
-                  src={`/api/proxy/cdn/object/${previewDialog.object.id}`}
+                  src={previewDialog.imageUrl}
                   alt={previewDialog.object.originalFilename || previewDialog.object.path}
                   className="max-w-full max-h-[50vh] w-auto h-auto object-contain"
                   data-testid={`img-preview-${previewDialog.object.id}`}
@@ -629,8 +738,19 @@ export default function LargeObjects() {
                   variant="outline"
                   onClick={async () => {
                     if (previewDialog.object) {
-                      const cdnUrl = await getCdnUrl(previewDialog.object.id);
-                      window.open(cdnUrl, '_blank');
+                      try {
+                        const blob = await fetchObjectAsBlob(previewDialog.object.id);
+                        const url = window.URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        // Clean up after a delay to allow the new tab to load
+                        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+                      } catch (error) {
+                        toast({
+                          title: 'Error',
+                          description: 'Failed to open object',
+                          variant: 'destructive',
+                        });
+                      }
                     }
                   }}
                   data-testid="button-preview-open"
