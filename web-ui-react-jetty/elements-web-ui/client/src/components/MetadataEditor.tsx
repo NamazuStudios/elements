@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TagsInput } from '@/components/TagsInput';
 import { ResourceSearchDialog } from '@/components/ResourceSearchDialog';
-import { AlertCircle, XCircle, Search } from 'lucide-react';
+import { AlertCircle, XCircle, Search, Plus, X } from 'lucide-react';
 
 interface MetadataSpecProperty {
   name: string;
@@ -172,14 +172,18 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
       if (onValidationChange) {
         onValidationChange(validation.isValid, validation.errorMessages);
       }
+    } else {
+      // No spec selected - skip validation
+      if (onValidationChange) {
+        onValidationChange(true, []);
+      }
     }
   }, [metadataValues, selectedSpecId, selectedSpec, onValidationChange]);
   
   // Notify parent of metadata changes (separate from validation to avoid loops)
   useEffect(() => {
-    if (selectedSpecId && selectedSpecId !== 'none') {
-      onChange(metadataValues, selectedSpecId);
-    }
+    // Always notify parent of metadata changes, even without a spec
+    onChange(metadataValues, selectedSpecId || '');
   }, [metadataValues, selectedSpecId]);
 
   const handleSpecChange = (newSpecId: string) => {
@@ -481,8 +485,77 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
       )}
 
       {!selectedSpecId && (
-        <div className="text-sm text-muted-foreground italic">
-          Select a metadata spec above to see available fields
+        <div className="space-y-4 pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium">Metadata Values (Free-form)</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter metadata as key-value pairs. No validation will be applied.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {Object.entries(metadataValues).map(([key, value]) => (
+              <div key={key} className="flex gap-2">
+                <Input
+                  placeholder="Key"
+                  value={key}
+                  onChange={(e) => {
+                    const newKey = e.target.value;
+                    const newValues = { ...metadataValues };
+                    delete newValues[key];
+                    if (newKey) {
+                      newValues[newKey] = value;
+                    }
+                    setMetadataValues(newValues);
+                  }}
+                  className="flex-1"
+                  data-testid={`input-metadata-key-${key}`}
+                />
+                <Input
+                  placeholder="Value"
+                  value={typeof value === 'string' ? value : JSON.stringify(value)}
+                  onChange={(e) => {
+                    setMetadataValues({
+                      ...metadataValues,
+                      [key]: e.target.value
+                    });
+                  }}
+                  className="flex-1"
+                  data-testid={`input-metadata-value-${key}`}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    const newValues = { ...metadataValues };
+                    delete newValues[key];
+                    setMetadataValues(newValues);
+                  }}
+                  data-testid={`button-remove-metadata-${key}`}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newKey = `key${Object.keys(metadataValues).length + 1}`;
+                setMetadataValues({
+                  ...metadataValues,
+                  [newKey]: ''
+                });
+              }}
+              data-testid="button-add-metadata"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Entry
+            </Button>
+          </div>
         </div>
       )}
 

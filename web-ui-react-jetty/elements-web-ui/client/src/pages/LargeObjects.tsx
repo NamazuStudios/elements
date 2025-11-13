@@ -173,40 +173,44 @@ export default function LargeObjects() {
       return id;
     },
     onSuccess: (deletedId) => {
-      // Always update the cache for the current page first
+      // Check if we need to adjust pagination after deletion
       const queryKey = ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize];
       const currentData = queryClient.getQueryData(queryKey) as LargeObjectResponse | undefined;
       
-      if (currentData) {
-        // Remove the deleted item from the current page
-        const updatedObjects = currentData.objects.filter((obj) => obj.id !== deletedId);
-        
-        // Update the cache with the filtered data and decremented total
-        queryClient.setQueryData(queryKey, {
-          ...currentData,
-          objects: updatedObjects,
-          total: currentData.total - 1,
-        });
-        
-        // Update the total count in ALL cached pages to keep them in sync
-        queryClient.setQueriesData(
-          { queryKey: ['/api/proxy/api/rest/large_object'] },
-          (oldData: any) => {
-            if (oldData && typeof oldData.total === 'number') {
+      // If we're deleting the last item on this page and it's not the first page, go back one page
+      if (currentData && currentData.objects.length === 1 && currentPage > 0) {
+        setCurrentPage(Math.max(0, currentPage - 1));
+      }
+      
+      // Update all cached pages for this resource
+      queryClient.setQueriesData(
+        { queryKey: ['/api/proxy/api/rest/large_object'] },
+        (oldData: any) => {
+          if (!oldData || typeof oldData.total !== 'number') {
+            return oldData; // Skip non-paginated responses
+          }
+          
+          // Remove the deleted item if it's in this page
+          if (Array.isArray(oldData.objects)) {
+            const filteredObjects = oldData.objects.filter((obj: any) => obj.id !== deletedId);
+            
+            // Only update if something was actually removed
+            if (filteredObjects.length < oldData.objects.length) {
               return {
                 ...oldData,
-                total: oldData.total - 1,
+                objects: filteredObjects,
+                total: Math.max(0, oldData.total - 1),
               };
             }
-            return oldData;
           }
-        );
-        
-        // If we deleted the last item on this page and it's not the first page, go back one page
-        if (updatedObjects.length === 0 && currentPage > 0) {
-          setCurrentPage(Math.max(0, currentPage - 1));
+          
+          // If item not in this page, just decrement the total
+          return {
+            ...oldData,
+            total: Math.max(0, oldData.total - 1),
+          };
         }
-      }
+      );
       
       toast({ title: 'Success', description: 'Large object deleted successfully' });
     },
@@ -555,7 +559,7 @@ export default function LargeObjects() {
                   <TableHead>Type</TableHead>
                   <TableHead>State</TableHead>
                   <TableHead>Last Modified</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[140px] text-center sticky right-0 bg-background border-l z-10">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -584,8 +588,8 @@ export default function LargeObjects() {
                         ? new Date(obj.lastModified).toLocaleDateString()
                         : <span className="text-muted-foreground">—</span>}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <TableCell className="w-[140px] sticky right-0 bg-background border-l z-10">
+                      <div className="flex items-center justify-center gap-1">
                         {isImageType(obj.mimeType) && (
                           <Button
                             size="sm"

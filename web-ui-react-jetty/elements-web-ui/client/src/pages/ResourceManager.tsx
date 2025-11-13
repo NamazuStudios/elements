@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { queryClient } from '@/lib/queryClient';
@@ -62,8 +62,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     const saved = localStorage.getItem('admin-results-per-page');
     return saved ? parseInt(saved, 10) : 20;
   });
-  const [paginationInfo, setPaginationInfo] = useState<{ total: number; offset: number; count: number } | null>(null);
-
+  
+  // Track previous endpoint to detect resource changes
+  const prevEndpointRef = useRef<string | null>(null);
+  const isResourceChange = prevEndpointRef.current !== endpoint;
+  useEffect(() => {
+    prevEndpointRef.current = endpoint;
+  }, [endpoint]);
+  
   // Fetch metadata specs for ID resolution (only for Metadata resource)
   const { data: metadataSpecsResponse } = useQuery<{ objects: any[] }>({
     queryKey: ['/api/rest/metadata_spec'],
@@ -80,6 +86,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     });
     return lookup;
   }, [metadataSpecsResponse]);
+
+  // Reset pagination when resource changes
+  useEffect(() => {
+    if (!endpoint) return;
+    setOffset(0);
+    // Cancel any in-flight queries for the old resource
+    queryClient.cancelQueries({ queryKey: [endpoint], exact: false });
+  }, [resourceName, endpoint]);
 
   // Debounce search input to avoid refetching on every keystroke
   useEffect(() => {
@@ -169,6 +183,18 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     // Normalize metadataSpec field - extract ID from object if needed
     if (normalized.metadataSpec && typeof normalized.metadataSpec === 'object' && 'id' in normalized.metadataSpec) {
       normalized.metadataSpec = normalized.metadataSpec.id;
+    }
+    
+    // Use schema to normalize object fields that should be strings (IDs)
+    if (schema && schema.fields) {
+      for (const field of schema.fields) {
+        const value = normalized[field.name];
+        
+        // If schema expects a string but value is an object with an id, convert to ID
+        if (field.type === 'string' && value && typeof value === 'object' && 'id' in value) {
+          normalized[field.name] = value.id;
+        }
+      }
     }
     
     return normalized;
@@ -283,9 +309,10 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
     return formData;
   };
 
-  const { data: items, isLoading, isFetching, error } = useQuery({
+  const { data, isLoading, isFetching, error } = useQuery({
     queryKey: [endpoint, offset, count, searchTerm],
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching new data
+    // Only keep previous data when paginating within the same resource, not when switching resources
+    placeholderData: isResourceChange ? undefined : (previousData) => previousData,
     queryFn: async () => {
       // Build query parameters for pagination and search
       const params = new URLSearchParams({
@@ -301,31 +328,36 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       
       // Elements API returns paginated data: {offset, total, objects: [...]} or {offset, total, content: [...]}
       if (response && typeof response === 'object') {
-        // Store pagination info if response has total field
+        let items: any[] = [];
+        let pagination: { total: number; offset: number; count: number } | null = null;
+        
+        // Extract pagination info if present
         if ('total' in response) {
-          setPaginationInfo({
+          pagination = {
             total: response.total,
             offset: response.offset || 0,
             count: response.count || count,
-          });
-        } else {
-          // Clear pagination info for non-paginated responses
-          setPaginationInfo(null);
+          };
         }
         
         // Extract items from response
         if ('objects' in response) {
-          return response.objects || [];
+          items = response.objects || [];
         } else if ('content' in response) {
-          return response.content || [];
+          items = response.content || [];
         }
+        
+        return { items, pagination };
       }
       
-      // Fallback for non-paginated responses - clear pagination info
-      setPaginationInfo(null);
-      return Array.isArray(response) ? response : [];
+      // Fallback for non-paginated responses
+      return { items: Array.isArray(response) ? response : [], pagination: null };
     },
   });
+
+  // Extract items and pagination from query data
+  const items = data?.items || [];
+  const paginationInfo = data?.pagination || null;
 
   // Combine items with draft (draft appears at top)
   const itemsWithDraft = useMemo(() => {
@@ -339,11 +371,11 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { _configurations, id, name, ...dataWithoutConfigsAndId } = data;
+      const { _configurations, id, ...rest } = data;
       
       if (dialogMode === 'create') {
-        // Include name for create requests
-        const createData = name ? { name, ...dataWithoutConfigsAndId } : dataWithoutConfigsAndId;
+        // For create, exclude id and _configurations only
+        const createData = rest;
         const createdItem = await apiClient.request(endpoint, { 
           method: 'POST',
           body: JSON.stringify(createData),
@@ -419,10 +451,26 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         if (!itemId) {
           throw new Error('Cannot update: No ID found for the selected item');
         }
-        // Exclude id and name from update request body (only in URL path)
+        
+        // Filter data based on the update schema
+        const updateData: any = {};
+        const updateSchema = await getResourceSchema(resourceName, 'update');
+        
+        if (updateSchema && updateSchema.fields) {
+          // Only include fields that are in the update schema and not readOnly
+          for (const field of updateSchema.fields) {
+            if (!field.readOnly && !field.uiOnly && field.name in rest) {
+              updateData[field.name] = rest[field.name];
+            }
+          }
+        } else {
+          // Fallback: if no schema, just exclude id
+          Object.assign(updateData, rest);
+        }
+        
         return await apiClient.request(`${endpoint}/${itemId}`, { 
           method: 'PUT',
-          body: JSON.stringify(dataWithoutConfigsAndId),
+          body: JSON.stringify(updateData),
         });
       }
     },
@@ -535,6 +583,9 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           };
         }
       );
+      
+      // Invalidate to refetch with correct server-side total
+      queryClient.invalidateQueries({ queryKey: [endpoint] });
       
       // Helper function to singularize resource name
       const getSingularName = (name: string) => {
@@ -689,6 +740,13 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           return filteredKeys;
         }
         
+        // Custom column filtering for Smart Contracts resource
+        if (resourceName === 'Smart Contracts') {
+          // Remove addresses and metadata columns
+          const filteredKeys = keys.filter(k => k !== 'addresses' && k !== 'metadata');
+          return filteredKeys;
+        }
+        
     return keys;
   }, [items, resourceName]);
 
@@ -819,7 +877,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {itemsWithDraft && itemsWithDraft.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <RefreshCw className="w-8 h-8 mx-auto mb-4 text-muted-foreground animate-spin" />
+              <p className="text-muted-foreground">Loading {resourceName.toLowerCase()}...</p>
+            </div>
+          ) : itemsWithDraft && itemsWithDraft.length > 0 ? (
             <div className="border rounded-md overflow-x-auto">
               <table className="w-full caption-bottom text-sm">
                 <thead className="[&_tr]:border-b">
@@ -893,6 +956,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             } else {
                               cellValue = `${seconds} second${seconds !== 1 ? 's' : ''}`;
                             }
+                          }
+                        }
+                        
+                        // Custom rendering for Smart Contracts resource
+                        if (resourceName === 'Smart Contracts') {
+                          if (col === 'vault' && typeof cellValue === 'object' && cellValue !== null) {
+                            // Show vault displayName instead of full object
+                            cellValue = cellValue?.displayName || cellValue?.id || '';
                           }
                         }
                         
@@ -1019,9 +1090,11 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             }
                           } else {
                             // For other resources, use item from list directly
+                            // For Missions, convert API format to form format (especially rewards)
+                            const formData = resourceName === 'Missions' ? convertJsonToFormData(item) : item;
                             setSelectedItem(item);
-                            setCurrentFormData(item);
-                            setFormInitialData(item);
+                            setCurrentFormData(formData);
+                            setFormInitialData(formData);
                             setJsonText(JSON.stringify(item, null, 2));
                             setJsonError('');
                             setDialogMode('edit');
