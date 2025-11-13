@@ -122,6 +122,11 @@ public interface ApplicationDeploymentService {
         CLEAN,
 
         /**
+         * Indicates that the deployment completed, but there were warnings during the process.
+         */
+        WARNINGS,
+
+        /**
          * Indicates that the deployment completed, but there were warnings during the process which resulted in
          * exceptions that were caught and handled.
          */
