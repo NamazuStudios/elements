@@ -93,16 +93,21 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             final String userId,
             final String profileId,
             final String query) {
-        final Optional<Profile> profile = getProfileDao().findActiveProfile(profileId);
+
+        final var profile = getProfileDao().findActiveProfile(profileId);
+
         if (profile.isPresent()) {
             final User user = isCurrentUser(userId) ? getUser() : getUserDao().getUser(userId);
+
             if (!user.getId().equals(profile.get().getUser().getId())) {
                 return new Pagination<>();
             }
         }
 
-        Pagination<DistinctInventoryItem> items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId, !isCurrentUser(userId), query);
+        final var items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId, false, query);
+
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
+
         return items;
     }
 
