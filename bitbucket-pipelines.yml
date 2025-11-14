@@ -120,7 +120,6 @@ pipelines:
         caches:
           - maven
         script:
-          - export DOCKER_BUILDKIT=1
           - make setup
           - make build
           - make docker
