@@ -55,7 +55,9 @@ git:
 	git remote add github git@github.com:NamazuStudios/elements.git
 
 setup: git
+	export DOCKER_HOST=tcp://docker:2375
 	export DOCKER_BUILDKIT=1
+	export DOCKER_CLI_EXPERIMENTAL=enabled
 	ng
 	mvn -version
 	docker buildx create --use

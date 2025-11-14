@@ -13,10 +13,9 @@ image:
 definitions:
   services:
     docker:
-      image: docker:29.0-dind
-# https://confluence.atlassian.com/bbkb/docker-buildkit-error-in-pipelines-when-deploying-to-google-cloud-1235859715.html
-options:
-  docker: true
+      image: docker:20.10-dind
+      variables:
+        DOCKER_TLS_CERTDIR: ""
 
 clone:
   depth: full
