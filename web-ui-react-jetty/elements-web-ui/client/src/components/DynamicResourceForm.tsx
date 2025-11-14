@@ -130,6 +130,9 @@ export function DynamicResourceForm({
         if (mode === 'create' && (groups.insert === 'null' || groups.create === 'null')) {
           continue; // Skip this field for create mode
         }
+        if (mode === 'update' && groups.update === 'null') {
+          continue; // Skip this field for update mode (must be null)
+        }
       }
       
       // Special case: Metadata Spec properties field should accept array and be required
@@ -438,6 +441,16 @@ export function DynamicResourceForm({
         continue;
       }
       
+      // Skip fields that must be null in update mode
+      if (field?.validationGroups) {
+        if (mode === 'update' && field.validationGroups.update === 'null') {
+          continue;
+        }
+        if (mode === 'create' && (field.validationGroups.insert === 'null' || field.validationGroups.create === 'null')) {
+          continue;
+        }
+      }
+      
       // Skip id field in update mode (it's already in the URL path)
       if (key === 'id' && mode === 'update') {
         continue;
@@ -456,12 +469,18 @@ export function DynamicResourceForm({
           cleanedData[key] = value;
         }
       } else if (key === 'metadataSpec') {
-        // For Metadata resource, convert metadataSpec from string ID to object with id field
+        // Extract the ID whether it's a string or object
+        let specId = value;
+        if (typeof value === 'object' && value !== null) {
+          specId = value.id || value;
+        }
+        
+        // For Metadata resource, convert metadataSpec to object with id field
         // For other resources (Items, etc.), keep as string ID
         if (isMetadataResource) {
-          cleanedData[key] = { id: value };
-        } else if (value) {
-          cleanedData[key] = value;
+          cleanedData[key] = { id: specId };
+        } else if (specId) {
+          cleanedData[key] = specId;
         }
       } else if (value !== '' && value !== null && value !== undefined) {
         cleanedData[key] = value;
@@ -630,6 +649,16 @@ export function DynamicResourceForm({
         : dependentValue === showWhen;
       
       if (!shouldShow) {
+        return null;
+      }
+    }
+    
+    // Hide fields that must be null in update mode
+    if (field.validationGroups) {
+      if (mode === 'update' && field.validationGroups.update === 'null') {
+        return null;
+      }
+      if (mode === 'create' && (field.validationGroups.insert === 'null' || field.validationGroups.create === 'null')) {
         return null;
       }
     }

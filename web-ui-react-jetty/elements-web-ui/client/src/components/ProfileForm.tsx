@@ -2,18 +2,14 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Check, ChevronsUpDown, Trash2, Plus, Package } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { apiClient } from '@/lib/api-client';
+import { Trash2, Plus, Package } from 'lucide-react';
 import { InventoryViewer } from './InventoryViewer';
+import { UserSearchDialog } from './UserSearchDialog';
+import { ApplicationSearchDialog } from './ApplicationSearchDialog';
 import { useFormDraft } from '@/hooks/use-form-draft';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,6 +38,8 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [selectedUserName, setSelectedUserName] = useState<string>('');
+  const [selectedAppName, setSelectedAppName] = useState<string>('');
   const [metadataEntries, setMetadataEntries] = useState<Array<{ key: string; value: string }>>(
     initialData?.metadata ? Object.entries(initialData.metadata).map(([key, value]) => ({ 
       key, 
@@ -54,30 +52,6 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
     resourceName: 'Profiles',
     mode,
     itemId: initialData?.id,
-  });
-
-  // Fetch users
-  const { data: usersList, isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/rest/user'],
-    queryFn: async () => {
-      const response = await apiClient.request<any>('/api/rest/user');
-      if (response && typeof response === 'object' && 'objects' in response) {
-        return response.objects || [];
-      }
-      return Array.isArray(response) ? response : [];
-    },
-  });
-
-  // Fetch applications
-  const { data: appsList, isLoading: appsLoading } = useQuery({
-    queryKey: ['/api/rest/application'],
-    queryFn: async () => {
-      const response = await apiClient.request<any>('/api/rest/application');
-      if (response && typeof response === 'object' && 'objects' in response) {
-        return response.objects || [];
-      }
-      return Array.isArray(response) ? response : [];
-    },
   });
 
   const form = useForm<ProfileFormData>({
@@ -130,8 +104,21 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
     setMetadataEntries(updated);
   };
 
-  const selectedUser = usersList?.find((u: any) => u.id === form.watch('user'));
-  const selectedApp = appsList?.find((a: any) => a.id === form.watch('application'));
+  // Initialize selected names from initialData
+  useEffect(() => {
+    if (initialData?.user) {
+      const userName = typeof initialData.user === 'object' 
+        ? (initialData.user.username || initialData.user.name || initialData.user.id)
+        : initialData.user;
+      setSelectedUserName(userName);
+    }
+    if (initialData?.application) {
+      const appName = typeof initialData.application === 'object'
+        ? (initialData.application.displayName || initialData.application.name || initialData.application.id)
+        : initialData.application;
+      setSelectedAppName(appName);
+    }
+  }, [initialData]);
 
   // Sync form data with parent component for JSON editor
   useEffect(() => {
@@ -176,66 +163,16 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>User *</FormLabel>
-                <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className={cn(
-                          'justify-between',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                        data-testid="button-user-picker"
-                      >
-                        {field.value && selectedUser
-                          ? `${selectedUser.username || selectedUser.name || selectedUser.id} (${selectedUser.level || 'USER'})`
-                          : 'Select user...'}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0">
-                    <Command>
-                      <CommandInput placeholder="Search by username or ID..." data-testid="input-user-search" />
-                      <CommandList>
-                        <CommandEmpty>
-                          {usersLoading ? 'Loading users...' : 'No users found.'}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {usersList?.map((user: any) => {
-                            const displayName = user.username || user.name || user.id;
-                            return (
-                              <CommandItem
-                                key={user.id}
-                                value={`${displayName} ${user.id || ''}`}
-                                keywords={[user.username, user.name, user.id].filter(Boolean)}
-                                onSelect={() => {
-                                  form.setValue('user', user.id);
-                                  setUserSearchOpen(false);
-                                }}
-                                data-testid={`option-user-${user.id}`}
-                              >
-                                <Check
-                                  className={cn(
-                                    'mr-2 h-4 w-4',
-                                    user.id === field.value ? 'opacity-100' : 'opacity-0'
-                                  )}
-                                />
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{displayName}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {user.level || 'USER'} • {user.id}
-                                  </span>
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUserSearchOpen(true)}
+                    className="justify-start"
+                    data-testid="button-user-picker"
+                  >
+                    {selectedUserName || 'Select user...'}
+                  </Button>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -248,63 +185,16 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Application *</FormLabel>
-                <Popover open={appSearchOpen} onOpenChange={setAppSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className={cn(
-                          'justify-between',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                        data-testid="button-application-picker"
-                      >
-                        {field.value && selectedApp
-                          ? `${selectedApp.displayName || selectedApp.name}`
-                          : 'Select application...'}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[400px] p-0">
-                    <Command>
-                      <CommandInput placeholder="Search by name or ID..." data-testid="input-application-search" />
-                      <CommandList>
-                        <CommandEmpty>
-                          {appsLoading ? 'Loading applications...' : 'No applications found.'}
-                        </CommandEmpty>
-                        <CommandGroup>
-                          {appsList?.map((app: any) => (
-                            <CommandItem
-                              key={app.id}
-                              value={`${app.name} ${app.displayName || ''} ${app.id}`}
-                              keywords={[app.name, app.displayName, app.id].filter(Boolean)}
-                              onSelect={() => {
-                                form.setValue('application', app.id);
-                                setAppSearchOpen(false);
-                              }}
-                              data-testid={`option-application-${app.id}`}
-                            >
-                              <Check
-                                className={cn(
-                                  'mr-2 h-4 w-4',
-                                  app.id === field.value ? 'opacity-100' : 'opacity-0'
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium">{app.displayName || app.name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {app.name} • {app.id}
-                                </span>
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Button
+                    variant="outline"
+                    onClick={() => setAppSearchOpen(true)}
+                    className="justify-start"
+                    data-testid="button-application-picker"
+                  >
+                    {selectedAppName || 'Select application...'}
+                  </Button>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -465,6 +355,26 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
           </DialogContent>
         </Dialog>
       )}
+
+      {/* User Search Dialog */}
+      <UserSearchDialog
+        open={userSearchOpen}
+        onOpenChange={setUserSearchOpen}
+        onSelect={(userId, user) => {
+          form.setValue('user', userId);
+          setSelectedUserName(user.username || user.name || userId);
+        }}
+      />
+
+      {/* Application Search Dialog */}
+      <ApplicationSearchDialog
+        open={appSearchOpen}
+        onOpenChange={setAppSearchOpen}
+        onSelect={(appId, app) => {
+          form.setValue('application', appId);
+          setSelectedAppName(app.displayName || app.name || appId);
+        }}
+      />
     </>
   );
 }

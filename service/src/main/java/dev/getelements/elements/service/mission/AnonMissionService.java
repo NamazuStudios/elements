@@ -26,7 +26,7 @@ public class AnonMissionService implements MissionService {
     public Pagination<Mission> getMissions(int offset, int count, String query)  { return missionDao.getMissions(offset, count, query); }
 
     @Override
-    public Mission updateMission(Mission mission) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }
+    public Mission updateMission(String missionNameOrId, Mission mission) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }
 
     @Override
     public Mission createMission(Mission mission) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }

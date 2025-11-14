@@ -335,9 +335,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var classGraph = new ClassGraph()
                 .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
-                .enableClassInfo()
-                .enableMethodInfo()
-                .enableAnnotationInfo()
+                .enableAllInfo()
                 .acceptClasses(serviceInterfaces
                         .stream()
                         .map(Class::getName)

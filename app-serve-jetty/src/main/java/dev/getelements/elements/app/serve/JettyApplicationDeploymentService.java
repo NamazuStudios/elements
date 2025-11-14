@@ -13,8 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static dev.getelements.elements.common.app.ApplicationDeploymentService.DeploymentStatus.CLEAN;
-import static dev.getelements.elements.common.app.ApplicationDeploymentService.DeploymentStatus.UNSTABLE;
+import static dev.getelements.elements.common.app.ApplicationDeploymentService.DeploymentStatus.*;
 
 public class JettyApplicationDeploymentService extends AbstractApplicationDeploymentService {
 
@@ -37,8 +36,9 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
 
         final var uris = new TreeSet<URI>();
         final var logs = new ArrayList<String>();
+        final var warnings = new ArrayList<String>();
         final var errors = new ArrayList<Throwable>();
-        final var pending = new Loader.PendingDeployment(uris::add, logs::add, errors::add);
+        final var pending = new Loader.PendingDeployment(uris::add, logs::add, warnings::add, errors::add);
 
         getLoaders().forEach(loader -> {
             try {
@@ -48,9 +48,19 @@ public class JettyApplicationDeploymentService extends AbstractApplicationDeploy
             }
         });
 
+        DeploymentStatus status = CLEAN;
+
+        if (!warnings.isEmpty()) {
+            status = WARNINGS;
+        }
+
+        if (!errors.isEmpty()) {
+            status = UNSTABLE;
+        }
+
         return new DeploymentRecord(
                 application,
-                errors.isEmpty() ? CLEAN : UNSTABLE,
+                status,
                 record,
                 Set.copyOf(uris),
                 List.copyOf(logs),

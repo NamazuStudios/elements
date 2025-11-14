@@ -9,7 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Database, RefreshCw, Info, ExternalLink } from 'lucide-react';
+import { Loader2, Database, RefreshCw, Info, ExternalLink, AppWindow } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { getApiPath } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
@@ -53,24 +54,30 @@ export default function ElementApiExplorer() {
   const appId = params.get('app');
   const elementName = params.get('element');
   const elementUri = params.get('uri');
+  const showAppInfo = params.get('showAppInfo') === 'true';
 
   // Fetch element metadata from Elements backend
+  // Enable when appId is present (for both element view and app info view)
   const { data: appsData } = useQuery({
     queryKey: ['/api/proxy/api/rest/elements/application'],
-    enabled: !!appId && !!elementName,
+    enabled: !!appId,
     staleTime: 30000,
   });
 
   // Find the specific element and app status
   const { currentElement, currentAppStatus } = useMemo(() => {
-    if (!appsData || !appId || !elementName) return { currentElement: null, currentAppStatus: null };
+    if (!appsData || !appId) return { currentElement: null, currentAppStatus: null };
     const appStatus = (appsData as any[])?.find((a: any) => a.application?.id === appId);
     if (!appStatus) return { currentElement: null, currentAppStatus: null };
+    // If showing app info only (no element), don't look for element
+    if (showAppInfo && !elementName) {
+      return { currentElement: null, currentAppStatus: appStatus };
+    }
     const element = appStatus.elements?.find((e: any) => 
       e.definition?.name === elementName
     );
     return { currentElement: element, currentAppStatus: appStatus };
-  }, [appsData, appId, elementName]);
+  }, [appsData, appId, elementName, showAppInfo]);
 
   // Extract the path from the URI (remove protocol and domain)
   const elementPath = useMemo(() => {
@@ -91,14 +98,29 @@ export default function ElementApiExplorer() {
     queryFn: async () => {
       if (!elementPath) throw new Error('No element path provided');
       
+      // Get session token for authentication
+      const { apiClient: client } = await import('@/lib/api-client');
+      const sessionToken = client.getSessionToken();
+      
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+      
       // Try YAML first, using getApiPath to handle production vs development
       const yamlPath = await getApiPath(`${elementPath}/openapi.yaml`);
-      let response = await fetch(yamlPath, { credentials: 'include' });
+      let response = await fetch(yamlPath, { 
+        credentials: 'include',
+        headers
+      });
       
       // If YAML fails, try JSON
       if (!response.ok) {
         const jsonPath = await getApiPath(`${elementPath}/openapi.json`);
-        response = await fetch(jsonPath, { credentials: 'include' });
+        response = await fetch(jsonPath, { 
+          credentials: 'include',
+          headers
+        });
       }
       
       if (!response.ok) {
@@ -301,6 +323,102 @@ export default function ElementApiExplorer() {
       });
     },
   });
+
+  // Show application info if showAppInfo=true and no element selected
+  if (showAppInfo && currentAppStatus && !elementName) {
+    const appName = currentAppStatus.application?.name || appId;
+    const hasLogs = currentAppStatus.logs && currentAppStatus.logs.length > 0;
+    
+    return (
+      <div className="p-6 space-y-6">
+        <div className="border-b pb-4">
+          <div className="flex items-center gap-3">
+            <Icons.AppWindow className="w-6 h-6" />
+            <div>
+              <h1 className="text-2xl font-bold" data-testid="page-title">
+                {appName}
+              </h1>
+              <div className="text-sm text-muted-foreground flex items-center gap-2" data-testid="page-subtitle">
+                Application Information
+                {currentAppStatus.status && (
+                  <div className="flex items-center gap-1">
+                    <span>Status:</span>
+                    <span className="font-medium">{currentAppStatus.status}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Application Details</CardTitle>
+            <CardDescription>Information about this Elements application</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2 text-sm">
+              <div className="flex gap-2">
+                <span className="font-medium">ID:</span>
+                <span className="text-muted-foreground font-mono text-xs">{currentAppStatus.application.id}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-medium">Name:</span>
+                <span className="text-muted-foreground">{currentAppStatus.application.name || 'N/A'}</span>
+              </div>
+              {currentAppStatus.application.description && (
+                <div className="flex gap-2">
+                  <span className="font-medium">Description:</span>
+                  <span className="text-muted-foreground">{currentAppStatus.application.description}</span>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <span className="font-medium">Status:</span>
+                <span className="text-muted-foreground">{currentAppStatus.status}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-medium">Elements:</span>
+                <span className="text-muted-foreground">
+                  {currentAppStatus.elements?.length || 0} installed
+                </span>
+              </div>
+            </div>
+
+            {currentAppStatus.uris && currentAppStatus.uris.length > 0 && (
+              <div>
+                <h3 className="text-md font-semibold mb-2">URIs</h3>
+                <div className="space-y-2">
+                  {currentAppStatus.uris.map((uri: string, idx: number) => (
+                    <div key={idx} className="p-3 bg-muted rounded-md">
+                      <code className="text-xs break-all">{uri}</code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {hasLogs && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Application Logs</CardTitle>
+              <CardDescription>Recent logs from the Elements application</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1 max-h-96 overflow-y-auto">
+                {currentAppStatus.logs.map((log: any, idx: number) => (
+                  <div key={idx} className="p-2 bg-muted rounded text-xs font-mono">
+                    {typeof log === 'string' ? log : JSON.stringify(log)}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   if (specLoading) {
     return (

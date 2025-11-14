@@ -44,16 +44,33 @@ public interface Loader {
     record PendingDeployment(
             Predicate<URI> uris,
             Consumer<String> logs,
+            Consumer<String> warnings,
             Consumer<Throwable> errors) {
 
         private static final Logger logger = LoggerFactory.getLogger(PendingDeployment.class);
+
+        public void log(final String message) {
+            log(logs(), message);
+        }
+
+        public void logf(final String fmt, final Object ... args) {
+            logf(logs(), fmt, args);
+        }
+
+        public void logWarning(final String message) {
+            log(warnings(), message);
+        }
+
+        public void logWarningf(final String fmt, final Object ... args) {
+            logf(warnings(), fmt, args);
+        }
 
         /**
          * Logs a message to the deployment log.
          *
          * @param message the message
          */
-        public void log(final String message) {
+        public static void log(final Consumer<String> logs, final String message) {
             logs.accept(message);
         }
 
@@ -63,10 +80,10 @@ public interface Loader {
          * @param format the format
          * @param args the arguments
          */
-        public void logf(final String format, final Object... args) {
+        public static void logf(final Consumer<String> log, final String format, final Object... args) {
             try {
                 final var formatted = format(format, args);
-                log(formatted);
+                log(log, formatted);
             } catch (IllegalFormatException ex) {
 
                 logger.error("Badly formatted log message.", ex);
@@ -81,7 +98,7 @@ public interface Loader {
                         ex.getMessage()
                 );
 
-                log(formatted);
+                log(log, formatted);
 
             }
 
@@ -96,6 +113,24 @@ public interface Loader {
             if (!uris().test(uri)) {
                 logf("Warning! Detected duplicate URI: %s", uri);
             }
+        }
+
+        /**
+         * Records a Throwable to the deployment errors. Returns the same throwable for convenience such that it may
+         * be re-thrown.
+         *
+         * @param throwable the throwable
+         * @return the same throwable
+         */
+        public <ThrowableT extends Throwable> ThrowableT warning(final ThrowableT throwable) {
+
+            logf("WARNING! Caught Exception %s: - %s",
+                    throwable.getClass().getSimpleName(),
+                    throwable.getMessage()
+            );
+
+            return throwable;
+
         }
 
         /**

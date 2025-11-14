@@ -13,7 +13,9 @@ image:
 definitions:
   services:
     docker:
-      image: docker:dind
+      image: docker:20.10-dind
+      variables:
+        DOCKER_TLS_CERTDIR: ""
 
 clone:
   depth: full
@@ -63,7 +65,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
-            - make build 
+            - make build
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch

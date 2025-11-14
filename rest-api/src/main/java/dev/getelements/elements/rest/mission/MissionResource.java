@@ -80,7 +80,7 @@ public class MissionResource {
                     "from the passed in request body. ")
     public Mission updateMission(final Mission updatedMission,
                            @PathParam("missionNameOrId") String missionNameOrId) {
-        return missionService.updateMission(updatedMission);
+        return missionService.updateMission(missionNameOrId, updatedMission);
     }
 
     @DELETE

@@ -11,6 +11,7 @@ import {
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
 import * as Icons from 'lucide-react';
 
 interface ApplicationElement {
@@ -35,7 +36,7 @@ interface ApplicationStatus {
     name: string;
     description?: string;
   };
-  status: 'CLEAN' | 'FAILED' | string;
+  status: 'CLEAN' | 'UNSTABLE' | 'FAILED' | string;
   uris: string[];
   logs: string[];
   elements: ApplicationElement[];
@@ -72,9 +73,23 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
     return uri.replace('http://localhost:8080', backendUrl);
   };
 
-  // Filter applications with non-empty elements list (any status)
-  const appsWithElements = applicationStatuses?.filter(
-    appStatus => appStatus.elements && appStatus.elements.length > 0
+  // Get status dot color based on application status
+  const getStatusDotColor = (status: string) => {
+    switch (status) {
+      case 'CLEAN':
+        return 'bg-green-500';
+      case 'UNSTABLE':
+        return 'bg-orange-500';
+      case 'FAILED':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  // All applications (display all, not just those with elements)
+  const allApplications = applicationStatuses?.filter(
+    appStatus => appStatus?.application
   ) || [];
 
   // Always show the API Explorer section (at minimum, Core API will be shown)
@@ -115,17 +130,18 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* Installed Elements - each element gets its own API explorer */}
-              {appsWithElements.filter(appStatus => appStatus?.application).map((appStatus) => {
-                // Determine status badge variant
-                const statusVariant = appStatus.status === 'CLEAN' 
-                  ? 'default' 
-                  : appStatus.status === 'UNSTABLE' 
-                    ? 'secondary' 
-                    : 'destructive';
+              {/* Installed Elements - display ALL applications */}
+              {allApplications.map((appStatus) => {
+                const statusColor = getStatusDotColor(appStatus.status);
+                const hasElements = appStatus.elements && appStatus.elements.length > 0;
+                const hasLogs = appStatus.logs && appStatus.logs.length > 0;
                 
                 return (
-                  <Collapsible key={appStatus.application.id} defaultOpen className="group/app">
+                  <Collapsible 
+                    key={appStatus.application.id} 
+                    defaultOpen={hasElements} 
+                    className="group/app"
+                  >
                     <SidebarMenuItem>
                       <CollapsibleTrigger asChild>
                         <SidebarMenuButton
@@ -133,25 +149,38 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                           data-testid={`link-app-${appStatus.application?.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`}
                         >
                           <Icons.AppWindow className="w-4 h-4" />
-                          <div className="flex flex-col items-start flex-1 min-w-0">
-                            <span className="truncate">{appStatus.application.name || appStatus.application.id}</span>
-                            <div className="flex items-center gap-1">
-                              <div className={`w-1.5 h-1.5 rounded-full ${
-                                appStatus.status === 'CLEAN' 
-                                  ? 'bg-green-500' 
-                                  : appStatus.status === 'UNSTABLE' 
-                                    ? 'bg-yellow-500' 
-                                    : 'bg-red-500'
-                              }`} />
-                              <span className="text-[10px] text-muted-foreground">{appStatus.status}</span>
-                            </div>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="truncate flex-1">{appStatus.application.name || appStatus.application.id}</span>
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${statusColor}`} title={appStatus.status} />
                           </div>
                           <Icons.ChevronRight className="ml-auto transition-transform group-data-[state=open]/app:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {appStatus.elements?.filter(element => element != null).map((element, idx) => {
+                        {/* Show logs if status is not CLEAN and logs are available */}
+                        {appStatus.status !== 'CLEAN' && hasLogs && (
+                          <SidebarMenuSubItem>
+                            <div className="px-2 py-1.5 text-[10px] text-muted-foreground">
+                              <div className="font-medium mb-1">Logs:</div>
+                              <div className="space-y-0.5 max-h-24 overflow-y-auto">
+                                {appStatus.logs.slice(0, 5).map((log, idx) => (
+                                  <div key={idx} className="truncate" title={log}>
+                                    {log}
+                                  </div>
+                                ))}
+                                {appStatus.logs.length > 5 && (
+                                  <div className="text-muted-foreground/70">
+                                    +{appStatus.logs.length - 5} more...
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </SidebarMenuSubItem>
+                        )}
+                        
+                        {/* Show elements if available */}
+                        {hasElements && appStatus.elements.filter(element => element != null).map((element, idx) => {
                           // Use serve.prefix as the display name, fallback to definition.name
                           const servePrefix = element?.attributes?.['dev.getelements.elements.app.serve.prefix'];
                           const displayName = servePrefix || element?.definition?.name?.split('.').pop() || `Element ${idx}`;
@@ -193,6 +222,26 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                             </SidebarMenuSubItem>
                           );
                         })}
+                        
+                        {/* Show link to view application details if no elements */}
+                        {!hasElements && (
+                          <SidebarMenuSubItem>
+                            <SidebarMenuSubButton
+                              onClick={() => {
+                                setLocation(`/element-api-explorer?app=${encodeURIComponent(appStatus.application.id)}&showAppInfo=true`);
+                              }}
+                              isActive={
+                                location.includes('/element-api-explorer') &&
+                                location.includes(`app=${encodeURIComponent(appStatus.application.id)}`) &&
+                                location.includes('showAppInfo=true')
+                              }
+                              data-testid={`link-app-info-${appStatus.application?.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`}
+                            >
+                              <Icons.Info className="w-3 h-3" />
+                              <span className="truncate">View Application Info</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </SidebarMenuItem>

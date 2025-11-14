@@ -13,21 +13,24 @@ import { Search, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiRequest } from '@/lib/queryClient';
 
-interface UserSearchDialogProps {
+interface ApplicationSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (userId: string, user: any) => void;
-  currentUserId?: string;
+  onSelect: (applicationId: string, application: any) => void;
 }
 
-export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }: UserSearchDialogProps) {
+export function ApplicationSearchDialog({
+  open,
+  onOpenChange,
+  onSelect,
+}: ApplicationSearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const limit = 20;
   const offset = page * limit;
 
-  const { data, isLoading} = useQuery({
-    queryKey: ['/api/rest/user', offset, limit, searchQuery],
+  const { data, isLoading } = useQuery({
+    queryKey: ['/api/rest/application', offset, limit, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams({
         offset: offset.toString(),
@@ -36,34 +39,33 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
       if (searchQuery) {
         params.append('search', searchQuery);
       }
-      const response = await apiRequest('GET', `/api/proxy/api/rest/user?${params}`);
+      const response = await apiRequest('GET', `/api/proxy/api/rest/application?${params}`);
       return response.json();
     },
     enabled: open,
   });
 
-  const handleSelect = (userId: string, user: any) => {
-    onSelect(userId, user);
+  const handleSelect = (appId: string, app: any) => {
+    onSelect(appId, app);
     onOpenChange(false);
     setSearchQuery('');
     setPage(0);
   };
 
   // Handle paginated response from Elements API
-  // The API returns: { offset, total, approximation, objects: [...] }
-  const userList = Array.isArray(data) 
+  const applicationList = Array.isArray(data) 
     ? data 
     : ((data as any)?.objects || []);
   const totalCount = (data as any)?.total || 0;
-  const hasMore = totalCount ? (page + 1) * limit < totalCount : userList.length >= limit;
+  const hasMore = totalCount ? (page + 1) * limit < totalCount : applicationList.length >= limit;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
-          <DialogTitle>Search Users</DialogTitle>
+          <DialogTitle>Search Applications</DialogTitle>
           <DialogDescription>
-            Search for a user to associate with this vault
+            Search for an application to associate with this profile
           </DialogDescription>
         </DialogHeader>
 
@@ -72,14 +74,14 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by name or ID..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setPage(0);
               }}
               className="pl-9"
-              data-testid="input-search-user"
+              data-testid="input-search-application"
             />
           </div>
 
@@ -89,36 +91,38 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
-            ) : userList.length === 0 ? (
+            ) : applicationList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                <p>No users found</p>
+                <p>No applications found</p>
               </div>
             ) : (
               <div className="p-2 space-y-1">
-                {userList.map((user: any) => (
+                {applicationList.map((app: any) => (
                   <Button
-                    key={user.id}
+                    key={app.id}
                     variant="ghost"
                     className="w-full justify-start hover-elevate p-3"
-                    onClick={() => handleSelect(user.id, user)}
-                    data-testid={`button-select-user-${user.id}`}
+                    onClick={() => handleSelect(app.id, app)}
+                    data-testid={`button-select-application-${app.id}`}
                   >
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full text-left text-sm">
                       <div>
                         <span className="text-muted-foreground">Name: </span>
-                        <span className="font-medium">{user.name || user.firstName || 'N/A'}</span>
+                        <span className="font-medium">{app.name || 'N/A'}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Email: </span>
-                        <span>{user.email || 'N/A'}</span>
+                        <span className="text-muted-foreground">Display Name: </span>
+                        <span>{app.displayName || 'N/A'}</span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Level: </span>
-                        <span>{user.level || 'N/A'}</span>
-                      </div>
-                      <div className="truncate">
+                      {app.description && (
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Description: </span>
+                          <span className="text-xs">{app.description}</span>
+                        </div>
+                      )}
+                      <div className="truncate col-span-2">
                         <span className="text-muted-foreground">ID: </span>
-                        <span className="text-xs">{user.id}</span>
+                        <span className="text-xs">{app.id}</span>
                       </div>
                     </div>
                   </Button>
@@ -128,14 +132,14 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
           </ScrollArea>
 
           {/* Pagination */}
-          {!isLoading && userList.length > 0 && (
+          {!isLoading && applicationList.length > 0 && (
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(Math.max(0, page - 1))}
                 disabled={page === 0}
-                data-testid="button-previous-page"
+                data-testid="button-previous-page-application"
               >
                 Previous
               </Button>
@@ -148,7 +152,7 @@ export function UserSearchDialog({ open, onOpenChange, onSelect, currentUserId }
                 size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={!hasMore}
-                data-testid="button-next-page"
+                data-testid="button-next-page-application"
               >
                 Next
               </Button>

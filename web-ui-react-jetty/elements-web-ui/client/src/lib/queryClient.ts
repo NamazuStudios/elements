@@ -20,10 +20,10 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
 
-  // In production mode, add session token header
+  // Add session token header in both development and production
   const config = await getApiConfig();
   const sessionToken = apiClient.getSessionToken();
-  if (config.mode === 'production' && sessionToken) {
+  if (sessionToken) {
     headers['Elements-SessionSecret'] = sessionToken;
   }
 
@@ -57,14 +57,12 @@ export const getQueryFn: <T>(options: {
     console.log('[QUERY] Fetching:', queryKey);
     console.log('[QUERY] Config mode:', config.mode);
     
-    // In production mode, add session token header
-    if (config.mode === 'production') {
-      if (sessionToken) {
-        headers['Elements-SessionSecret'] = sessionToken;
-        console.log('[QUERY] ✓ Added Elements-SessionSecret header');
-      } else {
-        console.warn('[QUERY] ✗ Production mode but NO session token! Request will likely fail.');
-      }
+    // Add session token header in both development and production
+    if (sessionToken) {
+      headers['Elements-SessionSecret'] = sessionToken;
+      console.log('[QUERY] ✓ Added Elements-SessionSecret header');
+    } else {
+      console.warn('[QUERY] ✗ NO session token! Request may fail if authentication required.');
     }
     
     // Get the correct API path based on production vs development
