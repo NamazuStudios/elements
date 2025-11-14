@@ -14,7 +14,6 @@ definitions:
   services:
     docker:
       name: docker:29.0-dind
-      image: docker:dind
 # https://confluence.atlassian.com/bbkb/docker-buildkit-error-in-pipelines-when-deploying-to-google-cloud-1235859715.html
 options:
   docker: true
