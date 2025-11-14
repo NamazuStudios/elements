@@ -1,6 +1,6 @@
 package dev.getelements.elements.rest.test;
 
-import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.jetty.ElementsWebServices;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
 import jakarta.inject.Inject;

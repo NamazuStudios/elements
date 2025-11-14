@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo.test;
+package dev.getelements.elements.sdk.mongo.test;
 
 /**
  * A test instance runner for mongo.

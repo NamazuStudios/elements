@@ -1,8 +1,8 @@
 package dev.getelements.elements.sdk.local.test;
 
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
-import dev.getelements.elements.dao.mongo.test.DockerMongoTestInstance;
-import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.local.ElementsLocal;
 import dev.getelements.elements.sdk.local.ElementsLocalBuilder;

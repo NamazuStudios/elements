@@ -3,6 +3,8 @@ package dev.getelements.elements.dao.mongo.test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.spi.ProvisionListener;
+import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 
 public class MongoTestInstanceModule extends AbstractModule {
 

@@ -1,6 +1,5 @@
-package dev.getelements.elements.dao.mongo.test;
+package dev.getelements.elements.sdk.mongo.test;
 
-import dev.getelements.elements.sdk.mongo.test.MongoTestSslCertificates;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
