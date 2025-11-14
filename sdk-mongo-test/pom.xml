@@ -35,6 +35,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
+            <scope>te</scope>
         </dependency>
     </dependencies>
 
