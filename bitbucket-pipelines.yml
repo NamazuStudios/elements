@@ -14,6 +14,10 @@ definitions:
   services:
     docker:
       name: docker:29.0-dind
+      image: docker:dind
+# https://confluence.atlassian.com/bbkb/docker-buildkit-error-in-pipelines-when-deploying-to-google-cloud-1235859715.html
+options:
+  docker: true
 
 clone:
   depth: full
@@ -63,7 +67,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
-            - make build 
+            - make build
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch
@@ -116,6 +120,7 @@ pipelines:
         caches:
           - maven
         script:
+          - export DOCKER_BUILDKIT=1
           - make setup
           - make build
           - make docker
