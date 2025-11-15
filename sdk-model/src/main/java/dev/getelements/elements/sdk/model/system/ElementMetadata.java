@@ -26,9 +26,9 @@ import static dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord.
 public record ElementMetadata(
         ElementType type,
         ElementDefinitionMetadata definition,
-        List<ElementServiceMetadata> services,
-        List<ElementEventProducerMetadata> producedEvents,
-        List<ElementEventConsumerMetadata> consumedEvents,
+        List<ElementServiceRecord> services,
+        List<ElementEventProducerRecord> producedEvents,
+        List<ElementEventConsumerRecord<?>> consumedEvents,
         List<ElementDependencyRecord> dependencies,
         Map<String, Object> attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes) {
@@ -65,20 +65,10 @@ public record ElementMetadata(
 
         return new ElementMetadata(
                 element.type(),
-                ElementDefinitionMetadata
-                        .from(element.definition()),
-                element.services()
-                        .stream()
-                        .map(ElementServiceMetadata::from)
-                        .toList(),
-                element.producedEvents()
-                        .stream()
-                        .map(ElementEventProducerMetadata::from)
-                        .toList(),
-                element.consumedEvents()
-                        .stream()
-                        .map(ElementEventConsumerMetadata::from)
-                        .toList(),
+                ElementDefinitionMetadata.from(element.definition()),
+                element.services(),
+                element.producedEvents(),
+                element.consumedEvents(),
                 element.dependencies(),
                 attributesMap,
                 element.defaultAttributes()
