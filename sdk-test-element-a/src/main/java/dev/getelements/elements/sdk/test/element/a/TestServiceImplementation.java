@@ -17,7 +17,7 @@ public class TestServiceImplementation implements TestService {
 
     private static final List<MethodEventRecord> eventObjects = new CopyOnWriteArrayList<>();
 
-    @ElementDefaultAttribute("test.value")
+    @ElementDefaultAttribute(value = "test.value", description = "A test configuration parameter.")
     public static final String TEST_CONFIGURATION_PARAMETER = "dev.getelements.elements.sdk.test.element.a.config";
 
     @Override

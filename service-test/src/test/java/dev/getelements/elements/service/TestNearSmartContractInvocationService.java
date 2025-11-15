@@ -15,6 +15,7 @@ import dev.getelements.elements.sdk.service.blockchain.NearSmartContractInvocati
 import dev.getelements.elements.sdk.service.blockchain.SmartContractService;
 import dev.getelements.elements.sdk.service.blockchain.VaultService;
 import dev.getelements.elements.sdk.service.blockchain.WalletService;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
-import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ import static dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorith
 import static dev.getelements.elements.sdk.model.user.User.Level.SUPERUSER;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static java.util.stream.Collectors.toMap;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertNotNull;
 
 public class TestNearSmartContractInvocationService {
 

@@ -18,19 +18,19 @@ public class DefaultUserConfiguration {
     /**
      * The email/username to use for the default user.
      */
-    @ElementDefaultAttribute("root")
+    @ElementDefaultAttribute(value = "root", description = "The username to use for the default user.")
     public static final String DEFAULT_USER_NAME = "dev.getelements.elements.user.default.name";
 
     /**
      * The email/username to use for the default user.
      */
-    @ElementDefaultAttribute("root@example.com")
+    @ElementDefaultAttribute(value = "root@example.com", description = "The email to use for the default user.")
     public static final String DEFAULT_USER_EMAIL = "dev.getelements.elements.user.default.email";
 
     /**
      * The email/username to use for the default user.
      */
-    @ElementDefaultAttribute("example")
+    @ElementDefaultAttribute(value = "example", description = "The password to use for the default user.")
     public static final String DEFAULT_USER_PASSWORD = "dev.getelements.elements.user.default.password";
 
     private UserDao userDao;

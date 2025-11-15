@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.morphia.Datastore;
 
 import jakarta.inject.Inject;
@@ -17,20 +18,35 @@ import static java.lang.Thread.sleep;
  * A class that helps reduce the boilerplate code when atomic operations are necessary.
  *
  * Created by patricktwohig on 3/29/15.
+ *
+ * @deprecated This was written before MongoDB transactions were available. Use transactions instead.
  */
 @Singleton
+@Deprecated
 public class MongoConcurrentUtils {
 
+    @ElementDefaultAttribute(
+            value = "10",
+            description = "Defines the number of times an optimistic operation will retry before failing."
+    )
     public static final String OPTIMISTIC_RETRY_COUNT = "dev.getelements.elements.mongo.optimistic.retry.count";
 
     /**
      * Defines the minimum time an optimistic operation will wait before retrying.
      */
+    @ElementDefaultAttribute(
+            value = "50",
+            description = "Defines the minimum time in milliseconds an optimistic operation will wait before retrying."
+    )
     public static final String FALLOFF_TIME_MIN_MS = "dev.getelements.elements.mongo.optimistic.falloff.time.min.msec";
 
     /**
      * Defines the maximum time an optimistic operation will wait before retrying.
      */
+    @ElementDefaultAttribute(
+            value = "150",
+            description = "Defines the maximum time in milliseconds an optimistic operation will wait before retrying."
+    )
     public static final String FALLOFF_TIME_MAX_MS = "dev.getelements.elements.mongo.optimistic.falloff.time.max.msec";
 
     @Inject

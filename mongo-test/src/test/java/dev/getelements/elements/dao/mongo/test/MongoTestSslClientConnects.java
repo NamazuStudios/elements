@@ -7,16 +7,16 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.provider.MongoClientProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
+import dev.getelements.elements.sdk.mongo.test.MongoTestSslCertificates;
+import dev.getelements.elements.sdk.mongo.test.SslCliMongoTestInstance;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
 import java.util.Properties;
 
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
-import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CA;
-import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CLIENT_CERTIFICATE;
-import static dev.getelements.elements.dao.mongo.test.MongoTestInstance.ELEMENTS_TESTED_VERSION;
+import static dev.getelements.elements.sdk.mongo.test.MongoTestInstance.ELEMENTS_TESTED_VERSION;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.*;
 import static java.lang.String.format;
 import static org.testng.AssertJUnit.assertNotNull;
 

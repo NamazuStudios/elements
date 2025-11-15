@@ -14,7 +14,10 @@ public class FilesystemCdnGitLoaderProvider implements Provider<GitApplicationAs
     /**
      * The storage directory for the git repositories housing the application's script storage.
      */
-    @ElementDefaultAttribute("cdn-repos/git")
+    @ElementDefaultAttribute(
+            value = "cdn-repos/git",
+            description = "The storage directory for the git repositories housing the application's CDN assets."
+    )
     public static final String GIT_CDN_STORAGE_DIRECTORY = "dev.getelements.elements.git.cdn.storage.directory";
 
     private String gitStorageDirectory;

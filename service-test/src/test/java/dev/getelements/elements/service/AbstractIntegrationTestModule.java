@@ -25,11 +25,11 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork.FLOW;
 import static dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork.FLOW_TEST;
 import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
 import static dev.getelements.elements.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 

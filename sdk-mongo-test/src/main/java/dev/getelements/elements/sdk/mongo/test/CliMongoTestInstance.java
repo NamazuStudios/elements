@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo.test;
+package dev.getelements.elements.sdk.mongo.test;
 
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -153,4 +153,5 @@ public abstract class CliMongoTestInstance implements MongoTestInstance {
             }
         };
     }
+
 }

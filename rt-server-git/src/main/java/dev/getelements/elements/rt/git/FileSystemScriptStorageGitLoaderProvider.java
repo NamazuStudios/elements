@@ -11,7 +11,10 @@ public class FileSystemScriptStorageGitLoaderProvider implements Provider<GitApp
     /**
      * The storage directory for the git repositories housing the application's script storage.
      */
-    @ElementDefaultAttribute("script-repos/git")
+    @ElementDefaultAttribute(
+            value = "script-repos/git",
+            description = "The storage directory for the git repositories housing the application's script storage."
+    )
     public static final String ELEMENT_STORAGE_DIRECTORY = "dev.getelements.elements.rt.git.element.storage.directory";
 
     private String directory;

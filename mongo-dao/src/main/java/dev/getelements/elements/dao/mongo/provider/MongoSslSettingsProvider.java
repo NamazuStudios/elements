@@ -16,25 +16,9 @@ import java.io.IOException;
 import java.security.*;
 import java.security.cert.CertificateException;
 
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.*;
 
 public class MongoSslSettingsProvider implements Provider<SslSettings> {
-
-    public static final String FORMAT =  "dev.getelements.elements.mongo.tls.format";
-
-    public static final String TRUST_ALGORITHM =  "dev.getelements.elements.mongo.tls.trust.algorithm";
-
-    public static final String KEY_ALGORITHM =  "dev.getelements.elements.mongo.tls.key.algorithm";
-
-    public static final String CA = "dev.getelements.elements.mongo.tls.ca";
-
-    public static final String CA_PASSPHRASE = "dev.getelements.elements.mongo.tls.ca.passphrase";
-
-    public static final String CLIENT_CERTIFICATE = "dev.getelements.elements.mongo.tls.client.certificate";
-
-    public static final String CLIENT_CERTIFICATE_PASSPHRASE = "dev.getelements.elements.mongo.tls.client.certificate.passphrase";
-
-    public static final String SSL_PROTOCOL = "dev.getelements.elements.mongo.tls.protocol";
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSslSettingsProvider.class);
 

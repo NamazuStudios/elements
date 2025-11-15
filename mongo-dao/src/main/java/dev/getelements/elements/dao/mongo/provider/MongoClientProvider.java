@@ -4,22 +4,17 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.connection.SslSettings;
 import dev.getelements.elements.dao.mongo.codec.TimestampCodec;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
-
-import java.util.Optional;
-
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
 /**
@@ -28,8 +23,6 @@ import static org.bson.codecs.configuration.CodecRegistries.*;
 public class MongoClientProvider implements Provider<MongoClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoClientProvider.class);
-
-    public static final String MONGO_CLIENT_URI = "dev.getelements.elements.mongo.uri";
 
     private String mongoDbUri;
 

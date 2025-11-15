@@ -5,6 +5,7 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.guice.ConfigurationModule;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import static java.lang.Thread.sleep;

@@ -4,8 +4,11 @@ import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementType;
 import dev.getelements.elements.sdk.record.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import static dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord.REDACTED;
 
 /**
  * Record type for the {@link ElementMetadata}. This contains a summary of all the metadata in an {@link ElementRecord}
@@ -47,6 +50,19 @@ public record ElementMetadata(
      * @return the newly created {@link ElementMetadata}
      */
     public static ElementMetadata from(final ElementRecord element) {
+
+        final var attributesMap = new LinkedHashMap<>(element.attributes().asMap());
+
+        final var defaultAttributes = element.defaultAttributes()
+                        .stream()
+                        .map(ElementDefaultAttributeRecord::redacted)
+                        .toList();
+
+        defaultAttributes
+                .stream()
+                .filter(ElementDefaultAttributeRecord::sensitive)
+                .forEach(attribute -> attributesMap.put(attribute.name(), REDACTED));
+
         return new ElementMetadata(
                 element.type(),
                 ElementDefinitionMetadata.from(element.definition()),
@@ -54,9 +70,13 @@ public record ElementMetadata(
                 element.producedEvents(),
                 element.consumedEvents(),
                 element.dependencies(),
-                element.attributes().asMap(),
+                attributesMap,
                 element.defaultAttributes()
+                        .stream()
+                        .map(ElementDefaultAttributeRecord::redacted)
+                        .toList()
         );
+
     }
 
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static java.lang.String.format;
 
 
@@ -33,8 +34,6 @@ public class IntegrationTestModule extends AbstractModule {
     public static final String TEST_COMPONENT = "dev.getelements.elements.dao.mongo.test.IntegrationTestModule.test";
 
     private static final String TEST_BIND_IP = "localhost";
-
-    public static final String MONGO_CLIENT_URI = "dev.getelements.elements.mongo.uri";
 
     private static final AtomicInteger testPort = new AtomicInteger(45000);
 

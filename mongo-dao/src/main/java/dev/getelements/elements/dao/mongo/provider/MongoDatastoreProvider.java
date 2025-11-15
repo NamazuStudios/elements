@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.provider;
 
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.MongoClient;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.morphia.Datastore;
 import dev.morphia.Morphia;
 import dev.morphia.annotations.Entity;
@@ -26,6 +27,10 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoDatastoreProvider.class);
 
+    @ElementDefaultAttribute(
+            value = "elements",
+            description = "The name of the MongoDB database to use for Elements data storage."
+    )
     public static final String DATABASE_NAME = "dev.getelements.elements.mongo.database.name";
 
     @Inject

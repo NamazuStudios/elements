@@ -1,8 +1,8 @@
 package dev.getelements.elements.sdk.local.test;
 
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
-import dev.getelements.elements.dao.mongo.test.DockerMongoTestInstance;
-import dev.getelements.elements.dao.mongo.test.MongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.local.ElementsLocal;
 import dev.getelements.elements.sdk.local.ElementsLocalBuilder;
@@ -17,8 +17,8 @@ import org.testng.annotations.Test;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static dev.getelements.elements.sdk.model.Constants.HTTP_PORT;
+import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static java.lang.String.format;
 
 public class TestLocalSDK {

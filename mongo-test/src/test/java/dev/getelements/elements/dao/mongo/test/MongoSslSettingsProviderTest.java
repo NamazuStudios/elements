@@ -3,17 +3,11 @@ package dev.getelements.elements.dao.mongo.test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.mongodb.connection.SslSettings;
-import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
-import dev.getelements.elements.guice.ConfigurationModule;
+import dev.getelements.elements.sdk.mongo.test.SslDisabledModule;
+import dev.getelements.elements.sdk.mongo.test.SslEnabledModule;
 import org.testng.annotations.Test;
 
-import java.util.Properties;
-
-import static dev.getelements.elements.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
-import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CA;
-import static dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider.CLIENT_CERTIFICATE;
-import static java.lang.String.format;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertFalse;
 
@@ -25,7 +19,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledSecure() {
 
         final var sslSettings = Guice
-                .createInjector(new SslEnabledModule(false))
+                .createInjector(new SslEnabledModule(false), new SslSettingsModule())
                 .getInstance(SslSettings.class);
 
         assertTrue(sslSettings.isEnabled());
@@ -38,7 +32,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledInsecure() {
 
         final var sslSettings = Guice
-                .createInjector(new SslEnabledModule(true))
+                .createInjector(new SslEnabledModule(true), new SslSettingsModule())
                 .getInstance(SslSettings.class);
 
         assertTrue(sslSettings.isEnabled());
@@ -51,7 +45,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledDefault() {
 
         final var sslSettings = Guice
-                .createInjector(new SslEnabledModule())
+                .createInjector(new SslEnabledModule(), new SslSettingsModule())
                 .getInstance(SslSettings.class);
 
         assertTrue(sslSettings.isEnabled());
@@ -64,7 +58,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslDisabledExplicit() {
 
         final var sslSettings = Guice
-                .createInjector(new SslDisabledModule(true))
+                .createInjector(new SslDisabledModule(true), new SslSettingsModule())
                 .getInstance(SslSettings.class);
 
         assertFalse(sslSettings.isEnabled());
@@ -76,7 +70,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslDisabledImplicit() {
 
         final var sslSettings = Guice
-                .createInjector(new SslDisabledModule(false))
+                .createInjector(new SslDisabledModule(false), new SslSettingsModule())
                 .getInstance(SslSettings.class);
 
         assertFalse(sslSettings.isEnabled());
@@ -84,64 +78,11 @@ public class MongoSslSettingsProviderTest {
 
     }
 
-    public static class SslEnabledModule extends AbstractModule {
-
-        private final Boolean insecure;
-
-        public SslEnabledModule() {
-            this.insecure = null;
-        }
-
-        public SslEnabledModule(final Boolean insecure) {
-            this.insecure = insecure;
-        }
+    private static class SslSettingsModule extends AbstractModule {
 
         @Override
         protected void configure() {
-
-            final var certs = new MongoTestSslCertificates();
-
-            final var uri = insecure == null
-                    ? "mongodb://localhost/?tls=true"
-                    : format("mongodb://localhost/?tls=true&tlsinsecure=%s", insecure);
-
-            install(new ConfigurationModule(() -> {
-                final var properties = new Properties(new DefaultConfigurationSupplier().get());
-                properties.put(CA, certs.getCaP12().toAbsolutePath().toString());
-                properties.put(CLIENT_CERTIFICATE, certs.getClientP12().toAbsolutePath().toString());
-                properties.put(MONGO_CLIENT_URI, uri);
-                return properties;
-            }));
-
-            bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
-
-        }
-
-    }
-
-    public static class SslDisabledModule extends AbstractModule {
-
-        private final boolean explicit;
-
-        public SslDisabledModule(final boolean explicit) {
-            this.explicit = explicit;
-        }
-
-        @Override
-        protected void configure() {
-
-            final var uri = explicit
-                    ? "mongodb://localhost/?tls=true"
-                    : "mongodb://localhost";
-
-            install(new ConfigurationModule(() -> {
-                final var properties = new Properties(new DefaultConfigurationSupplier().get());
-                properties.put(MONGO_CLIENT_URI, uri);
-                return properties;
-            }));
-
-            bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
-
+                bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
         }
 
     }

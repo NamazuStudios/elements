@@ -138,6 +138,10 @@
             <artifactId>web-ui-react-jetty</artifactId>
         </dependency>
         <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-mongo</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>compile</scope>

@@ -18,7 +18,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-dao</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
@@ -27,7 +26,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -37,25 +35,18 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-common</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>guice</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>common-util</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ru.vyarus</groupId>
@@ -64,23 +55,22 @@
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
-            <version>${hibernate.validator.version}</version>
         </dependency>
-            <dependency>
-                <groupId>org.glassfish</groupId>
-                <artifactId>jakarta.el</artifactId>
-            </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.el</artifactId>
+        </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-dao</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.morphia.morphia</groupId>
             <artifactId>morphia-core</artifactId>
-            <version>${morphia.version}</version>
-            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-mongo-test</artifactId>
         </dependency>
     </dependencies>
 </project>
