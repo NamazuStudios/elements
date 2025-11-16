@@ -163,15 +163,26 @@ export default function Settings() {
               <Input
                 id="results-per-page"
                 type="number"
-                min="5"
+                min="2"
                 max="100"
-                value={settings.resultsPerPage}
-                onChange={(e) => setSettings(prev => ({ ...prev, resultsPerPage: parseInt(e.target.value, 10) || 20 }))}
+                value={settings.resultsPerPage === 0 ? '' : settings.resultsPerPage}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Allow empty or any number while typing
+                  const num = value === '' ? 0 : parseInt(value, 10);
+                  setSettings(prev => ({ ...prev, resultsPerPage: isNaN(num) ? prev.resultsPerPage : num }));
+                }}
+                onBlur={() => {
+                  // Enforce minimum of 2 when user stops editing
+                  if (settings.resultsPerPage < 2) {
+                    setSettings(prev => ({ ...prev, resultsPerPage: 2 }));
+                  }
+                }}
                 data-testid="input-results-per-page"
                 className="max-w-xs"
               />
               <p className="text-sm text-muted-foreground">
-                Number of items to display per page in all resource lists
+                Number of items to display per page in all resource lists (minimum: 2)
               </p>
             </div>
           </CardContent>
