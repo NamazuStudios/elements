@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ export function DynamicResourceView({
   const [page, setPage] = useState(0);
   const [useCustomToken, setUseCustomToken] = useState(false);
   const [customToken, setCustomToken] = useState('');
+  const [requestedPath, setRequestedPath] = useState<string | null>(null);
   
   // Read page size from settings (localStorage)
   const getPageSize = () => {
@@ -81,14 +82,16 @@ export function DynamicResourceView({
 
   // Analyze security requirements from OpenAPI spec
   const getSecurityRequirements = () => {
-    // Check operation-specific security first
+    // For element endpoints, ONLY check operation-level security (ignore global security)
+    // This allows elements to have global security definitions while selectively
+    // enforcing auth on specific operations
     const operationSecurity = resource.list?.operation?.security;
     
     // If operation has empty security array, explicitly no auth required
     if (operationSecurity && operationSecurity.length === 0) return null;
     
-    // Use operation security if defined, otherwise fall back to global spec security
-    const securityToUse = operationSecurity !== undefined ? operationSecurity : spec?.security;
+    // ONLY use operation-level security, do NOT fall back to global spec security
+    const securityToUse = operationSecurity;
     
     // If no security at all, treat as no auth required
     if (!securityToUse || securityToUse.length === 0) return null;
@@ -120,19 +123,25 @@ export function DynamicResourceView({
     }
     // If no scheme definition found, but the security requirement is named session_secret, treat as auth required
     return req.name === 'session_secret';
-  });
+  }) ?? false; // Default to false if securityRequirements is null/undefined
+
+  // Reset requestedPath when token settings change (user must click Send Request again)
+  useEffect(() => {
+    setRequestedPath(null);
+  }, [useCustomToken, customToken]);
 
   // Determine which token to use
   const getAuthToken = () => {
-    if (!requiresAuth) return '';
+    // Always send token if we have one (backend may require auth even if not in spec)
     // Use custom token if explicitly enabled, otherwise use current session token
     if (useCustomToken) return customToken;
     return apiClient.getSessionToken() || '';
   };
 
   // Fetch data from list endpoint - use basePath in queryKey for consistent cache invalidation
+  // Note: We don't include useCustomToken/customToken in queryKey because we manually control fetching
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [basePath, page, pageSize, useCustomToken, customToken],
+    queryKey: [basePath, page, pageSize],
     queryFn: async () => {
       // Use getApiPath to handle production vs development mode
       const fullUrl = await getApiPath(pathWithQuery);
@@ -158,7 +167,8 @@ export function DynamicResourceView({
         return response.blob();
       }
     },
-    enabled: !!resource.list,
+    enabled: !!resource.list && requestedPath === basePath,
+    retry: false, // Don't auto-retry on error - let user manually retry
   });
 
   // Handle non-JSON responses (text, blob, etc.)
@@ -255,27 +265,13 @@ export function DynamicResourceView({
   };
 
   const anyOperation = getAnyOperation();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-destructive">Error Loading {getResourceDisplayName()}</CardTitle>
-          <CardDescription>
-            {error instanceof Error ? error.message : 'Failed to load data'}
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  
+  // Handler for sending request
+  const handleSendRequest = () => {
+    setRequestedPath(basePath);
+    // Force refetch even if data is cached
+    refetch();
+  };
 
   return (
     <div className="space-y-4">
@@ -387,28 +383,68 @@ export function DynamicResourceView({
             {useCustomToken && (
               <div className="space-y-2">
                 <Label htmlFor="custom-token" className="text-xs">Session Token</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="custom-token"
-                    type="text"
-                    placeholder="Enter session token..."
-                    value={customToken}
-                    onChange={(e) => setCustomToken(e.target.value)}
-                    className="font-mono text-xs"
-                    data-testid="input-custom-token"
-                  />
-                  <Button 
-                    size="sm" 
-                    onClick={() => refetch()}
-                    data-testid="button-refresh-with-token"
-                  >
-                    Refresh
-                  </Button>
-                </div>
+                <Input
+                  id="custom-token"
+                  type="text"
+                  placeholder="Enter session token..."
+                  value={customToken}
+                  onChange={(e) => setCustomToken(e.target.value)}
+                  className="font-mono text-xs"
+                  data-testid="input-custom-token"
+                />
                 <p className="text-xs text-muted-foreground">
                   Use the Core API explorer to create a session for a different user if needed
                 </p>
               </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Request Controls */}
+      {resource.list && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Request:</span>
+                <Badge variant="outline" className="font-mono text-xs">
+                  {resource.list.method} {resource.list.path}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleSendRequest}
+                  disabled={isLoading}
+                  data-testid="button-send-request"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Send Request'
+                  )}
+                </Button>
+                {data && !error && (
+                  <Badge variant="secondary" className="text-xs">
+                    Request successful
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            {/* Error Display */}
+            {error && (
+              <Alert className="mt-4 border-destructive">
+                <AlertDescription className="text-destructive">
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold">Error:</span>
+                    <span>{error instanceof Error ? error.message : 'Failed to load data'}</span>
+                  </div>
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
@@ -617,34 +653,51 @@ export function DynamicResourceView({
                 </TableBody>
               </Table>
 
-              {resource.list?.isPaginated && totalPages > 1 && (
+              {/* Pagination Controls - show when paginated OR when there are results */}
+              {(resource.list?.isPaginated || items.length > 0) && (
                 <div className="flex items-center justify-between px-4 py-3 border-t">
                   <div className="text-sm text-muted-foreground">
-                    Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, total)} of {total} results
+                    {total > 0 ? (
+                      <>
+                        Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, total)} of {total} results
+                      </>
+                    ) : (
+                      <>No results</>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setPage(p => Math.max(0, p - 1))}
-                      disabled={page === 0}
-                      data-testid="button-prev-page"
-                    >
-                      Previous
-                    </Button>
-                    <div className="text-sm">
-                      Page {page + 1} of {totalPages}
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setPage(p => Math.max(0, p - 1));
+                          setRequestedPath(basePath);
+                          refetch();
+                        }}
+                        disabled={page === 0 || isLoading}
+                        data-testid="button-prev-page"
+                      >
+                        Previous
+                      </Button>
+                      <div className="text-sm font-medium">
+                        Page {page + 1} of {totalPages}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setPage(p => Math.min(totalPages - 1, p + 1));
+                          setRequestedPath(basePath);
+                          refetch();
+                        }}
+                        disabled={page >= totalPages - 1 || isLoading}
+                        data-testid="button-next-page"
+                      >
+                        Next
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                      disabled={page >= totalPages - 1}
-                      data-testid="button-next-page"
-                    >
-                      Next
-                    </Button>
-                  </div>
+                  )}
                 </div>
               )}
               </>
