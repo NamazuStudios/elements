@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,33 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [urlSessionExpired, setUrlSessionExpired] = useState(false);
+  const { login, sessionExpired: authSessionExpired } = useAuth();
   const { toast } = useToast();
+
+  // Check for session expiration query parameter (from 403 redirect)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setUrlSessionExpired(true);
+      // Clean up URL by removing the query parameter
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+  
+  // Show session expired message from either URL param or auth context
+  const sessionExpired = urlSessionExpired || authSessionExpired;
+  
+  // Show toast notification when session has expired
+  useEffect(() => {
+    if (sessionExpired) {
+      toast({
+        title: 'Session Expired',
+        description: 'Your session has expired due to inactivity. Please log in again to continue.',
+        variant: 'destructive',
+      });
+    }
+  }, [sessionExpired, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

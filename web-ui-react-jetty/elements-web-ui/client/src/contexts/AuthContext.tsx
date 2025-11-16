@@ -8,6 +8,7 @@ interface AuthContextType {
   login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
+  sessionExpired: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userLevel, setUserLevel] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
     // On initial load, check localStorage for "remember me" user info
@@ -24,11 +26,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
+        
+        // Check if session has expired
+        const now = Date.now();
+        const isExpired = userData.expiry && typeof userData.expiry === 'number' && userData.expiry < now;
+        
+        if (isExpired) {
+          console.log('[AUTH] Session expired on initial load (expiry:', userData.expiry, ', now:', now, ')');
+          localStorage.removeItem('elements-user');
+          setSessionExpired(true);
+          setIsLoading(false);
+          return;
+        }
+        
         // SECURITY: Only restore session if user is SUPERUSER
         if (userData.level === 'SUPERUSER') {
           setUsername(userData.username);
           setUserLevel(userData.level);
           setIsAuthenticated(true);
+          setSessionExpired(false); // Clear expired flag when valid session is restored
           
           // Restore session token to apiClient if available
           if (userData.sessionToken) {
@@ -38,11 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Clear non-SUPERUSER stored data
           localStorage.removeItem('elements-user');
+          setSessionExpired(false);
         }
       } catch (error) {
         console.error('Failed to parse stored user data:', error);
         localStorage.removeItem('elements-user');
+        setSessionExpired(false);
       }
+    } else {
+      // No stored session - ensure expired flag is cleared
+      setSessionExpired(false);
     }
     setIsLoading(false);
   }, []);
@@ -73,12 +94,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('elements-user', JSON.stringify({
           username: userId,
           level: level,
-          sessionToken: sessionToken
+          sessionToken: sessionToken,
+          expiry: response.session?.expiry
         }));
       } else {
         // Clear any existing stored user
         localStorage.removeItem('elements-user');
       }
+      
+      // Clear session expired flag on successful login
+      setSessionExpired(false);
     } catch (error) {
       setIsAuthenticated(false);
       throw error;
@@ -102,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, logout, isLoading, sessionExpired }}>
       {children}
     </AuthContext.Provider>
   );
