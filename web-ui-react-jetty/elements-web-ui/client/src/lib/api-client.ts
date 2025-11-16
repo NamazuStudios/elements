@@ -1,5 +1,41 @@
 import { getApiPath, getApiConfig } from './config';
 
+// Helper function to determine if current route is a core resource page
+// (not an API explorer page where session overrides might be in use)
+function isCoreResourcePage(): boolean {
+  const path = window.location.pathname;
+  const basePath = import.meta.env.BASE_URL || '/';
+  
+  // Normalize base path to ensure it ends with /
+  const normalizedBase = basePath.endsWith('/') ? basePath : basePath + '/';
+  
+  // Remove base path from pathname to get relative path
+  let relativePath = path.startsWith(normalizedBase) 
+    ? path.slice(normalizedBase.length) 
+    : path;
+  
+  // Normalize relative path (remove leading slash if present)
+  if (relativePath.startsWith('/')) {
+    relativePath = relativePath.slice(1);
+  }
+  
+  // Check if this is a core resource page (starts with 'resource' - with or without trailing content)
+  let isCoreResource = relativePath === 'resource' || relativePath.startsWith('resource/');
+  
+  // Development quirk: if BASE_URL is / but path starts with /admin/, also check with /admin/ stripped
+  if (!isCoreResource && basePath === '/' && path.startsWith('/admin/')) {
+    const devRelativePath = path.slice('/admin/'.length);
+    isCoreResource = devRelativePath === 'resource' || devRelativePath.startsWith('resource/');
+  }
+  
+  // Exclude API explorer pages
+  const isApiExplorer = path.includes('api-explorer');
+  
+  console.log('[AUTH] Path check - pathname:', path, 'basePath:', basePath, 'relativePath:', relativePath, 'isCoreResource:', isCoreResource, 'isApiExplorer:', isApiExplorer, 'result:', isCoreResource && !isApiExplorer);
+  
+  return isCoreResource && !isApiExplorer;
+}
+
 export class ApiClient {
   private sessionToken: string | null = null;
 
@@ -43,16 +79,31 @@ export class ApiClient {
       // Handle session expiry/invalid tokens
       if (response.status === 401 || response.status === 403) {
         if (!suppressAuthRedirect) {
-          // Session expired, redirect to login with correct base path
-          const basePath = import.meta.env.BASE_URL || '/';
-          // Ensure proper path formation: /admin/ → /admin/login, / → /login
-          const loginPath = basePath.endsWith('/') 
-            ? `${basePath}login` 
-            : `${basePath}/login`;
-          window.location.href = loginPath;
-          throw new Error('Session expired. Please login again.');
+          // Only redirect on 403 if we're on a core resource page
+          // API explorer pages use session overrides and shouldn't trigger auto-redirect
+          const shouldRedirect = response.status === 401 || (response.status === 403 && isCoreResourcePage());
+          
+          if (shouldRedirect) {
+            // Clear session token and localStorage before redirecting
+            this.setSessionToken(null);
+            localStorage.removeItem('elements-user');
+            console.log('[AUTH] Session expired - cleared session token and localStorage');
+            
+            // Session expired, redirect to login with correct base path
+            const basePath = import.meta.env.BASE_URL || '/';
+            // In development, app is at /admin/ even when BASE_URL is /
+            // In production, BASE_URL will be set correctly (e.g., /admin/)
+            const isDev = import.meta.env.DEV;
+            const adminPath = isDev && basePath === '/' ? '/admin' : basePath;
+            const loginPath = adminPath.endsWith('/') 
+              ? `${adminPath}login?expired=true` 
+              : `${adminPath}/login?expired=true`;
+            console.log('[AUTH] Redirecting to:', loginPath);
+            window.location.href = loginPath;
+            throw new Error('Session expired. Please login again.');
+          }
         }
-        // During discovery or when suppressed, just throw with status
+        // During discovery, when suppressed, or on non-core pages, just throw with status
         const error = new Error(`Auth required: ${response.status}`) as Error & { status: number };
         error.status = response.status;
         throw error;
@@ -96,7 +147,7 @@ export class ApiClient {
     return undefined as T;
   }
 
-  async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string } }> {
+  async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string; expiry?: number } }> {
     // Use the config system to determine production vs development mode
     const { getApiConfig, getApiPath } = await import('./config');
     const config = await getApiConfig();
@@ -146,11 +197,27 @@ export class ApiClient {
       console.error('[LOGIN] ✗ No session token found in response');
     }
     
+    // Extract expiry timestamp - try multiple field names and formats
+    let expiryTimestamp: number | undefined;
+    const expiresAt = responseData.session?.expiresAt || responseData.expiresAt;
+    const expiry = responseData.session?.expiry || responseData.expiry;
+    
+    if (expiresAt) {
+      // Convert ISO string to timestamp
+      expiryTimestamp = new Date(expiresAt).getTime();
+      console.log('[LOGIN] Session expires at:', expiresAt, '(timestamp:', expiryTimestamp, ')');
+    } else if (expiry) {
+      // Could be a number timestamp or ISO string
+      expiryTimestamp = typeof expiry === 'string' ? new Date(expiry).getTime() : expiry;
+      console.log('[LOGIN] Session expiry:', expiry, '(timestamp:', expiryTimestamp, ')');
+    }
+    
     return {
       success: true,
       session: {
         userId: responseData.session?.user?.name || username,
         level: responseData.session?.user?.level,
+        expiry: expiryTimestamp,
       },
     };
   }

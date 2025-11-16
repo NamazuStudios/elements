@@ -72,6 +72,7 @@ interface ElementApiTesterProps {
 }
 
 export function ElementApiTester({ elementName, elementUri }: ElementApiTesterProps) {
+  console.log('[ElementApiTester] ✓ LOADED - Build 4');
   const { toast } = useToast();
   const [selectedPath, setSelectedPath] = useState<string>('');
   const [selectedMethod, setSelectedMethod] = useState<string>('');
@@ -173,12 +174,10 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
         'Content-Type': 'application/json',
       };
 
-      // Add authentication header if required
-      if (requiresAuth) {
-        const token = useCustomToken ? customToken : apiClient.getSessionToken();
-        if (token) {
-          headers['Elements-SessionSecret'] = token;
-        }
+      // Always send auth token if available (backend may require auth even if not in spec)
+      const token = useCustomToken ? customToken : apiClient.getSessionToken();
+      if (token) {
+        headers['Elements-SessionSecret'] = token;
       }
 
       const options: RequestInit = {
@@ -235,14 +234,18 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
     : null;
 
   // Check if the current operation requires authentication
-  // Use operation-level security if defined, otherwise fall back to global security
-  const securityToCheck = currentOperation?.security !== undefined 
-    ? currentOperation.security 
-    : openApiSpec?.security;
-  
-  const requiresAuth = securityToCheck?.some((secReq: { [key: string]: string[] }) => 
+  // For element endpoints, only check operation-level security (ignore global security)
+  // This allows elements to have global security but only enforce it on specific operations
+  const requiresAuth = currentOperation?.security?.some((secReq: { [key: string]: string[] }) => 
     Object.keys(secReq).some(schemeName => schemeName === 'session_secret')
-  );
+  ) ?? false;
+  
+  // Debug logging
+  if (selectedPath && selectedMethod) {
+    console.log('[ElementApiTester] Path:', selectedPath, 'Method:', selectedMethod);
+    console.log('[ElementApiTester] Operation security:', currentOperation?.security);
+    console.log('[ElementApiTester] requiresAuth:', requiresAuth);
+  }
 
   // Extract parameters
   const pathParameters = currentOperation?.parameters?.filter(p => p.in === 'path') || [];
@@ -278,7 +281,10 @@ export function ElementApiTester({ elementName, elementUri }: ElementApiTesterPr
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>API Endpoint Selection</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            API Endpoint Selection
+            <Badge variant="destructive" className="text-xs font-normal">Build 4</Badge>
+          </CardTitle>
           <CardDescription>Choose an endpoint to test</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
