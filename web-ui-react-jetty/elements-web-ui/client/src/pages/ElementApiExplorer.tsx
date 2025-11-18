@@ -59,7 +59,7 @@ export default function ElementApiExplorer() {
   // Fetch element metadata from Elements backend
   // Enable when appId is present (for both element view and app info view)
   const { data: appsData } = useQuery({
-    queryKey: ['/api/proxy/api/rest/elements/application'],
+    queryKey: ['/api/rest/elements/application'],
     enabled: !!appId,
     staleTime: 30000,
   });

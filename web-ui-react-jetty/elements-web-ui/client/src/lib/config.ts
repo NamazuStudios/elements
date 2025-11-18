@@ -42,14 +42,13 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
       console.log('[CONFIG] Loaded config:', config);
       
       if (config?.api?.url) {
-        // Production mode: Extract path from backend URL
-        // e.g., "http://backend:8080/api/rest" -> "/api/rest"
-        const url = new URL(config.api.url);
+        // Production mode: Store full backend URL
+        // This allows us to handle both same-origin and cross-origin backends
         cachedConfig = {
-          baseUrl: url.pathname,
+          baseUrl: config.api.url,
           mode: 'production'
         };
-        console.log('[CONFIG] ✓ Production mode detected. Base URL:', cachedConfig.baseUrl);
+        console.log('[CONFIG] ✓ Production mode detected. Backend URL:', cachedConfig.baseUrl);
         return cachedConfig;
       }
     }
@@ -74,23 +73,7 @@ export async function getApiPath(path: string): Promise<string> {
   console.log('[getApiPath] Mode:', config.mode);
   console.log('[getApiPath] Base URL:', config.baseUrl);
   
-  // If path already starts with /api/proxy, strip it in production mode
-  if (config.mode === 'production' && path.startsWith('/api/proxy')) {
-    // Remove /api/proxy prefix - the rest is already the correct path
-    // e.g., "/api/proxy/api/rest/health" → "/api/rest/health"
-    const result = path.replace('/api/proxy', '');
-    console.log('[getApiPath] Production: Stripped /api/proxy → ', result);
-    return result;
-  }
-  
-  // If path starts with absolute /api/rest or /app/, use it as-is in production
-  // This preserves query parameters and full path structure
-  if (config.mode === 'production' && (path.startsWith('/api/rest') || path.startsWith('/app/'))) {
-    console.log('[getApiPath] Production: Using path as-is (preserving query params) → ', path);
-    return path;
-  }
-  
-  // For development, prefix with /api/proxy if not already present
+  // Development mode: prefix with /api/proxy if not already present
   if (config.mode === 'development' && !path.startsWith('/api/proxy')) {
     // Normalize relative paths (./path -> /path)
     let normalizedPath = path.startsWith('./') ? path.substring(1) : path;
@@ -100,6 +83,41 @@ export async function getApiPath(path: string): Promise<string> {
     }
     const result = `${config.baseUrl}${normalizedPath}`;
     console.log('[getApiPath] Development: Adding proxy prefix → ', result);
+    return result;
+  }
+  
+  // Production mode: handle both same-origin and cross-origin backends
+  if (config.mode === 'production') {
+    // Strip /api/proxy prefix if present (legacy path format)
+    let cleanPath = path;
+    if (path.startsWith('/api/proxy')) {
+      cleanPath = path.replace('/api/proxy', '');
+      console.log('[getApiPath] Production: Stripped /api/proxy prefix → ', cleanPath);
+    }
+    
+    // Check if baseUrl is a full URL (http:// or https://)
+    if (config.baseUrl.startsWith('http://') || config.baseUrl.startsWith('https://')) {
+      const backendUrl = new URL(config.baseUrl);
+      const isSameOrigin = typeof window !== 'undefined' && 
+                          backendUrl.origin === window.location.origin;
+      
+      if (isSameOrigin) {
+        // Same origin: use just the pathname to avoid CORS preflight
+        const result = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+        console.log('[getApiPath] Production (same-origin): Using pathname → ', result);
+        return result;
+      } else {
+        // Cross-origin: use full URL
+        // Replace the backend's pathname with our request path
+        const fullUrl = new URL(cleanPath, backendUrl.origin).href;
+        console.log('[getApiPath] Production (cross-origin): Using full URL → ', fullUrl);
+        return fullUrl;
+      }
+    }
+    
+    // baseUrl is just a pathname (fallback for legacy configs)
+    const result = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    console.log('[getApiPath] Production (pathname only): Using path as-is → ', result);
     return result;
   }
   
