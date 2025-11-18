@@ -11,12 +11,10 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
     return cachedConfig;
   }
 
-  // Check if running in Replit development environment
-  // In Replit, the BASE_URL is typically '/' and we have the Node.js proxy available
-  const isReplitDev = import.meta.env.BASE_URL === '/' || import.meta.env.DEV;
-  
-  if (isReplitDev) {
-    console.log('[CONFIG] Replit development mode detected (BASE_URL:', import.meta.env.BASE_URL, ', DEV:', import.meta.env.DEV, ')');
+  // Check if running in development mode (Vite dev server)
+  // Only use DEV flag - BASE_URL can be '/' in both dev and prod
+  if (import.meta.env.DEV) {
+    console.log('[CONFIG] Development mode detected (DEV:', import.meta.env.DEV, ')');
     cachedConfig = {
       baseUrl: '/api/proxy',
       mode: 'development'
@@ -50,7 +48,11 @@ export async function getApiConfig(): Promise<{ baseUrl: string; mode: 'producti
         };
         console.log('[CONFIG] ✓ Production mode detected. Backend URL:', cachedConfig.baseUrl);
         return cachedConfig;
+      } else {
+        console.warn('[CONFIG] ⚠️ config.json loaded but missing api.url field. Config:', config);
       }
+    } else {
+      console.warn('[CONFIG] ⚠️ config.json fetch failed with status:', configResponse.status);
     }
   } catch (error) {
     console.log('[CONFIG] Failed to load config.json:', error);
