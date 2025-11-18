@@ -63,13 +63,13 @@ export default function CoreElements() {
 
   // Fetch Elements version
   const { data: versionData } = useQuery<{ version: string }>({
-    queryKey: ['/api/proxy/api/rest/version'],
+    queryKey: ['/api/rest/version'],
     staleTime: Infinity,
   });
 
   // Fetch Core Elements system data
   const { data: systemData, isLoading, isFetching, error } = useQuery<SystemElements | ElementData[]>({
-    queryKey: ['/api/proxy/api/rest/elements/system'],
+    queryKey: ['/api/rest/elements/system'],
     staleTime: 60000, // Cache for 1 minute
   });
 
@@ -165,7 +165,7 @@ export default function CoreElements() {
         </div>
         <Button 
           onClick={async () => {
-            await queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/elements/system'] });
+            await queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/system'] });
           }} 
           variant="outline" 
           size="sm"

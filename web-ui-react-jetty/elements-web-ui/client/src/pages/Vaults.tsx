@@ -56,14 +56,14 @@ export default function VaultsPage() {
       if (searchTerm) {
         params.append('search', searchTerm);
       }
-      const response = await apiRequest('GET', `/api/proxy/api/rest/blockchain/omni/vault?${params}`);
+      const response = await apiRequest('GET', `/api/rest/blockchain/omni/vault?${params}`);
       return response.json();
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest('DELETE', `/api/proxy/api/rest/blockchain/omni/vault/${id}`);
+      await apiRequest('DELETE', `/api/rest/blockchain/omni/vault/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rest/blockchain/omni/vault'] });
@@ -103,7 +103,7 @@ export default function VaultsPage() {
             <VaultForm
               mode="create"
               onSubmit={async (data) => {
-                await apiRequest('POST', '/api/proxy/api/rest/blockchain/omni/vault', data);
+                await apiRequest('POST', '/api/rest/blockchain/omni/vault', data);
                 queryClient.invalidateQueries({ queryKey: ['/api/rest/blockchain/omni/vault'] });
                 setIsCreateDialogOpen(false);
                 toast({ title: 'Success', description: 'Vault created successfully' });
@@ -195,7 +195,7 @@ export default function VaultsPage() {
                               variant="ghost"
                               onClick={async () => {
                                 try {
-                                  const response = await apiRequest('GET', `/api/proxy/api/rest/blockchain/omni/vault/${vault.id}`);
+                                  const response = await apiRequest('GET', `/api/rest/blockchain/omni/vault/${vault.id}`);
                                   const fullVault = await response.json();
                                   setEditingVault(fullVault);
                                 } catch (error: any) {
@@ -220,7 +220,7 @@ export default function VaultsPage() {
                                 mode="update"
                                 initialData={editingVault}
                                 onSubmit={async (data) => {
-                                  await apiRequest('PUT', `/api/proxy/api/rest/blockchain/omni/vault/${editingVault.id}`, data);
+                                  await apiRequest('PUT', `/api/rest/blockchain/omni/vault/${editingVault.id}`, data);
                                   queryClient.invalidateQueries({ queryKey: ['/api/rest/blockchain/omni/vault'] });
                                   setEditingVault(null);
                                   toast({ title: 'Success', description: 'Vault updated successfully' });
