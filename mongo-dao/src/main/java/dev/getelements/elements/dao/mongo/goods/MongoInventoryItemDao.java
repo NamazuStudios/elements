@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.goods;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.sdk.dao.InventoryItemDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
@@ -19,6 +20,7 @@ import dev.getelements.elements.sdk.model.exception.TooBusyException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.ValidationGroups.Update;
+import dev.getelements.elements.sdk.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.sdk.model.inventory.InventoryItem;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
@@ -54,6 +56,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     private MongoUserDao mongoUserDao;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
+
+    private BooleanQueryParser booleanQueryParser;
 
     @Override
     public InventoryItem getInventoryItem(final String inventoryItemId) {
@@ -121,9 +125,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             .find(MongoInventoryItem.class)
             .filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
 
-        return getMongoDBUtils().paginationFromQuery(
-            query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions());
+        return getBooleanQueryParser()
+                .parse(query, search)
+                .filter(getMongoDBUtils()::isIndexedQuery)
+                .map(q -> getMongoDBUtils().paginationFromQuery(q, offset, count, i -> getDozerMapper().map(i, InventoryItem.class)))
+                .orElse(getMongoDBUtils().paginationFromQuery(
+                        query, offset, count,
+                        mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions()));
+
     }
 
     @Override
@@ -398,6 +407,15 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
+    }
+
+    public BooleanQueryParser getBooleanQueryParser() {
+        return booleanQueryParser;
+    }
+
+    @Inject
+    public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
+        this.booleanQueryParser = booleanQueryParser;
     }
 
 

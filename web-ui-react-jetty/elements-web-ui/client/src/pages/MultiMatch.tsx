@@ -70,7 +70,7 @@ export default function MultiMatchPage() {
   const { data: applicationsData } = useQuery({
     queryKey: ['/api/rest/application'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/proxy/api/rest/application');
+      const response = await apiRequest('GET', '/api/rest/application');
       const data = await response.json();
       return Array.isArray(data) ? data : (data.objects || data.content || []);
     },
@@ -81,7 +81,7 @@ export default function MultiMatchPage() {
     queryKey: ['/api/rest/application', selectedApplicationId, 'configuration'],
     queryFn: async () => {
       if (!selectedApplicationId) return [];
-      const response = await apiRequest('GET', `/api/proxy/api/rest/application/${selectedApplicationId}/configuration`);
+      const response = await apiRequest('GET', `/api/rest/application/${selectedApplicationId}/configuration`);
       const data = await response.json();
       // Normalize response format: Elements API can return array, {objects: [...]}, or {content: [...]}
       let normalized: any[] = [];
@@ -111,7 +111,7 @@ export default function MultiMatchPage() {
       if (searchTerm) {
         params.append('search', searchTerm);
       }
-      const response = await apiRequest('GET', `/api/proxy/api/rest/multi_match?${params}`);
+      const response = await apiRequest('GET', `/api/rest/multi_match?${params}`);
       const data = await response.json();
       
       // Normalize response format: Elements API can return either {objects: [...]} or {content: [...]}
@@ -126,7 +126,7 @@ export default function MultiMatchPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: Partial<MultiMatch>) => {
-      const response = await apiRequest('POST', '/api/proxy/api/rest/multi_match', data);
+      const response = await apiRequest('POST', '/api/rest/multi_match', data);
       return response.json();
     },
     onSuccess: () => {
@@ -146,7 +146,7 @@ export default function MultiMatchPage() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<MultiMatch> }) => {
-      const response = await apiRequest('PUT', `/api/proxy/api/rest/multi_match/${id}`, data);
+      const response = await apiRequest('PUT', `/api/rest/multi_match/${id}`, data);
       return response.json();
     },
     onSuccess: () => {
@@ -166,7 +166,7 @@ export default function MultiMatchPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest('DELETE', `/api/proxy/api/rest/multi_match/${id}`);
+      await apiRequest('DELETE', `/api/rest/multi_match/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rest/multi_match'] });
@@ -183,7 +183,7 @@ export default function MultiMatchPage() {
 
   const deleteAllMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest('DELETE', '/api/proxy/api/rest/multi_match');
+      await apiRequest('DELETE', '/api/rest/multi_match');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/rest/multi_match'] });
@@ -326,7 +326,7 @@ export default function MultiMatchPage() {
       const apps = applicationsData || [];
       for (const app of apps) {
         try {
-          const response = await apiRequest('GET', `/api/proxy/api/rest/application/${app.id}/configuration`);
+          const response = await apiRequest('GET', `/api/rest/application/${app.id}/configuration`);
           const configs = await response.json();
           // Normalize response format
           let configsArray: any[] = [];

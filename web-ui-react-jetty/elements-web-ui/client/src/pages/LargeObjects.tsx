@@ -78,26 +78,15 @@ export default function LargeObjects() {
   }, [pageSize]);
 
   const { data: response, isLoading, isFetching, error } = useQuery<LargeObjectResponse>({
-    queryKey: ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize],
+    queryKey: ['/api/rest/large_object', currentPage, searchQuery, pageSize],
     queryFn: async () => {
-      let url = `/api/proxy/api/rest/large_object?offset=${currentPage * pageSize}&count=${pageSize}`;
+      let path = `/api/rest/large_object?offset=${currentPage * pageSize}&count=${pageSize}`;
       if (searchQuery.trim()) {
-        url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+        path += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
-      console.log('[LARGE_OBJECTS] Fetching with pageSize:', pageSize, 'URL:', url);
+      console.log('[LARGE_OBJECTS] Fetching with pageSize:', pageSize, 'Path:', path);
       
-      // Add authentication header
-      const headers: HeadersInit = {};
-      const sessionToken = apiClient.getSessionToken();
-      if (sessionToken) {
-        headers['Elements-SessionSecret'] = sessionToken;
-      }
-      
-      const response = await fetch(url, { 
-        credentials: 'include',
-        headers 
-      });
-      if (!response.ok) throw new Error('Failed to fetch');
+      const response = await apiRequest('GET', path);
       const data = await response.json();
       console.log('[LARGE_OBJECTS] Received', data.objects?.length, 'objects');
       return data;
@@ -123,11 +112,11 @@ export default function LargeObjects() {
 
   const createMutation = useMutation({
     mutationFn: async (data: { mimeType: string; write: SubjectRequest; read: SubjectRequest; delete: SubjectRequest }) => {
-      const response = await apiRequest('POST', '/api/proxy/api/rest/large_object', data);
+      const response = await apiRequest('POST', '/api/rest/large_object', data);
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rest/large_object'] });
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -146,11 +135,11 @@ export default function LargeObjects() {
 
   const createFromUrlMutation = useMutation({
     mutationFn: async (urlData: { fileUrl: string; mimeType: string; write: SubjectRequest; read: SubjectRequest; delete: SubjectRequest }) => {
-      const response = await apiRequest('POST', '/api/proxy/api/rest/large_object/from_url', urlData);
+      const response = await apiRequest('POST', '/api/rest/large_object/from_url', urlData);
       return response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rest/large_object'] });
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${data.id || 'Unknown'}` 
@@ -169,12 +158,12 @@ export default function LargeObjects() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiRequest('DELETE', `/api/proxy/api/rest/large_object/${id}`);
+      const response = await apiRequest('DELETE', `/api/rest/large_object/${id}`);
       return id;
     },
     onSuccess: (deletedId) => {
       // Check if we need to adjust pagination after deletion
-      const queryKey = ['/api/proxy/api/rest/large_object', currentPage, searchQuery, pageSize];
+      const queryKey = ['/api/rest/large_object', currentPage, searchQuery, pageSize];
       const currentData = queryClient.getQueryData(queryKey) as LargeObjectResponse | undefined;
       
       // If we're deleting the last item on this page and it's not the first page, go back one page
@@ -184,7 +173,7 @@ export default function LargeObjects() {
       
       // Update all cached pages for this resource
       queryClient.setQueriesData(
-        { queryKey: ['/api/proxy/api/rest/large_object'] },
+        { queryKey: ['/api/rest/large_object'] },
         (oldData: any) => {
           if (!oldData || typeof oldData.total !== 'number') {
             return oldData; // Skip non-paginated responses
@@ -242,7 +231,7 @@ export default function LargeObjects() {
         delete: createPublicAccess()
       };
 
-      const createResponse = await apiRequest('POST', '/api/proxy/api/rest/large_object', createRequest);
+      const createResponse = await apiRequest('POST', '/api/rest/large_object', createRequest);
       const createdObject = await createResponse.json();
       
       if (!createdObject.id) {
@@ -253,14 +242,18 @@ export default function LargeObjects() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      // Add authentication header
+      // Use apiRequest infrastructure for proper path handling
+      // Note: We can't use apiRequest directly because it sets Content-Type to JSON
+      const uploadPath = `/api/rest/large_object/${createdObject.id}/content`;
+      const fullPath = await getApiPath(uploadPath);
+      
       const headers: HeadersInit = {};
       const sessionToken = apiClient.getSessionToken();
       if (sessionToken) {
         headers['Elements-SessionSecret'] = sessionToken;
       }
 
-      const uploadResponse = await fetch(`/api/proxy/api/rest/large_object/${createdObject.id}/content`, {
+      const uploadResponse = await fetch(fullPath, {
         method: 'PUT',
         body: formData,
         credentials: 'include',
@@ -271,7 +264,7 @@ export default function LargeObjects() {
         throw new Error(`Content upload failed: ${uploadResponse.statusText}`);
       }
 
-      queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/rest/large_object'] });
       toast({ 
         title: 'Success', 
         description: `Large object created with ID: ${createdObject.id}` 
@@ -427,7 +420,7 @@ export default function LargeObjects() {
         <div className="flex items-center gap-2">
           <Button 
             onClick={async () => {
-              await queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/large_object'] });
+              await queryClient.invalidateQueries({ queryKey: ['/api/rest/large_object'] });
             }} 
             variant="outline" 
             size="sm"
