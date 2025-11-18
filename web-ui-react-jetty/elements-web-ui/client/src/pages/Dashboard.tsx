@@ -19,7 +19,7 @@ interface HealthStatus {
 
 export default function Dashboard() {
   const { data: healthStatus, isLoading: isHealthLoading, isFetching: isHealthFetching, error: healthError } = useQuery<HealthStatus>({
-    queryKey: ['/api/proxy/api/rest/health'],
+    queryKey: ['/api/rest/health'],
     refetchInterval: 30000, // Refetch every 30 seconds
     retry: false, // Don't retry on failure for health checks
   });
@@ -35,7 +35,7 @@ export default function Dashboard() {
   const healthColor = getHealthColor();
 
   const handleRefresh = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['/api/proxy/api/rest/health'] });
+    await queryClient.invalidateQueries({ queryKey: ['/api/rest/health'] });
   };
 
   return (
