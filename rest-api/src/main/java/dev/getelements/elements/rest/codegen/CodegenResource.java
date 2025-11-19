@@ -97,7 +97,7 @@ public class CodegenResource extends BaseOpenApiResource {
     private File generateElementSpecFile(final File path, final String elementSpecUrl) throws JsonProcessingException {
 
         final var yaml = this.getClient()
-                .target("http://localhost:8080/app/rest/wordrally/openapi.yaml")
+                .target(elementSpecUrl)
                 .request(new String[]{"application/yaml"})
                 .get(String.class);
 
