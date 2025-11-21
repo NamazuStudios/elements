@@ -14,8 +14,7 @@ import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -50,17 +49,81 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     }
 
+    private static URL toUrl(final Path path) {
+        try {
+            return path.toUri().toURL();
+        } catch (MalformedURLException ex) {
+            throw new SdkException(ex);
+        }
+    }
+
+    private static boolean isJarFile(final Path path) {
+        return isRegularFile(path) && path.getFileName().toString().endsWith("."  + JAR_EXTENSION);
+    }
+
+    private static boolean isApiDirectory(final Path path) {
+        return isDirectory(path) && API_DIR.equals(path.getFileName().toString());
+    }
+
+    private static boolean isLibDirectory(final Path path) {
+        return isDirectory(path) && LIB_DIR.equals(path.getFileName().toString());
+    }
+
+    private static boolean isClasspathDirectory(final Path path) {
+        return isDirectory(path) && CLASSPATH_DIR.equals(path.getFileName().toString());
+    }
+
+    private static boolean isAttributesFiles(final Path path) {
+        return isRegularFile(path) && ATTRIBUTES_PROPERTIES_FILE.equals(path.getFileName().toString());
+    }
 
     @Override
     public Stream<Element> load(
             final MutableElementRegistry registry,
             final Path path,
             final ClassLoader baseClassLoader) {
+        try (final var fs = FileSystems.newFileSystem(path)) {
+            final var root = fs.getPath("/");
+            return doLoad(registry, root, baseClassLoader);
+        } catch (ProviderNotFoundException ex) {
+            if (Files.isDirectory(path)) {
+                return doLoad(registry, path, baseClassLoader);
+            } else {
+                logger.warn("{} not a directory. Skipping.", path);
+                return Stream.empty();
+            }
+        } catch (final NoSuchFileException ex) {
+            logger.warn("{} does not exist. Skipping.", path);
+            return Stream.empty();
+        } catch (final IOException ex) {
+            throw new SdkException(ex);
+        }
+    }
+
+    private Stream<Element> doLoad(
+            final MutableElementRegistry registry,
+            final Path path,
+            final ClassLoader baseClassLoader) {
+
+        final var sharedClassLoader = SharedClasspathRecord
+                .from(path)
+                .build()
+                .newClassLoader();
+
+        return doLoadWithSharedClasspath(registry, path, baseClassLoader, sharedClassLoader);
+
+    }
+
+    private Stream<Element> doLoadWithSharedClasspath(
+            final MutableElementRegistry registry,
+            final Path path,
+            final ClassLoader baseClassLoader,
+            final ClassLoader sharedClassloader) {
 
         Stream<Element> result = Stream.empty();
 
         try (final var directory = newDirectoryStream(path)) {
-            final var record = ElementPathRecord.from(registry, baseClassLoader, directory);
+            final var record = ElementPathRecord.from(registry, baseClassLoader, sharedClassloader, directory);
             final var elements = record.load();
             return elements.stream();
         } catch (IOException ex) {
@@ -72,17 +135,74 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     }
 
+    private record SharedClasspathRecord(
+            Path path,
+            List<URL> classpath
+    ) {
+
+        public static SharedClasspathRecord from(final Path path) {
+            return new SharedClasspathRecord(path, new ArrayList<>());
+        }
+
+        public SharedClasspathRecord build() {
+            build(path());
+            return this;
+        }
+
+        public ClassLoader newClassLoader() {
+            return new URLClassLoader(classpath.toArray(URL[]::new), null);
+        }
+
+        private void build(final Path path) {
+            if (isLibDirectory(path)) {
+                logger.trace("Not including library directory {} in shared classpath.", path);
+            } else if (isClasspathDirectory(path)) {
+                logger.trace("Not including classpath directory {} in shared classpath.", path);
+            } else if (isAttributesFiles(path)) {
+                logger.trace("Skipping attributes file {} while evaluating shared classpath.", path);
+            } else if (isApiDirectory(path)) {
+
+                logger.info("Including API directory {} in shared classpath.", path);
+
+                try (final var ds = newDirectoryStream(path)) {
+                    for (final var subPath : ds) {
+                        if (isJarFile(subPath)) {
+                            classpath.add(toUrl(subPath));
+                            logger.debug("Added {} to shared classpath.", subPath);
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new SdkException(e);
+                }
+
+            } else if (isDirectory(path)) {
+                try (final var ds = newDirectoryStream(path)) {
+                    for (final var subPath : ds) {
+                        build(subPath);
+                    }
+                } catch (IOException e) {
+                    throw new SdkException(e);
+                }
+            } else {
+                logger.info("Skipping {} while evaluating shared classpath. Not a directory.", path);
+            }
+        }
+
+    }
+
     private record ElementPathRecord(
             Path libs,
             Path classpath,
             Path attributesFile,
             List<Path> directories,
             ClassLoader baseClassLoader,
+            ClassLoader sharedClassLoader,
             MutableElementRegistry registry,
             Element parent) {
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
                                              final ClassLoader baseClassLoader,
+                                             final ClassLoader sharedClassLoader,
                                              final DirectoryStream<Path> directory) {
 
             Path libs, classpath, attributesFile;
@@ -112,6 +232,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile,
                     List.copyOf(directories),
                     baseClassLoader,
+                    sharedClassLoader,
                     registry,
                     null
             );
@@ -147,34 +268,11 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile,
                     directories,
                     baseClassLoader(),
+                    sharedClassLoader(),
                     registry(),
                     parent
             );
 
-        }
-
-        private static URL toUrl(final Path path) {
-            try {
-                return path.toUri().toURL();
-            } catch (MalformedURLException ex) {
-                throw new SdkException(ex);
-            }
-        }
-
-        private static boolean isJarFile(final Path path) {
-            return isRegularFile(path) && path.getFileName().toString().endsWith("."  + JAR_EXTENSION);
-        }
-
-        private static boolean isLibDirectory(final Path path) {
-            return isDirectory(path) && LIB_DIR.equals(path.getFileName().toString());
-        }
-
-        private static boolean isClasspathDirectory(final Path path) {
-            return isDirectory(path) && CLASSPATH_DIR.equals(path.getFileName().toString());
-        }
-
-        private static boolean isAttributesFiles(final Path path) {
-            return isRegularFile(path) && ATTRIBUTES_PROPERTIES_FILE.equals(path.getFileName().toString());
         }
 
         public Stream<URL> libsUrls() {
@@ -182,8 +280,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 return libs() == null
                         ? Stream.empty()
                         : list(libs())
-                            .filter(ElementPathRecord::isJarFile)
-                            .map(ElementPathRecord::toUrl);
+                            .filter(DirectoryElementPathLoader::isJarFile)
+                            .map(DirectoryElementPathLoader::toUrl);
             } catch (IOException ex) {
                 throw new SdkException(ex);
             }
@@ -281,14 +379,16 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     .findFirst()
                     .orElseThrow(() -> new SdkException(
                             "No SPI for " + ElementLoaderFactory.class.getName() + " " +
-                                    "found in " + baseClassLoader.getName()
+                            "found in " + baseClassLoader.getName()
                     ))
                     .get()
                     .getIsolatedLoaderWithParent(
                             attributes,
                             baseClassLoader,
                             cl -> new URLClassLoader(classLoaderName, urls, cl),
-                            parent(),
+                            parent() == null
+                                    ? sharedClassLoader()
+                                    : parent().getElementRecord().classLoader(),
                             edr -> registry
                                     .stream()
                                     .map(element -> element.getElementRecord().definition().name())
