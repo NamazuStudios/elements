@@ -140,7 +140,7 @@ public interface ElementLoaderFactory {
                 attributes,
                 baseClassLoader,
                 classLoaderCtor,
-                null,
+                (ClassLoader) null,
                 selector
         );
     }
