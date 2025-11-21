@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest.codegen;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import dev.getelements.elements.rest.Oas3DocumentationResource;
 import dev.getelements.elements.sdk.model.Headers;
@@ -11,6 +12,7 @@ import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import io.swagger.util.Json;
+import io.swagger.v3.core.util.Yaml;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.models.Components;
@@ -92,12 +94,14 @@ public class CodegenResource extends BaseOpenApiResource {
         }
     }
 
-    private File generateElementSpecFile(final File path, final String elementSpecUrl) {
+    private File generateElementSpecFile(final File path, final String elementSpecUrl) throws JsonProcessingException {
 
-        final OpenAPI openApi = getClient()
+        final var yaml = this.getClient()
                 .target(elementSpecUrl)
-                .request("application/json")
-                .get(OpenAPI.class);
+                .request(new String[]{"application/yaml"})
+                .get(String.class);
+
+        final var openApi = Yaml.mapper().readValue(yaml, OpenAPI.class);
 
         addSecuritySchemes(openApi);
         final var specFile = new File(path, "openapi.json");
