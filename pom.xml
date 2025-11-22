@@ -106,6 +106,7 @@
         <module>sdk-model</module>
         <module>sdk-mongo</module>
         <module>sdk-mongo-test</module>
+        <module>sdk-test-api</module>
         <module>sdk-test-element</module>
         <module>sdk-test-element-a</module>
         <module>sdk-test-element-b</module>
@@ -585,6 +586,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-mongo-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
