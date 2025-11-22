@@ -160,6 +160,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 logger.trace("Not including classpath directory {} in shared classpath.", path);
             } else if (isAttributesFiles(path)) {
                 logger.trace("Skipping attributes file {} while evaluating shared classpath.", path);
+            } else if (isPathInHiddenHierarchy(path)) {
+                logger.debug("Skipping hidden path {} while evaluating shared classpath.", path);
             } else if (isApiDirectory(path)) {
 
                 logger.info("Including API directory {} in shared classpath.", path);
