@@ -1,6 +1,8 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.InsertOptions;
+import com.mongodb.MongoWriteException;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -17,14 +19,14 @@ import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.bson.types.ObjectId;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -59,11 +61,21 @@ public class MongoUserUidDao implements UserUidDao {
 
         final Query<MongoUserUid> query = getDatastore().find(MongoUserUid.class);
 
+        if(ObjectId.isValid(trimmedQueryString)) {
+            final var user = datastore.find(MongoUser.class)
+                    .filter(Filters.eq("_id", new ObjectId(search)))
+                    .first();
+
+            if(user != null) {
+                query.filter(Filters.eq("user", user));
+                return paginationFromQuery(query, offset, count);
+            }
+        }
+
         query.filter(
                 or(
-                        Filters.regex("_id.schema", Pattern.compile(search)),
-                        Filters.regex("_id.id", Pattern.compile(search)),
-                        Filters.regex("user.id", Pattern.compile(search))
+                        Filters.regex("_id.scheme", Pattern.compile(search)),
+                        Filters.regex("_id.id", Pattern.compile(search))
                 )
         );
 
@@ -100,6 +112,11 @@ public class MongoUserUidDao implements UserUidDao {
 
     @Override
     public UserUid createUserUidStrict(UserUid userUid) {
+        return createUserUid(userUid);
+    }
+
+    @Override
+    public UserUid createUserUid(UserUid userUid) {
         validate(userUid);
 
         final var user = getMongoUserForId(userUid.getUserId());
@@ -109,48 +126,14 @@ public class MongoUserUidDao implements UserUidDao {
         mongoUserUid.setId(id);
 
         try {
-            getDatastore().save(mongoUserUid);
-        } catch (DuplicateKeyException ex) {
+            getDatastore().insert(mongoUserUid);
+        } catch (MongoWriteException ex) {
             throw new DuplicateException(ex);
         }
 
         addLinkedAccount(user, userUid);
 
         return getDozerMapperRegistry().map(mongoUserUid, UserUid.class);
-    }
-
-    @Override
-    public UserUid createOrUpdateUserUid(UserUid userUid) {
-
-        validate(userUid);
-
-        final var id = createSchemeId(userUid);
-        final var user = getMongoUserForId(userUid.getUserId());
-
-        final var query = getDatastore().find(MongoUserUid.class)
-                .filter(
-                    and(
-                        eq("user", user),
-                        eq("_id.scheme", id.getScheme())
-                    )
-                );
-
-        final var builder = new UpdateBuilder()
-                .with(
-                        set("_id.scheme", id.getScheme()),
-                        set("_id.id", id.getId()),
-                        set("user", user)
-                );
-
-        final var opts = new ModifyOptions()
-                .upsert(true)
-                .returnDocument(AFTER);
-
-        final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
-
-        addLinkedAccount(user, userUid);
-
-        return getDozerMapperRegistry().map(mongoUser, UserUid.class);
     }
 
     @Override
