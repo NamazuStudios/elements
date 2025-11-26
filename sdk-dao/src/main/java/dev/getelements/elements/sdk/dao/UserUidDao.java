@@ -21,8 +21,19 @@ import static com.google.common.base.Strings.nullToEmpty;
 @ElementServiceExport
 public interface UserUidDao {
 
+    /**
+     * The user's unique user name.
+     */
     String SCHEME_NAME = "dev.getelements.auth.scheme.name";
+
+    /**
+     * The user's email address.
+     */
     String SCHEME_EMAIL = "dev.getelements.auth.scheme.email";
+
+    /**
+     * The user's phone number.
+     */
     String SCHEME_PHONE_NUMBER = "dev.getelements.auth.scheme.phone";
 
     /**

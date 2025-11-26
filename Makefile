@@ -22,6 +22,8 @@ build: clean
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
 deploy: clean
+	## This step ensures that the sources get built and installed first
+	mvn -DskipTests source:jar install
 	mvn --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:
