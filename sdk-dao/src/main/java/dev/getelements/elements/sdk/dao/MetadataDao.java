@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundExc
 import dev.getelements.elements.sdk.model.metadata.Metadata;
 import dev.getelements.elements.sdk.model.user.User;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,6 +14,14 @@ import java.util.Optional;
  */
 @ElementServiceExport
 public interface MetadataDao {
+
+    /**
+     * Lists all {@link Metadata} instances with the specified pagination constraints.
+     *
+     * @param metadataSpecNameOrId the metadata spec name or id
+     * @return a {@link Pagination} of {@link Metadata} instances
+     */
+    List<Metadata> getAllMetadatasBySpec(String metadataSpecNameOrId);
 
     /**
      * Lists all {@link Metadata} instances with the specified pagination constraints.
@@ -75,16 +84,16 @@ public interface MetadataDao {
     /**
      * Creates a new metadata object.
      *
-     * @param metadata
-     * @return
+     * @param metadata the metadata object to create
+     * @return the metadata object as it was written to the database
      */
     Metadata createMetadata(Metadata metadata);
 
     /**
      * Creates a new metadata object.
      *
-     * @param metadata
-     * @return
+     * @param metadata the metadata object to create
+     * @return the metadata object as it was written to the database
      */
     Metadata updateMetadata(Metadata metadata);
 
