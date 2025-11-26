@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.user.User;
@@ -9,8 +10,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import java.util.Set;
+
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_EMAIL;
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_NAME;
+import static dev.getelements.elements.sdk.model.user.User.Level.USER;
+import static java.lang.String.format;
 import static org.testng.Assert.*;
 import static org.testng.Assert.assertEquals;
 
@@ -18,6 +23,8 @@ import static org.testng.Assert.assertEquals;
 public class MongoUserUidDaoTest {
 
     private UserUidDao userUidDao;
+
+    private UserDao userDao;
 
     private static final String TEST_SCHEME_NAME = "MongoTestUserUidScheme";
 
@@ -27,7 +34,18 @@ public class MongoUserUidDaoTest {
 
     @BeforeClass
     public void createTestUsers() {
-        testUserA = userTestFactory.createTestUser();
+        final var testUser = new User();
+        final var userName = "MongoUserUidDaoTestUserA";
+
+        testUser.setName(userName);
+        testUser.setEmail(format("%s@example.com", userName));
+        testUser.setLevel(USER);
+        testUser.setLinkedAccounts(Set.of(
+                UserUidDao.SCHEME_EMAIL,
+                UserUidDao.SCHEME_NAME
+        ));
+
+        testUserA = getUserDao().createUser(testUser);
     }
 
     @Test
@@ -123,6 +141,15 @@ public class MongoUserUidDaoTest {
     @Inject
     public void setUserUidDao(UserUidDao userUidDao) {
         this.userUidDao = userUidDao;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public UserTestFactory getUserTestFactory() {
