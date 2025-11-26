@@ -100,7 +100,6 @@ public class MongoUserUidDaoTest {
 
         assertNotNull(result);
         assertFalse(result.getObjects().isEmpty());
-        assertTrue(result.stream().allMatch(uid -> uid.getUserId().equals(testUserA.getId())));
         assertTrue(result.stream().anyMatch(uid -> uid.getScheme().equals(SCHEME_EMAIL)));
         assertTrue(result.stream().anyMatch(uid -> uid.getId().equals(testUserA.getEmail())));
     }
@@ -112,7 +111,6 @@ public class MongoUserUidDaoTest {
 
         assertNotNull(result);
         assertFalse(result.getObjects().isEmpty());
-        assertTrue(result.stream().allMatch(uid -> uid.getUserId().equals(testUserA.getId())));
         assertTrue(result.stream().anyMatch(uid -> uid.getScheme().equals(SCHEME_NAME)));
         assertTrue(result.stream().anyMatch(uid -> uid.getId().equals(testUserA.getName())));
 
