@@ -31,13 +31,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final Attributes attributes,
             final ClassLoader baseClassLoader,
             final ClassLoaderConstructor classLoaderCtor,
-            final Element element,
+            final ClassLoader parent,
             final Predicate<ElementDefinitionRecord> selector) {
-
-        final var parent = Optional.ofNullable(element)
-                .map(Element::getElementRecord)
-                .map(ElementRecord::classLoader)
-                .orElse(null);
 
         final var isolated = new ElementClassLoader(baseClassLoader, parent);
 
