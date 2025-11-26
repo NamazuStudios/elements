@@ -21,6 +21,7 @@ public class MongoMetadata {
     @Property
     private Map<String, Object> metadata;
 
+    @Indexed
     @Reference
     private MongoMetadataSpec metadataSpec;
 

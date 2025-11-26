@@ -1,27 +1,27 @@
 package dev.getelements.elements.dao.mongo.metadata;
 
-import dev.getelements.elements.dao.mongo.model.MongoUser;
-import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.metadata.MongoMetadata;
-import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
+import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
+import dev.getelements.elements.sdk.model.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.sdk.model.metadata.Metadata;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
-
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -37,9 +37,25 @@ public class MongoMetadataDao implements MetadataDao {
 
     private Datastore datastore;
 
-    private MapperRegistry beanMapperRegistry;
+    private MapperRegistry beanMapper;
 
     private ValidationHelper validationHelper;
+
+    private MongoMetadataSpecDao mongoMetadataSpecDao;
+
+    @Override
+    public List<Metadata> getAllMetadatasBySpec(final String metadataSpecNameOrId) {
+        return getMongoMetadataSpecDao()
+                .findActiveMongoMetadataSpec(metadataSpecNameOrId)
+                .map(metadataSpec -> getDatastore()
+                    .find(MongoMetadata.class)
+                    .filter(eq("metadataSpec", metadataSpec), exists("name"))
+                    .stream()
+                    .map(this::transform)
+                    .toList()
+                )
+                .orElseGet(List::of);
+    }
 
     @Override
     public Pagination<Metadata> getMetadatas(final int offset, final int count, final User.Level accessLevel) {
@@ -194,6 +210,7 @@ public class MongoMetadataDao implements MetadataDao {
         }
     }
 
+
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;
     }
@@ -213,12 +230,12 @@ public class MongoMetadataDao implements MetadataDao {
     }
 
     public MapperRegistry getBeanMapper() {
-        return beanMapperRegistry;
+        return beanMapper;
     }
 
     @Inject
-    public void setBeanMapper(MapperRegistry beanMapperRegistry) {
-        this.beanMapperRegistry = beanMapperRegistry;
+    public void setBeanMapper(MapperRegistry beanMapper) {
+        this.beanMapper = beanMapper;
     }
 
     public ValidationHelper getValidationHelper() {
@@ -228,6 +245,15 @@ public class MongoMetadataDao implements MetadataDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public MongoMetadataSpecDao getMongoMetadataSpecDao() {
+        return mongoMetadataSpecDao;
+    }
+
+    @Inject
+    public void setMongoMetadataSpecDao(final MongoMetadataSpecDao mongoMetadataSpecDao) {
+        this.mongoMetadataSpecDao = mongoMetadataSpecDao;
     }
 
 }

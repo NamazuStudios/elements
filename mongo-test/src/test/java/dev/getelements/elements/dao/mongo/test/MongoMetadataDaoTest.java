@@ -19,6 +19,7 @@ import jakarta.inject.Inject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.model.schema.MetadataSpecPropertyType.*;
@@ -167,6 +168,29 @@ public class MongoMetadataDaoTest {
             //Should just get the 1 unprivileged
             case UNPRIVILEGED -> assertEquals(metadatas.getObjects().size(), 1);
         }
+    }
+
+    @Test(groups = "fetch", dependsOnGroups = "update")
+    public void testGetAll() {
+
+        final var byId = getMetadataDao().getAllMetadatasBySpec(testMetadataSpec.getId());
+        final var byName = getMetadataDao().getAllMetadatasBySpec(testMetadataSpec.getName());
+
+        final var expectedIds = metadataList.stream()
+                .map(Metadata::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        final var byIdIds = byId.stream()
+                .map(Metadata::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        final var byNameIds = byName.stream()
+                .map(Metadata::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+        assertEquals(byIdIds, expectedIds);
+        assertEquals(byNameIds, expectedIds);
+
     }
 
     @Test(groups = "delete", dependsOnGroups = "fetch", dataProvider = "intermediateMetadataDataProvider")

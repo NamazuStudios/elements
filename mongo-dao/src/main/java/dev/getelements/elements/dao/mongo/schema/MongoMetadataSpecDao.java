@@ -52,11 +52,16 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     public Optional<MongoMetadataSpec> findActiveMongoMetadataSpec(final String metadataSpecId) {
         return getMongoDBUtils()
                 .parse(metadataSpecId)
-                .map(objectId ->  getDatastore()
+                .map(objectId -> getDatastore()
                         .find(MongoMetadataSpec.class)
                         .filter(eq("_id", objectId), exists("name"))
-                        .first()
-                );
+                )
+                .orElseGet(() -> getDatastore()
+                        .find(MongoMetadataSpec.class)
+                        .filter(eq("name", metadataSpecId))
+                )
+                .stream()
+                .findFirst();
     }
 
     @Override
