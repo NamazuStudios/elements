@@ -62,14 +62,16 @@ public interface UserUidDao {
      * @param userUid - the object to create in the db
      * @return - the resultant userUid with any modifications made as a result of the creation
      */
+    @Deprecated
     UserUid createUserUidStrict(UserUid userUid);
 
     /**
-     * Attempts to create or update a new UserUid with the given userUid object.
-     * @param userUid - the object to create or update in the db
-     * @return - the resultant userUid with any modifications made as a result of the creation or update
+     * Attempts to create a new UserUid with the given userUid object.
+     * Using "Strict" semantics, if the user exists then this will throw an exception.
+     * @param userUid - the object to create in the db
+     * @return - the resultant userUid with any modifications made as a result of the creation
      */
-    UserUid createOrUpdateUserUid(UserUid userUid);
+    UserUid createUserUid(UserUid userUid);
 
     /**
      * This will scrub all scheme ids for all UserUids referencing the user with the given id.

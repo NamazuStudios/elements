@@ -664,15 +664,21 @@ public class MongoUserDao implements UserDao {
 
     private void createUidsStrictForUser(final User user) {
         if(user.getEmail() != null && !user.getEmail().isBlank()) {
-            createUidStrict(UserUidDao.SCHEME_EMAIL, user, user.getEmail());
+            try {
+                createUidStrict(UserUidDao.SCHEME_EMAIL, user, user.getEmail());
+            } catch (DuplicateException ignored) {}
         }
 
         if(user.getName() != null && !user.getName().isBlank()) {
-            createUidStrict(UserUidDao.SCHEME_NAME, user, user.getName());
+            try {
+                createUidStrict(UserUidDao.SCHEME_NAME, user, user.getName());
+            } catch (DuplicateException ignored) {}
         }
 
         if(user.getPrimaryPhoneNb() != null && !user.getPrimaryPhoneNb().isBlank()) {
-            createUidStrict(UserUidDao.SCHEME_PHONE_NUMBER, user, user.getPrimaryPhoneNb());
+            try {
+                createUidStrict(UserUidDao.SCHEME_PHONE_NUMBER, user, user.getPrimaryPhoneNb());
+            } catch (DuplicateException ignored) {}
         }
     }
 
