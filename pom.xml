@@ -195,6 +195,7 @@
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
         <mapstruct.version>1.6.2</mapstruct.version>
         <openapi-generator.version>7.12.0</openapi-generator.version>
+        <javadoc.plugin.version>3.12.0</javadoc.plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -1310,7 +1311,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.4.1</version>
+                        <version>${javadoc.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
