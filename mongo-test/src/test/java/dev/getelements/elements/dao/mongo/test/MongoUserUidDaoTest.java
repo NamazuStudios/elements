@@ -17,6 +17,7 @@ import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_NAME;
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoUserUidDaoTest {
@@ -205,5 +206,5 @@ public class MongoUserUidDaoTest {
     public void setUserTestFactory(UserTestFactory userTestFactory) {
         this.userTestFactory = userTestFactory;
     }
-    
+
 }

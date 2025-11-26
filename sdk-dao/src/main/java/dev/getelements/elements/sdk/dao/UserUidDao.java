@@ -185,6 +185,7 @@ public interface UserUidDao {
      * @param user - the id of the user to search for
      * @deprecated Use {@link #softDeleteUser(User)} instead.
      */
+    @Deprecated
     default void softDeleteUserUidsForUserId(final User user) {
         softDeleteUser(user);
     }
