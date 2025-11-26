@@ -14,8 +14,9 @@ import static java.lang.System.getenv;
  * {@link Element}s, the loader will search a {@link Path} with the following rules.
  *
  * <ul>
- *     <li>If the {@link Path} is a file, it will assume that the entire {@link Element} is in one file.</li>
+ *     <li>If the {@link Path} can load using {@link java.nio.file.FileSystems#newFileSystem(Path)}, it will load</li>
  *     <li>If thd {@link Path} is a directory, it will assume all files in the directory make up the {@link Element}</li>
+ *     <li>If thd {@link Path} is a not found or otherwise empty, it will return an empty {@link Stream}</li>
  *     <li>For each directory in the {@link Path}, it will create a new subordinate {@link ElementRegistry}</li>
  *     <li>Each loaded {@link Element} will follow the hierarchy of the directory.</li>
  *     <li>Empty directories, or directories containing directories will be skipped.</li>
@@ -27,7 +28,8 @@ import static java.lang.System.getenv;
  *
  * <ul>
  *    <li>dev.getelements.element.attributes.properties - custom attributes for the Element</li>
- *    <li>lib - every file is assumed to be a jar file</li>
+ *    <li>api - every file is assumed to be a jar file, shared among all Elements in a directory</li>
+ *    <li>lib - every file is assumed to be a jar file, specific to that Element only</li>
  *    <li>classpath - every file inside this directory is added to the classpath</li>
  * </ul>
  *
@@ -54,6 +56,11 @@ import static java.lang.System.getenv;
  *     <li>Root -> Bar -> B</li>
  * </ul>
  *
+ * Changes for 3.6 and up. The "api" directory is now supported. Any jars in this directory are shared among all
+ * Elements in the same directory and any subdirectories. This enables each Element to share common API jars without
+ * exposing its own implementation jars to its peers. API jars should be as lean as absolutely possible, containing only
+ * the interfaces and data types needed to interact with the Element's services. When scanning a directory structure,
+ * the loader will first look for an "api" directory and load any jars found there into the classpath before loading.
  */
 public interface ElementPathLoader {
 
@@ -66,6 +73,12 @@ public interface ElementPathLoader {
      * The environment variable for the element path.
      */
     String ELEMENT_PATH_ENV = "ELEMENTPATH";
+
+    /**
+     * The API directory.
+     * @since 3.6
+     */
+    String API_DIR = "api";
 
     /**
      * The library directory name.

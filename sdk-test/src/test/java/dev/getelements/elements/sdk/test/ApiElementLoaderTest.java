@@ -4,30 +4,37 @@ import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.stream.Collectors;
 
-import static dev.getelements.elements.sdk.ElementPathLoader.CLASSPATH_DIR;
-import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
+import static dev.getelements.elements.sdk.ElementPathLoader.*;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
 import static java.lang.ClassLoader.getSystemClassLoader;
+import static java.nio.file.Files.createDirectories;
+import static java.util.stream.Collectors.toSet;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-public class FlatElementPathLoaderTest {
+public class ApiElementLoaderTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ApiElementLoaderTest.class);
 
     private static final TestArtifactRegistry testArtifactRegistry = new TestArtifactRegistry();
 
     private static final TemporaryFiles temporaryFiles = new TemporaryFiles(NestedElementPathLoaderTest.class);
 
     private final Path baseDirectory = temporaryFiles.createTempDirectory();
+
+    private final Path apiDirectory = baseDirectory.resolve(API_DIR);
 
     private final Path variantADirectory = baseDirectory.resolve("variant_a");
 
@@ -37,17 +44,20 @@ public class FlatElementPathLoaderTest {
 
     @Factory
     public static Object[] getTestFixtures() {
-        return new Object[] { new FlatElementPathLoaderTest(GUICE_7_0_X)};
+        return new Object[] { new ApiElementLoaderTest(GUICE_7_0_X)};
     }
 
-    public FlatElementPathLoaderTest(final TestElementSpi elementSpi) {
+    public ApiElementLoaderTest(final TestElementSpi elementSpi) {
         this.elementSpi = elementSpi;
     }
+
 
     @BeforeClass
     public void arrangeElementsInDirectory() throws IOException {
 
-        layoutSkeletonElement(baseDirectory, BASE.getAttributes());
+        createDirectories(apiDirectory);
+        testArtifactRegistry.copyArtifactTo(API, apiDirectory);
+
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
 
@@ -60,7 +70,7 @@ public class FlatElementPathLoaderTest {
     }
 
     @Test
-    public void testLoadAll() {
+    public void testLoad() throws ClassNotFoundException {
 
         final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
@@ -71,43 +81,32 @@ public class FlatElementPathLoaderTest {
                 getSystemClassLoader()
         ).toList();
 
-        final var inRegistry = elementRegistry.stream().toList();
-        assertEquals(inRegistry.size(), 2);
-        assertEquals(loadedElements.size(), 2);
+        logger.info("Loaded Elements.");
 
-        for (final var artifact : List.of(VARIANT_A, VARIANT_B)) {
+        // We want to ensure that all elements root classloader is the same.
+        final var loaders = loadedElements.stream()
+                .map(e -> {
 
-            final var fromLoaded = loadedElements.stream()
-                    .filter(e -> e.getElementRecord().definition().name().equals(artifact.getElementName()))
-                    .findFirst()
-                    .orElseThrow();
+                    var loader = e.getElementRecord().classLoader();
 
-            final var fromRegistry = elementRegistry.stream()
-                    .filter(e -> e.getElementRecord().definition().name().equals(artifact.getElementName()))
-                    .findFirst()
-                    .orElseThrow();
+                    while (loader.getParent() != null) {
+                        loader = loader.getParent();
+                    }
 
-            assertEquals(fromRegistry, fromLoaded);
+                    return loader;
+                })
+                .collect(toSet());
 
-            final var attributes = fromLoaded.getElementRecord().attributes();
+        assertEquals(loaders.size(), 1, "All elements should share the same root classloader.");
 
-            for (var entry : artifact.getAttributes().entrySet()) {
-                final var attribute = attributes.getAttribute(entry.getKey().toString());
-                assertEquals(attribute, entry.getValue());
-            }
+        // We want to make sure that we can locate the test interface from the root classloader.
+        final var cls = loaders
+                .stream()
+                .findFirst()
+                .get()
+                .loadClass(TestService.class.getName());
 
-            final var service = fromLoaded
-                    .getServiceLocator()
-                    .getInstance(TestService.class);
-
-            assertNotNull(service);
-
-            service.testElementSpi();
-            service.testElementRegistrySpi();
-
-            assertEquals(service.getImplementationPackage(), artifact.getElementName());
-
-        }
+        assertNotNull(cls);
 
     }
 

@@ -140,7 +140,7 @@ public interface ElementLoaderFactory {
                 attributes,
                 baseClassLoader,
                 classLoaderCtor,
-                null,
+                (ClassLoader) null,
                 selector
         );
     }
@@ -204,11 +204,58 @@ public interface ElementLoaderFactory {
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementLoader}
      */
-    ElementLoader getIsolatedLoaderWithParent(
+    default ElementLoader getIsolatedLoaderWithParent(
             Attributes attributes,
             ClassLoader baseClassLoader,
             ClassLoaderConstructor classLoaderCtor,
             Element element,
+            Predicate<ElementDefinitionRecord> selector) {
+
+        final var parent = Optional.ofNullable(element)
+                .map(Element::getElementRecord)
+                .map(ElementRecord::classLoader)
+                .orElse(null);
+
+        return getIsolatedLoaderWithParent(
+                attributes,
+                baseClassLoader,
+                classLoaderCtor,
+                parent,
+                selector
+        );
+
+    }
+
+    /**
+     * <p>
+     * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
+     * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
+     * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
+     * exactly one {@link ElementDefinition} with the supplied {@link Predicate}.
+     * </p>
+     *
+     * <p>
+     * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
+     * </p>
+     *
+     * The returned {@link ElementLoader} will use the {@link Element}'s classpath with a filtered version of the
+     * supplied base {@link ClassLoader} as the parent classloader.
+     *
+     * @param attributes the attributes to use
+     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
+     *                        {@link ClassLoader} instance.
+     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param parent the parent {@link ClassLoader} to use for the classloader isolation, may be null indicating that
+     *                isolation should exist for the bootstrap classpath only.
+     * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
+     * @return the {@link ElementLoader}
+     * @since 3.6
+     */
+    ElementLoader getIsolatedLoaderWithParent(
+            Attributes attributes,
+            ClassLoader baseClassLoader,
+            ClassLoaderConstructor classLoaderCtor,
+            ClassLoader parent,
             Predicate<ElementDefinitionRecord> selector);
 
     /**

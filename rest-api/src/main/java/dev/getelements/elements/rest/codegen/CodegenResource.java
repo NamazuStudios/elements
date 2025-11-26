@@ -17,6 +17,7 @@ import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
 import jakarta.inject.Inject;
@@ -30,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 
 import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.AUTH_BEARER;
 import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
@@ -104,6 +106,8 @@ public class CodegenResource extends BaseOpenApiResource {
         final var openApi = Yaml.mapper().readValue(yaml, OpenAPI.class);
 
         addSecuritySchemes(openApi);
+        formatEnums(openApi);
+
         final var specFile = new File(path, "openapi.json");
 
         try(final var writer = new FileOutputStream(specFile)) {
@@ -125,7 +129,10 @@ public class CodegenResource extends BaseOpenApiResource {
             final ServletConfig servletConfig) throws OpenApiConfigurationException {
 
         final var openApi = getDocumentationResource().getOpenApiJson(type, uriInfo, headers, application, servletConfig);
+
         addSecuritySchemes(openApi);
+        formatEnums(openApi);
+
         final var specFile = new File(path, "openapi.json");
 
         try(final var writer = new FileOutputStream(specFile)) {
@@ -164,6 +171,30 @@ public class CodegenResource extends BaseOpenApiResource {
 
         components.setSecuritySchemes(securitySchemes);
         openApi.setComponents(components);
+    }
+
+    private void formatEnums(final OpenAPI openApi) {
+
+        final var components = openApi.getComponents() == null ? new Components() : openApi.getComponents();
+
+        for (Schema<?> schema : components.getSchemas().values()) {
+
+            if (schema.getEnum() != null &&
+                schema.getEnum().stream().allMatch(v -> v instanceof String)) {
+
+                final var values = schema.getEnum().stream().map(Object::toString).toList();
+                final var enumOverride = "x-enum-varnames";
+
+                if(schema.getExtensions() == null) {
+                    schema.setExtensions(new HashMap<>());
+                }
+
+                if (!schema.getExtensions().containsKey(enumOverride)) {
+                    schema.addExtension(enumOverride, values);
+                }
+            }
+        }
+
     }
 
     public CodegenService getCodegenService() {

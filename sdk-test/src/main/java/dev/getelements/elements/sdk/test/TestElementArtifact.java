@@ -7,6 +7,10 @@ import java.util.Map;
  */
 public enum TestElementArtifact {
 
+    API(
+            "sdk-test-api",
+            "dev.getelements.elements.sdk.test.element"
+    ),
     BASE(
             "sdk-test-element",
             "dev.getelements.elements.sdk.test.element"
