@@ -1,11 +1,15 @@
 package dev.getelements.elements.sdk.service.auth;
 
+import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.user.UserUid;
 
 import java.util.Optional;
 
+@ElementPublic
+@ElementServiceExport
 public interface UserUidService {
 
     /**
