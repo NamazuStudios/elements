@@ -1,15 +1,13 @@
 package dev.getelements.elements.sdk.dao;
 
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
-import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
+import java.util.List;
 import java.util.Optional;
-
-import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * This is the UserUidDao which is used to manage associated unique user ids. These will represent different
@@ -24,6 +22,22 @@ public interface UserUidDao {
     String SCHEME_NAME = "dev.getelements.auth.scheme.name";
     String SCHEME_EMAIL = "dev.getelements.auth.scheme.email";
     String SCHEME_PHONE_NUMBER = "dev.getelements.auth.scheme.phone";
+
+    /**
+     * Gets all user uids for a given user
+     *
+     * @return the user uid pagination object
+     */
+    default List<UserUid> getAllUserIdsForUser(final User user) {
+        return getAllUserIdsForUser(user.getId());
+    }
+
+    /**
+     * Gets all user uids for a given user
+     *
+     * @return the user uid pagination object
+     */
+    List<UserUid> getAllUserIdsForUser(String userId);
 
     /**
      * Attempts to get a certain number of user uids
@@ -74,8 +88,105 @@ public interface UserUidDao {
     UserUid createUserUid(UserUid userUid);
 
     /**
-     * This will scrub all scheme ids for all UserUids referencing the user with the given id.
-     * @param user - the id of the user to search for
+     * Deletes a user uid by its UserUid object.
+     *
+     * @param userUid the UserUid object to delete
+     * @throws UserNotFoundException if the UserUid with the given scheme and id does not exist
      */
-    void softDeleteUserUidsForUserId(User user);
+    default void deleteUserUid(final UserUid userUid) {
+        if (!tryDeleteUserUid(userUid.getScheme(), userUid.getId())) {
+            throw new UserNotFoundException("UserUid with id " + userUid.getId() + " not found.");
+        }
+    }
+
+    /**
+     * Deletes a user uid by its scheme and user id.
+     *
+     * @param scheme Corresponds to {@link UserUid#getScheme()}
+     * @param id Corresponds to {@link UserUid#getId()}
+     * @throws UserNotFoundException if the UserUid with the given scheme and id does not exist
+     */
+    default void deleteUserUid(final String scheme, final String id) {
+        if (!tryDeleteUserUid(scheme, id)) {
+            throw new UserNotFoundException("UserUid with id " + id + " and/or scheme " + scheme + " not found.");
+        }
+    }
+
+    /**
+     * Deletes a user uid by its UserUid object.
+     *
+     * @param userUid the UserUid object to delete
+     * @return true if the UserUid was found and deleted, false otherwise
+     */
+    default boolean tryDeleteUserUid(final UserUid userUid) {
+        return tryDeleteUserUid(userUid.getScheme(), userUid.getId());
+    }
+
+    /**
+     * Deletes a user uid by its scheme and user id.
+     *
+     * @param scheme Corresponds to {@link UserUid#getScheme()}
+     * @param id Corresponds to {@link UserUid#getId()}
+     * @return true if the UserUid was found and deleted, false otherwise
+     */
+    boolean tryDeleteUserUid(String scheme, String id);
+
+    /**
+     * Soft deletes the user by removing all ID references to the user in the UserUid records. This does not delete
+     * the actual User object, just the references to it in UserUid records.
+     *
+     * It is STRONGLY RECOMMENDED to use this method from within a transaction to ensure data integrity as it requires
+     * multiple operations to complete. Outside of a transaction, there is a substantial risk of partial completion
+     * leaving the associated data in an inconsistent state.
+     *
+     * @param user the user to soft delete
+     */
+    default void softDeleteUser(final User user) {
+        softDeleteUser(user.getId());
+    }
+
+    /**
+     * Soft deletes the user by removing all ID references to the user in the UserUid records. This does not delete
+     * the actual User object, just the references to it in UserUid records.
+     *
+     * It is STRONGLY RECOMMENDED to use this method from within a transaction to ensure data integrity as it requires
+     * multiple operations to complete. Outside of a transaction, there is a substantial risk of partial completion
+     * leaving the associated data in an inconsistent state.
+     *
+     * @param userId the user to soft delete
+     * @throws UserNotFoundException if the user with the given id does not exist
+     */
+    default void softDeleteUser(final String userId) {
+        if (!trySoftDeleteUser(userId)) {
+            throw new UserNotFoundException("User with id " + userId + " not found.");
+        }
+    }
+
+    /**
+     * Soft deletes the user by removing all ID references to the user in the UserUid records. This does not delete
+     * the actual User object, just the references to it in UserUid records.
+     *
+     * It is STRONGLY RECOMMENDED to use this method from within a transaction to ensure data integrity as it requires
+     * multiple operations to complete. Outside of a transaction, there is a substantial risk of partial completion
+     * leaving the associated data in an inconsistent state.
+     *
+     * @param userId the user to soft delete
+     * @return true if the user was found and soft deleted, false otherwise
+     */
+    boolean trySoftDeleteUser(final String userId);
+
+    /**
+     * This will scrub all scheme ids for all UserUids referencing the user with the given id.
+     *
+     * It is STRONGLY RECOMMENDED to use this method from within a transaction to ensure data integrity as it requires
+     * multiple operations to complete. Outside of a transaction, there is a substantial risk of partial completion
+     * leaving the associated data in an inconsistent state.
+     *
+     * @param user - the id of the user to search for
+     * @deprecated Use {@link #softDeleteUser(User)} instead.
+     */
+    default void softDeleteUserUidsForUserId(final User user) {
+        softDeleteUser(user);
+    }
+
 }
