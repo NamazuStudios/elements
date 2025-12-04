@@ -31,4 +31,5 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
     public boolean tryReleaseCode(String code) {
         return false;
     }
+
 }
