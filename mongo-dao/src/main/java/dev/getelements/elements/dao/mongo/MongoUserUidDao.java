@@ -1,6 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
-import com.mongodb.MongoWriteException;
+import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.MongoUserUid;
 import dev.getelements.elements.dao.mongo.model.MongoUserUidScheme;
@@ -11,18 +11,15 @@ import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
-import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
+import dev.morphia.InsertOneOptions;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -134,22 +131,18 @@ public class MongoUserUidDao implements UserUidDao {
     }
 
     @Override
-    public UserUid createUserUid(UserUid userUid) {
+    public UserUid createUserUid(final UserUid userUid) {
         validate(userUid);
 
         final var user = getMongoUserForId(userUid.getUserId());
         final var id = createSchemeId(userUid);
+
         final MongoUserUid mongoUserUid = new MongoUserUid();
         mongoUserUid.setUser(user);
         mongoUserUid.setId(id);
 
-        try {
-            getDatastore().save(mongoUserUid);
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
-        }
-
-        addLinkedAccount(user, userUid);
+        getMongoDBUtils().performV(ds -> getDatastore().insert(mongoUserUid));
+        addLinkedAccount(mongoUserUid);
 
         return getDozerMapperRegistry().map(mongoUserUid, UserUid.class);
     }
@@ -214,10 +207,6 @@ public class MongoUserUidDao implements UserUidDao {
 
         return true;
 
-            return getMongoDBUtils().perform(ds ->
-                    builder.execute(query, new ModifyOptions().upsert(false))
-            );
-        });
     }
 
     private Pagination<UserUid> paginationFromQuery(

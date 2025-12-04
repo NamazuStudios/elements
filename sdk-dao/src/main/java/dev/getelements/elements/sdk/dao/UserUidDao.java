@@ -1,15 +1,13 @@
 package dev.getelements.elements.sdk.dao;
 
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
-import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
+import java.util.List;
 import java.util.Optional;
-
-import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * This is the UserUidDao which is used to manage associated unique user ids. These will represent different
