@@ -17,7 +17,6 @@ import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_NAME;
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoUserUidDaoTest {
@@ -80,8 +79,8 @@ public class MongoUserUidDaoTest {
         userUid.setUserId(testUserA.getId());
         userUid.setId(testUserA.getId());
         userUid.setScheme(TEST_SCHEME_NAME);
-        final var result = userUidDao.createUserUidStrict(userUid);
 
+        final var result = userUidDao.createUserUidStrict(userUid);
         assertEquals(result.getId(), userUid.getId());
         assertEquals(result.getScheme(), userUid.getScheme());
         assertEquals(result.getUserId(), userUid.getUserId());
@@ -131,6 +130,52 @@ public class MongoUserUidDaoTest {
         assertFalse(result.getObjects().isEmpty());
         assertTrue(result.stream().anyMatch(uid -> uid.getScheme().equals(SCHEME_NAME)));
         assertTrue(result.stream().anyMatch(uid -> uid.getId().equals(testUserA.getName())));
+
+    }
+
+    @Test(dependsOnMethods = "testRecreateUid")
+    public void testGetAll() {
+
+        final var result = getUserUidDao().getAllUserIdsForUser(testUserA);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.stream().anyMatch(uid -> uid.getScheme().equals(SCHEME_NAME)));
+        assertTrue(result.stream().anyMatch(uid -> uid.getId().equals(testUserA.getName())));
+
+    }
+
+
+    @Test(dependsOnMethods = "testRecreateUid")
+    public void testLinkedAccounts() {
+        final var result = getUserDao().getUser(testUserA.getId());
+        assertTrue(result.getLinkedAccounts().contains(SCHEME_NAME));
+        assertTrue(result.getLinkedAccounts().contains(SCHEME_EMAIL));
+        assertTrue(result.getLinkedAccounts().contains(TEST_SCHEME_NAME));
+    }
+
+    @Test(dependsOnMethods = "testLinkedAccounts")
+    public void testDeleteScheme() {
+
+        getUserUidDao().deleteUserUid(TEST_SCHEME_NAME, testUserA.getId());
+
+        final var result = getUserDao().getUser(testUserA.getId());
+        assertTrue(result.getLinkedAccounts().contains(SCHEME_NAME));
+        assertTrue(result.getLinkedAccounts().contains(SCHEME_EMAIL));
+        assertFalse(result.getLinkedAccounts().contains(TEST_SCHEME_NAME));
+
+    }
+
+    @Test(dependsOnMethods = "testDeleteScheme")
+    public void testSoftDeleteUser() {
+
+        getUserUidDao().softDeleteUser(testUserA);
+
+        final var user = getUserDao().getUser(testUserA.getId());
+        assertNull(user.getLinkedAccounts());
+
+        final var allUids = getUserUidDao().getAllUserIdsForUser(testUserA);
+        assertTrue(allUids.isEmpty());
 
     }
 

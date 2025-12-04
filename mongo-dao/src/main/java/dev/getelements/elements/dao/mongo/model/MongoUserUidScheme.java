@@ -14,6 +14,13 @@ public class MongoUserUidScheme {
     @Property
     private String id;
 
+    public MongoUserUidScheme() {}
+
+    public MongoUserUidScheme(final String scheme, final String id) {
+        this.scheme = scheme;
+        this.id = id;
+    }
+
     public String getScheme() {
         return scheme;
     }
@@ -42,4 +49,5 @@ public class MongoUserUidScheme {
                 ", id='" + id + '\'' +
                 "}";
     }
+
 }
