@@ -55,7 +55,7 @@ public class UniqueCodeGenerator {
         final var code = CharBuffer.allocate(length);
 
         while (code.hasRemaining()) {
-            final var i = configuration.random().nextInt(length);
+            final var i = configuration.random().nextInt(configuration.candidates.length());
             final var c = configuration.candidates().charAt(i);
             code.put(c);
         }

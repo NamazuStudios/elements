@@ -16,11 +16,11 @@ import static org.testng.Assert.assertTrue;
 
 public class OffensiveWordFilterTest {
 
-    private static final int MIN_CODE_LENGTH = 5;
+    private static final int BENCHMARK_CODE_LENGTH = 4;
 
-    private static final int MAX_CODE_LENGTH = 8;
+    private static final int RANDOM_SAMPLE_SET = 50000;
 
-    private static final int RANDOM_SAMPLE_SET = 200000;
+    private static final double ACCEPTABLE_REJECTION_PERCENTAGE = 0.20;
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
@@ -56,8 +56,7 @@ public class OffensiveWordFilterTest {
                 .build();
 
         for (int i = 0; i < RANDOM_SAMPLE_SET; i++) {
-            final int length = random.nextInt(MIN_CODE_LENGTH, MAX_CODE_LENGTH + 1);
-            final var code = generator.tryGenerateUniqueCode(length, 1000);
+            final var code = generator.tryGenerateUniqueCode(BENCHMARK_CODE_LENGTH);
             codes.add(code.orElseThrow(IllegalStateException::new));
         }
 
@@ -76,39 +75,6 @@ public class OffensiveWordFilterTest {
         }
     }
 
-    @Test(dataProvider = "allFourLetterCodes")
-    public void testOffensiveWordsBenchmark(final String code) {
-
-        if (filter.isOffensive(code)) {
-            offensive.add(code);
-        } else {
-            inoffensive.add(code);
-        }
-
-    }
-
-    @AfterClass
-    public void writeResults() throws IOException {
-
-        try (final var fos = new FileOutputStream("offensive_words.txt");
-             final var writer = new PrintWriter(fos)) {
-
-            for (final var word : offensive) {
-                writer.println(word);
-            }
-
-        }
-
-        try (final var fos = new FileOutputStream("inoffensive_words.txt");
-             final var writer = new PrintWriter(fos)) {
-
-            for (final var word : inoffensive) {
-                writer.println(word);
-            }
-
-        }
-
-    }
 
     private String editToDistance(final String source, final int distance) {
 
@@ -135,6 +101,52 @@ public class OffensiveWordFilterTest {
             case 2 -> Levenshtein.deleteAt(source, index);
             default -> throw new IllegalStateException("Unexpected value: " + random);
         };
+
+    }
+
+    @Test(dataProvider = "allFourLetterCodes")
+    public void testOffensiveWordsBenchmark(final String code) {
+
+        if (filter.isOffensive(code)) {
+            offensive.add(code);
+        } else {
+            inoffensive.add(code);
+        }
+
+    }
+
+    @Test(dependsOnMethods = "testOffensiveWordsBenchmark")
+    public void checkOffensiveWordsAvailability() {
+        final double offensiveCount = offensive.size();
+        final double inoffensiveCount = inoffensive.size();
+        final double rejectionPercentage = offensiveCount / (inoffensiveCount + offensiveCount);
+        assertTrue(rejectionPercentage < ACCEPTABLE_REJECTION_PERCENTAGE,
+            "Offensive Word Filter is Too Strict: %f > %f".formatted(
+                    rejectionPercentage,
+                    ACCEPTABLE_REJECTION_PERCENTAGE)
+        );
+    }
+
+    @AfterClass
+    public void writeResults() throws IOException {
+
+        try (final var fos = new FileOutputStream("offensive_words.txt");
+             final var writer = new PrintWriter(fos)) {
+
+            for (final var word : offensive) {
+                writer.println(word);
+            }
+
+        }
+
+        try (final var fos = new FileOutputStream("inoffensive_words.txt");
+             final var writer = new PrintWriter(fos)) {
+
+            for (final var word : inoffensive) {
+                writer.println(word);
+            }
+
+        }
 
     }
 
