@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.mongo.ucode;
 
+import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
@@ -25,6 +27,12 @@ public class MongoUniqueCode {
 
     @Property
     private Timestamp expiry;
+
+    @Property
+    private User user;
+
+    @Property
+    private Profile profile;
 
     public String getId() {
         return id;
@@ -66,4 +74,19 @@ public class MongoUniqueCode {
         this.banned = banned;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(Profile profile) {
+        this.profile = profile;
+    }
 }

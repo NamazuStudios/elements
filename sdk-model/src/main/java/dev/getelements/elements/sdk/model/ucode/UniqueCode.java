@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.model.ucode;
 
+import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Objects;
@@ -20,6 +22,10 @@ public class UniqueCode {
 
     private long expiresAt;
 
+    private User user;
+
+    private Profile profile;
+
     public String getId() {
         return id;
     }
@@ -36,6 +42,22 @@ public class UniqueCode {
         this.code = code;
     }
 
+    public long getLinger() {
+        return linger;
+    }
+
+    public void setLinger(long linger) {
+        this.linger = linger;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
     public long getExpiresAt() {
         return expiresAt;
     }
@@ -44,16 +66,32 @@ public class UniqueCode {
         this.expiresAt = expiresAt;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(Profile profile) {
+        this.profile = profile;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         UniqueCode that = (UniqueCode) object;
-        return expiresAt == that.expiresAt && Objects.equals(id, that.id) && Objects.equals(code, that.code);
+        return linger == that.linger && timeout == that.timeout && expiresAt == that.expiresAt && Objects.equals(id, that.id) && Objects.equals(code, that.code) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, code, expiresAt);
+        return Objects.hash(id, code, linger, timeout, expiresAt, user, profile);
     }
 
     @Override
@@ -61,7 +99,11 @@ public class UniqueCode {
         return "UniqueCode{" +
                 "id='" + id + '\'' +
                 ", code='" + code + '\'' +
+                ", linger=" + linger +
+                ", timeout=" + timeout +
                 ", expiresAt=" + expiresAt +
+                ", user=" + user +
+                ", profile=" + profile +
                 '}';
     }
 

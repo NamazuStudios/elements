@@ -1,7 +1,8 @@
 package dev.getelements.elements.sdk.util;
 
 /**
- * Utility class for calculating the Levenshtein distance between two CharSequences.
+ * Utility class for calculating the Levenshtein distance between two CharSequences. Additionally, this has some
+ * utility method which can be used to generate strings with specific edit operations.
  */
 public class Levenshtein {
 
@@ -58,6 +59,36 @@ public class Levenshtein {
 
         return prev[lenB];
 
+    }
+
+    /**
+     * Inserts a character at the given index in the source string.
+     */
+    public static String insertAt(final String source, final int index, final char ch) {
+        if (index < 0 || index > source.length()) {
+            throw new IndexOutOfBoundsException("Index " + index + " out of bounds for insertion");
+        }
+        return source.substring(0, index) + ch + source.substring(index);
+    }
+
+    /**
+     * Deletes the character at the given index from the source string.
+     */
+    public static String deleteAt(final String source, final int index) {
+        if (index < 0 || index >= source.length()) {
+            throw new IndexOutOfBoundsException("Index " + index + " out of bounds for deletion");
+        }
+        return source.substring(0, index) + source.substring(index + 1);
+    }
+
+    /**
+     * Substitutes the character at the given index with a new character.
+     */
+    public static String substituteAt(final String source, final int index, final char newChar) {
+        if (index < 0 || index >= source.length()) {
+            throw new IndexOutOfBoundsException("Index " + index + " out of bounds for substitution");
+        }
+        return source.substring(0, index) + newChar + source.substring(index + 1);
     }
 
 }

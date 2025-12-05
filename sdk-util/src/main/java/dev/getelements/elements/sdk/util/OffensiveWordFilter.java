@@ -53,15 +53,17 @@ public class OffensiveWordFilter {
      */
     public boolean isOffensive(final CharSequence input) {
         final var transformed = configuration.transform(input);
-        return CharSequenceStreams
-                .allSubSequences(transformed)
-                .anyMatch(this::check);
-    }
-
-    private boolean check(final CharSequence input) {
         return configuration.words()
                 .stream()
-                .anyMatch(word -> word.matches(input));
+                .anyMatch(word -> word.check(transformed));
+    }
+
+    /**
+     * Returns the configuration of this OffensiveWordFilter.
+     * @return the configuration
+     */
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
     /**
@@ -69,15 +71,65 @@ public class OffensiveWordFilter {
      *
      * @param word the word
      * @param distance the permitted edit distance
+     * @param phonetic the phonetic code for the word
+     * @param phoneticCoding the phonetic coding function
      */
-    public record Word(CharSequence word, int distance) {
+    public record Word(CharSequence word,
+                       int distance,
+                       CharSequence phonetic,
+                       Function<CharSequence, CharSequence> phoneticCoding) {
 
-        public boolean matches(final CharSequence charSequence) {
+        /**
+         * Checks the input for any subsequence that matches this offensive word within the allowed edit distance. This
+         * example all subsequences of the input that are within the length range defined by the word length and the
+         * edit distance.
+         * @param input the input string
+         * @return true if a match is found, false otherwise
+         */
+        public boolean check(final CharSequence input) {
+            return checkMetaphone(input) || checkLevenshtein(input);
+        }
+
+        /**
+         * Checks the input for any subsequence that matches this offensive word using the Metaphone algorithm.
+         *
+         * @param input the input
+         * @return true if a match is found, false otherwise
+         */
+        public boolean checkMetaphone(final CharSequence input) {
+            return CharSequenceStreams
+                    .allSubSequences(input)
+                    .filter(sub -> sub.length() >= word().length())
+                    .map(phoneticCoding())
+                    .anyMatch(phonetic()::equals);
+        }
+
+        /**
+         * Checks the input for any subsequence that matches this offensive word within the allowed edit distance.
+         *
+         * @param input the input
+         * @return true if a match is found, false otherwise
+         */
+        public boolean checkLevenshtein(final CharSequence input) {
+            return CharSequenceStreams
+                    .allSubSequences(input)
+                    .filter(sub -> sub.length() >= word().length() - distance())
+                    .filter(sub -> sub.length() <= word().length() + distance())
+                    .anyMatch(this::matchesLevenshtein);
+        }
+
+        /**
+         * Checks if the given CharSequence matches this offensive word within the allowed edit distance.
+         *
+         * @param charSequence the CharSequence to check
+         * @return true if it matches within the edit distance, false otherwise
+         */
+        public boolean matchesLevenshtein(final CharSequence charSequence) {
 
             final var matches = Levenshtein.distance(word(), charSequence) <= distance;
 
             if (matches) {
-                logger.debug("Input '{}' matches offensive word '{}' with distance {}",
+                logger.trace("Input '{}' matches offensive word '{}' with distance {}",
                         charSequence,
                         word(),
                         distance()
@@ -86,6 +138,24 @@ public class OffensiveWordFilter {
 
             return matches;
 
+        }
+
+        /**
+         * Returns the Metaphone encoding of this offensive word.
+         *
+         * @return the Metaphone encoding
+         */
+        public String metaphone() {
+            return Metaphone.metaphone(word());
+        }
+
+        /**
+         * Transforms the word using the given transformer function.
+         * @param transformer the transformer function
+         * @return a new Word instance with the transformed word
+         */
+        public Word transformed(final Function<CharSequence, CharSequence> transformer) {
+            return new Word(transformer.apply(word()), distance(), phonetic(), phoneticCoding());
         }
 
     }
@@ -100,10 +170,15 @@ public class OffensiveWordFilter {
 
         public Configuration {
             words = words.stream()
-                    .map(w -> new Word(transform.apply(w.word()), w.distance()))
+                    .map(w -> w.transformed(transform))
                     .toList();
         }
 
+        /**
+         * Applies the transformation function to the given CharSequence.
+         * @param charSequence the CharSequence to transform
+         * @return the transformed CharSequence
+         */
         public CharSequence transform(final CharSequence charSequence) {
             return transform.apply(charSequence);
         }
@@ -113,7 +188,7 @@ public class OffensiveWordFilter {
     /**
      * Builder for constructing an OffensiveWordFilter with a list of offensive words.
      */
-    static class Builder {
+    public static class Builder {
 
         public static String DEFAULT_OFFENSIVE_WORDS_PATH = "/offensive_words.properties";
 
@@ -141,9 +216,10 @@ public class OffensiveWordFilter {
         public Builder addWords(final Properties properties) {
 
             for (var entry : properties.entrySet()) {
-                final var key = (String) entry.getKey();
-                final var distance = Integer.parseInt((String) entry.getValue());
-                addWord(new Word(key, distance));
+                final var key = entry.getKey().toString();
+                final var value = entry.getValue().toString();
+                final var distance = value.isBlank() ? 0 : Integer.parseInt(value);
+                addWord(new Word(key, distance, Metaphone.metaphone(key), Metaphone::metaphone));
             }
 
             return this;

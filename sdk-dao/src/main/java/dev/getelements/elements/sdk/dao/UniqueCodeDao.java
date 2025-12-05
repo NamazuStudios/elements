@@ -1,7 +1,9 @@
 package dev.getelements.elements.sdk.dao;
 
 import dev.getelements.elements.sdk.model.exception.ucode.UniqueCodeNotFoundException;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.ucode.UniqueCode;
+import dev.getelements.elements.sdk.model.user.User;
 
 import java.util.Optional;
 
@@ -35,6 +37,11 @@ public interface UniqueCodeDao {
      * The default timeout for which the generated code should remain unique. 1 hour in milliseconds.
      */
     long DEFAULT_TIMEOUT_MS = 3600 * 1000;
+
+    /**
+     * The default maximum number of attempts to generate a unique code before giving up.
+     */
+    int DEFAULT_MAX_GENERATION_ATTEMPTS = 1000;
 
     /**
      * TGenerates a unique code with the default length and timeout.
@@ -102,18 +109,47 @@ public interface UniqueCodeDao {
     record GenerationParameters(
             long timeout,
             long linger,
-            int length) {
+            int length,
+            int maxAttempts,
+            User user,
+            Profile profile) {
 
         /**
-         * Constructor that sets default values for any parameters that are zero.
+         * Constructor that sets default values for any parameters that are zero, and resolves the user from the profile
+         * if provided.
+         *
          * @param timeout the timeout time
          * @param linger the linger time
          * @param length the length of the code
          */
         public GenerationParameters {
+
+            if (length < 0) {
+                throw new IllegalArgumentException("Code length cannot be negative");
+            }
+
+            if (linger < 0) {
+                throw new IllegalArgumentException("Linger time cannot be negative");
+            }
+
+            if (timeout < 0) {
+                throw new IllegalArgumentException("Timeout time cannot be negative");
+            }
+
+            if (maxAttempts < 0) {
+                throw new IllegalArgumentException("Max generation attempts cannot be negative");
+            }
+
             linger = linger == 0 ? DEFAULT_LINGER_MS : linger;
             length = length == 0 ? DEFAULT_CODE_LENGTH : length;
             timeout = timeout == 0 ? DEFAULT_TIMEOUT_MS : timeout;
+            maxAttempts = maxAttempts == 0 ? DEFAULT_MAX_GENERATION_ATTEMPTS : maxAttempts;
+
+            user = Optional
+                    .ofNullable(profile)
+                    .map(Profile::getUser)
+                    .orElse(user);
+
         }
 
         /**
@@ -122,7 +158,7 @@ public interface UniqueCodeDao {
          * @return the default generation parameters
          */
         static GenerationParameters defaults() {
-            return new GenerationParameters(0,0, 0);
+            return new GenerationParameters(0,0,0,0, null, null);
         }
 
     }
