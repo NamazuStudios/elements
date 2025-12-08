@@ -17,6 +17,8 @@ import java.util.List;
 @ElementServiceExport
 public interface AppleIapReceiptService {
 
+    String APPLE_IAP_SCHEME = "com.apple.appstore";
+
     /**
      * Gets receipts for a given user specifying the offset and the count.
      *

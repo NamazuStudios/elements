@@ -16,6 +16,8 @@ import java.util.List;
 @ElementServiceExport
 public interface GooglePlayIapReceiptService {
 
+    String GOOGLE_IAP_SCHEME = "com.android.vending";
+
     /**
      * Gets receipts for a given user specifying the offset and the count.
      *

@@ -1,0 +1,374 @@
+package dev.getelements.elements.service.facebookiap;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.application.*;
+import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.receipt.Receipt;
+import dev.getelements.elements.sdk.model.reward.RewardIssuance;
+import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Form;
+import jakarta.ws.rs.core.MediaType;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import static dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt.buildRewardIssuanceTags;
+import static dev.getelements.elements.sdk.model.reward.RewardIssuance.*;
+import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
+
+public class UserFacebookIapReceiptService implements FacebookIapReceiptService {
+
+    private User user;
+
+    private Supplier<Profile> currentProfileSupplier;
+
+    private ReceiptDao receiptDao;
+
+    private MapperRegistry dozerMapperRegistry;
+
+    private RewardIssuanceDao rewardIssuanceDao;
+
+    private ItemDao itemDao;
+
+    private ApplicationConfigurationDao applicationConfigurationDao;
+
+    private Client client;
+
+    private ObjectMapper objectMapper;
+
+    @Override
+    public Pagination<FacebookIapReceipt> getFacebookIapReceipts(User user, int offset, int count) {
+        final var search = "id.scheme=facebook";
+        final var receipts = receiptDao.getReceipts(user, offset, count, search);
+        final var fbReceipts = receipts.getObjects().stream().map(this::convertReceipt);
+
+        return Pagination.from(fbReceipts);
+    }
+
+    @Override
+    public FacebookIapReceipt getFacebookIapReceipt(String originalTransactionId) {
+        return convertReceipt(receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, originalTransactionId));
+    }
+
+    @Override
+    public FacebookIapReceipt getOrCreateFacebookIapReceipt(FacebookIapReceipt facebookIapReceipt) {
+
+        final var receipt = new Receipt();
+        final var body = getDozerMapper().map(facebookIapReceipt, String.class);
+        receipt.setBody(body);
+        receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
+        receipt.setSchema(OCULUS_PLATFORM_IAP_SCHEME);
+
+        return convertReceipt(receiptDao.getOrCreateReceipt(receipt));
+    }
+
+    @Override
+    public void deleteFacebookIapReceipt(String receiptId) {
+        receiptDao.deleteReceipt(receiptId);
+    }
+
+    @Override
+    public FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(FacebookIapReceipt receiptData) {
+
+        final Profile profile = getCurrentProfileSupplier().get();
+
+        if (profile == null) {
+            throw new NotFoundException("User has no profile.");
+        }
+
+        final Application application = profile.getApplication();
+
+        if (application == null) {
+            throw new InvalidDataException("Profile is not associated with a valid application.");
+        }
+
+        final var applicationConfiguration = getFacebookApplicationConfiguration(application);
+        final var appId = applicationConfiguration.getApplicationId();
+        final var appSecret = applicationConfiguration.getApplicationSecret();
+        final var userId = receiptData.getFbUserId();
+        final var sku = receiptData.getSku();
+        final var accessToken = createAccessToken(appId, appSecret);
+        final var form = new Form()
+                .param("access_token", accessToken)
+                .param("user_id", userId)
+                .param("sku", sku);
+
+        final var entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+
+        return client.target(OCULUS_ROOT_URL)
+                .path(appId)
+                .path("verify_entitlement")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(entity, FacebookIapVerifyReceiptResponse.class);
+    }
+
+    @Override
+    public FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(FacebookIapReceipt receiptData) {
+        final Profile profile = getCurrentProfileSupplier().get();
+
+        if (profile == null) {
+            throw new NotFoundException("User has no profile.");
+        }
+
+        final Application application = profile.getApplication();
+
+        if (application == null) {
+            throw new InvalidDataException("Profile is not associated with a valid application.");
+        }
+
+        final var applicationConfiguration = getFacebookApplicationConfiguration(application);
+        final var appId = applicationConfiguration.getApplicationId();
+        final var appSecret = applicationConfiguration.getApplicationSecret();
+        final var userId = receiptData.getFbUserId();
+        final var sku = receiptData.getSku();
+        final var accessToken = createAccessToken(appId, appSecret);
+
+        final var form = new Form()
+                .param("access_token", accessToken)
+                .param("user_id", userId)
+                .param("sku", sku);
+
+        final var entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+
+        final var response = client.target(OCULUS_ROOT_URL)
+                .path(appId)
+                .path("consume_entitlement")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                .post(entity, FacebookIapConsumeResponse.class);
+
+        // If consumption was successful, we write the receipt to the db
+        if(response.getSuccess()) {
+            getOrCreateFacebookIapReceipt(receiptData);
+        }
+
+        return response;
+    }
+
+    @Override
+    public List<RewardIssuance> getOrCreateRewardIssuances(List<FacebookIapReceipt> facebookIapReceipts) {
+
+        final var resultRewardIssuances = new ArrayList<RewardIssuance>();
+        final var profile = getCurrentProfileSupplier().get();
+
+        if (profile == null) {
+            throw new NotFoundException("User has no profile.");
+        }
+
+        final var application = profile.getApplication();
+
+        if (application == null) {
+            throw new InvalidDataException("Profile is not associated with a valid application.");
+        }
+
+        final var applicationId = application.getId();
+
+        if (applicationId == null || applicationId.isEmpty()) {
+            throw new InvalidDataException("Application id associated with the profile is invalid.");
+        }
+
+        // next, we look up the associated application configuration
+        final var facebookApplicationConfiguration = getApplicationConfigurationDao()
+                .getDefaultApplicationConfigurationForApplication(
+                        applicationId,
+                        FacebookApplicationConfiguration.class);
+
+        final var productBundles = facebookApplicationConfiguration.getProductBundles();
+
+        // for each purchase we received from the ios app...
+        for (final var facebookIapReceipt : facebookIapReceipts) {
+
+            final var productId = facebookIapReceipt.getSku();
+            final var productBundle = productBundles.stream()
+                    .filter(p -> p.getProductId().equals(productId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (productBundle == null) {
+                throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
+                        "has no ProductBundle for productId " + productId);
+            }
+
+            // for each reward in the product bundle...
+            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
+
+                final var resultRewardIssuance = getOrCreateRewardIssuance(
+                        facebookIapReceipt.getPurchaseId(),
+                        productBundleReward.getItemId(),
+                        productBundleReward.getQuantity()
+                );
+
+                resultRewardIssuances.add(resultRewardIssuance);
+            }
+        }
+
+        return resultRewardIssuances;
+    }
+
+    private FacebookApplicationConfiguration getFacebookApplicationConfiguration(Application application) {
+
+        final String applicationId = application.getId();
+
+        if (applicationId == null || applicationId.isEmpty()) {
+            throw new InvalidDataException("Application id associated with the profile is invalid.");
+        }
+
+        return getApplicationConfigurationDao()
+                .getDefaultApplicationConfigurationForApplication(
+                        applicationId,
+                        FacebookApplicationConfiguration.class
+                );
+    }
+
+    private RewardIssuance getOrCreateRewardIssuance(
+            String originalTransactionId,
+            String itemId,
+            Integer quantity
+    ) {
+
+        final var context = buildFacebookIapContextString(originalTransactionId, itemId);
+        final var item = getItemDao().getItemByIdOrName(itemId);
+        final var metadata = generateFacebookIapReceiptMetadata();
+        final var rewardIssuance = new RewardIssuance();
+
+        rewardIssuance.setItem(item);
+        rewardIssuance.setItemQuantity(quantity);
+        rewardIssuance.setUser(user);
+        // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
+        rewardIssuance.setType(PERSISTENT);
+        rewardIssuance.setContext(context);
+        rewardIssuance.setMetadata(metadata);
+        rewardIssuance.setSource(FACEBOOK_IAP_SOURCE);
+
+        final List<String> tags = buildRewardIssuanceTags(originalTransactionId);
+        rewardIssuance.setTags(tags);
+
+        final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
+
+        return resultRewardIssuance;
+    }
+
+    private Map<String, Object> generateFacebookIapReceiptMetadata() {
+        final HashMap<String, Object> map = new HashMap<>();
+
+        return map;
+    }
+
+    private String createAccessToken(String appId, String appSecret) {
+        return "OC|" + appId + "|" + appSecret;
+    }
+
+    private FacebookIapReceipt convertReceipt(Receipt receipt) {
+        try {
+            return getObjectMapper().readValue(receipt.getBody(), FacebookIapReceipt.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public ReceiptDao getFacebookIapReceiptDao() {
+        return receiptDao;
+    }
+
+    @Inject
+    public void setFacebookIapReceiptDao(ReceiptDao receiptDao) {
+        this.receiptDao = receiptDao;
+    }
+
+    public MapperRegistry getDozerMapper() {
+        return dozerMapperRegistry;
+    }
+
+    @Inject
+    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
+        this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public RewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
+    }
+
+    @Inject
+    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
+    }
+
+    public ItemDao getItemDao() {
+        return itemDao;
+    }
+
+    @Inject
+    public void setItemDao(ItemDao itemDao) {
+        this.itemDao = itemDao;
+    }
+
+    public ApplicationConfigurationDao getApplicationConfigurationDao() {
+        return applicationConfigurationDao;
+    }
+
+    @Inject
+    public void setApplicationConfigurationDao(ApplicationConfigurationDao applicationConfigurationDao) {
+        this.applicationConfigurationDao = applicationConfigurationDao;
+    }
+
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
+    }
+
+    @Inject
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
+    }
+
+    public MapperRegistry getDozerMapperRegistry() {
+        return dozerMapperRegistry;
+    }
+
+    @Inject
+    public void setDozerMapperRegistry(MapperRegistry dozerMapperRegistry) {
+        this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    @Inject
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
+    @Inject
+    public void setObjectMapper(final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+}

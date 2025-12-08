@@ -28,6 +28,8 @@ import dev.getelements.elements.dao.mongo.mission.*;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.query.*;
+import dev.getelements.elements.dao.mongo.receipt.MongoAppleIapReceiptDao;
+import dev.getelements.elements.dao.mongo.receipt.MongoGooglePlayIapReceiptDao;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
 import dev.getelements.elements.sdk.ElementRegistry;

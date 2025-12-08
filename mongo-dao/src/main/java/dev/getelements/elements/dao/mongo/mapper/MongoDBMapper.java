@@ -2,8 +2,6 @@ package dev.getelements.elements.dao.mongo.mapper;
 
 
 import dev.getelements.elements.dao.mongo.model.*;
-import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
-import dev.getelements.elements.dao.mongo.model.application.MongoApplicationConfiguration;
 import dev.getelements.elements.dao.mongo.model.auth.MongoAuthScheme;
 import dev.getelements.elements.dao.mongo.model.blockchain.*;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
@@ -14,13 +12,13 @@ import dev.getelements.elements.dao.mongo.model.index.MongoIndexPlanStep;
 import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
 import dev.getelements.elements.dao.mongo.model.match.MongoMatch;
 import dev.getelements.elements.dao.mongo.model.mission.*;
+import dev.getelements.elements.dao.mongo.model.receipt.MongoAppleIapReceipt;
+import dev.getelements.elements.dao.mongo.model.receipt.MongoGooglePlayIapReceipt;
 import dev.getelements.elements.dao.mongo.model.savedata.MongoSaveDataDocument;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.sdk.model.Deployment;
 import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
-import dev.getelements.elements.sdk.model.application.Application;
-import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.auth.AuthScheme;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.sdk.model.blockchain.ElementsSmartContract;
@@ -40,7 +38,6 @@ import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.sdk.model.leaderboard.Leaderboard;
 import dev.getelements.elements.sdk.model.leaderboard.Rank;
-import dev.getelements.elements.sdk.model.leaderboard.RankRow;
 import dev.getelements.elements.sdk.model.leaderboard.Score;
 import dev.getelements.elements.sdk.model.match.Match;
 import dev.getelements.elements.sdk.model.mission.*;
@@ -57,11 +54,9 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;

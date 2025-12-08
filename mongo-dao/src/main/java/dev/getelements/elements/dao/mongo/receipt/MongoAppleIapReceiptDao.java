@@ -1,9 +1,11 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.receipt;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.dao.mongo.MongoDBUtils;
+import dev.getelements.elements.dao.mongo.MongoUserDao;
 import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
-import dev.getelements.elements.dao.mongo.model.MongoAppleIapReceipt;
+import dev.getelements.elements.dao.mongo.model.receipt.MongoAppleIapReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;

@@ -23,6 +23,7 @@ public class RewardIssuance implements Serializable, Taggable {
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
     public static final String APPLE_IAP_SOURCE = "APPLE_IAP";
     public static final String GOOGLE_PLAY_IAP_SOURCE = "GOOGLE_PLAY_IAP";
+    public static final String FACEBOOK_IAP_SOURCE = "FACEBOOK_IAP";
 
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
@@ -380,5 +381,20 @@ public class RewardIssuance implements Serializable, Taggable {
         final int hashResult = Objects.hash(orderId, itemId);
         final String hashResultString = Integer.toString(hashResult);
         return buildContextString(SERVER_CONTEXT_PREFIX, GOOGLE_PLAY_IAP_SOURCE, hashResultString);
+    }
+
+    /**
+     * Builds the context string for a Google Play-sourced reward issuance. The last element in the context string is
+     * the hash of the orderId issued by the Google Play services, presumed to be universally unique, as well as the
+     * itemId.
+     *
+     * @param orderId
+     * @param itemId
+     * @return the resultant context string
+     */
+    public static String buildFacebookIapContextString(String orderId, String itemId) {
+        final int hashResult = Objects.hash(orderId, itemId);
+        final String hashResultString = Integer.toString(hashResult);
+        return buildContextString(SERVER_CONTEXT_PREFIX, FACEBOOK_IAP_SOURCE, hashResultString);
     }
 }

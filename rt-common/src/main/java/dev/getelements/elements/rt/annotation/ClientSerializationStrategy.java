@@ -24,6 +24,11 @@ public @interface ClientSerializationStrategy {
     String APPLE_ITUNES = "dev.getelements.elements.sdk.model.annotation.SerializationStrategy.apple.itunes";
 
     /**
+     * Implies serialized fields follow the Apple/iTunes Style
+     */
+    String OCULUS_GRAPH = "dev.getelements.elements.sdk.model.annotation.SerializationStrategy.oculus.graph";
+
+    /**
      * Implies that serialized fields use lowerCamelCase
      */
     String LCAMEL = "dev.getelements.elements.sdk.model.annotation.SerializationStrategy.lcamel";
