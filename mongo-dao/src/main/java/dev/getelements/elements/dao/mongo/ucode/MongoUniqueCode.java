@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.mongo.ucode;
 
+import dev.getelements.elements.dao.mongo.model.MongoProfile;
+import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.morphia.annotations.*;
@@ -29,10 +31,10 @@ public class MongoUniqueCode {
     private Timestamp expiry;
 
     @Property
-    private User user;
+    private MongoUser user;
 
     @Property
-    private Profile profile;
+    private MongoProfile profile;
 
     public String getId() {
         return id;
@@ -74,19 +76,20 @@ public class MongoUniqueCode {
         this.banned = banned;
     }
 
-    public User getUser() {
+    public MongoUser getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(MongoUser user) {
         this.user = user;
     }
 
-    public Profile getProfile() {
+    public MongoProfile getProfile() {
         return profile;
     }
 
-    public void setProfile(Profile profile) {
+    public void setProfile(MongoProfile profile) {
         this.profile = profile;
     }
+
 }

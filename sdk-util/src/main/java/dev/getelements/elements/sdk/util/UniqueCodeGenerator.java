@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.util;
 import java.nio.CharBuffer;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -38,15 +39,65 @@ public class UniqueCodeGenerator {
      * @param maxAttempts the maximum number of attempts to generate a unique code
      */
     public Optional<String> tryGenerateUniqueCode(final int length, final int maxAttempts) {
+        return tryGenerateUniqueCode(length, maxAttempts, s -> true);
+    }
+
+    /**
+     * Generates a unique code of the specified length, ensuring it does not match the rejection predicate.
+     *
+     * @param length the length of the code to generate
+     * @param maxAttempts the maximum number of attempts to generate a unique code
+     * @param accept an additional predicate to accept generated codes after all tests have been attempted. If the
+     *               predicate returns true, then the code is accepted; otherwise, generation continues until
+     *               maxAttempts is reached.
+     */
+    public Optional<String> tryGenerateUniqueCode(final int length,
+                                                  final int maxAttempts,
+                                                  final Predicate<String> accept) {
 
         int attempts = 0;
         String candidate;
 
+        final var reject = configuration.rejection.or(accept.negate());
+
         do {
             candidate = generateCandidateCode(length);
-        } while (configuration.rejection.test(candidate) && (++attempts < maxAttempts));
+        } while (reject.test(candidate) && (++attempts < maxAttempts));
 
-        return attempts < maxAttempts ? Optional.of(candidate) : Optional.empty();
+        return attempts < maxAttempts
+                ? Optional.of(candidate)
+                : Optional.empty();
+
+    }
+
+    /**
+     * Generates a unique code of the specified length allowing for a custom result function to determine acceptance.
+     * This is useful if generating a code requires additional processing, such as checking a database for uniqueness
+     * and doing so while honoring concurrency concerns (such as atomic inserting or rejecting the code to prevent
+     * duplicates).
+     *
+     * @param length the length of the code to generate
+     * @param maxAttempts the maximum number of attempts to generate a unique code
+     * @param resultFunction a function that tests the generated code and returns an Optional result. If the function
+     *                       returns an Optional containing a value, then the code is accepted and the value is
+     *                       returned. If the function returns an empty Optional, then generation continues until
+     *                       maxAttempts is reached or a code is accepted.
+     */
+    public <T> Optional<T> tryComputeWithUniqueCode(final int length,
+                                                    final int maxAttempts,
+                                                    final Function<String, Optional<T>> resultFunction) {
+
+        int attempts = 0;
+
+        String code;
+        Optional<T> candidate;
+
+        do {
+            code = generateCandidateCode(length);
+            candidate = resultFunction.apply(code);
+        } while (configuration.rejection.test(code) && candidate.isEmpty() && (++attempts < maxAttempts));
+
+        return candidate;
 
     }
 
@@ -111,14 +162,33 @@ public class UniqueCodeGenerator {
         }
 
         /**
+         * Specifies a supplier for the {@link Random} to use for code generation.
+         *
+         * @param randomSupplier the random supplier
+         * @return this builder
+         */
+        public Builder withRandomSupplier(final Supplier<Random> randomSupplier) {
+            this.random = randomSupplier;
+            return this;
+        }
+
+        /**
          * Specifies the {@link Random} to use for code generation.
          *
          * @param random the random generator
          * @return this builder
          */
         public Builder withRandom(final Random random) {
-            this.random = () -> random;
-            return this;
+            return withRandomSupplier(() -> random);
+        }
+
+        /**
+         * Specifies to use a {@link java.security.SecureRandom} for code generation.
+         *
+         * @return this builder
+         */
+        public Builder withSecureRandom() {
+            return withRandomSupplier(java.security.SecureRandom::new);
         }
 
         /**

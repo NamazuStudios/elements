@@ -20,7 +20,7 @@ public class UniqueCode {
 
     private long timeout;
 
-    private long expiresAt;
+    private long expiry;
 
     private User user;
 
@@ -58,12 +58,12 @@ public class UniqueCode {
         this.timeout = timeout;
     }
 
-    public long getExpiresAt() {
-        return expiresAt;
+    public long getExpiry() {
+        return expiry;
     }
 
-    public void setExpiresAt(long expiresAt) {
-        this.expiresAt = expiresAt;
+    public void setExpiry(long expiry) {
+        this.expiry = expiry;
     }
 
     public User getUser() {
@@ -86,12 +86,12 @@ public class UniqueCode {
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         UniqueCode that = (UniqueCode) object;
-        return linger == that.linger && timeout == that.timeout && expiresAt == that.expiresAt && Objects.equals(id, that.id) && Objects.equals(code, that.code) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
+        return linger == that.linger && timeout == that.timeout && expiry == that.expiry && Objects.equals(id, that.id) && Objects.equals(code, that.code) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, code, linger, timeout, expiresAt, user, profile);
+        return Objects.hash(id, code, linger, timeout, expiry, user, profile);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class UniqueCode {
                 ", code='" + code + '\'' +
                 ", linger=" + linger +
                 ", timeout=" + timeout +
-                ", expiresAt=" + expiresAt +
+                ", expiresAt=" + expiry +
                 ", user=" + user +
                 ", profile=" + profile +
                 '}';

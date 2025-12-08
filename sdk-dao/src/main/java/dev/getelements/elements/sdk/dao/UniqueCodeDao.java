@@ -153,6 +153,24 @@ public interface UniqueCodeDao {
         }
 
         /**
+         * Returns the user wrapped in an Optional.
+         *
+         * @return the user optional
+         */
+        public Optional<User> userOptional() {
+            return Optional.ofNullable(user);
+        }
+
+        /**
+         * Returns the profile wrapped in an Optional.
+         *
+         * @return the profile optional
+         */
+        public Optional<Profile> profileOptional() {
+            return Optional.ofNullable(profile);
+        }
+
+        /**
          * Returns the default generation parameters.
          *
          * @return the default generation parameters
