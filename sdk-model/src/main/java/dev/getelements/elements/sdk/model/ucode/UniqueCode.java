@@ -14,8 +14,6 @@ public class UniqueCode {
 
     private String id;
 
-    private String code;
-
     private long linger;
 
     private long timeout;
@@ -32,14 +30,6 @@ public class UniqueCode {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
     }
 
     public long getLinger() {
@@ -86,19 +76,18 @@ public class UniqueCode {
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         UniqueCode that = (UniqueCode) object;
-        return linger == that.linger && timeout == that.timeout && expiry == that.expiry && Objects.equals(id, that.id) && Objects.equals(code, that.code) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
+        return linger == that.linger && timeout == that.timeout && expiry == that.expiry && Objects.equals(id, that.id) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, code, linger, timeout, expiry, user, profile);
+        return Objects.hash(id, linger, timeout, expiry, user, profile);
     }
 
     @Override
     public String toString() {
         return "UniqueCode{" +
                 "id='" + id + '\'' +
-                ", code='" + code + '\'' +
                 ", linger=" + linger +
                 ", timeout=" + timeout +
                 ", expiresAt=" + expiry +

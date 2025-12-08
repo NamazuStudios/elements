@@ -82,13 +82,30 @@ public interface UniqueCodeDao {
      *
      * @param code the code to reset the timeout for
      */
-    void resetTimeout(String code, long timeout);
+    default void resetTimeout(final String code) {
+        if (!tryResetTimeout(code)) {
+            throw new UniqueCodeNotFoundException();
+        }
+    }
+
+    /**
+     * Tries to reset the timeout for the specified code, extending its uniqueness period. If the code has been
+     * released, then this will have no effect.
+     *
+     * @param code the code
+     * @return true if the timeout was successfully reset, false otherwise
+     */
+    boolean tryResetTimeout(String code);
 
     /**
      * Releases the specified code, allowing it to be reused after a short linger period.
      * @param code the code
      */
-    void releaseCode(String code);
+    default void releaseCode(final String code) {
+        if (!tryReleaseCode(code)) {
+            throw new UniqueCodeNotFoundException();
+        }
+    }
 
     /**
      * Attempts to release the specified code within the given timeout period. Once released, the code can be reused

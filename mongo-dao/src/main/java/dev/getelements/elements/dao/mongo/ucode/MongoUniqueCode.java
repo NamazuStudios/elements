@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 
 @Entity(value = "unique_codes", useDiscriminator = false)
 @Indexes({
-        @Index(fields = @Field("banned")),
+        @Index(fields = @Field("released")),
         @Index(fields = @Field("expiry"), options = @IndexOptions(expireAfterSeconds = 0))
 })
 public class MongoUniqueCode {
@@ -25,10 +25,10 @@ public class MongoUniqueCode {
     private long timeout;
 
     @Property
-    private boolean banned;
+    private Timestamp expiry;
 
     @Property
-    private Timestamp expiry;
+    private boolean active;
 
     @Property
     private MongoUser user;
@@ -68,12 +68,12 @@ public class MongoUniqueCode {
         this.expiry = expiry;
     }
 
-    public boolean isBanned() {
-        return banned;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setBanned(boolean banned) {
-        this.banned = banned;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public MongoUser getUser() {

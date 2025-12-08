@@ -152,7 +152,21 @@ public class UniqueCodeGenerator {
         }
 
         /**
-         * Rejects the offensive words provided by the OffensiveWordFilter.
+         * Rejects generated codes that contain substrings matching the provided rejection predicate.
+         *
+         * @param rejection the substring rejection predicate
+         * @return this builder
+         */
+        public Builder rejectingSubstrings(final Predicate<String> rejection) {
+            return rejecting(code -> CharSequenceStreams
+                    .allSubSequences(code)
+                    .map(CharSequence::toString)
+                    .anyMatch(rejection)
+            );
+        }
+
+        /**
+         * Rejects the offensive words provided by the {@link OffensiveWordFilter}.
          *
          * @param offensiveWords the offensive word filter
          * @return this builder

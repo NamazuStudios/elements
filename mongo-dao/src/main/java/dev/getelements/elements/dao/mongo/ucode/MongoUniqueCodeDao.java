@@ -4,20 +4,23 @@ import com.mongodb.MongoWriteException;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
+import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.sdk.dao.UniqueCodeDao;
 import dev.getelements.elements.sdk.model.exception.TooBusyException;
 import dev.getelements.elements.sdk.model.ucode.UniqueCode;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.util.OffensiveWordFilter;
 import dev.getelements.elements.sdk.util.UniqueCodeGenerator;
 import dev.morphia.Datastore;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.Query;
 import jakarta.inject.Inject;
 
-import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.Optional;
 
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoUniqueCodeDao implements UniqueCodeDao {
@@ -32,21 +35,10 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
 
     private MongoProfileDao profileDao;
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
-    private static final OffensiveWordFilter OFFENSIVE_WORD_FILTER = new OffensiveWordFilter.Builder()
-            .addDefaultWords()
-            .ignoringCase()
-            .build();
+    private UniqueCodeGenerator uniqueCodeGenerator;
 
     @Override
     public UniqueCode generateCode(final GenerationParameters parameters) {
-
-        final UniqueCodeGenerator generator = new UniqueCodeGenerator.Builder()
-                .withRandom(SECURE_RANDOM)
-                .rejecting(DictionaryWords::isDictionaryWord)
-                .rejectingOffensiveWords(OFFENSIVE_WORD_FILTER)
-                .build();
 
         final var mongoUser = parameters
                 .userOptional()
@@ -59,7 +51,7 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
                 .flatMap(getProfileDao()::findActiveMongoProfile)
                 .orElse(null);
 
-        return generator
+        return getUniqueCodeGenerator()
                 .tryComputeWithUniqueCode(parameters.length(), parameters.maxAttempts(), code -> {
                     final var expiry = new Timestamp(currentTimeMillis() + parameters.timeout());
 
@@ -70,6 +62,7 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
                     mongoUniqueCode.setExpiry(expiry);
                     mongoUniqueCode.setLinger(parameters.linger());
                     mongoUniqueCode.setTimeout(parameters.timeout());
+                    mongoUniqueCode.setActive(true);
 
                     try {
                         getDatastore().insert(mongoUniqueCode);
@@ -86,26 +79,68 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
 
     @Override
     public Optional<UniqueCode> findCode(final String code) {
-        return Optional.empty();
+        return findMongoCode(code)
+                .map(muc -> getMapperRegistry().map(muc, UniqueCode.class));
     }
 
     public Optional<MongoUniqueCode> findMongoCode(final String code) {
-        return Optional.empty();
+        return getActiveCodeQuery(code)
+                .stream()
+                .findFirst();
     }
 
     @Override
-    public void resetTimeout(final String code, final long timeout) {
+    public boolean tryResetTimeout(final String code) {
 
-    }
+        final var query = getActiveCodeQuery(code);
 
-    @Override
-    public void releaseCode(final String code) {
+        return query
+                .stream()
+                .findFirst()
+                .map(mc -> {
+
+                    final var expiry = new Timestamp(currentTimeMillis() + mc.getTimeout());
+                    final var updates = new UpdateBuilder()
+                            .with(set("expiry", expiry))
+                            .execute(query, new UpdateOptions());
+
+                    return updates.getModifiedCount() > 0;
+
+                })
+                .orElse(false);
 
     }
 
     @Override
     public boolean tryReleaseCode(final String code) {
-        return false;
+        
+        final var query = getActiveCodeQuery(code);
+
+        return query
+                .stream()
+                .findFirst()
+                .map(mc -> {
+
+                    final var expiry = new Timestamp(currentTimeMillis() + mc.getLinger());
+                    final var updates = new UpdateBuilder()
+                            .with(set("expiry", expiry))
+                            .with(set("active", false))
+                            .execute(query, new UpdateOptions());
+
+                    return updates.getModifiedCount() > 0;
+
+                })
+                .orElse(false);
+
+    }
+
+    public Query<MongoUniqueCode> getActiveCodeQuery(final String code) {
+        return getDatastore()
+                .find(MongoUniqueCode.class)
+                .filter(
+                        eq("_id", code),
+                        eq("active", true)
+                );
     }
 
     public Datastore getDatastore() {
@@ -151,6 +186,15 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
     @Inject
     public void setProfileDao(MongoProfileDao profileDao) {
         this.profileDao = profileDao;
+    }
+
+    public UniqueCodeGenerator getUniqueCodeGenerator() {
+        return uniqueCodeGenerator;
+    }
+
+    @Inject
+    public void setUniqueCodeGenerator(UniqueCodeGenerator uniqueCodeGenerator) {
+        this.uniqueCodeGenerator = uniqueCodeGenerator;
     }
 
 }

@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.mongo.ucode;
 
+import jakarta.inject.Singleton;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Properties;
@@ -9,14 +11,17 @@ import java.util.Set;
  * Dummy class to hold dictionary words for unique code generation. We exclude all words that are dictionary words
  * to ensure that generated unique codes are strictly codes and not actual words.
  */
+@Singleton
 public class DictionaryWords {
 
     public static final String DICTIONARY_RESOURCE_PATH = "/dictionary_words.properties";
 
-    private static final Set<String> DICTIONARY_WORDS;
+    private final Set<String> words;
 
-    static {
-
+    /**
+     * Creates a new DictionaryWords instance and loads the dictionary words from the resource file.
+     */
+    public DictionaryWords() {
         final var properties = new Properties();
 
         try (var is = DictionaryWords.class.getResourceAsStream(DICTIONARY_RESOURCE_PATH)) {
@@ -25,8 +30,7 @@ public class DictionaryWords {
             throw new UncheckedIOException(ex);
         }
 
-        DICTIONARY_WORDS = properties.stringPropertyNames();
-
+        this.words = properties.stringPropertyNames();
     }
 
     /**
@@ -35,8 +39,8 @@ public class DictionaryWords {
      * @param word the word
      * @return true if the word is a dictionary word, false otherwise
      */
-    public static boolean isDictionaryWord(final String word) {
-        return DICTIONARY_WORDS.contains(word);
+    public boolean isDictionaryWord(final String word) {
+        return words.contains(word);
     }
 
 }
