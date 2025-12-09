@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 
 @Entity(value = "unique_codes", useDiscriminator = false)
 @Indexes({
-        @Index(fields = @Field("released")),
+        @Index(fields = @Field("active")),
         @Index(fields = @Field("expiry"), options = @IndexOptions(expireAfterSeconds = 0))
 })
 public class MongoUniqueCode {

@@ -41,7 +41,7 @@ public interface UniqueCodeDao {
     /**
      * The default maximum number of attempts to generate a unique code before giving up.
      */
-    int DEFAULT_MAX_GENERATION_ATTEMPTS = 1000;
+    int DEFAULT_MAX_GENERATION_ATTEMPTS = 2000;
 
     /**
      * TGenerates a unique code with the default length and timeout.
@@ -188,11 +188,41 @@ public interface UniqueCodeDao {
         }
 
         /**
+         * Creates generation parameters with the specified length and default values for other parameters.
+         *
+         * @param length the length of the code
+         * @return the generation parameters
+         */
+        public static GenerationParameters withLength(final int length) {
+            return new GenerationParameters(0,0,length,0, null, null);
+        }
+
+        /**
+         * Creates generation parameters with the specified length and default values for other parameters.
+         *
+         * @param length the length of the code
+         * @return the generation parameters
+         */
+        public static GenerationParameters withLength(final int length, final User user) {
+            return new GenerationParameters(0,0,length,0, user, null);
+        }
+
+        /**
+         * Creates generation parameters with the specified length and default values for other parameters.
+         *
+         * @param length the length of the code
+         * @return the generation parameters
+         */
+        public static GenerationParameters withLength(final int length, final Profile profile) {
+            return new GenerationParameters(0,0,length,0, null, profile);
+        }
+
+        /**
          * Returns the default generation parameters.
          *
          * @return the default generation parameters
          */
-        static GenerationParameters defaults() {
+        public static GenerationParameters defaults() {
             return new GenerationParameters(0,0,0,0, null, null);
         }
 

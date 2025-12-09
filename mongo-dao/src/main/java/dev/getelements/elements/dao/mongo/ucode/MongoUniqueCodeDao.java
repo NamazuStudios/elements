@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.util.Optional;
 
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.gt;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
 
@@ -113,7 +114,7 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
 
     @Override
     public boolean tryReleaseCode(final String code) {
-        
+
         final var query = getActiveCodeQuery(code);
 
         return query
@@ -135,12 +136,17 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
     }
 
     public Query<MongoUniqueCode> getActiveCodeQuery(final String code) {
+
+        final var now = new Timestamp(currentTimeMillis());
+
         return getDatastore()
                 .find(MongoUniqueCode.class)
                 .filter(
                         eq("_id", code),
+                        gt("expiry", now),
                         eq("active", true)
                 );
+
     }
 
     public Datastore getDatastore() {
