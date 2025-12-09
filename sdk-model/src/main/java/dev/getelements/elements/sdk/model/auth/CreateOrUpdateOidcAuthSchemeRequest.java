@@ -12,6 +12,10 @@ import java.util.Objects;
 public class CreateOrUpdateOidcAuthSchemeRequest {
 
     @NotNull
+    @Schema(description = "The name used when linking the scheme to the user.")
+    private String name;
+
+    @NotNull
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
             "When validating from an external source (e.g. Google or Apple SSO), must match the 'iss' property of the decoded JWT.")
     private String issuer;
@@ -25,6 +29,14 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
 
     @Schema(description = "The JWK format. Defaults to application/json")
     private String mediaType = "application/json";
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getIssuer() {
         return issuer;
@@ -60,15 +72,23 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CreateOrUpdateOidcAuthSchemeRequest that = (CreateOrUpdateOidcAuthSchemeRequest) o;
-        return Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        if (!(o instanceof CreateOrUpdateOidcAuthSchemeRequest that)) return false;
+        return Objects.equals(name, that.name) && Objects.equals(issuer, that.issuer) && Objects.equals(keys, that.keys) && Objects.equals(keysUrl, that.keysUrl) && Objects.equals(mediaType, that.mediaType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(name, issuer, keys, keysUrl, mediaType);
     }
 
+    @Override
+    public String toString() {
+        return "CreateOrUpdateOidcAuthSchemeRequest{" +
+                "name='" + name + '\'' +
+                ", issuer='" + issuer + '\'' +
+                ", keys=" + keys +
+                ", keysUrl='" + keysUrl + '\'' +
+                ", mediaType='" + mediaType + '\'' +
+                '}';
+    }
 }

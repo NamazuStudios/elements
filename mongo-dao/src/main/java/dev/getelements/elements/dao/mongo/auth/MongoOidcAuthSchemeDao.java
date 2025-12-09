@@ -40,6 +40,8 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
 
         final var mongoQuery = getDatastore().find(MongoOidcAuthScheme.class);
 
+        mongoQuery.filter(exists("issuer"));
+
         if (tags != null && !tags.isEmpty()) {
             mongoQuery.filter(in("tags", tags));
         }

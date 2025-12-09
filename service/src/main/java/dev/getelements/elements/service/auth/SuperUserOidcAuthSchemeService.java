@@ -33,6 +33,7 @@ public class SuperUserOidcAuthSchemeService implements OidcAuthSchemeService {
         getValidationHelper().validateModel(authSchemeRequest, ValidationGroups.Create.class);
 
         final var authScheme = new OidcAuthScheme();
+        authScheme.setName(authSchemeRequest.getName());
         authScheme.setKeys(authSchemeRequest.getKeys());
         authScheme.setIssuer(authSchemeRequest.getIssuer());
         authScheme.setKeysUrl(authSchemeRequest.getKeysUrl());
@@ -54,6 +55,7 @@ public class SuperUserOidcAuthSchemeService implements OidcAuthSchemeService {
         getValidationHelper().validateModel(authSchemeRequest, ValidationGroups.Update.class);
 
         final var authScheme = getAuthSchemeDao().getAuthScheme(authSchemeId);
+        authScheme.setName(authSchemeRequest.getName());
         authScheme.setKeys(authSchemeRequest.getKeys());
         authScheme.setIssuer(authSchemeRequest.getIssuer());
         authScheme.setKeysUrl(authSchemeRequest.getKeysUrl());
