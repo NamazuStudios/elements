@@ -26,12 +26,11 @@ public interface FacebookIapReceiptService {
     /**
      * Gets receipts for a given user specifying the offset and the count.
      *
-     * @param user the user
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link FacebookIapReceipt} objects.
      */
-    Pagination<FacebookIapReceipt> getFacebookIapReceipts(User user, int offset, int count);
+    Pagination<FacebookIapReceipt> getFacebookIapReceipts(int offset, int count);
 
     /**
      * Gets the receipt with the id, or throws a {@link NotFoundException} if the
@@ -78,10 +77,10 @@ public interface FacebookIapReceiptService {
 
 
     /**
-     * Gets or creates a {@link RewardIssuance} in the db for each given {@link FacebookIapReceipt}.
+     * Gets or creates {@link RewardIssuance} in the db for the given {@link FacebookIapReceipt}.
      *
-     * @param facebookIapReceipts
-     * @return
+     * @param facebookIapReceipt
+     * @return the reward issuances from the product bundle matching the receipt sku
      */
-    List<RewardIssuance> getOrCreateRewardIssuances(List<FacebookIapReceipt> facebookIapReceipts);
+    List<RewardIssuance> getOrCreateRewardIssuances(FacebookIapReceipt facebookIapReceipt);
 }

@@ -9,10 +9,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.androidpublisher.AndroidPublisher;
 import com.google.api.services.androidpublisher.AndroidPublisherScopes;
 import com.google.api.services.androidpublisher.model.ProductPurchase;
-import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
-import dev.getelements.elements.sdk.dao.GooglePlayIapReceiptDao;
-import dev.getelements.elements.sdk.dao.ItemDao;
-import dev.getelements.elements.sdk.dao.RewardIssuanceDao;
+import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration;
@@ -24,6 +21,7 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
@@ -39,9 +37,8 @@ import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.buildRewardIssuanceTags;
-import static dev.getelements.elements.sdk.model.reward.RewardIssuance.GOOGLE_PLAY_IAP_SOURCE;
+import static dev.getelements.elements.sdk.model.reward.RewardIssuance.*;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
-import static dev.getelements.elements.sdk.model.reward.RewardIssuance.buildGooglePlayIapContextString;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptService {
@@ -52,7 +49,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     private Supplier<Profile> currentProfileSupplier;
 
-    private GooglePlayIapReceiptDao googlePlayIapReceiptDao;
+    private ReceiptDao receiptDao;
 
     private MapperRegistry dozerMapperRegistry;
 
@@ -67,91 +64,44 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     private ApplicationConfigurationDao applicationConfigurationDao;
 
-    public User getUser() {
-        return user;
-    }
-
-    @Inject
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public GooglePlayIapReceiptDao getGooglePlayIapReceiptDao() {
-        return googlePlayIapReceiptDao;
-    }
-
-    @Inject
-    public void setGooglePlayIapReceiptDao(GooglePlayIapReceiptDao googlePlayIapReceiptDao) {
-        this.googlePlayIapReceiptDao = googlePlayIapReceiptDao;
-    }
-
-    public MapperRegistry getDozerMapper() {
-        return dozerMapperRegistry;
-    }
-
-    @Inject
-    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
-        this.dozerMapperRegistry = dozerMapperRegistry;
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
-    }
-
-    public RewardIssuanceDao getRewardIssuanceDao() {
-        return rewardIssuanceDao;
-    }
-
-    @Inject
-    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
-        this.rewardIssuanceDao = rewardIssuanceDao;
-    }
-
-    public ItemDao getItemDao() {
-        return itemDao;
-    }
-
-    @Inject
-    public void setItemDao(ItemDao itemDao) {
-        this.itemDao = itemDao;
-    }
-
-    public ApplicationConfigurationDao getApplicationConfigurationDao() {
-        return applicationConfigurationDao;
-    }
-
-    @Inject
-    public void setApplicationConfigurationDao(ApplicationConfigurationDao applicationConfigurationDao) {
-        this.applicationConfigurationDao = applicationConfigurationDao;
-    }
-
-    public Supplier<Profile> getCurrentProfileSupplier() {
-        return currentProfileSupplier;
-    }
-
-    @Inject
-    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
-        this.currentProfileSupplier = currentProfileSupplier;
-    }
-
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
-        return getGooglePlayIapReceiptDao().getGooglePlayIapReceipts(user, offset, count);
+        final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, GOOGLE_PLAY_IAP_SOURCE);
+        final var googleReceipts = receiptPagination.getObjects().stream().map(this::convertReceipt);
+
+        return Pagination.from(googleReceipts);
     }
 
     @Override
     public GooglePlayIapReceipt getGooglePlayIapReceipt(String orderId) {
-        return getGooglePlayIapReceiptDao().getGooglePlayIapReceipt(orderId);
+        final var receipt = getReceiptDao().getReceipt(GOOGLE_PLAY_IAP_SOURCE, orderId);
+        return convertReceipt(receipt);
     }
 
     @Override
     public GooglePlayIapReceipt getOrCreateGooglePlayIapReceipt(GooglePlayIapReceipt googlePlayIapReceipt) {
-        return getGooglePlayIapReceiptDao().getOrCreateGooglePlayIapReceipt(googlePlayIapReceipt);
+        final var receipt = new Receipt();
+        receipt.setSchema(GOOGLE_PLAY_IAP_SOURCE);
+        receipt.setOriginalTransactionId(googlePlayIapReceipt.getOrderId());
+        receipt.setUser(user);
+        receipt.setPurchaseTime(googlePlayIapReceipt.getPurchaseTimeMillis());
+
+        final String body;
+        try {
+            body = getObjectMapper().writeValueAsString(googlePlayIapReceipt);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        receipt.setBody(body);
+
+        final var createdReceipt = getReceiptDao().createReceipt(receipt);
+
+        return convertReceipt(createdReceipt);
     }
 
     @Override
     public void deleteGooglePlayIapReceipt(String orderId) {
-        getGooglePlayIapReceiptDao().deleteGooglePlayIapReceipt(orderId);
+        getReceiptDao().deleteReceipt(orderId);
     }
 
     @Override
@@ -334,4 +284,78 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         return jsonKeyString;
     }
 
+    private GooglePlayIapReceipt convertReceipt(Receipt receipt) {
+        try {
+            return getObjectMapper().readValue(receipt.getBody(), GooglePlayIapReceipt.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public ReceiptDao getReceiptDao() {
+        return receiptDao;
+    }
+
+    @Inject
+    public void setReceiptDao(ReceiptDao receiptDao) {
+        this.receiptDao = receiptDao;
+    }
+
+    public MapperRegistry getDozerMapper() {
+        return dozerMapperRegistry;
+    }
+
+    @Inject
+    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
+        this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
+    public RewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
+    }
+
+    @Inject
+    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
+    }
+
+    public ItemDao getItemDao() {
+        return itemDao;
+    }
+
+    @Inject
+    public void setItemDao(ItemDao itemDao) {
+        this.itemDao = itemDao;
+    }
+
+    public ApplicationConfigurationDao getApplicationConfigurationDao() {
+        return applicationConfigurationDao;
+    }
+
+    @Inject
+    public void setApplicationConfigurationDao(ApplicationConfigurationDao applicationConfigurationDao) {
+        this.applicationConfigurationDao = applicationConfigurationDao;
+    }
+
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
+    }
+
+    @Inject
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
+    }
 }

@@ -1,16 +1,13 @@
-package dev.getelements.elements.sdk.dao;
+package dev.getelements.elements.sdk.service.receipt;
 
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
-
-@ElementServiceExport
-public interface ReceiptDao {
+public interface ReceiptService {
 
     /**
      * Gets receipts for a given user specifying the offset and the count.
@@ -24,39 +21,30 @@ public interface ReceiptDao {
     Pagination<Receipt> getReceipts(User user, int offset, int count, String search);
 
     /**
-     * Gets receipts for a given user specifying the offset and the count.
-     *
-     * @param user   the user
-     * @param offset the offset
-     * @param count  the count
-     * @return a {@link Pagination} of {@link Receipt} objects.
-     */
-    Pagination<Receipt> getReceipts(User user, int offset, int count);
-
-    /**
-     * Gets the receipt with the matching database id, or throws a {@link NotFoundException} if the
+     * Gets the receipt with the schema and transaction id, or throws a {@link NotFoundException} if the
      * receipt can't be found.
      *
-     * @param id the database id
-     * @return the {@link Receipt} that was requested, never null
-     */
-    Receipt getReceipt(String id);
-
-    /**
-     * Gets the receipt with the matching schema and transaction id, or throws a {@link NotFoundException} if the
-     * receipt can't be found.
-     *
+     * @param schema the schema of the payment processor
      * @param originalTransactionId the original transaction id
      * @return the {@link Receipt} that was requested, never null
      */
-    Receipt getReceipt(String schema, String originalTransactionId);
+    Receipt getReceiptBySchemaAndTransactionId(String schema, String originalTransactionId);
+
+    /**
+     * Gets the receipt with the db id, or throws a {@link NotFoundException} if the
+     * receipt can't be found.
+     *
+     * @param id the db id
+     * @return the {@link Receipt} that was requested, never null
+     */
+    Receipt getReceiptById(String id);
 
     /**
      * Creates a new receipt.
      *
      * @return the {@link Receipt} as it was written into the database
      * @throws InvalidDataException if the state of the passed in Receipt is invalid
-     * @throws DuplicateException   if the passed in Receipt has a schema + id that already exists
+     * @throws DuplicateException   if the passed in Receipt has a scheme + transaction id that already exists
      */
     Receipt createReceipt(Receipt receipt);
 

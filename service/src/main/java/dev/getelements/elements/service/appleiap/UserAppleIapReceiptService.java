@@ -1,12 +1,12 @@
 package dev.getelements.elements.service.appleiap;
 
-import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
-import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
-import dev.getelements.elements.sdk.dao.ItemDao;
-import dev.getelements.elements.sdk.dao.RewardIssuanceDao;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -40,7 +40,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     private Supplier<Profile> currentProfileSupplier;
 
-    private AppleIapReceiptDao appleIapReceiptDao;
+    private ReceiptDao receiptDao;
 
     private Provider<AppleIapVerifyReceiptInvoker.Builder> appleIapVerifyReceiptInvokerBuilderProvider;
 
@@ -52,96 +52,47 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     private ApplicationConfigurationDao applicationConfigurationDao;
 
-    public User getUser() {
-        return user;
-    }
-
-    @Inject
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public AppleIapReceiptDao getAppleIapReceiptDao() {
-        return appleIapReceiptDao;
-    }
-
-    @Inject
-    public void setAppleIapReceiptDao(AppleIapReceiptDao appleIapReceiptDao) {
-        this.appleIapReceiptDao = appleIapReceiptDao;
-    }
-
-    public Provider<AppleIapVerifyReceiptInvoker.Builder> getAppleIapVerifyReceiptInvokerBuilderProvider() {
-        return appleIapVerifyReceiptInvokerBuilderProvider;
-    }
-
-    @Inject
-    public void setAppleIapVerifyReceiptInvokerBuilderProvider(Provider<AppleIapVerifyReceiptInvoker.Builder> appleIapVerifyReceiptInvokerBuilderProvider) {
-        this.appleIapVerifyReceiptInvokerBuilderProvider = appleIapVerifyReceiptInvokerBuilderProvider;
-    }
-
-    public MapperRegistry getDozerMapper() {
-        return dozerMapperRegistry;
-    }
-
-    @Inject
-    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
-        this.dozerMapperRegistry = dozerMapperRegistry;
-    }
-
-    public RewardIssuanceDao getRewardIssuanceDao() {
-        return rewardIssuanceDao;
-    }
-
-    @Inject
-    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
-        this.rewardIssuanceDao = rewardIssuanceDao;
-    }
-
-    public ItemDao getItemDao() {
-        return itemDao;
-    }
-
-    @Inject
-    public void setItemDao(ItemDao itemDao) {
-        this.itemDao = itemDao;
-    }
-
-    public ApplicationConfigurationDao getApplicationConfigurationDao() {
-        return applicationConfigurationDao;
-    }
-
-    @Inject
-    public void setApplicationConfigurationDao(ApplicationConfigurationDao applicationConfigurationDao) {
-        this.applicationConfigurationDao = applicationConfigurationDao;
-    }
-
-    public Supplier<Profile> getCurrentProfileSupplier() {
-        return currentProfileSupplier;
-    }
-
-    @Inject
-    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
-        this.currentProfileSupplier = currentProfileSupplier;
-    }
+    private ObjectMapper objectMapper;
 
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
-        return appleIapReceiptDao.getAppleIapReceipts(user, offset, count);
+        final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, APPLE_IAP_SOURCE);
+        final var appleReceipts = receiptPagination.getObjects().stream().map(this::convertReceipt);
+
+        return Pagination.from(appleReceipts);
     }
 
     @Override
     public AppleIapReceipt getAppleIapReceipt(String originalTransactionId) {
-        return appleIapReceiptDao.getAppleIapReceipt(originalTransactionId);
+        final var receipt = getReceiptDao().getReceipt(APPLE_IAP_SOURCE, originalTransactionId);
+        return convertReceipt(receipt);
     }
 
     @Override
     public AppleIapReceipt getOrCreateAppleIapReceipt(AppleIapReceipt appleIapReceipt) {
-        return appleIapReceiptDao.getOrCreateAppleIapReceipt(appleIapReceipt);
+
+        final var receipt = new Receipt();
+        receipt.setSchema(APPLE_IAP_SOURCE);
+        receipt.setOriginalTransactionId(appleIapReceipt.getOriginalTransactionId());
+        receipt.setUser(user);
+        receipt.setPurchaseTime(appleIapReceipt.getOriginalPurchaseDate().getTime());
+
+        final String body;
+        try {
+            body = getObjectMapper().writeValueAsString(appleIapReceipt);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        receipt.setBody(body);
+
+        final var createdReceipt = getReceiptDao().createReceipt(receipt);
+
+        return convertReceipt(createdReceipt);
     }
 
     @Override
     public void deleteAppleIapReceipt(String originalTransactionId) {
-        appleIapReceiptDao.deleteAppleIapReceipt(originalTransactionId);
+        getReceiptDao().deleteReceipt(originalTransactionId);
     }
 
     @Override
@@ -270,5 +221,95 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         final HashMap<String, Object> map = new HashMap<>();
 
         return map;
+    }
+
+    private AppleIapReceipt convertReceipt(Receipt receipt) {
+        try {
+            return getObjectMapper().readValue(receipt.getBody(), AppleIapReceipt.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public ReceiptDao getReceiptDao() {
+        return receiptDao;
+    }
+
+    @Inject
+    public void setReceiptDao(ReceiptDao receiptDao) {
+        this.receiptDao = receiptDao;
+    }
+
+    public Provider<AppleIapVerifyReceiptInvoker.Builder> getAppleIapVerifyReceiptInvokerBuilderProvider() {
+        return appleIapVerifyReceiptInvokerBuilderProvider;
+    }
+
+    @Inject
+    public void setAppleIapVerifyReceiptInvokerBuilderProvider(Provider<AppleIapVerifyReceiptInvoker.Builder> appleIapVerifyReceiptInvokerBuilderProvider) {
+        this.appleIapVerifyReceiptInvokerBuilderProvider = appleIapVerifyReceiptInvokerBuilderProvider;
+    }
+
+    public MapperRegistry getDozerMapper() {
+        return dozerMapperRegistry;
+    }
+
+    @Inject
+    public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
+        this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public RewardIssuanceDao getRewardIssuanceDao() {
+        return rewardIssuanceDao;
+    }
+
+    @Inject
+    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
+        this.rewardIssuanceDao = rewardIssuanceDao;
+    }
+
+    public ItemDao getItemDao() {
+        return itemDao;
+    }
+
+    @Inject
+    public void setItemDao(ItemDao itemDao) {
+        this.itemDao = itemDao;
+    }
+
+    public ApplicationConfigurationDao getApplicationConfigurationDao() {
+        return applicationConfigurationDao;
+    }
+
+    @Inject
+    public void setApplicationConfigurationDao(ApplicationConfigurationDao applicationConfigurationDao) {
+        this.applicationConfigurationDao = applicationConfigurationDao;
+    }
+
+    public Supplier<Profile> getCurrentProfileSupplier() {
+        return currentProfileSupplier;
+    }
+
+    @Inject
+    public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
+        this.currentProfileSupplier = currentProfileSupplier;
+    }
+
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
+    @Inject
+    public void setObjectMapper(final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 }

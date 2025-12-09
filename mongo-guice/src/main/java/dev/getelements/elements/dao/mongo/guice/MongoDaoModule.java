@@ -30,6 +30,7 @@ import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.receipt.MongoAppleIapReceiptDao;
 import dev.getelements.elements.dao.mongo.receipt.MongoGooglePlayIapReceiptDao;
+import dev.getelements.elements.dao.mongo.receipt.MongoReceiptDao;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
 import dev.getelements.elements.sdk.ElementRegistry;
@@ -84,6 +85,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ProgressDao.class).to(MongoProgressDao.class);
         bind(RewardIssuanceDao.class).to(MongoRewardIssuanceDao.class);
         bind(AppleIapReceiptDao.class).to(MongoAppleIapReceiptDao.class);
+        bind(ReceiptDao.class).to(MongoReceiptDao.class);
         bind(GooglePlayIapReceiptDao.class).to(MongoGooglePlayIapReceiptDao.class);
         bind(FollowerDao.class).to(MongoFollowerDao.class);
         bind(TokensWithExpirationDao.class).to(MongoTokensWithExpirationDao.class);
@@ -166,6 +168,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(SmartContractDao.class);
         expose(VaultDao.class);
         expose(LargeObjectDao.class);
+        expose(ReceiptDao.class);
         expose(ScheduleDao.class);
         expose(ScheduleEventDao.class);
         expose(ScheduleProgressDao.class);

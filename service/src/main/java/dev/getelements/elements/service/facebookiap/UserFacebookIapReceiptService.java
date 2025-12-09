@@ -53,8 +53,8 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     private ObjectMapper objectMapper;
 
     @Override
-    public Pagination<FacebookIapReceipt> getFacebookIapReceipts(User user, int offset, int count) {
-        final var search = "id.scheme=facebook";
+    public Pagination<FacebookIapReceipt> getFacebookIapReceipts(int offset, int count) {
+        final var search = OCULUS_PLATFORM_IAP_SCHEME;
         final var receipts = receiptDao.getReceipts(user, offset, count, search);
         final var fbReceipts = receipts.getObjects().stream().map(this::convertReceipt);
 
@@ -75,7 +75,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
         receipt.setSchema(OCULUS_PLATFORM_IAP_SCHEME);
 
-        return convertReceipt(receiptDao.getOrCreateReceipt(receipt));
+        return convertReceipt(receiptDao.createReceipt(receipt));
     }
 
     @Override
@@ -161,7 +161,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public List<RewardIssuance> getOrCreateRewardIssuances(List<FacebookIapReceipt> facebookIapReceipts) {
+    public List<RewardIssuance> getOrCreateRewardIssuances(FacebookIapReceipt facebookIapReceipt) {
 
         final var resultRewardIssuances = new ArrayList<RewardIssuance>();
         final var profile = getCurrentProfileSupplier().get();
@@ -189,32 +189,27 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
                         FacebookApplicationConfiguration.class);
 
         final var productBundles = facebookApplicationConfiguration.getProductBundles();
+        final var productId = facebookIapReceipt.getSku();
+        final var productBundle = productBundles.stream()
+                .filter(p -> p.getProductId().equals(productId))
+                .findFirst()
+                .orElse(null);
 
-        // for each purchase we received from the ios app...
-        for (final var facebookIapReceipt : facebookIapReceipts) {
+        if (productBundle == null) {
+            throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
+                    "has no ProductBundle for productId " + productId);
+        }
 
-            final var productId = facebookIapReceipt.getSku();
-            final var productBundle = productBundles.stream()
-                    .filter(p -> p.getProductId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
+        // for each reward in the product bundle...
+        for (final var productBundleReward : productBundle.getProductBundleRewards()) {
 
-            if (productBundle == null) {
-                throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
-                        "has no ProductBundle for productId " + productId);
-            }
+            final var resultRewardIssuance = getOrCreateRewardIssuance(
+                    facebookIapReceipt.getPurchaseId(),
+                    productBundleReward.getItemId(),
+                    productBundleReward.getQuantity()
+            );
 
-            // for each reward in the product bundle...
-            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
-
-                final var resultRewardIssuance = getOrCreateRewardIssuance(
-                        facebookIapReceipt.getPurchaseId(),
-                        productBundleReward.getItemId(),
-                        productBundleReward.getQuantity()
-                );
-
-                resultRewardIssuances.add(resultRewardIssuance);
-            }
+            resultRewardIssuances.add(resultRewardIssuance);
         }
 
         return resultRewardIssuances;

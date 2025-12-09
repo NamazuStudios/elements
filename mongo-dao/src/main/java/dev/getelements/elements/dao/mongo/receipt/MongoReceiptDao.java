@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
@@ -18,13 +19,14 @@ import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.morphia.query.filters.Filters.*;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoReceiptDao implements ReceiptDao {
@@ -41,9 +43,22 @@ public class MongoReceiptDao implements ReceiptDao {
 
     @Override
     public Pagination<Receipt> getReceipts(User user, int offset, int count, String search) {
-        final Query<MongoReceipt> query = getDatastore().find(MongoReceipt.class);
 
-        query.filter(Filters.eq("user", getDozerMapper().map(user, MongoUser.class)));
+        final var trimmedQueryString = nullToEmpty(search).trim();
+
+        if (trimmedQueryString.isEmpty()) {
+            throw new InvalidDataException("search must be specified.");
+        }
+
+        final var query = getDatastore().find(MongoReceipt.class);
+
+        query.filter(
+                eq("user", getDozerMapper().map(user, MongoUser.class)),
+                or(
+                        regex("transactionId", Pattern.compile(search)),
+                        regex("scheme", Pattern.compile(search))
+                )
+        );
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
@@ -51,26 +66,68 @@ public class MongoReceiptDao implements ReceiptDao {
     }
 
     @Override
-    public Receipt getReceipt(String schema, String originalTransactionId) {
-        if (isEmpty(nullToEmpty(originalTransactionId).trim())) {
-            throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
+    public Pagination<Receipt> getReceipts(User user, int offset, int count) {
+
+        final var query = getDatastore().find(MongoReceipt.class);
+
+        query.filter(
+                eq("user", getDozerMapper().map(user, MongoUser.class))
+        );
+
+        return getMongoDBUtils().paginationFromQuery(
+                query, offset, count,
+                mongoReceipt -> getDozerMapper().map(mongoReceipt, Receipt.class), new FindOptions());
+    }
+
+    @Override
+    public Receipt getReceipt(String id) {
+        
+        if (isEmpty(nullToEmpty(id).trim()) || !ObjectId.isValid(id)) {
+            throw new NotFoundException("Unable to find receipt with an id of " + id);
         }
 
         final Query<MongoReceipt> receiptQuery = getDatastore().find(MongoReceipt.class);
 
-        receiptQuery.filter(Filters.eq("_id", originalTransactionId));
+        receiptQuery.filter(
+                        eq("id", new ObjectId(id))
+        );
 
         final MongoReceipt mongoReceipt = receiptQuery.first();
 
         if(null == mongoReceipt) {
-            throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
+            throw new NotFoundException("Unable to find receipt with an id of " + id);
         }
 
         return getDozerMapper().map(mongoReceipt, Receipt.class);
     }
 
     @Override
-    public Receipt getOrCreateReceipt(Receipt receipt) {
+    public Receipt getReceipt(String schema, String originalTransactionId) {
+        if (isEmpty(nullToEmpty(originalTransactionId).trim())) {
+            throw new NotFoundException("Unable to find receipt with an id of " + originalTransactionId);
+        }
+
+        final Query<MongoReceipt> receiptQuery = getDatastore().find(MongoReceipt.class);
+
+        receiptQuery.filter(
+                and(
+                        eq("transactionId", originalTransactionId),
+                        eq("scheme", schema)
+                )
+
+        );
+
+        final MongoReceipt mongoReceipt = receiptQuery.first();
+
+        if(null == mongoReceipt) {
+            throw new NotFoundException("Unable to find receipt with an id of " + originalTransactionId);
+        }
+
+        return getDozerMapper().map(mongoReceipt, Receipt.class);
+    }
+
+    @Override
+    public Receipt createReceipt(Receipt receipt) {
         getValidationHelper().validateModel(receipt, ValidationGroups.Insert.class);
 
         try {
@@ -91,7 +148,7 @@ public class MongoReceiptDao implements ReceiptDao {
 
         final Query<MongoReceipt> receiptQuery = getDatastore().find(MongoReceipt.class);
 
-        receiptQuery.filter(Filters.eq("_id", receipt.getOriginalTransactionId()));
+        receiptQuery.filter(eq("_id", receipt.getOriginalTransactionId()));
 
         return getDozerMapper().map(receiptQuery.first(), Receipt.class);
     }
@@ -107,7 +164,7 @@ public class MongoReceiptDao implements ReceiptDao {
 
         final var objectId = new ObjectId(id);
 
-        receiptQuery.filter(Filters.eq("_id", objectId));
+        receiptQuery.filter(eq("_id", objectId));
 
         final DeleteResult deleteResult = getDatastore().delete(Objects.requireNonNull(receiptQuery.first()));
 

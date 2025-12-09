@@ -32,7 +32,7 @@ public interface GooglePlayIapReceiptService {
      * Gets the receipt with the id, or throws a {@link NotFoundException} if the
      * receipt can't be found.
      *
-     * @param orderId the original apple transaction id
+     * @param orderId the original Google play order id.
      * @return the {@link GooglePlayIapReceipt} that was requested, never null
      */
     GooglePlayIapReceipt getGooglePlayIapReceipt(String orderId);
