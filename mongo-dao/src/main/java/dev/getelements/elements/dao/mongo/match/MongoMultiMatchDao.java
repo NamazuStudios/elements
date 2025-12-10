@@ -398,13 +398,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
+        final var result = getMapperRegistry().map(updated, MultiMatch.class);
+
         getEventPublisher().accept(Event.builder()
-                .argument(updated)
+                .argument(result)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
         );
 
-        return getMapperRegistry().map(updated, MultiMatch.class);
+        return result;
 
     }
 
@@ -437,13 +439,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
+        final var result = getMapperRegistry().map(updated, MultiMatch.class);
+
         getEventPublisher().accept(Event.builder()
-                .argument(updated)
+                .argument(result)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
         );
 
-        return getMapperRegistry().map(updated, MultiMatch.class);
+        return result;
 
     }
 
@@ -483,8 +487,10 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
+        final var result = getMapperRegistry().map(updated, MultiMatch.class);
+
         getEventPublisher().accept(Event.builder()
-                .argument(updated)
+                .argument(result)
                 .named(MULTI_MATCH_EXPIRED)
                 .build()
         );
@@ -547,8 +553,10 @@ public class MongoMultiMatchDao implements MultiMatchDao {
             throw new InvalidMultiMatchPhaseException(existing.getStatus(), CLOSED);
         }
 
+        final var result = getMapperRegistry().map(updated, MultiMatch.class);
+
         getEventPublisher().accept(Event.builder()
-                .argument(updated)
+                .argument(result)
                 .named(MULTI_MATCH_UPDATED)
                 .build()
         );
