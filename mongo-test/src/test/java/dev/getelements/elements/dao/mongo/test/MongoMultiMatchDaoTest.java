@@ -524,7 +524,7 @@ public class MongoMultiMatchDaoTest {
             dataProvider = "allJoinCodes"
     )
     public void testFindMultiMatchByJoinCode(final UniqueCode joinCode) {
-        final var actual = multiMatchDao.findMultiMatch(joinCode.getId()).get();
+        final var actual = multiMatchDao.findMultiMatchByJoinCode(joinCode.getId()).get();
         assertEquals(actual.getJoinCode().getId(), joinCode.getId(), "Match not found: " + joinCode.getId());
     }
 
