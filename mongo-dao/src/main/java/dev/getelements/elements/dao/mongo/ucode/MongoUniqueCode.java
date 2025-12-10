@@ -8,7 +8,7 @@ import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
 
-@Entity(value = "unique_codes", useDiscriminator = false)
+@Entity(value = "unique_code")
 @Indexes({
         @Index(fields = @Field("active")),
         @Index(fields = @Field("expiry"), options = @IndexOptions(expireAfterSeconds = 0))
