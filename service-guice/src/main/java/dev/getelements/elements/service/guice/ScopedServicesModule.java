@@ -2,18 +2,12 @@ package dev.getelements.elements.service.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scope;
-
-import dev.getelements.elements.sdk.service.auth.*;
-import dev.getelements.elements.sdk.service.application.*;
-import dev.getelements.elements.sdk.service.blockchain.*;
-import dev.getelements.elements.sdk.service.codegen.CodegenService;
-import dev.getelements.elements.sdk.service.inventory.*;
-import dev.getelements.elements.sdk.service.invite.InviteService;
-import dev.getelements.elements.sdk.service.match.MultiMatchService;
-import dev.getelements.elements.sdk.service.metadata.MetadataService;
-import dev.getelements.elements.sdk.service.user.*;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
+import dev.getelements.elements.sdk.service.application.*;
+import dev.getelements.elements.sdk.service.auth.*;
+import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
+import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.firebase.FCMRegistrationService;
 import dev.getelements.elements.sdk.service.follower.FollowerService;
 import dev.getelements.elements.sdk.service.friend.FriendService;
@@ -21,11 +15,17 @@ import dev.getelements.elements.sdk.service.goods.ItemService;
 import dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService;
 import dev.getelements.elements.sdk.service.health.HealthStatusService;
 import dev.getelements.elements.sdk.service.index.IndexService;
+import dev.getelements.elements.sdk.service.inventory.AdvancedInventoryItemService;
+import dev.getelements.elements.sdk.service.inventory.DistinctInventoryItemService;
+import dev.getelements.elements.sdk.service.inventory.SimpleInventoryItemService;
+import dev.getelements.elements.sdk.service.invite.InviteService;
 import dev.getelements.elements.sdk.service.largeobject.LargeObjectService;
 import dev.getelements.elements.sdk.service.leaderboard.LeaderboardService;
 import dev.getelements.elements.sdk.service.leaderboard.RankService;
 import dev.getelements.elements.sdk.service.leaderboard.ScoreService;
 import dev.getelements.elements.sdk.service.match.MatchService;
+import dev.getelements.elements.sdk.service.match.MultiMatchService;
+import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleProgressService;
@@ -36,8 +36,7 @@ import dev.getelements.elements.sdk.service.progress.ProgressService;
 import dev.getelements.elements.sdk.service.rewardissuance.RewardIssuanceService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
 import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
-import dev.getelements.elements.sdk.service.auth.UsernamePasswordAuthService;
-
+import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
 import dev.getelements.elements.service.application.*;
@@ -412,9 +411,6 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonUsernamePasswordAuthService.class);
 
-        bind(UserUidService.class)
-                .annotatedWith(named(ANONYMOUS))
-                .to(AnonUserUidService.class);
     }
 
     private void bindUser() {
@@ -518,10 +514,6 @@ public class ScopedServicesModule extends AbstractModule {
         bind(UsernamePasswordAuthService.class)
                 .annotatedWith(named(USER))
                 .to(UserUsernamePasswordAuthService.class);
-
-        bind(UserUidService.class)
-                .annotatedWith(named(USER))
-                .to(UserUserUidService.class);
 
         bind(VaultService.class)
                 .annotatedWith(named(USER))
