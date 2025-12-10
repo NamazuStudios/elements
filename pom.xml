@@ -1251,7 +1251,7 @@
                 <version>${surefire.version}</version>
                 <configuration>
                     <additionalClasspathElements>
-                        <additionalClasspathElement>${project.basedir}/src/test/resources</additionalClasspathElement>
+                        <additionalClasspathElement>${maven.multiModuleProjectDirectory}/logback-test</additionalClasspathElement>
                     </additionalClasspathElements>
                 </configuration>
             </plugin>
