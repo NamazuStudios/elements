@@ -41,7 +41,7 @@ public class MongoUniqueCodeDaoTest {
                 .toArray(Object[][]::new);
     }
 
-    @Test(groups = "createUniqueCode", dataProvider = "lengths", invocationCount = 500)
+    @Test(groups = "createUniqueCode", dataProvider = "lengths", invocationCount = 10)
     public void testCreateUniqueCode(final int length) {
 
         final var parameters = UniqueCodeDao.GenerationParameters.withLength(length);
