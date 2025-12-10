@@ -145,7 +145,7 @@
         <lucene.version>7.2.0</lucene.version>
         <testng.version>7.10.2</testng.version>
         <test.groups>unit</test.groups>
-        <surefire.version>3.0.0-M5</surefire.version>
+        <surefire.version>3.5.4</surefire.version>
         <jackson.version>2.18.2</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.12</reflections.version>
@@ -1242,6 +1242,17 @@
                 <version>2.16.0</version>
                 <configuration>
                     <generateBackupPoms>false</generateBackupPoms>
+                </configuration>
+            </plugin>
+            <!-- Surefire Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.basedir}/src/test/resources</additionalClasspathElement>
+                    </additionalClasspathElements>
                 </configuration>
             </plugin>
             <!-- Enforcer Plugin -->

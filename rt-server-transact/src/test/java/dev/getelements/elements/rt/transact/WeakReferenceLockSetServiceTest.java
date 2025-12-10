@@ -103,7 +103,7 @@ public class WeakReferenceLockSetServiceTest {
 
         try (final var monitor = monitorResolver.apply(paths)) {
             final long now = System.nanoTime();
-            logger.trace("Entered scope in {} ns", then - now);
+            logger.debug("Entered scope in {} ns", then - now);
             simulateIoWorkload();
         }
 
@@ -144,7 +144,7 @@ public class WeakReferenceLockSetServiceTest {
 
         try (final var monitor = monitorResolver.apply(resourceIds)) {
             final long now = System.nanoTime();
-            logger.info("Entered scope in {} ns", then - now);
+            logger.debug("Entered scope in {} ns", then - now);
             simulateIoWorkload();
         }
 
@@ -156,7 +156,7 @@ public class WeakReferenceLockSetServiceTest {
                 .mapToObj(fileSize -> {
 
                     final var file = temporaryFiles.createTempFile();
-                    logger.trace("Writing temporary file {}", file);
+                    logger.debug("Writing temporary file {}", file);
 
                     try (final var fc = FileChannel.open(file, WRITE)) {
 
@@ -178,7 +178,7 @@ public class WeakReferenceLockSetServiceTest {
                 })
                 .forEach(file -> {
                     try {
-                        logger.trace("Deleting temporary file {}", file);
+                        logger.debug("Deleting temporary file {}", file);
                         Files.delete(file);
                     } catch (IOException ex) {
                         throw new UncheckedIOException(ex);
