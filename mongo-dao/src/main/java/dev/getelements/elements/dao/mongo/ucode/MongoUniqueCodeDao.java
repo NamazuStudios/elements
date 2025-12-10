@@ -40,6 +40,10 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
 
     @Override
     public UniqueCode generateCode(final GenerationParameters parameters) {
+        return getMapperRegistry().map(generateMongoCode(parameters), UniqueCode.class);
+    }
+
+    public MongoUniqueCode generateMongoCode(final GenerationParameters parameters) {
 
         final var mongoUser = parameters
                 .userOptional()
@@ -73,7 +77,6 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
                     }
 
                 })
-                .map(muc -> getMapperRegistry().map(muc, UniqueCode.class))
                 .orElseThrow(TooBusyException::new);
 
     }

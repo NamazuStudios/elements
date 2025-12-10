@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.match;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
+import dev.getelements.elements.dao.mongo.ucode.MongoUniqueCode;
 import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.morphia.annotations.*;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +20,10 @@ public class MongoMultiMatch {
 
     @Id
     private ObjectId id;
+
+    @Indexed
+    @Property
+    private MongoUniqueCode joinCode;
 
     @NotNull
     @Property
@@ -51,6 +56,14 @@ public class MongoMultiMatch {
 
     public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public MongoUniqueCode getJoinCode() {
+        return joinCode;
+    }
+
+    public void setJoinCode(MongoUniqueCode joinCode) {
+        this.joinCode = joinCode;
     }
 
     public MultiMatchStatus getStatus() {

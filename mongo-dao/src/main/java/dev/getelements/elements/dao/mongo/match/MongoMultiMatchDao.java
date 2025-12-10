@@ -8,9 +8,12 @@ import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.dao.mongo.ucode.MongoUniqueCodeDao;
 import dev.getelements.elements.rt.exception.DuplicateProfileException;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
+import dev.getelements.elements.sdk.dao.UniqueCodeDao;
+import dev.getelements.elements.sdk.dao.UniqueCodeDao.GenerationParameters;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
@@ -69,6 +72,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     private Consumer<Event> eventPublisher;
 
+    private MongoUniqueCodeDao mongoUniqueCodeDao;
+
     @Override
     public List<MultiMatch> getAllMultiMatches(final String search) {
 
@@ -123,6 +128,19 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     public Optional<MultiMatch> findMultiMatch(final String multiMatchId) {
         return findMongoMultiMatch(multiMatchId)
                 .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class));
+    }
+
+    @Override
+    public Optional<MultiMatch> findMultiMatchByJoinCode(final String joinCode) {
+        return getMongoUniqueCodeDao()
+                .findMongoCode(joinCode)
+                .flatMap(uniqueCode -> getDatastore()
+                        .find(MongoMultiMatch.class)
+                        .filter(eq("joinCode", uniqueCode))
+                        .stream()
+                        .findFirst()
+                )
+                .map(mongoMultiMatch -> getMapperRegistry().map(mongoMultiMatch, MultiMatch.class));
     }
 
     public Optional<MongoMultiMatch> findMongoMultiMatch(final String multiMatchId) {
@@ -329,6 +347,43 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         );
 
         return result;
+
+    }
+
+    @Override
+    public MultiMatch createMultiMatch(final MultiMatch multiMatch,
+                                       final GenerationParameters joinCodeGenerationParameters) {
+
+        requireNonNull(multiMatch, "multiMatch");
+        getValidationHelper().validateModel(multiMatch, ValidationGroups.Insert.class);
+
+        final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
+
+        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
+                mongoMatchmakingApplicationConfiguration.getTimeoutSeconds(),
+                SECONDS
+        ));
+
+        final var uniqueCode = getMongoUniqueCodeDao().generateMongoCode(joinCodeGenerationParameters);
+        final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
+        mongoMultiMatch.setExpiry(expiry);
+        mongoMultiMatch.setCreated(new Timestamp(currentTimeMillis()));
+        mongoMultiMatch.setConfiguration(mongoMatchmakingApplicationConfiguration);
+        mongoMultiMatch.setApplication(mongoMatchmakingApplicationConfiguration.getParent());
+        mongoMultiMatch.setJoinCode(uniqueCode);
+
+        final var inserted = getDatastore().save(mongoMultiMatch);
+
+        final var result =  getMapperRegistry().map(inserted, MultiMatch.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(result)
+                .named(MULTI_MATCH_CREATED)
+                .build()
+        );
+
+        return result;
+
     }
 
     @Override
@@ -706,6 +761,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     @Inject
     public void setEventPublisher(Consumer<Event> eventPublisher) {
         this.eventPublisher = eventPublisher;
+    }
+
+    public MongoUniqueCodeDao getMongoUniqueCodeDao() {
+        return mongoUniqueCodeDao;
+    }
+
+    @Inject
+    public void setMongoUniqueCodeDao(MongoUniqueCodeDao mongoUniqueCodeDao) {
+        this.mongoUniqueCodeDao = mongoUniqueCodeDao;
     }
 
 }
