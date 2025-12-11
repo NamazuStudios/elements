@@ -617,7 +617,7 @@ public class MongoMultiMatchDaoTest {
     )
     public void checkDeletedMultiMatches() {
 
-        assertEquals(deletedMatches.size(), TEST_MATCH_COUNT, "Expected all of the matches to be deleted.");
+        assertEquals(deletedMatches.size(), TEST_MATCH_COUNT * 2, "Expected all of the matches to be deleted.");
 
         for (final var match : matches) {
             assertTrue(deletedMatches
