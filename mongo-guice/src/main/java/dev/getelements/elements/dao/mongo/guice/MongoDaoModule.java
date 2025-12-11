@@ -30,15 +30,21 @@ import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.dao.mongo.ucode.MongoUniqueCodeDao;
+import dev.getelements.elements.dao.mongo.ucode.OffensiveWordFilterProvider;
+import dev.getelements.elements.dao.mongo.ucode.UniqueCodeGeneratorProvider;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.index.IndexableType;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import dev.getelements.elements.sdk.util.OffensiveWordFilter;
+import dev.getelements.elements.sdk.util.UniqueCodeGenerator;
 import dev.morphia.Datastore;
 
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.function.Consumer;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
@@ -102,10 +108,23 @@ public class MongoDaoModule extends PrivateModule {
         bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
         bind(ScheduleProgressDao.class).to(MongoScheduleProgressDao.class);
         bind(Matchmaker.class).to(MongoFIFOMatchmaker.class);
+        bind(UniqueCodeDao.class).to(MongoUniqueCodeDao.class);
+
+        bind(SecureRandom.class)
+                .toProvider(SecureRandom::new)
+                .asEagerSingleton();
+
+        bind(UniqueCodeGenerator.class)
+                .toProvider(UniqueCodeGeneratorProvider.class)
+                .asEagerSingleton();
 
         bind(MessageDigest.class)
                 .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
+
+        bind(OffensiveWordFilter.class)
+                .toProvider(OffensiveWordFilterProvider.class)
+                .asEagerSingleton();
 
         bind(BooleanQueryParser.class)
                 .to(SidhantAggarwalBooleanQueryParser.class);
@@ -167,6 +186,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ScheduleDao.class);
         expose(ScheduleEventDao.class);
         expose(ScheduleProgressDao.class);
+        expose(UniqueCodeDao.class);
 
     }
 

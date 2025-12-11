@@ -4,6 +4,7 @@ import dev.getelements.elements.rt.exception.DuplicateProfileException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;
+import dev.getelements.elements.sdk.dao.UniqueCodeDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
@@ -12,6 +13,7 @@ import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.match.MultiMatch;
 import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.ucode.UniqueCode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.bson.types.ObjectId;
@@ -67,12 +69,21 @@ public class MongoMultiMatchDaoTest {
 
     private final List<MultiMatch> expiredMatches = new CopyOnWriteArrayList<>();
 
+    private final List<UniqueCode> joinCodes = new CopyOnWriteArrayList<>();
+
     private final Map<String, Set<Profile>> profilesByMatch = new ConcurrentHashMap<>();
 
     @DataProvider
     public Object[][] allMatches() {
         return matches.stream()
                 .map(m -> new Object[]{m})
+                .toArray(Object[][]::new);
+    }
+
+    @DataProvider
+    public Object[][] allJoinCodes() {
+        return joinCodes.stream()
+                .map(c -> new Object[]{c})
                 .toArray(Object[][]::new);
     }
 
@@ -164,7 +175,13 @@ public class MongoMultiMatchDaoTest {
     }
 
     private void onCreate(final MultiMatch match) {
+
         matches.add(match);
+
+        if (match.getJoinCode() != null) {
+            joinCodes.add(match.getJoinCode());
+        }
+
     }
 
     private void onUpdate(final MultiMatch match) {
@@ -242,16 +259,34 @@ public class MongoMultiMatchDaoTest {
         assertEquals(result.getStatus(), match.getStatus());
         assertEquals(result.getMetadata(), match.getMetadata());
         assertEquals(result.getConfiguration(), match.getConfiguration());
+        assertNull(result.getJoinCode());
+
+    }
+
+    @Test(groups = "createMultiMatch", threadPoolSize = 10, invocationCount = TEST_MATCH_COUNT)
+    public void testCreateMultiMatchWithJoinCode() {
+
+        final var match = new MultiMatch();
+        match.setStatus(OPEN);
+        match.setConfiguration(applicationConfiguration);
+
+        final var generationParameters = UniqueCodeDao.GenerationParameters.defaults();
+        final var result = multiMatchDao.createMultiMatch(match, generationParameters);
+        assertNotNull(result.getId());
+        assertEquals(result.getStatus(), match.getStatus());
+        assertEquals(result.getMetadata(), match.getMetadata());
+        assertEquals(result.getConfiguration(), match.getConfiguration());
+        assertNotNull(result.getJoinCode());
 
     }
 
     @Test(groups = "createMultiMatch",
-          dependsOnMethods = "testCreateMultiMatch")
-    public void testAlLCreatedProperly() {
+          dependsOnMethods = {"testCreateMultiMatch", "testCreateMultiMatchWithJoinCode"})
+    public void testAllCreatedProperly() {
         assertEquals(
                 matches.size(),
-                TEST_MATCH_COUNT,
-                "Expected " + TEST_MATCH_COUNT + " matches to be created."
+                TEST_MATCH_COUNT * 2,
+                "Expected " + TEST_MATCH_COUNT * 2 + " matches to be created."
         );
     }
 
@@ -485,6 +520,28 @@ public class MongoMultiMatchDaoTest {
     @Test(
             threadPoolSize = 10,
             groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch",
+            dataProvider = "allJoinCodes"
+    )
+    public void testFindMultiMatchByJoinCode(final UniqueCode joinCode) {
+        final var actual = multiMatchDao.findMultiMatchByJoinCode(joinCode.getId()).get();
+        assertEquals(actual.getJoinCode().getId(), joinCode.getId(), "Match not found: " + joinCode.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
+            dependsOnGroups = "updateMultiMatch",
+            dataProvider = "allJoinCodes"
+    )
+    public void testGetMultiMatchByJoinCode(final UniqueCode joinCode) {
+        final var actual = multiMatchDao.getMultiMatchByJoinCode(joinCode.getId());
+        assertEquals(actual.getJoinCode().getId(), joinCode.getId(), "Match not found: " + joinCode.getId());
+    }
+
+    @Test(
+            threadPoolSize = 10,
+            groups = "getMultiMatches",
             dependsOnGroups = "updateMultiMatch"
     )
     public void testGetAllMultiMatches() {
@@ -560,7 +617,7 @@ public class MongoMultiMatchDaoTest {
     )
     public void checkDeletedMultiMatches() {
 
-        assertEquals(deletedMatches.size(), TEST_MATCH_COUNT, "Expected all of the matches to be deleted.");
+        assertEquals(deletedMatches.size(), TEST_MATCH_COUNT * 2, "Expected all of the matches to be deleted.");
 
         for (final var match : matches) {
             assertTrue(deletedMatches

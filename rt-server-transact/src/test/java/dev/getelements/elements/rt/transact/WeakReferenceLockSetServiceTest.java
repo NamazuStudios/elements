@@ -144,7 +144,7 @@ public class WeakReferenceLockSetServiceTest {
 
         try (final var monitor = monitorResolver.apply(resourceIds)) {
             final long now = System.nanoTime();
-            logger.info("Entered scope in {} ns", then - now);
+            logger.trace("Entered scope in {} ns", then - now);
             simulateIoWorkload();
         }
 
