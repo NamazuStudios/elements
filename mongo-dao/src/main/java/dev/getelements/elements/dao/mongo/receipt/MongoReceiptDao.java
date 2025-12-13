@@ -52,11 +52,14 @@ public class MongoReceiptDao implements ReceiptDao {
 
         final var query = getDatastore().find(MongoReceipt.class);
 
+        if(user != null) {
+            query.filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
+        }
+
         query.filter(
-                eq("user", getDozerMapper().map(user, MongoUser.class)),
                 or(
-                        regex("transactionId", Pattern.compile(search)),
-                        regex("scheme", Pattern.compile(search))
+                        regex("originalTransactionId", Pattern.compile(search)),
+                        regex("schema", Pattern.compile(search))
                 )
         );
 
@@ -70,9 +73,9 @@ public class MongoReceiptDao implements ReceiptDao {
 
         final var query = getDatastore().find(MongoReceipt.class);
 
-        query.filter(
-                eq("user", getDozerMapper().map(user, MongoUser.class))
-        );
+        if(user != null) {
+            query.filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
+        }
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
@@ -111,8 +114,8 @@ public class MongoReceiptDao implements ReceiptDao {
 
         receiptQuery.filter(
                 and(
-                        eq("transactionId", originalTransactionId),
-                        eq("scheme", schema)
+                        eq("originalTransactionId", originalTransactionId),
+                        eq("schema", schema)
                 )
 
         );
@@ -128,29 +131,25 @@ public class MongoReceiptDao implements ReceiptDao {
 
     @Override
     public Receipt createReceipt(Receipt receipt) {
+
         getValidationHelper().validateModel(receipt, ValidationGroups.Insert.class);
 
         try {
-            return getReceipt(receipt.getSchema(), receipt.getOriginalTransactionId());
+            final var checkById = receipt.getId() != null && ObjectId.isValid(receipt.getId());
+            return checkById ? getReceipt(receipt.getId()) : getReceipt(receipt.getSchema(), receipt.getOriginalTransactionId());
         }
         catch (NotFoundException e) {
             // do nothing
         }
 
-        final MongoReceipt mongoReceipt =
-                getDozerMapper().map(receipt, MongoReceipt.class);
+        final var mongoReceipt = getDozerMapper().map(receipt, MongoReceipt.class);
 
         try {
-            getDatastore().insert(mongoReceipt);
+            final var result = getDatastore().save(mongoReceipt);
+            return getDozerMapper().map(result, Receipt.class);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }
-
-        final Query<MongoReceipt> receiptQuery = getDatastore().find(MongoReceipt.class);
-
-        receiptQuery.filter(eq("_id", receipt.getOriginalTransactionId()));
-
-        return getDozerMapper().map(receiptQuery.first(), Receipt.class);
     }
 
     @Override

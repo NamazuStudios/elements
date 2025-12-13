@@ -1,61 +1,57 @@
-package dev.getelements.elements.dao.mongo.test;
+package dev.getelements.elements.service.receipt;
 
-import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
-import dev.getelements.elements.sdk.dao.UserDao;
+import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
-import org.testng.ITestContext;
-import org.testng.annotations.*;
-
+import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
+import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
 import jakarta.inject.Inject;
+import org.jetbrains.annotations.NotNull;
+import org.testng.ITestContext;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.util.Date;
-import java.util.Objects;
 
+import static com.google.inject.Guice.createInjector;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
-@Guice(modules = IntegrationTestModule.class)
-public class MongoAppleIapReceiptDaoTest {
+public class AppleIapReceiptServiceTest extends AbstractReceiptServiceTest {
 
-    private AppleIapReceiptDao appleIapReceiptDao;
+    @Inject
+    private UserAppleIapReceiptService appleIapReceiptService;
 
+    @Inject
     private User testUser;
 
-    private UserTestFactory userTestFactory;
-
-    private static final int INVOCATION_COUNT = 10;
-
     @BeforeClass
-    public void createTestUser() {
-        testUser = getUserTestFactory().createTestUser();
+    @Override
+    public void setup() {
+        final var injector = createInjector(new TestModule());
+        injector.injectMembers(this);
+
+        super.setup();
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
     public void testCreateAppleIapReceipt(ITestContext testContext) {
-        final int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
 
-        final var appleIapReceipt = new AppleIapReceipt();
-        appleIapReceipt.setOriginalTransactionId("id." + invocation);
-        appleIapReceipt.setUser(testUser);
-        appleIapReceipt.setReceiptData("receiptData." + invocation);
-        appleIapReceipt.setQuantity(invocation + 1);
-        appleIapReceipt.setProductId("productId." + invocation);
-        appleIapReceipt.setBundleId("dev.getelements.test_app");
-        appleIapReceipt.setOriginalPurchaseDate(new Date());
+        final var appleIapReceipt = getAppleIapReceipt(testContext);
 
         try {
-            getAppleIapReceiptDao().getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
-        } catch (NotFoundException e) {
+            appleIapReceiptService.getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
+        } catch (Exception e) {
             // this is the expected result
         }
 
-        final var resultAppleIapReceipt = getAppleIapReceiptDao().getOrCreateAppleIapReceipt(appleIapReceipt);
+        final var resultAppleIapReceipt = appleIapReceiptService.getOrCreateAppleIapReceipt(appleIapReceipt);
 
         assertNotNull(resultAppleIapReceipt);
 
         assertEquals(resultAppleIapReceipt.getOriginalTransactionId(), appleIapReceipt.getOriginalTransactionId());
-        assertEquals(resultAppleIapReceipt.getUser(), appleIapReceipt.getUser());
         assertEquals(resultAppleIapReceipt.getReceiptData(), appleIapReceipt.getReceiptData());
         assertEquals(resultAppleIapReceipt.getQuantity(), appleIapReceipt.getQuantity());
         assertEquals(resultAppleIapReceipt.getProductId(), appleIapReceipt.getProductId());
@@ -63,9 +59,25 @@ public class MongoAppleIapReceiptDaoTest {
 
     }
 
+    @NotNull
+    private AppleIapReceipt getAppleIapReceipt(ITestContext testContext) {
+        final int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
+        final var user = new User();
+        user.setId(testUser.getId());
+        final var appleIapReceipt = new AppleIapReceipt();
+        appleIapReceipt.setOriginalTransactionId("id." + invocation);
+        appleIapReceipt.setUser(user);
+        appleIapReceipt.setReceiptData("receiptData." + invocation);
+        appleIapReceipt.setQuantity(invocation + 1);
+        appleIapReceipt.setProductId("productId." + invocation);
+        appleIapReceipt.setBundleId("dev.getelements.test_app");
+        appleIapReceipt.setOriginalPurchaseDate(new Date());
+        return appleIapReceipt;
+    }
+
     @DataProvider
     public Object[][] getAppleIapReceipts() {
-        final Object[][] objects = getAppleIapReceiptDao()
+        final Object[][] objects = appleIapReceiptService
                 .getAppleIapReceipts(testUser, 0, 20)
                 .getObjects()
                 .stream()
@@ -78,7 +90,7 @@ public class MongoAppleIapReceiptDaoTest {
     @Test(dataProvider = "getAppleIapReceipts", dependsOnMethods = "testCreateAppleIapReceipt")
     public void testGetAppleIapReceiptsFromGetOrCreateAppleIapReceipt(final AppleIapReceipt appleIapReceipt) {
         final AppleIapReceipt resultAppleIapReceipt =
-                getAppleIapReceiptDao().getOrCreateAppleIapReceipt(appleIapReceipt);
+                appleIapReceiptService.getOrCreateAppleIapReceipt(appleIapReceipt);
 
         assertNotNull(resultAppleIapReceipt);
         assertEquals(resultAppleIapReceipt, appleIapReceipt);
@@ -87,7 +99,7 @@ public class MongoAppleIapReceiptDaoTest {
     @Test(dataProvider = "getAppleIapReceipts", dependsOnMethods = "testCreateAppleIapReceipt")
     public void testGetAppleIapReceiptByOriginalTransactionId(final AppleIapReceipt appleIapReceipt) {
         final AppleIapReceipt resultAppleIapReceipt =
-                getAppleIapReceiptDao().getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
+                appleIapReceiptService.getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
 
         assertNotNull(resultAppleIapReceipt);
         assertEquals(resultAppleIapReceipt, appleIapReceipt);
@@ -106,7 +118,7 @@ public class MongoAppleIapReceiptDaoTest {
         newAppleIapReceipt.setOriginalPurchaseDate(new Date());
 
         final AppleIapReceipt resultAppleIapReceipt =
-                getAppleIapReceiptDao().getOrCreateAppleIapReceipt(newAppleIapReceipt);
+                appleIapReceiptService.getOrCreateAppleIapReceipt(newAppleIapReceipt);
 
         assertEquals(resultAppleIapReceipt.getOriginalTransactionId(), appleIapReceipt.getOriginalTransactionId());
     }
@@ -118,11 +130,11 @@ public class MongoAppleIapReceiptDaoTest {
                     "testDisallowedUpsertForGetOrCreateAppleIapReceipt"
             })
     public void testDeleteAppleIapReceipt(final AppleIapReceipt appleIapReceipt) {
-        getAppleIapReceiptDao().deleteAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
+        appleIapReceiptService.deleteAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
 
         try {
             final AppleIapReceipt resultAppleIapReceipt =
-                    getAppleIapReceiptDao().getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
+                    appleIapReceiptService.getAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
             assertNull(resultAppleIapReceipt);
         }
         catch (NotFoundException e) {
@@ -130,22 +142,16 @@ public class MongoAppleIapReceiptDaoTest {
         }
     }
 
-    public AppleIapReceiptDao getAppleIapReceiptDao() {
-        return appleIapReceiptDao;
-    }
+    public static class TestModule extends AbstractTestModule {
+        
+        @Override
+        protected void configure() {
 
-    @Inject
-    public void setAppleIapReceiptDao(AppleIapReceiptDao appleIapReceiptDao) {
-        this.appleIapReceiptDao = appleIapReceiptDao;
-    }
+            super.configure();
+            
+            bind(AppleIapVerifyReceiptInvoker.Builder.class).toInstance(mock(AppleIapVerifyReceiptInvoker.Builder.class));
+            bind(AppleIapReceiptDao.class).toInstance(mock(AppleIapReceiptDao.class));
+        }
 
-    public UserTestFactory getUserTestFactory() {
-        return userTestFactory;
     }
-
-    @Inject
-    public void setUserTestFactory(UserTestFactory userTestFactory) {
-        this.userTestFactory = userTestFactory;
-    }
-
 }

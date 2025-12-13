@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.model.receipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.morphia.annotations.*;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.util.Date;
 import java.util.Objects;
@@ -11,15 +12,15 @@ import java.util.Objects;
 public class MongoReceipt {
 
     @Id
-    private String id;
+    private ObjectId id;
 
     @Property
     @Indexed
-    private String scheme;
+    private String schema;
 
     @Property
     @Indexed
-    private String transactionId;
+    private String originalTransactionId;
 
     @Reference
     @Indexed
@@ -30,14 +31,30 @@ public class MongoReceipt {
     private Date purchaseTime;
 
     @Property
-    private Document rawReceipt;
+    private Document body;
 
-    public String getId() {
+    public ObjectId getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    public String getOriginalTransactionId() {
+        return originalTransactionId;
+    }
+
+    public void setOriginalTransactionId(String originalTransactionId) {
+        this.originalTransactionId = originalTransactionId;
     }
 
     public MongoUser getUser() {
@@ -56,34 +73,34 @@ public class MongoReceipt {
         this.purchaseTime = purchaseTime;
     }
 
-    public Document getRawReceipt() {
-        return rawReceipt;
+    public Document getBody() {
+        return body;
     }
 
-    public void setRawReceipt(Document rawReceipt) {
-        this.rawReceipt = rawReceipt;
+    public void setBody(Document rawReceipt) {
+        this.body = rawReceipt;
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof MongoReceipt that)) return false;
-        return Objects.equals(id, that.id) && Objects.equals(scheme, that.scheme) && Objects.equals(transactionId, that.transactionId) && Objects.equals(user, that.user) && Objects.equals(purchaseTime, that.purchaseTime) && Objects.equals(rawReceipt, that.rawReceipt);
+        return Objects.equals(id, that.id) && Objects.equals(schema, that.schema) && Objects.equals(originalTransactionId, that.originalTransactionId) && Objects.equals(user, that.user) && Objects.equals(purchaseTime, that.purchaseTime) && Objects.equals(body, that.body);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, scheme, transactionId, user, purchaseTime, rawReceipt);
+        return Objects.hash(id, schema, originalTransactionId, user, purchaseTime, body);
     }
 
     @Override
     public String toString() {
         return "MongoReceipt{" +
                 "id='" + id + '\'' +
-                ", scheme='" + scheme + '\'' +
-                ", transactionId='" + transactionId + '\'' +
+                ", schema='" + schema + '\'' +
+                ", originalTransactionId='" + originalTransactionId + '\'' +
                 ", user=" + user +
                 ", purchaseTime=" + purchaseTime +
-                ", rawReceipt=" + rawReceipt +
+                ", rawReceipt=" + body +
                 '}';
     }
 }

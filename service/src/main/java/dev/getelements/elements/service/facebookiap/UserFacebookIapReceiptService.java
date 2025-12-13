@@ -14,6 +14,7 @@ import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
 import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import jakarta.inject.Inject;
@@ -52,6 +53,8 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     private ObjectMapper objectMapper;
 
+    private FacebookIapReceiptRequestInvoker requestInvoker;
+
     @Override
     public Pagination<FacebookIapReceipt> getFacebookIapReceipts(int offset, int count) {
         final var search = OCULUS_PLATFORM_IAP_SCHEME;
@@ -70,8 +73,14 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     public FacebookIapReceipt getOrCreateFacebookIapReceipt(FacebookIapReceipt facebookIapReceipt) {
 
         final var receipt = new Receipt();
-        final var body = getDozerMapper().map(facebookIapReceipt, String.class);
-        receipt.setBody(body);
+
+        try {
+            final var body = getObjectMapper().writeValueAsString(facebookIapReceipt);
+            receipt.setBody(body);
+        } catch (JsonProcessingException e) {
+            throw new InternalError("Unable to serialize receipt: " + e.getMessage());
+        }
+
         receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
         receipt.setSchema(OCULUS_PLATFORM_IAP_SCHEME);
 
@@ -79,20 +88,21 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public void deleteFacebookIapReceipt(String receiptId) {
-        receiptDao.deleteReceipt(receiptId);
+    public void deleteFacebookIapReceipt(String transactionId) {
+        final var receipt = receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, transactionId);
+        receiptDao.deleteReceipt(receipt.getId());
     }
 
     @Override
     public FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(FacebookIapReceipt receiptData) {
 
-        final Profile profile = getCurrentProfileSupplier().get();
+        final var profile = getCurrentProfileSupplier().get();
 
         if (profile == null) {
             throw new NotFoundException("User has no profile.");
         }
 
-        final Application application = profile.getApplication();
+        final var application = profile.getApplication();
 
         if (application == null) {
             throw new InvalidDataException("Profile is not associated with a valid application.");
@@ -101,32 +111,27 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         final var applicationConfiguration = getFacebookApplicationConfiguration(application);
         final var appId = applicationConfiguration.getApplicationId();
         final var appSecret = applicationConfiguration.getApplicationSecret();
-        final var userId = receiptData.getFbUserId();
-        final var sku = receiptData.getSku();
-        final var accessToken = createAccessToken(appId, appSecret);
-        final var form = new Form()
-                .param("access_token", accessToken)
-                .param("user_id", userId)
-                .param("sku", sku);
 
-        final var entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+        final var response = requestInvoker.invokeVerify(receiptData, appId, appSecret);
 
-        return client.target(OCULUS_ROOT_URL)
-                .path(appId)
-                .path("verify_entitlement")
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .post(entity, FacebookIapVerifyReceiptResponse.class);
+        // If verification was successful, we try to write the receipt to the db
+        if(response != null && response.getSuccess()) {
+            getOrCreateFacebookIapReceipt(receiptData);
+        }
+
+        return response;
     }
 
     @Override
     public FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(FacebookIapReceipt receiptData) {
-        final Profile profile = getCurrentProfileSupplier().get();
+
+        final var profile = getCurrentProfileSupplier().get();
 
         if (profile == null) {
             throw new NotFoundException("User has no profile.");
         }
 
-        final Application application = profile.getApplication();
+        final var application = profile.getApplication();
 
         if (application == null) {
             throw new InvalidDataException("Profile is not associated with a valid application.");
@@ -135,26 +140,13 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         final var applicationConfiguration = getFacebookApplicationConfiguration(application);
         final var appId = applicationConfiguration.getApplicationId();
         final var appSecret = applicationConfiguration.getApplicationSecret();
-        final var userId = receiptData.getFbUserId();
-        final var sku = receiptData.getSku();
-        final var accessToken = createAccessToken(appId, appSecret);
 
-        final var form = new Form()
-                .param("access_token", accessToken)
-                .param("user_id", userId)
-                .param("sku", sku);
+        final var response = requestInvoker.invokeConsume(receiptData, appId, appSecret);
 
-        final var entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
-
-        final var response = client.target(OCULUS_ROOT_URL)
-                .path(appId)
-                .path("consume_entitlement")
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .post(entity, FacebookIapConsumeResponse.class);
-
-        // If consumption was successful, we write the receipt to the db
+        // If consumption was successful, we try to write the receipt to the db and process rewards
         if(response.getSuccess()) {
             getOrCreateFacebookIapReceipt(receiptData);
+            getOrCreateRewardIssuances(receiptData);
         }
 
         return response;
@@ -215,21 +207,6 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         return resultRewardIssuances;
     }
 
-    private FacebookApplicationConfiguration getFacebookApplicationConfiguration(Application application) {
-
-        final String applicationId = application.getId();
-
-        if (applicationId == null || applicationId.isEmpty()) {
-            throw new InvalidDataException("Application id associated with the profile is invalid.");
-        }
-
-        return getApplicationConfigurationDao()
-                .getDefaultApplicationConfigurationForApplication(
-                        applicationId,
-                        FacebookApplicationConfiguration.class
-                );
-    }
-
     private RewardIssuance getOrCreateRewardIssuance(
             String originalTransactionId,
             String itemId,
@@ -264,10 +241,6 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         return map;
     }
 
-    private String createAccessToken(String appId, String appSecret) {
-        return "OC|" + appId + "|" + appSecret;
-    }
-
     private FacebookIapReceipt convertReceipt(Receipt receipt) {
         try {
             return getObjectMapper().readValue(receipt.getBody(), FacebookIapReceipt.class);
@@ -275,6 +248,23 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
             throw new RuntimeException(e);
         }
     }
+
+
+    private FacebookApplicationConfiguration getFacebookApplicationConfiguration(final Application application) {
+
+        final var applicationId = application.getId();
+
+        if (applicationId == null || applicationId.isEmpty()) {
+            throw new InvalidDataException("Application id associated with the profile is invalid.");
+        }
+
+        return getApplicationConfigurationDao()
+                .getDefaultApplicationConfigurationForApplication(
+                        applicationId,
+                        FacebookApplicationConfiguration.class
+                );
+    }
+
 
     public User getUser() {
         return user;
@@ -285,12 +275,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.user = user;
     }
 
-    public ReceiptDao getFacebookIapReceiptDao() {
+    public ReceiptDao getReceiptDao() {
         return receiptDao;
     }
 
     @Inject
-    public void setFacebookIapReceiptDao(ReceiptDao receiptDao) {
+    public void setReceiptDao(ReceiptDao receiptDao) {
         this.receiptDao = receiptDao;
     }
 
@@ -339,15 +329,6 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.currentProfileSupplier = currentProfileSupplier;
     }
 
-    public MapperRegistry getDozerMapperRegistry() {
-        return dozerMapperRegistry;
-    }
-
-    @Inject
-    public void setDozerMapperRegistry(MapperRegistry dozerMapperRegistry) {
-        this.dozerMapperRegistry = dozerMapperRegistry;
-    }
-
     public Client getClient() {
         return client;
     }
@@ -366,4 +347,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.objectMapper = objectMapper;
     }
 
+    public FacebookIapReceiptRequestInvoker getRequestInvoker() {
+        return requestInvoker;
+    }
+
+    @Inject
+    public void setRequestInvoker(FacebookIapReceiptRequestInvoker requestInvoker) {
+        this.requestInvoker = requestInvoker;
+    }
 }

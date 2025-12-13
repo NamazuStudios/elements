@@ -12,13 +12,13 @@ public interface ReceiptService {
     /**
      * Gets receipts for a given user specifying the offset and the count.
      *
-     * @param user   the user
+     * @param userId   the id of the user to search for
      * @param offset the offset
      * @param count  the count
      * @param search Used to filter by scheme if you support multiple IAP providers
      * @return a {@link Pagination} of {@link Receipt} objects.
      */
-    Pagination<Receipt> getReceipts(User user, int offset, int count, String search);
+    Pagination<Receipt> getReceipts(String userId, int offset, int count, String search);
 
     /**
      * Gets the receipt with the schema and transaction id, or throws a {@link NotFoundException} if the

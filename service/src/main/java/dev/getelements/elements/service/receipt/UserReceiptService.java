@@ -2,6 +2,7 @@ package dev.getelements.elements.service.receipt;
 
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
@@ -11,8 +12,11 @@ public class UserReceiptService implements ReceiptService {
 
     private ReceiptDao receiptDao;
 
+    //We only want to use the current user, so we ignore anything passed in for this permission level
+    private User user;
+
     @Override
-    public Pagination<Receipt> getReceipts(User user, int offset, int count, String search) {
+    public Pagination<Receipt> getReceipts(String ignored, int offset, int count, String search) {
 
         if(search == null || search.isEmpty()) {
             return receiptDao.getReceipts(user, offset, count);
@@ -33,12 +37,12 @@ public class UserReceiptService implements ReceiptService {
 
     @Override
     public Receipt createReceipt(Receipt receipt) {
-        return receiptDao.createReceipt(receipt);
+        throw new ForbiddenException("User receipt creation not allowed via this API");
     }
 
     @Override
     public void deleteReceipt(String receiptId) {
-        receiptDao.deleteReceipt(receiptId);
+        throw new ForbiddenException("User receipt deletion not allowed via this API");
     }
 
     public ReceiptDao getReceiptDao() {
@@ -48,5 +52,14 @@ public class UserReceiptService implements ReceiptService {
     @Inject
     public void setReceiptDao(ReceiptDao receiptDao) {
         this.receiptDao = receiptDao;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
     }
 }

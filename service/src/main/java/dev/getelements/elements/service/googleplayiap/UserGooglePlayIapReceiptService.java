@@ -66,7 +66,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
-        final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, GOOGLE_PLAY_IAP_SOURCE);
+        final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, GOOGLE_IAP_SCHEME);
         final var googleReceipts = receiptPagination.getObjects().stream().map(this::convertReceipt);
 
         return Pagination.from(googleReceipts);
@@ -74,14 +74,14 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     @Override
     public GooglePlayIapReceipt getGooglePlayIapReceipt(String orderId) {
-        final var receipt = getReceiptDao().getReceipt(GOOGLE_PLAY_IAP_SOURCE, orderId);
+        final var receipt = getReceiptDao().getReceipt(GOOGLE_IAP_SCHEME, orderId);
         return convertReceipt(receipt);
     }
 
     @Override
     public GooglePlayIapReceipt getOrCreateGooglePlayIapReceipt(GooglePlayIapReceipt googlePlayIapReceipt) {
         final var receipt = new Receipt();
-        receipt.setSchema(GOOGLE_PLAY_IAP_SOURCE);
+        receipt.setSchema(GOOGLE_IAP_SCHEME);
         receipt.setOriginalTransactionId(googlePlayIapReceipt.getOrderId());
         receipt.setUser(user);
         receipt.setPurchaseTime(googlePlayIapReceipt.getPurchaseTimeMillis());
@@ -101,7 +101,8 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     @Override
     public void deleteGooglePlayIapReceipt(String orderId) {
-        getReceiptDao().deleteReceipt(orderId);
+        final var receipt = receiptDao.getReceipt(GOOGLE_IAP_SCHEME, orderId);
+        receiptDao.deleteReceipt(receipt.getId());
     }
 
     @Override

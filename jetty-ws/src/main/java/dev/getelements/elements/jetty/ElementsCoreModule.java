@@ -9,6 +9,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoDaoElementModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkElementModule;
+import dev.getelements.elements.service.guice.FacebookIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.ServicesElementModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
@@ -57,6 +58,7 @@ public class ElementsCoreModule extends AbstractModule {
         install(new MongoSdkElementModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
+        install(new FacebookIapReceiptInvokerModule());
         install(new JerseyHttpClientModule());
         install(new FileSystemCdnGitLoaderModule());
 

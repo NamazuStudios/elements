@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.receipt;
 
 import dev.getelements.elements.sdk.dao.ReceiptDao;
+import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
@@ -11,8 +12,12 @@ public class SuperuserReceiptService implements ReceiptService {
 
     private ReceiptDao receiptDao;
 
+    private UserDao userDao;
+
     @Override
-    public Pagination<Receipt> getReceipts(User user, int offset, int count, String search) {
+    public Pagination<Receipt> getReceipts(String userId, int offset, int count, String search) {
+
+        final var user = userDao.getUser(userId);
 
         if(search == null || search.isEmpty()) {
             return receiptDao.getReceipts(user, offset, count);
