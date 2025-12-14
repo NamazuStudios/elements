@@ -1,7 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
+import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+
+import java.util.List;
 
 /**
  * Created by patricktwohig on 6/15/17.
@@ -14,6 +19,12 @@ public class MongoFacebookApplicationConfiguration extends MongoApplicationConfi
 
     @Property
     private String applicationSecret;
+
+    @Property
+    private List<String> builtinApplicationPermissions;
+
+    @Property
+    private List<MongoProductBundle> productBundles;
 
     public String getApplicationId() {
         return applicationId;
@@ -31,4 +42,19 @@ public class MongoFacebookApplicationConfiguration extends MongoApplicationConfi
         this.applicationSecret = applicationSecret;
     }
 
+    public List<String> getBuiltinApplicationPermissions() {
+        return builtinApplicationPermissions;
+    }
+
+    public void setBuiltinApplicationPermissions(List<String> builtinApplicationPermissions) {
+        this.builtinApplicationPermissions = builtinApplicationPermissions;
+    }
+
+    public List<MongoProductBundle> getProductBundles() {
+        return productBundles;
+    }
+
+    public void setProductBundles(List<MongoProductBundle> productBundles) {
+        this.productBundles = productBundles;
+    }
 }

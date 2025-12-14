@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
-import java.util.Objects;
 
 /**
  *
@@ -15,7 +14,7 @@ import java.util.Objects;
  */
 @Schema(
     description = "Houses the various parameters required which allow communication with " +
-                  "the Faceook API.  The Facebook API will ")
+                  "the Facebook API.")
 public class FacebookApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
     @NotNull
@@ -75,7 +74,7 @@ public class FacebookApplicationConfiguration extends ApplicationConfiguration i
             return false;
         if (getApplicationSecret() != null ? !getApplicationSecret().equals(that.getApplicationSecret()) : that.getApplicationSecret() != null)
             return false;
-        if(getBuiltinApplicationPermissions() != null ? getBuiltinApplicationPermissions().equals(that.getBuiltinApplicationPermissions()) : that.getBuiltinApplicationPermissions() == null)
+        if(getBuiltinApplicationPermissions() != null ? getBuiltinApplicationPermissions().equals(that.getBuiltinApplicationPermissions()) : that.getBuiltinApplicationPermissions() != null)
             return false;
         return getProductBundles() != null ? getProductBundles().equals(that.getProductBundles()) : that.getProductBundles() == null;
     }

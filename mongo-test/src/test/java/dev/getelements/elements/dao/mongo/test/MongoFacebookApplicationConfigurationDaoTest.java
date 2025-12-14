@@ -14,8 +14,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoFacebookApplicationConfigurationDaoTest extends MongoApplicationConfigurationDaoTest<FacebookApplicationConfiguration> {
@@ -79,7 +78,14 @@ public class MongoFacebookApplicationConfigurationDaoTest extends MongoApplicati
         assertNull(actual.getBuiltinApplicationPermissions());
         assertEquals(actual.getApplicationId(), expected.getApplicationId());
         assertEquals(actual.getApplicationSecret(), expected.getApplicationSecret());
-        Assert.assertEquals(actual.getProductBundles(), expected.getProductBundles());
+
+        //If the configuration was created without defining product bundles,
+        // it will have been inserted as null, but returned with empty
+        if(actual.getProductBundles() == null) {
+            assertTrue(expected.getProductBundles().isEmpty());
+        } else {
+            assertEquals(actual.getProductBundles(), expected.getProductBundles());
+        }
     }
 
     @Test(

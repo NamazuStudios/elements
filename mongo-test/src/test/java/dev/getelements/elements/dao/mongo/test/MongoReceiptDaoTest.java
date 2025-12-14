@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.testng.Assert.*;
 
@@ -48,7 +49,7 @@ public class MongoReceiptDaoTest {
         final int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
         final var receipt = new Receipt();
 
-        receipt.setOriginalTransactionId("id." + invocation);
+        receipt.setOriginalTransactionId("id." + invocation + "." + UUID.randomUUID());
         receipt.setUser(testUser);
         receipt.setSchema("dev.getelements.test_app");
         receipt.setPurchaseTime(new Date().getTime());
