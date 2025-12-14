@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.model.match;
 
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
+import dev.getelements.elements.sdk.model.ucode.UniqueCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -17,6 +18,9 @@ public class MultiMatch {
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @Schema(description = "The unique ID of the match.")
     private String id;
+
+    @Schema(description = "The unique join code for the match. May be null if join code is not used.")
+    private UniqueCode joinCode;
 
     @NotNull
     @NotNull
@@ -45,6 +49,14 @@ public class MultiMatch {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public UniqueCode getJoinCode() {
+        return joinCode;
+    }
+
+    public void setJoinCode(UniqueCode joinCode) {
+        this.joinCode = joinCode;
     }
 
     public MultiMatchStatus getStatus() {
@@ -99,18 +111,19 @@ public class MultiMatch {
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         MultiMatch that = (MultiMatch) object;
-        return count == that.count && Objects.equals(id, that.id) && status == that.status && Objects.equals(configuration, that.configuration) && Objects.equals(metadata, that.metadata) && Objects.equals(expiry, that.expiry) && Objects.equals(created, that.created);
+        return count == that.count && Objects.equals(id, that.id) && Objects.equals(joinCode, that.joinCode) && status == that.status && Objects.equals(configuration, that.configuration) && Objects.equals(metadata, that.metadata) && Objects.equals(expiry, that.expiry) && Objects.equals(created, that.created);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, status, configuration, metadata, count, expiry, created);
+        return Objects.hash(id, joinCode, status, configuration, metadata, count, expiry, created);
     }
 
     @Override
     public String toString() {
         return "MultiMatch{" +
                 "id='" + id + '\'' +
+                ", joinCode=" + joinCode +
                 ", status=" + status +
                 ", configuration=" + configuration +
                 ", metadata=" + metadata +

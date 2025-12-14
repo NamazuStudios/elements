@@ -1,0 +1,99 @@
+package dev.getelements.elements.sdk.model.ucode;
+
+import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.user.User;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.Objects;
+
+/**
+ * Represents a unique code with an identifier, the code itself, and an expiration timestamp.
+ */
+@Schema(description = "Represents a unique code with an identifier, the code itself, and an expiration timestamp.")
+public class UniqueCode {
+
+    private String id;
+
+    private long linger;
+
+    private long timeout;
+
+    private long expiry;
+
+    private User user;
+
+    private Profile profile;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public long getLinger() {
+        return linger;
+    }
+
+    public void setLinger(long linger) {
+        this.linger = linger;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
+    }
+
+    public long getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(long expiry) {
+        this.expiry = expiry;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Profile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(Profile profile) {
+        this.profile = profile;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (object == null || getClass() != object.getClass()) return false;
+        UniqueCode that = (UniqueCode) object;
+        return linger == that.linger && timeout == that.timeout && expiry == that.expiry && Objects.equals(id, that.id) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, linger, timeout, expiry, user, profile);
+    }
+
+    @Override
+    public String toString() {
+        return "UniqueCode{" +
+                "id='" + id + '\'' +
+                ", linger=" + linger +
+                ", timeout=" + timeout +
+                ", expiresAt=" + expiry +
+                ", user=" + user +
+                ", profile=" + profile +
+                '}';
+    }
+
+}

@@ -9,6 +9,7 @@ import org.mapstruct.Mappings;
 
 @Mapper(uses = {
         PropertyConverters.class,
+        MongoUniqueCodeMapper.class,
         MongoApplicationMapper.class,
         MongoMatchmakingApplicationConfigurationMapper.class
 })

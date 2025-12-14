@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.dao;
 
 import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.dao.UniqueCodeDao.GenerationParameters;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.MultiMatchNotFoundException;
@@ -112,6 +113,14 @@ public interface MultiMatchDao {
     Optional<MultiMatch> findMultiMatch(String multiMatchId);
 
     /**
+     * Finds a {@link MultiMatch} by its ID.
+     * @param joinCode the join code of the multi match.
+     *
+     * @return the found {@link MultiMatch}, or an empty Optional if not found.
+     */
+    Optional<MultiMatch> findMultiMatchByJoinCode(String joinCode);
+
+    /**
      * Finds the latest {@link MultiMatch} for the given configuration and profile ID. This method will exclude any
      * matches that the specific profile currently not participating in. If no match meets the criteria, then an empty
      * optional is returned allowing downstream code to create a new match.
@@ -133,11 +142,21 @@ public interface MultiMatchDao {
     /**
      * Gets a {@link MultiMatch} by its ID.
      *
-     * @param multiMatchId the {@link MultiMatch}
+     * @param multiMatchId the {@link MultiMatch}'s id
      * @return the {@link MultiMatch}
      */
     default MultiMatch getMultiMatch(final String multiMatchId) {
         return findMultiMatch(multiMatchId).orElseThrow(MultiMatchNotFoundException::new);
+    }
+
+    /**
+     * Gets a {@link MultiMatch} by its ID.
+     *
+     * @param joinCode the {@link MultiMatch}'s join code
+     * @return the {@link MultiMatch}
+     */
+    default MultiMatch getMultiMatchByJoinCode(final String joinCode) {
+        return findMultiMatchByJoinCode(joinCode).orElseThrow(MultiMatchNotFoundException::new);
     }
 
     /**
@@ -176,6 +195,15 @@ public interface MultiMatchDao {
      * @return the newly created {@link MultiMatch}
      */
     MultiMatch createMultiMatch(MultiMatch multiMatch);
+
+    /**
+     * Creates a new {@link MultiMatch} with no players.
+     *
+     * @param multiMatch the {@link MultiMatch} to create
+     * @param joinCodeGenerationParameters the {@link GenerationParameters} to use when generating the join code
+     * @return the newly created {@link MultiMatch}
+     */
+    MultiMatch createMultiMatch(MultiMatch multiMatch, GenerationParameters joinCodeGenerationParameters);
 
     /**
      * Creates a new {@link MultiMatch} with no players.
