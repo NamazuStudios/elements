@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 
@@ -46,7 +47,7 @@ public interface ReceiptService {
      * @throws InvalidDataException if the state of the passed in Receipt is invalid
      * @throws DuplicateException   if the passed in Receipt has a scheme + transaction id that already exists
      */
-    Receipt createReceipt(Receipt receipt);
+    Receipt createReceipt(CreateReceiptRequest receipt);
 
     /**
      * Deletes an existing receipt.

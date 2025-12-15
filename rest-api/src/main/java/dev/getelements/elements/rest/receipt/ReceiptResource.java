@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest.receipt;
 
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,8 +44,8 @@ public class ReceiptResource {
     @Operation(
             summary = "Creates a Receipt",
             description = "Creates a new Receipt record.")
-    public Receipt createReceipt(Receipt receipt) {
-        return receiptService.createReceipt(receipt);
+    public Receipt createReceipt(CreateReceiptRequest createReceiptRequest) {
+        return receiptService.createReceipt(createReceiptRequest);
     }
 
     @DELETE

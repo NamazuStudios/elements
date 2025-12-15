@@ -1,4 +1,4 @@
-package dev.getelements.elements.rest.facebook;
+package dev.getelements.elements.rest.meta.facebook;
 
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
@@ -17,7 +17,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
-@Path("facebook")
+@Path("meta/facebook")
 public class FacebookIapResource {
 
     private FacebookIapReceiptService facebookIapReceiptService;

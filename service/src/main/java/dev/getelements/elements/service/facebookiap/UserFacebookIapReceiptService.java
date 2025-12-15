@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.model.application.*;
 import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
@@ -18,6 +19,7 @@ import dev.getelements.elements.sdk.service.facebookiap.client.invoker.FacebookI
 import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Form;
@@ -55,8 +57,10 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     private FacebookIapReceiptRequestInvoker requestInvoker;
 
+    private Provider<Transaction> transactionProvider;
+
     @Override
-    public Pagination<FacebookIapReceipt> getFacebookIapReceipts(int offset, int count) {
+    public Pagination<FacebookIapReceipt> getFacebookIapReceipts(final int offset, final int count) {
         final var search = OCULUS_PLATFORM_IAP_SCHEME;
         final var receipts = receiptDao.getReceipts(user, offset, count, search);
         final var fbReceipts = receipts.getObjects().stream().map(this::convertReceipt);
@@ -65,12 +69,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public FacebookIapReceipt getFacebookIapReceipt(String originalTransactionId) {
+    public FacebookIapReceipt getFacebookIapReceipt(final String originalTransactionId) {
         return convertReceipt(receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, originalTransactionId));
     }
 
     @Override
-    public FacebookIapReceipt getOrCreateFacebookIapReceipt(FacebookIapReceipt facebookIapReceipt) {
+    public FacebookIapReceipt getOrCreateFacebookIapReceipt(final FacebookIapReceipt facebookIapReceipt) {
 
         final var receipt = new Receipt();
 
@@ -84,17 +88,20 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
         receipt.setSchema(OCULUS_PLATFORM_IAP_SCHEME);
 
-        return convertReceipt(receiptDao.createReceipt(receipt));
+        return getTransactionProvider().get().performAndClose(tx -> {
+            final var receiptDao = tx.getDao(ReceiptDao.class);
+            return convertReceipt(receiptDao.createReceipt(receipt));
+        });
     }
 
     @Override
-    public void deleteFacebookIapReceipt(String transactionId) {
+    public void deleteFacebookIapReceipt(final String transactionId) {
         final var receipt = receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, transactionId);
         receiptDao.deleteReceipt(receipt.getId());
     }
 
     @Override
-    public FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(FacebookIapReceipt receiptData) {
+    public FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(final FacebookIapReceipt receiptData) {
 
         final var profile = getCurrentProfileSupplier().get();
 
@@ -123,7 +130,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(FacebookIapReceipt receiptData) {
+    public FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(final FacebookIapReceipt receiptData) {
 
         final var profile = getCurrentProfileSupplier().get();
 
@@ -153,7 +160,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public List<RewardIssuance> getOrCreateRewardIssuances(FacebookIapReceipt facebookIapReceipt) {
+    public List<RewardIssuance> getOrCreateRewardIssuances(final FacebookIapReceipt facebookIapReceipt) {
 
         final var resultRewardIssuances = new ArrayList<RewardIssuance>();
         final var profile = getCurrentProfileSupplier().get();
@@ -174,47 +181,57 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
             throw new InvalidDataException("Application id associated with the profile is invalid.");
         }
 
-        // next, we look up the associated application configuration
-        final var facebookApplicationConfiguration = getApplicationConfigurationDao()
-                .getDefaultApplicationConfigurationForApplication(
-                        applicationId,
-                        FacebookApplicationConfiguration.class);
+        return getTransactionProvider().get().performAndClose( tx -> {
 
-        final var productBundles = facebookApplicationConfiguration.getProductBundles();
-        final var productId = facebookIapReceipt.getSku();
-        final var productBundle = productBundles.stream()
-                .filter(p -> p.getProductId().equals(productId))
-                .findFirst()
-                .orElse(null);
+            // next, we look up the associated application configuration
+            final var applicationConfigurationDao = tx.getDao(ApplicationConfigurationDao.class);
+            final var facebookApplicationConfiguration = applicationConfigurationDao
+                    .getDefaultApplicationConfigurationForApplication(
+                            applicationId,
+                            FacebookApplicationConfiguration.class);
 
-        if (productBundle == null) {
-            throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
-                    "has no ProductBundle for productId " + productId);
-        }
+            final var productBundles = facebookApplicationConfiguration.getProductBundles();
+            final var productId = facebookIapReceipt.getSku();
+            final var productBundle = productBundles.stream()
+                    .filter(p -> p.getProductId().equals(productId))
+                    .findFirst()
+                    .orElse(null);
 
-        // for each reward in the product bundle...
-        for (final var productBundleReward : productBundle.getProductBundleRewards()) {
+            if (productBundle == null) {
+                throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
+                        "has no ProductBundle for productId " + productId);
+            }
 
-            final var resultRewardIssuance = getOrCreateRewardIssuance(
-                    facebookIapReceipt.getPurchaseId(),
-                    productBundleReward.getItemId(),
-                    productBundleReward.getQuantity()
-            );
+            final var itemDao = tx.getDao(ItemDao.class);
+            final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
 
-            resultRewardIssuances.add(resultRewardIssuance);
-        }
+            // for each reward in the product bundle...
+            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
 
-        return resultRewardIssuances;
+                final var item = itemDao.getItemByIdOrName(productBundleReward.getItemId());
+
+                final var rewardIssuance = createRewardIssuance(
+                        facebookIapReceipt.getPurchaseId(),
+                        item,
+                        productBundleReward.getQuantity()
+                );
+
+                final var resultRewardIssuance = rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
+                resultRewardIssuances.add(resultRewardIssuance);
+            }
+
+            return resultRewardIssuances;
+        });
+
     }
 
-    private RewardIssuance getOrCreateRewardIssuance(
-            String originalTransactionId,
-            String itemId,
-            Integer quantity
+    private RewardIssuance createRewardIssuance(
+            final String originalTransactionId,
+            final Item item,
+            final Integer quantity
     ) {
 
-        final var context = buildFacebookIapContextString(originalTransactionId, itemId);
-        final var item = getItemDao().getItemByIdOrName(itemId);
+        final var context = buildFacebookIapContextString(originalTransactionId, item.getId());
         final var metadata = generateFacebookIapReceiptMetadata();
         final var rewardIssuance = new RewardIssuance();
 
@@ -227,12 +244,10 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         rewardIssuance.setMetadata(metadata);
         rewardIssuance.setSource(FACEBOOK_IAP_SOURCE);
 
-        final List<String> tags = buildRewardIssuanceTags(originalTransactionId);
+        final var tags = buildRewardIssuanceTags(originalTransactionId);
         rewardIssuance.setTags(tags);
 
-        final RewardIssuance resultRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
-
-        return resultRewardIssuance;
+        return rewardIssuance;
     }
 
     private Map<String, Object> generateFacebookIapReceiptMetadata() {
@@ -241,7 +256,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         return map;
     }
 
-    private FacebookIapReceipt convertReceipt(Receipt receipt) {
+    private FacebookIapReceipt convertReceipt(final Receipt receipt) {
         try {
             return getObjectMapper().readValue(receipt.getBody(), FacebookIapReceipt.class);
         } catch (JsonProcessingException e) {
@@ -354,5 +369,14 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     @Inject
     public void setRequestInvoker(FacebookIapReceiptRequestInvoker requestInvoker) {
         this.requestInvoker = requestInvoker;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 }

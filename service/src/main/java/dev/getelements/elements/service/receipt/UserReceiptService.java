@@ -3,6 +3,7 @@ package dev.getelements.elements.service.receipt;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
+import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
@@ -36,7 +37,7 @@ public class UserReceiptService implements ReceiptService {
     }
 
     @Override
-    public Receipt createReceipt(Receipt receipt) {
+    public Receipt createReceipt(CreateReceiptRequest receipt) {
         throw new ForbiddenException("User receipt creation not allowed via this API");
     }
 

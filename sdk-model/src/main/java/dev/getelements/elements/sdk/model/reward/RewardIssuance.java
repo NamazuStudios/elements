@@ -384,8 +384,8 @@ public class RewardIssuance implements Serializable, Taggable {
     }
 
     /**
-     * Builds the context string for a Google Play-sourced reward issuance. The last element in the context string is
-     * the hash of the orderId issued by the Google Play services, presumed to be universally unique, as well as the
+     * Builds the context string for a Facebook-sourced reward issuance. The last element in the context string is
+     * the hash of the orderId issued by the Facebook services, presumed to be universally unique, as well as the
      * itemId.
      *
      * @param orderId

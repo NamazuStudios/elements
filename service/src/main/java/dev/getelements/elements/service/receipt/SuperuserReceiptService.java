@@ -3,8 +3,8 @@ package dev.getelements.elements.service.receipt;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
-import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import jakarta.inject.Inject;
 
@@ -37,8 +37,18 @@ public class SuperuserReceiptService implements ReceiptService {
     }
 
     @Override
-    public Receipt createReceipt(Receipt receipt) {
-        return receiptDao.createReceipt(receipt);
+    public Receipt createReceipt(CreateReceiptRequest createReceiptRequest) {
+
+        final var user = getUserDao().getUser(createReceiptRequest.getUserId());
+        final var receipt = new Receipt();
+
+        receipt.setUser(user);
+        receipt.setBody(createReceiptRequest.getBody());
+        receipt.setSchema(createReceiptRequest.getSchema());
+        receipt.setOriginalTransactionId(createReceiptRequest.getOriginalTransactionId());
+        receipt.setPurchaseTime(createReceiptRequest.getPurchaseTime());
+
+        return getReceiptDao().createReceipt(receipt);
     }
 
     @Override
@@ -53,5 +63,14 @@ public class SuperuserReceiptService implements ReceiptService {
     @Inject
     public void setReceiptDao(ReceiptDao receiptDao) {
         this.receiptDao = receiptDao;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 }

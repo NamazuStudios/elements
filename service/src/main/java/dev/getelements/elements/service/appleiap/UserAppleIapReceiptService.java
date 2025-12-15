@@ -17,8 +17,6 @@ import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
-import dev.getelements.elements.sdk.service.appleiap.client.model.AppleIapGrandUnifiedReceipt;
-import dev.getelements.elements.sdk.service.appleiap.client.model.AppleIapGrandUnifiedReceiptPurchase;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
@@ -50,6 +48,8 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     private ObjectMapper objectMapper;
 
+    private Provider<Transaction> transactionProvider;
+
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
         final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, APPLE_IAP_SOURCE);
@@ -65,7 +65,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     }
 
     @Override
-    public AppleIapReceipt getOrCreateAppleIapReceipt(AppleIapReceipt appleIapReceipt) {
+    public AppleIapReceipt getOrCreateAppleIapReceipt(final AppleIapReceipt appleIapReceipt) {
 
         final var receipt = new Receipt();
         receipt.setSchema(APPLE_IAP_SOURCE);
@@ -80,9 +80,13 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
             throw new RuntimeException(e);
         }
 
-        final var createdReceipt = getReceiptDao().createReceipt(receipt);
+        return getTransactionProvider().get().performAndClose(tx -> {
+            final var receiptDao = tx.getDao(ReceiptDao.class);
+            final var createdReceipt = receiptDao.createReceipt(receipt);
 
-        return convertReceipt(createdReceipt);
+            return convertReceipt(createdReceipt);
+        });
+
     }
 
     @Override
@@ -93,22 +97,21 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     @Override
     public List<AppleIapReceipt> verifyAndCreateAppleIapReceiptsIfNeeded(
-            AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment,
-            String receiptData) {
+            final AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment,
+            final String receiptData) {
 
-            final AppleIapGrandUnifiedReceipt appleIapGrandUnifiedReceipt =
+            final var appleIapGrandUnifiedReceipt =
                     getAppleIapVerifyReceiptInvokerBuilderProvider().get()
                             .withEnvironment(appleIapVerifyReceiptEnvironment)
                             .withReceiptData(receiptData)
                             .build()
                             .invoke();
 
-            final List<AppleIapReceipt> resultAppleIapReceipts = new ArrayList<>();
+            final var resultAppleIapReceipts = new ArrayList<AppleIapReceipt>();
 
-            for (final AppleIapGrandUnifiedReceiptPurchase appleIapGrandUnifiedReceiptPurchase :
-                    appleIapGrandUnifiedReceipt.getInApp()) {
+            for (final var appleIapGrandUnifiedReceiptPurchase : appleIapGrandUnifiedReceipt.getInApp()) {
                 // map the grand unified receipt and the purchase entities into a single model for db insertion
-                final AppleIapReceipt appleIapReceipt = getDozerMapper().map(appleIapGrandUnifiedReceipt, AppleIapReceipt.class);
+                final var appleIapReceipt = getDozerMapper().map(appleIapGrandUnifiedReceipt, AppleIapReceipt.class);
                 getDozerMapper().map(appleIapGrandUnifiedReceiptPurchase, appleIapReceipt);
 
                 // manually add the receipt data and user to the model
@@ -116,7 +119,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                 appleIapReceipt.setUser(getUser());
 
                 // perform insertion/retrieval
-                final AppleIapReceipt resultAppleIapReceipt = getOrCreateAppleIapReceipt(appleIapReceipt);
+                final var resultAppleIapReceipt = getOrCreateAppleIapReceipt(appleIapReceipt);
 
                 // add to results
                 resultAppleIapReceipts.add(resultAppleIapReceipt);
@@ -148,49 +151,57 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         }
 
         // next, we look up the associated application configuration
-        final var iosApplicationConfiguration =  getApplicationConfigurationDao()
+        final var iosApplicationConfiguration = getApplicationConfigurationDao()
                 .getDefaultApplicationConfigurationForApplication(
                         applicationId,
                         IosApplicationConfiguration.class);
 
-        // for each purchase we received from the ios app...
-        for (final var appleIapReceipt : appleIapReceipts) {
-            final var productId = appleIapReceipt.getProductId();
-            final var productBundle = iosApplicationConfiguration.getProductBundle(productId);
+        return getTransactionProvider().get().performAndClose(tx ->
+        {
+            // for each purchase we received from the ios app...
+            for (final var appleIapReceipt : appleIapReceipts) {
+                final var productId = appleIapReceipt.getProductId();
+                final var productBundle = iosApplicationConfiguration.getProductBundle(productId);
 
-            if (productBundle == null) {
-                throw new InvalidDataException("ApplicationConfiguration " + iosApplicationConfiguration.getId() +
-                        "has no ProductBundle for productId " + productId);
-            }
+                if (productBundle == null) {
+                    throw new InvalidDataException("ApplicationConfiguration " + iosApplicationConfiguration.getId() +
+                            "has no ProductBundle for productId " + productId);
+                }
 
-            // for each reward in the product bundle...
-            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
-                // and for each instance of the SKU they purchased...
-                for (int skuOrdinal = 0; skuOrdinal < appleIapReceipt.getQuantity(); skuOrdinal++) {
-                    final RewardIssuance resultRewardIssuance = getOrCreateRewardIssuance(
-                            appleIapReceipt.getOriginalTransactionId(),
-                            productBundleReward.getItemId(),
-                            productBundleReward.getQuantity(),
-                            skuOrdinal
-                    );
+                // for each reward in the product bundle...
+                for (final var productBundleReward : productBundle.getProductBundleRewards()) {
+                    // and for each instance of the SKU they purchased...
+                    for (int skuOrdinal = 0; skuOrdinal < appleIapReceipt.getQuantity(); skuOrdinal++) {
+                        final RewardIssuance resultRewardIssuance = getOrCreateRewardIssuance(
+                                tx,
+                                appleIapReceipt.getOriginalTransactionId(),
+                                productBundleReward.getItemId(),
+                                productBundleReward.getQuantity(),
+                                skuOrdinal
+                        );
 
-                    resultRewardIssuances.add(resultRewardIssuance);
+                        resultRewardIssuances.add(resultRewardIssuance);
+                    }
                 }
             }
-        }
 
-        return resultRewardIssuances;
+            return resultRewardIssuances;
+        });
+
     }
 
     private RewardIssuance getOrCreateRewardIssuance(
-            String originalTransactionId,
-            String itemId,
-            Integer quantity,
-            Integer skuOrdinal
+            final Transaction transaction,
+            final String originalTransactionId,
+            final String itemId,
+            final Integer quantity,
+            final Integer skuOrdinal
     ) {
 
+        final var itemDao = transaction.getDao(ItemDao.class);
+        final var rewardIssuanceDao = transaction.getDao(RewardIssuanceDao.class);
         final var context = buildAppleIapContextString(originalTransactionId, itemId, skuOrdinal);
-        final var item = getItemDao().getItemByIdOrName(itemId);
+        final var item = itemDao.getItemByIdOrName(itemId);
         final var metadata = generateAppleIapReceiptMetadata();
         final var rewardIssuance = new RewardIssuance();
 
@@ -206,9 +217,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         final var tags = buildRewardIssuanceTags(originalTransactionId, skuOrdinal);
         rewardIssuance.setTags(tags);
 
-        final var resultRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(rewardIssuance);
-
-        return resultRewardIssuance;
+        return rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
     }
 
 
@@ -306,5 +315,15 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     @Inject
     public void setObjectMapper(final ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 }

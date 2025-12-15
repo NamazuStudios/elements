@@ -11,14 +11,10 @@ import com.google.api.services.androidpublisher.AndroidPublisherScopes;
 import com.google.api.services.androidpublisher.model.ProductPurchase;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.ProductBundle;
-import dev.getelements.elements.sdk.model.application.ProductBundleReward;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
@@ -27,6 +23,7 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +60,8 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     private ItemDao itemDao;
 
     private ApplicationConfigurationDao applicationConfigurationDao;
+
+    private Provider<Transaction> transactionProvider;
 
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
@@ -160,40 +159,42 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     }
 
     @Override
-    public List<RewardIssuance> getOrCreateRewardIssuances(GooglePlayIapReceipt googlePlayIapReceipt) {
+    public List<RewardIssuance> getOrCreateRewardIssuances(final GooglePlayIapReceipt googlePlayIapReceipt) {
+
         if (PURCHASE_STATE_CANCELED == googlePlayIapReceipt.getPurchaseState()) {
             throw new InvalidDataException("Google Play purchase marked as canceled in purchaseState.");
         }
 
-        GooglePlayApplicationConfiguration googlePlayApplicationConfiguration =
-                getGooglePlayApplicationConfiguration();
+        final var googlePlayApplicationConfiguration = getGooglePlayApplicationConfiguration();
+        final var productId = googlePlayIapReceipt.getProductId();
+        final var productBundle = googlePlayApplicationConfiguration.getProductBundle(productId);
 
-        final String productId = googlePlayIapReceipt.getProductId();
+        return transactionProvider.get().performAndClose(tx -> {
 
-        final ProductBundle productBundle = googlePlayApplicationConfiguration.getProductBundle(productId);
+            final var rewardIssuances = new ArrayList<RewardIssuance>();
 
-        final List<RewardIssuance> rewardIssuances = new ArrayList<>();
+            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
+                final var resultRewardIssuance = getOrCreateRewardIssuance(
+                        tx,
+                        googlePlayIapReceipt.getOrderId(),
+                        productBundleReward.getItemId(),
+                        productBundleReward.getQuantity());
+                rewardIssuances.add(resultRewardIssuance);
+            }
 
-        for (ProductBundleReward productBundleReward : productBundle.getProductBundleRewards()) {
-            final RewardIssuance resultRewardIssuance = getOrCreateRewardIssuance(
-                    googlePlayIapReceipt.getOrderId(),
-                    productBundleReward.getItemId(),
-                    productBundleReward.getQuantity());
-            rewardIssuances.add(resultRewardIssuance);
-        }
-
-        return rewardIssuances;
+            return rewardIssuances;
+        });
     }
 
-    private RewardIssuance getOrCreateRewardIssuance(String orderId, String itemId, Integer quantity) {
-        final String context = buildGooglePlayIapContextString(orderId, itemId);
+    private RewardIssuance getOrCreateRewardIssuance(final Transaction tx, final String orderId, final String itemId, final Integer quantity) {
 
-        final Map<String, Object> metadata = generateGooglePlayIapReceiptMetadata();
-        final List<String> tags = buildRewardIssuanceTags(orderId);
-
-        final Item item = getItemDao().getItemByIdOrName(itemId);
-
-        final RewardIssuance rewardIssuance = new RewardIssuance();
+        final var itemDao = tx.getDao(ItemDao.class);
+        final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
+        final var context = buildGooglePlayIapContextString(orderId, itemId);
+        final var metadata = generateGooglePlayIapReceiptMetadata();
+        final var tags = buildRewardIssuanceTags(orderId);
+        final var item = itemDao.getItemByIdOrName(itemId);
+        final var rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setItem(item);
         rewardIssuance.setItemQuantity(quantity);
@@ -205,50 +206,44 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         rewardIssuance.setMetadata(metadata);
         rewardIssuance.setSource(GOOGLE_PLAY_IAP_SOURCE);
 
-
-        final RewardIssuance resultRewardIssuance = getRewardIssuanceDao()
-                .getOrCreateRewardIssuance(rewardIssuance);
-
-        return resultRewardIssuance;
+        return rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
     }
 
     public Map<String, Object> generateGooglePlayIapReceiptMetadata() {
         final HashMap<String, Object> map = new HashMap<>();
-
         return map;
     }
 
     private GooglePlayApplicationConfiguration getGooglePlayApplicationConfiguration() {
-        final Profile profile = getCurrentProfileSupplier().get();
+
+        final var profile = getCurrentProfileSupplier().get();
 
         if (profile == null) {
             throw new NotFoundException("User has no profile.");
         }
 
-        final Application application = profile.getApplication();
+        final var application = profile.getApplication();
 
         if (application == null) {
             throw new InvalidDataException("Profile is not associated with a valid application.");
         }
 
-        final String applicationId = application.getId();
+        final var applicationId = application.getId();
 
-        if (applicationId == null || applicationId.length() == 0) {
+        if (applicationId == null || applicationId.isEmpty()) {
             throw new InvalidDataException("Application id associated with the profile is invalid.");
         }
 
-        GooglePlayApplicationConfiguration googlePlayApplicationConfiguration = getApplicationConfigurationDao()
+        return getApplicationConfigurationDao()
                 .getDefaultApplicationConfigurationForApplication(
                         applicationId,
                         GooglePlayApplicationConfiguration.class
                 );
-
-        return googlePlayApplicationConfiguration;
     }
 
     private String getCurrentPlatformApplicationId() {
-        GooglePlayApplicationConfiguration googlePlayApplicationConfiguration = getGooglePlayApplicationConfiguration();
 
+        final var googlePlayApplicationConfiguration = getGooglePlayApplicationConfiguration();
         final String platformApplicationId;
 
         if (googlePlayApplicationConfiguration.getApplicationId() != null) {
@@ -264,9 +259,9 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     }
 
     private String getCurrentJsonKeyString() {
-        GooglePlayApplicationConfiguration googlePlayApplicationConfiguration = getGooglePlayApplicationConfiguration();
 
-        final Map<String, Object> jsonKey = googlePlayApplicationConfiguration.getJsonKey();
+        final var googlePlayApplicationConfiguration = getGooglePlayApplicationConfiguration();
+        final var jsonKey = googlePlayApplicationConfiguration.getJsonKey();
 
         if (jsonKey == null) {
             throw new InvalidDataException("JsonKey is not set in application configuration " +
@@ -358,5 +353,14 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     @Inject
     public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
         this.currentProfileSupplier = currentProfileSupplier;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 }
