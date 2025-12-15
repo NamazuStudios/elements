@@ -50,7 +50,7 @@ public class MongoReceiptDaoTest {
 
         receipt.setOriginalTransactionId("id." + invocation + "." + UUID.randomUUID());
         receipt.setUser(testUser);
-        receipt.setSchema("dev.getelements.test_app" + invocation);
+        receipt.setSchema("dev.getelements.test_receipt_schema." + invocation);
         receipt.setPurchaseTime(new Date().getTime());
         receipt.setBody(objectMapper.writeValueAsString(testBody));
 
