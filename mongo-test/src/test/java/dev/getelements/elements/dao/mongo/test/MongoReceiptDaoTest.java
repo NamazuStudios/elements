@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.dao.UserDao;
-import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
@@ -43,7 +42,7 @@ public class MongoReceiptDaoTest {
         testUser = getUserTestFactory().createTestUser();
     }
 
-    @Test(invocationCount = INVOCATION_COUNT)
+    @Test(invocationCount = INVOCATION_COUNT, groups = "create")
     public void testCreateReceipt(ITestContext testContext) throws JsonProcessingException {
 
         final int invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
@@ -51,7 +50,7 @@ public class MongoReceiptDaoTest {
 
         receipt.setOriginalTransactionId("id." + invocation + "." + UUID.randomUUID());
         receipt.setUser(testUser);
-        receipt.setSchema("dev.getelements.test_app");
+        receipt.setSchema("dev.getelements.test_app" + invocation);
         receipt.setPurchaseTime(new Date().getTime());
         receipt.setBody(objectMapper.writeValueAsString(testBody));
 
@@ -91,7 +90,7 @@ public class MongoReceiptDaoTest {
         return objects;
     }
 
-    @Test(dataProvider = "getReceipts", dependsOnMethods = "testCreateReceipt")
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
     public void testGetReceiptById(final Receipt receipt) {
 
         final var resultReceipt = getReceiptDao().getReceipt(receipt.getId());
@@ -100,7 +99,79 @@ public class MongoReceiptDaoTest {
         assertEquals(resultReceipt, receipt);
     }
 
-    @Test(dataProvider = "getReceipts", dependsOnMethods = "testCreateReceipt")
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
+    public void testGetReceiptsBySchemaFilter(final Receipt receipt) {
+
+        final var count = 20;
+        final var offset = 0;
+        final var resultReceiptPagination = getReceiptDao().getReceipts(receipt.getUser(), 0, 20, receipt.getSchema());
+
+        assertNotNull(resultReceiptPagination);
+        assertTrue(resultReceiptPagination.getTotal() <= count);
+        assertEquals(resultReceiptPagination.getOffset(), offset);
+        assertFalse(resultReceiptPagination.getObjects().isEmpty());
+        // Each schema is unique so there should only ever be one result
+        assertEquals(resultReceiptPagination.stream().count(), 1);
+        final var resultReceiptOptional = resultReceiptPagination.stream().findFirst();
+        assertTrue(resultReceiptOptional.isPresent());
+        final var resultReceipt = resultReceiptOptional.get();
+        assertEquals(resultReceipt, receipt);
+    }
+
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
+    public void testGetReceiptsByPartialSchemaFilter(final Receipt receipt) {
+
+        final var count = 20;
+        final var offset = 0;
+        final var search = receipt.getSchema().substring(0, receipt.getSchema().length() - 2);
+        final var resultReceiptPagination = getReceiptDao().getReceipts(receipt.getUser(), 0, 20, search);
+
+        assertNotNull(resultReceiptPagination);
+        assertTrue(resultReceiptPagination.getTotal() <= count);
+        assertEquals(resultReceiptPagination.getOffset(), offset);
+        assertFalse(resultReceiptPagination.getObjects().isEmpty());
+        // We should find multiple with a partial search
+        assertEquals(resultReceiptPagination.stream().count(), INVOCATION_COUNT);
+    }
+
+
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
+    public void testGetReceiptsByTransactionIdFilter(final Receipt receipt) {
+
+        final var count = 20;
+        final var offset = 0;
+        final var resultReceiptPagination = getReceiptDao().getReceipts(receipt.getUser(), 0, 20, receipt.getOriginalTransactionId());
+
+        assertNotNull(resultReceiptPagination);
+        assertTrue(resultReceiptPagination.getTotal() <= count);
+        assertEquals(resultReceiptPagination.getOffset(), offset);
+        assertFalse(resultReceiptPagination.getObjects().isEmpty());
+        // Each schema is unique so there should only ever be one result
+        assertEquals(resultReceiptPagination.stream().count(), 1);
+        final var resultReceiptOptional = resultReceiptPagination.stream().findFirst();
+        assertTrue(resultReceiptOptional.isPresent());
+        final var resultReceipt = resultReceiptOptional.get();
+        assertEquals(resultReceipt, receipt);
+    }
+
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
+    public void testGetReceiptsByPartialTransactionIdFilter(final Receipt receipt) {
+
+        final var count = 20;
+        final var offset = 0;
+        final var search = receipt.getOriginalTransactionId().substring(0, receipt.getOriginalTransactionId().length() - 2);
+        final var resultReceiptPagination = getReceiptDao().getReceipts(receipt.getUser(), 0, 20, search);
+
+        assertNotNull(resultReceiptPagination);
+        assertTrue(resultReceiptPagination.getTotal() <= count);
+        assertEquals(resultReceiptPagination.getOffset(), offset);
+        assertFalse(resultReceiptPagination.getObjects().isEmpty());
+        // Transaction id is a bit more unique so we don't expect to find more than 1
+        assertTrue(resultReceiptPagination.getTotal() >= 1 && resultReceiptPagination.getTotal() < INVOCATION_COUNT);
+    }
+
+
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
     public void testGetReceiptBySchemeAndTransactionId(final Receipt receipt) {
 
         final var resultReceipt = getReceiptDao().getReceipt(receipt.getSchema(), receipt.getOriginalTransactionId());
@@ -109,27 +180,25 @@ public class MongoReceiptDaoTest {
         assertEquals(resultReceipt, receipt);
     }
 
-    @Test(dataProvider = "getReceipts", dependsOnMethods = "testCreateReceipt")
+    @Test(dataProvider = "getReceipts", groups = "get", dependsOnGroups = "create")
     public void testDisallowedUpsertForCreateReceipt(final Receipt receipt) {
 
+        // Attempt to overwrite according to the original transaction id key and schema.
+        // Should return the existing receipt instead.
         final var newReceipt = new Receipt();
-        // attempt to overwrite according to the original transaction id key
         newReceipt.setOriginalTransactionId(receipt.getOriginalTransactionId());
+        newReceipt.setSchema(receipt.getSchema());
         newReceipt.setUser(testUser);
 
         final var resultReceipt = getReceiptDao().createReceipt(newReceipt);
 
-        assertEquals(resultReceipt.getOriginalTransactionId(), receipt.getOriginalTransactionId());
+        assertEquals(resultReceipt, receipt);
     }
 
 
     @Test(
             dataProvider = "getReceipts",
-            dependsOnMethods = {
-                    "testGetReceiptById",
-                    "testGetReceiptBySchemeAndTransactionId",
-                    "testDisallowedUpsertForCreateReceipt"
-            },
+            groups = "delete", dependsOnGroups = "get",
             expectedExceptions = NotFoundException.class
     )
     public void testDeleteReceipt(final Receipt receipt) {
