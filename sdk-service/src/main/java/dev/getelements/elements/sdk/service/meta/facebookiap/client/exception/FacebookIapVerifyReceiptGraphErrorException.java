@@ -7,17 +7,17 @@ import dev.getelements.elements.sdk.model.exception.ErrorCode;
  * Used to indicate that the Apple verify receipt API returned a valid JSON response but with an error "status" code in
  * the response body.
  */
-public class FacebookIapVerifyReceiptStatusErrorCodeException extends BaseException {
+public class FacebookIapVerifyReceiptGraphErrorException extends BaseException {
 
-    private final int statusCode;
+    private final String graphError;
 
-    public FacebookIapVerifyReceiptStatusErrorCodeException(final int statusCode) {
-        super("Received Facebook IAP receipt verification status error code: " + statusCode);
-        this.statusCode = statusCode;
+    public FacebookIapVerifyReceiptGraphErrorException(final String graphError) {
+        super("Received Facebook IAP receipt verification status error code: " + graphError);
+        this.graphError = graphError;
     }
 
-    public int getStatusCode() {
-        return statusCode;
+    public String getStatusCode() {
+        return graphError;
     }
 
     @Override

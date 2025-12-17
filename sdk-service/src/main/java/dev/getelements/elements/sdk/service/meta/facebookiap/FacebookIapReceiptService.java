@@ -9,7 +9,6 @@ import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 
 import java.util.List;
@@ -66,13 +65,6 @@ public interface FacebookIapReceiptService {
      * @param receiptData
      * @return the {@link FacebookIapReceipt} as it was written into the database, or the existing database record
      */
-    FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(FacebookIapReceipt receiptData);
+    List<RewardIssuance> verifyAndCreateFacebookIapReceiptIfNeeded(FacebookIapReceipt receiptData);
 
-    /**
-     * Gets or creates {@link RewardIssuance} in the db for the given {@link FacebookIapReceipt}.
-     *
-     * @param facebookIapReceipt
-     * @return the reward issuances from the product bundle matching the receipt sku
-     */
-    List<RewardIssuance> getOrCreateRewardIssuances(FacebookIapReceipt facebookIapReceipt);
 }

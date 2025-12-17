@@ -3,7 +3,6 @@ package dev.getelements.elements.service.receipt;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import dev.getelements.elements.service.meta.facebookiap.UserFacebookIapReceiptService;
 import dev.getelements.elements.service.meta.facebookiap.invoker.DefaultFacebookIapReceiptRequestInvoker;
@@ -14,6 +13,8 @@ import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import java.util.UUID;
 
 import static com.google.inject.Guice.createInjector;
 import static java.lang.System.currentTimeMillis;
@@ -42,8 +43,11 @@ public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
         when(facebookIapReceiptRequestInvoker.invokeVerify(any(), anyString(), anyString())).then(mockInvocation -> {
             final FacebookIapReceipt receipt = mockInvocation.getArgument(0);
             final var response = new FacebookIapVerifyReceiptResponse();
-            response.setSuccess(true);
-            response.setGrantTime(receipt.getGrantTime());
+            response.setAmount("1");
+            response.setStatus("completed");
+            response.setId(UUID.randomUUID().toString());
+            response.setCurrency("USD");
+            response.setCreatedTime(Long.toString(receipt.getGrantTime()));
             return response;
         });
 

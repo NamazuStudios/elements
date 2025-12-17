@@ -108,7 +108,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(final FacebookIapReceipt receiptData) {
+    public List<RewardIssuance> verifyAndCreateFacebookIapReceiptIfNeeded(final FacebookIapReceipt receiptData) {
 
         final var profile = getCurrentProfileSupplier().get();
 
@@ -129,16 +129,15 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         final var response = requestInvoker.invokeVerify(receiptData, appId, appSecret);
 
         // If verification was successful, we try to write the receipt to the db
-        if(response != null && response.getSuccess()) {
+        if(response != null && response.getItems() != null) {
             getOrCreateFacebookIapReceipt(receiptData);
-            getOrCreateRewardIssuances(receiptData);
+            getOrCreateRewardIssuances(response);
         }
 
-        return response;
+        return List.of();
     }
 
-    @Override
-    public List<RewardIssuance> getOrCreateRewardIssuances(final FacebookIapReceipt facebookIapReceipt) {
+    private List<RewardIssuance> getOrCreateRewardIssuances(final FacebookIapVerifyReceiptResponse facebookIapReceiptResponse) {
 
         final var resultRewardIssuances = new ArrayList<RewardIssuance>();
         final var profile = getCurrentProfileSupplier().get();
@@ -169,34 +168,39 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
                             FacebookApplicationConfiguration.class);
 
             final var productBundles = facebookApplicationConfiguration.getProductBundles();
-            final var productId = facebookIapReceipt.getSku();
-            final var productBundle = productBundles.stream()
-                    .filter(p -> p.getProductId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
 
-            if (productBundle == null) {
-                throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
-                        "has no ProductBundle for productId " + productId);
+            for(final var purchaseItem : facebookIapReceiptResponse.getItems()) {
+
+                final var productId = purchaseItem.getProduct();
+                final var productBundle = productBundles.stream()
+                        .filter(p -> p.getProductId().equals(productId))
+                        .findFirst()
+                        .orElse(null);
+
+                if (productBundle == null) {
+                    throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
+                            "has no ProductBundle for productId " + productId);
+                }
+
+                final var itemDao = tx.getDao(ItemDao.class);
+                final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
+
+                // for each reward in the product bundle...
+                for (final var productBundleReward : productBundle.getProductBundleRewards()) {
+
+                    final var item = itemDao.getItemByIdOrName(productBundleReward.getItemId());
+
+                    final var rewardIssuance = createRewardIssuance(
+                            facebookIapReceiptResponse.getId(),
+                            item,
+                            productBundleReward.getQuantity() * purchaseItem.getQuantity()
+                    );
+
+                    final var resultRewardIssuance = rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
+                    resultRewardIssuances.add(resultRewardIssuance);
+                }
             }
 
-            final var itemDao = tx.getDao(ItemDao.class);
-            final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
-
-            // for each reward in the product bundle...
-            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
-
-                final var item = itemDao.getItemByIdOrName(productBundleReward.getItemId());
-
-                final var rewardIssuance = createRewardIssuance(
-                        facebookIapReceipt.getPurchaseId(),
-                        item,
-                        productBundleReward.getQuantity()
-                );
-
-                final var resultRewardIssuance = rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
-                resultRewardIssuances.add(resultRewardIssuance);
-            }
 
             return resultRewardIssuances;
         });

@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker;
 
 import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 
 public interface FacebookIapReceiptRequestInvoker {

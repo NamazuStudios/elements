@@ -132,7 +132,7 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         final var response = requestInvoker.invokeVerify(receiptData, appId, appSecret);
 
         // If verification was successful, we try to write the receipt to the db
-        if(response != null && response.getSuccess()) {
+        if(response != null && response.isSuccess()) {
             getOrCreateOculusIapReceipt(receiptData);
         }
 

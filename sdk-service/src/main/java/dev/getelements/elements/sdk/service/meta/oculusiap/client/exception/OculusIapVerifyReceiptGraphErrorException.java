@@ -7,17 +7,17 @@ import dev.getelements.elements.sdk.model.exception.ErrorCode;
  * Used to indicate that the Apple verify receipt API returned a valid JSON response but with an error "status" code in
  * the response body.
  */
-public class OculusIapVerifyReceiptStatusErrorCodeException extends BaseException {
+public class OculusIapVerifyReceiptGraphErrorException extends BaseException {
 
-    private final int statusCode;
+    private final String graphError;
 
-    public OculusIapVerifyReceiptStatusErrorCodeException(final int statusCode) {
-        super("Received Oculus IAP receipt verification status error code: " + statusCode);
-        this.statusCode = statusCode;
+    public OculusIapVerifyReceiptGraphErrorException(final String graphError) {
+        super("Received Oculus IAP receipt verification status error: " + graphError);
+        this.graphError = graphError;
     }
 
-    public int getStatusCode() {
-        return statusCode;
+    public String getStatusCode() {
+        return graphError;
     }
 
     @Override

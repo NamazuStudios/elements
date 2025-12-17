@@ -13,7 +13,11 @@ public class OculusIapVerifyReceiptResponse {
 
     private long grantTime;
 
-    public boolean getSuccess() {
+    private String userId;
+
+    private String sku;
+
+    public boolean isSuccess() {
         return success;
     }
 
@@ -29,18 +33,31 @@ public class OculusIapVerifyReceiptResponse {
         this.grantTime = grantTime;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        OculusIapVerifyReceiptResponse that = (OculusIapVerifyReceiptResponse) o;
-        return Objects.equals(getSuccess(), that.getSuccess()) &&
-                Objects.equals(getGrantTime(), that.getGrantTime());
+        if (!(o instanceof OculusIapVerifyReceiptResponse that)) return false;
+        return success == that.success && grantTime == that.grantTime && Objects.equals(userId, that.userId) && Objects.equals(sku, that.sku);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSuccess(), getGrantTime());
+        return Objects.hash(success, grantTime, userId, sku);
     }
 
     @Override
@@ -48,6 +65,8 @@ public class OculusIapVerifyReceiptResponse {
         return "OculusIapVerifyReceiptResponse{" +
                 "success=" + success +
                 ", grantTime=" + grantTime +
+                ", userId='" + userId + '\'' +
+                ", sku='" + sku + '\'' +
                 '}';
     }
 }

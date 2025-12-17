@@ -8,7 +8,6 @@ import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 
 import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.inject.Inject;
@@ -55,20 +54,9 @@ public class FacebookIapResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Attempts to verify the Facebook IAP Receipt data." +
             "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
-    public FacebookIapVerifyReceiptResponse verifyFacebookIapPurchase(final FacebookIapReceipt facebookIapReceipt) {
+    public List<RewardIssuance> redeemFacebookIapPurchase(final FacebookIapReceipt facebookIapReceipt) {
         validateReceipt(facebookIapReceipt);
         return getFacebookIapReceiptService().verifyAndCreateFacebookIapReceiptIfNeeded(facebookIapReceipt);
-    }
-
-    @GET
-    @Path("reward")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation( summary = "Attempts to verify the Facebook IAP Receipt data." +
-            "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
-    public List<RewardIssuance> getRewardIssuances(FacebookIapReceipt facebookIapReceipt) {
-        validateReceipt(facebookIapReceipt);
-        return getFacebookIapReceiptService().getOrCreateRewardIssuances(facebookIapReceipt);
     }
 
     private void validateReceipt(FacebookIapReceipt facebookIapReceipt) {

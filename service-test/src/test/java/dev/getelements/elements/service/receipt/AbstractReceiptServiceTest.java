@@ -3,6 +3,7 @@ package dev.getelements.elements.service.receipt;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -12,11 +13,14 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.service.util.ServicesMapperRegistryProvider;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import org.bson.types.ObjectId;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.google.inject.name.Names.named;
@@ -35,7 +39,7 @@ public abstract class AbstractReceiptServiceTest {
     @Inject
     private Injector injector;
 
-    @Mock
+    @Inject
     private Transaction mockTransaction;
 
     protected static final ArrayList<Receipt> createdReceipts = new ArrayList<>();
@@ -92,13 +96,21 @@ public abstract class AbstractReceiptServiceTest {
             return receiptId;
         }).when(receiptDao).deleteReceipt(anyString());
 
+
         when(mockTransaction.getDao(any())).then(mockInvocation -> {
-            final var daoClass = mockInvocation.getArgument(0);
-            return injector.getInstance(daoClass.getClass());
+            Class<?> daoClass = mockInvocation.getArgument(0);
+            return injector.getInstance(daoClass);
         });
+
+        doAnswer(mockInvocation -> {
+            Function<Transaction, ?> functionArg = mockInvocation.getArgument(0);
+            return functionArg.apply(mockTransaction); // Use the mocked transaction
+        }).when(mockTransaction).performAndClose(any(Function.class));
     }
 
     public abstract static class AbstractTestModule extends AbstractModule {
+
+        final Transaction mockTransaction = mock(Transaction.class);
 
         @Override
         protected void configure() {
@@ -121,7 +133,8 @@ public abstract class AbstractReceiptServiceTest {
 
             // Service Level Dependencies
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
-            bind(Transaction.class).toProvider(() -> mock(Transaction.class));
+            bind(Transaction.class).toInstance(mockTransaction);
+            bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
 
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
