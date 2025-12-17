@@ -8,14 +8,12 @@ import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
-import jnr.ffi.annotations.In;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
-import static dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService.APPLE_IAP_SCHEME;
 import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
@@ -70,7 +68,7 @@ public class SuperuserReceiptApiTest {
         final var receipt = new CreateReceiptRequest();
         receipt.setUserId(userClientContext.getUser().getId());
         receipt.setOriginalTransactionId("transactionId.12345");
-        receipt.setSchema(APPLE_IAP_SCHEME);
+        receipt.setSchema("SuperuserReceiptApiTest");
         receipt.setPurchaseTime(currentTimeMillis());
         receipt.setBody("{\"test\": \"test\"}");
 

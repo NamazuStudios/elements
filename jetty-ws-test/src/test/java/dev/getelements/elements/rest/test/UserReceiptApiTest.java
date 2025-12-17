@@ -15,7 +15,6 @@ import org.testng.annotations.Test;
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static dev.getelements.elements.sdk.model.Headers.PROFILE_ID;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
-import static dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService.APPLE_IAP_SCHEME;
 import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
@@ -58,7 +57,7 @@ public class UserReceiptApiTest {
         working = new Receipt();
         working.setUser(userClientContext.getUser());
         working.setOriginalTransactionId("transactionId.12345");
-        working.setSchema(APPLE_IAP_SCHEME);
+        working.setSchema("UserReceiptApiTest");
         working.setPurchaseTime(currentTimeMillis());
         working.setBody("{\"test\": \"test\"}");
 
