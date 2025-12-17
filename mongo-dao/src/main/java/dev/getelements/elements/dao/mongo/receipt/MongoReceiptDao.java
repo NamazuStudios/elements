@@ -6,12 +6,14 @@ import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
 import dev.getelements.elements.dao.mongo.model.receipt.MongoReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
@@ -23,6 +25,7 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -40,6 +43,8 @@ public class MongoReceiptDao implements ReceiptDao {
     private MongoDBUtils mongoDBUtils;
 
     private MongoUserDao mongoUserDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Receipt> getReceipts(User user, int offset, int count, String search) {
@@ -145,8 +150,15 @@ public class MongoReceiptDao implements ReceiptDao {
         final var mongoReceipt = getDozerMapper().map(receipt, MongoReceipt.class);
 
         try {
-            final var result = getDatastore().save(mongoReceipt);
-            return getDozerMapper().map(result, Receipt.class);
+            final var saveResult = getDatastore().save(mongoReceipt);
+            final var response = getDozerMapper().map(saveResult, Receipt.class);
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(response)
+                    .named(RECEIPT_CREATED)
+                    .build());
+
+            return response;
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }
@@ -216,4 +228,14 @@ public class MongoReceiptDao implements ReceiptDao {
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
     }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
 }

@@ -1,8 +1,8 @@
-package dev.getelements.elements.sdk.service.facebookiap.client.invoker;
+package dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker;
 
-import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 
 public interface FacebookIapReceiptRequestInvoker {
 
@@ -13,10 +13,4 @@ public interface FacebookIapReceiptRequestInvoker {
      */
     FacebookIapVerifyReceiptResponse invokeVerify(FacebookIapReceipt receipt, String appId, String appSecret);
 
-    /**
-     * Sends a request to Facebook to consume the receipt
-     * @param receipt data to consume
-     * @return the consume response
-     */
-    FacebookIapConsumeResponse invokeConsume(FacebookIapReceipt receipt, String appId, String appSecret);
 }

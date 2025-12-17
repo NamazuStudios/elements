@@ -1,13 +1,13 @@
-package dev.getelements.elements.sdk.service.meta.facebookiap.client.model;
+package dev.getelements.elements.sdk.service.meta.oculusiap.client.model;
 
 import dev.getelements.elements.rt.annotation.ClientSerializationStrategy;
 
 import java.util.Objects;
 
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.OCULUS_GRAPH;
+import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.META_GRAPH;
 
-@ClientSerializationStrategy(OCULUS_GRAPH)
-public class FacebookIapConsumeResponse {
+@ClientSerializationStrategy(META_GRAPH)
+public class OculusIapConsumeResponse {
 
     private boolean success;
 
@@ -23,7 +23,7 @@ public class FacebookIapConsumeResponse {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FacebookIapConsumeResponse that = (FacebookIapConsumeResponse) o;
+        OculusIapConsumeResponse that = (OculusIapConsumeResponse) o;
         return Objects.equals(getSuccess(), that.getSuccess());
     }
 
@@ -34,7 +34,7 @@ public class FacebookIapConsumeResponse {
 
     @Override
     public String toString() {
-        return "FacebookIapConsumeResponse{" +
+        return "OculusIapConsumeResponse{" +
                 "success=" + success +
                 '}';
     }

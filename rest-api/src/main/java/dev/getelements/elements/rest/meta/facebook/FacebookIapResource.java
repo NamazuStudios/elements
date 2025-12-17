@@ -3,13 +3,13 @@ package dev.getelements.elements.rest.meta.facebook;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 
-import dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -50,17 +50,6 @@ public class FacebookIapResource {
     }
 
     @POST
-    @Path("consume")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation( summary = "Attempts to consume the Facebook IAP Receipt data. " +
-            "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
-    public FacebookIapConsumeResponse consumeFacebookIapPurchase(final FacebookIapReceipt facebookIapReceipt) {
-        validateReceipt(facebookIapReceipt);
-        return getFacebookIapReceiptService().consumeAndRecordFacebookIapReceipt(facebookIapReceipt);
-    }
-
-    @POST
     @Path("verify")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -87,7 +76,7 @@ public class FacebookIapResource {
         getValidationHelper().validateModel(facebookIapReceipt, ValidationGroups.Create.class);
 
         final String purchaseId = facebookIapReceipt.getPurchaseId();
-        final String fbUserId = facebookIapReceipt.getFbUserId();
+        final String fbUserId = facebookIapReceipt.getUserId();
         final String sku = facebookIapReceipt.getSku();
 
         if (purchaseId.isEmpty()) {

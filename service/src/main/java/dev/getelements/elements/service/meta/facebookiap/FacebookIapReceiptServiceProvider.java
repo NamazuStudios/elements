@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.facebookiap;
+package dev.getelements.elements.service.meta.facebookiap;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;

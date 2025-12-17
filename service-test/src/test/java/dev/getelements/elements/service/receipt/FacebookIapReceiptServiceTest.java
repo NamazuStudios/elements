@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
 
-public class OculusIapReceiptServiceTest extends AbstractReceiptServiceTest {
+public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
 
     @Inject
     private UserFacebookIapReceiptService facebookIapReceiptService;
@@ -36,14 +36,8 @@ public class OculusIapReceiptServiceTest extends AbstractReceiptServiceTest {
     @Override
     public void setup() {
 
-        final var injector = createInjector(new OculusIapReceiptServiceTest.TestModule());
+        final var injector = createInjector(new FacebookIapReceiptServiceTest.TestModule());
         injector.injectMembers(this);
-
-        when(facebookIapReceiptRequestInvoker.invokeConsume(any(), anyString(), anyString())).then(mockInvocation -> {
-            final var response = new FacebookIapConsumeResponse();
-            response.setSuccess(true);
-            return response;
-        });
 
         when(facebookIapReceiptRequestInvoker.invokeVerify(any(), anyString(), anyString())).then(mockInvocation -> {
             final FacebookIapReceipt receipt = mockInvocation.getArgument(0);
@@ -85,7 +79,7 @@ public class OculusIapReceiptServiceTest extends AbstractReceiptServiceTest {
 
         final var invocation = testContext.getAllTestMethods()[0].getCurrentInvocationCount();
         final var facebookIapReceipt = new FacebookIapReceipt();
-        facebookIapReceipt.setFbUserId("fbUserId." + invocation);
+        facebookIapReceipt.setUserId("fbUserId." + invocation);
         facebookIapReceipt.setSku("sku." + invocation);
         facebookIapReceipt.setPurchaseId("purchaseId." + invocation);
         facebookIapReceipt.setGrantTime(currentTimeMillis());
@@ -136,7 +130,7 @@ public class OculusIapReceiptServiceTest extends AbstractReceiptServiceTest {
         newFacebookIapReceipt.setPurchaseId(facebookIapReceipt.getPurchaseId());
 
         // attempt to overwrite according to the original transaction id key
-        newFacebookIapReceipt.setFbUserId("fbUserId." + -1);
+        newFacebookIapReceipt.setUserId("fbUserId." + -1);
         newFacebookIapReceipt.setSku("sku." + -1);
         newFacebookIapReceipt.setGrantTime(currentTimeMillis());
         newFacebookIapReceipt.setExpirationTime(currentTimeMillis() - 10000L);

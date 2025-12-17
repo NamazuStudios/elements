@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.service.googleplayiap;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
+import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -14,9 +16,16 @@ import java.util.List;
 
 @ElementPublic
 @ElementServiceExport
+@ElementEventProducer(
+        value = ReceiptDao.RECEIPT_CREATED,
+        parameters = GooglePlayIapReceipt.class,
+        description = "Called when a new Google Play receipt is created."
+)
 public interface GooglePlayIapReceiptService {
 
     String GOOGLE_IAP_SCHEME = "com.android.vending";
+
+    String GOOGLE_PLAY_IAP_RECEIPT_CREATED = "dev.getelements.elements.sdk.service.receipt.google.play.created";
 
     /**
      * Gets receipts for a given user specifying the offset and the count.

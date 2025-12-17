@@ -8,7 +8,7 @@ import dev.getelements.elements.sdk.service.auth.*;
 import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
-import dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
 import dev.getelements.elements.sdk.service.firebase.FCMRegistrationService;
 import dev.getelements.elements.sdk.service.follower.FollowerService;
 import dev.getelements.elements.sdk.service.friend.FriendService;
@@ -26,6 +26,7 @@ import dev.getelements.elements.sdk.service.leaderboard.RankService;
 import dev.getelements.elements.sdk.service.leaderboard.ScoreService;
 import dev.getelements.elements.sdk.service.match.MatchService;
 import dev.getelements.elements.sdk.service.match.MultiMatchService;
+import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
 import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
@@ -54,8 +55,8 @@ import dev.getelements.elements.service.cdn.AnonCdnDeploymentService;
 import dev.getelements.elements.service.cdn.CdnDeploymentServiceProvider;
 import dev.getelements.elements.service.cdn.SuperuserDeploymentService;
 import dev.getelements.elements.service.codegen.OpenApiCodegenServiceProvider;
-import dev.getelements.elements.service.facebookiap.FacebookIapReceiptServiceProvider;
-import dev.getelements.elements.service.facebookiap.UserFacebookIapReceiptService;
+import dev.getelements.elements.service.meta.facebookiap.FacebookIapReceiptServiceProvider;
+import dev.getelements.elements.service.meta.facebookiap.UserFacebookIapReceiptService;
 import dev.getelements.elements.service.follower.FollowerServiceProvider;
 import dev.getelements.elements.service.follower.SuperUserFollowerService;
 import dev.getelements.elements.service.follower.UserFollowerService;
@@ -79,6 +80,8 @@ import dev.getelements.elements.service.largeobject.SuperUserLargeObjectService;
 import dev.getelements.elements.service.largeobject.UserLargeObjectService;
 import dev.getelements.elements.service.leaderboard.*;
 import dev.getelements.elements.service.match.*;
+import dev.getelements.elements.service.meta.oculusiap.OculusIapReceiptServiceProvider;
+import dev.getelements.elements.service.meta.oculusiap.UserOculusIapReceiptService;
 import dev.getelements.elements.service.metadata.AnonMetadataService;
 import dev.getelements.elements.service.metadata.MetadataServiceProvider;
 import dev.getelements.elements.service.metadata.SuperUserMetadataService;
@@ -159,6 +162,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(FacebookApplicationConfigurationServiceProvider.class)
                 .in(scope);
 
+        bind(OculusApplicationConfigurationService.class)
+                .toProvider(OculusApplicationConfigurationServiceProvider.class)
+                .in(scope);
+
         bind(ProfileService.class)
                 .toProvider(ProfileServiceProvider.class)
                 .in(scope);
@@ -185,6 +192,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(FacebookApplicationConfigurationService.class)
                 .toProvider(FacebookApplicationConfigurationServiceProvider.class)
+                .in(scope);
+
+        bind(OculusApplicationConfigurationService.class)
+                .toProvider(OculusApplicationConfigurationServiceProvider.class)
                 .in(scope);
 
         bind(MatchmakingApplicationConfigurationService.class)
@@ -257,6 +268,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(FacebookIapReceiptService.class)
                 .toProvider(FacebookIapReceiptServiceProvider.class)
+                .in(scope);
+
+        bind(OculusIapReceiptService.class)
+                .toProvider(OculusIapReceiptServiceProvider.class)
                 .in(scope);
 
         bind(ProfileOverrideService.class)
@@ -379,6 +394,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonFacebookApplicationConfigurationService.class);
 
+        bind(OculusApplicationConfigurationService.class)
+                .annotatedWith(named(ANONYMOUS))
+                .to(AnonOculusApplicationConfigurationService.class);
+
         bind(GooglePlayApplicationConfigurationService.class)
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonGooglePlayApplicationConfigurationService.class);
@@ -450,6 +469,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(FacebookIapReceiptService.class)
                 .annotatedWith(named(USER))
                 .to(UserFacebookIapReceiptService.class);
+
+        bind(OculusIapReceiptService.class)
+                .annotatedWith(named(USER))
+                .to(UserOculusIapReceiptService.class);
 
         bind(FCMRegistrationService.class)
                 .annotatedWith(named(USER))
@@ -587,6 +610,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserFacebookApplicationConfigurationService.class);
 
+        bind(OculusApplicationConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserOculusApplicationConfigurationService.class);
+
         bind(FlowSmartContractInvocationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserFlowSmartContractInvocationService.class);
@@ -614,6 +641,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(FacebookApplicationConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserFacebookApplicationConfigurationService.class);
+
+        bind(OculusApplicationConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserOculusApplicationConfigurationService.class);
 
         bind(IndexService.class)
                 .annotatedWith(named(SUPERUSER))

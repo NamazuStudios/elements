@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.service.facebookiap.client.exception;
+package dev.getelements.elements.sdk.service.meta.facebookiap.client.exception;
 
 import dev.getelements.elements.sdk.model.exception.BaseException;
 import dev.getelements.elements.sdk.model.exception.ErrorCode;

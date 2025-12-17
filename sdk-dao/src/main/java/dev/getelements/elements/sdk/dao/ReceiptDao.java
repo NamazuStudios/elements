@@ -1,16 +1,29 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.match.MultiMatch;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = ReceiptDao.RECEIPT_CREATED,
+        parameters = Receipt.class,
+        description = "Called when a new receipt is created. " +
+                "If the raw receipt data needs to be parsed, check the scheme to determine the corresponding class:\n" +
+                "GOOGLE_IAP_SCHEME -> GooglePlayIapReceipt\n" +
+                "OCULUS_PLATFORM_IAP_SCHEME -> OculusIapReceipt\n" +
+                "APPLE_IAP_SCHEME -> AppleIapReceipt"
+)
 public interface ReceiptDao {
+
+    String RECEIPT_CREATED = "dev.getelements.elements.sdk.model.dao.receipt.created";
 
     /**
      * Gets receipts for a given user specifying the offset and the count.

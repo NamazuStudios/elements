@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.model.meta.facebookiapreceipt;
+package dev.getelements.elements.sdk.model.meta.oculusiapreceipt;
 
 import dev.getelements.elements.sdk.model.ValidationGroups.Create;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Objects;
 
 @Schema
-public class FacebookIapReceipt implements Serializable {
+public class OculusIapReceipt implements Serializable {
     public static final String ID_TAG_PREFIX = "ID";
     public static final String TAG_SEPARATOR = ".";
 
-    @Schema(description = "The id of the Facebook User that purchased the IAP.")
+    @Schema(description = "The id of the Oculus User that purchased the IAP.")
     private String userId;
 
     @Schema(description =
@@ -120,7 +120,7 @@ public class FacebookIapReceipt implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FacebookIapReceipt that = (FacebookIapReceipt) o;
+        OculusIapReceipt that = (OculusIapReceipt) o;
         return Objects.equals(getSku(), that.getSku()) &&
                 Objects.equals(getUserId(), that.getUserId()) &&
                 Objects.equals(getPurchaseId(), that.getPurchaseId()) &&
@@ -137,7 +137,7 @@ public class FacebookIapReceipt implements Serializable {
     @Override
     public String toString() {
         return "OculusIapReceipt{" +
-                "fbUserId=" + userId +
+                "userId=" + userId +
                 ", purchaseId='" + purchaseId + '\'' +
                 ", reportingId='" + reportingId + '\'' +
                 ", sku='" + sku + '\'' +

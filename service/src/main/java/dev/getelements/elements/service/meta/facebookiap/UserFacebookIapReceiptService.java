@@ -1,12 +1,13 @@
-package dev.getelements.elements.service.facebookiap;
+package dev.getelements.elements.service.meta.facebookiap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.*;
-import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.goods.Item;
@@ -17,7 +18,6 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -27,10 +27,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt.buildRewardIssuanceTags;
+import static dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt.buildRewardIssuanceTags;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.*;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
 
@@ -58,11 +57,11 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     private Provider<Transaction> transactionProvider;
 
-    private Consumer<Event> eventPublisher;
+    private ElementRegistry elementRegistry;
 
     @Override
     public Pagination<FacebookIapReceipt> getFacebookIapReceipts(final int offset, final int count) {
-        final var search = OCULUS_PLATFORM_IAP_SCHEME;
+        final var search = FACEBOOK_IAP_SCHEME;
         final var receipts = receiptDao.getReceipts(user, offset, count, search);
         final var fbReceipts = receipts.getObjects().stream().map(this::convertReceipt);
 
@@ -71,7 +70,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     @Override
     public FacebookIapReceipt getFacebookIapReceipt(final String originalTransactionId) {
-        return convertReceipt(receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, originalTransactionId));
+        return convertReceipt(receiptDao.getReceipt(FACEBOOK_IAP_SCHEME, originalTransactionId));
     }
 
     @Override
@@ -87,15 +86,15 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         }
 
         receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
-        receipt.setSchema(OCULUS_PLATFORM_IAP_SCHEME);
+        receipt.setSchema(FACEBOOK_IAP_SCHEME);
 
         return getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
             final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
 
-            getEventPublisher().accept(Event.builder()
+            getElementRegistry().publish(Event.builder()
                     .argument(convertedReceipt)
-                    .named(OCULUS_RECEIPT_CREATED)
+                    .named(FACEBOOK_IAP_RECEIPT_CREATED)
                     .build());
 
             return convertedReceipt;
@@ -104,7 +103,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     @Override
     public void deleteFacebookIapReceipt(final String transactionId) {
-        final var receipt = receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, transactionId);
+        final var receipt = receiptDao.getReceipt(FACEBOOK_IAP_SCHEME, transactionId);
         receiptDao.deleteReceipt(receipt.getId());
     }
 
@@ -131,35 +130,6 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
         // If verification was successful, we try to write the receipt to the db
         if(response != null && response.getSuccess()) {
-            getOrCreateFacebookIapReceipt(receiptData);
-        }
-
-        return response;
-    }
-
-    @Override
-    public FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(final FacebookIapReceipt receiptData) {
-
-        final var profile = getCurrentProfileSupplier().get();
-
-        if (profile == null) {
-            throw new NotFoundException("User has no profile.");
-        }
-
-        final var application = profile.getApplication();
-
-        if (application == null) {
-            throw new InvalidDataException("Profile is not associated with a valid application.");
-        }
-
-        final var applicationConfiguration = getFacebookApplicationConfiguration(application);
-        final var appId = applicationConfiguration.getApplicationId();
-        final var appSecret = applicationConfiguration.getApplicationSecret();
-
-        final var response = requestInvoker.invokeConsume(receiptData, appId, appSecret);
-
-        // If consumption was successful, we try to write the receipt to the db and process rewards
-        if(response.getSuccess()) {
             getOrCreateFacebookIapReceipt(receiptData);
             getOrCreateRewardIssuances(receiptData);
         }
@@ -388,12 +358,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.transactionProvider = transactionProvider;
     }
 
-    public Consumer<Event> getEventPublisher() {
-        return eventPublisher;
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
     }
 
     @Inject
-    public void setEventPublisher(Consumer<Event> eventPublisher) {
-        this.eventPublisher = eventPublisher;
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 }

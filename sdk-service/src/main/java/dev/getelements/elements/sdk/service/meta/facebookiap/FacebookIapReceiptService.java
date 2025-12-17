@@ -1,17 +1,16 @@
-package dev.getelements.elements.sdk.service.facebookiap;
+package dev.getelements.elements.sdk.service.meta.facebookiap;
 
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
-import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 
 import java.util.List;
 
@@ -19,11 +18,11 @@ import java.util.List;
 @ElementServiceExport
 public interface FacebookIapReceiptService {
 
-    String OCULUS_PLATFORM_IAP_SCHEME = "com.oculus.platform";
+    String FACEBOOK_IAP_SCHEME = "com.facebook.platform";
 
-    String OCULUS_ROOT_URL = "https://graph.oculus.com";
+    String FACEBOOK_IAP_ROOT_URL = "https://graph.facebook.com/v20.0";
 
-    String OCULUS_RECEIPT_CREATED = "dev.getelements.elements.sdk.service.receipt.google.play.created";
+    String FACEBOOK_IAP_RECEIPT_CREATED = "dev.getelements.elements.sdk.service.receipt.meta.facebook.created";
 
     /**
      * Gets receipts for a given user specifying the offset and the count.
@@ -48,9 +47,9 @@ public interface FacebookIapReceiptService {
      *
      * @return the {@link Receipt} as it was written into the database
      * @throws InvalidDataException
-     *     if the state of the passed in FacebookIapReceipt is invalid
+     *     if the state of the passed in OculusIapReceipt is invalid
      * @throws DuplicateException
-     *     if the passed in FacebookIapReceipt has a name that already exists
+     *     if the passed in OculusIapReceipt has a name that already exists
      */
     FacebookIapReceipt getOrCreateFacebookIapReceipt(FacebookIapReceipt facebookIapReceipt);
 
@@ -68,15 +67,6 @@ public interface FacebookIapReceiptService {
      * @return the {@link FacebookIapReceipt} as it was written into the database, or the existing database record
      */
     FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(FacebookIapReceipt receiptData);
-
-    /**
-     * Verifies the given receipt against the Facebook servers.
-     *
-     * @param receiptData
-     * @return the {@link FacebookIapReceipt} as it was written into the database, or the existing database record
-     */
-    FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(FacebookIapReceipt receiptData);
-
 
     /**
      * Gets or creates {@link RewardIssuance} in the db for the given {@link FacebookIapReceipt}.

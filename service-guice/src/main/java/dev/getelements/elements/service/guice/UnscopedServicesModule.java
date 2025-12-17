@@ -108,6 +108,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserFacebookApplicationConfigurationService.class);
 
+        bind(OculusApplicationConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserOculusApplicationConfigurationService.class);
+
         bind(MatchmakingApplicationConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserMatchmakingApplicationConfigurationService.class);

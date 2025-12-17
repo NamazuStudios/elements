@@ -1,13 +1,13 @@
-package dev.getelements.elements.sdk.service.meta.facebookiap.client.model;
+package dev.getelements.elements.sdk.service.meta.oculusiap.client.model;
 
 import dev.getelements.elements.rt.annotation.ClientSerializationStrategy;
 
 import java.util.Objects;
 
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.OCULUS_GRAPH;
+import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.META_GRAPH;
 
-@ClientSerializationStrategy(OCULUS_GRAPH)
-public class FacebookIapVerifyReceiptResponse {
+@ClientSerializationStrategy(META_GRAPH)
+public class OculusIapVerifyReceiptResponse {
 
     private boolean success;
 
@@ -33,7 +33,7 @@ public class FacebookIapVerifyReceiptResponse {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FacebookIapVerifyReceiptResponse that = (FacebookIapVerifyReceiptResponse) o;
+        OculusIapVerifyReceiptResponse that = (OculusIapVerifyReceiptResponse) o;
         return Objects.equals(getSuccess(), that.getSuccess()) &&
                 Objects.equals(getGrantTime(), that.getGrantTime());
     }
@@ -45,7 +45,7 @@ public class FacebookIapVerifyReceiptResponse {
 
     @Override
     public String toString() {
-        return "FacebookIapVerifyReceiptResponse{" +
+        return "OculusIapVerifyReceiptResponse{" +
                 "success=" + success +
                 ", grantTime=" + grantTime +
                 '}';

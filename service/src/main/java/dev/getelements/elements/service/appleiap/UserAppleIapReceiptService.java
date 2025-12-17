@@ -2,6 +2,8 @@ package dev.getelements.elements.service.appleiap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -50,6 +52,8 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     private Provider<Transaction> transactionProvider;
 
+    private ElementRegistry elementRegistry;
+
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
         final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, APPLE_IAP_SOURCE);
@@ -83,8 +87,14 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         return getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
             final var createdReceipt = receiptDao.createReceipt(receipt);
+            final var convertedReceipt = convertReceipt(createdReceipt);
 
-            return convertReceipt(createdReceipt);
+            getElementRegistry().publish(Event.builder()
+                    .argument(convertedReceipt)
+                    .named(APPLE_IAP_RECEIPT_CREATED)
+                    .build());
+
+            return convertedReceipt;
         });
 
     }
@@ -325,5 +335,14 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     @Inject
     public void setTransactionProvider(Provider<Transaction> transactionProvider) {
         this.transactionProvider = transactionProvider;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 }

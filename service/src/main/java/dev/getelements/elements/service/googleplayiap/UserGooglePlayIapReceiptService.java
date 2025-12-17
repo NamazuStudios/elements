@@ -9,6 +9,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.androidpublisher.AndroidPublisher;
 import com.google.api.services.androidpublisher.AndroidPublisherScopes;
 import com.google.api.services.androidpublisher.model.ProductPurchase;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration;
@@ -30,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
@@ -63,6 +66,8 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     private Provider<Transaction> transactionProvider;
 
+    private ElementRegistry elementRegistry;
+
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
         final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, GOOGLE_IAP_SCHEME);
@@ -93,9 +98,18 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         }
         receipt.setBody(body);
 
-        final var createdReceipt = getReceiptDao().createReceipt(receipt);
+        return getTransactionProvider().get().performAndClose(tx -> {
+            final var receiptDao = tx.getDao(ReceiptDao.class);
+            final var createdReceipt = receiptDao.createReceipt(receipt);
+            final var convertedReceipt = convertReceipt(createdReceipt);
 
-        return convertReceipt(createdReceipt);
+            getElementRegistry().publish(Event.builder()
+                    .argument(convertedReceipt)
+                    .named(GOOGLE_PLAY_IAP_RECEIPT_CREATED)
+                    .build());
+
+            return convertedReceipt;
+        });
     }
 
     @Override
@@ -362,5 +376,14 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     @Inject
     public void setTransactionProvider(Provider<Transaction> transactionProvider) {
         this.transactionProvider = transactionProvider;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 }

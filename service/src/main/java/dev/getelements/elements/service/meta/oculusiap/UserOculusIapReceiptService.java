@@ -1,24 +1,26 @@
-package dev.getelements.elements.service.meta.facebookiap;
+package dev.getelements.elements.service.meta.oculusiap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.application.*;
-import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
+import dev.getelements.elements.sdk.service.meta.oculusiap.client.invoker.OculusIapReceiptRequestInvoker;
+import dev.getelements.elements.sdk.service.meta.oculusiap.client.model.OculusIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.oculusiap.client.model.OculusIapVerifyReceiptResponse;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.ws.rs.client.Client;
@@ -30,11 +32,11 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt.buildRewardIssuanceTags;
+import static dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt.buildRewardIssuanceTags;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.*;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
 
-public class UserFacebookIapReceiptService implements FacebookIapReceiptService {
+public class UserOculusIapReceiptService implements OculusIapReceiptService {
 
     private User user;
 
@@ -54,15 +56,15 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     private ObjectMapper objectMapper;
 
-    private FacebookIapReceiptRequestInvoker requestInvoker;
+    private OculusIapReceiptRequestInvoker requestInvoker;
 
     private Provider<Transaction> transactionProvider;
 
-    private Consumer<Event> eventPublisher;
+    private ElementRegistry elementRegistry;
 
     @Override
-    public Pagination<FacebookIapReceipt> getFacebookIapReceipts(final int offset, final int count) {
-        final var search = OCULUS_PLATFORM_IAP_SCHEME;
+    public Pagination<OculusIapReceipt> getOculusIapReceipts(final int offset, final int count) {
+        final var search = OCULUS_IAP_SCHEME;
         final var receipts = receiptDao.getReceipts(user, offset, count, search);
         final var fbReceipts = receipts.getObjects().stream().map(this::convertReceipt);
 
@@ -70,32 +72,32 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public FacebookIapReceipt getFacebookIapReceipt(final String originalTransactionId) {
-        return convertReceipt(receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, originalTransactionId));
+    public OculusIapReceipt getOculusIapReceipt(final String originalTransactionId) {
+        return convertReceipt(receiptDao.getReceipt(OCULUS_IAP_SCHEME, originalTransactionId));
     }
 
     @Override
-    public FacebookIapReceipt getOrCreateFacebookIapReceipt(final FacebookIapReceipt facebookIapReceipt) {
+    public OculusIapReceipt getOrCreateOculusIapReceipt(final OculusIapReceipt oculusIapReceipt) {
 
         final var receipt = new Receipt();
 
         try {
-            final var body = getObjectMapper().writeValueAsString(facebookIapReceipt);
+            final var body = getObjectMapper().writeValueAsString(oculusIapReceipt);
             receipt.setBody(body);
         } catch (JsonProcessingException e) {
             throw new InternalError("Unable to serialize receipt: " + e.getMessage());
         }
 
-        receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
-        receipt.setSchema(OCULUS_PLATFORM_IAP_SCHEME);
+        receipt.setOriginalTransactionId(oculusIapReceipt.getPurchaseId());
+        receipt.setSchema(OCULUS_IAP_SCHEME);
 
         return getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
             final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
 
-            getEventPublisher().accept(Event.builder()
+            getElementRegistry().publish(Event.builder()
                     .argument(convertedReceipt)
-                    .named(OCULUS_RECEIPT_CREATED)
+                    .named(OCULUS_IAP_RECEIPT_CREATED)
                     .build());
 
             return convertedReceipt;
@@ -103,13 +105,13 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public void deleteFacebookIapReceipt(final String transactionId) {
-        final var receipt = receiptDao.getReceipt(OCULUS_PLATFORM_IAP_SCHEME, transactionId);
+    public void deleteOculusIapReceipt(final String transactionId) {
+        final var receipt = receiptDao.getReceipt(OCULUS_IAP_SCHEME, transactionId);
         receiptDao.deleteReceipt(receipt.getId());
     }
 
     @Override
-    public FacebookIapVerifyReceiptResponse verifyAndCreateFacebookIapReceiptIfNeeded(final FacebookIapReceipt receiptData) {
+    public OculusIapVerifyReceiptResponse verifyAndCreateOculusIapReceiptIfNeeded(final OculusIapReceipt receiptData) {
 
         final var profile = getCurrentProfileSupplier().get();
 
@@ -123,7 +125,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
             throw new InvalidDataException("Profile is not associated with a valid application.");
         }
 
-        final var applicationConfiguration = getFacebookApplicationConfiguration(application);
+        final var applicationConfiguration = getOculusApplicationConfiguration(application);
         final var appId = applicationConfiguration.getApplicationId();
         final var appSecret = applicationConfiguration.getApplicationSecret();
 
@@ -131,14 +133,14 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
         // If verification was successful, we try to write the receipt to the db
         if(response != null && response.getSuccess()) {
-            getOrCreateFacebookIapReceipt(receiptData);
+            getOrCreateOculusIapReceipt(receiptData);
         }
 
         return response;
     }
 
     @Override
-    public FacebookIapConsumeResponse consumeAndRecordFacebookIapReceipt(final FacebookIapReceipt receiptData) {
+    public OculusIapConsumeResponse consumeAndRecordOculusIapReceipt(final OculusIapReceipt receiptData) {
 
         final var profile = getCurrentProfileSupplier().get();
 
@@ -152,7 +154,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
             throw new InvalidDataException("Profile is not associated with a valid application.");
         }
 
-        final var applicationConfiguration = getFacebookApplicationConfiguration(application);
+        final var applicationConfiguration = getOculusApplicationConfiguration(application);
         final var appId = applicationConfiguration.getApplicationId();
         final var appSecret = applicationConfiguration.getApplicationSecret();
 
@@ -160,7 +162,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
         // If consumption was successful, we try to write the receipt to the db and process rewards
         if(response.getSuccess()) {
-            getOrCreateFacebookIapReceipt(receiptData);
+            getOrCreateOculusIapReceipt(receiptData);
             getOrCreateRewardIssuances(receiptData);
         }
 
@@ -168,7 +170,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     }
 
     @Override
-    public List<RewardIssuance> getOrCreateRewardIssuances(final FacebookIapReceipt facebookIapReceipt) {
+    public List<RewardIssuance> getOrCreateRewardIssuances(final OculusIapReceipt oculusIapReceipt) {
 
         final var resultRewardIssuances = new ArrayList<RewardIssuance>();
         final var profile = getCurrentProfileSupplier().get();
@@ -193,20 +195,20 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
             // next, we look up the associated application configuration
             final var applicationConfigurationDao = tx.getDao(ApplicationConfigurationDao.class);
-            final var facebookApplicationConfiguration = applicationConfigurationDao
+            final var oculusApplicationConfiguration = applicationConfigurationDao
                     .getDefaultApplicationConfigurationForApplication(
                             applicationId,
-                            FacebookApplicationConfiguration.class);
+                            OculusApplicationConfiguration.class);
 
-            final var productBundles = facebookApplicationConfiguration.getProductBundles();
-            final var productId = facebookIapReceipt.getSku();
+            final var productBundles = oculusApplicationConfiguration.getProductBundles();
+            final var productId = oculusIapReceipt.getSku();
             final var productBundle = productBundles.stream()
                     .filter(p -> p.getProductId().equals(productId))
                     .findFirst()
                     .orElse(null);
 
             if (productBundle == null) {
-                throw new InvalidDataException("ApplicationConfiguration " + facebookApplicationConfiguration.getId() +
+                throw new InvalidDataException("ApplicationConfiguration " + oculusApplicationConfiguration.getId() +
                         "has no ProductBundle for productId " + productId);
             }
 
@@ -219,7 +221,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
                 final var item = itemDao.getItemByIdOrName(productBundleReward.getItemId());
 
                 final var rewardIssuance = createRewardIssuance(
-                        facebookIapReceipt.getPurchaseId(),
+                        oculusIapReceipt.getPurchaseId(),
                         item,
                         productBundleReward.getQuantity()
                 );
@@ -239,8 +241,8 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
             final Integer quantity
     ) {
 
-        final var context = buildFacebookIapContextString(originalTransactionId, item.getId());
-        final var metadata = generateFacebookIapReceiptMetadata();
+        final var context = buildOculusIapContextString(originalTransactionId, item.getId());
+        final var metadata = generateOculusIapReceiptMetadata();
         final var rewardIssuance = new RewardIssuance();
 
         rewardIssuance.setItem(item);
@@ -250,7 +252,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         rewardIssuance.setType(PERSISTENT);
         rewardIssuance.setContext(context);
         rewardIssuance.setMetadata(metadata);
-        rewardIssuance.setSource(FACEBOOK_IAP_SOURCE);
+        rewardIssuance.setSource(OCULUS_IAP_SOURCE);
 
         final var tags = buildRewardIssuanceTags(originalTransactionId);
         rewardIssuance.setTags(tags);
@@ -258,22 +260,22 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         return rewardIssuance;
     }
 
-    private Map<String, Object> generateFacebookIapReceiptMetadata() {
+    private Map<String, Object> generateOculusIapReceiptMetadata() {
         final HashMap<String, Object> map = new HashMap<>();
 
         return map;
     }
 
-    private FacebookIapReceipt convertReceipt(final Receipt receipt) {
+    private OculusIapReceipt convertReceipt(final Receipt receipt) {
         try {
-            return getObjectMapper().readValue(receipt.getBody(), FacebookIapReceipt.class);
+            return getObjectMapper().readValue(receipt.getBody(), OculusIapReceipt.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
 
-    private FacebookApplicationConfiguration getFacebookApplicationConfiguration(final Application application) {
+    private OculusApplicationConfiguration getOculusApplicationConfiguration(final Application application) {
 
         final var applicationId = application.getId();
 
@@ -284,7 +286,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         return getApplicationConfigurationDao()
                 .getDefaultApplicationConfigurationForApplication(
                         applicationId,
-                        FacebookApplicationConfiguration.class
+                        OculusApplicationConfiguration.class
                 );
     }
 
@@ -370,12 +372,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.objectMapper = objectMapper;
     }
 
-    public FacebookIapReceiptRequestInvoker getRequestInvoker() {
+    public OculusIapReceiptRequestInvoker getRequestInvoker() {
         return requestInvoker;
     }
 
     @Inject
-    public void setRequestInvoker(FacebookIapReceiptRequestInvoker requestInvoker) {
+    public void setRequestInvoker(OculusIapReceiptRequestInvoker requestInvoker) {
         this.requestInvoker = requestInvoker;
     }
 
@@ -388,12 +390,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.transactionProvider = transactionProvider;
     }
 
-    public Consumer<Event> getEventPublisher() {
-        return eventPublisher;
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
     }
 
     @Inject
-    public void setEventPublisher(Consumer<Event> eventPublisher) {
-        this.eventPublisher = eventPublisher;
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 }

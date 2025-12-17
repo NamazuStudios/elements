@@ -1,26 +1,25 @@
-package dev.getelements.elements.service.meta.facebookiap;
+package dev.getelements.elements.service.meta.oculusiap;
 
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
 import dev.getelements.elements.service.util.Services;
-
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-public class FacebookIapReceiptServiceProvider implements Provider<FacebookIapReceiptService> {
+public class OculusIapReceiptServiceProvider implements Provider<OculusIapReceiptService> {
 
     private User user;
 
-    private Provider<UserFacebookIapReceiptService> userFacebookIapReceiptServiceProvider;
+    private Provider<UserOculusIapReceiptService> userOculusIapReceiptServiceProvider;
 
     @Override
-    public FacebookIapReceiptService get() {
+    public OculusIapReceiptService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:
             case USER:
-                return getUserFacebookIapReceiptServiceProvider().get();
+                return getUserOculusIapReceiptServiceProvider().get();
             default:
-                return Services.forbidden(FacebookIapReceiptService.class);
+                return Services.forbidden(OculusIapReceiptService.class);
         }
     }
 
@@ -33,12 +32,12 @@ public class FacebookIapReceiptServiceProvider implements Provider<FacebookIapRe
         this.user = user;
     }
 
-    public Provider<UserFacebookIapReceiptService> getUserFacebookIapReceiptServiceProvider() {
-        return userFacebookIapReceiptServiceProvider;
+    public Provider<UserOculusIapReceiptService> getUserOculusIapReceiptServiceProvider() {
+        return userOculusIapReceiptServiceProvider;
     }
 
     @Inject
-    public void setUserFacebookIapReceiptServiceProvider(Provider<UserFacebookIapReceiptService> userFacebookIapReceiptServiceProvider) {
-        this.userFacebookIapReceiptServiceProvider = userFacebookIapReceiptServiceProvider;
+    public void setUserOculusIapReceiptServiceProvider(Provider<UserOculusIapReceiptService> userOculusIapReceiptServiceProvider) {
+        this.userOculusIapReceiptServiceProvider = userOculusIapReceiptServiceProvider;
     }
 }

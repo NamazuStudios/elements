@@ -19,6 +19,8 @@ public interface AppleIapReceiptService {
 
     String APPLE_IAP_SCHEME = "com.apple.appstore";
 
+    String APPLE_IAP_RECEIPT_CREATED = "dev.getelements.elements.sdk.service.receipt.apple.appstore.created";
+
     /**
      * Gets receipts for a given user specifying the offset and the count.
      *

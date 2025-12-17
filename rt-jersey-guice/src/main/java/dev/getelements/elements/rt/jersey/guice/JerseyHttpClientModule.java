@@ -115,7 +115,7 @@ public class JerseyHttpClientModule extends PrivateModule {
             return objectMapper;
         });
 
-        withNamedObjectMapperProvider(OCULUS_GRAPH, () -> {
+        withNamedObjectMapperProvider(META_GRAPH, () -> {
             final ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
             objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);

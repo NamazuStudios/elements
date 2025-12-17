@@ -26,7 +26,7 @@ public @interface ClientSerializationStrategy {
     /**
      * Implies serialized fields follow the Apple/iTunes Style
      */
-    String OCULUS_GRAPH = "dev.getelements.elements.sdk.model.annotation.SerializationStrategy.oculus.graph";
+    String META_GRAPH = "dev.getelements.elements.sdk.model.annotation.SerializationStrategy.meta.graph";
 
     /**
      * Implies that serialized fields use lowerCamelCase
