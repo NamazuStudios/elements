@@ -1,16 +1,16 @@
-package dev.getelements.elements.service.facebookiap.invoker;
+package dev.getelements.elements.service.meta.facebookiap.invoker;
 
 import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
-import dev.getelements.elements.sdk.service.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Form;
 import jakarta.ws.rs.core.MediaType;
 
-import static dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService.OCULUS_ROOT_URL;
+import static dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService.OCULUS_ROOT_URL;
 
 public class DefaultFacebookIapReceiptRequestInvoker implements FacebookIapReceiptRequestInvoker {
 

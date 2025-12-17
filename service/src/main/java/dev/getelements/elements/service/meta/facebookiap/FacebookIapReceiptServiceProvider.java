@@ -1,7 +1,7 @@
 package dev.getelements.elements.service.facebookiap;
 
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
 import dev.getelements.elements.service.util.Services;
 
 import jakarta.inject.Inject;

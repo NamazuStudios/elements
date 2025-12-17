@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.service.facebookiap;
+package dev.getelements.elements.sdk.service.meta.facebookiap;
 
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -9,9 +9,8 @@ import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
-import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 
 import java.util.List;
 
@@ -22,6 +21,8 @@ public interface FacebookIapReceiptService {
     String OCULUS_PLATFORM_IAP_SCHEME = "com.oculus.platform";
 
     String OCULUS_ROOT_URL = "https://graph.oculus.com";
+
+    String OCULUS_RECEIPT_CREATED = "dev.getelements.elements.sdk.service.receipt.google.play.created";
 
     /**
      * Gets receipts for a given user specifying the offset and the count.

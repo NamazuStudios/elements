@@ -2,6 +2,7 @@ package dev.getelements.elements.service.facebookiap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.*;
@@ -14,21 +15,19 @@ import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.service.facebookiap.FacebookIapReceiptService;
-import dev.getelements.elements.sdk.service.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.Form;
-import jakarta.ws.rs.core.MediaType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt.buildRewardIssuanceTags;
@@ -58,6 +57,8 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     private FacebookIapReceiptRequestInvoker requestInvoker;
 
     private Provider<Transaction> transactionProvider;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<FacebookIapReceipt> getFacebookIapReceipts(final int offset, final int count) {
@@ -90,7 +91,14 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
         return getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
-            return convertReceipt(receiptDao.createReceipt(receipt));
+            final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(convertedReceipt)
+                    .named(OCULUS_RECEIPT_CREATED)
+                    .build());
+
+            return convertedReceipt;
         });
     }
 
@@ -378,5 +386,14 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
     @Inject
     public void setTransactionProvider(Provider<Transaction> transactionProvider) {
         this.transactionProvider = transactionProvider;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

@@ -1,12 +1,12 @@
 package dev.getelements.elements.service.receipt;
 
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.facebookiapreceipt.FacebookIapReceipt;
-import dev.getelements.elements.sdk.service.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapConsumeResponse;
-import dev.getelements.elements.sdk.service.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
-import dev.getelements.elements.service.facebookiap.UserFacebookIapReceiptService;
-import dev.getelements.elements.service.facebookiap.invoker.DefaultFacebookIapReceiptRequestInvoker;
+import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapConsumeResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.service.meta.facebookiap.UserFacebookIapReceiptService;
+import dev.getelements.elements.service.meta.facebookiap.invoker.DefaultFacebookIapReceiptRequestInvoker;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
 
-public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
+public class OculusIapReceiptServiceTest extends AbstractReceiptServiceTest {
 
     @Inject
     private UserFacebookIapReceiptService facebookIapReceiptService;
@@ -36,7 +36,7 @@ public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
     @Override
     public void setup() {
 
-        final var injector = createInjector(new FacebookIapReceiptServiceTest.TestModule());
+        final var injector = createInjector(new OculusIapReceiptServiceTest.TestModule());
         injector.injectMembers(this);
 
         when(facebookIapReceiptRequestInvoker.invokeConsume(any(), anyString(), anyString())).then(mockInvocation -> {
@@ -73,7 +73,7 @@ public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
 
         assertEquals(facebookIapReceipt.getPurchaseId(), resultFacebookIapReceipt.getPurchaseId());
         assertEquals(facebookIapReceipt.getSku(), resultFacebookIapReceipt.getSku());
-        assertEquals(facebookIapReceipt.getFbUserId(), resultFacebookIapReceipt.getFbUserId());
+        assertEquals(facebookIapReceipt.getUserId(), resultFacebookIapReceipt.getUserId());
         assertEquals(facebookIapReceipt.getReportingId(), resultFacebookIapReceipt.getReportingId());
         assertEquals(facebookIapReceipt.getDeveloperPayload(), resultFacebookIapReceipt.getDeveloperPayload());
         assertEquals(facebookIapReceipt.getExpirationTime(), resultFacebookIapReceipt.getExpirationTime());

@@ -3,40 +3,24 @@ package dev.getelements.elements.service.receipt;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
-import com.mongodb.MongoException;
-import dev.getelements.elements.dao.mongo.guice.MongoTransactionBufferedEventPublisher;
-import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.exception.TooBusyException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.service.receipt.ReceiptService;
-import dev.getelements.elements.sdk.util.LazyValue;
-import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import dev.getelements.elements.service.util.ServicesMapperRegistryProvider;
-import dev.morphia.transactions.MorphiaSession;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import org.bson.types.ObjectId;
-import org.testng.annotations.Test;
+import org.mockito.Mock;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Random;
 import java.util.function.Supplier;
 
 import static com.google.inject.name.Names.named;
-import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
-import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
-import static dev.getelements.elements.sdk.dao.Transaction.RetryException.DEFAULT_RECOMMENDED_DELAY;
 import static dev.getelements.elements.sdk.model.Constants.API_OUTSIDE_URL;
-import static java.lang.Thread.sleep;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -49,7 +33,10 @@ public abstract class AbstractReceiptServiceTest {
     protected ReceiptDao receiptDao;
 
     @Inject
-    private Provider<Transaction> transactionProvider;
+    private Injector injector;
+
+    @Mock
+    private Transaction mockTransaction;
 
     protected static final ArrayList<Receipt> createdReceipts = new ArrayList<>();
 
@@ -105,8 +92,10 @@ public abstract class AbstractReceiptServiceTest {
             return receiptId;
         }).when(receiptDao).deleteReceipt(anyString());
 
-//        doAnswer(mockInvocation -> new TestTransaction()).when(transactionProvider).get();
-
+        when(mockTransaction.getDao(any())).then(mockInvocation -> {
+            final var daoClass = mockInvocation.getArgument(0);
+            return injector.getInstance(daoClass.getClass());
+        });
     }
 
     public abstract static class AbstractTestModule extends AbstractModule {
@@ -132,55 +121,11 @@ public abstract class AbstractReceiptServiceTest {
 
             // Service Level Dependencies
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
-            bind(Transaction.class).toProvider(TestTransactionProvider.class);
+            bind(Transaction.class).toProvider(() -> mock(Transaction.class));
 
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
 
     }
 
-    public static class TestTransactionProvider implements Provider<Transaction> {
-
-        @Inject
-        private Injector injector;
-
-        @Override
-        public Transaction get() {
-            return new TestTransaction(injector);
-        }
-    }
-
-    public static class TestTransaction implements Transaction {
-
-        private Injector injector;
-
-        public TestTransaction(Injector injector) {
-            this.injector = injector;
-        }
-
-        @Override
-        public <DaoT> DaoT getDao(final Class<DaoT> daoT) {
-            return injector.getInstance(daoT);
-        }
-
-        @Override
-        public boolean isActive() {
-            return true;
-        }
-
-        @Override
-        public void commit() {}
-
-        private void handle(final MongoException ex, final Runnable unknown) {}
-
-        @Override
-        public void start() {}
-
-        @Override
-        public void rollback() {}
-
-        @Override
-        public void close() {}
-
-    }
 }
