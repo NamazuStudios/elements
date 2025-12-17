@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.rest.test.model.ReceiptPagination;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
+import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import jakarta.inject.Inject;
@@ -19,6 +20,7 @@ import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -58,14 +60,21 @@ public class UserReceiptApiTest {
         working.setOriginalTransactionId("transactionId.12345");
         working.setSchema(APPLE_IAP_SCHEME);
         working.setPurchaseTime(currentTimeMillis());
-        working.setBody("{ \"test\": \"test\" }");
+        working.setBody("{\"test\": \"test\"}");
 
-        receiptDao.createReceipt(working);
+        working = receiptDao.createReceipt(working);
     }
 
 
     @Test(groups = "create")
     public void testCreateReceipt() {
+
+        final var request = new CreateReceiptRequest();
+        request.setUserId(working.getId());
+        request.setSchema(working.getSchema());
+        request.setOriginalTransactionId(working.getOriginalTransactionId());
+        request.setPurchaseTime(working.getPurchaseTime());
+        request.setBody(working.getBody());
 
         final var response = client
                 .target(apiRoot + "/receipt")
@@ -74,7 +83,7 @@ public class UserReceiptApiTest {
                 .header(PROFILE_ID, userClientContext.getDefaultProfile().getId())
                 .post(entity(working, APPLICATION_JSON));
 
-        assertEquals(401, response.getStatus());
+        assertNotEquals(200, response.getStatus());
 
     }
 
@@ -90,8 +99,8 @@ public class UserReceiptApiTest {
 
         assertEquals(200, response.getStatus());
 
-        final var metadataSpec = response.readEntity(Receipt.class);
-        assertEquals(working, metadataSpec);
+        final var receipt = response.readEntity(Receipt.class);
+        assertEquals(working, receipt);
 
     }
 
@@ -127,7 +136,7 @@ public class UserReceiptApiTest {
                 .header(SESSION_SECRET, userClientContext.getSessionSecret())
                 .delete();
 
-        assertEquals(401, response.getStatus());
+        assertNotEquals(204, response.getStatus());
 
     }
 

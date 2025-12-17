@@ -177,11 +177,18 @@ public class MongoReceiptDao implements ReceiptDao {
 
         receiptQuery.filter(eq("_id", objectId));
 
-        final DeleteResult deleteResult = getDatastore().delete(Objects.requireNonNull(receiptQuery.first()));
+        try {
+            final var receipt = Objects.requireNonNull(receiptQuery.first());
 
-        if (deleteResult.getDeletedCount() == 0) {
+            final DeleteResult deleteResult = getDatastore().delete(receipt);
+
+            if (deleteResult.getDeletedCount() == 0) {
+                throw new NotFoundException("Receipt not found: " + id);
+            }
+        } catch (NullPointerException e) {
             throw new NotFoundException("Receipt not found: " + id);
         }
+
     }
 
     public Datastore getDatastore() {

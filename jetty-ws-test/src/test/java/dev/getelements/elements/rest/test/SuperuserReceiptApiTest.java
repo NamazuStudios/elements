@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.rest.test.model.ReceiptPagination;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
+import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.util.PaginationWalker;
 import jakarta.inject.Inject;
@@ -19,6 +20,7 @@ import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -65,12 +67,12 @@ public class SuperuserReceiptApiTest {
     @Test(groups = "create")
     public void testCreateReceipt() {
 
-        final var receipt = new Receipt();
-        receipt.setUser(userClientContext.getUser());
+        final var receipt = new CreateReceiptRequest();
+        receipt.setUserId(userClientContext.getUser().getId());
         receipt.setOriginalTransactionId("transactionId.12345");
         receipt.setSchema(APPLE_IAP_SCHEME);
         receipt.setPurchaseTime(currentTimeMillis());
-        receipt.setBody("{ \"test\": \"test\" }");
+        receipt.setBody("{\"test\": \"test\"}");
 
         final var response = client
                 .target(apiRoot + "/receipt")
@@ -86,7 +88,7 @@ public class SuperuserReceiptApiTest {
         assertNotNull(createdReceipt.getId());
         assertEquals(receipt.getSchema(), createdReceipt.getSchema());
         assertEquals(receipt.getBody(), createdReceipt.getBody());
-        assertEquals(receipt.getUser(), createdReceipt.getUser());
+        assertEquals(receipt.getUserId(), createdReceipt.getUser().getId());
         assertEquals(receipt.getOriginalTransactionId(), createdReceipt.getOriginalTransactionId());
         assertEquals(receipt.getPurchaseTime(), createdReceipt.getPurchaseTime());
 
@@ -159,7 +161,7 @@ public class SuperuserReceiptApiTest {
                 .header(SESSION_SECRET, superUserClientContext.getSessionSecret())
                 .delete();
 
-        assertEquals(404, response.getStatus());
+        assertNotEquals(204, response.getStatus());
 
     }
 

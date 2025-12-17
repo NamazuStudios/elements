@@ -1,13 +1,19 @@
 package dev.getelements.elements.sdk.service.receipt;
 
+import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.receipt.CreateReceiptRequest;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
-import dev.getelements.elements.sdk.model.user.User;
 
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
+
+@ElementPublic
+@ElementServiceExport
+@ElementServiceExport(name = UNSCOPED)
 public interface ReceiptService {
 
     /**
