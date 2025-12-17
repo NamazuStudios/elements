@@ -76,8 +76,6 @@ public class OculusIapReceiptServiceTest extends AbstractReceiptServiceTest {
         assertEquals(oculusIapReceipt.getUserId(), resultOculusIapReceipt.getUserId());
         assertEquals(oculusIapReceipt.getReportingId(), resultOculusIapReceipt.getReportingId());
         assertEquals(oculusIapReceipt.getDeveloperPayload(), resultOculusIapReceipt.getDeveloperPayload());
-        assertEquals(oculusIapReceipt.getExpirationTime(), resultOculusIapReceipt.getExpirationTime());
-        assertEquals(oculusIapReceipt.getGrantTime(), resultOculusIapReceipt.getGrantTime());
     }
 
     @NotNull

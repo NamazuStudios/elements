@@ -69,7 +69,7 @@ public class GooglePlayIapReceiptServiceTest extends AbstractReceiptServiceTest 
         final var user = new User();
         user.setId(testUser.getId());
         final GooglePlayIapReceipt googlePlayIapReceipt = new GooglePlayIapReceipt();
-        googlePlayIapReceipt.setOrderId("orderId." + invocation);
+        googlePlayIapReceipt.setOrderId("orderId.google." + invocation);
         googlePlayIapReceipt.setUser(user);
         googlePlayIapReceipt.setPurchaseToken("purchaseToken." + invocation);
         googlePlayIapReceipt.setProductId("productId." + invocation);

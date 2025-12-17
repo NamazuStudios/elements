@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
+import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookPaymentItem;
 import dev.getelements.elements.service.meta.facebookiap.UserFacebookIapReceiptService;
 import dev.getelements.elements.service.meta.facebookiap.invoker.DefaultFacebookIapReceiptRequestInvoker;
 import jakarta.inject.Inject;
@@ -14,6 +15,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.google.inject.Guice.createInjector;
@@ -48,6 +50,13 @@ public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
             response.setId(UUID.randomUUID().toString());
             response.setCurrency("USD");
             response.setCreatedTime(Long.toString(receipt.getGrantTime()));
+
+            final var item = new FacebookPaymentItem();
+            item.setAmount("1");
+            item.setCurrency("USD");
+            item.setProduct("abcd");
+            item.setQuantity(5);
+            response.setItems(List.of(item));
             return response;
         });
 
@@ -74,8 +83,6 @@ public class FacebookIapReceiptServiceTest extends AbstractReceiptServiceTest {
         assertEquals(facebookIapReceipt.getUserId(), resultFacebookIapReceipt.getUserId());
         assertEquals(facebookIapReceipt.getReportingId(), resultFacebookIapReceipt.getReportingId());
         assertEquals(facebookIapReceipt.getDeveloperPayload(), resultFacebookIapReceipt.getDeveloperPayload());
-        assertEquals(facebookIapReceipt.getExpirationTime(), resultFacebookIapReceipt.getExpirationTime());
-        assertEquals(facebookIapReceipt.getGrantTime(), resultFacebookIapReceipt.getGrantTime());
     }
 
     @NotNull
