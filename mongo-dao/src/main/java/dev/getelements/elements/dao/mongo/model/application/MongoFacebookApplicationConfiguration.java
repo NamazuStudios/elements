@@ -1,17 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.getelements.elements.sdk.model.application.ProductBundle;
-import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
 /**
  * Created by patricktwohig on 6/15/17.
  */
-@Entity(value = "application_configuration")
 public class MongoFacebookApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

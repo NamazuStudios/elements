@@ -1,11 +1,9 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
 import java.util.List;
 
-@Entity(value = "application_configuration")
 public class MongoOculusApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
