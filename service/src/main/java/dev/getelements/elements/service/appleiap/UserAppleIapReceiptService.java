@@ -84,19 +84,26 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
             throw new RuntimeException(e);
         }
 
-        return getTransactionProvider().get().performAndClose(tx -> {
+        final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
-            final var createdReceipt = receiptDao.createReceipt(receipt);
-            final var convertedReceipt = convertReceipt(createdReceipt);
+
+            final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
 
             getElementRegistry().publish(Event.builder()
                     .argument(convertedReceipt)
+                    .argument(tx)
                     .named(APPLE_IAP_RECEIPT_CREATED)
                     .build());
 
             return convertedReceipt;
         });
 
+        getElementRegistry().publish(Event.builder()
+                .argument(createdReceipt)
+                .named(APPLE_IAP_RECEIPT_CREATED)
+                .build());
+
+        return createdReceipt;
     }
 
     @Override

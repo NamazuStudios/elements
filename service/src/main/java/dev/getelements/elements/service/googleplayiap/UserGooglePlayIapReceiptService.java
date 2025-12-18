@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
@@ -98,18 +97,25 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         }
         receipt.setBody(body);
 
-        return getTransactionProvider().get().performAndClose(tx -> {
+        final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
-            final var createdReceipt = receiptDao.createReceipt(receipt);
-            final var convertedReceipt = convertReceipt(createdReceipt);
+            final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
 
             getElementRegistry().publish(Event.builder()
                     .argument(convertedReceipt)
+                    .argument(tx)
                     .named(GOOGLE_PLAY_IAP_RECEIPT_CREATED)
                     .build());
 
             return convertedReceipt;
         });
+
+        getElementRegistry().publish(Event.builder()
+                .argument(createdReceipt)
+                .named(GOOGLE_PLAY_IAP_RECEIPT_CREATED)
+                .build());
+
+        return createdReceipt;
     }
 
     @Override

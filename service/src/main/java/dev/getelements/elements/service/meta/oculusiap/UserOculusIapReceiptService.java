@@ -91,17 +91,25 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         receipt.setOriginalTransactionId(oculusIapReceipt.getPurchaseId());
         receipt.setSchema(OCULUS_IAP_SCHEME);
 
-        return getTransactionProvider().get().performAndClose(tx -> {
+        final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
             final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
 
             getElementRegistry().publish(Event.builder()
                     .argument(convertedReceipt)
+                    .argument(tx)
                     .named(OCULUS_IAP_RECEIPT_CREATED)
                     .build());
 
             return convertedReceipt;
         });
+
+        getElementRegistry().publish(Event.builder()
+                .argument(createdReceipt)
+                .named(OCULUS_IAP_RECEIPT_CREATED)
+                .build());
+
+        return createdReceipt;
     }
 
     @Override

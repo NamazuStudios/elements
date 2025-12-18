@@ -88,17 +88,25 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
         receipt.setSchema(FACEBOOK_IAP_SCHEME);
 
-        return getTransactionProvider().get().performAndClose(tx -> {
+        final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
             final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
 
             getElementRegistry().publish(Event.builder()
                     .argument(convertedReceipt)
+                    .argument(tx)
                     .named(FACEBOOK_IAP_RECEIPT_CREATED)
                     .build());
 
             return convertedReceipt;
         });
+
+        getElementRegistry().publish(Event.builder()
+                .argument(createdReceipt)
+                .named(FACEBOOK_IAP_RECEIPT_CREATED)
+                .build());
+
+        return createdReceipt;
     }
 
     @Override
