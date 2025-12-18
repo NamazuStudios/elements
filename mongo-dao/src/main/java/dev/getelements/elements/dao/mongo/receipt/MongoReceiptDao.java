@@ -22,6 +22,7 @@ import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import jakarta.inject.Inject;
+import org.bson.json.JsonParseException;
 import org.bson.types.ObjectId;
 
 import java.util.Objects;
@@ -147,20 +148,24 @@ public class MongoReceiptDao implements ReceiptDao {
             // do nothing
         }
 
-        final var mongoReceipt = getDozerMapper().map(receipt, MongoReceipt.class);
-
         try {
-            final var saveResult = getDatastore().save(mongoReceipt);
-            final var response = getDozerMapper().map(saveResult, Receipt.class);
+            final var mongoReceipt = getDozerMapper().map(receipt, MongoReceipt.class);
 
-            getEventPublisher().accept(Event.builder()
-                    .argument(response)
-                    .named(RECEIPT_CREATED)
-                    .build());
+            try {
+                final var saveResult = getDatastore().save(mongoReceipt);
+                final var response = getDozerMapper().map(saveResult, Receipt.class);
 
-            return response;
-        } catch (DuplicateKeyException e) {
-            throw new DuplicateException(e);
+                getEventPublisher().accept(Event.builder()
+                        .argument(response)
+                        .named(RECEIPT_CREATED)
+                        .build());
+
+                return response;
+            } catch (DuplicateKeyException e) {
+                throw new DuplicateException(e);
+            }
+        } catch (JsonParseException e) {
+            throw new InvalidDataException("Unable to convert receipt body to JSON: " + e.getMessage());
         }
     }
 

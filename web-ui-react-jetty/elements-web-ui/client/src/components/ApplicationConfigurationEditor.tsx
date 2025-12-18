@@ -19,6 +19,7 @@ type ConfigurationType =
   | 'GooglePlay'
   | 'iOS'
   | 'Matchmaking'
+  | 'Oculus'
   | null;
 
 interface ApplicationConfigurationEditorProps {
@@ -26,6 +27,7 @@ interface ApplicationConfigurationEditorProps {
   onChange: (value: any) => void;
   configurationType: ConfigurationType;
   onChangeType: (type: ConfigurationType) => void;
+  disableTypeSelector?: boolean;
 }
 
 export function ApplicationConfigurationEditor({
@@ -33,6 +35,7 @@ export function ApplicationConfigurationEditor({
   onChange,
   configurationType,
   onChangeType,
+  disableTypeSelector = false,
 }: ApplicationConfigurationEditorProps) {
   const handleFieldChange = (fieldName: string, fieldValue: any) => {
     onChange({ ...value, [fieldName]: fieldValue });
@@ -47,7 +50,7 @@ export function ApplicationConfigurationEditor({
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label>Configuration Type</Label>
-          <Select value={configurationType || ''} onValueChange={(v) => onChangeType(v as ConfigurationType)}>
+          <Select value={configurationType || ''} onValueChange={(v) => onChangeType(v as ConfigurationType)} disabled={disableTypeSelector}>
             <SelectTrigger data-testid="select-configuration-type">
               <SelectValue placeholder="Select configuration type" />
             </SelectTrigger>
@@ -57,6 +60,7 @@ export function ApplicationConfigurationEditor({
               <SelectItem value="GooglePlay">Google Play</SelectItem>
               <SelectItem value="iOS">iOS</SelectItem>
               <SelectItem value="Matchmaking">Matchmaking</SelectItem>
+              <SelectItem value="Oculus">Oculus</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -79,6 +83,10 @@ export function ApplicationConfigurationEditor({
 
         {configurationType === 'Matchmaking' && (
           <MatchmakingConfigFields value={value} onChange={handleFieldChange} />
+        )}
+
+        {configurationType === 'Oculus' && (
+          <OculusConfigFields value={value} onChange={handleFieldChange} />
         )}
       </CardContent>
     </Card>
@@ -178,6 +186,58 @@ function FacebookConfigFields({ value, onChange }: { value: any; onChange: (fiel
         />
         <p className="text-sm text-muted-foreground">Built-in permissions connected clients will need to request</p>
       </div>
+
+      <ProductBundlesField value={value.productBundles || []} onChange={(bundles) => onChange('productBundles', bundles)} />
+    </>
+  );
+}
+
+function OculusConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
+  return (
+    <>
+      <CommonConfigFields value={value} onChange={onChange} />
+      
+      <div className="space-y-2">
+        <Label htmlFor="applicationId">
+          Application ID {!value.applicationId && <span className="text-destructive">*</span>}
+        </Label>
+        <Input
+          id="applicationId"
+          value={value.applicationId || ''}
+          onChange={(e) => onChange('applicationId', e.target.value)}
+          placeholder="Oculus App ID"
+          data-testid="input-applicationId"
+        />
+        <p className="text-sm text-muted-foreground">The AppID as it appears in the Oculus Developer Dashboard</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="applicationSecret">
+          Application Secret {!value.applicationSecret && <span className="text-destructive">*</span>}
+        </Label>
+        <Input
+          id="applicationSecret"
+          type="password"
+          value={value.applicationSecret || ''}
+          onChange={(e) => onChange('applicationSecret', e.target.value)}
+          placeholder="Oculus App Secret"
+          data-testid="input-applicationSecret"
+        />
+        <p className="text-sm text-muted-foreground">The App Secret as it appears in the Oculus Developer Dashboard</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="builtinApplicationPermissions">Permissions</Label>
+        <TagsInput
+          value={value.builtinApplicationPermissions || []}
+          onChange={(tags) => onChange('builtinApplicationPermissions', tags)}
+          placeholder="Add permission"
+          data-testid="tags-builtinApplicationPermissions"
+        />
+        <p className="text-sm text-muted-foreground">Built-in permissions connected clients will need to request</p>
+      </div>
+
+      <ProductBundlesField value={value.productBundles || []} onChange={(bundles) => onChange('productBundles', bundles)} />
     </>
   );
 }

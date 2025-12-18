@@ -11,6 +11,7 @@ const POTENTIAL_RESOURCES = [
   { name: 'Users', endpoint: '/api/rest/user', icon: 'Users', category: 'Accounts' },
   { name: 'Applications', endpoint: '/api/rest/application', icon: 'AppWindow', category: 'Accounts' },
   { name: 'Profiles', endpoint: '/api/rest/profile', icon: 'User', category: 'Accounts' },
+  { name: 'Receipts', endpoint: '/api/rest/receipt', icon: 'ScrollText', category: 'Accounts' },
   
   // Game Resources
   { name: 'Items', endpoint: '/api/rest/item', icon: 'Package', category: 'Game' },

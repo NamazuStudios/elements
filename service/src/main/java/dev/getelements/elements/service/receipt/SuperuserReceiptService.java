@@ -17,7 +17,7 @@ public class SuperuserReceiptService implements ReceiptService {
     @Override
     public Pagination<Receipt> getReceipts(String userId, int offset, int count, String search) {
 
-        final var user = userDao.getUser(userId);
+        final var user = userId != null && !userId.isEmpty() ? userDao.getUser(userId) : null;
 
         if(search == null || search.isEmpty()) {
             return receiptDao.getReceipts(user, offset, count);

@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk.model.receipt;
 
-import dev.getelements.elements.sdk.model.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Objects;
