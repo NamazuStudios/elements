@@ -309,7 +309,11 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     @Override
     public List<Profile> getProfiles(final String multiMatchId) {
         return findMongoMultiMatch(multiMatchId)
-                .map(mongoMultiMatch -> mongoMultiMatch.getProfiles()
+                .map(mongoMultiMatch -> mongoMultiMatch.getProfiles() == null
+                        ? List.<MongoProfile>of()
+                        : mongoMultiMatch.getProfiles()
+                )
+                .map(profiles -> profiles
                         .stream()
                         .map(mp -> getMapperRegistry().map(mp, Profile.class))
                         .toList()
