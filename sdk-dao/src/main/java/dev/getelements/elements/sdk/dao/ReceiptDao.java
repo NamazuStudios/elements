@@ -21,6 +21,15 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
                 "OCULUS_PLATFORM_IAP_SCHEME -> OculusIapReceipt\n" +
                 "APPLE_IAP_SCHEME -> AppleIapReceipt"
 )
+@ElementEventProducer(
+        value = ReceiptDao.RECEIPT_CREATED,
+        parameters = {Receipt.class, Transaction.class},
+        description = "Called when a new receipt is created. " +
+                "If the raw receipt data needs to be parsed, check the scheme to determine the corresponding class:\n" +
+                "GOOGLE_IAP_SCHEME -> GooglePlayIapReceipt\n" +
+                "OCULUS_PLATFORM_IAP_SCHEME -> OculusIapReceipt\n" +
+                "APPLE_IAP_SCHEME -> AppleIapReceipt"
+)
 public interface ReceiptDao {
 
     String RECEIPT_CREATED = "dev.getelements.elements.sdk.model.dao.receipt.created";
