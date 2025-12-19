@@ -29,7 +29,7 @@ public class StandardNotificationFactoryProvider implements Provider<Notificatio
         return injector;
     }
 
-    @Inject
+//    @Inject
     public void setInjector(Injector injector) {
         this.injector = injector;
     }
