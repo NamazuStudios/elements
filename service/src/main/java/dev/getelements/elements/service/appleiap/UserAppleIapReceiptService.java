@@ -56,15 +56,14 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
-        final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, APPLE_IAP_SOURCE);
+        final var receiptPagination = getReceiptDao().getReceipts(user, offset, count, APPLE_IAP_SCHEME);
         final var appleReceipts = receiptPagination.getObjects().stream().map(this::convertReceipt);
-
         return Pagination.from(appleReceipts);
     }
 
     @Override
     public AppleIapReceipt getAppleIapReceipt(String originalTransactionId) {
-        final var receipt = getReceiptDao().getReceipt(APPLE_IAP_SOURCE, originalTransactionId);
+        final var receipt = getReceiptDao().getReceipt(APPLE_IAP_SCHEME, originalTransactionId);
         return convertReceipt(receipt);
     }
 
@@ -72,7 +71,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     public AppleIapReceipt getOrCreateAppleIapReceipt(final AppleIapReceipt appleIapReceipt) {
 
         final var receipt = new Receipt();
-        receipt.setSchema(APPLE_IAP_SOURCE);
+        receipt.setSchema(APPLE_IAP_SCHEME);
         receipt.setOriginalTransactionId(appleIapReceipt.getOriginalTransactionId());
         receipt.setUser(user);
         receipt.setPurchaseTime(appleIapReceipt.getOriginalPurchaseDate().getTime());
@@ -86,16 +85,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
         final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
-
-            final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
-
-            getElementRegistry().publish(Event.builder()
-                    .argument(convertedReceipt)
-                    .argument(tx)
-                    .named(APPLE_IAP_RECEIPT_CREATED)
-                    .build());
-
-            return convertedReceipt;
+            return convertReceipt(receiptDao.createReceipt(receipt));
         });
 
         getElementRegistry().publish(Event.builder()
@@ -108,7 +98,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     @Override
     public void deleteAppleIapReceipt(String originalTransactionId) {
-        final var receipt = getReceiptDao().getReceipt(APPLE_IAP_SOURCE, originalTransactionId);
+        final var receipt = getReceiptDao().getReceipt(APPLE_IAP_SCHEME, originalTransactionId);
         getReceiptDao().deleteReceipt(receipt.getId());
     }
 

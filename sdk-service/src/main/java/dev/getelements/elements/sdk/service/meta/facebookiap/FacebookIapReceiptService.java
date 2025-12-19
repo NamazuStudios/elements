@@ -1,20 +1,26 @@
 package dev.getelements.elements.sdk.service.meta.facebookiap;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
-import dev.getelements.elements.sdk.service.meta.facebookiap.client.model.FacebookIapVerifyReceiptResponse;
 
 import java.util.List;
 
 @ElementPublic
 @ElementServiceExport
+@ElementEventProducer(
+        value = FacebookIapReceiptService.FACEBOOK_IAP_RECEIPT_CREATED,
+        parameters = FacebookIapReceipt.class,
+        description = "Called when a new Google Play receipt is created."
+)
 public interface FacebookIapReceiptService {
 
     String FACEBOOK_IAP_SCHEME = "com.facebook.platform";

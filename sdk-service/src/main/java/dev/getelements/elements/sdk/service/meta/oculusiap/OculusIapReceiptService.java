@@ -1,14 +1,17 @@
 package dev.getelements.elements.sdk.service.meta.oculusiap;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
+import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.meta.oculusiap.client.model.OculusIapConsumeResponse;
 import dev.getelements.elements.sdk.service.meta.oculusiap.client.model.OculusIapVerifyReceiptResponse;
 
@@ -16,6 +19,11 @@ import java.util.List;
 
 @ElementPublic
 @ElementServiceExport
+@ElementEventProducer(
+        value = OculusIapReceiptService.OCULUS_IAP_RECEIPT_CREATED,
+        parameters = OculusIapReceipt.class,
+        description = "Called when a new Google Play receipt is created."
+)
 public interface OculusIapReceiptService {
 
     String OCULUS_IAP_SCHEME = "com.oculus.platform";

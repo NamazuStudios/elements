@@ -67,7 +67,6 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         final var search = OCULUS_IAP_SCHEME;
         final var receipts = receiptDao.getReceipts(user, offset, count, search);
         final var fbReceipts = receipts.getObjects().stream().map(this::convertReceipt);
-
         return Pagination.from(fbReceipts);
     }
 
@@ -93,15 +92,7 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
 
         final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
-            final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
-
-            getElementRegistry().publish(Event.builder()
-                    .argument(convertedReceipt)
-                    .argument(tx)
-                    .named(OCULUS_IAP_RECEIPT_CREATED)
-                    .build());
-
-            return convertedReceipt;
+            return convertReceipt(receiptDao.createReceipt(receipt));
         });
 
         getElementRegistry().publish(Event.builder()

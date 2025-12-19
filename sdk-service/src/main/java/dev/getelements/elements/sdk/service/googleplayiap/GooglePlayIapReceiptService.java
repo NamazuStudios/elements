@@ -1,30 +1,23 @@
 package dev.getelements.elements.sdk.service.googleplayiap;
 
 import dev.getelements.elements.sdk.annotation.ElementEventProducer;
-import dev.getelements.elements.sdk.dao.ReceiptDao;
-import dev.getelements.elements.sdk.dao.Transaction;
+import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.annotation.ElementPublic;
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.List;
 
 @ElementPublic
 @ElementServiceExport
 @ElementEventProducer(
-        value = ReceiptDao.RECEIPT_CREATED,
+        value = GooglePlayIapReceiptService.GOOGLE_PLAY_IAP_RECEIPT_CREATED,
         parameters = GooglePlayIapReceipt.class,
-        description = "Called when a new Google Play receipt is created."
-)
-@ElementEventProducer(
-        value = ReceiptDao.RECEIPT_CREATED,
-        parameters = {GooglePlayIapReceipt.class, Transaction.class},
         description = "Called when a new Google Play receipt is created."
 )
 public interface GooglePlayIapReceiptService {
