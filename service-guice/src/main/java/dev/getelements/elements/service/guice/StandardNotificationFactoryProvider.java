@@ -12,6 +12,10 @@ public class StandardNotificationFactoryProvider implements Provider<Notificatio
 
     private Injector injector;
 
+    public StandardNotificationFactoryProvider(Injector injector) {
+        this.injector = injector;
+    }
+
     @Override
     public NotificationFactory get() {
         return p -> {
