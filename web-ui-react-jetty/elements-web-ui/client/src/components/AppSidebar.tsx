@@ -43,6 +43,7 @@ const iconMap: Record<string, any> = {
   FileJson: Icons.FileJson,
   Key: Icons.Key,
   HardDrive: Icons.HardDrive,
+  ScrollText: Icons.ScrollText,
 };
 
 interface AppSidebarProps {

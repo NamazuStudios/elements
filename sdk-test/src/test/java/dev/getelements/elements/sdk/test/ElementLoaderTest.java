@@ -14,8 +14,7 @@ import java.util.stream.Stream;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_A;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_B;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
-import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_1;
-import static dev.getelements.elements.sdk.test.element.TestService.TEST_ELEMENT_EVENT_2;
+import static dev.getelements.elements.sdk.test.element.TestService.*;
 
 public class ElementLoaderTest {
 
@@ -122,6 +121,11 @@ public class ElementLoaderTest {
                 .argument(eventObject2)
                 .build();
 
+        final var event3 = Event.builder()
+                .named(TEST_ELEMENT_EVENT_2)
+                .argument(eventObject1)
+                .build();
+
         elementRegistry.publish(event1);
         elementRegistry.publish(event2);
 
@@ -132,10 +136,17 @@ public class ElementLoaderTest {
         Assert.assertEquals(testService.getConsumedEventObjects().get(0).name(), TEST_ELEMENT_EVENT_1);
         Assert.assertEquals(testService.getConsumedEventObjects().get(0).arguments().get(0), eventObject1);
         Assert.assertEquals(testService.getConsumedEventObjects().get(0).arguments().get(1), eventObject1);
+        Assert.assertEquals(testService.getConsumedEventObjects().size(), 2);
         Assert.assertEquals(testService.getConsumedEventObjects().get(1).name(), TEST_ELEMENT_EVENT_2);
         Assert.assertEquals(testService.getConsumedEventObjects().get(1).arguments().get(0), eventObject2);
         Assert.assertEquals(testService.getConsumedEventObjects().get(1).arguments().get(1), eventObject2);
+        Assert.assertEquals(testService.getConsumedEventObjects().size(), 2);
 
+        elementRegistry.publish(event3);
+
+        Assert.assertEquals(testService.getConsumedEventObjects().size(), 3);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(2).name(), TEST_ELEMENT_EVENT_3);
+        Assert.assertEquals(testService.getConsumedEventObjects().get(2).arguments().get(0), eventObject1);
     }
 
 }

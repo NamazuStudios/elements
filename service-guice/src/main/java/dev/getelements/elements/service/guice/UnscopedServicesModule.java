@@ -23,6 +23,7 @@ import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
+import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.sdk.service.application.*;
 import dev.getelements.elements.sdk.service.auth.*;
@@ -64,6 +65,7 @@ import dev.getelements.elements.service.notification.SuperUserFCMRegistrationSer
 import dev.getelements.elements.service.profile.SuperUserProfileOverrideService;
 import dev.getelements.elements.service.profile.SuperUserProfileService;
 import dev.getelements.elements.service.progress.SuperUserProgressService;
+import dev.getelements.elements.service.receipt.SuperuserReceiptService;
 import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
 import dev.getelements.elements.service.user.SuperuserUserService;
@@ -105,6 +107,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(FacebookApplicationConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserFacebookApplicationConfigurationService.class);
+
+        bind(OculusApplicationConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserOculusApplicationConfigurationService.class);
 
         bind(MatchmakingApplicationConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))
@@ -298,6 +304,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(CodegenService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOpenApiCodegenService.class);
+
+        bind(ReceiptService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperuserReceiptService.class);
 
         bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultUserConfiguration.class).asEagerSingleton();

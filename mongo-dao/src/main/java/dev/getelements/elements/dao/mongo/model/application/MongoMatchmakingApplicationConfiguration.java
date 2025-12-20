@@ -2,14 +2,10 @@ package dev.getelements.elements.dao.mongo.model.application;
 
 import dev.getelements.elements.dao.mongo.model.MongoCallbackDefinition;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
-import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 
 import java.util.Map;
 
-@Entity(value = "application_configuration")
 public class MongoMatchmakingApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

@@ -29,6 +29,7 @@ const facebookConfigSchema = z.object({
   applicationId: z.string().min(1, 'Application ID is required'),
   applicationSecret: z.string().min(1, 'Application Secret is required'),
   builtinApplicationPermissions: z.array(z.string()).optional(),
+  productBundles: z.array(z.any()).optional(),
 });
 
 const firebaseConfigSchema = z.object({
@@ -65,12 +66,22 @@ const matchmakingConfigSchema = z.object({
   metadata: z.any().optional(),
 });
 
+const oculusConfigSchema = z.object({
+  ...commonConfigFields,
+  '@class': z.literal('dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration'),
+  applicationId: z.string().min(1, 'Application ID is required'),
+  applicationSecret: z.string().min(1, 'Application Secret is required'),
+  builtinApplicationPermissions: z.array(z.string()).optional(),
+  productBundles: z.array(z.any()).optional(),
+});
+
 const applicationConfigSchema = z.union([
   facebookConfigSchema,
   firebaseConfigSchema,
   googlePlayConfigSchema,
   iosConfigSchema,
   matchmakingConfigSchema,
+  oculusConfigSchema,
 ]);
 
 // Create schema based on mode - don't validate applicationConfiguration in update mode
@@ -560,6 +571,7 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
           }}
           value={editingConfig?.value || {}}
           configurationType={editingConfig?.type || null}
+          isEditing={!!editingConfig?.value?.id}
           onSave={async ({ type, value }) => {
             if (mode !== 'update') {
               throw new Error('Configurations can only be managed in update mode');
@@ -588,6 +600,7 @@ function getConfigTypeEndpoint(type: string): string {
     'GooglePlay': 'google_play',
     'iOS': 'ios',
     'Matchmaking': 'matchmaking',
+    'Oculus': 'oculus',
   };
   return typeMap[type] || type.toLowerCase();
 }
@@ -599,6 +612,7 @@ function getConfigurationClass(type: string): string {
     'GooglePlay': 'dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration',
     'iOS': 'dev.getelements.elements.sdk.model.application.IosApplicationConfiguration',
     'Matchmaking': 'dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration',
+    'Oculus': 'dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration',
   };
   return classMap[type] || '';
 }
@@ -614,6 +628,7 @@ function detectConfigurationType(config: any): string | null {
     if (className.includes('GooglePlayApplicationConfiguration')) return 'GooglePlay';
     if (className.includes('IosApplicationConfiguration')) return 'iOS';
     if (className.includes('MatchmakingApplicationConfiguration')) return 'Matchmaking';
+    if (className.includes('OculusApplicationConfiguration')) return 'Oculus';
   }
   
   // Check type field from API response
@@ -624,6 +639,7 @@ function detectConfigurationType(config: any): string | null {
     if (typeName.includes('GooglePlayApplicationConfiguration')) return 'GooglePlay';
     if (typeName.includes('IosApplicationConfiguration')) return 'iOS';
     if (typeName.includes('MatchmakingApplicationConfiguration')) return 'Matchmaking';
+    if (typeName.includes('OculusApplicationConfiguration')) return 'Oculus';
   }
   
   // Fallback to field-based detection
@@ -645,6 +661,7 @@ function getConfigurationName(config: any, type: string | null): string | null {
   // Fall back to type-specific identifiers
   switch (type) {
     case 'Facebook':
+    case 'Oculus':
       return config.applicationId || null;
     case 'Firebase':
       return config.projectId || null;

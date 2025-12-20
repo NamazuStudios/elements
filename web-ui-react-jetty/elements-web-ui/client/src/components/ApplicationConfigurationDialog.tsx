@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type ConfigurationType = 'Facebook' | 'Firebase' | 'GooglePlay' | 'iOS' | 'Matchmaking';
+type ConfigurationType = 'Facebook' | 'Firebase' | 'GooglePlay' | 'iOS' | 'Matchmaking' | 'Oculus';
 
 interface ApplicationConfigurationDialogProps {
   open: boolean;
@@ -13,6 +13,7 @@ interface ApplicationConfigurationDialogProps {
   value: any;
   configurationType: ConfigurationType | null;
   onSave: (config: { type: ConfigurationType | null; value: any }) => Promise<void>;
+  isEditing?: boolean;
 }
 
 // Validation: name must match pattern [^_]\w+ (no leading underscore, word characters only)
@@ -33,7 +34,7 @@ function validateConfiguration(configurationType: ConfigurationType | null, valu
     return false;
   }
   
-  if (configurationType === 'Facebook') {
+  if (configurationType === 'Facebook' || configurationType === 'Oculus') {
     return !!(value.applicationId && value.applicationSecret);
   } else if (configurationType === 'Firebase') {
     return !!(value.projectId && value.serviceAccountCredentials);
@@ -59,6 +60,7 @@ export function ApplicationConfigurationDialog({
   value,
   configurationType: initialConfigurationType,
   onSave,
+  isEditing = false,
 }: ApplicationConfigurationDialogProps) {
   const [configurationType, setConfigurationType] = useState<ConfigurationType | null>(initialConfigurationType);
   const [configValue, setConfigValue] = useState<any>(value);
@@ -142,6 +144,7 @@ export function ApplicationConfigurationDialog({
             onChange={setConfigValue}
             configurationType={configurationType as ConfigurationType}
             onChangeType={setConfigurationType}
+            disableTypeSelector={isEditing}
           />
         </div>
 

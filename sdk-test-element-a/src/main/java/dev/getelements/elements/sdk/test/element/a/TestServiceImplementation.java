@@ -57,13 +57,19 @@ public class TestServiceImplementation implements TestService {
 
     @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT_1)
     public void testEvent1ConsumerWithObject(String value1, String value2) {
-        final var record = new MethodEventRecord(TEST_ELEMENT_EVENT_1, List.of(value1, value2));
+        final var record = new MethodEventRecord(TestService.TEST_ELEMENT_EVENT_1, List.of(value1, value2));
         eventObjects.add(record);
     }
 
     @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT_2)
     public void testEvent2ConsumerWithObject(String value1, String value2) {
-        final var record = new MethodEventRecord(TEST_ELEMENT_EVENT_2, List.of(value1, value2));
+        final var record = new MethodEventRecord(TestService.TEST_ELEMENT_EVENT_2, List.of(value1, value2));
+        eventObjects.add(record);
+    }
+
+    @ElementEventConsumer(TestService.TEST_ELEMENT_EVENT_2)
+    public void testEvent2ConsumerWithObject(String value1) {
+        final var record = new MethodEventRecord(TestService.TEST_ELEMENT_EVENT_3, List.of(value1));
         eventObjects.add(record);
     }
 

@@ -1,5 +1,6 @@
-package dev.getelements.elements.dao.mongo.model;
+package dev.getelements.elements.dao.mongo.model.receipt;
 
+import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.morphia.annotations.*;
 
 import java.util.Date;

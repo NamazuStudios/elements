@@ -83,6 +83,19 @@ public interface Event {
         private final List<Object> arguments = new ArrayList<>();
 
         /**
+         * Copies the data from an existing {@link Event} into the builder.
+         *
+         * @param event the event to copy
+         * @return this instance
+         */
+        public Builder from(final Event event) {
+            this.name = event.getEventName();
+            this.arguments.clear();
+            this.arguments.addAll(event.getEventArguments());
+            return this;
+        }
+
+        /**
          * Specifies the {@link Event} name.
          *
          * @param name the name of the event

@@ -22,7 +22,7 @@ public class FacebookApplicationConfigurationResource {
     private FacebookApplicationConfigurationService facebookApplicationConfigurationService;
 
     /**
-     * Gets the specific {@link FacebookApplicationConfiguration} instances assocated with the
+     * Gets the specific {@link FacebookApplicationConfiguration} instances associated with the
      * application.
      *
      * @param applicationNameOrId the application name or ID
@@ -43,10 +43,10 @@ public class FacebookApplicationConfigurationResource {
     }
 
     /**
-     * Creates a new {@link FacebookApplicationConfiguration} isntance.
+     * Creates a new {@link FacebookApplicationConfiguration} instance.
      *
-     * @param applicationNameOrId the applciation name or ID
-     * @param facebookApplicationConfiguration the Facebook appliation profile object to creates
+     * @param applicationNameOrId the application name or ID
+     * @param facebookApplicationConfiguration the Facebook application profile object to creates
      *
      * @return the {@link FacebookApplicationConfiguration} the Facebook Application Configuration
      */
@@ -72,9 +72,9 @@ public class FacebookApplicationConfigurationResource {
     }
 
     /**
-     * Updates an existing {@link FacebookApplicationConfiguration} isntance.
+     * Updates an existing {@link FacebookApplicationConfiguration} instance.
      *
-     * @param applicationNameOrId the applciation name or ID
+     * @param applicationNameOrId the application name or ID
      * @param applicationConfigurationNameOrId the name or identifier of the {@link FacebookApplicationConfiguration}
      * @param facebookApplicationConfiguration the Facebook application profile object to update
      *

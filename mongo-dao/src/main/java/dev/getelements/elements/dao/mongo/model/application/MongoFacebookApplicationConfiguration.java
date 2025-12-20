@@ -1,12 +1,12 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
+
+import java.util.List;
 
 /**
  * Created by patricktwohig on 6/15/17.
  */
-@Entity(value = "application_configuration")
 public class MongoFacebookApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property
@@ -14,6 +14,12 @@ public class MongoFacebookApplicationConfiguration extends MongoApplicationConfi
 
     @Property
     private String applicationSecret;
+
+    @Property
+    private List<String> builtinApplicationPermissions;
+
+    @Property
+    private List<MongoProductBundle> productBundles;
 
     public String getApplicationId() {
         return applicationId;
@@ -31,4 +37,19 @@ public class MongoFacebookApplicationConfiguration extends MongoApplicationConfi
         this.applicationSecret = applicationSecret;
     }
 
+    public List<String> getBuiltinApplicationPermissions() {
+        return builtinApplicationPermissions;
+    }
+
+    public void setBuiltinApplicationPermissions(List<String> builtinApplicationPermissions) {
+        this.builtinApplicationPermissions = builtinApplicationPermissions;
+    }
+
+    public List<MongoProductBundle> getProductBundles() {
+        return productBundles;
+    }
+
+    public void setProductBundles(List<MongoProductBundle> productBundles) {
+        this.productBundles = productBundles;
+    }
 }
