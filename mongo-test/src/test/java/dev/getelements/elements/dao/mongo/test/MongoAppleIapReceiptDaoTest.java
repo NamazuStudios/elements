@@ -17,15 +17,14 @@ import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoAppleIapReceiptDaoTest {
-    private static final int INVOCATION_COUNT = 10;
-
-    private UserDao userDao;
 
     private AppleIapReceiptDao appleIapReceiptDao;
 
     private User testUser;
 
     private UserTestFactory userTestFactory;
+
+    private static final int INVOCATION_COUNT = 10;
 
     @BeforeClass
     public void createTestUser() {
@@ -129,15 +128,6 @@ public class MongoAppleIapReceiptDaoTest {
         catch (NotFoundException e) {
             // this is the expected result
         }
-    }
-
-    public UserDao getUserDao() {
-        return userDao;
-    }
-
-    @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
     }
 
     public AppleIapReceiptDao getAppleIapReceiptDao() {

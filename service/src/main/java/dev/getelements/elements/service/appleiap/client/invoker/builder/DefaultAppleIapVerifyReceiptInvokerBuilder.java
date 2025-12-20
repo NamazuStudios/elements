@@ -33,7 +33,7 @@ public class DefaultAppleIapVerifyReceiptInvokerBuilder implements Builder {
             throw new IllegalStateException("receiptData is null.");
         }
 
-        if (receiptData.trim().length() == 0) {
+        if (receiptData.trim().isEmpty()) {
             throw new IllegalStateException("receiptData is empty.");
         }
 

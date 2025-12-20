@@ -18,13 +18,23 @@ import java.util.*;
 @Schema(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                       "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
 public class RewardIssuance implements Serializable, Taggable {
+
     public static final String SERVER_CONTEXT_PREFIX = "SERVER";
+
     public static final String CONTEXT_SEPARATOR = ".";
+
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
+
     public static final String APPLE_IAP_SOURCE = "APPLE_IAP";
+
     public static final String GOOGLE_PLAY_IAP_SOURCE = "GOOGLE_PLAY_IAP";
 
+    public static final String FACEBOOK_IAP_SOURCE = "FACEBOOK_IAP";
+
+    public static final String OCULUS_IAP_SOURCE = "OCULUS_IAP";
+
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
+
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
 
     @Null(groups = {Create.class})
@@ -380,5 +390,35 @@ public class RewardIssuance implements Serializable, Taggable {
         final int hashResult = Objects.hash(orderId, itemId);
         final String hashResultString = Integer.toString(hashResult);
         return buildContextString(SERVER_CONTEXT_PREFIX, GOOGLE_PLAY_IAP_SOURCE, hashResultString);
+    }
+
+    /**
+     * Builds the context string for a Facebook-sourced reward issuance. The last element in the context string is
+     * the hash of the orderId issued by the Facebook services, presumed to be universally unique, as well as the
+     * itemId.
+     *
+     * @param orderId
+     * @param itemId
+     * @return the resultant context string
+     */
+    public static String buildFacebookIapContextString(String orderId, String itemId) {
+        final int hashResult = Objects.hash(orderId, itemId);
+        final String hashResultString = Integer.toString(hashResult);
+        return buildContextString(SERVER_CONTEXT_PREFIX, FACEBOOK_IAP_SOURCE, hashResultString);
+    }
+
+    /**
+     * Builds the context string for a Oculus-sourced reward issuance. The last element in the context string is
+     * the hash of the orderId issued by the Facebook services, presumed to be universally unique, as well as the
+     * itemId.
+     *
+     * @param orderId
+     * @param itemId
+     * @return the resultant context string
+     */
+    public static String buildOculusIapContextString(String orderId, String itemId) {
+        final int hashResult = Objects.hash(orderId, itemId);
+        final String hashResultString = Integer.toString(hashResult);
+        return buildContextString(SERVER_CONTEXT_PREFIX, OCULUS_IAP_SOURCE, hashResultString);
     }
 }

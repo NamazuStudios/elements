@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 5/31/17.
  */
-@Entity(value = "application_configuration")
 public class MongoGooglePlayApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

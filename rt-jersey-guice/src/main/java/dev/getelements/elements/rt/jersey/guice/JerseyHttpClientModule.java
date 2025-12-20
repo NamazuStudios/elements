@@ -32,8 +32,7 @@ import java.util.function.Consumer;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.google.inject.Scopes.SINGLETON;
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.APPLE_ITUNES;
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.DEFAULT;
+import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.*;
 import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
 
 public class JerseyHttpClientModule extends PrivateModule {
@@ -111,6 +110,13 @@ public class JerseyHttpClientModule extends PrivateModule {
             final ObjectMapper objectMapper = new ObjectMapper();
             final DateFormat dateFormat = new AppleDateFormat();
             objectMapper.setDateFormat(dateFormat);
+            objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+            objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+            return objectMapper;
+        });
+
+        withNamedObjectMapperProvider(META_GRAPH, () -> {
+            final ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
             objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
             return objectMapper;

@@ -48,8 +48,6 @@ public class MongoUserUidDao implements UserUidDao {
 
     private MongoUserDao mongoUserDao;
 
-    private Provider<Transaction> transactionProvider;
-
     @Override
     public List<UserUid> getAllUserIdsForUser(final String userId) {
         return getMongoUserDao()
@@ -318,15 +316,6 @@ public class MongoUserUidDao implements UserUidDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
-    }
-
-    public Provider<Transaction> getTransactionProvider() {
-        return transactionProvider;
-    }
-
-    @Inject
-    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
-        this.transactionProvider = transactionProvider;
     }
 
 }
