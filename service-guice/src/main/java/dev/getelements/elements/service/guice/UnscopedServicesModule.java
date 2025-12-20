@@ -285,9 +285,6 @@ public class UnscopedServicesModule extends AbstractModule {
                 .to(SuperUserRankService.class);
 
         bind(NotificationService.class)
-                .to(StandardNotificationService.class);
-
-        bind(NotificationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardNotificationService.class);
 

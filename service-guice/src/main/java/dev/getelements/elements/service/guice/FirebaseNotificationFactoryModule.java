@@ -14,9 +14,8 @@ public class FirebaseNotificationFactoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final var injectorProvider = getProvider(Injector.class);
         bind(NotificationBuilder.class).to(StandardNotificationBuilder.class);
-        bind(NotificationFactory.class).toProvider(new StandardNotificationFactoryProvider(injectorProvider.get()));
+        bind(NotificationFactory.class).toProvider(StandardNotificationFactoryProvider.class);
         bind(NotificationDestinationFactory.class).toProvider(StandardNotificationDestinationFactoryProvider.class);
         bind(FirebaseMessagingFactory.class).toProvider(FirebaseMessagingFactoryProvider.class);
     }

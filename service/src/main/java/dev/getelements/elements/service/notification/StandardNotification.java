@@ -2,17 +2,21 @@ package dev.getelements.elements.service.notification;
 
 import dev.getelements.elements.sdk.service.notification.*;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
+
 public class StandardNotification implements Notification {
 
-    private final NotificationParameters notificationParameters;
+    private NotificationParameters notificationParameters;
 
     private NotificationDestinationFactory notificationDestinationFactory;
 
-    public StandardNotification(final NotificationParameters notificationParameters) {
+    public void initialize(NotificationParameters notificationParameters) {
         this.notificationParameters = notificationParameters;
     }
 

@@ -30,6 +30,7 @@ import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleProgressService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
+import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
@@ -80,6 +81,7 @@ import dev.getelements.elements.service.metadata.SuperUserMetadataService;
 import dev.getelements.elements.service.metadata.UserMetadataService;
 import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.notification.FCMRegistrationServiceProvider;
+import dev.getelements.elements.service.notification.StandardNotificationService;
 import dev.getelements.elements.service.notification.SuperUserFCMRegistrationService;
 import dev.getelements.elements.service.notification.UserFCMRegistrationService;
 import dev.getelements.elements.service.profile.*;
@@ -339,6 +341,8 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(ApplicationStatusServiceProvider.class)
                 .in(scope);
 
+        bind(NotificationService.class)
+                .to(StandardNotificationService.class);
     }
 
     private void bindAnonymous() {
