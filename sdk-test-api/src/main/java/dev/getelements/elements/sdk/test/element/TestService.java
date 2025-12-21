@@ -15,6 +15,8 @@ public interface TestService {
 
     String TEST_ELEMENT_EVENT_2 = "dev.getelements.elements.element.test.event.2";
 
+    String TEST_ELEMENT_EVENT_3 = "dev.getelements.elements.element.test.event.3";
+
     /**
      * Returns the implementation's package.
      *

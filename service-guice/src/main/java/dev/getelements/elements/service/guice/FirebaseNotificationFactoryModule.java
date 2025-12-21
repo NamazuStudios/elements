@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import dev.getelements.elements.sdk.service.notification.NotificationBuilder;
 import dev.getelements.elements.sdk.service.notification.NotificationDestinationFactory;
 import dev.getelements.elements.sdk.service.notification.NotificationFactory;

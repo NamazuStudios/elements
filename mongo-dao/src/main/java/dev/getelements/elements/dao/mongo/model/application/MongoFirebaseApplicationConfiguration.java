@@ -1,9 +1,7 @@
 package dev.getelements.elements.dao.mongo.model.application;
 
-import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
-@Entity(value = "application_configuration")
 public class MongoFirebaseApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

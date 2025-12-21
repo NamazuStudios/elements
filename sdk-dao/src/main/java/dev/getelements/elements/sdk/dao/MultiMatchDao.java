@@ -23,8 +23,18 @@ import java.util.Optional;
         description = "Called when a multi-match was created."
 )
 @ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_CREATED,
+        parameters = {MultiMatch.class, Transaction.class},
+        description = "Called when a multi-match was created."
+)
+@ElementEventProducer(
         value = MultiMatchDao.MULTI_MATCH_ADD_PROFILE,
         parameters = {MultiMatch.class, Profile.class},
+        description = "Called when a profile is added to a multi match."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_ADD_PROFILE,
+        parameters = {MultiMatch.class, Profile.class, Transaction.class},
         description = "Called when a profile is added to a multi match."
 )
 @ElementEventProducer(
@@ -33,8 +43,18 @@ import java.util.Optional;
         description = "Called when a profile is removed from a multi match."
 )
 @ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_REMOVE_PROFILE,
+        parameters = {MultiMatch.class, Profile.class, Transaction.class},
+        description = "Called when a profile is removed from a multi match."
+)
+@ElementEventProducer(
         value = MultiMatchDao.MULTI_MATCH_UPDATED,
         parameters = MultiMatch.class,
+        description = "Called when a multi-match was updated."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_UPDATED,
+        parameters = {MultiMatch.class, Transaction.class},
         description = "Called when a multi-match was updated."
 )
 @ElementEventProducer(
@@ -43,13 +63,28 @@ import java.util.Optional;
         description = "Called when a multi-match was expired."
 )
 @ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_EXPIRED,
+        parameters = {MultiMatch.class, Transaction.class},
+        description = "Called when a multi-match was expired."
+)
+@ElementEventProducer(
         value = MultiMatchDao.MULTI_MATCH_DELETED,
         parameters = MultiMatch.class,
         description = "Called when a multi-match was deleted."
 )
 @ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCH_DELETED,
+        parameters = {MultiMatch.class, Transaction.class},
+        description = "Called when a multi-match was deleted."
+)
+@ElementEventProducer(
         value = MultiMatchDao.MULTI_MATCHES_TRUNCATED,
         parameters = MultiMatch.class,
+        description = "Called when all multi-matches were deleted. Will not drive individual deletion events."
+)
+@ElementEventProducer(
+        value = MultiMatchDao.MULTI_MATCHES_TRUNCATED,
+        parameters = {MultiMatch.class, Transaction.class},
         description = "Called when all multi-matches were deleted. Will not drive individual deletion events."
 )
 public interface MultiMatchDao {

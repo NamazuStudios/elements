@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.guice;
 
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.dao.Transaction;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
@@ -19,11 +20,21 @@ public class MongoTransactionBufferedEventPublisher implements Consumer<Event> {
 
     private final List<Event> buffer = new ArrayList<>();
 
+    private Transaction transaction;
+
     private ElementRegistry elementRegistry;
 
     @Override
     public void accept(final Event event) {
+
+        final var transactionalEvent = new Event.Builder()
+                .from(event)
+                .argument(getTransaction())
+                .build();
+
+        getElementRegistry().publish(transactionalEvent);
         buffer.add(event);
+
     }
 
     public void postCommit() {
@@ -33,6 +44,15 @@ public class MongoTransactionBufferedEventPublisher implements Consumer<Event> {
 
     public void rollback() {
         buffer.clear();
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
+
+    @Inject
+    public void setTransaction(Transaction transaction) {
+        this.transaction = transaction;
     }
 
     public ElementRegistry getElementRegistry() {

@@ -21,7 +21,9 @@ import {
 import { DynamicResourceForm } from '@/components/DynamicResourceForm';
 import { ScheduleEventsEditor } from '@/components/ScheduleEventsEditor';
 import { InventoryViewer } from '@/components/InventoryViewer';
+import { UserSearchDialog } from '@/components/UserSearchDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { User, X } from 'lucide-react';
 
 interface ResourceManagerProps {
   resourceName: string;
@@ -57,6 +59,9 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   const [draftRefreshKey, setDraftRefreshKey] = useState(0);
   const [searchInput, setSearchInput] = useState(''); // Input value (not debounced)
   const [searchTerm, setSearchTerm] = useState(''); // Actual search query (debounced)
+  const [filterUserId, setFilterUserId] = useState(''); // User ID filter for Receipts
+  const [filterUserName, setFilterUserName] = useState(''); // Display name for selected user
+  const [userPickerOpen, setUserPickerOpen] = useState(false); // User picker dialog state
   const [offset, setOffset] = useState(0);
   const [count] = useState(() => {
     const saved = localStorage.getItem('admin-results-per-page');
@@ -104,6 +109,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
 
     return () => clearTimeout(timer);
   }, [searchInput]);
+
 
   // Load schema for JSON validation
   useEffect(() => {
@@ -310,7 +316,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   };
 
   const { data, isLoading, isFetching, error } = useQuery({
-    queryKey: [endpoint, offset, count, searchTerm],
+    queryKey: [endpoint, offset, count, searchTerm, filterUserId],
     // Only keep previous data when paginating within the same resource, not when switching resources
     placeholderData: isResourceChange ? undefined : (previousData) => previousData,
     queryFn: async () => {
@@ -322,36 +328,55 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       if (searchTerm) {
         params.append('search', searchTerm);
       }
-      
-      const urlWithParams = `${endpoint}?${params}`;
-      const response = await apiClient.request<any>(urlWithParams);
-      
-      // Elements API returns paginated data: {offset, total, objects: [...]} or {offset, total, content: [...]}
-      if (response && typeof response === 'object') {
-        let items: any[] = [];
-        let pagination: { total: number; offset: number; count: number } | null = null;
-        
-        // Extract pagination info if present
-        if ('total' in response) {
-          pagination = {
-            total: response.total,
-            offset: response.offset || 0,
-            count: response.count || count,
-          };
-        }
-        
-        // Extract items from response
-        if ('objects' in response) {
-          items = response.objects || [];
-        } else if ('content' in response) {
-          items = response.content || [];
-        }
-        
-        return { items, pagination };
+      // For Receipts, add userId filter
+      if (resourceName === 'Receipts' && filterUserId) {
+        params.append('userId', filterUserId);
       }
       
-      // Fallback for non-paginated responses
-      return { items: Array.isArray(response) ? response : [], pagination: null };
+      const urlWithParams = `${endpoint}?${params}`;
+      
+      try {
+        const response = await apiClient.request<any>(urlWithParams);
+        
+        // Elements API returns paginated data: {offset, total, objects: [...]} or {offset, total, content: [...]}
+        if (response && typeof response === 'object') {
+          let items: any[] = [];
+          let pagination: { total: number; offset: number; count: number } | null = null;
+          
+          // Extract pagination info if present
+          if ('total' in response) {
+            pagination = {
+              total: response.total,
+              offset: response.offset || 0,
+              count: response.count || count,
+            };
+          }
+          
+          // Extract items from response
+          if ('objects' in response) {
+            items = response.objects || [];
+          } else if ('content' in response) {
+            items = response.content || [];
+          }
+          
+          return { items, pagination };
+        }
+        
+        // Fallback for non-paginated responses
+        return { items: Array.isArray(response) ? response : [], pagination: null };
+      } catch (err: any) {
+        // Handle errors gracefully - show toast and return empty results
+        const errorMessage = err?.message || 'Failed to fetch data';
+        if (resourceName === 'Receipts' && filterUserId) {
+          toast({
+            title: 'Filter Error',
+            description: `Could not filter by user: ${errorMessage}`,
+            variant: 'destructive',
+          });
+          return { items: [], pagination: null };
+        }
+        throw err;
+      }
     },
   });
 
@@ -858,6 +883,33 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
             Searching for "{searchTerm}" (Note: Search may not be supported by all resources)
           </p>
         )}
+        {resourceName === 'Receipts' && (
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setUserPickerOpen(true)}
+              className="gap-2"
+              data-testid="button-filter-user"
+            >
+              <User className="w-4 h-4" />
+              {filterUserId ? `User: ${filterUserName || filterUserId}` : 'Filter by User'}
+            </Button>
+            {filterUserId && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setFilterUserId('');
+                  setFilterUserName('');
+                  setOffset(0);
+                }}
+                data-testid="button-clear-user-filter"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <Card>
@@ -1050,63 +1102,65 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                         <Package className="w-4 h-4" />
                       </Button>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={async () => {
-                        if (item._isDraft) {
-                          const { _isDraft, ...draftData } = item;
-                          setSelectedItem(null);
-                          setCurrentFormData(draftData);
-                          setFormInitialData(draftData);
-                          setJsonText(JSON.stringify(draftData, null, 2));
-                          setJsonError('');
-                          setDialogMode('create');
-                          setIsDialogOpen(true);
-                        } else {
-                          // For auth schemes (OAuth2, OIDC, Custom), fetch full details
-                          const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'Custom';
-                          
-                          if (isAuthScheme && item.id) {
-                            try {
-                              // Fetch full details from individual endpoint
-                              const fullItem = await apiClient.request<any>(`${endpoint}/${item.id}`);
-                              setSelectedItem(fullItem);
-                              setCurrentFormData(fullItem);
-                              setFormInitialData(fullItem);
-                              setJsonText(JSON.stringify(fullItem, null, 2));
+                    {resourceName !== 'Receipts' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={async () => {
+                          if (item._isDraft) {
+                            const { _isDraft, ...draftData } = item;
+                            setSelectedItem(null);
+                            setCurrentFormData(draftData);
+                            setFormInitialData(draftData);
+                            setJsonText(JSON.stringify(draftData, null, 2));
+                            setJsonError('');
+                            setDialogMode('create');
+                            setIsDialogOpen(true);
+                          } else {
+                            // For auth schemes (OAuth2, OIDC, Custom), fetch full details
+                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'Custom';
+                            
+                            if (isAuthScheme && item.id) {
+                              try {
+                                // Fetch full details from individual endpoint
+                                const fullItem = await apiClient.request<any>(`${endpoint}/${item.id}`);
+                                setSelectedItem(fullItem);
+                                setCurrentFormData(fullItem);
+                                setFormInitialData(fullItem);
+                                setJsonText(JSON.stringify(fullItem, null, 2));
+                                setJsonError('');
+                                setDialogMode('edit');
+                                // Increment key to force form re-render with new data
+                                setFormResetKey(prev => prev + 1);
+                                setIsDialogOpen(true);
+                              } catch (error) {
+                                console.error('Failed to fetch full item details:', error);
+                                toast({
+                                  title: 'Error',
+                                  description: 'Failed to load full item details for editing.',
+                                  variant: 'destructive',
+                                });
+                              }
+                            } else {
+                              // For other resources, use item from list directly
+                              // For Missions, convert API format to form format (especially rewards)
+                              const formData = resourceName === 'Missions' ? convertJsonToFormData(item) : item;
+                              setSelectedItem(item);
+                              setCurrentFormData(formData);
+                              setFormInitialData(formData);
+                              setJsonText(JSON.stringify(item, null, 2));
                               setJsonError('');
                               setDialogMode('edit');
-                              // Increment key to force form re-render with new data
-                              setFormResetKey(prev => prev + 1);
                               setIsDialogOpen(true);
-                            } catch (error) {
-                              console.error('Failed to fetch full item details:', error);
-                              toast({
-                                title: 'Error',
-                                description: 'Failed to load full item details for editing.',
-                                variant: 'destructive',
-                              });
                             }
-                          } else {
-                            // For other resources, use item from list directly
-                            // For Missions, convert API format to form format (especially rewards)
-                            const formData = resourceName === 'Missions' ? convertJsonToFormData(item) : item;
-                            setSelectedItem(item);
-                            setCurrentFormData(formData);
-                            setFormInitialData(formData);
-                            setJsonText(JSON.stringify(item, null, 2));
-                            setJsonError('');
-                            setDialogMode('edit');
-                            setIsDialogOpen(true);
                           }
-                        }
-                      }}
-                      data-testid={`button-edit-${idx}`}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    {!item._isDraft && (
+                        }}
+                        data-testid={`button-edit-${idx}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {!item._isDraft && resourceName !== 'Receipts' && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1523,6 +1577,17 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           </DialogContent>
         </Dialog>
       )}
+
+      <UserSearchDialog
+        open={userPickerOpen}
+        onOpenChange={setUserPickerOpen}
+        onSelect={(userId, user) => {
+          setFilterUserId(userId);
+          setFilterUserName(user?.name || user?.email || userId);
+          setOffset(0);
+        }}
+        currentUserId={filterUserId}
+      />
     </div>
   );
 }
@@ -1539,6 +1604,7 @@ function detectConfigType(config: any): string | null {
     if (className.includes('GooglePlayApplicationConfiguration')) return 'GooglePlay';
     if (className.includes('IosApplicationConfiguration')) return 'iOS';
     if (className.includes('MatchmakingApplicationConfiguration')) return 'Matchmaking';
+    if (className.includes('OculusApplicationConfiguration')) return 'Oculus';
   }
   
   // Fallback: Check for type-specific fields
@@ -1558,6 +1624,7 @@ function getConfigTypeEndpoint(type: string): string {
     'GooglePlay': 'google_play',
     'iOS': 'ios',
     'Matchmaking': 'matchmaking',
+    'Oculus': 'oculus',
   };
   return typeMap[type] || type.toLowerCase();
 }
@@ -1569,6 +1636,7 @@ function getConfigurationClass(type: string): string {
     'GooglePlay': 'dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration',
     'iOS': 'dev.getelements.elements.sdk.model.application.IosApplicationConfiguration',
     'Matchmaking': 'dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration',
+    'Oculus': 'dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration',
   };
   return classMap[type] || '';
 }
