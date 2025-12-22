@@ -23,7 +23,7 @@ build: clean
 
 deploy: clean
 	## This step ensures that the sources get built and installed first
-	mvn -DskipTests source:jar install
+	mvn -DskipTests -Dmaven.main.skip=true source:jar install
 	mvn --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:

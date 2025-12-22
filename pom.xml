@@ -1291,21 +1291,21 @@
             <build>
                 <plugins>
                     <!-- Source Jars -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>3.3.1</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <phase>prepare-package</phase>
-                                <!-- Correct phase -->
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
+<!--                    <plugin>-->
+<!--                        <groupId>org.apache.maven.plugins</groupId>-->
+<!--                        <artifactId>maven-source-plugin</artifactId>-->
+<!--                        <version>3.3.1</version>-->
+<!--                        <executions>-->
+<!--                            <execution>-->
+<!--                                <id>attach-sources</id>-->
+<!--                                <phase>prepare-package</phase>-->
+<!--                                &lt;!&ndash; Correct phase &ndash;&gt;-->
+<!--                                <goals>-->
+<!--                                    <goal>jar</goal>-->
+<!--                                </goals>-->
+<!--                            </execution>-->
+<!--                        </executions>-->
+<!--                    </plugin>-->
                     <!-- Javadocs -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
