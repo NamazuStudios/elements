@@ -156,7 +156,6 @@ The following are internal libraries which make up the implementation of Element
 - **code-serve-guice** - A library of guice bindings specific to code-serve
 - **common-app** - A common library used by application loading code.
 - **common-git** - A common library used for processing git repositories.
-- **common-git-guice** - Common git guice bindings.
 - **common-jetty** - Common Jetty types and implementations
 - **common-mapstruct** - Common Maptstruct types and implementations
 - **common-servlet** - Common servlet types and implementation.

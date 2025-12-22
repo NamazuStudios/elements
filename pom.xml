@@ -79,7 +79,6 @@
         <module>rt-jersey-guice</module>
         <module>docker-config</module>
         <module>common-git</module>
-        <module>common-git-guice</module>
         <module>common-jetty</module>
         <module>cdn-serve</module>
         <module>app-serve-jetty</module>
@@ -95,7 +94,6 @@
         <module>mongo-guice</module>
         <module>jetty-ws</module>
         <module>jetty-ws-test</module>
-        <module>web-ui-angular-jetty</module>
         <module>web-ui-react-jetty</module>
         <module>sdk</module>
         <module>sdk-spi</module>
@@ -471,11 +469,6 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>common-git-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>jetty-ws</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -522,11 +515,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-simple-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>web-ui-angular-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
