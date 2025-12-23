@@ -25,7 +25,7 @@ install:
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish install
 
 deploy:
-	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish test deploy
+	mvn --no-transfer-progress -B -Pcentral-publish test deploy
 
 docker:
 	make -C docker-config internal
