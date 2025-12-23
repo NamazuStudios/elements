@@ -6,21 +6,13 @@
 
     <parent>
         <groupId>dev.getelements.elements</groupId>
-<<<<<<< Updated upstream
-        <version>3.6.5-SNAPSHOT</version>
-=======
         <artifactId>eci-elements</artifactId>
-        <version>3.6.4-SNAPSHOT</version>
->>>>>>> Stashed changes
+        <version>3.6.5-SNAPSHOT</version>
     </parent>
 
     <name>${project.artifactId}</name>
-<<<<<<< Updated upstream
-    <version>3.6.5-SNAPSHOT</version>
-=======
     <artifactId>web-ui-react-jetty</artifactId>
-    <version>3.6.4-SNAPSHOT</version>
->>>>>>> Stashed changes
+    <version>3.6.5-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
