@@ -33,6 +33,8 @@ pipelines:
             - "self.hosted"
           script:
             - make setup_release
+            - make clean
+            - make install
             - make deploy
             - make docker
             - make javadoc

@@ -18,12 +18,13 @@ help:
 clean:
 	mvn --no-transfer-progress -B clean
 
-build: clean
+build:
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
-deploy: clean
-	## This step ensures that the sources get built and installed first
+install:
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish install
+
+deploy:
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish test deploy
 
 docker:
