@@ -5,14 +5,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>eci-elements</artifactId>
         <groupId>dev.getelements.elements</groupId>
+<<<<<<< Updated upstream
         <version>3.6.5-SNAPSHOT</version>
+=======
+        <artifactId>eci-elements</artifactId>
+        <version>3.6.4-SNAPSHOT</version>
+>>>>>>> Stashed changes
     </parent>
 
-    <artifactId>web-ui-react-jetty</artifactId>
     <name>${project.artifactId}</name>
+<<<<<<< Updated upstream
     <version>3.6.5-SNAPSHOT</version>
+=======
+    <artifactId>web-ui-react-jetty</artifactId>
+    <version>3.6.4-SNAPSHOT</version>
+>>>>>>> Stashed changes
 
     <dependencies>
         <dependency>
