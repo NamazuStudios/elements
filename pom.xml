@@ -4,7 +4,7 @@
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <name>Namazu Elements</name>
-    <version>3.6.10-SNAPSHOT</version>
+    <version>3.6.11-SNAPSHOT</version>
     <packaging>pom</packaging>
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
