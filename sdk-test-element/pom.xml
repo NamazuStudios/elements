@@ -16,11 +16,6 @@
     <version>3.6.9-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
-    <properties>
-        <!-- This is the cleanest way to signal this module doesn't produce Javadoc -->
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
