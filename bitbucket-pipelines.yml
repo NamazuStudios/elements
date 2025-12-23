@@ -67,7 +67,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup
-#            - make build
+            - make build
             - make detach tag
             - make BRANCH=$BITBUCKET_BRANCH checkout
             - make patch
@@ -102,6 +102,7 @@ pipelines:
             - maven
           script:
             - make setup
+            - make clean
             - make build
             - make docker
             - make publish_github
@@ -121,6 +122,7 @@ pipelines:
           - maven
         script:
           - make setup
+          - make clean
           - make build
           - make docker
           - make publish_github
