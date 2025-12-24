@@ -1322,16 +1322,6 @@
                                     <goal>jar</goal>
                                 </goals>
                             </execution>
-                            <execution>
-                                <id>aggregate-javadocs</id>
-                                <goals>
-                                    <goal>aggregate</goal>
-                                </goals>
-                                <configuration>
-                                    <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
-                                    <destDir>apidocs</destDir>
-                                </configuration>
-                            </execution>
                         </executions>
                     </plugin>
                     <plugin>

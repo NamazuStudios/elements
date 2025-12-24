@@ -110,14 +110,9 @@ endif
 
 javadoc: JAVADOC_VERSION?=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 javadoc:
-
-	mvn -Pcentral-publish -N javadoc:aggregate
-	find target
-
 	mvn -Pcentral-publish javadoc:aggregate
 	find target
-
-	aws --delete s3 sync target/site/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
+	aws --delete s3 sync target/reports/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
