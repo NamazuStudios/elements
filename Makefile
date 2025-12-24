@@ -25,7 +25,7 @@ install:
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish install
 
 deploy:
-	mvn --no-transfer-progress -B -Pcentral-publish test deploy
+	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish test deploy
 
 docker:
 	make -C docker-config internal
@@ -110,7 +110,7 @@ endif
 
 javadoc: JAVADOC_VERSION?=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 javadoc:
-	mvn javadoc:aggregate
+	mvn -Pcentral-publish -N javadoc:aggregate
 	aws --delete s3 sync target/site/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
 
 rollback:

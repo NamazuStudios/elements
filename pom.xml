@@ -195,6 +195,8 @@
         <openapi-generator.version>7.12.0</openapi-generator.version>
         <javadoc.plugin.version>3.12.0</javadoc.plugin.version>
         <maven.dependency.plugin.version>3.6.0</maven.dependency.plugin.version>
+        <central.publish.plugin.version>0.7.0</central.publish.plugin.version>
+        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -1295,7 +1297,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.3.1</version>
+                        <version>${maven.source.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -1316,17 +1318,26 @@
                             <execution>
                                 <id>attach-javadocs</id>
                                 <phase>prepare-package</phase>
-                                <!-- Change to prepare-package -->
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
+                            </execution>
+                            <execution>
+                                <id>aggregate-javadocs</id>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                                <configuration>
+                                    <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
+                                    <destDir>apidocs</destDir>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.7.0</version>
+                        <version>${central.publish.plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <autoPublish>true</autoPublish>
