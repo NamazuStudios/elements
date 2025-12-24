@@ -19,10 +19,13 @@ clean:
 	mvn --no-transfer-progress -B clean
 
 build:
+	mvn --no-transfer-progress -B install
+
+build_github:
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
-install:
-	mvn --no-transfer-progress -B -Pcentral-publish install
+build_central:
+	mvn --no-transfer-progress -B -Pcentral-publish,github-publish install
 
 deploy:
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish deploy
