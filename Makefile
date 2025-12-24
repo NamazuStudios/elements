@@ -22,10 +22,10 @@ build:
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
 install:
-	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish install
+	mvn --no-transfer-progress -B -Pcentral-publish install
 
 deploy:
-	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish test deploy
+	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:
 	make -C docker-config internal
