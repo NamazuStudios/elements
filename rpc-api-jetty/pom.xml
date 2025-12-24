@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.6.13-SNAPSHOT</version>
+        <version>3.6.14-SNAPSHOT</version>
     </parent>
 
     <artifactId>rpc-api-jetty</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.6.13-SNAPSHOT</version>
+    <version>3.6.14-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
