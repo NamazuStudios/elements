@@ -226,13 +226,17 @@ export function DynamicResourceForm({
         fieldSchema = z.number();
       } else if (field.type === 'boolean') {
         fieldSchema = z.boolean();
-      } else if ((field.name === 'headers' || field.name === 'params') && field.type === 'object' && field.isArray) {
-        // OAuth2 headers and params - accept array of objects directly
+      } else if ((field.name === 'headers' || field.name === 'params' || field.name === 'body') && field.type === 'object' && field.isArray) {
+        // OAuth2 headers, params, and body - accept array of objects directly
         fieldSchema = z.array(z.object({
           key: z.string(),
           value: z.string(),
           fromClient: z.boolean(),
-        }));
+          userId: z.boolean().optional(),
+        })).optional();
+      } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
+        // Valid status codes - accept array of numbers directly
+        fieldSchema = z.array(z.number()).optional();
       } else if (field.type === 'object' || field.isMap || field.isArray) {
         // For objects/arrays, accept string input (JSON) and parse it
         fieldSchema = z.string().transform((val, ctx) => {
@@ -341,8 +345,11 @@ export function DynamicResourceForm({
         } else if (field.type === 'string' && field.isArray) {
           // String arrays (like tags) - keep as array
           values[field.name] = Array.isArray(value) ? value : [];
-        } else if ((field.name === 'headers' || field.name === 'params') && field.type === 'object' && field.isArray) {
-          // OAuth2 headers and params - keep as array of objects
+        } else if ((field.name === 'headers' || field.name === 'params' || field.name === 'body') && field.type === 'object' && field.isArray) {
+          // OAuth2 headers, params, and body - keep as array of objects
+          values[field.name] = Array.isArray(value) ? value : [];
+        } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
+          // Valid status codes - keep as array of numbers
           values[field.name] = Array.isArray(value) ? value : [];
         } else if (field.type === 'object' || field.isMap || field.isArray) {
           // For other resources, convert objects/arrays to JSON strings
@@ -380,8 +387,11 @@ export function DynamicResourceForm({
       } else if (field.type === 'string' && field.isArray) {
         // String arrays (like tags) - initialize as empty array
         values[field.name] = [];
-      } else if ((field.name === 'headers' || field.name === 'params') && field.type === 'object' && field.isArray) {
-        // OAuth2 headers and params - initialize as empty array
+      } else if ((field.name === 'headers' || field.name === 'params' || field.name === 'body') && field.type === 'object' && field.isArray) {
+        // OAuth2 headers, params, and body - initialize as empty array
+        values[field.name] = [];
+      } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
+        // Valid status codes - initialize as empty array
         values[field.name] = [];
       } else if (field.type === 'boolean') {
         values[field.name] = false;

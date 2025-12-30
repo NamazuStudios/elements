@@ -11,10 +11,47 @@ import { type UseFormReturn } from 'react-hook-form';
 import { Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+function getFirstSentence(text: string | undefined): string | undefined {
+  if (!text) return undefined;
+  const match = text.match(/^[^.!?]+[.!?]/);
+  return match ? match[0].trim() : text;
+}
+
 interface FormFieldGeneratorProps {
   field: FieldSchema;
   form: UseFormReturn<any>;
   mode: 'create' | 'update';
+}
+
+function OAuth2FieldWithUserIdExclusion({ 
+  form, 
+  fieldName, 
+  value, 
+  onChange 
+}: { 
+  form: UseFormReturn<any>; 
+  fieldName: string; 
+  value: any; 
+  onChange: (value: any) => void;
+}) {
+  const otherFields = ['headers', 'params', 'body'].filter(f => f !== fieldName);
+  
+  const watchedValues = form.watch(otherFields);
+  
+  const hasUserIdInOtherFields = otherFields.some((fieldName, index) => {
+    const fieldValues = watchedValues[index];
+    return Array.isArray(fieldValues) && fieldValues.some((item: any) => item?.userId === true);
+  });
+
+  return (
+    <OAuth2HeaderParamEditor
+      value={Array.isArray(value) ? value : []}
+      onChange={onChange}
+      placeholder={`No ${fieldName.toLowerCase()} configured`}
+      showUserIdCheckbox={true}
+      hasUserIdElsewhere={hasUserIdInOtherFields}
+    />
+  );
 }
 
 export function FormFieldGenerator({ field, form, mode }: FormFieldGeneratorProps) {
@@ -135,13 +172,30 @@ function renderInput(
   
   // Handle arrays BEFORE objects (arrays can have object type)
   if (schema.isArray) {
-    // Special handling for OAuth2 headers and params
-    if ((schema.name === 'headers' || schema.name === 'params') && schema.type === 'object') {
+    // Special handling for OAuth2 headers, params, and body
+    if ((schema.name === 'headers' || schema.name === 'params' || schema.name === 'body') && schema.type === 'object') {
       return (
-        <OAuth2HeaderParamEditor
-          value={Array.isArray(formField.value) ? formField.value : []}
+        <OAuth2FieldWithUserIdExclusion
+          form={form}
+          fieldName={schema.name}
+          value={formField.value}
           onChange={formField.onChange}
-          placeholder={`No ${schema.name.toLowerCase()} configured`}
+        />
+      );
+    }
+
+    // Special handling for validStatusCodes - array of integers
+    if (schema.name === 'validStatusCodes' && schema.type === 'integer') {
+      const currentValues: number[] = Array.isArray(formField.value) ? formField.value : [];
+      return (
+        <TagsInput
+          value={currentValues.map(v => String(v))}
+          onChange={(values) => {
+            const nums = values.map(v => parseInt(v, 10)).filter(n => !isNaN(n));
+            formField.onChange(nums);
+          }}
+          placeholder="Type status code and press Enter (e.g. 200, 201)"
+          testId={`input-${schema.name}`}
         />
       );
     }
@@ -219,7 +273,7 @@ function renderInput(
     return (
       <Input
         type="password"
-        placeholder={schema.description || `Enter ${formatLabel(schema.name).toLowerCase()}`}
+        placeholder={getFirstSentence(schema.description) || `Enter ${formatLabel(schema.name).toLowerCase()}`}
         name={formField.name}
         value={formField.value ?? ''}
         onChange={formField.onChange}
@@ -235,7 +289,7 @@ function renderInput(
     return (
       <Input
         type="email"
-        placeholder={schema.description || `Enter ${formatLabel(schema.name).toLowerCase()}`}
+        placeholder={getFirstSentence(schema.description) || `Enter ${formatLabel(schema.name).toLowerCase()}`}
         name={formField.name}
         value={formField.value ?? ''}
         onChange={formField.onChange}
@@ -251,7 +305,7 @@ function renderInput(
     return (
       <Input
         type="number"
-        placeholder={schema.description || `Enter ${formatLabel(schema.name).toLowerCase()}`}
+        placeholder={getFirstSentence(schema.description) || `Enter ${formatLabel(schema.name).toLowerCase()}`}
         name={formField.name}
         value={formField.value ?? ''}
         onChange={(e) => {
@@ -274,7 +328,7 @@ function renderInput(
   return (
     <Input
       type="text"
-      placeholder={schema.description || `Enter ${formatLabel(schema.name).toLowerCase()}`}
+      placeholder={getFirstSentence(schema.description) || `Enter ${formatLabel(schema.name).toLowerCase()}`}
       name={formField.name}
       value={formField.value ?? ''}
       onChange={formField.onChange}
@@ -312,7 +366,7 @@ function PublicKeyInput({ formField, schema, mode }: { formField: any; schema: F
     <div className="flex gap-2">
       <Input
         type="text"
-        placeholder={schema.description || `Enter ${formatLabel(schema.name).toLowerCase()}`}
+        placeholder={getFirstSentence(schema.description) || `Enter ${formatLabel(schema.name).toLowerCase()}`}
         name={formField.name}
         value={formField.value ?? ''}
         onChange={formField.onChange}
@@ -337,6 +391,15 @@ function PublicKeyInput({ formField, schema, mode }: { formField: any; schema: F
 }
 
 function formatLabel(fieldName: string): string {
+  const labelOverrides: Record<string, string> = {
+    'responseValidMapping': 'Valid Response Mapping',
+    'responseValidExpectedValue': 'Valid Response Expected Value',
+  };
+  
+  if (labelOverrides[fieldName]) {
+    return labelOverrides[fieldName];
+  }
+  
   // Convert camelCase to Title Case
   return fieldName
     .replace(/([A-Z])/g, ' $1')
