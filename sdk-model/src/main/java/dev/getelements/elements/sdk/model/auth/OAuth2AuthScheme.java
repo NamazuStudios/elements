@@ -40,7 +40,8 @@ public class OAuth2AuthScheme {
             Determines how to map the user id in the response. Will search the response for the corresponding key. \
             For example, if the response is structured like: \
              {"response": { "params" : { "steamid" : <id> } } } \
-            then you only need to input "steamid".""")
+            then you only need to input "steamid". \
+            Ignored if one of the parameters is marked as user id.""")
     private String responseIdMapping;
 
     @Schema(description = """

@@ -58,7 +58,6 @@ public class ElementsCoreModule extends AbstractModule {
         install(new ServicesElementModule());
         install(new MongoSdkElementModule());
         install(new ValidationModule());
-        install(new AuthOperationsModule());
         install(new AppleIapReceiptInvokerModule());
         install(new MetaIapReceiptInvokerModule());
         install(new JerseyHttpClientModule());

@@ -43,8 +43,14 @@ public class SuperUserOAuth2AuthSchemeService implements OAuth2AuthSchemeService
         authScheme.setName(authSchemeRequest.getName());
         authScheme.setHeaders(authSchemeRequest.getHeaders());
         authScheme.setParams(authSchemeRequest.getParams());
+        authScheme.setBody(authSchemeRequest.getBody());
+        authScheme.setBodyType(authSchemeRequest.getBodyType());
+        authScheme.setValidStatusCodes(authSchemeRequest.getValidStatusCodes());
         authScheme.setValidationUrl(authSchemeRequest.getValidationUrl());
         authScheme.setResponseIdMapping(authSchemeRequest.getResponseIdMapping());
+        authScheme.setResponseValidMapping(authSchemeRequest.getResponseValidMapping());
+        authScheme.setResponseValidExpectedValue(authSchemeRequest.getResponseValidExpectedValue());
+        authScheme.setMethod(authSchemeRequest.getMethod());
 
         validateScheme(authScheme);
 
@@ -67,8 +73,14 @@ public class SuperUserOAuth2AuthSchemeService implements OAuth2AuthSchemeService
 
         authScheme.setHeaders(authSchemeRequest.getHeaders());
         authScheme.setParams(authSchemeRequest.getParams());
+        authScheme.setBody(authSchemeRequest.getBody());
+        authScheme.setBodyType(authSchemeRequest.getBodyType());
+        authScheme.setValidStatusCodes(authSchemeRequest.getValidStatusCodes());
         authScheme.setValidationUrl(authSchemeRequest.getValidationUrl());
         authScheme.setResponseIdMapping(authSchemeRequest.getResponseIdMapping());
+        authScheme.setResponseValidMapping(authSchemeRequest.getResponseValidMapping());
+        authScheme.setResponseValidExpectedValue(authSchemeRequest.getResponseValidExpectedValue());
+        authScheme.setMethod(authSchemeRequest.getMethod());
 
         validateScheme(authScheme);
 

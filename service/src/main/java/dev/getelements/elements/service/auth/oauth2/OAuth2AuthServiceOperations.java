@@ -96,12 +96,12 @@ public class OAuth2AuthServiceOperations {
 
         final var mapping = scheme.getResponseIdMapping();
         if (mapping == null || mapping.isBlank()) {
-            throw new InternalException("No external user id source configured. Set responseIdMapping or mark a request field with userId=true.");
+            throw new AuthValidationException("No external user id source configured. Set responseIdMapping or mark a request field with userId=true.");
         }
 
         final var node = findChildNodeByKey(responseJson, mapping);
         if (node.isNull()) {
-            throw new InternalException("Response mapper mismatch! Could not find key: " + mapping);
+            throw new AuthValidationException("Response mapper mismatch! Could not find key: " + mapping);
         }
         return node.asText();
     }
