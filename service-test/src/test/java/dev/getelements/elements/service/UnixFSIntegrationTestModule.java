@@ -10,6 +10,7 @@ import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
+import dev.getelements.elements.service.guice.AuthOperationsModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
 import dev.getelements.elements.test.EmbeddedTestService;
@@ -43,6 +44,7 @@ public class UnixFSIntegrationTestModule extends AbstractIntegrationTestModule {
                     modules.add(new FirebaseAppFactoryModule());
                     modules.add(new ConfigurationModule(() -> properties));
                     modules.add(new AppleIapReceiptInvokerModule());
+                    modules.add(new AuthOperationsModule());
                     modules.add(new MetaIapReceiptInvokerModule());
                     modules.add(new ClusterContextFactoryModule());
                     modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));

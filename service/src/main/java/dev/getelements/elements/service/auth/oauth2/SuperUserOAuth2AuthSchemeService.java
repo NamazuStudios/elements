@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service.auth.oauth2;
 
 
 import dev.getelements.elements.sdk.dao.OAuth2AuthSchemeDao;

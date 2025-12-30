@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service.auth.oidc;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.auth.OidcAuthSchemeService;
