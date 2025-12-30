@@ -50,7 +50,7 @@ public class DefaultOAuth2SchemeConfiguration {
         try {
             getAuthSchemeDao().createAuthScheme(authScheme);
         } catch (Exception e) {
-            logger.debug("Google OIDC Auth Scheme detected, skipping default...");
+            logger.debug("Steam OAuth2 Auth Scheme detected, skipping default...");
         }
 
     }
