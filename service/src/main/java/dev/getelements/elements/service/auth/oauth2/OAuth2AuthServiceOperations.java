@@ -95,14 +95,17 @@ public class OAuth2AuthServiceOperations {
         }
 
         final var mapping = scheme.getResponseIdMapping();
+
         if (mapping == null || mapping.isBlank()) {
             throw new AuthValidationException("No external user id source configured. Set responseIdMapping or mark a request field with userId=true.");
         }
 
         final var node = findChildNodeByKey(responseJson, mapping);
+
         if (node.isNull()) {
-            throw new AuthValidationException("Response mapper mismatch! Could not find key: " + mapping);
+            throw new AuthValidationException("Response mapper mismatch! Cannot find key: \"" + mapping + "\" in: " + responseJson);
         }
+
         return node.asText();
     }
 
@@ -218,7 +221,7 @@ public class OAuth2AuthServiceOperations {
         final var node = jsonNode.findValue(key);
 
         if(node == null) {
-            throw new AuthValidationException("Response mapper mismatch!");
+            throw new AuthValidationException("Response mapper mismatch! Cannot find key: \"" + key + "\" in: " + jsonNode);
         }
 
         return node;

@@ -19,7 +19,6 @@ import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
-import dev.getelements.elements.service.guice.AuthOperationsModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.morphia.Datastore;
@@ -99,7 +98,6 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
-        install(new AuthOperationsModule());
         install(new MetaIapReceiptInvokerModule());
         install(new FacebookBuiltinPermissionsModule(new FacebookBuiltinPermissionsSupplier()));
 
