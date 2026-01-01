@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service.auth.oidc;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

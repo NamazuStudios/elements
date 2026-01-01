@@ -924,7 +924,11 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
               : resourceName}
           </CardTitle>
           <CardDescription>
-            {paginationInfo ? `${paginationInfo.total} total` : `${items?.length || 0}`} {resourceName.toLowerCase()} found
+            {paginationInfo ? `${paginationInfo.total} total` : `${items?.length || 0}`} {
+              resourceName === 'OAuth2' || resourceName === 'Custom' || resourceName === 'Oidc'
+                ? 'auth schemes'
+                : resourceName.toLowerCase()
+            } found
             {draft && ' + 1 draft'}
           </CardDescription>
         </CardHeader>

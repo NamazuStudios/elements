@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service.auth.oidc;
 
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.model.Pagination;

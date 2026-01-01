@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service.auth.oauth2;
 
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
@@ -32,8 +32,7 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
         final var oidcUid = userUidDao.findUserUid(uid, scheme);
         final var userOptional = tryGetUserFromUid(oidcUid);
 
-        //If the user already exists, check to see if we need to associate
-        //any new UIds from the extracted JWT claims
+        //If the user already exists, check to see if we need to associate any new UIds
         if (userOptional.isPresent()) {
             final var user = userOptional.get();
 
@@ -44,8 +43,7 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
             return user;
         }
 
-        //No existing user was found, create a new one in the DB and assign the ref to
-        //any UIds made from the JWT claims
+        //No existing user was found, create a new one in the DB and assign the ref to any UIds made
         var user = new User();
         user.setLevel(USER);
         user = getUserDao().createUser(user);
