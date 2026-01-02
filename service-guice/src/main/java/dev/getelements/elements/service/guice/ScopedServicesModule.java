@@ -45,6 +45,8 @@ import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
+import dev.getelements.elements.service.auth.oauth2.*;
+import dev.getelements.elements.service.auth.oidc.*;
 import dev.getelements.elements.service.blockchain.crypto.evm.EvmSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.FlowSmartContractInvocationServiceProvider;

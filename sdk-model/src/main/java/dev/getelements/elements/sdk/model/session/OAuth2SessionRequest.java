@@ -12,10 +12,15 @@ public class OAuth2SessionRequest {
     @Schema(description = "The OAuth2 scheme ID to use.")
     private String schemeId;
 
-    @Schema(description = "The request parameters to be used in the token validation request. This should adhere to any params marked as fromClient in the auth scheme.")
+    @Schema(description = "The request parameters to be used in the token validation request. " +
+            "These will automatically be mapped to the corresponding query param/header/body value defined in the auth scheme.")
     private Map<String, String> requestParameters;
 
-    @Schema(description = "The request headers to be used in the token validation request. This should adhere to any headers marked as fromClient in the auth scheme.")
+    @Schema(description = """
+            The request headers to be used in the token validation request. This should adhere to any headers marked as fromClient in the auth scheme.\
+            Deprecated: All key/values can now be placed in the requestParameters and they will be mapped automatically.
+            Internally, this is combined with requestParameters for backwards compatibility.""")
+    @Deprecated
     private Map<String, String> requestHeaders;
 
     @Schema(description = "The profile ID to assign to the session.")
