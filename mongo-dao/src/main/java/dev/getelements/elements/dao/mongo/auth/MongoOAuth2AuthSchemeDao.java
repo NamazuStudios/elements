@@ -78,10 +78,16 @@ public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
 
         final var builder = new UpdateBuilder();
         builder.with(set("name", authScheme.getName()));
+        builder.with(set("validationUrl", authScheme.getValidationUrl()));
         builder.with(set("params", authScheme.getParams()));
         builder.with(set("headers", authScheme.getHeaders()));
-        builder.with(set("validationUrl", authScheme.getValidationUrl()));
+        builder.with(set("body", authScheme.getBody()));
+        builder.with(set("method", authScheme.getMethod()));
+        builder.with(set("bodyType", authScheme.getBodyType()));
         builder.with(set("responseIdMapping", authScheme.getResponseIdMapping()));
+        builder.with(set("responseValidMapping", authScheme.getResponseValidMapping()));
+        builder.with(set("responseValidExpectedValue", authScheme.getResponseValidExpectedValue()));
+        builder.with(set("validStatusCodes", authScheme.getValidStatusCodes()));
 
         final MongoOAuth2AuthScheme mongoOAuth2AuthScheme = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
@@ -105,10 +111,16 @@ public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
 
         final var builder = new UpdateBuilder();
         builder.with(unset("name"));
+        builder.with(unset("validationUrl"));
         builder.with(unset("params"));
         builder.with(unset("headers"));
-        builder.with(unset("validationUrl"));
+        builder.with(unset("body"));
+        builder.with(unset("method"));
+        builder.with(unset("bodyType"));
         builder.with(unset("responseIdMapping"));
+        builder.with(unset("responseValidMapping"));
+        builder.with(unset("responseValidExpectedValue"));
+        builder.with(unset("validStatusCodes"));
 
         final MongoOAuth2AuthScheme mongoOidcAuthScheme = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))

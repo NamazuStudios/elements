@@ -61,7 +61,6 @@ public class ServicesModule extends AbstractModule {
         install(new EvmInvokerModule());
         install(new FlowInvokerModule());
         install(new NearInvokerModule());
-
     }
 
 }

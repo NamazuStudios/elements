@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.auth;
+package dev.getelements.elements.service.auth.oidc;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import dev.getelements.elements.sdk.dao.UserDao;
@@ -15,7 +15,7 @@ import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 
-public class UserOidcAuthService implements OidcAuthService {
+public class AnonOidcAuthService implements OidcAuthService {
 
     private UserDao userDao;
 
@@ -44,8 +44,11 @@ public class UserOidcAuthService implements OidcAuthService {
 
         if(uid.isPresent()) {
             final var userId = uid.get().getUserId();
-            final var user = userDao.getUser(userId);
-            return Optional.of(user);
+
+            if(userId != null) {
+                final var user = userDao.getUser(userId);
+                return Optional.of(user);
+            }
         }
 
         return Optional.empty();
@@ -85,6 +88,7 @@ public class UserOidcAuthService implements OidcAuthService {
         //No existing user was found, create a new one in the DB and assign the ref to
         //any UIds made from the JWT claims
         var user = new User();
+        user.setName(email);
         user.setEmail(email);
         user.setLevel(USER);
         user = getUserDao().createUser(user);

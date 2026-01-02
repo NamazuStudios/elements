@@ -10,18 +10,23 @@ interface HeaderParam {
   key: string;
   value: string;
   fromClient: boolean;
+  userId?: boolean;
 }
 
 interface OAuth2HeaderParamEditorProps {
   value: HeaderParam[];
   onChange: (value: HeaderParam[]) => void;
   placeholder?: string;
+  showUserIdCheckbox?: boolean;
+  hasUserIdElsewhere?: boolean;
 }
 
 export function OAuth2HeaderParamEditor({ 
   value = [], 
   onChange, 
-  placeholder = 'Add item'
+  placeholder = 'Add item',
+  showUserIdCheckbox = false,
+  hasUserIdElsewhere = false,
 }: OAuth2HeaderParamEditorProps) {
   const [items, setItems] = useState<HeaderParam[]>([]);
 
@@ -31,9 +36,12 @@ export function OAuth2HeaderParamEditor({
     setItems(normalizedValue);
   }, [value]);
 
+  // Check if any item in this list has userId set to true
+  const hasUserIdInThisList = items.some(item => item.userId === true);
+
   const handleAdd = () => {
     // Add new item to the top for better visibility
-    const newItems = [{ key: '', value: '', fromClient: false }, ...items];
+    const newItems = [{ key: '', value: '', fromClient: false, userId: false }, ...items];
     setItems(newItems);
     onChange(newItems);
   };
@@ -99,19 +107,39 @@ export function OAuth2HeaderParamEditor({
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`fromClient-${index}`}
-                      checked={item.fromClient}
-                      onCheckedChange={(checked) => handleChange(index, 'fromClient', !!checked)}
-                      data-testid={`checkbox-item-fromclient-${index}`}
-                    />
-                    <Label 
-                      htmlFor={`fromClient-${index}`} 
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      Sent From Client
-                    </Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`fromClient-${index}`}
+                        checked={item.fromClient}
+                        onCheckedChange={(checked) => handleChange(index, 'fromClient', !!checked)}
+                        data-testid={`checkbox-item-fromclient-${index}`}
+                      />
+                      <Label 
+                        htmlFor={`fromClient-${index}`} 
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        From Client
+                      </Label>
+                    </div>
+
+                    {showUserIdCheckbox && (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`userId-${index}`}
+                          checked={item.userId === true}
+                          onCheckedChange={(checked) => handleChange(index, 'userId', !!checked)}
+                          disabled={!item.userId && (hasUserIdElsewhere || hasUserIdInThisList)}
+                          data-testid={`checkbox-item-userid-${index}`}
+                        />
+                        <Label 
+                          htmlFor={`userId-${index}`} 
+                          className={`text-sm font-normal cursor-pointer ${!item.userId && (hasUserIdElsewhere || hasUserIdInThisList) ? 'text-muted-foreground' : ''}`}
+                        >
+                          User ID
+                        </Label>
+                      </div>
+                    )}
                   </div>
 
                   <Button
