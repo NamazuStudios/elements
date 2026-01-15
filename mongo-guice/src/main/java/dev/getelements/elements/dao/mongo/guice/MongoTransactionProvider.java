@@ -1,10 +1,8 @@
 package dev.getelements.elements.dao.mongo.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Stage;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.mongodb.client.MongoDatabase;
+import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
@@ -65,8 +63,13 @@ public class MongoTransactionProvider implements Provider<Transaction> {
 
                     @Override
                     protected void bindDatastore() {
+
                         bind(Datastore.class).toInstance(morphiaSession);
                         bind(MorphiaSession.class).toInstance(morphiaSession);
+
+                        final var mainDatastoreProvider = getProvider(getMainDatastoreKey());
+                        bind(getMainDatastoreKey()).toProvider(mainDatastoreProvider);
+
                     }
 
                     @Override
