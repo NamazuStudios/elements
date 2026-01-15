@@ -51,6 +51,7 @@ import java.security.SecureRandom;
 import java.util.function.Consumer;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
+import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.model.index.IndexableType.DISTINCT_INVENTORY_ITEM;
 import static dev.getelements.elements.sdk.model.index.IndexableType.METADATA;
 
@@ -123,7 +124,7 @@ public class MongoDaoModule extends PrivateModule {
                 .asEagerSingleton();
 
         bind(MessageDigest.class)
-                .annotatedWith(Names.named(Constants.PASSWORD_DIGEST))
+                .annotatedWith(named(Constants.PASSWORD_DIGEST))
                 .toProvider(PasswordDigestProvider.class);
 
         bind(OffensiveWordFilter.class)
@@ -202,9 +203,13 @@ public class MongoDaoModule extends PrivateModule {
     }
 
     protected void bindDatastore() {
-        bind(Datastore.class)
+
+        bind(Datastore.class).to(getMainDatastoreKey());
+
+        bind(getMainDatastoreKey())
                 .toProvider(MongoDatastoreProvider.class)
                 .asEagerSingleton();
+
     }
 
     protected void bindTransaction() {
@@ -213,7 +218,7 @@ public class MongoDaoModule extends PrivateModule {
 
     protected void bindEventPublisher() {
 
-        final var key = Key.get(ElementRegistry.class, Names.named(ElementRegistry.ROOT));
+        final var key = Key.get(ElementRegistry.class, named(ElementRegistry.ROOT));
         final var registryProvider = getProvider(key);
 
         bind(new TypeLiteral<Consumer<Event>>(){})
@@ -222,5 +227,9 @@ public class MongoDaoModule extends PrivateModule {
     }
 
     protected void bindElementRegistries() {}
+
+    protected Key<Datastore> getMainDatastoreKey() {
+        return Key.get(Datastore.class, named(MongoDatastoreProvider.MAIN));
+    }
 
 }
