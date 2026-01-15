@@ -63,13 +63,9 @@ public class MongoTransactionProvider implements Provider<Transaction> {
 
                     @Override
                     protected void bindDatastore() {
-
                         bind(Datastore.class).toInstance(morphiaSession);
                         bind(MorphiaSession.class).toInstance(morphiaSession);
-
-                        final var mainDatastoreProvider = getProvider(getMainDatastoreKey());
-                        bind(getMainDatastoreKey()).toProvider(mainDatastoreProvider);
-
+                        bind(getMainDatastoreKey()).toInstance(datastore);
                     }
 
                     @Override
