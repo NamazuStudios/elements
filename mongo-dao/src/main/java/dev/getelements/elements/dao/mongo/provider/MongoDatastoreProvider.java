@@ -25,6 +25,8 @@ import static dev.morphia.Morphia.createDatastore;
  */
 public class MongoDatastoreProvider implements Provider<Datastore> {
 
+    public static final String MAIN = "dev.getelements.elements.mongo.datastore.main";
+
     private static final Logger logger = LoggerFactory.getLogger(MongoDatastoreProvider.class);
 
     @ElementDefaultAttribute(

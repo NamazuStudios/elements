@@ -2,11 +2,12 @@ package dev.getelements.elements.dao.mongo.query;
 
 import com.github.sidhant92.boolparser.domain.*;
 import com.github.sidhant92.boolparser.parser.canopy.PEGBoolExpressionParser;
+import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filter;
-
 import jakarta.inject.Inject;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +16,6 @@ import java.util.stream.Stream;
 
 import static dev.getelements.elements.dao.mongo.query.BooleanQueryOperator.DEFAULT;
 import static dev.morphia.query.filters.Filters.*;
-import static java.lang.Double.NaN;
 
 /**
  * A {@link BooleanQueryParser} based on Sidhant Aggarwal's boolean query parser.
@@ -24,6 +24,8 @@ import static java.lang.Double.NaN;
 public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
 
     private Datastore datastore;
+
+    private MongoDBUtils mongoDBUtils;
 
     private Set<BooleanQueryOperator> operators;
 
@@ -36,7 +38,9 @@ public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
     @Override
     public <QueryT> Optional<Query<QueryT>> parse(final Query<QueryT> base, final String query) {
         final var parser = new PEGBoolExpressionParser();
-        return parser.parseExpression(query).map(node -> translate(base, base::filter, node));
+        return parser.parseExpression(query)
+                .map(node -> translate(base, base::filter, node))
+                .filter(getMongoDBUtils()::isIndexedQuery);
     }
 
     private <QueryT> Query<QueryT> translate(
@@ -164,6 +168,15 @@ public class SidhantAggarwalBooleanQueryParser implements BooleanQueryParser {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
     }
 
     public Set<BooleanQueryOperator> getOperators() {
