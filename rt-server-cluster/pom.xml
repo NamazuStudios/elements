@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.6.18-SNAPSHOT</version>
+        <version>3.6.18</version>
     </parent>
 
     <artifactId>rt-server-cluster</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.6.18-SNAPSHOT</version>
+    <version>3.6.18</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
