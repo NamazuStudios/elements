@@ -72,7 +72,6 @@ public class OculusIapResource {
 
     @GET
     @Path("reward")
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Attempts to verify the Oculus IAP Receipt data." +
             "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
