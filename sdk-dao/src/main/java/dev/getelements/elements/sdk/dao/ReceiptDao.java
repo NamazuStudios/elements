@@ -18,7 +18,7 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
         description = "Called when a new receipt is created. " +
                 "If the raw receipt data needs to be parsed, check the scheme to determine the corresponding class:\n" +
                 "GOOGLE_IAP_SCHEME -> GooglePlayIapReceipt\n" +
-                "OCULUS_PLATFORM_IAP_SCHEME -> OculusIapReceipt\n" +
+                "OCULUS_IAP_SCHEME -> OculusIapReceipt\n" +
                 "APPLE_IAP_SCHEME -> AppleIapReceipt"
 )
 @ElementEventProducer(
@@ -27,7 +27,7 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
         description = "Called when a new receipt is created. " +
                 "If the raw receipt data needs to be parsed, check the scheme to determine the corresponding class:\n" +
                 "GOOGLE_IAP_SCHEME -> GooglePlayIapReceipt\n" +
-                "OCULUS_PLATFORM_IAP_SCHEME -> OculusIapReceipt\n" +
+                "OCULUS_IAP_SCHEME -> OculusIapReceipt\n" +
                 "APPLE_IAP_SCHEME -> AppleIapReceipt"
 )
 public interface ReceiptDao {
