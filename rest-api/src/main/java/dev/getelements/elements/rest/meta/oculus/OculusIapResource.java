@@ -75,7 +75,7 @@ public class OculusIapResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Attempts to verify the Oculus IAP Receipt data." +
             "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
-    public List<RewardIssuance> getRewardIssuances(OculusIapReceipt oculusIapReceipt) {
+    public List<RewardIssuance> getRewardIssuancesForOculusIapReceipt(OculusIapReceipt oculusIapReceipt) {
         validateReceipt(oculusIapReceipt);
         return getOculusIapReceiptService().getOrCreateRewardIssuances(oculusIapReceipt);
     }

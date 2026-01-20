@@ -25,7 +25,7 @@ public class OAuth2AuthSchemeResource {
     @Operation(
             summary = "Lists all auth schemes in the system",
             description = "Requires SUPERUSER access. Gets a pagination of Auth Schemes for the given query.")
-    public Pagination<OAuth2AuthScheme> getAuthSchemes(
+    public Pagination<OAuth2AuthScheme> getOauth2AuthSchemes(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags) {
@@ -46,7 +46,7 @@ public class OAuth2AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Gets a specific Auth Scheme",
             description = "Gets a specific Auth Scheme by the oAuth2AuthSchemeId.")
-    public OAuth2AuthScheme getAuthScheme(@PathParam("oAuth2AuthSchemeId") String oAuth2AuthSchemeId) {
+    public OAuth2AuthScheme getOauth2AuthScheme(@PathParam("oAuth2AuthSchemeId") String oAuth2AuthSchemeId) {
 
         oAuth2AuthSchemeId = Strings.nullToEmpty(oAuth2AuthSchemeId).trim();
 
@@ -62,7 +62,7 @@ public class OAuth2AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Creates a new Auth Scheme",
             description = "Creates a new Auth Scheme, from the data in the given auth scheme request")
-    public CreateOrUpdateOAuth2AuthSchemeResponse createAuthScheme(final CreateOrUpdateOAuth2AuthSchemeRequest oAuth2AuthSchemeRequest) {
+    public CreateOrUpdateOAuth2AuthSchemeResponse createOauth2AuthScheme(final CreateOrUpdateOAuth2AuthSchemeRequest oAuth2AuthSchemeRequest) {
         return getOAuth2AuthSchemeService().createAuthScheme(oAuth2AuthSchemeRequest);
     }
 
@@ -72,7 +72,7 @@ public class OAuth2AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Updates an Auth Scheme",
             description = "Updates an Auth Scheme with the specified data in the auth scheme request.")
-    public CreateOrUpdateOAuth2AuthSchemeResponse updateAuthScheme(
+    public CreateOrUpdateOAuth2AuthSchemeResponse updateOauth2AuthScheme(
             @PathParam("oAuth2AuthSchemeId")
             final String oAuth2AuthSchemeId,
             final CreateOrUpdateOAuth2AuthSchemeRequest oAuth2AuthSchemeRequest) {
@@ -84,7 +84,7 @@ public class OAuth2AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Deletes an Auth Scheme",
             description = "Deletes an Auth Scheme with the specified id.")
-    public void deleteAuthScheme(@PathParam("oAuth2AuthSchemeId") String oAuth2AuthSchemeId) {
+    public void deleteOauth2AuthScheme(@PathParam("oAuth2AuthSchemeId") String oAuth2AuthSchemeId) {
 
         oAuth2AuthSchemeId = Strings.nullToEmpty(oAuth2AuthSchemeId).trim();
 

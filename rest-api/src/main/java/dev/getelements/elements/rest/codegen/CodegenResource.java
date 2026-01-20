@@ -2,7 +2,6 @@ package dev.getelements.elements.rest.codegen;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import dev.getelements.elements.rest.Oas3DocumentationResource;
 import dev.getelements.elements.sdk.model.Headers;
 import dev.getelements.elements.sdk.model.codegen.CodegenRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;

@@ -96,7 +96,7 @@ public class VaultWalletResource {
     @Operation(
             summary = "Gets a specific  Wallet",
             description = "Gets a specific  Wallet by Id.")
-    public Wallet getWallet(
+    public Wallet getWalletForVault(
 
             @PathParam("vaultId")
             final String vaultId,

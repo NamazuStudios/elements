@@ -27,7 +27,7 @@ public class MultipartLargeObjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Operation( summary = "Creates a LargeObject with content")
-    public LargeObject createLargeObject(
+    public LargeObject createMultipartLargeObject(
             @FormDataParam("object") final FormDataBodyPart objectBodyPart,
             @FormDataParam("metadata") final CreateLargeObjectRequest createLargeObjectRequest) {
 
