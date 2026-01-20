@@ -1,7 +1,5 @@
 package dev.getelements.elements.rest;
 
-import com.fasterxml.jackson.databind.util.TokenBuffer;
-import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.sdk.model.Headers;
@@ -10,10 +8,8 @@ import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
-import io.swagger.v3.core.filter.OpenAPISpecFilter;
 import io.swagger.v3.core.filter.SpecFilter;
 import io.swagger.v3.core.model.ApiDescription;
-import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -33,13 +29,9 @@ import io.swagger.v3.oas.models.servers.Server;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.servlet.ServletConfig;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
@@ -83,7 +75,7 @@ import static java.lang.String.format;
                 name = SESSION_SECRET,
                 paramName = Headers.SESSION_SECRET)
 })
-@Path("openapi.{type:json|yaml}")
+@Path("")
 public class Oas3DocumentationResource extends BaseOpenApiResource {
 
     private URI apiOutsideUrl;
@@ -98,46 +90,94 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
             .getInstance(true)
             .readAllAsResolvedSchema(ErrorResponse.class);
 
+    private static final String APPLICATION_YAML = "application/yaml";
+
     @GET
-    @Produces(APPLICATION_JSON)
+    @Path("openapi.json")
+    @Produces(MediaType.APPLICATION_JSON)
     @Operation(hidden = true)
-    public OpenAPI getOpenApiJson(
-            @PathParam("type")
-            final String type,
-            @Context
-            final UriInfo uriInfo,
-            @Context
-            final HttpHeaders headers,
-            @Context
-            final Application application,
-            @Context
-            final ServletConfig servletConfig
-        ) throws OpenApiConfigurationException {
-        return getOpenApi(type, uriInfo, headers, application, servletConfig);
+    public Response getOpenApiJson(
+            @Context final UriInfo uriInfo,
+            @Context final HttpHeaders headers,
+            @Context final Application application,
+            @Context final ServletConfig servletConfig
+    ) throws OpenApiConfigurationException {
+
+        return buildAndSerialize(
+                "json",
+                uriInfo,
+                headers,
+                application,
+                servletConfig
+        );
     }
 
     @GET
-    @Produces("application/yaml")
+    @Path("openapi.yaml")
+    @Produces(APPLICATION_YAML)
     @Operation(hidden = true)
-    public OpenAPI getOpenApiYaml(
-            @PathParam("type")
+    public Response getOpenApiYaml(
+            @Context final UriInfo uriInfo,
+            @Context final HttpHeaders headers,
+            @Context final Application application,
+            @Context final ServletConfig servletConfig
+    ) throws OpenApiConfigurationException {
+
+        return buildAndSerialize(
+                "yaml",
+                uriInfo,
+                headers,
+                application,
+                servletConfig
+        );
+    }
+
+    private Response buildAndSerialize(
             final String type,
-            @Context
             final UriInfo uriInfo,
-            @Context
             final HttpHeaders headers,
-            @Context
             final Application application,
-            @Context
             final ServletConfig servletConfig
     ) throws OpenApiConfigurationException {
-        return getOpenApi(type, uriInfo, headers, application, servletConfig);
+
+        final var context = buildContext(application, servletConfig);
+        final var oas = context.read();
+
+        final var filter = switch (oas.getSpecVersion()) {
+            case V30 -> new EnhancedSpecFilter(ERROR_RESPONSE_SCHEMA_3_0);
+            case V31 -> new EnhancedSpecFilter(ERROR_RESPONSE_SCHEMA_3_1);
+        };
+
+        final var filtered = new SpecFilter().filter(
+                oas,
+                filter,
+                getQueryParams(uriInfo.getQueryParameters()),
+                getCookies(headers),
+                getHeaders(headers)
+        );
+
+        // Serialize with the correct mapper
+        final var mapper = "yaml".equals(type)
+                ? context.getOutputYamlMapper()
+                : context.getOutputJsonMapper();
+
+        final var mediaType = "yaml".equals(type)
+                ? APPLICATION_YAML
+                : MediaType.APPLICATION_JSON;
+
+        try {
+            final var bytes = mapper.writeValueAsBytes(filtered);
+
+            return Response.ok(bytes, mediaType)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"openapi." + type + "\"")
+                    .build();
+
+        } catch (Exception e) {
+            throw new OpenApiConfigurationException(e.getMessage(), e);
+        }
     }
 
-    private OpenAPI getOpenApi(
-            final String type,
-            final UriInfo uriInfo,
-            final HttpHeaders headers,
+    private OpenApiContext buildContext(
             final Application application,
             final ServletConfig servletConfig
     ) throws OpenApiConfigurationException {
@@ -147,75 +187,12 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 "dev.getelements.elements.model"
         );
 
-        final var context = new JaxrsOpenApiContextBuilder()
+        return new io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder()
                 .application(application)
                 .servletConfig(servletConfig)
                 .resourcePackages(resourcePackages)
-                .openApiConfiguration(null)
                 .ctxId(getContextId(servletConfig))
                 .buildContext(true);
-
-        final var oas = context.read();
-        final var clone = cloneOas3Spec(type, context, oas);
-
-        final OpenAPISpecFilter filter;
-
-        switch (oas.getSpecVersion()) {
-            case V30:
-                filter = new EnhancedSpecFilter(ERROR_RESPONSE_SCHEMA_3_0);
-                break;
-            case V31:
-                filter = new EnhancedSpecFilter(ERROR_RESPONSE_SCHEMA_3_1);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported spec version: " + oas.getPaths());
-        }
-
-        return new SpecFilter().filter(
-                clone,
-                filter,
-                getQueryParams(uriInfo.getQueryParameters()),
-                getCookies(headers),
-                getHeaders(headers)
-        );
-    }
-
-    private OpenAPI cloneOas3Spec(final String type, final OpenApiContext context, final OpenAPI oas) {
-
-        final var mapper =
-                "yaml".equals(type) ? context.getOutputYamlMapper() :
-                "json".equals(type) ? context.getOutputJsonMapper() :
-                null;
-
-        if (mapper == null) {
-            throw new IllegalArgumentException("Must be one of 'yaml' or 'json'");
-        }
-
-        try (final var buffer = new TokenBuffer(mapper, false)) {
-            mapper.writeValue(buffer, oas);
-            return mapper.readValue(buffer.asParser(), OpenAPI.class);
-        } catch (IOException ex) {
-            throw new InternalException(ex);
-        }
-
-    }
-
-    public URI getApiOutsideUrl() {
-        return apiOutsideUrl;
-    }
-
-    @Inject
-    public void setApiOutsideUrl(@Named(Constants.API_OUTSIDE_URL) URI apiOutsideUrl) {
-        this.apiOutsideUrl = apiOutsideUrl;
-    }
-
-    public VersionService getVersionService() {
-        return versionService;
-    }
-
-    @Inject
-    public void setVersionService(VersionService versionService) {
-        this.versionService = versionService;
     }
 
     private static Map<String, List<String>> getQueryParams(MultivaluedMap<String, String> params) {
@@ -309,6 +286,24 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
 
         }
 
+    }
+
+    public URI getApiOutsideUrl() {
+        return apiOutsideUrl;
+    }
+
+    @Inject
+    public void setApiOutsideUrl(@Named(Constants.API_OUTSIDE_URL) URI apiOutsideUrl) {
+        this.apiOutsideUrl = apiOutsideUrl;
+    }
+
+    public VersionService getVersionService() {
+        return versionService;
+    }
+
+    @Inject
+    public void setVersionService(VersionService versionService) {
+        this.versionService = versionService;
     }
 
 }

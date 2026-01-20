@@ -31,7 +31,6 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.List;
 
 import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.AUTH_BEARER;
 import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
@@ -59,7 +58,9 @@ public class CodegenResource extends BaseOpenApiResource {
     @Operation(
             summary = "Generate Client API Code",
             description = "Generates API code for use on the client. " +
-                    "Will generate Elements core if no application is specified in the request body.")
+                    "Will generate Elements core if no application is specified in the request body." +
+                    "The generated code will always be returned in JSON format. To get a YAML representation, " +
+                    "use the Oas3DocumentationResource directly, such as /api/rest/openapi.yaml")
     public Response generateCode(final CodegenRequest request,
                                  @Context
                                  final UriInfo uriInfo,
@@ -74,12 +75,11 @@ public class CodegenResource extends BaseOpenApiResource {
         getValidationHelper().validateModel(request);
 
         final var generateCore = request.elementSpecUrl == null || request.elementSpecUrl.isEmpty();
-
         final var path = temporaryFiles.createTempDirectory().toFile();
 
         try {
             final var specFile = generateCore ?
-                    generateSpecFile(path, "json", uriInfo, headers, application, servletConfig) :
+                    generateSpecFile(path, uriInfo, headers, application, servletConfig) :
                     generateElementSpecFile(path, request.elementSpecUrl);
 
             final var zipFile = getFileForRequest(request, specFile);
@@ -98,17 +98,17 @@ public class CodegenResource extends BaseOpenApiResource {
 
     private File generateElementSpecFile(final File path, final String elementSpecUrl) throws JsonProcessingException {
 
+        //For some reason the JSON has issues when doing this conversion
         final var yaml = this.getClient()
-                .target(elementSpecUrl)
+                .target(elementSpecUrl.toLowerCase().replace(".json", ".yaml"))
                 .request(new String[]{"application/yaml"})
                 .get(String.class);
 
         final var openApi = Yaml.mapper().readValue(yaml, OpenAPI.class);
+        final var specFile = new File(path, "openapi.json");
 
         addSecuritySchemes(openApi);
         formatEnums(openApi);
-
-        final var specFile = new File(path, "openapi.json");
 
         try(final var writer = new FileOutputStream(specFile)) {
             Json.mapper()
@@ -122,18 +122,25 @@ public class CodegenResource extends BaseOpenApiResource {
     }
 
     private File generateSpecFile(final File path,
-            final String type,
             final UriInfo uriInfo,
             final HttpHeaders headers,
             final Application application,
             final ServletConfig servletConfig) throws OpenApiConfigurationException {
 
-        final var openApi = getDocumentationResource().getOpenApiJson(type, uriInfo, headers, application, servletConfig);
+        final var openApiResponse = getDocumentationResource().getOpenApiYaml(uriInfo, headers, application, servletConfig);
+        final var raw = new String((byte[]) openApiResponse.getEntity());
+        final OpenAPI openApi;
+
+        try {
+             openApi = Yaml.mapper().readValue(raw, OpenAPI.class);
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+
+        final var specFile = new File(path, "openapi.json");
 
         addSecuritySchemes(openApi);
         formatEnums(openApi);
-
-        final var specFile = new File(path, "openapi.json");
 
         try(final var writer = new FileOutputStream(specFile)) {
             Json.mapper()
@@ -177,7 +184,11 @@ public class CodegenResource extends BaseOpenApiResource {
 
         final var components = openApi.getComponents() == null ? new Components() : openApi.getComponents();
 
-        for (Schema<?> schema : components.getSchemas().values()) {
+        if(components.getSchemas() == null || components.getSchemas().isEmpty()) {
+            return;
+        }
+
+        for (final Schema<?> schema : components.getSchemas().values()) {
 
             if (schema.getEnum() != null &&
                 schema.getEnum().stream().allMatch(v -> v instanceof String)) {
