@@ -89,7 +89,7 @@ public interface Transaction extends AutoCloseable {
             while (true) {
 
                 try {
-                    final var result = op.apply(this);
+                    final var result = wrapped.apply(this);
                     commit();
                     return result;
                 } catch (RetryException ex) {
