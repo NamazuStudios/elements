@@ -285,33 +285,34 @@ public class MongoUserDao implements UserDao {
     @Override
     public User createUser(final User user) {
 
-        validate(user);
-
-        final var query = getDatastore().find(MongoUser.class)
-            .filter(or(
-                eq("name", user.getName()),
-                eq("email", user.getEmail())
-            ));
-
-        final var builder = new UpdateBuilder()
-            .with(
-                set("name", user.getName()),
-                set("email", user.getEmail()),
-                set("level", user.getLevel())
-            )
-            .with(getMongoPasswordUtils()::scramblePassword);
-
-        updateBuilderWithOptionalData(user, builder);
-
-        final var opts = new ModifyOptions()
-            .upsert(true)
-            .returnDocument(AFTER);
-
-        final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
-        final var createdUser = getDozerMapper().map(mongoUser, User.class);
-        createUidsStrictForUser(createdUser);
-
-        return createdUser;
+        return createUserStrict(user);
+//        validate(user);
+//
+//        final var query = getDatastore().find(MongoUser.class)
+//            .filter(or(
+//                eq("name", user.getName()),
+//                eq("email", user.getEmail())
+//            ));
+//
+//        final var builder = new UpdateBuilder()
+//            .with(
+//                set("name", user.getName()),
+//                set("email", user.getEmail()),
+//                set("level", user.getLevel())
+//            )
+//            .with(getMongoPasswordUtils()::scramblePassword);
+//
+//        updateBuilderWithOptionalData(user, builder);
+//
+//        final var opts = new ModifyOptions()
+//            .upsert(true)
+//            .returnDocument(AFTER);
+//
+//        final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
+//        final var createdUser = getDozerMapper().map(mongoUser, User.class);
+//        createUidsStrictForUser(createdUser);
+//
+//        return createdUser;
 
     }
 

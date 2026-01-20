@@ -11,8 +11,11 @@ import dev.getelements.elements.sdk.util.SimpleLazyValue;
 import dev.morphia.transactions.MorphiaSession;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Random;
+import java.util.function.Function;
 
 import static com.mongodb.MongoException.TRANSIENT_TRANSACTION_ERROR_LABEL;
 import static com.mongodb.MongoException.UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL;
@@ -20,6 +23,8 @@ import static dev.getelements.elements.sdk.dao.Transaction.RetryException.DEFAUL
 import static java.lang.Thread.sleep;
 
 public class MorphiaGuiceTransaction implements Transaction {
+
+    private static final Logger logger = LoggerFactory.getLogger(MorphiaGuiceTransaction.class);
 
     @ElementDefaultAttribute(
             value = "32",
@@ -50,6 +55,31 @@ public class MorphiaGuiceTransaction implements Transaction {
     }
 
     @Override
+    public <T> Function<Transaction, T> wrap(final Function<Transaction, T> original) {
+        return txn -> {
+
+            if (failures > getMaxRetries()) {
+                throw new TooBusyException("Maximum number of retries reached");
+            }
+
+            try {
+                return original.apply(txn);
+            } catch (final MongoException ex) {
+                if (ex.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+                    // Tells the caller to retry the whole transaction because we know that the
+                    // transaction definitely failed. We call this "optimistic backoff and retry"
+                    // because we expect that the next attempt will succeed.
+                    final var delay = calculateNextDelay();
+                    throw new RetryException(delay);
+                } else {
+                    throw ex;
+                }
+            }
+
+        };
+    }
+
+    @Override
     public void commit() {
 
         if (failures > getMaxRetries()) {
@@ -60,7 +90,20 @@ public class MorphiaGuiceTransaction implements Transaction {
             getMorphiaSession().commitTransaction();
             getBufferedEventPublisher().postCommit();
         } catch (MongoException ex) {
-            handle(ex, this::retryCommitUntilSuccessOrFailure);
+            if (ex.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+                // Tells the caller to retry the whole transaction because we know that the
+                // transaction definitely failed. We call this "optimistic backoff and retry"
+                // because we expect that the next attempt will succeed.
+                final var delay = calculateNextDelay();
+                throw new RetryException(delay);
+            } else if (ex.hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
+                // This failure indicates we need to retry just the commit as the transaction
+                // may have completed we just don't know it. So we are going to keep retrying
+                // until we get a success, failure, or we just give up.
+                retryCommitUntilSuccessOrFailure();
+            } else {
+                throw ex;
+            }
         }
 
     }
@@ -74,7 +117,17 @@ public class MorphiaGuiceTransaction implements Transaction {
                 getMorphiaSession().commitTransaction();
                 return;
             } catch (MongoException ex) {
-                handle(ex, () -> {});
+                if (ex.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
+                    // Tells the caller to retry the whole transaction because we know that the
+                    // transaction definitely failed. We call this "optimistic backoff and retry"
+                    // because we expect that the next attempt will succeed.
+                    final var delay = calculateNextDelay();
+                    throw new RetryException(delay);
+                } else if (ex.hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
+                    logger.trace("Caught unknown transaction commit result. Retrying.");
+                } else {
+                    throw ex;
+                }
             } catch (InterruptedException ex) {
                 throw new InternalException(ex);
             }
@@ -86,21 +139,6 @@ public class MorphiaGuiceTransaction implements Transaction {
 
     private long calculateNextDelay() {
         return random.get().nextLong(++failures * DEFAULT_RECOMMENDED_DELAY);
-    }
-
-    private void handle(final MongoException ex, final Runnable unknown) {
-        if (ex.hasErrorLabel(TRANSIENT_TRANSACTION_ERROR_LABEL)) {
-            // Tells the caller to retry the whole transaction because we know that the
-            // transaction definitely failed. We call this "optimistic backoff and retry"
-            // because we expect that the next attempt will succeed.
-            final var delay = calculateNextDelay();
-            throw new RetryException(delay);
-        } else if (ex.hasErrorLabel(UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL)) {
-            // We handle the unknown edge case.
-            unknown.run();
-        } else {
-            throw ex;
-        }
     }
 
     @Override
