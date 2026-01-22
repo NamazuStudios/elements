@@ -5,12 +5,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.6.24-SNAPSHOT</version>
+        <version>3.6.24</version>
     </parent>
 
     <artifactId>rt-server-transact</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.6.24-SNAPSHOT</version>
+    <version>3.6.24</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
