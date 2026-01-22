@@ -8,11 +8,11 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.6.23-SNAPSHOT</version>
+        <version>3.6.24-SNAPSHOT</version>
     </parent>
 
     <artifactId>sdk-test-api</artifactId>
-    <version>3.6.23-SNAPSHOT</version>
+    <version>3.6.24-SNAPSHOT</version>
     <name>sdk-test-api</name>
 
     <dependencies>
