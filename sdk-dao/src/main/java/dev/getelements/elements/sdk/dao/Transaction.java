@@ -93,7 +93,7 @@ public interface Transaction extends AutoCloseable {
                     commit();
                     return result;
                 } catch (RetryException ex) {
-                    rollback();
+                    if (isActive()) rollback();
                     ex.waitForRecommendedDelay();
                     start();
                 }

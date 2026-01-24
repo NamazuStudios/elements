@@ -32,9 +32,9 @@ export default function DynamicApiExplorer() {
     setLastResponse(null);
   }, [selectedResource?.resourceName]);
 
-  // Fetch OpenAPI spec from Elements backend (YAML endpoint, converted to JSON by our proxy)
+  // Fetch OpenAPI spec from Elements backend (JSON endpoint)
   const { data: spec, isLoading: specLoading, error: specError } = useQuery({
-    queryKey: ['/api/rest/openapi.yaml'],
+    queryKey: ['/api/rest/openapi.json'],
     queryFn: async () => {
       // Get session token for authentication
       const { apiClient: client } = await import('@/lib/api-client');
@@ -46,7 +46,7 @@ export default function DynamicApiExplorer() {
       }
       
       // Use getApiPath to handle production vs development mode
-      const specPath = await getApiPath('/api/rest/openapi.yaml');
+      const specPath = await getApiPath('/api/rest/openapi.json');
       const response = await fetch(specPath, { 
         credentials: 'include',
         headers
