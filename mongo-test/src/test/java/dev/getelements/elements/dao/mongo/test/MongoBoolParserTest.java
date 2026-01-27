@@ -4,6 +4,10 @@ import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.sdk.dao.ProfileDao;
+import dev.getelements.elements.sdk.dao.Transaction;
+import dev.getelements.elements.sdk.dao.UserDao;
+import jakarta.inject.Provider;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +22,8 @@ public class MongoBoolParserTest {
     private static final Logger logger = LoggerFactory.getLogger(MongoBoolParserTest.class);
 
     private BooleanQueryParser booleanQueryParser;
+
+    private Provider<Transaction> transactionProvider;
 
     @Test
     public void testSimpleQuery() {
@@ -81,6 +87,14 @@ public class MongoBoolParserTest {
         logger.info("Query {} - {}", query, explanation);
     }
 
+    @Test
+    public void testWorksInTransactions() {
+        getTransactionProvider().get().performAndCloseV(txn -> {
+            final var dao = txn.getDao(ProfileDao.class);
+            dao.getActiveProfiles(0, 100, "displayName:test");
+        });
+    }
+
     public BooleanQueryParser getBooleanQueryParser() {
         return booleanQueryParser;
     }
@@ -88,6 +102,15 @@ public class MongoBoolParserTest {
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 
 }

@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.6.0-SNAPSHOT</version>
+        <version>3.7.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>jetty-ws</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.6.0-SNAPSHOT</version>
+    <version>3.7.0-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
@@ -128,10 +128,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>doc-serve-jetty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>web-ui-angular-jetty</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>

@@ -1,8 +1,0 @@
-.application-form-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.application-form-container > * {
-  width: 100%;
-}

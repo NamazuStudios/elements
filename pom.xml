@@ -4,7 +4,7 @@
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <name>Namazu Elements</name>
-    <version>3.6.0-SNAPSHOT</version>
+    <version>3.7.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
@@ -79,7 +79,6 @@
         <module>rt-jersey-guice</module>
         <module>docker-config</module>
         <module>common-git</module>
-        <module>common-git-guice</module>
         <module>common-jetty</module>
         <module>cdn-serve</module>
         <module>app-serve-jetty</module>
@@ -95,7 +94,6 @@
         <module>mongo-guice</module>
         <module>jetty-ws</module>
         <module>jetty-ws-test</module>
-        <module>web-ui-angular-jetty</module>
         <module>web-ui-react-jetty</module>
         <module>sdk</module>
         <module>sdk-spi</module>
@@ -196,6 +194,9 @@
         <mapstruct.version>1.6.2</mapstruct.version>
         <openapi-generator.version>7.12.0</openapi-generator.version>
         <javadoc.plugin.version>3.12.0</javadoc.plugin.version>
+        <maven.dependency.plugin.version>3.6.0</maven.dependency.plugin.version>
+        <central.publish.plugin.version>0.7.0</central.publish.plugin.version>
+        <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -471,11 +472,6 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>common-git-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>jetty-ws</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -522,11 +518,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-simple-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>web-ui-angular-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1306,7 +1297,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.3.1</version>
+                        <version>${maven.source.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -1327,7 +1318,6 @@
                             <execution>
                                 <id>attach-javadocs</id>
                                 <phase>prepare-package</phase>
-                                <!-- Change to prepare-package -->
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
@@ -1337,7 +1327,7 @@
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.7.0</version>
+                        <version>${central.publish.plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <autoPublish>true</autoPublish>

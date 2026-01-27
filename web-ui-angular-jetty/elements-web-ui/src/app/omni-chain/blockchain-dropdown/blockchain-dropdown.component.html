@@ -1,8 +1,0 @@
-<div class="blockchain-dropdown">
-    <mat-label class="label">Network: </mat-label>
-    <mat-select class="select" [value]="currentNetwork" (selectionChange)="changeNetwork($event)">
-        <mat-option *ngFor="let blockchain of blockchainOptions" [value]="blockchain.key">
-            {{blockchain.description}}
-        </mat-option>
-    </mat-select>
-</div>

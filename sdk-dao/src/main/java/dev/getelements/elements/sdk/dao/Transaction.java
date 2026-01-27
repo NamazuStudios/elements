@@ -82,22 +82,38 @@ public interface Transaction extends AutoCloseable {
      * @return the result of the operation
      */
     default <T> T performAndClose(final Function<Transaction, T> op) {
+
+        final var wrapped = wrap(op);
+
         try (this) {
             while (true) {
 
-                final var result = op.apply(this);
-
                 try {
+                    final var result = wrapped.apply(this);
                     commit();
                     return result;
                 } catch (RetryException ex) {
-                    rollback();
+                    if (isActive()) rollback();
                     ex.waitForRecommendedDelay();
                     start();
                 }
 
             }
         }
+
+    }
+
+    /**
+     * Optionally, wraps the transaction operation in another {@link Function} to properly handle any retry exceptions
+     * specific to the transaction's implementation. This ensures that any executed code will properly honor the
+     * semantics of {@link RetryException}.
+     *
+     * @param op the operation
+     * @return the wrapped function, or the original function
+     * @param <T> the return type
+     */
+    default <T> Function<Transaction, T> wrap(final Function<Transaction, T> op) {
+        return op;
     }
 
     /**

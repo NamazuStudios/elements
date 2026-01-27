@@ -18,13 +18,17 @@ help:
 clean:
 	mvn --no-transfer-progress -B clean
 
-build: clean
+build:
+	mvn --no-transfer-progress -B install
+
+build_github:
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
-deploy: clean
-	## This step ensures that the sources get built and installed first
-	mvn -DskipTests source:jar install
-	mvn --no-transfer-progress -B -Pcentral-publish deploy
+build_central:
+	mvn --no-transfer-progress -B -Pcentral-publish,github-publish install
+
+deploy:
+	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:
 	make -C docker-config internal
@@ -109,8 +113,9 @@ endif
 
 javadoc: JAVADOC_VERSION?=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 javadoc:
-	mvn javadoc:aggregate
-	aws --delete s3 sync target/site/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
+	mvn -Pcentral-publish javadoc:aggregate
+	find target
+	aws --delete s3 sync target/reports/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
 
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;

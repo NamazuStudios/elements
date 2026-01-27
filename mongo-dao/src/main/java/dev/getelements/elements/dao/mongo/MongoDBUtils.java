@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider.MAIN;
 import static dev.morphia.aggregation.expressions.Expressions.field;
 import static dev.morphia.aggregation.stages.Facet.facet;
 import static dev.morphia.aggregation.stages.Limit.limit;
@@ -50,6 +51,8 @@ public class MongoDBUtils {
     public static final String COLLSCAN = "COLLSCAN";
 
     private Datastore datastore;
+
+    private Datastore mainDatastore;
 
     private int queryMaxResults;
 
@@ -382,9 +385,18 @@ public class MongoDBUtils {
     }
 
     public boolean isIndexedQuery(final Query<?> query) {
-        final var planner = (Document) query.explain().get("queryPlanner");
+
+        final var rawQuery = query.toDocument();
+
+        final var planner = (Document) getMainDatastore()
+                .find(query.getEntityClass(), rawQuery)
+                .explain()
+                .get("queryPlanner");
+
         final var winner = planner.get("winningPlan", Document.class);
+
         return isIndexedPlan(winner);
+
     }
 
     public boolean isIndexedPlan(final Document plan) {
@@ -409,6 +421,15 @@ public class MongoDBUtils {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public Datastore getMainDatastore() {
+        return mainDatastore;
+    }
+
+    @Inject
+    public void setMainDatastore(@Named(MAIN) Datastore mainDatastore) {
+        this.mainDatastore = mainDatastore;
     }
 
     public int getQueryMaxResults() {
