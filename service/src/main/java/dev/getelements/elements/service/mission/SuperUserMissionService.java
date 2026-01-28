@@ -8,6 +8,9 @@ import org.eclipse.jgit.lib.ObjectId;
 public class SuperUserMissionService extends AnonMissionService implements MissionService {
 
     @Override
+    public Mission updateMission(final String missionNameOrId, final Mission mission) { return missionDao.updateMission(missionNameOrId, mission); }
+
+    @Override
     public Mission updateMission(final String missionNameOrId, final UpdateMissionRequest request) {
 
         final var mission = new Mission();

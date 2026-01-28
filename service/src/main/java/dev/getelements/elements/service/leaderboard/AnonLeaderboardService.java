@@ -1,10 +1,13 @@
 package dev.getelements.elements.service.leaderboard;
 
 import dev.getelements.elements.sdk.dao.LeaderboardDao;
+import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.leaderboard.CreateLeaderboardRequest;
 import dev.getelements.elements.sdk.model.leaderboard.Leaderboard;
 
+import dev.getelements.elements.sdk.model.leaderboard.UpdateLeaderboardRequest;
 import dev.getelements.elements.sdk.service.leaderboard.LeaderboardService;
 import jakarta.inject.Inject;
 
@@ -35,6 +38,16 @@ public class AnonLeaderboardService implements LeaderboardService {
     @Override
     public Leaderboard updateLeaderboard(String nameOrId, Leaderboard application) {
         throw new NotFoundException();
+    }
+
+    @Override
+    public Leaderboard createLeaderboard(CreateLeaderboardRequest leaderboard) {
+        throw new ForbiddenException("Unprivileged requests are unable to modify leaderboards.");
+    }
+
+    @Override
+    public Leaderboard updateLeaderboard(String nameOrId, UpdateLeaderboardRequest leaderboard) {
+        throw new ForbiddenException("Unprivileged requests are unable to modify leaderboard.");
     }
 
     @Override

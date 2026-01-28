@@ -51,6 +51,17 @@ public interface MissionService {
      * @param mission the {@link Mission} to update
      * @return the {@link Mission} as it was written to the database
      */
+    @Deprecated
+    Mission updateMission(String missionNameOrId, Mission mission);
+
+    /**
+     * Updates the {@link Mission}. The {@link Mission#getId()} method is
+     * used to key the {@link Mission}.
+     *
+     * @param missionNameOrId the name or id of the mission to update
+     * @param mission the {@link UpdateMissionRequest} parameters to update
+     * @return the {@link Mission} as it was written to the database
+     */
     Mission updateMission(String missionNameOrId, UpdateMissionRequest mission);
 
     /**

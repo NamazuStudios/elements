@@ -23,6 +23,7 @@ import org.bson.types.ObjectId;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 
@@ -64,9 +65,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
                 throw new DuplicateException("Leaderboard with the given name already exists");
             }
         }
-        catch (NotFoundException e) {
-
-        }
+        catch (NotFoundException ignored) {}
 
         final MongoLeaderboard mongoLeaderboard = getBeanMapper().map(leaderboard, MongoLeaderboard.class);
 
@@ -140,6 +139,41 @@ public class MongoLeaderboardDao implements LeaderboardDao {
     }
 
     @Override
+    public Leaderboard updateLeaderboard(final Leaderboard leaderboard) {
+
+        getValidationHelper().validateModel(leaderboard, ValidationGroups.Update.class);
+
+        final var query = datastore.find(MongoLeaderboard.class);
+
+        if (leaderboard.getId() != null) {
+            query.filter(eq("_id", new ObjectId(leaderboard.getId())));
+        } else if (leaderboard.getName() != null) {
+            query.filter(eq("name", leaderboard.getName()));
+        } else {
+            throw new InvalidDataException("At least one of name or id must be provided.");
+        }
+
+        final var options = new ModifyOptions()
+                .upsert(false)
+                .returnDocument(AFTER);
+
+        final var mongoLeaderboard = getMongoDBUtils().perform(ds->
+                query.modify(options,
+                        set("name", leaderboard.getName()),
+                        set("title", leaderboard.getTitle()),
+                        set("scoreUnits", leaderboard.getScoreUnits())
+                )
+        );
+
+        if (mongoLeaderboard == null) {
+            throw new LeaderboardNotFoundException("Leaderboard not found: " + (leaderboard.getId() != null ? leaderboard.getId() : leaderboard.getName()));
+        }
+
+        return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+
+    }
+
+    @Override
     public Leaderboard updateLeaderboard(final String leaderboardNameOrId, final Leaderboard leaderboard) {
 
         if (leaderboardNameOrId == null) {
@@ -159,11 +193,11 @@ public class MongoLeaderboardDao implements LeaderboardDao {
         // for now, do not allow updating of firstEpochTimestamp or epochInterval
 
         final var mongoLeaderboard = getMongoDBUtils().perform(ds->
-            query.modify(
+            query.modify(new ModifyOptions().upsert(false).returnDocument(AFTER),
                 set("name", leaderboard.getName()),
                 set("title", leaderboard.getTitle()),
                 set("scoreUnits", leaderboard.getScoreUnits())
-            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+            )
         );
 
         if (mongoLeaderboard == null) {

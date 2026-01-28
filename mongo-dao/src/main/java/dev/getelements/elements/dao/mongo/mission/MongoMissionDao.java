@@ -186,6 +186,7 @@ public class MongoMissionDao implements MissionDao {
         final var builder = new UpdateBuilder();
 
         builder.with(
+            set("name", mission.getName()),
             set("displayName", mission.getDisplayName()),
             set("description", mission.getDescription())
         );
@@ -220,6 +221,69 @@ public class MongoMissionDao implements MissionDao {
 
         if (updatedMongoItem == null) {
             throw new MissionNotFoundException("Mission with id or name of " + (mission.getId() != null ? mission.getId() : mission.getName()) + " does not exist");
+        }
+
+        return getDozerMapper().map(updatedMongoItem, Mission.class);
+
+    }
+
+    @Override
+    public Mission updateMission(final String missionNameOrId, final Mission mission) {
+
+        getValidationHelper().validateModel(mission, Update.class);
+        mission.validateTags();
+
+        if ((mission.getSteps() == null || mission.getSteps().isEmpty()) && mission.getFinalRepeatStep() == null) {
+            throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
+        }
+
+        final var mongoMission = checkMission(mission);
+        final var query = getDatastore().find(MongoMission.class);
+
+        if (ObjectId.isValid(missionNameOrId)) {
+            query.filter(eq("_id", new ObjectId(missionNameOrId)));
+        } else {
+            query.filter(eq("name", missionNameOrId));
+        }
+
+        final var builder = new UpdateBuilder();
+
+        builder.with(
+                set("name", mongoMission.getName()),
+                set("displayName", mongoMission.getDisplayName()),
+                set("description", mongoMission.getDescription())
+        );
+
+        if (mission.getTags() != null) {
+            builder.with(set("tags", mongoMission.getTags()));
+        } else {
+            builder.with(unset("tags"));
+        }
+
+        if (mission.getSteps() != null) {
+            builder.with(set("steps", mongoMission.getSteps()));
+        } else {
+            builder.with(unset("steps"));
+        }
+
+        if (mission.getFinalRepeatStep() != null) {
+            builder.with(set("finalRepeatStep", mongoMission.getFinalRepeatStep()));
+        } else {
+            builder.with(unset("finalRepeatStep"));
+        }
+
+        if (mission.getMetadata() != null) {
+            builder.with(set("metadata", mongoMission.getMetadata()));
+        } else {
+            builder.with(unset("metadata"));
+        }
+
+        final var updatedMongoItem = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (updatedMongoItem == null) {
+            throw new MissionNotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
         }
 
         return getDozerMapper().map(updatedMongoItem, Mission.class);
