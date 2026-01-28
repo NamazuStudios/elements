@@ -5,8 +5,10 @@ import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.Tabulation;
+import dev.getelements.elements.sdk.model.mission.CreateProgressRequest;
 import dev.getelements.elements.sdk.model.mission.Progress;
 import dev.getelements.elements.sdk.model.mission.ProgressRow;
+import dev.getelements.elements.sdk.model.mission.UpdateProgressRequest;
 import dev.getelements.elements.sdk.model.profile.Profile;
 
 import dev.getelements.elements.sdk.service.progress.ProgressService;
@@ -48,9 +50,21 @@ public class UserProgressService implements ProgressService {
     }
 
     @Override
+    public Progress updateProgress(String progressId, UpdateProgressRequest request) {
+        throw new ForbiddenException("Unprivileged requests are unable to modify progress.");
+    }
+
+    @Override
+    public Progress createProgress(CreateProgressRequest progress) {
+        throw new ForbiddenException("Unprivileged requests are unable to modify progress.");
+    }
+
+    @Override
+    @Deprecated
     public Progress updateProgress(Progress progress) { throw new ForbiddenException("Unprivileged requests are unable to modify progress."); }
 
     @Override
+    @Deprecated
     public Progress createProgress(Progress progress) { throw new ForbiddenException("Unprivileged requests are unable to modify progress."); }
 
     @Override

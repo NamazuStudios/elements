@@ -250,7 +250,7 @@ public class MongoProgressDao implements ProgressDao {
             if (finalRepeatStep == null) throw new InvalidDataException("one step must be defined");
             first = finalRepeatStep;
         } else {
-            first = steps.get(0);
+            first = steps.getFirst();
         }
 
         final var missionTags = mongoMission.getTags();
