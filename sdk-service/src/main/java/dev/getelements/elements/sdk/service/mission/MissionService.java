@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public interface MissionService {
      * @param mission the {@link Mission} to update
      * @return the {@link Mission} as it was written to the database
      */
-    Mission updateMission(String missionNameOrId, Mission mission);
+    Mission updateMission(String missionNameOrId, UpdateMissionRequest mission);
 
     /**
      * Creates a new {@link Mission}.  The ID of the mission, as specified by {@link Mission#getId()},

@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.mission;
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.mission.Mission;
+import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -78,7 +79,7 @@ public class MissionResource {
             summary = "Updates an entire single Mission",
             description = "Supplying a mission, this will update the Mission identified by the name or ID in the path with contents " +
                     "from the passed in request body. ")
-    public Mission updateMission(final Mission updatedMission,
+    public Mission updateMission(final UpdateMissionRequest updatedMission,
                            @PathParam("missionNameOrId") String missionNameOrId) {
         return missionService.updateMission(missionNameOrId, updatedMission);
     }

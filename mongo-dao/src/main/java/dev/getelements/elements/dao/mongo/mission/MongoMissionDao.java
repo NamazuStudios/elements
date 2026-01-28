@@ -10,6 +10,7 @@ import dev.getelements.elements.dao.mongo.model.mission.MongoMission;
 import dev.getelements.elements.dao.mongo.model.mission.MongoReward;
 import dev.getelements.elements.dao.mongo.model.mission.MongoStep;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.sdk.model.Taggable;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -18,6 +19,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.ValidationGroups.Update;
 import dev.getelements.elements.sdk.model.mission.Mission;
+import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import jakarta.inject.Inject;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -161,54 +164,52 @@ public class MongoMissionDao implements MissionDao {
     }
 
     @Override
-    public Mission updateMission(final String missionNameOrId, final Mission mission) {
+    public Mission updateMission(final Mission mission) {
 
         getValidationHelper().validateModel(mission, Update.class);
-        normalize(mission);
+        mission.validateTags();
 
         if ((mission.getSteps() == null || mission.getSteps().isEmpty()) && mission.getFinalRepeatStep() == null) {
             throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
         }
 
-        final var mongoMission = checkMission(mission);
         final var query = getDatastore().find(MongoMission.class);
 
-        if (ObjectId.isValid(missionNameOrId)) {
-            query.filter(eq("_id", new ObjectId(missionNameOrId)));
+        if (mission.getId() != null) {
+            query.filter(eq("_id", new ObjectId(mission.getId())));
+        } else if (mission.getName() != null) {
+            query.filter(eq("name", mission.getName()));
         } else {
-            query.filter(eq("name", missionNameOrId));
+            throw new InvalidDataException("At least one of name or id must be provided.");
         }
 
         final var builder = new UpdateBuilder();
 
         builder.with(
-            set("name", mongoMission.getName()),
-            set("displayName", mongoMission.getDisplayName()),
-            set("description", mongoMission.getDescription())
+            set("displayName", mission.getDisplayName()),
+            set("description", mission.getDescription())
         );
 
-        mission.validateTags();
-
         if (mission.getTags() != null) {
-            builder.with(set("tags", mongoMission.getTags()));
+            builder.with(set("tags", mission.getTags()));
         } else {
             builder.with(unset("tags"));
         }
 
         if (mission.getSteps() != null) {
-            builder.with(set("steps", mongoMission.getSteps()));
+            builder.with(set("steps", mission.getSteps()));
         } else {
             builder.with(unset("steps"));
         }
 
         if (mission.getFinalRepeatStep() != null) {
-            builder.with(set("finalRepeatStep", mongoMission.getFinalRepeatStep()));
+            builder.with(set("finalRepeatStep", mission.getFinalRepeatStep()));
         } else {
             builder.with(unset("finalRepeatStep"));
         }
 
         if (mission.getMetadata() != null) {
-            builder.with(set("metadata", mongoMission.getMetadata()));
+            builder.with(set("metadata", mission.getMetadata()));
         } else {
             builder.with(unset("metadata"));
         }
@@ -218,7 +219,7 @@ public class MongoMissionDao implements MissionDao {
         );
 
         if (updatedMongoItem == null) {
-            throw new MissionNotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
+            throw new MissionNotFoundException("Mission with id or name of " + (mission.getId() != null ? mission.getId() : mission.getName()) + " does not exist");
         }
 
         return getDozerMapper().map(updatedMongoItem, Mission.class);
@@ -234,7 +235,7 @@ public class MongoMissionDao implements MissionDao {
             throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
         }
 
-        normalize(mission);
+        mission.validateTags();
 
         final MongoMission mongoMission = checkMission(mission);
 
@@ -273,7 +274,7 @@ public class MongoMissionDao implements MissionDao {
     }
 
     private List<MongoStep> checkSteps(final List<MongoStep> mongoSteps) {
-        return mongoSteps.stream().map(mongoStep -> checkStep(mongoStep)).collect(toList());
+        return mongoSteps.stream().map(this::checkStep).collect(toList());
     }
 
     private MongoStep checkStep(final MongoStep mongoStep) {
@@ -282,8 +283,8 @@ public class MongoMissionDao implements MissionDao {
 
         final List<MongoReward> mongoRewards = mongoStep.getRewards()
             .stream()
-            .filter(mongoReward -> mongoReward != null)
-            .map(mongoReward -> checkReward(mongoReward))
+            .filter(Objects::nonNull)
+            .map(this::checkReward)
             .collect(toList());
 
         mongoStep.setRewards(mongoRewards);
@@ -310,10 +311,6 @@ public class MongoMissionDao implements MissionDao {
             throw new NotFoundException("Mission not found: " + missionNameOrID);
         }
 
-    }
-
-    private void normalize(final Mission mission) {
-        mission.validateTags();
     }
 
     public Datastore getDatastore() {
