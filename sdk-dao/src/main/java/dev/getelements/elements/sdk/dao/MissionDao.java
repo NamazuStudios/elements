@@ -71,7 +71,7 @@ public interface MissionDao {
 
     /**
      * Updates the mission, or throws a {@link NotFoundException} if the
-     * mission can't be found.  The missionNameOrId is used to key the mission being updated.
+     * mission can't be found by the provided id or name.
      *
      * @return the {@link Mission} as it was written into the database
      * @throws InvalidDataException if the state of the passed in Mission is invalid
