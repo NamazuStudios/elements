@@ -1,17 +1,19 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.sdk.dao.ItemDao;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.goods.Item;
+import dev.getelements.elements.sdk.util.UniqueCodeGenerator;
 import dev.morphia.Datastore;
-import org.apache.commons.lang3.RandomStringUtils;
+import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
-import org.testng.annotations.*;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
-import jakarta.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -95,12 +97,15 @@ public class MongoItemDaoIntegrationTest {
         int numberOfItems = 50;
         List<String> tagsToFilterBy = Lists.newArrayList("laser", "tag");
 
+        final var generator = new UniqueCodeGenerator.Builder().build();
+
         //Add Items to collection, and track the objectIds that contain the tags we care about.
         Set<ObjectId> expectedObjectIds = new HashSet<>();
         for (int i = 0; i < numberOfItems; i++) {
             Item item = createMockItem(format("items_by_tags_%d", i));
             List<String> tagsForItem = new ArrayList<>();
-            item.setName(RandomStringUtils.randomAlphabetic(30));
+            item.setName(generator.tryGenerateUniqueCode(30).get());
+
             if (i % 2 == 0) {
                 tagsForItem.add("laser");
                 tagsForItem.add("tag");

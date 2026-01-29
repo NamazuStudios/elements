@@ -4,8 +4,8 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
-import dev.getelements.elements.dao.mongo.model.receipt.MongoReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
+import dev.getelements.elements.dao.mongo.model.receipt.MongoReceipt;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -13,7 +13,6 @@ import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
@@ -31,7 +30,6 @@ import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.morphia.query.filters.Filters.*;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoReceiptDao implements ReceiptDao {
     
@@ -91,7 +89,7 @@ public class MongoReceiptDao implements ReceiptDao {
     @Override
     public Receipt getReceipt(String id) {
         
-        if (isEmpty(nullToEmpty(id).trim()) || !ObjectId.isValid(id)) {
+        if (nullToEmpty(id).isBlank() || !ObjectId.isValid(id)) {
             throw new NotFoundException("Unable to find receipt with an id of " + id);
         }
 
@@ -112,7 +110,8 @@ public class MongoReceiptDao implements ReceiptDao {
 
     @Override
     public Receipt getReceipt(String schema, String originalTransactionId) {
-        if (isEmpty(nullToEmpty(originalTransactionId).trim())) {
+
+        if (nullToEmpty(originalTransactionId).isBlank()) {
             throw new NotFoundException("Unable to find receipt with an id of " + originalTransactionId);
         }
 

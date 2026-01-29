@@ -45,7 +45,6 @@ import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.UUID.randomUUID;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
@@ -96,7 +95,8 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     }
 
     public MongoRewardIssuance getMongoRewardIssuance(final String id) {
-        if (isEmpty(nullToEmpty(id).trim())) {
+
+        if (nullToEmpty(id).isBlank()) {
             throw new NotFoundException("Unable to find reward issuance with an id " + id);
         }
 

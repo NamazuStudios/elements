@@ -1,32 +1,30 @@
 package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.client.model.ReturnDocument;
-import dev.getelements.elements.sdk.dao.ItemDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.sdk.dao.ItemDao;
+import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.item.ItemNotFoundException;
-import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.goods.ItemCategory;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
-import org.apache.commons.lang3.StringUtils;
-
+import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,12 +32,12 @@ import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static dev.morphia.query.filters.Filters.*;
+import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.exists;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoItemDao implements ItemDao {
 
@@ -99,7 +97,7 @@ public class MongoItemDao implements ItemDao {
 
     public Optional<MongoItem> findMongoItemByNameOrId(final String itemNameOrId) {
 
-        if (isEmpty(nullToEmpty(itemNameOrId).trim())) {
+        if (nullToEmpty(itemNameOrId).isBlank()) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
         }
 
@@ -169,7 +167,7 @@ public class MongoItemDao implements ItemDao {
 
         }
 
-        if (StringUtils.isNotEmpty(query)) {
+        if (!nullToEmpty(query).isBlank()) {
             mongoQuery.filter(
                     Filters.regex("name", Pattern.compile(query))
             );
