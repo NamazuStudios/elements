@@ -1,4 +1,4 @@
-package dev.getelements.elements.rest;
+package dev.getelements.elements.rest.codegen;
 
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.ErrorResponse;
@@ -10,6 +10,7 @@ import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
 import io.swagger.v3.core.filter.SpecFilter;
 import io.swagger.v3.core.model.ApiDescription;
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -23,9 +24,11 @@ import io.swagger.v3.oas.integration.OpenApiConfigurationException;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.servlet.ServletConfig;
@@ -91,6 +94,8 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
             .readAllAsResolvedSchema(ErrorResponse.class);
 
     private static final String APPLICATION_YAML = "application/yaml";
+
+    private static final String DEFAULT_TAG = "ElementsCore";
 
     @GET
     @Path("openapi.json")
@@ -187,7 +192,7 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 "dev.getelements.elements.model"
         );
 
-        return new io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder()
+        return new JaxrsOpenApiContextBuilder()
                 .application(application)
                 .servletConfig(servletConfig)
                 .resourcePackages(resourcePackages)
@@ -198,7 +203,7 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
     private static Map<String, List<String>> getQueryParams(MultivaluedMap<String, String> params) {
         Map<String, List<String>> output = new HashMap<>();
         if (params != null) {
-            params.forEach(output::put);
+            output.putAll(params);
         }
         return output;
     }
@@ -214,9 +219,27 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
     private static Map<String, List<String>> getHeaders(HttpHeaders headers) {
         Map<String, List<String>> output = new HashMap<>();
         if (headers != null) {
-            headers.getRequestHeaders().forEach(output::put);
+            output.putAll(headers.getRequestHeaders());
         }
         return output;
+    }
+
+    public URI getApiOutsideUrl() {
+        return apiOutsideUrl;
+    }
+
+    @Inject
+    public void setApiOutsideUrl(@Named(Constants.API_OUTSIDE_URL) URI apiOutsideUrl) {
+        this.apiOutsideUrl = apiOutsideUrl;
+    }
+
+    public VersionService getVersionService() {
+        return versionService;
+    }
+
+    @Inject
+    public void setVersionService(VersionService versionService) {
+        this.versionService = versionService;
     }
 
     private class EnhancedSpecFilter extends AbstractSpecFilter {
@@ -242,9 +265,16 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
             final var components = openAPI.getComponents();
             components.addSchemas(errorResponseSchema.schema.getName(), errorResponseSchema.schema);
 
-
             final var info = openAPI.getInfo();
             info.setVersion(getVersionService().getVersion().toString());
+
+            final var tag = new Tag();
+            tag.setName(DEFAULT_TAG);
+            tag.setDescription("Namazu Elements Core APIs");
+
+            if (openAPI.getTags() == null || openAPI.getTags().stream().noneMatch(t -> DEFAULT_TAG.equals(t.getName()))) {
+                openAPI.addTagsItem(tag);
+            }
 
             return Optional.of(openAPI);
         }
@@ -257,6 +287,12 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
                 final Map<String, String> cookies,
                 final Map<String, List<String>> headers) {
 
+            final var tags = operation.getTags();
+
+            if (tags == null || tags.isEmpty()) {
+                operation.setTags(List.of(DEFAULT_TAG));
+            }
+
             final ApiResponses responses;
 
             if (operation.getResponses() == null) {
@@ -268,16 +304,16 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
 
             HTTP_STATUS_MAP.values().forEach(code -> {
 
-                var $ref = format("%s%s",COMPONENTS_SCHEMAS_REF, errorResponseSchema.schema.getName());
+                final var $ref = format("%s%s",COMPONENTS_SCHEMAS_REF, errorResponseSchema.schema.getName());
 
-                var schema = new io.swagger.v3.oas.models.media.Schema<>().$ref($ref);
+                final var schema = new Schema<>().$ref($ref);
 
-                var content = new Content().addMediaType(
+                final var content = new Content().addMediaType(
                         APPLICATION_JSON.toLowerCase(),
                         new io.swagger.v3.oas.models.media.MediaType().schema(schema)
                 );
 
-                var response = new ApiResponse().content(content);
+                final var response = new ApiResponse().content(content);
                 responses.addApiResponse(format("%d", code.getStatusCode()), response);
 
             });
@@ -287,23 +323,4 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
         }
 
     }
-
-    public URI getApiOutsideUrl() {
-        return apiOutsideUrl;
-    }
-
-    @Inject
-    public void setApiOutsideUrl(@Named(Constants.API_OUTSIDE_URL) URI apiOutsideUrl) {
-        this.apiOutsideUrl = apiOutsideUrl;
-    }
-
-    public VersionService getVersionService() {
-        return versionService;
-    }
-
-    @Inject
-    public void setVersionService(VersionService versionService) {
-        this.versionService = versionService;
-    }
-
 }

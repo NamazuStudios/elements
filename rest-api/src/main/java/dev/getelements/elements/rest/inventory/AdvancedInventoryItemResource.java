@@ -89,7 +89,7 @@ public class AdvancedInventoryItemResource {
     @Operation(
             summary = "Updates an inventory item for the specified item",
             description = "Updates an inventory item for the specified item")
-    public InventoryItem updateSimpleInventoryItem(
+    public InventoryItem updateAdvancedInventoryItem(
             @PathParam("inventoryItemId")
             final String inventoryItemId,
             final UpdateInventoryItemRequest updateInventoryItemRequest) {

@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.model.match.Match;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.match.MatchService;
 import dev.getelements.elements.sdk.service.topic.Topic;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,6 +38,7 @@ import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
  * Created by patricktwohig on 7/18/17.
  */
 @Path("match")
+@Hidden
 public class MatchResource {
 
     private int asyncTimeoutLimit;
