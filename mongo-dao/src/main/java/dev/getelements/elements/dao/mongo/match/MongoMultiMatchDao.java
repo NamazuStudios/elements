@@ -564,7 +564,7 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         getValidationHelper().validateModel(multiMatch.getConfiguration());
 
         final var mongoApplication = getMongoApplicationDao()
-                .findActiveMongoApplication(applicationId)
+                .findMongoApplicationOptional(applicationId)
                 .orElseThrow(() -> new InvalidDataException("Application not found: " + applicationId));
 
         return getMongoApplicationConfigurationDao()
