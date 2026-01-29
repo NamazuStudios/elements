@@ -3,6 +3,7 @@ package dev.getelements.elements.service.mission;
 import dev.getelements.elements.sdk.dao.MissionDao;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.mission.CreateMissionRequest;
 import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.mission.Mission;
@@ -33,7 +34,7 @@ public class AnonMissionService implements MissionService {
     public Mission updateMission(String missionNameOrId, UpdateMissionRequest mission) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }
 
     @Override
-    public Mission createMission(Mission mission) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }
+    public Mission createMission(CreateMissionRequest request) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }
 
     @Override
     public void deleteMission(String missionNameOrId) { throw new ForbiddenException("Unprivileged requests are unable to modify missions."); }

@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.mission;
 
+import dev.getelements.elements.sdk.model.mission.CreateMissionRequest;
 import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 import dev.getelements.elements.sdk.service.mission.MissionService;
@@ -32,7 +33,20 @@ public class SuperUserMissionService extends AnonMissionService implements Missi
     }
 
     @Override
-    public Mission createMission(final Mission mission) { return missionDao.createMission(mission); }
+    public Mission createMission(final CreateMissionRequest request) {
+
+        final var mission = new Mission();
+
+        mission.setName(request.getName());
+        mission.setDisplayName(request.getDisplayName());
+        mission.setDescription(request.getDescription());
+        mission.setFinalRepeatStep(request.getFinalRepeatStep());
+        mission.setMetadata(request.getMetadata());
+        mission.setSteps(request.getSteps());
+        mission.setTags(request.getTags());
+
+        return missionDao.createMission(mission);
+    }
 
     @Override
     public void deleteMission(final String missionNameOrId) { missionDao.deleteMission(missionNameOrId); }

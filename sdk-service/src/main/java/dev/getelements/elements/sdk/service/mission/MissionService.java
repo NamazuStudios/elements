@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.service.mission;
 
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.mission.CreateMissionRequest;
 import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -65,13 +66,12 @@ public interface MissionService {
     Mission updateMission(String missionNameOrId, UpdateMissionRequest mission);
 
     /**
-     * Creates a new {@link Mission}.  The ID of the mission, as specified by {@link Mission#getId()},
-     * should be null and will be assigned.
+     * Creates a new {@link Mission}.
      *
-     * @param mission the {@link Mission} to create
+     * @param mission the properties for the new {@link Mission} to create
      * @return the {@link Mission} as it was created by the service.
      */
-    Mission createMission(Mission mission);
+    Mission createMission(CreateMissionRequest request);
 
     /**
      * Deletes the {@link Mission} with the supplied id or name.

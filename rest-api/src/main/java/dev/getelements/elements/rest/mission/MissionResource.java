@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.mission;
 
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.mission.CreateMissionRequest;
 import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 import dev.getelements.elements.sdk.service.mission.MissionService;
@@ -30,7 +31,7 @@ public class MissionResource {
                     "The Mission representation returned in the response body is a representation of the Mission as persisted " +
                     "with a unique identifier assigned and with its fields properly normalized.  The supplied mission object " +
                     "submitted with the request must have a name property that is unique across all items.")
-    public Mission createMission(Mission missionToBeCreated) {
+    public Mission createMission(CreateMissionRequest missionToBeCreated) {
         return missionService.createMission(missionToBeCreated);
     }
 
