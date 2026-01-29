@@ -17,7 +17,7 @@ import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("auth_scheme/custom")
-public class AuthSchemeResource {
+public class CustomAuthSchemeResource {
 
     private AuthSchemeService authSchemeService;
 
@@ -26,7 +26,7 @@ public class AuthSchemeResource {
     @Operation(
             summary = "Lists all auth schemes in the system",
             description = "Requires SUPERUSER access. Gets a pagination of Auth Schemes for the given query.")
-    public Pagination<AuthScheme> getAuthSchemes(
+    public Pagination<AuthScheme> getCustomAuthSchemes(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags) {
@@ -48,7 +48,7 @@ public class AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Gets a specific Auth Scheme",
             description = "Gets a specific Auth Scheme by the authSchemeId.")
-    public AuthScheme getAuthScheme(@PathParam("authSchemeId") String authSchemeId) {
+    public AuthScheme getCustomAuthScheme(@PathParam("authSchemeId") String authSchemeId) {
 
         authSchemeId = Strings.nullToEmpty(authSchemeId).trim();
 
@@ -64,7 +64,7 @@ public class AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Creates a new Auth Scheme",
             description = "Creates a new Auth Scheme, from the data in the given auth scheme request")
-    public CreateAuthSchemeResponse createAuthScheme(final CreateAuthSchemeRequest authSchemeRequest) {
+    public CreateAuthSchemeResponse createCustomAuthScheme(final CreateAuthSchemeRequest authSchemeRequest) {
         return getAuthSchemeService().createAuthScheme(authSchemeRequest);
     }
 
@@ -74,7 +74,7 @@ public class AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Updates an Auth Scheme",
             description = "Updates an Auth Scheme with the specified data in the auth scheme request.")
-    public UpdateAuthSchemeResponse updateAuthScheme(
+    public UpdateAuthSchemeResponse updateCustomAuthScheme(
             @PathParam("authSchemeId")
             final String authSchemeId,
             final UpdateAuthSchemeRequest authSchemeRequest) {
@@ -86,7 +86,7 @@ public class AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Deletes an Auth Scheme",
             description = "Deletes an Auth Scheme with the specified id.")
-    public void deleteAuthScheme(@PathParam("authSchemeId") String authSchemeId) {
+    public void deleteCustomAuthScheme(@PathParam("authSchemeId") String authSchemeId) {
 
         authSchemeId = Strings.nullToEmpty(authSchemeId).trim();
 

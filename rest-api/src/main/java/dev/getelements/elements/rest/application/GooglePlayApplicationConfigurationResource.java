@@ -115,7 +115,7 @@ public class GooglePlayApplicationConfigurationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Updates the ProductBundle",
             description = "Updates the ProductBundle for the given ApplicationConfiguration")
-    public ApplicationConfiguration updateProductBundleForApplicationConfiguration(
+    public ApplicationConfiguration updateProductBundleForGooglePlayApplicationConfiguration(
 
             @PathParam("applicationNameOrId")
             final String applicationNameOrId,

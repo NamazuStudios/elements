@@ -24,7 +24,7 @@ public class OidcAuthSchemeResource {
     @Operation(
             summary = "Lists all auth schemes in the system",
             description = "Requires SUPERUSER access. Gets a pagination of Auth Schemes for the given query.")
-    public Pagination<OidcAuthScheme> getAuthSchemes(
+    public Pagination<OidcAuthScheme> getOidcAuthSchemes(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags) {
@@ -45,7 +45,7 @@ public class OidcAuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Gets a specific Auth Scheme",
             description = "Gets a specific Auth Scheme by the oidcAuthSchemeId.")
-    public OidcAuthScheme getAuthScheme(@PathParam("oidcAuthSchemeId") String oidcAuthSchemeId) {
+    public OidcAuthScheme getOidcAuthScheme(@PathParam("oidcAuthSchemeId") String oidcAuthSchemeId) {
 
         oidcAuthSchemeId = Strings.nullToEmpty(oidcAuthSchemeId).trim();
 
@@ -61,7 +61,7 @@ public class OidcAuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Creates a new Auth Scheme",
             description = "Creates a new Auth Scheme, from the data in the given auth scheme request")
-    public CreateOrUpdateOidcAuthSchemeResponse createAuthScheme(final CreateOrUpdateOidcAuthSchemeRequest oidcAuthSchemeRequest) {
+    public CreateOrUpdateOidcAuthSchemeResponse createOidcAuthScheme(final CreateOrUpdateOidcAuthSchemeRequest oidcAuthSchemeRequest) {
         return getOidcAuthSchemeService().createAuthScheme(oidcAuthSchemeRequest);
     }
 
@@ -71,7 +71,7 @@ public class OidcAuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Updates an Auth Scheme",
             description = "Updates an Auth Scheme with the specified data in the auth scheme request.")
-    public CreateOrUpdateOidcAuthSchemeResponse updateAuthScheme(
+    public CreateOrUpdateOidcAuthSchemeResponse updateOidcAuthScheme(
             @PathParam("oidcAuthSchemeId")
             final String oidcAuthSchemeId,
             final CreateOrUpdateOidcAuthSchemeRequest oidcAuthSchemeRequest) {
@@ -83,7 +83,7 @@ public class OidcAuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Deletes an Auth Scheme",
             description = "Deletes an Auth Scheme with the specified id.")
-    public void deleteAuthScheme(@PathParam("oidcAuthSchemeId") String oidcAuthSchemeId) {
+    public void deleteOidcAuthScheme(@PathParam("oidcAuthSchemeId") String oidcAuthSchemeId) {
 
         oidcAuthSchemeId = Strings.nullToEmpty(oidcAuthSchemeId).trim();
 

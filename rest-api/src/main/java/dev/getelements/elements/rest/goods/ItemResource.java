@@ -84,7 +84,7 @@ public class ItemResource {
     @Operation(
             summary = "Delete the item as identified by the given item name/id",
             description = "Delete the item as identified by the given item name/id")
-    public void deleteSimpleInventoryItem(@PathParam("identifier") final String identifier) {
+    public void deleteItem(@PathParam("identifier") final String identifier) {
         getItemService().deleteItem(identifier);
     }
 

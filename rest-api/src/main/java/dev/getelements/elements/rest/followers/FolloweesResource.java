@@ -20,10 +20,9 @@ public class FolloweesResource {
     @Path("{profileId}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
-            summary = "Search Followers",
-            description = "Searches all followers in the system and returning the metadata for all matches against the given " +
-                    "profile id.")
-    public Pagination<Profile> getFollowers(
+            summary = "Search Followees",
+            description = "Searches for all profiles that are being followed by the given profile id.")
+    public Pagination<Profile> getFollowees(
             @PathParam("profileId") final String profileId,
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count) {

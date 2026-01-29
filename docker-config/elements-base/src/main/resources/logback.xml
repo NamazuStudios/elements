@@ -14,4 +14,8 @@
         <appender-ref ref="STDOUT" />
     </logger>
 
+    <logger name="org.openapitools.codegen" level="ERROR"/>
+
+    <logger name="com.github.sidhant92.boolparser" level="OFF"/>
+
 </configuration>
