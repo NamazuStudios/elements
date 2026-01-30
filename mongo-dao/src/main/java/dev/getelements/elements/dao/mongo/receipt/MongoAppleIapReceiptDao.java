@@ -4,28 +4,26 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
-import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
-import dev.getelements.elements.dao.mongo.model.receipt.MongoAppleIapReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
-import dev.getelements.elements.sdk.model.exception.DuplicateException;
-import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.dao.mongo.model.receipt.MongoAppleIapReceipt;
+import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
 import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
-
 import static com.google.common.base.Strings.nullToEmpty;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
@@ -54,7 +52,8 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
     @Override
     public AppleIapReceipt getAppleIapReceipt(String originalTransactionId) {
-        if (isEmpty(nullToEmpty(originalTransactionId).trim())) {
+
+        if (nullToEmpty(originalTransactionId).isBlank()) {
             throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
         }
 

@@ -49,7 +49,6 @@ import static dev.morphia.query.filters.Filters.in;
 import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoProgressDao implements ProgressDao {
 
@@ -174,7 +173,7 @@ public class MongoProgressDao implements ProgressDao {
     @Override
     public Optional<Progress> findProgress(final String identifier) {
 
-        if (isEmpty(nullToEmpty(identifier).trim())) {
+        if (nullToEmpty(identifier).isBlank()) {
             throw new ProgressNotFoundException("Unable to find progress with an id " + identifier);
         }
 

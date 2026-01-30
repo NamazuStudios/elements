@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
@@ -98,6 +98,7 @@
         <module>sdk</module>
         <module>sdk-spi</module>
         <module>sdk-spi-guice</module>
+        <module>sdk-spi-shrinkwrap</module>
         <module>sdk-util</module>
         <module>sdk-guice</module>
         <module>sdk-test</module>
@@ -197,6 +198,7 @@
         <maven.dependency.plugin.version>3.6.0</maven.dependency.plugin.version>
         <central.publish.plugin.version>0.7.0</central.publish.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
+        <shrinkwrap.version>3.3.4</shrinkwrap.version>
     </properties>
     <dependencies>
         <dependency>
@@ -558,6 +560,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-spi-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-spi-shrinkwrap</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -997,6 +1004,13 @@
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.shrinkwrap.resolver</groupId>
+                <artifactId>shrinkwrap-resolver-bom</artifactId>
+                <version>${shrinkwrap.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <!-- Third Party Dependencies (With Specific Exclusions) -->
             <dependency>

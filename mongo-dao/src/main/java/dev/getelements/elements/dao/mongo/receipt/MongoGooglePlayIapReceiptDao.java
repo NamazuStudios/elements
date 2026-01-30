@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import jakarta.inject.Inject;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
@@ -56,7 +55,8 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
     @Override
     public GooglePlayIapReceipt getGooglePlayIapReceipt(String orderId) {
-        if (isEmpty(nullToEmpty(orderId).trim())) {
+
+        if (nullToEmpty(orderId).isBlank()) {
             throw new NotFoundException("Unable to find google play iap receipt with an id of " + orderId);
         }
 

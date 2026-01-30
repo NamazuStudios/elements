@@ -3,8 +3,8 @@ package dev.getelements.elements.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.result.DeleteResult;
-import dev.getelements.elements.sdk.dao.LeaderboardDao;
 import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
+import dev.getelements.elements.sdk.dao.LeaderboardDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.*;
@@ -17,7 +17,6 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
-import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 
 import java.util.regex.Pattern;
@@ -97,7 +96,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
         final Query<MongoLeaderboard> mongoQuery = getDatastore().find(MongoLeaderboard.class).filter(exists("name"));
 
-        if (StringUtils.isNotEmpty(search)) {
+        if (search != null && !search.isBlank()) {
             mongoQuery.filter(
                     Filters.regex("name", Pattern.compile(search))
             );
