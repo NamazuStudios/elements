@@ -3,9 +3,11 @@ package dev.getelements.elements.service.progress;
 import dev.getelements.elements.sdk.dao.ProgressDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.Tabulation;
+import dev.getelements.elements.sdk.model.mission.CreateProgressRequest;
 import dev.getelements.elements.sdk.model.mission.Progress;
 import dev.getelements.elements.sdk.model.mission.ProgressRow;
 
+import dev.getelements.elements.sdk.model.mission.UpdateProgressRequest;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
 import jakarta.inject.Inject;
 import java.util.List;
@@ -36,11 +38,35 @@ public class SuperUserProgressService implements ProgressService {
     }
 
     @Override
+    public Progress updateProgress(final String progressId, final UpdateProgressRequest request) {
+
+        final var progress = new Progress();
+        progress.setId(progressId);
+        progress.setRemaining(request.getRemaining());
+        progress.setCurrentStep(request.getCurrentStep());
+
+        return getProgressDao().updateProgress(progress);
+    }
+
+    @Override
+    @Deprecated
     public Progress updateProgress(final Progress progress) {
         return getProgressDao().updateProgress(progress);
     }
 
     @Override
+    public Progress createProgress(final CreateProgressRequest request) {
+
+        final var progress = new Progress();
+
+        progress.setProfile(progress.getProfile());
+        progress.setMission(request.getMission());
+
+        return getProgressDao().createOrGetExistingProgress(progress);
+    }
+
+    @Override
+    @Deprecated
     public Progress createProgress(final Progress progress) {
         return getProgressDao().createOrGetExistingProgress(progress);
     }

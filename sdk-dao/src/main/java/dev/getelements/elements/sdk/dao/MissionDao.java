@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 
 import java.util.Collection;
 import java.util.List;
@@ -65,7 +66,17 @@ public interface MissionDao {
      * @return the {@link Mission} as it was written into the database
      * @throws InvalidDataException if the state of the passed in Mission is invalid
      */
+    @Deprecated
     Mission updateMission(String missionNameOrId, Mission mission);
+
+    /**
+     * Updates the mission, or throws a {@link NotFoundException} if the
+     * mission can't be found by the provided id or name.
+     *
+     * @return the {@link Mission} as it was written into the database
+     * @throws InvalidDataException if the state of the passed in Mission is invalid
+     */
+    Mission updateMission(Mission mission);
 
     /**
      * Creates a mission.  The value of {@link Mission#getId()} will be ignored.

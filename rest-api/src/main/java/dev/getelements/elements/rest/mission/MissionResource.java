@@ -2,7 +2,9 @@ package dev.getelements.elements.rest.mission;
 
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.mission.CreateMissionRequest;
 import dev.getelements.elements.sdk.model.mission.Mission;
+import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -29,7 +31,7 @@ public class MissionResource {
                     "The Mission representation returned in the response body is a representation of the Mission as persisted " +
                     "with a unique identifier assigned and with its fields properly normalized.  The supplied mission object " +
                     "submitted with the request must have a name property that is unique across all items.")
-    public Mission createMission(Mission missionToBeCreated) {
+    public Mission createMission(CreateMissionRequest missionToBeCreated) {
         return missionService.createMission(missionToBeCreated);
     }
 
@@ -78,7 +80,7 @@ public class MissionResource {
             summary = "Updates an entire single Mission",
             description = "Supplying a mission, this will update the Mission identified by the name or ID in the path with contents " +
                     "from the passed in request body. ")
-    public Mission updateMission(final Mission updatedMission,
+    public Mission updateMission(final UpdateMissionRequest updatedMission,
                            @PathParam("missionNameOrId") String missionNameOrId) {
         return missionService.updateMission(missionNameOrId, updatedMission);
     }

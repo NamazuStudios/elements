@@ -2,7 +2,9 @@ package dev.getelements.elements.rest.leaderboard;
 
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.leaderboard.CreateLeaderboardRequest;
 import dev.getelements.elements.sdk.model.leaderboard.Leaderboard;
+import dev.getelements.elements.sdk.model.leaderboard.UpdateLeaderboardRequest;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 
 import dev.getelements.elements.sdk.service.leaderboard.LeaderboardService;
@@ -28,10 +30,9 @@ public class LeaderboardResource {
             summary = "Search Leaderboards",
             description = "Performs a full-text search of all leaderboards known to the server.  As with " +
                           "other full-text endpoints this allows for pagination and offset.")
-    public Pagination<Leaderboard> getLeaderboards(
-            @QueryParam("offset") @DefaultValue("0")  final int offset,
-            @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("search") final String search) {
+    public Pagination<Leaderboard> getLeaderboards(@QueryParam("offset") @DefaultValue("0")  final int offset,
+                                                   @QueryParam("count")  @DefaultValue("20") final int count,
+                                                   @QueryParam("search") final String search) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -57,6 +58,7 @@ public class LeaderboardResource {
             description = "Gets the metadata for a single leaderboard.  This may include more specific " +
                     "details not availble in the bulk-get or fetch operation.")
     public Leaderboard getLeaderboard(@PathParam("nameOrId") final String nameOrId) {
+
         return getLeaderboardService().getLeaderboard(nameOrId);
     }
 
@@ -67,8 +69,10 @@ public class LeaderboardResource {
             summary = "Creates a New Leaderboard",
             description = "Gets the metadata for a single leaderboard.  This may include more specific " +
                     "details not available in the bulk-get or fetch operation.")
-    public Leaderboard createLeaderboard(final Leaderboard leaderboard) {
+    public Leaderboard createLeaderboard(final CreateLeaderboardRequest leaderboard) {
+
         getValidationHelper().validateModel(leaderboard);
+
         return getLeaderboardService().createLeaderboard(leaderboard);
     }
 
@@ -79,10 +83,11 @@ public class LeaderboardResource {
     @Operation(
             summary = "Updates an Leaderboard",
             description = "Performs an update to an existing leaderboard known to the server.")
-    public Leaderboard updateLeaderboard(
-            @PathParam("nameOrId") final String nameOrId,
-            final Leaderboard leaderboard) {
+    public Leaderboard updateLeaderboard(@PathParam("nameOrId") final String nameOrId,
+                                         final UpdateLeaderboardRequest leaderboard) {
+
         getValidationHelper().validateModel(leaderboard);
+
         return getLeaderboardService().updateLeaderboard(nameOrId, leaderboard);
     }
 
@@ -91,8 +96,8 @@ public class LeaderboardResource {
     @Operation(
             summary = "Deletes an Leaderboard",
             description = "Deletes a specific leaderboard known to the server.")
-    public void deleteLeaderboard(
-            @PathParam("nameOrId") final String nameOrId) {
+    public void deleteLeaderboard(@PathParam("nameOrId") final String nameOrId) {
+
         getLeaderboardService().deleteLeaderboard(nameOrId);
     }
 

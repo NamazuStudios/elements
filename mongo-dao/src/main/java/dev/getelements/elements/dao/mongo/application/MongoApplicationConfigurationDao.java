@@ -66,7 +66,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final String applicationNameOrId,
             final Class<T> configurationClass) {
 
-        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
 
         final var query = getDatastore().find(MongoApplicationConfiguration.class);
 
@@ -98,7 +98,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     public Pagination<ApplicationConfiguration> getActiveApplicationConfigurations(
             final String applicationNameOrId,
             final int offset, final int count) {
-        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
         final var query = getDatastore().find(MongoApplicationConfiguration.class);
         query.filter(exists("name"), eq("parent", parent));
         return paginationFromQuery(query, offset, count);
@@ -111,7 +111,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             final String search) {
 
         final var trimmed = nullToEmpty(search).trim();
-        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
 
         final var query = getBooleanQueryParser()
                 .parse(MongoApplicationConfiguration.class, search)
@@ -182,7 +182,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         getValidationHelper().validateModel(applicationConfiguration, Insert.class);
         normalizeProductBundles(applicationConfiguration);
 
-        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
         final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
         final var mongoApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
 
@@ -204,7 +204,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         getValidationHelper().validateModel(applicationConfiguration, Update.class);
         normalizeProductBundles(applicationConfiguration);
 
-        final var parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var parent = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
         final var mongoTClass = getMongoApplicationConfigurationType(applicationConfiguration.getClass());
         final var mongoApplicationConfiguration = getMapperRegistry().map(applicationConfiguration, mongoTClass);
 

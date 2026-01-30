@@ -44,7 +44,7 @@ public class MongoApplicationDao implements ApplicationDao {
     private MapperRegistry mapperRegistry;
 
     @Override
-    public Application createOrUpdateInactiveApplication(final Application application) {
+    public Application createApplication(final Application application) {
 
         validate(application, ValidationGroups.Insert.class);
 
@@ -56,7 +56,7 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     @Override
-    public Pagination<Application> getActiveApplications() {
+    public Pagination<Application> getApplications() {
 
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
         query.filter(exists("name"));
@@ -80,14 +80,14 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     @Override
-    public Pagination<Application> getActiveApplications(final int offset, final int count) {
+    public Pagination<Application> getApplications(final int offset, final int count) {
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
         query.filter(exists("name"));
         return mongoDBUtils.paginationFromQuery(query, offset, count, this::transform, new FindOptions());
     }
 
     @Override
-    public Pagination<Application> getActiveApplications(final int offset, final int count, final String search) {
+    public Pagination<Application> getApplications(final int offset, final int count, final String search) {
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
         query.filter(
@@ -99,7 +99,7 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     @Override
-    public Optional<Application> findActiveApplication(final String nameOrId) {
+    public Optional<Application> findApplication(final String nameOrId) {
 
         final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
@@ -117,14 +117,14 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public Application getActiveApplicationWithoutAttributes(final String nameOrId) {
-        Application application = getActiveApplication(nameOrId);
+    public Application getApplicationWithoutAttributes(final String nameOrId) {
+        Application application = getApplication(nameOrId);
         application.setAttributes(emptyMap());
         return application;
     }
 
     @Override
-    public Application updateActiveApplication(final String nameOrId, final Application application) {
+    public Application updateApplication(final Application application) {
 
         validate(application, ValidationGroups.Update.class);
 
@@ -132,10 +132,12 @@ public class MongoApplicationDao implements ApplicationDao {
 
         query.filter(exists("name"));
 
-        if (ObjectId.isValid(nameOrId)) {
-            query.filter(eq("_id", new ObjectId(nameOrId)));
+        if (application.getId() != null) {
+            query.filter(eq("_id", new ObjectId(application.getId())));
+        } else if (application.getName() != null) {
+            query.filter(eq("name", application.getName()));
         } else {
-            query.filter(eq("name", nameOrId));
+            throw new InvalidDataException("At least one of name or id must be provided.");
         }
 
         final var mongoApplication = mongoDBUtils.perform(ds -> new UpdateBuilder().with(
@@ -145,7 +147,7 @@ public class MongoApplicationDao implements ApplicationDao {
         ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
 
         if (mongoApplication == null) {
-            throw new ApplicationNotFoundException("application not found: " + nameOrId);
+            throw new ApplicationNotFoundException("application not found: " + (application.getId() != null ? application.getId() : application.getName()));
         }
 
         return transform(mongoApplication);
@@ -201,7 +203,7 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public Optional<MongoApplication> findActiveMongoApplication(final String mongoApplicationNameOrId) {
+    public Optional<MongoApplication> findMongoApplicationOptional(final String mongoApplicationNameOrId) {
         return getMongoDBUtils().parse(mongoApplicationNameOrId)
                 .map(objectId -> getDatastore()
                         .find(MongoApplication.class)
@@ -214,8 +216,8 @@ public class MongoApplicationDao implements ApplicationDao {
                 .findFirst();
     }
 
-    public MongoApplication getActiveMongoApplication(final String mongoApplicationNameOrId) {
-        return findActiveMongoApplication(mongoApplicationNameOrId)
+    public MongoApplication getMongoApplication(final String mongoApplicationNameOrId) {
+        return findMongoApplicationOptional(mongoApplicationNameOrId)
                 .orElseThrow(() -> new ApplicationNotFoundException(
                         "application not found: " +
                         mongoApplicationNameOrId)
