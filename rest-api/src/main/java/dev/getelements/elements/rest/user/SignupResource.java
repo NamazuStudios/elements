@@ -58,6 +58,7 @@ public class SignupResource {
     @Operation(
             summary = "Sign Up a User",
             description = "Supplying the user create request object, this will create a new user.")
+    @Deprecated
     public UserCreateResponse signUpUser(final UserCreateRequest userCreateRequest) {
         getValidationHelper().validateModel(userCreateRequest, ValidationGroups.Create.class);
         return getUserService().createUser(userCreateRequest);
