@@ -162,7 +162,7 @@ public interface ApplicationDao {
      */
     @Deprecated
     default Pagination<Application> getActiveApplications(final int offset, final int count, final String search) {
-        return getActiveApplications(offset, count);
+        return getApplications(offset, count);
     }
 
     /**
@@ -186,7 +186,7 @@ public interface ApplicationDao {
      */
     @Deprecated
     default Optional<Application> findActiveApplication(final String nameOrId) {
-        return findActiveApplication(nameOrId);
+        return findApplication(nameOrId);
     }
 
     /**
