@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.sdk.model.user.UserCreateRequest;
+import dev.getelements.elements.sdk.model.user.UserCreateResponse;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.auth.UsernamePasswordAuthService;
 import dev.getelements.elements.sdk.service.user.UserService;
@@ -33,7 +34,8 @@ public class SignupResource {
             description = "Supplying the UserCreateRequest object, this will create a " +
                     "new user and create a session for it.  If any Profiles are supplied, the " +
                     "first one will be selected for the session creation.")
-    public SessionCreation signUpUser(final UserCreateRequest userCreateRequest) {
+    @Path("session")
+    public SessionCreation signUpUserAndCreateSession(final UserCreateRequest userCreateRequest) {
 
         getValidationHelper().validateModel(userCreateRequest, ValidationGroups.Create.class);
 
@@ -48,6 +50,17 @@ public class SignupResource {
         }
 
         return getAuthService().createSession(sessionRequest);
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Sign Up a User",
+            description = "Supplying the user create request object, this will create a new user.")
+    public UserCreateResponse signUpUser(final UserCreateRequest userCreateRequest) {
+        getValidationHelper().validateModel(userCreateRequest, ValidationGroups.Create.class);
+        return getUserService().createUser(userCreateRequest);
     }
 
     public UserService getUserService() {
