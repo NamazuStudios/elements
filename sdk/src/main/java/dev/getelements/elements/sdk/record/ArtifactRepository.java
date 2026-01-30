@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.record;
 
+import java.util.Set;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -27,6 +29,11 @@ public record ArtifactRepository(String id, String url) {
      * The default repository.
      */
     public static final ArtifactRepository DEFAULT = new ArtifactRepository(null, null);
+
+    /**
+     * The default set of repositories.
+     */
+    public static final Set<ArtifactRepository> DEFAULTS = Set.of(DEFAULT);
 
     /**
      * Indicates if this is the default repository

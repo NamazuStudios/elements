@@ -2,7 +2,7 @@ package dev.getelements.elements.sdk.spi.shrinkwrap;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.exception.SdkException;
-import dev.getelements.elements.sdk.record.ArtifactCoordinates;
+import dev.getelements.elements.sdk.record.ArtifactRepository;
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.slf4j.Logger;
@@ -28,19 +28,16 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
     );
 
     @Override
-    public Optional<ClassLoader> tryGetClassLoader(final ClassLoader parent, final Set<ArtifactCoordinates> coordinates) {
+    public Optional<ClassLoader> tryGetClassLoader(final ClassLoader parent,
+                                                   final Set<ArtifactRepository> repositories,
+                                                   final Set<String> coordinates) {
 
         final File[] files;
 
         try {
 
-            final var toResolve = coordinates
-                    .stream()
-                    .map(ArtifactCoordinates::coordinates)
-                    .toList();
-
-            files = configurableSystem(coordinates)
-                    .resolve(toResolve)
+            files = configurableSystem(repositories)
+                    .resolve(coordinates)
                     .withoutTransitivity()
                     .asFile();
 
@@ -64,20 +61,16 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
     }
 
-    private ConfigurableMavenResolverSystem configurableSystem(final Iterable<ArtifactCoordinates> coordinates) {
+    private ConfigurableMavenResolverSystem configurableSystem(final Set<ArtifactRepository> repositories) {
 
         var config = Maven.configureResolver();
 
-        for (var coordinate : coordinates) {
+        for (var repository : repositories) {
 
-            for (var repository : coordinate.repositories()) {
-
-                if (repository.isDefault()) {
-                    config = config.withMavenCentralRepo(true);
-                } else {
-                    config = config.withRemoteRepo(repository.id(), repository.url(), DEFAULT_LAYOUT);
-                }
-
+            if (repository.isDefault()) {
+                config = config.withMavenCentralRepo(true);
+            } else {
+                config = config.withRemoteRepo(repository.id(), repository.url(), DEFAULT_LAYOUT);
             }
 
         }
