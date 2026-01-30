@@ -7,13 +7,12 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @Schema(description =
-        "Request to create a new Element with specified artifacts and their repositories. All artifacts specified " +
+        "Request to update a new Element with specified artifacts and their repositories. All artifacts specified " +
         "must exist in the repositories provided. Additionally, the repositories must include any dependencies " +
         "required by the artifacts and all dependencies of those dependencies, and so on. The system will resolve " +
         "all dependencies transitively."
 )
-public record CreateElementDeploymentRequest(
-
+public record UpdateElementDeploymentRequest(
         @Schema(description =
                 "List of API artifact identifiers to include in the Element. These will be shared system wide " +
                 "available to all Elements installed within the scope of the Element."
@@ -54,4 +53,5 @@ public record CreateElementDeploymentRequest(
                 "All artifacts and their dependencies must be found within these repositories.")
         List<ArtifactRepository> repositories
 
-) {}
+)
+{}

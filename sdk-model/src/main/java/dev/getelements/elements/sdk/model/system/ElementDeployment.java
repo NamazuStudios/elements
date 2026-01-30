@@ -10,6 +10,10 @@ import jakarta.validation.constraints.Null;
 
 import java.util.List;
 
+@Schema(description =
+        "Represents the deployment configuration for an Element within the system. This includes details about " +
+        "the application context, artifacts to be included, and repositories for artifact resolution."
+)
 public record ElementDeployment(
 
         @Null(groups = ValidationGroups.Insert.class)
