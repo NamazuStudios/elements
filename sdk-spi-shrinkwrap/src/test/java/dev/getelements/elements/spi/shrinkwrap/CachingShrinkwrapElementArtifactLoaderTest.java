@@ -54,13 +54,13 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
 
     @Test(dataProvider = "getTestArtifacts")
     public void testGetArtifacts(final String coordinates) {
-        final var result = loader.tryGetClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
+        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
         assertTrue(result.isPresent());
     }
 
     @Test(dataProvider = "getMissingTestArtifacts")
     public void testMissingArtifacts(final String coordinates) {
-        final var result = loader.tryGetClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
+        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
         assertFalse(result.isPresent());
     }
 
@@ -71,7 +71,7 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
                 .stream()
                 .collect(toUnmodifiableSet());
 
-        final var result = loader.tryGetClassLoader(null, ArtifactRepository.DEFAULTS, all);
+        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, all);
         assertTrue(result.isPresent());
 
     }

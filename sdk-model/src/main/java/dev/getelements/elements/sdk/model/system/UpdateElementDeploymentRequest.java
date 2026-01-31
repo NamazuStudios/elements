@@ -3,6 +3,9 @@ package dev.getelements.elements.sdk.model.system;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jdk.jfr.Threshold;
 
 import java.util.List;
 
@@ -13,6 +16,7 @@ import java.util.List;
         "all dependencies transitively."
 )
 public record UpdateElementDeploymentRequest(
+
         @Schema(description =
                 "List of API artifact identifiers to include in the Element. These will be shared system wide " +
                 "available to all Elements installed within the scope of the Element."
@@ -29,7 +33,7 @@ public record UpdateElementDeploymentRequest(
 
         @Schema(description =
                 "A single ELM artifact identifier to include in the Element. Invalid if using general element " +
-                "artifacts."
+                "artifacts. May be empty or null."
         )
         String elmArtifact,
 
@@ -51,7 +55,16 @@ public record UpdateElementDeploymentRequest(
         @Schema(description =
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
-        List<ArtifactRepository> repositories
+        List<ArtifactRepository> repositories,
+
+        @NotNull
+        @Pattern(regexp = "ENABLED|DISABLED")
+        @Schema(description =
+                "Sets the state of the deployment. When updating, the change will only take place if the deployment " +
+                "meets all the requirements. For example, it will not be possible to put the deployment in the " +
+                "ENABLED or DISABLED state if there is not enough code loaded to attempt to load an Element."
+        )
+        ElementDeploymentState state
 
 )
 {}

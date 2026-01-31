@@ -2,9 +2,11 @@ package dev.getelements.elements.sdk.spi.shrinkwrap;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +30,9 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
     );
 
     @Override
-    public Optional<ClassLoader> tryGetClassLoader(final ClassLoader parent,
-                                                   final Set<ArtifactRepository> repositories,
-                                                   final Set<String> coordinates) {
+    public Optional<ClassLoader> findClassLoader(final ClassLoader parent,
+                                                 final Set<ArtifactRepository> repositories,
+                                                 final Set<String> coordinates) {
 
         final File[] files;
 
@@ -38,13 +40,19 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
             files = configurableSystem(repositories)
                     .resolve(coordinates)
-                    .withoutTransitivity()
+                    .withTransitivity()
                     .asFile();
 
         } catch (RuntimeException ex) {
             if (isNotFound(ex)) {
-                logger.info("Unable to resolve artifact coordinates: {}", coordinates, ex);
+
+                logger.info("Unable to resolve artifact coordinates: [{}]",
+                        String.join(",", coordinates),
+                        ex
+                );
+
                 return Optional.empty();
+
             } else {
                 throw new SdkException(ex);
             }
@@ -58,6 +66,38 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
                 .toArray(URL[]::new);
 
         return Optional.of(new URLClassLoader(classpath, parent));
+
+    }
+
+    @Override
+    public Optional<Artifact> findArtifact(Set<ArtifactRepository> repositories, String coordinates) {
+
+        final MavenResolvedArtifact resolvedArtifact;
+
+        try {
+            resolvedArtifact = configurableSystem(repositories)
+                    .resolve(coordinates)
+                    .withoutTransitivity()
+                    .asSingleResolvedArtifact();
+        } catch (RuntimeException ex) {
+            if (isNotFound(ex)) {
+
+                logger.info("Unable to resolve artifact coordinates: [{}]",
+                        String.join(",", coordinates),
+                        ex
+                );
+
+                return Optional.empty();
+
+            } else {
+                throw new SdkException(ex);
+            }
+        }
+
+        final var path = resolvedArtifact.asFile().toPath();
+        final var artifact = new Artifact(path, resolvedArtifact.getExtension());
+
+        return Optional.of(artifact);
 
     }
 

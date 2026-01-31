@@ -3,6 +3,8 @@ package dev.getelements.elements.sdk.model.system;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 
@@ -13,6 +15,13 @@ import java.util.List;
         "all dependencies transitively."
 )
 public record CreateElementDeploymentRequest(
+
+        @Schema(description =
+                "The application name or ID. May be null. If null, then the Element will be scoped to the " +
+                "global or root element registry making it visible to all Applications. If specific to an " +
+                "Application, then this will be be visible only to Elements within that Application."
+        )
+        String applicationNameOrId,
 
         @Schema(description =
                 "List of API artifact identifiers to include in the Element. These will be shared system wide " +
@@ -52,6 +61,15 @@ public record CreateElementDeploymentRequest(
         @Schema(description =
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
-        List<ArtifactRepository> repositories
+        List<ArtifactRepository> repositories,
 
-) {}
+        @Schema(description =
+                "Sets the state of the deployment. When creating, the creation will only take place if the " +
+                "deployment meets all the requirements. For example, it will not be possible to put the deployment " +
+                "in the ENABLED or DISABLED state if there is not enough code loaded to attempt to load an Element. " +
+                "If this field is left null, then the state will be inferred by the system and favor immediately " +
+                "setting the state to ENABLED."
+        )
+        ElementDeploymentState state
+
+) { }

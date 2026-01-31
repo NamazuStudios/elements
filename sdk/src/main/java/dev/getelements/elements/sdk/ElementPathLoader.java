@@ -70,6 +70,16 @@ public interface ElementPathLoader {
     String JAR_EXTENSION = "jar";
 
     /**
+     * The Element container format (elm).
+     */
+    String ELM_EXTENSION = "elm";
+
+    /**
+     * The mime type for the ELM files.
+     */
+    String ELM_MIME_TYPE = "application/zip";
+
+    /**
      * The environment variable for the element path.
      */
     String ELEMENT_PATH_ENV = "ELEMENTPATH";
