@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.largeobject.AccessPermissions;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
@@ -19,7 +20,6 @@ import jakarta.inject.Provider;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_MIME_TYPE;
-import static dev.getelements.elements.sdk.model.system.ElementDeploymentState.*;
 
 public class SuperUserElementDeploymentService implements ElementDeploymentService {
 
@@ -41,34 +41,12 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     ? null
                     : applicationDao.getActiveApplication(request.applicationNameOrId());
 
-            final var accessPermissions = new AccessPermissions();
-            accessPermissions.setRead(Subjects.nobody());
-            accessPermissions.setWrite(Subjects.nobody());
-            accessPermissions.setDelete(Subjects.nobody());
-
-            final var path = application == null
-                    ? "/system/element/global/deployment.%s".formatted(ELM_EXTENSION)
-                    : "/system/element/application/%s/deployment.%s".formatted(application.getName(), ELM_EXTENSION);
-
-            final var largeObject = new LargeObject();
-            largeObject.setPath(path);
-            largeObject.setMimeType(ELM_MIME_TYPE);
-            largeObject.setAccessPermissions(accessPermissions);
+            final var largeObject = createLargeObjectFor(application);
 
             final var largeObjectReference = getRegistry().map(
                     largeObjectDao.createLargeObject(largeObject),
                     LargeObjectReference.class
             );
-
-            final var isReady =
-                    request.elmArtifact() != null ||
-                    request.elementArtifacts() != null && !request.elementArtifacts().isEmpty();
-
-            final var state =
-                    isReady && request.state() == null ? ENABLED           :
-                    isReady && ENABLED.equals(request.state()) ? ENABLED   :
-                    isReady && DISABLED.equals(request.state()) ? DISABLED :
-                    UNLOADED;
 
             final var elementDeployment = new ElementDeployment(
                     null,
@@ -80,7 +58,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.elmArtifact(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    state
+                    request.effectiveState()
             );
 
             return elementDeploymentDao.createElementDeployment(elementDeployment);
@@ -113,16 +91,6 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
             final var existing = elementDeploymentDao.getElementDeployment(deploymentId);
             final var largeObjectReference = refreshElmReferenceIfNecessary(txn, existing);
 
-            final var isReady =
-                    request.elmArtifact() != null ||
-                    request.elementArtifacts() != null && !request.elementArtifacts().isEmpty();
-
-            final var state =
-                    isReady && request.state() == null ? ENABLED           :
-                    isReady && ENABLED.equals(request.state()) ? ENABLED   :
-                    isReady && DISABLED.equals(request.state()) ? DISABLED :
-                    UNLOADED;
-
             final var elementDeployment = new ElementDeployment(
                     existing.id(),
                     existing.application(),
@@ -133,7 +101,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.elmArtifact(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    state
+                    request.effectiveState()
             );
 
             return elementDeploymentDao.updateElementDeployment(elementDeployment);
@@ -151,22 +119,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
 
             final var largeObjectDao = transaction.getDao(LargeObjectDao.class);
 
-            final var accessPermissions = new AccessPermissions();
-            accessPermissions.setRead(Subjects.nobody());
-            accessPermissions.setWrite(Subjects.nobody());
-            accessPermissions.setDelete(Subjects.nobody());
-
-            final var path = existing.application() == null
-                    ? "/system/element/global/deployment.%s".formatted(ELM_EXTENSION)
-                    : "/system/element/application/%s/deployment.%s".formatted(
-                    existing.application().getName(),
-                    ELM_EXTENSION
-            );
-
-            final var largeObject = new LargeObject();
-            largeObject.setPath(path);
-            largeObject.setMimeType(ELM_MIME_TYPE);
-            largeObject.setAccessPermissions(accessPermissions);
+            final var largeObject = createLargeObjectFor(existing.application());
 
             return getRegistry().map(
                     largeObjectDao.createLargeObject(largeObject),
@@ -176,6 +129,28 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
         } else {
             return reference;
         }
+    }
+
+    private static LargeObject createLargeObjectFor(final Application application) {
+
+        final var path = application == null
+                ? "/system/element/global/deployment.%s".formatted(ELM_EXTENSION)
+                : "/system/element/application/%s/deployment.%s".formatted(
+                application.getName(),
+                ELM_EXTENSION
+        );
+
+        final var accessPermissions = new AccessPermissions();
+        accessPermissions.setRead(Subjects.nobody());
+        accessPermissions.setWrite(Subjects.nobody());
+        accessPermissions.setDelete(Subjects.nobody());
+
+        final var largeObject = new LargeObject();
+        largeObject.setPath(path);
+        largeObject.setMimeType(ELM_MIME_TYPE);
+        largeObject.setAccessPermissions(accessPermissions);
+        return largeObject;
+
     }
 
     @Override

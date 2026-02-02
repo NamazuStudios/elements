@@ -2,7 +2,9 @@ package dev.getelements.elements.sdk.model.system;
 
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
+import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -83,6 +85,17 @@ public record ElementDeployment(
         )
         ElementDeploymentState state
 
-) {
+) implements ElementDeploymentRequest {
+
+        /**
+         * In addition to the existing logic, this checks that the {@link LargeObject} contains content.
+         *
+         * @return true if ready
+         */
+        @Override
+            public boolean isReady() {
+                return ElementDeploymentRequest.super.isReady() ||
+                       elm() != null && LargeObjectState.UPLOADED.equals(elm().getState());
+            }
 
 }

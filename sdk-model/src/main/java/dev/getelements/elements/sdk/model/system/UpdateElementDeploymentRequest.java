@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jdk.jfr.Threshold;
 
 import java.util.List;
 
@@ -66,5 +65,4 @@ public record UpdateElementDeploymentRequest(
         )
         ElementDeploymentState state
 
-)
-{}
+) implements ElementDeploymentRequest {}
