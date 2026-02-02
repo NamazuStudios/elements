@@ -33,6 +33,7 @@ import dev.getelements.elements.dao.mongo.receipt.MongoGooglePlayIapReceiptDao;
 import dev.getelements.elements.dao.mongo.receipt.MongoReceiptDao;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.dao.mongo.system.MongoElementDeploymentDao;
 import dev.getelements.elements.dao.mongo.ucode.MongoUniqueCodeDao;
 import dev.getelements.elements.dao.mongo.ucode.OffensiveWordFilterProvider;
 import dev.getelements.elements.dao.mongo.ucode.UniqueCodeGeneratorProvider;
@@ -113,6 +114,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ScheduleEventDao.class).to(MongoScheduleEventDao.class);
         bind(ScheduleProgressDao.class).to(MongoScheduleProgressDao.class);
         bind(Matchmaker.class).to(MongoFIFOMatchmaker.class);
+        bind(ElementDeploymentDao.class).to(MongoElementDeploymentDao.class);
         bind(UniqueCodeDao.class).to(MongoUniqueCodeDao.class);
 
         bind(SecureRandom.class)
@@ -192,6 +194,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ScheduleDao.class);
         expose(ScheduleEventDao.class);
         expose(ScheduleProgressDao.class);
+        expose(ElementDeploymentDao.class);
         expose(UniqueCodeDao.class);
 
     }

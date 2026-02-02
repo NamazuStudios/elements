@@ -34,7 +34,7 @@ public record ElementDeployment(
 
         @Schema(description =
                 "List of API artifact identifiers to include in the Element. These will be shared system wide " +
-                        "available to all Elements installed within the scope of the Element."
+                "available to all Elements installed within the scope of the Element."
         )
         List<String> apiArtifacts,
 
