@@ -10,7 +10,9 @@ import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
+import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 
@@ -32,8 +34,11 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
 
     private BooleanQueryParser booleanQueryParser;
 
+    private ValidationHelper validationHelper;
+
     @Override
     public ElementDeployment createElementDeployment(final ElementDeployment elementDeployment) {
+        getValidationHelper().validateModel(elementDeployment, ValidationGroups.Insert.class);
         final var mongoElementDeployment = getMapperRegistry().map(elementDeployment, MongoElementDeployment.class);
         final var result = getMongoDBUtils().perform(
                 ds -> {
@@ -78,6 +83,7 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
 
     @Override
     public ElementDeployment updateElementDeployment(final ElementDeployment elementDeployment) {
+        getValidationHelper().validateModel(elementDeployment, ValidationGroups.Update.class);
 
         final var objectId = getMongoDBUtils().parseOrThrow(
                 elementDeployment.id(),
@@ -207,6 +213,15 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
 }
