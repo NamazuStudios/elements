@@ -32,7 +32,7 @@ public class MongoElementDeploymentDaoTest {
                 .toArray(Object[][]::new);
     }
 
-    @Test(groups = "create")
+    @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithApplication() {
         final var application = getApplicationTestFactory().createMockApplication(getClass());
         final var deployment = new ElementDeployment(
@@ -64,7 +64,7 @@ public class MongoElementDeploymentDaoTest {
         deployments.add(created);
     }
 
-    @Test(groups = "create")
+    @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithoutApplication() {
         final var deployment = new ElementDeployment(
                 null,
@@ -91,7 +91,11 @@ public class MongoElementDeploymentDaoTest {
         deployments.add(created);
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create", dataProvider = "allDeployments")
+    @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment",
+            dataProvider = "allDeployments"
+    )
     public void testGetById(final ElementDeployment deployment) {
         final var fetched = getElementDeploymentDao().getElementDeployment(deployment.id());
         assertNotNull(fetched);
@@ -100,20 +104,30 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(fetched.apiArtifacts(), deployment.apiArtifacts());
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create", dataProvider = "allDeployments")
+    @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment",
+            dataProvider = "allDeployments"
+    )
     public void testFindById(final ElementDeployment deployment) {
         final var found = getElementDeploymentDao().findElementDeployment(deployment.id());
         assertTrue(found.isPresent());
         assertEquals(found.get().id(), deployment.id());
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment"
+    )
     public void testFindByInvalidId() {
         final var found = getElementDeploymentDao().findElementDeployment("not_a_valid_id");
         assertTrue(found.isEmpty());
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment"
+    )
     public void testGetAllWithPagination() {
         final var page = getElementDeploymentDao().getElementDeployments(0, 10, null);
         assertNotNull(page);
@@ -122,7 +136,11 @@ public class MongoElementDeploymentDaoTest {
         assertFalse(page.getObjects().isEmpty());
     }
 
-    @Test(groups = "update", dependsOnGroups = "fetch", dataProvider = "allDeployments")
+    @Test(
+            groups = "updateElementDeployment",
+            dependsOnGroups = "fetchElementDeployment",
+            dataProvider = "allDeployments"
+    )
     public void testUpdateStateAndArtifacts(final ElementDeployment deployment) {
         final var updated = new ElementDeployment(
                 deployment.id(),
@@ -147,23 +165,31 @@ public class MongoElementDeploymentDaoTest {
         deployments.add(result);
     }
 
-    @Test(groups = "delete", dependsOnGroups = "update", dataProvider = "allDeployments")
+    @Test(
+            groups = "deleteElementDeployment",
+            dependsOnGroups = "updateElementDeployment",
+            dataProvider = "allDeployments"
+    )
     public void testDeleteById(final ElementDeployment deployment) {
         getElementDeploymentDao().deleteDeployment(deployment.id());
     }
 
-    @Test(groups = "delete",
+    @Test(
+            groups = "deleteElementDeployment",
             dependsOnMethods = "testDeleteById",
             expectedExceptions = ElementDeploymentNotFoundException.class,
-            dataProvider = "allDeployments")
+            dataProvider = "allDeployments"
+    )
     public void testDoubleDelete(final ElementDeployment deployment) {
         getElementDeploymentDao().deleteDeployment(deployment.id());
     }
 
-    @Test(groups = "delete",
+    @Test(
+            groups = "deleteElementDeployment",
             dependsOnMethods = "testDeleteById",
             expectedExceptions = ElementDeploymentNotFoundException.class,
-            dataProvider = "allDeployments")
+            dataProvider = "allDeployments"
+    )
     public void testFetchAfterDelete(final ElementDeployment deployment) {
         getElementDeploymentDao().getElementDeployment(deployment.id());
     }
