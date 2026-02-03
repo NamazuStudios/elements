@@ -71,6 +71,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null,
                 true,
                 List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
+                null,
                 ElementDeploymentState.DISABLED
         );
 
@@ -106,6 +107,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:element-impl:2.0.0"),
                 false,
                 List.of(),
+                null,
                 ElementDeploymentState.UNLOADED
         );
 
@@ -229,6 +231,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null,
                 true,
                 List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
+                null,
                 ElementDeploymentState.ENABLED
         );
 
@@ -262,6 +265,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:element:1.0.0"),
                 false,
                 List.of(),
+                null,
                 ElementDeploymentState.DISABLED
         );
 
@@ -332,6 +336,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null,
                 true,
                 List.of(),
+                null,
                 ElementDeploymentState.DISABLED
         );
 

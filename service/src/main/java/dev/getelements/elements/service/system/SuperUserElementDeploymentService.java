@@ -58,6 +58,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.elmArtifact(),
                     request.useDefaultRepositories(),
                     request.repositories(),
+                    request.attributes(),
                     request.effectiveState(),
                     0L
             );
@@ -102,6 +103,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.elmArtifact(),
                     request.useDefaultRepositories(),
                     request.repositories(),
+                    request.attributes(),
                     request.effectiveState(),
                     existing.version()
             );

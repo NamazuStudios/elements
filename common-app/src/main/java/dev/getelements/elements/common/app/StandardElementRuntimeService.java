@@ -239,7 +239,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private void doLoadDeployment(final ElementDeployment deployment) throws IOException {
 
         final var deploymentId = deployment.id();
-        
+
         final var tempFiles = new ArrayList<Path>();
 
         // Create subordinate registry for this deployment
@@ -371,7 +371,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                                                     final Set<ArtifactRepository> repositories) {
         if (!artifactLoaderAvailable) {
             throw new IllegalStateException(
-                    "Deployment " + deployment.id() + " requires element artifacts but ElementArtifactLoader SPI not available");
+                    "Deployment " + deployment.id() +
+                    " requires element artifacts but ElementArtifactLoader SPI not available"
+            );
         }
 
         // Resolve classloader with element artifacts

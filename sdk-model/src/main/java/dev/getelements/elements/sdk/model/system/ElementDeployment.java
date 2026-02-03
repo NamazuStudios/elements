@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
 import java.util.List;
+import java.util.Map;
 
 @Schema(description =
         "Represents the deployment configuration for an Element within the system. This includes details about " +
@@ -78,6 +79,12 @@ public record ElementDeployment(
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
         List<ArtifactRepository> repositories,
+
+        @Schema(description =
+                "Custom attributes to pass to the Element at load time. These key-value pairs will be merged with " +
+                "any default attributes and made available to the Element during initialization."
+        )
+        Map<String, Object> attributes,
 
         @Schema(description =
                 "The state of the deployment. Only deployments in the ENABLED state will be deployed to nodes in the " +

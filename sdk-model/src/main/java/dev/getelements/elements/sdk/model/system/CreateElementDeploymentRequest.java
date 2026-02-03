@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
 
 @Schema(description =
         "Request to create a new Element with specified artifacts and their repositories. All artifacts specified " +
@@ -60,6 +61,12 @@ public record CreateElementDeploymentRequest(
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
         List<ArtifactRepository> repositories,
+
+        @Schema(description =
+                "Custom attributes to pass to the Element at load time. These key-value pairs will be merged with " +
+                "any default attributes and made available to the Element during initialization."
+        )
+        Map<String, Object> attributes,
 
         @Schema(description =
                 "Sets the state of the deployment. When creating, the creation will only take place if the " +

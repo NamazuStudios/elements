@@ -43,6 +43,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
         install(new TestVersionServiceModule());
         install(new MongoTestInstanceModule(TEST_MONGO_PORT));
         install(new ApplicationElementServiceModule());
+        install(new ElementRuntimeServiceModule());
 
         install(new JettyServerModule());
         install(new ElementsCoreModule(configurationSupplier));

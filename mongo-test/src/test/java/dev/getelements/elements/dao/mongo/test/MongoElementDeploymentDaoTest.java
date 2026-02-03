@@ -45,6 +45,7 @@ public class MongoElementDeploymentDaoTest {
                 null,
                 true,
                 List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
+                null,
                 ElementDeploymentState.ENABLED,
                 0L
         );
@@ -77,6 +78,7 @@ public class MongoElementDeploymentDaoTest {
                 "com.example:elm:1.0",
                 false,
                 List.of(),
+                null,
                 ElementDeploymentState.UNLOADED,
                 0L
         );
@@ -191,6 +193,7 @@ public class MongoElementDeploymentDaoTest {
                 deployment.elmArtifact(),
                 deployment.useDefaultRepositories(),
                 deployment.repositories(),
+                deployment.attributes(),
                 ElementDeploymentState.DISABLED,
                 deployment.version()
         );

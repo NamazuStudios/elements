@@ -8,6 +8,7 @@ import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.List;
+import java.util.Map;
 
 @Entity(value = "element_deployment", useDiscriminator = false)
 public class MongoElementDeployment {
@@ -39,6 +40,9 @@ public class MongoElementDeployment {
 
     @Property
     private List<ArtifactRepository> repositories;
+
+    @Property
+    private Map<String, Object> attributes;
 
     @Property
     private ElementDeploymentState state;
@@ -116,6 +120,14 @@ public class MongoElementDeployment {
 
     public void setRepositories(List<ArtifactRepository> repositories) {
         this.repositories = repositories;
+    }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 
     public ElementDeploymentState getState() {
