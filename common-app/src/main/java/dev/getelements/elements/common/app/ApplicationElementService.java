@@ -43,6 +43,7 @@ public interface ApplicationElementService {
         public ApplicationElementRecord {
             elements = List.copyOf(elements);
         }
+
     }
 
 }

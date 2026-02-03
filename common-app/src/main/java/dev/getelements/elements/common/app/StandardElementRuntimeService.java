@@ -4,7 +4,6 @@ import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
-import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -128,6 +127,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         }
     }
 
+    @Override
+    public List<RuntimeRecord> getActiveDeployments() {
+        // TODO Implement This
+        return List.of();
+    }
+
     /**
      * Initializes the ElementArtifactLoader SPI.
      */
@@ -200,13 +205,13 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     } catch (Exception ex) {
                         logger.error("Failed to load deployment: {}", deploymentId, ex);
                     }
-                } else if (active.version() != deployment.version()) {
+                } else if (active.deployment().version() != deployment.version()) {
                     // Version changed - reload
                     try {
                         doUnloadDeployment(deploymentId);
                         doLoadDeployment(deployment);
                         logger.info("Reloaded deployment: {} (version {} -> {})",
-                                deploymentId, active.version(), deployment.version());
+                                deploymentId, active.deployment().version(), deployment.version());
                     } catch (Exception ex) {
                         logger.error("Failed to reload deployment: {}", deploymentId, ex);
                     }
@@ -252,8 +257,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // Track active deployment
             final var active = new ActiveDeployment(
-                    deploymentId,
-                    deployment.version(),
+                    deployment,
                     registry,
                     elements,
                     tempFiles
@@ -488,8 +492,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * Tracks an active deployment's runtime state.
      */
     private record ActiveDeployment(
-            String deploymentId,
-            long version,
+            ElementDeployment deployment,
             MutableElementRegistry registry,
             List<Element> elements,
             List<Path> tempFiles
@@ -502,7 +505,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             try {
                 registry.close();
             } catch (Exception ex) {
-                logger.error("Error closing registry for deployment {}", deploymentId, ex);
+                logger.error("Error closing registry for deployment {}", deployment.id(), ex);
             }
 
             // Clean up temp files
@@ -510,7 +513,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException ex) {
-                    logger.warn("Failed to delete temp file {} for deployment {}", tempFile, deploymentId, ex);
+                    logger.warn("Failed to delete temp file {} for deployment {}", tempFile, deployment.id(), ex);
                 }
             }
 
