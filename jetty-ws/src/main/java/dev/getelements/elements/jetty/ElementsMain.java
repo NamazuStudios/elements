@@ -61,6 +61,7 @@ public class ElementsMain {
                     protected void configure() {
                         if (services.contains(app_node) || services.contains(app_serve)) {
                             install(new ApplicationElementServiceModule());
+                            install(new ElementRuntimeServiceModule());
                         }
                     }
                 }

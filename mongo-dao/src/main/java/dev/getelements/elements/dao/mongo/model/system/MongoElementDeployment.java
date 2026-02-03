@@ -43,6 +43,9 @@ public class MongoElementDeployment {
     @Property
     private ElementDeploymentState state;
 
+    @Property
+    private long version;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -121,6 +124,14 @@ public class MongoElementDeployment {
 
     public void setState(ElementDeploymentState state) {
         this.state = state;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 
 }

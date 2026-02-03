@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
+import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
@@ -17,10 +18,12 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 
 import jakarta.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.updates.UpdateOperators.inc;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static dev.morphia.query.updates.UpdateOperators.unset;
 
@@ -142,6 +145,9 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
             builder.with(unset("state"));
         }
 
+        // Atomically increment version on each update
+        builder.with(inc("version", 1L));
+
         final var opts = new ModifyOptions()
                 .upsert(false)
                 .returnDocument(AFTER);
@@ -177,6 +183,17 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
             throw new InternalException("Deleted more rows than expected.");
         }
 
+    }
+
+    @Override
+    public List<ElementDeployment> getElementDeploymentsByState(final ElementDeploymentState state) {
+        final var query = getDatastore().find(MongoElementDeployment.class);
+        if (state != null) {
+            query.filter(eq("state", state));
+        }
+        return query.stream()
+                .map(m -> getMapperRegistry().map(m, ElementDeployment.class))
+                .toList();
     }
 
     public Datastore getDatastore() {

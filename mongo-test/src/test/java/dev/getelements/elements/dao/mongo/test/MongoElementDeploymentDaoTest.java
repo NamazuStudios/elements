@@ -45,7 +45,8 @@ public class MongoElementDeploymentDaoTest {
                 null,
                 true,
                 List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
-                ElementDeploymentState.ENABLED
+                ElementDeploymentState.ENABLED,
+                0L
         );
 
         final var created = getElementDeploymentDao().createElementDeployment(deployment);
@@ -76,7 +77,8 @@ public class MongoElementDeploymentDaoTest {
                 "com.example:elm:1.0",
                 false,
                 List.of(),
-                ElementDeploymentState.UNLOADED
+                ElementDeploymentState.UNLOADED,
+                0L
         );
 
         final var created = getElementDeploymentDao().createElementDeployment(deployment);
@@ -137,6 +139,43 @@ public class MongoElementDeploymentDaoTest {
     }
 
     @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment"
+    )
+    public void testGetByStateEnabled() {
+        final var enabledDeployments = getElementDeploymentDao().getElementDeploymentsByState(ElementDeploymentState.ENABLED);
+        assertNotNull(enabledDeployments);
+        assertFalse(enabledDeployments.isEmpty());
+        for (final var deployment : enabledDeployments) {
+            assertEquals(deployment.state(), ElementDeploymentState.ENABLED);
+        }
+    }
+
+    @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment"
+    )
+    public void testGetByStateUnloaded() {
+        final var unloadedDeployments = getElementDeploymentDao().getElementDeploymentsByState(ElementDeploymentState.UNLOADED);
+        assertNotNull(unloadedDeployments);
+        assertFalse(unloadedDeployments.isEmpty());
+        for (final var deployment : unloadedDeployments) {
+            assertEquals(deployment.state(), ElementDeploymentState.UNLOADED);
+        }
+    }
+
+    @Test(
+            groups = "fetchElementDeployment",
+            dependsOnGroups = "createElementDeployment"
+    )
+    public void testGetByStateDisabled() {
+        // No DISABLED deployments created yet, should return empty list
+        final var disabledDeployments = getElementDeploymentDao().getElementDeploymentsByState(ElementDeploymentState.DISABLED);
+        assertNotNull(disabledDeployments);
+        // May be empty since we haven't created any DISABLED deployments yet
+    }
+
+    @Test(
             groups = "updateElementDeployment",
             dependsOnGroups = "fetchElementDeployment",
             dataProvider = "allDeployments"
@@ -152,7 +191,8 @@ public class MongoElementDeploymentDaoTest {
                 deployment.elmArtifact(),
                 deployment.useDefaultRepositories(),
                 deployment.repositories(),
-                ElementDeploymentState.DISABLED
+                ElementDeploymentState.DISABLED,
+                deployment.version()
         );
 
         final var result = getElementDeploymentDao().updateElementDeployment(updated);
@@ -160,6 +200,7 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(result.apiArtifacts(), List.of("com.example:api-updated:2.0"));
         assertEquals(result.spiArtifacts(), List.of("com.example:spi-updated:2.0"));
         assertEquals(result.state(), ElementDeploymentState.DISABLED);
+        assertEquals(result.version(), deployment.version() + 1, "Version should be incremented on update");
 
         deployments.remove(deployment);
         deployments.add(result);

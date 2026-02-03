@@ -83,7 +83,13 @@ public record ElementDeployment(
                 "The state of the deployment. Only deployments in the ENABLED state will be deployed to nodes in the " +
                 "system."
         )
-        ElementDeploymentState state
+        ElementDeploymentState state,
+
+        @Schema(description =
+                "Monotonically increasing version number, updated on each modification. Used to detect changes " +
+                "without comparing all fields."
+        )
+        long version
 
 ) implements ElementDeploymentRequest {
 

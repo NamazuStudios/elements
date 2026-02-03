@@ -58,7 +58,8 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.elmArtifact(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    request.effectiveState()
+                    request.effectiveState(),
+                    0L
             );
 
             return elementDeploymentDao.createElementDeployment(elementDeployment);
@@ -101,7 +102,8 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.elmArtifact(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    request.effectiveState()
+                    request.effectiveState(),
+                    existing.version()
             );
 
             return elementDeploymentDao.updateElementDeployment(elementDeployment);

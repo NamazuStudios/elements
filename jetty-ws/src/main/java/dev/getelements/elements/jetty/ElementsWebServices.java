@@ -1,6 +1,7 @@
 package dev.getelements.elements.jetty;
 
 import dev.getelements.elements.common.app.ApplicationDeploymentService;
+import dev.getelements.elements.common.app.ElementRuntimeService;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import jakarta.inject.Inject;
@@ -22,6 +23,8 @@ public class ElementsWebServices implements Runnable {
 
     private ApplicationDeploymentService appServeApplicationDeploymentService;
 
+    private ElementRuntimeService elementRuntimeService;
+
     public void start() {
 
         getInstance().start();
@@ -34,6 +37,8 @@ public class ElementsWebServices implements Runnable {
 
         getAppServeApplicationDeploymentService().deployAvailableApplications();
 
+        getElementRuntimeService().start();
+
     }
 
     public void run() {
@@ -45,6 +50,12 @@ public class ElementsWebServices implements Runnable {
     }
 
     public void stop() {
+
+        try {
+            getElementRuntimeService().stop();
+        } catch (Exception ex) {
+            logger.error("Caught exception stopping ElementRuntimeService.", ex);
+        }
 
         try {
             getServer().stop();
@@ -85,6 +96,15 @@ public class ElementsWebServices implements Runnable {
     @Inject
     public void setAppServeApplicationDeploymentService(@Named(APP_SERVE) ApplicationDeploymentService appServeApplicationDeploymentService) {
         this.appServeApplicationDeploymentService = appServeApplicationDeploymentService;
+    }
+
+    public ElementRuntimeService getElementRuntimeService() {
+        return elementRuntimeService;
+    }
+
+    @Inject
+    public void setElementRuntimeService(ElementRuntimeService elementRuntimeService) {
+        this.elementRuntimeService = elementRuntimeService;
     }
 
 }
