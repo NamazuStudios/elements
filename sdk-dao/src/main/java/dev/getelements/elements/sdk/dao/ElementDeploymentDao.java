@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
@@ -11,6 +12,7 @@ import java.util.Optional;
 /**
  * Provides access to {@link ElementDeployment} instances in the database.
  */
+@ElementServiceExport
 public interface ElementDeploymentDao {
 
     /**

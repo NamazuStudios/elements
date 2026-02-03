@@ -1,13 +1,20 @@
 package dev.getelements.elements.sdk.service.system;
 
+import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.system.CreateElementDeploymentRequest;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.UpdateElementDeploymentRequest;
 
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
+
 /**
  * Manages {@link ElementDeployment} instances in the database.
  */
+@ElementPublic
+@ElementServiceExport
+@ElementServiceExport(name = UNSCOPED)
 public interface ElementDeploymentService {
 
     /**

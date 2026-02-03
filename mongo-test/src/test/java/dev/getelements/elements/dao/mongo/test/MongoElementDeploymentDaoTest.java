@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
+import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -44,7 +45,7 @@ public class MongoElementDeploymentDaoTest {
                 null,
                 null,
                 true,
-                List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
+                List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 ElementDeploymentState.ENABLED,
                 0L

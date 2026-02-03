@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.guice;
 
 import com.google.inject.AbstractModule;
+import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.service.advancement.AdvancementService;
 import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
@@ -24,6 +25,7 @@ import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
+import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.sdk.service.application.*;
 import dev.getelements.elements.sdk.service.auth.*;
@@ -72,6 +74,7 @@ import dev.getelements.elements.service.progress.SuperUserProgressService;
 import dev.getelements.elements.service.receipt.SuperuserReceiptService;
 import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
+import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
@@ -309,6 +312,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(ReceiptService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperuserReceiptService.class);
+
+        bind(ElementDeploymentService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserElementDeploymentService.class);
 
         bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultUserConfiguration.class).asEagerSingleton();

@@ -117,6 +117,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ElementDeploymentDao.class).to(MongoElementDeploymentDao.class);
         bind(UniqueCodeDao.class).to(MongoUniqueCodeDao.class);
 
+
         bind(SecureRandom.class)
                 .toProvider(SecureRandom::new)
                 .asEagerSingleton();

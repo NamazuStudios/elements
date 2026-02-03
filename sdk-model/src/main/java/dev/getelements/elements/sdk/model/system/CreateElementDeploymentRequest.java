@@ -60,7 +60,7 @@ public record CreateElementDeploymentRequest(
         @Schema(description =
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
-        List<ArtifactRepository> repositories,
+        List<ElementArtifactRepository> repositories,
 
         @Schema(description =
                 "Custom attributes to pass to the Element at load time. These key-value pairs will be merged with " +

@@ -37,7 +37,7 @@ public interface ElementDeploymentRequest {
      *
      * @return true if ready
      */
-    default boolean isReady() {
+    default boolean ready() {
         return elmArtifact() != null && !elmArtifact().isBlank() ||
                elementArtifacts() != null && elementArtifacts().isEmpty();
     }
@@ -49,7 +49,7 @@ public interface ElementDeploymentRequest {
      * @return the effective state, never null
      */
     default ElementDeploymentState effectiveState() {
-        if (isReady()) {
+        if (ready()) {
             return state() == null || UNLOADED.equals(state()) ? ENABLED : state();
         } else {
             return UNLOADED;

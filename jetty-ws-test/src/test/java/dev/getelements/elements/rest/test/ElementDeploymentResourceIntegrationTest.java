@@ -1,10 +1,7 @@
 package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.system.CreateElementDeploymentRequest;
-import dev.getelements.elements.sdk.model.system.ElementDeployment;
-import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
-import dev.getelements.elements.sdk.model.system.UpdateElementDeploymentRequest;
+import dev.getelements.elements.sdk.model.system.*;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -70,7 +67,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 "com.example:elm:1.0.0",
                 null,
                 true,
-                List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
+                List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 ElementDeploymentState.DISABLED
         );
@@ -230,7 +227,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 "com.example:elm-updated:1.1.0",
                 null,
                 true,
-                List.of(new ArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
+                List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 ElementDeploymentState.ENABLED
         );

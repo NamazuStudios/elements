@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
+import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -408,7 +409,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         // Add explicit repositories
         if (deployment.repositories() != null) {
-            result.addAll(deployment.repositories());
+            deployment.repositories()
+                    .stream()
+                    .map(ear -> new ArtifactRepository(ear.id(), ear.url()))
+                    .forEach(result::add);
         }
 
         return result;

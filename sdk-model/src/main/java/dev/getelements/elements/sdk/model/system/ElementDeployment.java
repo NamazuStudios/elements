@@ -5,7 +5,6 @@ import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
-import dev.getelements.elements.sdk.record.ArtifactRepository;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -78,7 +77,7 @@ public record ElementDeployment(
         @Schema(description =
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
-        List<ArtifactRepository> repositories,
+        List<ElementArtifactRepository> repositories,
 
         @Schema(description =
                 "Custom attributes to pass to the Element at load time. These key-value pairs will be merged with " +
@@ -106,8 +105,8 @@ public record ElementDeployment(
          * @return true if ready
          */
         @Override
-            public boolean isReady() {
-                return ElementDeploymentRequest.super.isReady() ||
+            public boolean ready() {
+                return ElementDeploymentRequest.super.ready() ||
                        elm() != null && LargeObjectState.UPLOADED.equals(elm().getState());
             }
 

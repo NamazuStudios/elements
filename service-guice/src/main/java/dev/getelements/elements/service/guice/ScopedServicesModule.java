@@ -40,6 +40,7 @@ import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import dev.getelements.elements.sdk.service.rewardissuance.RewardIssuanceService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
 import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
+import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
@@ -108,6 +109,8 @@ import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentServic
 import dev.getelements.elements.service.savedata.UserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.MetadataSpecServiceProvider;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
+import dev.getelements.elements.service.system.ElementDeploymentServiceProvider;
+import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.user.AnonUserService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 import dev.getelements.elements.service.user.UserServiceProvider;
@@ -378,8 +381,13 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(ApplicationStatusServiceProvider.class)
                 .in(scope);
 
+        bind(ElementDeploymentService.class)
+                .toProvider(ElementDeploymentServiceProvider.class)
+                .in(scope);
+
         bind(NotificationService.class)
                 .to(StandardNotificationService.class);
+
     }
 
     private void bindAnonymous() {
@@ -771,6 +779,11 @@ public class ScopedServicesModule extends AbstractModule {
         bind(WalletService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserWalletService.class);
+
+        bind(ElementDeploymentService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserElementDeploymentService.class);
+
     }
 
 }
