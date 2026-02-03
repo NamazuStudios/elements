@@ -4,6 +4,7 @@ import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.system.MongoElementDeployment;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
@@ -20,6 +21,7 @@ import dev.morphia.ModifyOptions;
 import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -39,6 +41,8 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
 
     private ValidationHelper validationHelper;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public ElementDeployment createElementDeployment(final ElementDeployment elementDeployment) {
         getValidationHelper().validateModel(elementDeployment, ValidationGroups.Insert.class);
@@ -50,7 +54,14 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
                 },
                 DuplicateException::new
         );
-        return getMapperRegistry().map(result, ElementDeployment.class);
+        final var response = getMapperRegistry().map(result, ElementDeployment.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(response)
+                .named(ELEMENT_DEPLOYMENT_CREATED)
+                .build());
+
+        return response;
     }
 
     @Override
@@ -167,7 +178,14 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
             throw new ElementDeploymentNotFoundException("Element deployment not found: " + elementDeployment.id());
         }
 
-        return getMapperRegistry().map(result, ElementDeployment.class);
+        final var response = getMapperRegistry().map(result, ElementDeployment.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(response)
+                .named(ELEMENT_DEPLOYMENT_UPDATED)
+                .build());
+
+        return response;
     }
 
     @Override
@@ -181,6 +199,11 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
         final var query = getDatastore().find(MongoElementDeployment.class);
         query.filter(eq("_id", objectId));
 
+        final var existing = query.first();
+        if (existing == null) {
+            throw new ElementDeploymentNotFoundException("Element deployment not found: " + deploymentId);
+        }
+
         final var writeResult = query.delete();
 
         if (writeResult.getDeletedCount() == 0) {
@@ -188,6 +211,11 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
         } else if (writeResult.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(getMapperRegistry().map(existing, ElementDeployment.class))
+                .named(ELEMENT_DEPLOYMENT_DELETED)
+                .build());
 
     }
 
@@ -245,6 +273,15 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

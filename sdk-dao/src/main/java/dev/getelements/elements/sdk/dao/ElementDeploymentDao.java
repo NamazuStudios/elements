@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
@@ -13,7 +14,43 @@ import java.util.Optional;
  * Provides access to {@link ElementDeployment} instances in the database.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_CREATED,
+        parameters = ElementDeployment.class,
+        description = "Called when an element deployment was created."
+)
+@ElementEventProducer(
+        value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_CREATED,
+        parameters = {ElementDeployment.class, Transaction.class},
+        description = "Called when an element deployment was created."
+)
+@ElementEventProducer(
+        value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_UPDATED,
+        parameters = ElementDeployment.class,
+        description = "Called when an element deployment was updated."
+)
+@ElementEventProducer(
+        value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_UPDATED,
+        parameters = {ElementDeployment.class, Transaction.class},
+        description = "Called when an element deployment was updated."
+)
+@ElementEventProducer(
+        value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_DELETED,
+        parameters = ElementDeployment.class,
+        description = "Called when an element deployment was deleted."
+)
+@ElementEventProducer(
+        value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_DELETED,
+        parameters = {ElementDeployment.class, Transaction.class},
+        description = "Called when an element deployment was deleted."
+)
 public interface ElementDeploymentDao {
+
+    String ELEMENT_DEPLOYMENT_CREATED = "dev.getelements.elements.sdk.model.dao.element.deployment.created";
+
+    String ELEMENT_DEPLOYMENT_UPDATED = "dev.getelements.elements.sdk.model.dao.element.deployment.updated";
+
+    String ELEMENT_DEPLOYMENT_DELETED = "dev.getelements.elements.sdk.model.dao.element.deployment.deleted";
 
     /**
      * Creates a new {@link ElementDeployment}.

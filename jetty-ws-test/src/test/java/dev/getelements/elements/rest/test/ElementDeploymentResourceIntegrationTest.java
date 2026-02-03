@@ -238,6 +238,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 .header(SESSION_SECRET, superuserContext.getSessionSecret())
                 .put(Entity.json(request));
 
+
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
         final var updated = response.readEntity(ElementDeployment.class);
@@ -364,7 +365,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 .request(MediaType.APPLICATION_JSON)
                 .get();
 
-        assertEquals(response.getStatus(), Response.Status.UNAUTHORIZED.getStatusCode());
+        assertEquals(response.getStatus(), Response.Status.FORBIDDEN.getStatusCode());
     }
 
 }

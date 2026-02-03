@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.service.system;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -15,7 +16,28 @@ import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 @ElementPublic
 @ElementServiceExport
 @ElementServiceExport(name = UNSCOPED)
+@ElementEventProducer(
+        value = ElementDeploymentService.ELEMENT_DEPLOYMENT_CREATED,
+        parameters = ElementDeployment.class,
+        description = "Called when an element deployment was created via the service layer."
+)
+@ElementEventProducer(
+        value = ElementDeploymentService.ELEMENT_DEPLOYMENT_UPDATED,
+        parameters = ElementDeployment.class,
+        description = "Called when an element deployment was updated via the service layer."
+)
+@ElementEventProducer(
+        value = ElementDeploymentService.ELEMENT_DEPLOYMENT_DELETED,
+        parameters = ElementDeployment.class,
+        description = "Called when an element deployment was deleted via the service layer."
+)
 public interface ElementDeploymentService {
+
+    String ELEMENT_DEPLOYMENT_CREATED = "dev.getelements.elements.sdk.service.element.deployment.created";
+
+    String ELEMENT_DEPLOYMENT_UPDATED = "dev.getelements.elements.sdk.service.element.deployment.updated";
+
+    String ELEMENT_DEPLOYMENT_DELETED = "dev.getelements.elements.sdk.service.element.deployment.deleted";
 
     /**
      * Creates an {@link ElementDeployment} with the supplied request.

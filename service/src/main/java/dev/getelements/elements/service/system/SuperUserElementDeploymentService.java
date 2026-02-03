@@ -1,5 +1,7 @@
 package dev.getelements.elements.service.system;
 
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
@@ -16,10 +18,13 @@ import dev.getelements.elements.sdk.model.system.UpdateElementDeploymentRequest;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_MIME_TYPE;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.service.system.ElementDeploymentService.*;
 
 public class SuperUserElementDeploymentService implements ElementDeploymentService {
 
@@ -29,9 +34,11 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
 
     private Provider<Transaction> transactionProvider;
 
+    private ElementRegistry elementRegistry;
+
     @Override
     public ElementDeployment createElementDeployment(final CreateElementDeploymentRequest request) {
-        return getTransactionProvider().get().performAndClose(txn -> {
+        final var created = getTransactionProvider().get().performAndClose(txn -> {
 
             final var applicationDao = txn.getDao(ApplicationDao.class);
             final var largeObjectDao = txn.getDao(LargeObjectDao.class);
@@ -66,6 +73,14 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
             return elementDeploymentDao.createElementDeployment(elementDeployment);
 
         });
+
+        // Publish service-level event after transaction commits
+        getElementRegistry().publish(Event.builder()
+                .argument(created)
+                .named(ELEMENT_DEPLOYMENT_CREATED)
+                .build());
+
+        return created;
     }
 
     @Override
@@ -86,7 +101,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
             final String deploymentId,
             final UpdateElementDeploymentRequest request) {
 
-        return getTransactionProvider().get().performAndClose(txn -> {
+        final var updated = getTransactionProvider().get().performAndClose(txn -> {
 
             final var elementDeploymentDao = txn.getDao(ElementDeploymentDao.class);
 
@@ -109,8 +124,16 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
             );
 
             return elementDeploymentDao.updateElementDeployment(elementDeployment);
-             
+
         });
+
+        // Publish service-level event after transaction commits
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(ELEMENT_DEPLOYMENT_UPDATED)
+                .build());
+
+        return updated;
 
     }
 
@@ -159,7 +182,16 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
 
     @Override
     public void deleteDeployment(final String deploymentId) {
+        // Fetch the deployment before deleting so we can emit it in the event
+        final var deployment = getElementDeploymentDao().getElementDeployment(deploymentId);
+
         getElementDeploymentDao().deleteDeployment(deploymentId);
+
+        // Publish service-level event after deletion
+        getElementRegistry().publish(Event.builder()
+                .argument(deployment)
+                .named(ELEMENT_DEPLOYMENT_DELETED)
+                .build());
     }
 
     public MapperRegistry getRegistry() {
@@ -187,6 +219,15 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
     @Inject
     public void setElementDeploymentDao(ElementDeploymentDao elementDeploymentDao) {
         this.elementDeploymentDao = elementDeploymentDao;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(@Named(ROOT) ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 
 }

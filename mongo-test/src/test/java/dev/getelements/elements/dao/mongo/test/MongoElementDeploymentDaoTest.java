@@ -1,20 +1,25 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ElementDeploymentDao.*;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -24,13 +29,46 @@ public class MongoElementDeploymentDaoTest {
 
     private ApplicationTestFactory applicationTestFactory;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     private final List<ElementDeployment> deployments = new CopyOnWriteArrayList<>();
+
+    private final List<ElementDeployment> createdDeployments = new CopyOnWriteArrayList<>();
+
+    private final List<ElementDeployment> updatedDeployments = new CopyOnWriteArrayList<>();
+
+    private final List<ElementDeployment> deletedDeployments = new CopyOnWriteArrayList<>();
 
     @DataProvider
     public Object[][] allDeployments() {
         return deployments.stream()
                 .map(d -> new Object[]{d})
                 .toArray(Object[][]::new);
+    }
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case ELEMENT_DEPLOYMENT_CREATED -> onCreate(ev.getEventArgument(0));
+                case ELEMENT_DEPLOYMENT_UPDATED -> onUpdate(ev.getEventArgument(0));
+                case ELEMENT_DEPLOYMENT_DELETED -> onDelete(ev.getEventArgument(0));
+            }
+        });
+    }
+
+    private void onCreate(final ElementDeployment deployment) {
+        createdDeployments.add(deployment);
+    }
+
+    private void onUpdate(final ElementDeployment deployment) {
+        updatedDeployments.add(deployment);
+    }
+
+    private void onDelete(final ElementDeployment deployment) {
+        deletedDeployments.add(deployment);
     }
 
     @Test(groups = "createElementDeployment")
@@ -64,6 +102,10 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(created.repositories().size(), 1);
         assertEquals(created.state(), ElementDeploymentState.ENABLED);
 
+        // Verify event was fired
+        assertTrue(createdDeployments.stream().anyMatch(d -> d.id().equals(created.id())),
+                "ELEMENT_DEPLOYMENT_CREATED event should have been fired");
+
         deployments.add(created);
     }
 
@@ -92,6 +134,10 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(created.elmArtifact(), "com.example:elm:1.0");
         assertFalse(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.UNLOADED);
+
+        // Verify event was fired
+        assertTrue(createdDeployments.stream().anyMatch(d -> d.id().equals(created.id())),
+                "ELEMENT_DEPLOYMENT_CREATED event should have been fired");
 
         deployments.add(created);
     }
@@ -206,6 +252,10 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(result.state(), ElementDeploymentState.DISABLED);
         assertEquals(result.version(), deployment.version() + 1, "Version should be incremented on update");
 
+        // Verify event was fired
+        assertTrue(updatedDeployments.stream().anyMatch(d -> d.id().equals(result.id())),
+                "ELEMENT_DEPLOYMENT_UPDATED event should have been fired");
+
         deployments.remove(deployment);
         deployments.add(result);
     }
@@ -217,6 +267,10 @@ public class MongoElementDeploymentDaoTest {
     )
     public void testDeleteById(final ElementDeployment deployment) {
         getElementDeploymentDao().deleteDeployment(deployment.id());
+
+        // Verify event was fired
+        assertTrue(deletedDeployments.stream().anyMatch(d -> d.id().equals(deployment.id())),
+                "ELEMENT_DEPLOYMENT_DELETED event should have been fired");
     }
 
     @Test(

@@ -16,7 +16,7 @@ public class ElementDeploymentServiceProvider implements Provider<ElementDeploym
     public ElementDeploymentService get() {
         return switch (getUser().getLevel()) {
             case SUPERUSER -> getSuperUserElementDeploymentServiceProvider().get();
-            default -> Services.forbidden(SuperUserElementDeploymentService.class);
+            default -> Services.forbidden(ElementDeploymentService.class);
         };
     }
 

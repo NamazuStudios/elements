@@ -4,7 +4,6 @@ import dev.getelements.elements.sdk.record.ArtifactRepository;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 import java.util.Map;
@@ -64,7 +63,6 @@ public record UpdateElementDeploymentRequest(
         Map<String, Object> attributes,
 
         @NotNull
-        @Pattern(regexp = "ENABLED|DISABLED")
         @Schema(description =
                 "Sets the state of the deployment. When updating, the change will only take place if the deployment " +
                 "meets all the requirements. For example, it will not be possible to put the deployment in the " +
