@@ -1,6 +1,8 @@
 package dev.getelements.elements.app.serve.loader;
 
 import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
+import dev.getelements.elements.common.app.ElementRuntimeService;
+import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +16,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
-@FunctionalInterface
+
 public interface Loader {
 
     /**
@@ -33,6 +35,24 @@ public interface Loader {
      * @param record the record to load
      */
     void load(PendingDeployment pending, ApplicationElementRecord record, Element element);
+
+
+    /**
+     * Loads the {@link Element}s from the supplied {@link ApplicationElementRecord}
+     *
+     * @param pending the pending deployment context
+     * @param record  the record to load
+     */
+    default void load(final PendingDeployment pending, final RuntimeRecord record) {
+        record.elements().forEach(element -> load(pending, record, element));
+    }
+
+    /**
+     * Loads the specific {@link Element} from the supplied {@link ApplicationElementRecord}
+     *
+     * @param record the record to load
+     */
+    void load(PendingDeployment pending, RuntimeRecord record, Element element);
 
     /**
      * Provides context and  callbacks for pending deployments.

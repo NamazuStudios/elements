@@ -1,5 +1,7 @@
 package dev.getelements.elements.app.serve.loader;
 
+import dev.getelements.elements.common.app.ElementRuntimeService;
+import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.servlet.HttpContextRoot;
@@ -241,6 +243,36 @@ public class JakartaWebsocketLoader implements Loader {
             return "ws";
         }
 
+    }
+
+    @Override
+    public void load(final PendingDeployment pending, final RuntimeRecord record, final Element element) {
+        try (var mon = Monitor.enter(lock)) {
+
+            final var deployed = activeDeployments
+                    .stream()
+                    .anyMatch(d -> d.element().equals(element));
+
+            if (deployed) {
+                final var appId = record.applicationId() != null ? record.applicationId() : "system";
+                pending.logf("Detected existing deployment for %s.", appId);
+
+                logger.warn("{}/{} is already deployed. Skipping.",
+                        appId,
+                        element.getElementRecord().definition().name());
+
+            } else {
+
+                final var classes = getEndpointClasses(pending, element);
+
+                if (!classes.isEmpty()) {
+                    final var deploymentRecord = loadClasses(pending, classes, element);
+                    activeDeployments.add(deploymentRecord);
+                }
+
+            }
+
+        }
     }
 
     public String getAppOutsideUrl() {

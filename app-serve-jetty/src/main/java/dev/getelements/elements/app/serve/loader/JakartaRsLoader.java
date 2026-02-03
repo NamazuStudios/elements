@@ -2,6 +2,8 @@ package dev.getelements.elements.app.serve.loader;
 
 import dev.getelements.elements.app.serve.AppServeConstants;
 import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
+import dev.getelements.elements.common.app.ElementRuntimeService;
+import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -160,6 +162,33 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
 
         return new JettyDeploymentRecord(element, servletContextHandler);
 
+    }
+
+    @Override
+    public void load(final PendingDeployment pending, final RuntimeRecord record, final Element element) {
+        try (var mon = Monitor.enter(lock)) {
+
+            final var deployed = activeDeployments
+                    .stream()
+                    .anyMatch(d -> d.element().equals(element));
+
+            if (deployed) {
+                final var appId = record.applicationId() != null ? record.applicationId() : "system";
+                pending.logWarningf("WARNING: Detected existing deployment for %s.", appId);
+                logger.warn("{}/{} is already deployed. Skipping.",
+                        appId,
+                        element.getElementRecord().definition().name());
+            } else {
+                element.getServiceLocator()
+                        .findInstance(Application.class)
+                        .map(Supplier::get)
+                        .filter(a -> Application.class != a.getClass())
+                        .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
+                        .map(a -> deploy(pending, element, a))
+                        .ifPresent(activeDeployments::add);
+            }
+
+        }
     }
 
     public String getAppOutsideUrl() {

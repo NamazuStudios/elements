@@ -129,8 +129,19 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     @Override
     public List<RuntimeRecord> getActiveDeployments() {
-        // TODO Implement This
-        return List.of();
+        try (var mon = Monitor.enter(lock)) {
+            return activeDeployments.values()
+                    .stream()
+                    .map(active -> new RuntimeRecord(
+                            active.deployment(),
+                            active.status(),
+                            active.registry(),
+                            active.elements(),
+                            active.logs(),
+                            active.errors()
+                    ))
+                    .toList();
+        }
     }
 
     /**
@@ -242,35 +253,77 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     /**
      * Loads a deployment.
      */
-    private void doLoadDeployment(final ElementDeployment deployment) throws IOException {
+    private void doLoadDeployment(final ElementDeployment deployment) {
 
         final var deploymentId = deployment.id();
-
         final var tempFiles = new ArrayList<Path>();
+        final var logs = new ArrayList<String>();
+        final var errors = new ArrayList<Throwable>();
+        final var warnings = new ArrayList<String>();
 
-        // Create subordinate registry for this deployment
-        final var registry = getRootElementRegistry().newSubordinateRegistry();
+        MutableElementRegistry registry = null;
+        List<Element> elements = null;
+        RuntimeStatus status = RuntimeStatus.CLEAN;
 
         try {
+            logs.add("Starting deployment load for " + deploymentId);
+
+            // Create subordinate registry for this deployment
+            registry = getRootElementRegistry().newSubordinateRegistry();
+            logs.add("Created subordinate registry");
+
             // Determine code source and load
-            final var elements = loadElements(deployment, registry, tempFiles);
+            elements = loadElements(deployment, registry, tempFiles, logs, warnings, errors);
+            logs.add("Loaded " + elements.size() + " element(s)");
+
+            // Determine final status
+            if (!errors.isEmpty()) {
+                status = RuntimeStatus.UNSTABLE;
+                logs.add("Deployment completed with " + errors.size() + " error(s)");
+            } else if (!warnings.isEmpty()) {
+                status = RuntimeStatus.WARNINGS;
+                logs.add("Deployment completed with " + warnings.size() + " warning(s)");
+            } else {
+                logs.add("Deployment completed successfully");
+            }
 
             // Track active deployment
             final var active = new ActiveDeployment(
                     deployment,
+                    status,
                     registry,
                     elements,
-                    tempFiles
+                    tempFiles,
+                    logs,
+                    errors
             );
 
             activeDeployments.put(deploymentId, active);
 
         } catch (Exception ex) {
+            logs.add("Deployment failed: " + ex.getMessage());
+            errors.add(ex);
+            status = RuntimeStatus.FAILED;
+
+            // Store failed deployment
+            final var failedDeployment = new ActiveDeployment(
+                    deployment,
+                    status,
+                    registry,
+                    elements != null ? elements : List.of(),
+                    tempFiles,
+                    logs,
+                    errors
+            );
+            activeDeployments.put(deploymentId, failedDeployment);
+
             // Clean up on failure
-            try {
-                registry.close();
-            } catch (Exception closeEx) {
-                logger.warn("Error closing registry after failed load for deployment {}", deploymentId, closeEx);
+            if (registry != null) {
+                try {
+                    registry.close();
+                } catch (Exception closeEx) {
+                    logger.warn("Error closing registry after failed load for deployment {}", deploymentId, closeEx);
+                }
             }
             for (final Path tempFile : tempFiles) {
                 try {
@@ -279,7 +332,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     logger.warn("Failed to delete temp file {} after failed load", tempFile, ioEx);
                 }
             }
-            throw ex;
         }
     }
 
@@ -288,29 +340,49 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      */
     private List<Element> loadElements(final ElementDeployment deployment,
                                         final MutableElementRegistry registry,
-                                        final List<Path> tempFiles) throws IOException {
+                                        final List<Path> tempFiles,
+                                        final List<String> logs,
+                                        final List<String> warnings,
+                                        final List<Throwable> errors) throws IOException {
         final var deploymentId = deployment.id();
 
-        // Build repository set
-        final var repositories = buildRepositorySet(deployment);
+        try {
+            // Build repository set
+            logs.add("Building artifact repository set");
+            final var repositories = buildRepositorySet(deployment);
+            if (repositories.isEmpty()) {
+                warnings.add("No artifact repositories configured");
+            } else {
+                logs.add("Configured " + repositories.size() + " artifact repository(ies)");
+            }
 
-        // Build ClassLoader chain: System -> API -> SPI
-        final var systemClassLoader = getClass().getClassLoader();
-        final var apiClassLoader = resolveClassLoader(systemClassLoader, repositories, deployment.apiArtifacts());
-        final var spiClassLoader = resolveClassLoader(apiClassLoader, repositories, deployment.spiArtifacts());
+            // Build ClassLoader chain: System -> API -> SPI
+            logs.add("Building ClassLoader chain");
+            final var systemClassLoader = getClass().getClassLoader();
+            final var apiClassLoader = resolveClassLoader(systemClassLoader, repositories, deployment.apiArtifacts(), logs, warnings);
+            final var spiClassLoader = resolveClassLoader(apiClassLoader, repositories, deployment.spiArtifacts(), logs, warnings);
 
-        // Determine code source strategy
-        if (hasElmFromLargeObject(deployment)) {
-            // Strategy 1: ELM from LargeObject
-            return loadFromLargeObject(deployment, registry, spiClassLoader, tempFiles);
-        } else if (deployment.elmArtifact() != null && !deployment.elmArtifact().isBlank()) {
-            // Strategy 2: ELM artifact from Maven
-            return loadFromElmArtifact(deployment, registry, spiClassLoader, repositories);
-        } else if (deployment.elementArtifacts() != null && !deployment.elementArtifacts().isEmpty()) {
-            // Strategy 3: Maven artifact collection
-            return loadFromElementArtifacts(deployment, registry, spiClassLoader, repositories);
-        } else {
-            throw new IllegalStateException("Deployment " + deploymentId + " has no valid code source");
+            // Determine code source strategy
+            if (hasElmFromLargeObject(deployment)) {
+                // Strategy 1: ELM from LargeObject
+                logs.add("Loading from ELM file in LargeObject");
+                return loadFromLargeObject(deployment, registry, spiClassLoader, tempFiles, logs, errors);
+            } else if (deployment.elmArtifact() != null && !deployment.elmArtifact().isBlank()) {
+                // Strategy 2: ELM artifact from Maven
+                logs.add("Loading from ELM artifact: " + deployment.elmArtifact());
+                return loadFromElmArtifact(deployment, registry, spiClassLoader, repositories, logs, errors);
+            } else if (deployment.elementArtifacts() != null && !deployment.elementArtifacts().isEmpty()) {
+                // Strategy 3: Maven artifact collection
+                logs.add("Loading from element artifacts: " + deployment.elementArtifacts());
+                return loadFromElementArtifacts(deployment, registry, spiClassLoader, repositories, logs, errors);
+            } else {
+                final var message = "Deployment " + deploymentId + " has no valid code source";
+                logs.add("ERROR: " + message);
+                throw new IllegalStateException(message);
+            }
+        } catch (Exception ex) {
+            errors.add(ex);
+            throw ex;
         }
     }
 
@@ -328,22 +400,39 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private List<Element> loadFromLargeObject(final ElementDeployment deployment,
                                                final MutableElementRegistry registry,
                                                final ClassLoader spiClassLoader,
-                                               final List<Path> tempFiles) throws IOException {
-        final var elmRef = deployment.elm();
-        final var elmId = elmRef.getId();
+                                               final List<Path> tempFiles,
+                                               final List<String> logs,
+                                               final List<Throwable> errors) throws IOException {
+        try {
+            final var elmRef = deployment.elm();
+            final var elmId = elmRef.getId();
 
-        // Download ELM to temp file
-        final var tempPath = temporaryFiles.createTempFile(".elm");
-        tempFiles.add(tempPath);
+            logs.add("Downloading ELM file from LargeObject: " + elmId);
 
-        try (final InputStream in = getLargeObjectBucket().readObject(elmId);
-             final OutputStream out = Files.newOutputStream(tempPath)) {
-            in.transferTo(out);
+            // Download ELM to temp file
+            final var tempPath = temporaryFiles.createTempFile(".elm");
+            tempFiles.add(tempPath);
+
+            try (final InputStream in = getLargeObjectBucket().readObject(elmId);
+                 final OutputStream out = Files.newOutputStream(tempPath)) {
+                in.transferTo(out);
+            }
+
+            logs.add("Downloaded ELM to temporary file: " + tempPath);
+
+            // Load via ElementPathLoader
+            final var pathLoader = ElementPathLoader.newDefaultInstance();
+            logs.add("Loading Elements from ELM file");
+            final var elements = pathLoader.load(registry, tempPath, spiClassLoader).toList();
+
+            logs.add("Successfully loaded " + elements.size() + " element(s) from ELM file");
+            return elements;
+
+        } catch (Exception ex) {
+            logs.add("Failed to load from LargeObject: " + ex.getMessage());
+            errors.add(ex);
+            throw ex;
         }
-
-        // Load via ElementPathLoader
-        final var pathLoader = ElementPathLoader.newDefaultInstance();
-        return pathLoader.load(registry, tempPath, spiClassLoader).toList();
     }
 
     /**
@@ -352,19 +441,35 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private List<Element> loadFromElmArtifact(final ElementDeployment deployment,
                                                final MutableElementRegistry registry,
                                                final ClassLoader spiClassLoader,
-                                               final Set<ArtifactRepository> repositories) {
-        if (!artifactLoaderAvailable) {
-            throw new IllegalStateException(
-                    "Deployment " + deployment.id() + " requires ELM artifact but ElementArtifactLoader SPI not available");
+                                               final Set<ArtifactRepository> repositories,
+                                               final List<String> logs,
+                                               final List<Throwable> errors) {
+        try {
+            if (!artifactLoaderAvailable) {
+                final var message = "Deployment " + deployment.id() + " requires ELM artifact but ElementArtifactLoader SPI not available";
+                logs.add("ERROR: " + message);
+                throw new IllegalStateException(message);
+            }
+
+            logs.add("Resolving ELM artifact from repositories");
+            // Resolve artifact
+            final var artifact = elementArtifactLoader.getArtifact(repositories, deployment.elmArtifact());
+            final var artifactPath = artifact.path();
+            logs.add("Resolved ELM artifact to path: " + artifactPath);
+
+            // Load via ElementPathLoader
+            final var pathLoader = ElementPathLoader.newDefaultInstance();
+            logs.add("Loading Elements from ELM artifact");
+            final var elements = pathLoader.load(registry, artifactPath, spiClassLoader).toList();
+
+            logs.add("Successfully loaded " + elements.size() + " element(s) from ELM artifact");
+            return elements;
+
+        } catch (Exception ex) {
+            logs.add("Failed to load from ELM artifact: " + ex.getMessage());
+            errors.add(ex);
+            throw ex;
         }
-
-        // Resolve artifact
-        final var artifact = elementArtifactLoader.getArtifact(repositories, deployment.elmArtifact());
-        final var artifactPath = artifact.path();
-
-        // Load via ElementPathLoader
-        final var pathLoader = ElementPathLoader.newDefaultInstance();
-        return pathLoader.load(registry, artifactPath, spiClassLoader).toList();
     }
 
     /**
@@ -373,31 +478,46 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private List<Element> loadFromElementArtifacts(final ElementDeployment deployment,
                                                     final MutableElementRegistry registry,
                                                     final ClassLoader spiClassLoader,
-                                                    final Set<ArtifactRepository> repositories) {
-        if (!artifactLoaderAvailable) {
-            throw new IllegalStateException(
-                    "Deployment " + deployment.id() +
-                    " requires element artifacts but ElementArtifactLoader SPI not available"
+                                                    final Set<ArtifactRepository> repositories,
+                                                    final List<String> logs,
+                                                    final List<Throwable> errors) {
+        try {
+            if (!artifactLoaderAvailable) {
+                final var message = "Deployment " + deployment.id() +
+                        " requires element artifacts but ElementArtifactLoader SPI not available";
+                logs.add("ERROR: " + message);
+                throw new IllegalStateException(message);
+            }
+
+            logs.add("Resolving element artifacts from repositories");
+            // Resolve classloader with element artifacts
+            final var coords = new HashSet<>(deployment.elementArtifacts());
+            final var elementClassLoader = elementArtifactLoader.getClassLoader(spiClassLoader, repositories, coords);
+            logs.add("Created ClassLoader with element artifacts");
+
+            // Use ElementLoaderFactory for isolated loading
+            final var loaderFactory = ElementLoaderFactory.getDefault();
+            final var attributes = SimpleAttributes.newDefaultInstance();
+
+            logs.add("Creating isolated Element loader");
+            // Get loader and load element
+            final var loader = loaderFactory.getIsolatedLoader(
+                    attributes,
+                    elementClassLoader,
+                    cl -> cl
             );
+
+            logs.add("Registering Element with registry");
+            final var element = registry.register(loader);
+            logs.add("Successfully loaded 1 element from artifacts");
+
+            return List.of(element);
+
+        } catch (Exception ex) {
+            logs.add("Failed to load from element artifacts: " + ex.getMessage());
+            errors.add(ex);
+            throw ex;
         }
-
-        // Resolve classloader with element artifacts
-        final var coords = new HashSet<>(deployment.elementArtifacts());
-        final var elementClassLoader = elementArtifactLoader.getClassLoader(spiClassLoader, repositories, coords);
-
-        // Use ElementLoaderFactory for isolated loading
-        final var loaderFactory = ElementLoaderFactory.getDefault();
-        final var attributes = SimpleAttributes.newDefaultInstance();
-
-        // Get loader and load element
-        final var loader = loaderFactory.getIsolatedLoader(
-                attributes,
-                elementClassLoader,
-                cl -> cl
-        );
-
-        final var element = registry.register(loader);
-        return List.of(element);
     }
 
     /**
@@ -427,19 +547,38 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      */
     private ClassLoader resolveClassLoader(final ClassLoader parent,
                                            final Set<ArtifactRepository> repositories,
-                                           final List<String> coordinates) {
+                                           final List<String> coordinates,
+                                           final List<String> logs,
+                                           final List<String> warnings) {
         if (coordinates == null || coordinates.isEmpty()) {
             return parent;
         }
 
         if (!artifactLoaderAvailable) {
-            logger.warn("Cannot resolve artifacts {} - ElementArtifactLoader SPI not available", coordinates);
+            final var warning = "Cannot resolve artifacts " + coordinates + " - ElementArtifactLoader SPI not available";
+            logger.warn(warning);
+            warnings.add(warning);
             return parent;
         }
 
-        final var coords = new HashSet<>(coordinates);
-        final Optional<ClassLoader> optional = elementArtifactLoader.findClassLoader(parent, repositories, coords);
-        return optional.orElse(parent);
+        try {
+            logs.add("Resolving ClassLoader for artifacts: " + coordinates);
+            final var coords = new HashSet<>(coordinates);
+            final Optional<ClassLoader> optional = elementArtifactLoader.findClassLoader(parent, repositories, coords);
+
+            if (optional.isPresent()) {
+                logs.add("Successfully resolved ClassLoader for " + coordinates.size() + " artifact(s)");
+                return optional.get();
+            } else {
+                warnings.add("Could not resolve artifacts: " + coordinates);
+                return parent;
+            }
+        } catch (Exception ex) {
+            final var warning = "Error resolving artifacts " + coordinates + ": " + ex.getMessage();
+            logger.warn(warning, ex);
+            warnings.add(warning);
+            return parent;
+        }
     }
 
     /**
@@ -493,10 +632,18 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      */
     private record ActiveDeployment(
             ElementDeployment deployment,
+            RuntimeStatus status,
             MutableElementRegistry registry,
             List<Element> elements,
-            List<Path> tempFiles
+            List<Path> tempFiles,
+            List<String> logs,
+            List<Throwable> errors
     ) implements AutoCloseable {
+
+        ActiveDeployment {
+            logs = logs != null ? List.copyOf(logs) : List.of();
+            errors = errors != null ? List.copyOf(errors) : List.of();
+        }
 
         @Override
         public void close() {
