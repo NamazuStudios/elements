@@ -2,6 +2,7 @@ package dev.getelements.elements.app.serve.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.multibindings.Multibinder;
+import dev.getelements.elements.app.serve.JettyElementContainerService;
 import dev.getelements.elements.app.serve.loader.AuthFilterFeature;
 import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
 import dev.getelements.elements.app.serve.loader.JakartaWebsocketLoader;
@@ -22,7 +23,7 @@ public class AppServeModule extends PrivateModule {
     protected void configure() {
 
         bind(ElementContainerService.class)
-                .to(ElementContainerService.class)
+                .to(JettyElementContainerService.class)
                 .asEagerSingleton();
 
         final var loaders = newSetBinder(binder(), Loader.class);
