@@ -361,44 +361,45 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 logs.add("Configured " + repositories.size() + " artifact repository(ies)");
             }
 
-            // Build ClassLoader chain: System -> API -> SPI
-            logs.add("Building ClassLoader chain");
-            final var systemClassLoader = getClass().getClassLoader();
+            final var allElements = new ArrayList<Element>();
 
-            final var apiClassLoader = resolveClassLoader(
-                    systemClassLoader,
-                    repositories,
-                    deployment.apiArtifacts(),
-                    logs,
-                    warnings
-            );
-
-            final var spiClassLoader = resolveClassLoader(
-                    apiClassLoader,
-                    repositories,
-                    deployment.spiArtifacts(),
-                    logs,
-                    warnings
-            );
-
-            // Determine code source strategy
+            // Strategy 1: Load from uploaded ELM file if present
             if (hasElmFromLargeObject(deployment)) {
-                // Strategy 1: ELM from LargeObject
-                logs.add("Loading from ELM file in LargeObject");
-                return loadFromLargeObject(deployment, registry, spiClassLoader, tempFiles, logs, errors);
-            } else if (deployment.elmArtifact() != null && !deployment.elmArtifact().isBlank()) {
-                // Strategy 2: ELM artifact from Maven
-                logs.add("Loading from ELM artifact: " + deployment.elmArtifact());
-                return loadFromElmArtifact(deployment, registry, spiClassLoader, repositories, logs, errors);
-            } else if (deployment.elementArtifacts() != null && !deployment.elementArtifacts().isEmpty()) {
-                // Strategy 3: Maven artifact collection
-                logs.add("Loading from element artifacts: " + deployment.elementArtifacts());
-                return loadFromElementArtifacts(deployment, registry, spiClassLoader, repositories, logs, errors);
-            } else {
-                final var message = "Deployment " + deploymentId + " has no valid code source";
+                logs.add("Loading elements from uploaded ELM file");
+                final var elmElements = loadFromLargeObject(deployment, registry, tempFiles, logs, errors, repositories);
+                allElements.addAll(elmElements);
+            }
+
+            // Strategy 2: Process each ElementDefinition
+            if (deployment.elements() != null && !deployment.elements().isEmpty()) {
+                logs.add("Processing " + deployment.elements().size() + " element definition(s)");
+
+                for (int i = 0; i < deployment.elements().size(); i++) {
+                    final var definition = deployment.elements().get(i);
+                    logs.add("Processing element definition " + (i + 1) + "/" + deployment.elements().size());
+
+                    final var elements = loadFromElementDefinition(
+                            definition,
+                            registry,
+                            repositories,
+                            tempFiles,
+                            logs,
+                            warnings,
+                            errors
+                    );
+                    allElements.addAll(elements);
+                }
+            }
+
+            if (allElements.isEmpty()) {
+                final var message = "Deployment " + deploymentId + " produced no elements";
                 logs.add("ERROR: " + message);
                 throw new IllegalStateException(message);
             }
+
+            logs.add("Successfully loaded " + allElements.size() + " total element(s)");
+            return allElements;
+
         } catch (Exception ex) {
             errors.add(ex);
             throw ex;
@@ -418,10 +419,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      */
     private List<Element> loadFromLargeObject(final ElementDeployment deployment,
                                                final MutableElementRegistry registry,
-                                               final ClassLoader spiClassLoader,
                                                final List<Path> tempFiles,
                                                final List<String> logs,
-                                               final List<Throwable> errors) throws IOException {
+                                               final List<Throwable> errors,
+                                               final Set<ArtifactRepository> repositories) throws IOException {
         try {
             final var elmRef = deployment.elm();
             final var elmId = elmRef.getId();
@@ -441,8 +442,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // Load via ElementPathLoader
             final var pathLoader = ElementPathLoader.newDefaultInstance();
+
+            // Build API classloader from the ELM
+            logs.add("Building API classloader from ELM");
+            final var systemClassLoader = getClass().getClassLoader();
+            final var apiClassLoader = pathLoader.buildApiClassLoader(tempPath)
+                    .orElse(new java.net.URLClassLoader(new java.net.URL[0], systemClassLoader));
+
             logs.add("Loading Elements from ELM file");
-            final var elements = pathLoader.load(registry, tempPath, spiClassLoader).toList();
+            final var elements = pathLoader.load(registry, tempPath, apiClassLoader).toList();
 
             logs.add("Successfully loaded " + elements.size() + " element(s) from ELM file");
             return elements;
@@ -455,74 +463,85 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     }
 
     /**
-     * Loads elements from an ELM artifact resolved via Maven.
+     * Loads elements from a single ElementDefinition.
      */
-    private List<Element> loadFromElmArtifact(final ElementDeployment deployment,
-                                               final MutableElementRegistry registry,
-                                               final ClassLoader spiClassLoader,
-                                               final Set<ArtifactRepository> repositories,
-                                               final List<String> logs,
-                                               final List<Throwable> errors) {
+    private List<Element> loadFromElementDefinition(final dev.getelements.elements.sdk.model.system.ElementDefinition definition,
+                                                     final MutableElementRegistry registry,
+                                                     final Set<ArtifactRepository> repositories,
+                                                     final List<Path> tempFiles,
+                                                     final List<String> logs,
+                                                     final List<String> warnings,
+                                                     final List<Throwable> errors) throws IOException {
         try {
+            final var systemClassLoader = getClass().getClassLoader();
 
-            logs.add("Resolving ELM artifact from repositories");
-            // Resolve artifact
-            final var artifact = elementArtifactLoader.getArtifact(repositories, deployment.elmArtifact());
-            final var artifactPath = artifact.path();
-            logs.add("Resolved ELM artifact to path: " + artifactPath);
+            // Check if this definition uses an ELM artifact
+            if (definition.elmArtifact() != null && !definition.elmArtifact().isBlank()) {
+                logs.add("Loading from ELM artifact: " + definition.elmArtifact());
 
-            // Load via ElementPathLoader
-            final var pathLoader = ElementPathLoader.newDefaultInstance();
-            logs.add("Loading Elements from ELM artifact");
-            final var elements = pathLoader.load(registry, artifactPath, spiClassLoader).toList();
+                // Resolve the ELM artifact
+                final var artifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
+                final var artifactPath = artifact.path();
+                logs.add("Resolved ELM artifact to path: " + artifactPath);
 
-            logs.add("Successfully loaded " + elements.size() + " element(s) from ELM artifact");
-            return elements;
+                // Build API classloader from this ELM
+                final var pathLoader = ElementPathLoader.newDefaultInstance();
+                final var apiClassLoader = pathLoader.buildApiClassLoader(artifactPath)
+                        .orElse(new java.net.URLClassLoader(new java.net.URL[0], systemClassLoader));
+
+                // Load elements from the ELM
+                final var elements = pathLoader.load(registry, artifactPath, apiClassLoader).toList();
+                logs.add("Loaded " + elements.size() + " element(s) from ELM artifact");
+                return elements;
+
+            } else {
+                // Build classloader chain from Maven artifacts: System -> API -> SPI -> Element
+                logs.add("Building classloader chain from Maven artifacts");
+
+                final var apiClassLoader = resolveClassLoader(
+                        systemClassLoader,
+                        repositories,
+                        definition.apiArtifacts(),
+                        logs,
+                        warnings
+                );
+
+                final var spiClassLoader = resolveClassLoader(
+                        apiClassLoader,
+                        repositories,
+                        definition.spiArtifacts(),
+                        logs,
+                        warnings
+                );
+
+                final var elementClassLoader = resolveClassLoader(
+                        spiClassLoader,
+                        repositories,
+                        definition.elementArtifacts(),
+                        logs,
+                        warnings
+                );
+
+                // Use ElementLoaderFactory for isolated loading
+                logs.add("Creating isolated Element loader");
+                final var loaderFactory = ElementLoaderFactory.getDefault();
+                final var attributes = SimpleAttributes.newDefaultInstance();
+
+                final var loader = loaderFactory.getIsolatedLoader(
+                        attributes,
+                        elementClassLoader,
+                        cl -> cl
+                );
+
+                logs.add("Registering Element with registry");
+                final var element = registry.register(loader);
+                logs.add("Successfully loaded 1 element from Maven artifacts");
+
+                return List.of(element);
+            }
 
         } catch (Exception ex) {
-            logs.add("Failed to load from ELM artifact: " + ex.getMessage());
-            errors.add(ex);
-            throw ex;
-        }
-    }
-
-    /**
-     * Loads elements from a collection of Maven artifacts.
-     */
-    private List<Element> loadFromElementArtifacts(final ElementDeployment deployment,
-                                                    final MutableElementRegistry registry,
-                                                    final ClassLoader spiClassLoader,
-                                                    final Set<ArtifactRepository> repositories,
-                                                    final List<String> logs,
-                                                    final List<Throwable> errors) {
-        try {
-
-            logs.add("Resolving element artifacts from repositories");
-            // Resolve classloader with element artifacts
-            final var coords = new HashSet<>(deployment.elementArtifacts());
-            final var elementClassLoader = elementArtifactLoader.getClassLoader(spiClassLoader, repositories, coords);
-            logs.add("Created ClassLoader with element artifacts");
-
-            // Use ElementLoaderFactory for isolated loading
-            final var loaderFactory = ElementLoaderFactory.getDefault();
-            final var attributes = SimpleAttributes.newDefaultInstance();
-
-            logs.add("Creating isolated Element loader");
-            // Get loader and load element
-            final var loader = loaderFactory.getIsolatedLoader(
-                    attributes,
-                    elementClassLoader,
-                    cl -> cl
-            );
-
-            logs.add("Registering Element with registry");
-            final var element = registry.register(loader);
-            logs.add("Successfully loaded 1 element from artifacts");
-
-            return List.of(element);
-
-        } catch (Exception ex) {
-            logs.add("Failed to load from element artifacts: " + ex.getMessage());
+            logs.add("Failed to load from ElementDefinition: " + ex.getMessage());
             errors.add(ex);
             throw ex;
         }
