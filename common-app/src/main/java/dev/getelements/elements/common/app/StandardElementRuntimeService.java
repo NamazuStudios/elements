@@ -502,27 +502,28 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 return elements;
 
             } else {
-                // Build classloader chain from Maven artifacts: System -> API -> SPI -> Element
+                // Build classloader chain from Maven artifacts: System -> (API+SPI) -> Element
                 logs.add("Building classloader chain from Maven artifacts");
 
-                final var apiClassLoader = resolveClassLoader(
+                // Combine API and SPI artifacts into a single classloader
+                final var apiSpiCoordinates = new ArrayList<String>();
+                if (definition.apiArtifacts() != null) {
+                    apiSpiCoordinates.addAll(definition.apiArtifacts());
+                }
+                if (definition.spiArtifacts() != null) {
+                    apiSpiCoordinates.addAll(definition.spiArtifacts());
+                }
+
+                final var apiSpiClassLoader = resolveClassLoader(
                         systemClassLoader,
                         repositories,
-                        definition.apiArtifacts(),
-                        logs,
-                        warnings
-                );
-
-                final var spiClassLoader = resolveClassLoader(
-                        apiClassLoader,
-                        repositories,
-                        definition.spiArtifacts(),
+                        apiSpiCoordinates,
                         logs,
                         warnings
                 );
 
                 final var elementClassLoader = resolveClassLoader(
-                        spiClassLoader,
+                        apiSpiClassLoader,
                         repositories,
                         definition.elementArtifacts(),
                         logs,
