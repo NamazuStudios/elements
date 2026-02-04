@@ -12,6 +12,7 @@ import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class GuiceSdkElement implements Element {
 
@@ -24,6 +25,8 @@ public class GuiceSdkElement implements Element {
     private final ElementEventDispatcher elementEventDispatcher;
 
     private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(GuiceSdkElement.class);
+
+    private final Publisher<Element> onClosePublisher = new ConcurrentDequePublisher<>(GuiceSdkElement.class);
 
     private final ReentrantThreadLocal<DefaultElementScope> scopeThreadLocal = new ReentrantThreadLocal<>();
 
@@ -71,6 +74,11 @@ public class GuiceSdkElement implements Element {
     }
 
     @Override
+    public Subscription onClose(final Consumer<Element> onClose) {
+        return onClosePublisher.subscribe(onClose);
+    }
+
+    @Override
     public void close() {
 
         final var cl = getElementRecord().classLoader();
@@ -83,6 +91,8 @@ public class GuiceSdkElement implements Element {
             }
         }
 
+        onClosePublisher.publish(this);
+        onClosePublisher.clear();
         elementEventDispatcher.close();
 
     }

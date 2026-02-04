@@ -129,10 +129,41 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final MutableElementRegistry registry,
             final Path path,
             final ClassLoader baseClassLoader) {
-        try (final var fs = FileSystems.newFileSystem(path)) {
+        try {
+
+            // Try to open as a FileSystem (for ELM/zip files)
+            final var fs = FileSystems.newFileSystem(path);
             final var root = fs.getPath("/");
-            return doLoad(registry, root, baseClassLoader);
+            final var elements = doLoad(registry, root, baseClassLoader).toList();
+
+            if (elements.isEmpty()) {
+                // No elements loaded, close the FileSystem immediately
+                try {
+                    fs.close();
+                } catch (IOException e) {
+                    logger.error("Error closing FileSystem for {}", path, e);
+                }
+                return Stream.empty();
+            }
+
+            // Attach close handlers to all elements using reference counting
+            final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
+
+            elements.forEach(element -> element.onClose(el -> {
+                if (counter.decrementAndGet() == 0) {
+                    try {
+                        fs.close();
+                        logger.debug("Closed FileSystem for {} after all elements closed", path);
+                    } catch (IOException e) {
+                        logger.error("Error closing FileSystem for {}", path, e);
+                    }
+                }
+            }));
+
+            return elements.stream();
+
         } catch (ProviderNotFoundException ex) {
+            // Not a zip/ELM file, try as directory
             if (Files.isDirectory(path)) {
                 return doLoad(registry, path, baseClassLoader);
             } else {
@@ -145,6 +176,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         } catch (final IOException ex) {
             throw new SdkException(ex);
         }
+
     }
 
     private Stream<Element> doLoad(

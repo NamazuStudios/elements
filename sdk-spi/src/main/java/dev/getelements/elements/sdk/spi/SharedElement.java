@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.util.Publisher;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
@@ -20,6 +21,8 @@ public class SharedElement implements Element {
     private final ElementRegistry elementRegistry;
 
     private final ElementEventDispatcher elementEventDispatcher;
+
+    private final Publisher<Element> onClosePublisher = new ConcurrentDequePublisher<>(SharedElement.class);
 
     private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(SharedElement.class);
 
@@ -80,7 +83,14 @@ public class SharedElement implements Element {
     }
 
     @Override
+    public Subscription onClose(final Consumer<Element> callback) {
+        return onClosePublisher.subscribe(callback);
+    }
+
+    @Override
     public void close() {
+        onClosePublisher.publish(null);
+        onClosePublisher.clear();
         elementEventDispatcher.close();
     }
 
