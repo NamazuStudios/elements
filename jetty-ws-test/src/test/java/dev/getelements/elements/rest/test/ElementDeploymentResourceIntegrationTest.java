@@ -60,12 +60,16 @@ public class ElementDeploymentResourceIntegrationTest {
 
     @Test(groups = "createDeployment")
     public void testCreateElementDeploymentWithArtifacts() {
-        final var request = new CreateElementDeploymentRequest(
-                null, // global deployment
+        final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api:1.0.0"),
                 List.of("com.example:spi:1.0.0"),
-                "com.example:elm:1.0.0",
                 null,
+                "com.example:elm:1.0.0"
+        );
+
+        final var request = new CreateElementDeploymentRequest(
+                null, // global deployment
+                List.of(elementDefinition),
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
@@ -84,9 +88,11 @@ public class ElementDeploymentResourceIntegrationTest {
         assertNotNull(created);
         assertNotNull(created.id());
         assertNull(created.application());
-        assertEquals(created.apiArtifacts(), request.apiArtifacts());
-        assertEquals(created.spiArtifacts(), request.spiArtifacts());
-        assertEquals(created.elmArtifact(), request.elmArtifact());
+        assertNotNull(created.elements());
+        assertEquals(created.elements().size(), 1);
+        assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
+        assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
+        assertEquals(created.elements().get(0).elmArtifact(), elementDefinition.elmArtifact());
         assertTrue(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.DISABLED);
         assertEquals(created.version(), 0L);
@@ -96,12 +102,16 @@ public class ElementDeploymentResourceIntegrationTest {
 
     @Test(groups = "createDeployment")
     public void testCreateElementDeploymentWithElementArtifacts() {
-        final var request = new CreateElementDeploymentRequest(
-                null,
+        final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api:2.0.0"),
                 List.of("com.example:spi:2.0.0"),
-                null,
                 List.of("com.example:element-impl:2.0.0"),
+                null
+        );
+
+        final var request = new CreateElementDeploymentRequest(
+                null,
+                List.of(elementDefinition),
                 false,
                 List.of(),
                 null,
@@ -119,7 +129,9 @@ public class ElementDeploymentResourceIntegrationTest {
         final var created = response.readEntity(ElementDeployment.class);
         assertNotNull(created);
         assertNotNull(created.id());
-        assertEquals(created.elementArtifacts(), request.elementArtifacts());
+        assertNotNull(created.elements());
+        assertEquals(created.elements().size(), 1);
+        assertEquals(created.elements().get(0).elementArtifacts(), elementDefinition.elementArtifacts());
         assertFalse(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.UNLOADED);
     }
@@ -142,7 +154,9 @@ public class ElementDeploymentResourceIntegrationTest {
         final var deployment = response.readEntity(ElementDeployment.class);
         assertNotNull(deployment);
         assertEquals(deployment.id(), createdDeploymentId);
-        assertEquals(deployment.elmArtifact(), "com.example:elm:1.0.0");
+        assertNotNull(deployment.elements());
+        assertEquals(deployment.elements().size(), 1);
+        assertEquals(deployment.elements().get(0).elmArtifact(), "com.example:elm:1.0.0");
     }
 
     @Test(
@@ -221,11 +235,15 @@ public class ElementDeploymentResourceIntegrationTest {
     public void testUpdateElementDeployment() {
         assertNotNull(createdDeploymentId, "Deployment ID should be set from create test");
 
-        final var request = new UpdateElementDeploymentRequest(
+        final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api-updated:1.1.0"),
                 List.of("com.example:spi-updated:1.1.0"),
-                "com.example:elm-updated:1.1.0",
                 null,
+                "com.example:elm-updated:1.1.0"
+        );
+
+        final var request = new UpdateElementDeploymentRequest(
+                List.of(elementDefinition),
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
@@ -244,9 +262,11 @@ public class ElementDeploymentResourceIntegrationTest {
         final var updated = response.readEntity(ElementDeployment.class);
         assertNotNull(updated);
         assertEquals(updated.id(), createdDeploymentId);
-        assertEquals(updated.apiArtifacts(), request.apiArtifacts());
-        assertEquals(updated.spiArtifacts(), request.spiArtifacts());
-        assertEquals(updated.elmArtifact(), request.elmArtifact());
+        assertNotNull(updated.elements());
+        assertEquals(updated.elements().size(), 1);
+        assertEquals(updated.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
+        assertEquals(updated.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
+        assertEquals(updated.elements().get(0).elmArtifact(), elementDefinition.elmArtifact());
         assertEquals(updated.state(), ElementDeploymentState.ENABLED);
         assertEquals(updated.version(), 1L, "Version should be incremented after update");
     }
@@ -256,11 +276,15 @@ public class ElementDeploymentResourceIntegrationTest {
             dependsOnGroups = "fetchDeployment"
     )
     public void testUpdateElementDeploymentNotFound() {
-        final var request = new UpdateElementDeploymentRequest(
+        final var elementDefinition = new ElementDefinition(
                 List.of(),
                 List.of(),
-                null,
                 List.of("com.example:element:1.0.0"),
+                null
+        );
+
+        final var request = new UpdateElementDeploymentRequest(
+                List.of(elementDefinition),
                 false,
                 List.of(),
                 null,
@@ -326,12 +350,16 @@ public class ElementDeploymentResourceIntegrationTest {
 
     @Test(groups = "accessControl")
     public void testRegularUserCannotCreateDeployment() {
-        final var request = new CreateElementDeploymentRequest(
-                null,
+        final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api:1.0.0"),
                 List.of("com.example:spi:1.0.0"),
-                "com.example:elm:1.0.0",
                 null,
+                "com.example:elm:1.0.0"
+        );
+
+        final var request = new CreateElementDeploymentRequest(
+                null,
+                List.of(elementDefinition),
                 true,
                 List.of(),
                 null,
