@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
+import dev.getelements.elements.sdk.model.system.ElementDefinition;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -74,14 +75,19 @@ public class MongoElementDeploymentDaoTest {
     @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithApplication() {
         final var application = getApplicationTestFactory().createMockApplication(getClass());
-        final var deployment = new ElementDeployment(
-                null,
-                application,
+
+        final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api:1.0"),
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
+                null
+        );
+
+        final var deployment = new ElementDeployment(
                 null,
+                application,
                 null,
+                List.of(elementDefinition),
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
@@ -93,11 +99,12 @@ public class MongoElementDeploymentDaoTest {
         assertNotNull(created.id());
         assertNotNull(created.application());
         assertEquals(created.application().getId(), application.getId());
-        assertEquals(created.apiArtifacts(), deployment.apiArtifacts());
-        assertEquals(created.spiArtifacts(), deployment.spiArtifacts());
-        assertEquals(created.elementArtifacts(), deployment.elementArtifacts());
+        assertNotNull(created.elements());
+        assertEquals(created.elements().size(), 1);
+        assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
+        assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
+        assertEquals(created.elements().get(0).elementArtifacts(), elementDefinition.elementArtifacts());
         assertNull(created.elm());
-        assertNull(created.elmArtifact());
         assertTrue(created.useDefaultRepositories());
         assertEquals(created.repositories().size(), 1);
         assertEquals(created.state(), ElementDeploymentState.ENABLED);
@@ -111,14 +118,18 @@ public class MongoElementDeploymentDaoTest {
 
     @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithoutApplication() {
-        final var deployment = new ElementDeployment(
-                null,
-                null,
+        final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
                 List.of(),
+                "com.example:elm:1.0"
+        );
+
+        final var deployment = new ElementDeployment(
                 null,
-                "com.example:elm:1.0",
+                null,
+                null,
+                List.of(elementDefinition),
                 false,
                 List.of(),
                 null,
@@ -129,9 +140,11 @@ public class MongoElementDeploymentDaoTest {
         final var created = getElementDeploymentDao().createElementDeployment(deployment);
         assertNotNull(created.id());
         assertNull(created.application());
-        assertEquals(created.apiArtifacts(), deployment.apiArtifacts());
-        assertEquals(created.spiArtifacts(), deployment.spiArtifacts());
-        assertEquals(created.elmArtifact(), "com.example:elm:1.0");
+        assertNotNull(created.elements());
+        assertEquals(created.elements().size(), 1);
+        assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
+        assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
+        assertEquals(created.elements().get(0).elmArtifact(), "com.example:elm:1.0");
         assertFalse(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.UNLOADED);
 
@@ -152,7 +165,7 @@ public class MongoElementDeploymentDaoTest {
         assertNotNull(fetched);
         assertEquals(fetched.id(), deployment.id());
         assertEquals(fetched.state(), deployment.state());
-        assertEquals(fetched.apiArtifacts(), deployment.apiArtifacts());
+        assertEquals(fetched.elements(), deployment.elements());
     }
 
     @Test(
@@ -230,14 +243,22 @@ public class MongoElementDeploymentDaoTest {
             dataProvider = "allDeployments"
     )
     public void testUpdateStateAndArtifacts(final ElementDeployment deployment) {
+        final var updatedDefinition = new ElementDefinition(
+                List.of("com.example:api-updated:2.0"),
+                List.of("com.example:spi-updated:2.0"),
+                deployment.elements() != null && !deployment.elements().isEmpty()
+                        ? deployment.elements().get(0).elementArtifacts()
+                        : List.of(),
+                deployment.elements() != null && !deployment.elements().isEmpty()
+                        ? deployment.elements().get(0).elmArtifact()
+                        : null
+        );
+
         final var updated = new ElementDeployment(
                 deployment.id(),
                 deployment.application(),
-                List.of("com.example:api-updated:2.0"),
-                List.of("com.example:spi-updated:2.0"),
-                deployment.elementArtifacts(),
                 deployment.elm(),
-                deployment.elmArtifact(),
+                List.of(updatedDefinition),
                 deployment.useDefaultRepositories(),
                 deployment.repositories(),
                 deployment.attributes(),
@@ -247,8 +268,10 @@ public class MongoElementDeploymentDaoTest {
 
         final var result = getElementDeploymentDao().updateElementDeployment(updated);
         assertEquals(result.id(), deployment.id());
-        assertEquals(result.apiArtifacts(), List.of("com.example:api-updated:2.0"));
-        assertEquals(result.spiArtifacts(), List.of("com.example:spi-updated:2.0"));
+        assertNotNull(result.elements());
+        assertEquals(result.elements().size(), 1);
+        assertEquals(result.elements().get(0).apiArtifacts(), List.of("com.example:api-updated:2.0"));
+        assertEquals(result.elements().get(0).spiArtifacts(), List.of("com.example:spi-updated:2.0"));
         assertEquals(result.state(), ElementDeploymentState.DISABLED);
         assertEquals(result.version(), deployment.version() + 1, "Version should be incremented on update");
 
