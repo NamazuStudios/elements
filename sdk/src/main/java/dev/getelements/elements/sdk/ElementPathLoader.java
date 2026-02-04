@@ -2,11 +2,15 @@ package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
 
+import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
+import static java.util.List.*;
 
 /**
  * Used to load {@link Element} instances from local paths on disk. As a single Element may span multiple sources for
@@ -139,6 +143,39 @@ public interface ElementPathLoader {
      * @return a {@link Stream} of {@link Element} instances
      */
     Stream<Element> load(MutableElementRegistry registry, Path path, ClassLoader baseClassLoader);
+
+    /**
+     * Builds a classloader containing API jars from a collection of paths. Each path may be:
+     * <ul>
+     *     <li>An ELM file (zip) - scans for {@code api/} directory inside</li>
+     *     <li>A directory - scans for {@code api/} subdirectory</li>
+     * </ul>
+     * All API jars found are combined into a single URLClassLoader with no parent (bootstrap).
+     * This classloader should be passed as the baseClassLoader when loading elements to ensure
+     * all elements share the same API classpath.
+     * <p>
+     * The returned URLClassLoader must be closed when no longer needed to release any resources
+     * (such as open zip file systems for ELM files).
+     *
+     * @param paths collection of paths to scan for API jars
+     * @return an Optional containing a URLClassLoader with all API jars, or empty if no APIs found
+     * @since 3.7
+     */
+    Optional<URLClassLoader> buildApiClassLoader(Collection<Path> paths);
+
+    /**
+     * Builds a classloader containing API jars from one or more paths.
+     * Convenience method that delegates to {@link #buildApiClassLoader(java.util.Collection)}.
+     * <p>
+     * The returned URLClassLoader must be closed when no longer needed.
+     *
+     * @param paths one or more paths to scan for API jars
+     * @return an Optional containing a URLClassLoader with all API jars, or empty if no APIs found
+     * @since 3.7
+     */
+    default Optional<URLClassLoader> buildApiClassLoader(final Path... paths) {
+        return buildApiClassLoader(of(paths));
+    }
 
     /**
      * Creates a new instance of the {@link ElementPathLoader} using the system default SPI.

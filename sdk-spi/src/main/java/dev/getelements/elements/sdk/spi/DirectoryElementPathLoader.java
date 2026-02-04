@@ -15,10 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.*;
@@ -78,6 +75,56 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     }
 
     @Override
+    public Optional<URLClassLoader> buildApiClassLoader(final Collection<Path> paths) {
+        final var apiClasspath = new ArrayList<URL>();
+        final var fileSystems = new ArrayList<FileSystem>();
+
+        for (final var path : paths) {
+            try {
+                // Try to open as a FileSystem (for ELM/zip files)
+                final var fs = FileSystems.newFileSystem(path);
+                fileSystems.add(fs); // Keep it open
+                final var root = fs.getPath("/");
+                collectApiJars(root, apiClasspath);
+            } catch (ProviderNotFoundException ex) {
+                // Not a zip/ELM file, try as directory
+                if (Files.isDirectory(path)) {
+                    collectApiJars(path, apiClasspath);
+                } else {
+                    logger.debug("{} is not a directory or ELM file. Skipping API scan.", path);
+                }
+            } catch (final NoSuchFileException ex) {
+                logger.debug("{} does not exist. Skipping API scan.", path);
+            } catch (final IOException ex) {
+                // Close any FileSystems we've opened so far
+                fileSystems.forEach(fs -> {
+                    try {
+                        fs.close();
+                    } catch (IOException e) {
+                        logger.error("Error closing FileSystem during cleanup", e);
+                    }
+                });
+                throw new SdkException(ex);
+            }
+        }
+
+        if (apiClasspath.isEmpty()) {
+            // No APIs found, close any FileSystems we opened
+            fileSystems.forEach(fs -> {
+                try {
+                    fs.close();
+                } catch (IOException e) {
+                    logger.error("Error closing FileSystem", e);
+                }
+            });
+            return Optional.empty();
+        }
+
+        // Return ApiClassLoader which will close the FileSystems when it's closed
+        return Optional.of(new ApiClassLoader(apiClasspath.toArray(URL[]::new), fileSystems));
+    }
+
+    @Override
     public Stream<Element> load(
             final MutableElementRegistry registry,
             final Path path,
@@ -105,13 +152,43 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path path,
             final ClassLoader baseClassLoader) {
 
-        final var sharedClassLoader = SharedClasspathRecord
-                .from(path)
-                .build()
-                .newClassLoader();
+        // baseClassLoader is expected to already contain the API jars
+        // We pass it as the sharedClassLoader since APIs are now pre-loaded
+        return doLoadWithSharedClasspath(registry, path, baseClassLoader, baseClassLoader);
 
-        return doLoadWithSharedClasspath(registry, path, baseClassLoader, sharedClassLoader);
+    }
 
+    private void collectApiJars(final Path path, final List<URL> apiClasspath) {
+        collectApiJarsRecursive(path, apiClasspath);
+    }
+
+    private void collectApiJarsRecursive(final Path path, final List<URL> apiClasspath) {
+        if (isLibDirectory(path) || isClasspathDirectory(path) || isAttributesFiles(path)) {
+            // Skip lib, classpath, and attributes files
+            return;
+        } else if (isPathInHiddenHierarchy(path)) {
+            logger.debug("Skipping hidden path {} while collecting API jars.", path);
+        } else if (isApiDirectory(path)) {
+            logger.info("Found API directory: {}", path);
+            try (final var ds = newDirectoryStream(path)) {
+                for (final var subPath : ds) {
+                    if (isJarFile(subPath)) {
+                        apiClasspath.add(toUrl(subPath));
+                        logger.debug("Added API jar: {}", subPath);
+                    }
+                }
+            } catch (IOException e) {
+                throw new SdkException(e);
+            }
+        } else if (isDirectory(path)) {
+            try (final var ds = newDirectoryStream(path)) {
+                for (final var subPath : ds) {
+                    collectApiJarsRecursive(subPath, apiClasspath);
+                }
+            } catch (IOException e) {
+                throw new SdkException(e);
+            }
+        }
     }
 
     private Stream<Element> doLoadWithSharedClasspath(
