@@ -20,20 +20,11 @@ public class MongoElementDeployment {
     @Reference
     private MongoApplication application;
 
-    @Property
-    private List<String> apiArtifacts;
-
-    @Property
-    private List<String> spiArtifacts;
-
-    @Property
-    private List<String> elementArtifacts;
-
     @Reference
     private MongoLargeObject elm;
 
     @Property
-    private String elmArtifact;
+    private List<MongoElementDefinition> elements;
 
     @Property
     private boolean useDefaultRepositories;
@@ -66,30 +57,6 @@ public class MongoElementDeployment {
         this.application = application;
     }
 
-    public List<String> getApiArtifacts() {
-        return apiArtifacts;
-    }
-
-    public void setApiArtifacts(List<String> apiArtifacts) {
-        this.apiArtifacts = apiArtifacts;
-    }
-
-    public List<String> getSpiArtifacts() {
-        return spiArtifacts;
-    }
-
-    public void setSpiArtifacts(List<String> spiArtifacts) {
-        this.spiArtifacts = spiArtifacts;
-    }
-
-    public List<String> getElementArtifacts() {
-        return elementArtifacts;
-    }
-
-    public void setElementArtifacts(List<String> elementArtifacts) {
-        this.elementArtifacts = elementArtifacts;
-    }
-
     public MongoLargeObject getElm() {
         return elm;
     }
@@ -98,12 +65,12 @@ public class MongoElementDeployment {
         this.elm = elm;
     }
 
-    public String getElmArtifact() {
-        return elmArtifact;
+    public List<MongoElementDefinition> getElements() {
+        return elements;
     }
 
-    public void setElmArtifact(String elmArtifact) {
-        this.elmArtifact = elmArtifact;
+    public void setElements(List<MongoElementDefinition> elements) {
+        this.elements = elements;
     }
 
     public boolean isUseDefaultRepositories() {

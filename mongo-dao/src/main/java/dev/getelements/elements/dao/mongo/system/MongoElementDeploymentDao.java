@@ -112,34 +112,16 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
 
         final var builder = new UpdateBuilder();
 
-        if (mongoElementDeployment.getApiArtifacts() != null) {
-            builder.with(set("apiArtifacts", mongoElementDeployment.getApiArtifacts()));
-        } else {
-            builder.with(unset("apiArtifacts"));
-        }
-
-        if (mongoElementDeployment.getSpiArtifacts() != null) {
-            builder.with(set("spiArtifacts", mongoElementDeployment.getSpiArtifacts()));
-        } else {
-            builder.with(unset("spiArtifacts"));
-        }
-
-        if (mongoElementDeployment.getElementArtifacts() != null) {
-            builder.with(set("elementArtifacts", mongoElementDeployment.getElementArtifacts()));
-        } else {
-            builder.with(unset("elementArtifacts"));
-        }
-
         if (mongoElementDeployment.getElm() != null) {
             builder.with(set("elm", mongoElementDeployment.getElm()));
         } else {
             builder.with(unset("elm"));
         }
 
-        if (mongoElementDeployment.getElmArtifact() != null) {
-            builder.with(set("elmArtifact", mongoElementDeployment.getElmArtifact()));
+        if (mongoElementDeployment.getElements() != null) {
+            builder.with(set("elements", mongoElementDeployment.getElements()));
         } else {
-            builder.with(unset("elmArtifact"));
+            builder.with(unset("elements"));
         }
 
         builder.with(set("useDefaultRepositories", mongoElementDeployment.isUseDefaultRepositories()));
