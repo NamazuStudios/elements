@@ -430,7 +430,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             logs.add("Downloading ELM file from LargeObject: " + elmId);
 
             // Download ELM to temp file
-            final var tempPath = temporaryFiles.createTempFile(".elm");
+            final var tempPath = temporaryFiles.createTempFile(deployment.id(), ".elm");
             tempFiles.add(tempPath);
 
             try (final InputStream in = getLargeObjectBucket().readObject(elmId);
@@ -492,6 +492,13 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 // Load elements from the ELM
                 final var elements = pathLoader.load(registry, artifactPath, apiClassLoader).toList();
                 logs.add("Loaded " + elements.size() + " element(s) from ELM artifact");
+
+                // Log each element's name
+                for (final var element : elements) {
+                    final var elementName = element.getElementRecord().definition().name();
+                    logs.add("  - Element: " + elementName);
+                }
+
                 return elements;
 
             } else {
@@ -535,7 +542,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
                 logs.add("Registering Element with registry");
                 final var element = registry.register(loader);
+                final var elementName = element.getElementRecord().definition().name();
                 logs.add("Successfully loaded 1 element from Maven artifacts");
+                logs.add("  - Element: " + elementName);
 
                 return List.of(element);
             }
