@@ -446,8 +446,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             // Build API classloader from the ELM
             logs.add("Building API classloader from ELM");
             final var systemClassLoader = getClass().getClassLoader();
-            final var apiClassLoader = pathLoader.buildApiClassLoader(tempPath)
-                    .orElse(new java.net.URLClassLoader(new java.net.URL[0], systemClassLoader));
+            final var apiClassLoader = pathLoader.buildApiClassLoader(null, tempPath);
 
             logs.add("Loading Elements from ELM file");
             final var elements = pathLoader.load(registry, tempPath, apiClassLoader).toList();
@@ -486,8 +485,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
                 // Build API classloader from this ELM
                 final var pathLoader = ElementPathLoader.newDefaultInstance();
-                final var apiClassLoader = pathLoader.buildApiClassLoader(artifactPath)
-                        .orElse(new java.net.URLClassLoader(new java.net.URL[0], systemClassLoader));
+                final var apiClassLoader = pathLoader.buildApiClassLoader(null, artifactPath);
 
                 // Load elements from the ELM
                 final var elements = pathLoader.load(registry, artifactPath, apiClassLoader).toList();

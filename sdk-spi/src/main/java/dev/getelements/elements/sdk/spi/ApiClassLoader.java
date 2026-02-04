@@ -21,13 +21,14 @@ public class ApiClassLoader extends URLClassLoader {
     private final List<FileSystem> fileSystems;
 
     /**
-     * Creates a new ApiClassLoader with the specified URLs and FileSystems.
+     * Creates a new ApiClassLoader with the specified URLs, FileSystems, and parent ClassLoader.
      *
      * @param urls the URLs from which to load classes and resources
      * @param fileSystems the FileSystems to close when this classloader is closed
+     * @param parent the parent ClassLoader, or null to use the bootstrap classloader
      */
-    public ApiClassLoader(final URL[] urls, final List<FileSystem> fileSystems) {
-        super(urls, null); // null parent = bootstrap classloader
+    public ApiClassLoader(final URL[] urls, final List<FileSystem> fileSystems, final ClassLoader parent) {
+        super(urls, parent);
         this.fileSystems = fileSystems != null ? List.copyOf(fileSystems) : List.of();
     }
 

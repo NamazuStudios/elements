@@ -2,14 +2,11 @@ package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
 
-import java.io.IOException;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
@@ -133,26 +130,27 @@ public interface ElementPathLoader {
      */
     default Stream<Element> load(final MutableElementRegistry registry, final Path path) {
 
-        final var api = buildApiClassLoader(path).orElseGet(() -> new URLClassLoader(new URL[0],null));
-        final var elements = load(registry, path, api).toList();
+        final var apiClassLoader = buildApiClassLoader(null, path);
+        final var elements = load(registry, path, apiClassLoader).toList();
 
-        // If we created an API classloader, attach close handlers to all elements for reference counting
-        final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
+        // Attach close handlers to all elements for reference counting
+        if (!elements.isEmpty()) {
+            final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
 
-        elements.forEach(element -> element.onClose(el -> {
-            if (counter.decrementAndGet() == 0) {
-                try {
-                    api.close();
-                } catch (java.io.IOException e) {
-                    throw new java.io.UncheckedIOException("Error closing API classloader for " + path, e);
+            elements.forEach(element -> element.onClose(el -> {
+                if (counter.decrementAndGet() == 0) {
+                    try {
+                        apiClassLoader.close();
+                    } catch (java.io.IOException e) {
+                        throw new java.io.UncheckedIOException("Error closing API classloader for " + path, e);
+                    }
                 }
-            }
-        }));
-
-        if (elements.isEmpty()) {
+            }));
+        } else {
+            // No elements loaded, close the API classloader immediately
             try {
-                api.close();
-            } catch (IOException ex) {
+                apiClassLoader.close();
+            } catch (java.io.IOException ex) {
                 throw new SdkException(ex);
             }
         }
@@ -177,32 +175,56 @@ public interface ElementPathLoader {
      *     <li>An ELM file (zip) - scans for {@code api/} directory inside</li>
      *     <li>A directory - scans for {@code api/} subdirectory</li>
      * </ul>
-     * All API jars found are combined into a single URLClassLoader with no parent (bootstrap).
-     * This classloader should be passed as the baseClassLoader when loading elements to ensure
-     * all elements share the same API classpath.
+     * All API jars found are combined into a single URLClassLoader with the specified parent.
+     * If no API jars are found, returns a URLClassLoader with an empty URL array.
      * <p>
      * The returned URLClassLoader must be closed when no longer needed to release any resources
      * (such as open zip file systems for ELM files).
      *
+     * @param parent the parent ClassLoader, or null to use the bootstrap classloader
      * @param paths collection of paths to scan for API jars
-     * @return an Optional containing a URLClassLoader with all API jars, or empty if no APIs found
+     * @return a URLClassLoader with all API jars (empty URL array if no APIs found)
      * @since 3.7
      */
-    Optional<URLClassLoader> buildApiClassLoader(Collection<Path> paths);
+    URLClassLoader buildApiClassLoader(ClassLoader parent, Collection<Path> paths);
 
     /**
      * Builds a classloader containing API jars from one or more paths.
-     * Convenience method that delegates to {@link #buildApiClassLoader(java.util.Collection)}.
+     * Convenience method that delegates to {@link #buildApiClassLoader(ClassLoader, Collection)}.
      * <p>
      * The returned URLClassLoader must be closed when no longer needed.
      *
+     * @param parent the parent ClassLoader, or null to use the bootstrap classloader
      * @param paths one or more paths to scan for API jars
-     * @return an Optional containing a URLClassLoader with all API jars, or empty if no APIs found
+     * @return a URLClassLoader with all API jars (empty URL array if no APIs found)
      * @since 3.7
      */
-    default Optional<URLClassLoader> buildApiClassLoader(final Path... paths) {
-        return buildApiClassLoader(of(paths));
+    default URLClassLoader buildApiClassLoader(final ClassLoader parent, final Path... paths) {
+        return buildApiClassLoader(parent, of(paths));
     }
+
+    /**
+     * Finds the SPI (service provider implementation) for a path to a single Element. This is intended to side-load
+     * the SPIs separate from the Element itself just in time for loading.
+     *
+     * <p>
+     * The {@link Path} specified must be one of the following:
+     * <ul>
+     *     <li>The root directory of the Element itself. In this case, it scans for all jars in path/spi.</li>
+     *     <li>The root directory of the SPI, In this case, it scans for all jars in the path itself.</li>
+     * </ul>
+     *
+     * <p>
+     * All SPI jars found are combined into a single URLClassLoader with the specified parent.
+     *
+     * <p>
+     *
+     * @param parent the parent ClassLoader, or null to use the bootstrap classloader
+     * @param path collection of paths to scan for SPI jars
+     * @return a URLClassLoader with all SPI jars, or an empty {@link Optional} if no SPI can be found.
+     * @since 3.7
+     */
+    Optional<ClassLoader> findSpiClassLoader(ClassLoader parent, Path path);
 
     /**
      * Creates a new instance of the {@link ElementPathLoader} using the system default SPI.
