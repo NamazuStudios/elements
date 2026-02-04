@@ -122,6 +122,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         // Return ApiClassLoader (handles FileSystem cleanup) even if classpath is empty
         return new ApiClassLoader(classpath.toArray(URL[]::new), fileSystems, parent);
+
     }
 
     /**
@@ -200,13 +201,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     public Stream<Element> load(
             final MutableElementRegistry registry,
             final Path path,
+            final ClassLoader parent,
             final ClassLoader baseClassLoader) {
         try {
 
             // Try to open as a FileSystem (for ELM/zip files)
             final var fs = FileSystems.newFileSystem(path);
             final var root = fs.getPath("/");
-            final var elements = doLoad(registry, root, baseClassLoader).toList();
+            final var elements = doLoad(registry, root, parent, baseClassLoader).toList();
 
             if (elements.isEmpty()) {
                 // No elements loaded, close the FileSystem immediately
@@ -237,7 +239,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         } catch (ProviderNotFoundException ex) {
             // Not a zip/ELM file, try as directory
             if (Files.isDirectory(path)) {
-                return doLoad(registry, path, baseClassLoader);
+                return doLoad(registry, path, parent, baseClassLoader);
             } else {
                 logger.warn("{} not a directory. Skipping.", path);
                 return Stream.empty();
@@ -254,6 +256,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     private Stream<Element> doLoad(
             final MutableElementRegistry registry,
             final Path path,
+            final ClassLoader parent,
             final ClassLoader baseClassLoader) {
 
         final var elements = new ArrayList<Element>();
@@ -264,8 +267,21 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 if (isDirectory(subpath)) {
                     try (final var elementDirectory = newDirectoryStream(subpath)) {
 
-                        final var elementClassLoader = findSpiClassLoader(baseClassLoader, subpath).orElse(baseClassLoader);
-                        final var record = ElementPathRecord.from(registry, elementClassLoader, subpath, elementDirectory);
+                        // If the Element provides its own SPI, we will include it. This is not required and
+                        // in that case we will assume it's on the parent provided and use the parent instead.
+                        final var elementClassLoader = findSpiClassLoader(parent, subpath).orElse(parent);
+
+                        // Construct the record with everything needed to make the new Element
+                        final var record = ElementPathRecord.from(
+                                registry,
+                                elementClassLoader,
+                                baseClassLoader,
+                                subpath,
+                                elementDirectory
+                        );
+
+                        // Check that the Element is valid and can be loaded. If conditions are ment, then
+                        // load the Element
 
                         if (record.isValidElement()) {
                             elements.add(record.loadElement());
@@ -292,10 +308,12 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             Path libs,
             Path classpath,
             Path attributesFile,
+            ClassLoader elementParent,
             ClassLoader baseClassLoader,
             MutableElementRegistry registry) {
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
+                                             final ClassLoader elementParent,
                                              final ClassLoader baseClassLoader,
                                              final Path elementPath,
                                              final DirectoryStream<Path> directory) {
@@ -328,6 +346,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     libs,
                     classpath,
                     attributesFile,
+                    elementParent,
                     baseClassLoader,
                     registry
             );
@@ -401,7 +420,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             // Build the classloader hierarchy: API -> SPI -> Implementation.
             // Create implementation classloader with SPI as parent
 
-            final var classLoaderName = String.format("%s[%s]",
+            final var classLoaderName = "%s[%s]".formatted(
                     ELEMENT_PATH_ENV,
                     elementPath().getFileName()
             );
@@ -417,13 +436,10 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     .get()
                     .getIsolatedLoaderWithParent(
                             attributes,
-                            baseClassLoader,
+                            getClass().getClassLoader(),
                             cl -> new URLClassLoader(classLoaderName, implUrls, cl),
-                            null,
-                            edr -> registry
-                                    .stream()
-                                    .map(element -> element.getElementRecord().definition().name())
-                                    .noneMatch(name -> false)
+                            elementParent(),
+                            el -> true
                     );
 
         }

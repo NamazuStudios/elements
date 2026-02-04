@@ -9,6 +9,10 @@ import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * A URLClassLoader that manages the lifecycle of FileSystem instances opened for ELM files.
@@ -28,8 +32,16 @@ public class ApiClassLoader extends URLClassLoader {
      * @param parent the parent ClassLoader, or null to use the bootstrap classloader
      */
     public ApiClassLoader(final URL[] urls, final List<FileSystem> fileSystems, final ClassLoader parent) {
-        super(urls, parent);
+
+        super("API=[%s]".formatted(
+                Stream.concat(
+                        Stream.of(urls).map(URL::toString),
+                        fileSystems.stream().map("fs:%s"::formatted)
+                ).collect(joining(","))
+        ), urls, parent);
+
         this.fileSystems = fileSystems != null ? List.copyOf(fileSystems) : List.of();
+
     }
 
     /**

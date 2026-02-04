@@ -1,12 +1,13 @@
 package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.ServiceLoader;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
@@ -122,52 +123,153 @@ public interface ElementPathLoader {
 
     /**
      * Loads all {@link Element}s from the supplied {@link Path} into the supplied {@link ElementRegistry}.
-     * Builds an API classloader from the path and manages its lifecycle with reference counting.
+     * Creates {@link ElementLoader} instances for each Element discovered in the path. Builds an API classloader
+     * from the path and manages its lifecycle with reference counting. The default implementation takes a copy
+     * of the returned {@link Element}s and returns that stream.
+     *
+     * <p>
+     * The classloader configuration uses the bootstrap classloader as the Elements' parent classloader
+     * (via the API classloader built from the path), and this class's classloader as the base classloader
+     * for selective type borrowing.
+     * </p>
      *
      * @param registry the registry to use for loading the {@link Element} instances
      * @param path the {@link Path}
      * @return a {@link Stream} of {@link Element} instances
+     * @see ElementLoader
      */
     default Stream<Element> load(final MutableElementRegistry registry, final Path path) {
+        return load(registry, Set.of(path));
+    }
 
-        final var apiClassLoader = buildApiClassLoader(null, path);
-        final var elements = load(registry, path, apiClassLoader).toList();
+    /**
+     * Loads all {@link Element}s from the supplied collection of {@link Path}s into the supplied {@link ElementRegistry}.
+     * Creates {@link ElementLoader} instances for each Element discovered across all paths. Builds a single shared
+     * API classloader from all paths and manages its lifecycle with reference counting. Elements from all paths
+     * share the same API classloader, enabling them to communicate through common APIs. The implementation
+     * iterates through each path, loading elements and collecting them into a single stream.
+     *
+     * <p>
+     * The classloader configuration uses the bootstrap classloader as the Elements' parent classloader
+     * (via the shared API classloader built from all paths), and this class's classloader as the base classloader
+     * for selective type borrowing.
+     * </p>
+     *
+     * @param registry the registry to use for loading the {@link Element} instances
+     * @param paths the collection of {@link Path}s to scan for Elements
+     * @return a {@link Stream} of {@link Element} instances from all paths
+     * @see ElementLoader
+     */
+    default Stream<Element> load(final MutableElementRegistry registry, final Collection<Path> paths) {
 
-        // Attach close handlers to all elements for reference counting
-        if (!elements.isEmpty()) {
-            final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
+        final var elements = new ArrayList<Element>();
+        final var apiClassLoader = buildApiClassLoader(null, paths);
 
-            elements.forEach(element -> element.onClose(el -> {
-                if (counter.decrementAndGet() == 0) {
-                    try {
-                        apiClassLoader.close();
-                    } catch (java.io.IOException e) {
-                        throw new java.io.UncheckedIOException("Error closing API classloader for " + path, e);
+        try {
+
+            // Build the list of all Elements we're trying to load
+            for (final var path : paths) {
+                final var fromPath = load(registry, path, apiClassLoader).toList();
+                elements.addAll(fromPath);
+            }
+
+            // Attach close handlers to all elements for reference counting This ensures that any FileSystems
+            // referenced by the underlying API Classpath are closed when all Elements no longer need them.
+            // These are likely open file descriptors to the backing ELM files to the element's implementation.
+
+            if (!elements.isEmpty()) {
+
+                final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
+
+                elements.forEach(element -> element.onClose(el -> {
+                    if (counter.decrementAndGet() == 0) {
+                        try {
+                            apiClassLoader.close();
+                        } catch (IOException ex) {
+                            final var logger = LoggerFactory.getLogger(getClass());
+                            logger.error("Caught exception closing API Classloader.", ex);
+                            throw new SdkException("Error closing API classloader.", ex);
+                        }
                     }
+                }));
+
+            } else {
+                // No elements loaded, close the API classloader immediately
+                try {
+                    apiClassLoader.close();
+                } catch (IOException ex) {
+                    throw new SdkException(ex);
                 }
-            }));
-        } else {
-            // No elements loaded, close the API classloader immediately
+            }
+
+        } catch (Exception ex) {
+
+            final var logger = LoggerFactory.getLogger(getClass());
+            logger.error("Caught exception loading Element.", ex);
+
             try {
                 apiClassLoader.close();
-            } catch (java.io.IOException ex) {
-                throw new SdkException(ex);
+            } catch (IOException e) {
+                logger.error("Caught exception closing api classloader.", ex);
+                ex.addSuppressed(ex);
             }
+
+            for (var element : elements) {
+                try {
+                    element.close();
+                } catch (Exception e) {
+                    logger.error("Caught exception closing previously loaded Element.", ex);
+                    ex.addSuppressed(e);
+                }
+            }
+
+            throw ex;
+
         }
 
         return elements.stream();
+
 
     }
 
     /**
      * Loads all {@link Element}s from the supplied {@link Path} into the supplied {@link ElementRegistry}.
+     * Creates {@link ElementLoader} instances for each Element discovered in the path.
+     *
+     * <p>
+     * The classloader configuration uses the explicitly specified parent classloader as the Elements'
+     * parent classloader, and this class's classloader as the base classloader for selective type borrowing.
+     * </p>
      *
      * @param registry the registry to use for loading the {@link Element} instances
      * @param path the {@link Path}
-     * @param baseClassLoader the base {@link ClassLoader} used to load the {@link Element}
+     * @param parent the parent {@link ClassLoader} that forms the delegation parent of the implementation classloader
      * @return a {@link Stream} of {@link Element} instances
+     * @see ElementLoader
      */
-    Stream<Element> load(MutableElementRegistry registry, Path path, ClassLoader baseClassLoader);
+    default Stream<Element> load(final MutableElementRegistry registry, final Path path, final ClassLoader parent) {
+        return load(registry, path, parent, getClass().getClassLoader());
+    }
+
+    /**
+     * Loads all {@link Element}s from the supplied {@link Path} into the supplied {@link ElementRegistry}.
+     * Creates {@link ElementLoader} instances for each Element discovered in the path.
+     *
+     * <p>
+     * The classloader configuration uses the explicitly specified parent classloader as the Elements'
+     * parent classloader (forming the delegation parent of the implementation classloader), and the
+     * explicitly specified base classloader for selective type borrowing.
+     * </p>
+     *
+     * @param registry the registry to use for loading the {@link Element} instances
+     * @param path the {@link Path}
+     * @param parent the parent {@link ClassLoader} that forms the delegation parent of the implementation classloader
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @return a {@link Stream} of {@link Element} instances
+     * @since 3.7
+     * @see ElementLoader
+     */
+    Stream<Element> load(MutableElementRegistry registry, Path path, ClassLoader parent, ClassLoader baseClassLoader);
 
     /**
      * Builds a classloader containing API jars from a collection of paths. Each path may be:
