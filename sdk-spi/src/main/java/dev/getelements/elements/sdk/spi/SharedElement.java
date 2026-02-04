@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.util.Publisher;
 import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toUnmodifiableSet;
@@ -21,6 +22,8 @@ public class SharedElement implements Element {
     private final ElementRegistry elementRegistry;
 
     private final ElementEventDispatcher elementEventDispatcher;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     private final Publisher<Element> onClosePublisher = new ConcurrentDequePublisher<>(SharedElement.class);
 
@@ -89,9 +92,11 @@ public class SharedElement implements Element {
 
     @Override
     public void close() {
-        onClosePublisher.publish(null);
-        onClosePublisher.clear();
-        elementEventDispatcher.close();
+        if (closed.compareAndSet(false, true)) {
+            onClosePublisher.publish(null);
+            onClosePublisher.clear();
+            elementEventDispatcher.close();
+        }
     }
 
 }

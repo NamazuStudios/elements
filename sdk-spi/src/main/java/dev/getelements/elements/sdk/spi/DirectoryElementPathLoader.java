@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.*;
-import static java.util.stream.Collectors.joining;
 
 public class DirectoryElementPathLoader implements ElementPathLoader {
 
@@ -191,9 +190,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         final var elements = new ArrayList<Element>();
 
         try (final var directory = newDirectoryStream(path)) {
-            // Scan for element directories (subdirectories that contain element configuration)
+
             for (final var subpath : directory) {
-                if (isDirectory(subpath) && !isApiDirectory(subpath) && !isPathInHiddenHierarchy(subpath)) {
+                if (isDirectory(subpath)) {
                     try (final var elementDirectory = newDirectoryStream(subpath)) {
                         final var record = ElementPathRecord.from(registry, baseClassLoader, subpath, elementDirectory);
                         if (record.isValidElement()) {
@@ -202,8 +201,11 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     }
                 }
             }
+
             return elements.stream();
+
         } catch (IOException ex) {
+            elements.forEach(Element::close);
             throw new SdkException(ex);
         } catch (Exception ex) {
             elements.forEach(Element::close);
@@ -262,7 +264,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             spi = libs = classpath = attributesFile = null;
 
             for (var subpath : directory) {
-                if (isSpiDirectory(subpath)) {
+                if (isApiDirectory(subpath)) {
+                    logger.debug("Skipping API directory {} while collecting path elements.", subpath);
+                } else if (isSpiDirectory(subpath)) {
                     spi = subpath;
                 } else if (isLibDirectory(subpath)) {
                     libs = subpath;
@@ -274,6 +278,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     logger.debug("Skipping hidden path: {}.", subpath);
                 } else if (!isDirectory(subpath)) {
                     logger.warn("Unexpected file in Element definition: {}, ignoring.", subpath);
+                } else {
+                    logger.debug("Ignoring element path: {}.", subpath);
                 }
             }
 

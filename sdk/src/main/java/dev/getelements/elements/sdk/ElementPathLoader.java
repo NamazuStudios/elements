@@ -2,11 +2,14 @@ package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
 
+import java.io.IOException;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
@@ -117,19 +120,45 @@ public interface ElementPathLoader {
      */
     default Stream<Element> load(final MutableElementRegistry registry) {
         final var path = Path.of(getenv(ELEMENT_PATH_ENV));
-        final var systemClassLoader = getClass().getClassLoader();
-        return load(registry, path, systemClassLoader);
+        return load(registry, path);
     }
 
     /**
      * Loads all {@link Element}s from the supplied {@link Path} into the supplied {@link ElementRegistry}.
+     * Builds an API classloader from the path and manages its lifecycle with reference counting.
      *
      * @param registry the registry to use for loading the {@link Element} instances
      * @param path the {@link Path}
      * @return a {@link Stream} of {@link Element} instances
      */
     default Stream<Element> load(final MutableElementRegistry registry, final Path path) {
-        return load(registry, path, getClass().getClassLoader());
+
+        final var api = buildApiClassLoader(path).orElseGet(() -> new URLClassLoader(new URL[0],null));
+        final var elements = load(registry, path, api).toList();
+
+        // If we created an API classloader, attach close handlers to all elements for reference counting
+        final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
+
+        elements.forEach(element -> element.onClose(el -> {
+            if (counter.decrementAndGet() == 0) {
+                try {
+                    api.close();
+                } catch (java.io.IOException e) {
+                    throw new java.io.UncheckedIOException("Error closing API classloader for " + path, e);
+                }
+            }
+        }));
+
+        if (elements.isEmpty()) {
+            try {
+                api.close();
+            } catch (IOException ex) {
+                throw new SdkException(ex);
+            }
+        }
+
+        return elements.stream();
+
     }
 
     /**

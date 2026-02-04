@@ -12,6 +12,7 @@ import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class GuiceSdkElement implements Element {
@@ -23,6 +24,8 @@ public class GuiceSdkElement implements Element {
     private final ElementRegistry elementRegistry;
 
     private final ElementEventDispatcher elementEventDispatcher;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     private final Publisher<Event> elementEventPublisher = new ConcurrentDequePublisher<>(GuiceSdkElement.class);
 
@@ -80,21 +83,21 @@ public class GuiceSdkElement implements Element {
 
     @Override
     public void close() {
+        if (closed.compareAndSet(false, true)) {
+            final var cl = getElementRecord().classLoader();
 
-        final var cl = getElementRecord().classLoader();
-
-        if (cl instanceof AutoCloseable) {
-            try {
-                ((AutoCloseable) cl).close();
-            } catch (Exception ex) {
-                throw new SdkException(ex);
+            if (cl instanceof AutoCloseable) {
+                try {
+                    ((AutoCloseable) cl).close();
+                } catch (Exception ex) {
+                    throw new SdkException(ex);
+                }
             }
+
+            onClosePublisher.publish(this);
+            onClosePublisher.clear();
+            elementEventDispatcher.close();
         }
-
-        onClosePublisher.publish(this);
-        onClosePublisher.clear();
-        elementEventDispatcher.close();
-
     }
 
 }
