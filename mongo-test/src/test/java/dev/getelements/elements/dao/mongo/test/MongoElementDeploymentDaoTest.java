@@ -121,7 +121,7 @@ public class MongoElementDeploymentDaoTest {
         final var elementDefinition = new ElementDefinition(
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
-                List.of(),
+                null,
                 "com.example:elm:1.0"
         );
 
