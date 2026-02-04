@@ -1,7 +1,6 @@
 package dev.getelements.elements.service.guice;
 
 import com.google.inject.AbstractModule;
-import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.service.advancement.AdvancementService;
 import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
@@ -25,6 +24,7 @@ import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
+import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.sdk.service.application.*;
@@ -301,9 +301,9 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardNotificationService.class);
 
-        bind(ApplicationStatusService.class)
+        bind(ElementStatusService.class)
                 .annotatedWith(named(UNSCOPED))
-                .to(SuperUserApplicationStatusService.class);
+                .to(SuperUserElementStatusService.class);
 
         bind(CodegenService.class)
                 .annotatedWith(named(UNSCOPED))

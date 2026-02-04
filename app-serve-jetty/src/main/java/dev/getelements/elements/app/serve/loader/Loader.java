@@ -1,7 +1,5 @@
 package dev.getelements.elements.app.serve.loader;
 
-import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
-import dev.getelements.elements.common.app.ElementRuntimeService;
 import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import org.slf4j.Logger;
@@ -20,25 +18,7 @@ import static java.util.stream.Collectors.joining;
 public interface Loader {
 
     /**
-     * Loads the {@link Element}s from the supplied {@link ApplicationElementRecord}
-     *
-     * @param pending the pending deployment context
-     * @param record  the record to load
-     */
-    default void load(final PendingDeployment pending, final ApplicationElementRecord record) {
-        record.elements().forEach(element -> load(pending, record, element));
-    }
-
-    /**
-     * Loads the specific {@link Element} from the supplied {@link ApplicationElementRecord}
-     *
-     * @param record the record to load
-     */
-    void load(PendingDeployment pending, ApplicationElementRecord record, Element element);
-
-
-    /**
-     * Loads the {@link Element}s from the supplied {@link ApplicationElementRecord}
+     * Loads the {@link Element}s from the supplied {@link RuntimeRecord}
      *
      * @param pending the pending deployment context
      * @param record  the record to load
@@ -48,7 +28,7 @@ public interface Loader {
     }
 
     /**
-     * Loads the specific {@link Element} from the supplied {@link ApplicationElementRecord}
+     * Loads the specific {@link Element} from the supplied {@link RuntimeRecord}
      *
      * @param record the record to load
      */
@@ -59,13 +39,16 @@ public interface Loader {
      *
      * @param uris a predicate that returns true if the URI is new, false if it has already been recorded.
      * @param logs a consumer of log messages
+     * @param warnings a consumer of warning messages
      * @param errors a consumer of errors
+     * @param elements a consumer of successfully loaded elements
      */
     record PendingDeployment(
             Predicate<URI> uris,
             Consumer<String> logs,
             Consumer<String> warnings,
-            Consumer<Throwable> errors) {
+            Consumer<Throwable> errors,
+            Consumer<Element> elements) {
 
         private static final Logger logger = LoggerFactory.getLogger(PendingDeployment.class);
 
@@ -171,6 +154,15 @@ public interface Loader {
 
             return throwable;
 
+        }
+
+        /**
+         * Records that an element was successfully loaded to the container.
+         *
+         * @param element the element that was loaded
+         */
+        public void element(final Element element) {
+            elements.accept(element);
         }
 
     }

@@ -1,6 +1,5 @@
 package dev.getelements.elements.app.serve.loader;
 
-import dev.getelements.elements.common.app.ElementRuntimeService;
 import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -24,7 +23,6 @@ import java.util.function.Predicate;
 
 import static dev.getelements.elements.app.serve.AppServeConstants.APPLICATION_PREFIX;
 import static dev.getelements.elements.app.serve.AppServeConstants.ENABLE_ELEMENTS_AUTH;
-import static dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure;
 
@@ -47,38 +45,6 @@ public class JakartaWebsocketLoader implements Loader {
     private HttpContextRoot httpContextRoot;
 
     private AuthFilterFeature authFilterFeature;
-
-    @Override
-    public void load(final PendingDeployment pending,
-                     final ApplicationElementRecord record,
-                     final Element element) {
-        try (var mon = Monitor.enter(lock)) {
-
-            final var deployed = activeDeployments
-                    .stream()
-                    .anyMatch(d -> d.element().equals(element));
-
-            if (deployed) {
-
-                pending.logf("Detected existing deployment for %s.", record.applicationId());
-
-                logger.warn("{}/{} is already deployed. Skipping.",
-                        record.applicationId(),
-                        element.getElementRecord().definition().name());
-
-            } else {
-
-                final var classes = getEndpointClasses(pending, element);
-
-                if (!classes.isEmpty()) {
-                    final var deploymentRecord = loadClasses(pending, classes, element);
-                    activeDeployments.add(deploymentRecord);
-                }
-
-            }
-
-        }
-    }
 
     private ClassGraph newClassGraph(final PendingDeployment pending, final Element element) {
 
@@ -254,7 +220,8 @@ public class JakartaWebsocketLoader implements Loader {
                     .anyMatch(d -> d.element().equals(element));
 
             if (deployed) {
-                final var appId = record.applicationId() != null ? record.applicationId() : "system";
+
+                final var appId = record.deployment().id();
                 pending.logf("Detected existing deployment for %s.", appId);
 
                 logger.warn("{}/{} is already deployed. Skipping.",
@@ -268,6 +235,7 @@ public class JakartaWebsocketLoader implements Loader {
                 if (!classes.isEmpty()) {
                     final var deploymentRecord = loadClasses(pending, classes, element);
                     activeDeployments.add(deploymentRecord);
+                    pending.element(element);
                 }
 
             }

@@ -37,7 +37,7 @@ public interface ElementRuntimeService {
      *
      * @return all active deployments.
      */
-    List<RuntimeRecord> getActiveDeployments();
+    List<RuntimeRecord> getActiveRuntimes();
 
     /**
      * Represents an active element runtime.
@@ -53,26 +53,7 @@ public interface ElementRuntimeService {
             List<Element> elements,
             List<String> logs,
             List<Throwable> errors
-    ) {
-
-        /**
-         * Returns the application id, if an application is present.
-         * @return the application id or null
-         */
-        public String applicationId() {
-            return deployment().application() == null ? null : deployment().application().getId();
-        }
-
-        /**
-         * Returns the application name, if an application is present.
-         *
-         * @return the application name or null
-         */
-        public String applicationName() {
-            return deployment().application() == null ? null : deployment().application().getName();
-        }
-
-    }
+    ) {}
 
     /**
      * Indicates the runtime status.

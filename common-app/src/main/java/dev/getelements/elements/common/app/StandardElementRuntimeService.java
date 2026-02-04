@@ -3,6 +3,7 @@ package dev.getelements.elements.common.app;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
@@ -35,9 +36,34 @@ import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
  */
 public class StandardElementRuntimeService implements ElementRuntimeService {
 
+    private static final long SHUTDOWN_TIMEOUT_SECONDS = 90;
+
     private static final Logger logger = LoggerFactory.getLogger(StandardElementRuntimeService.class);
 
     private static final TemporaryFiles temporaryFiles = new TemporaryFiles(StandardElementRuntimeService.class);
+
+    /**
+     * Loads the ElementArtifactLoader SPI.
+     */
+    private static ElementArtifactLoader loadArtifactLoader() {
+        try {
+            final var loader = ServiceLoader.load(ElementArtifactLoader.class);
+            final var optional = loader.findFirst();
+
+            if (optional.isEmpty()) {
+                throw new InternalException("ElementArtifactLoader SPI not available. Maven-based artifact loading is required.");
+            }
+
+            final var artifactLoader = optional.get();
+            logger.info("ElementArtifactLoader SPI available: {}", artifactLoader.getClass().getName());
+            return artifactLoader;
+
+        } catch (InternalException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new InternalException("Failed to load ElementArtifactLoader SPI. Maven-based artifact loading is required.", ex);
+        }
+    }
 
     private LargeObjectBucket largeObjectBucket;
 
@@ -53,9 +79,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     private ScheduledExecutorService scheduler;
 
-    private ElementArtifactLoader elementArtifactLoader;
-
-    private boolean artifactLoaderAvailable;
+    private final ElementArtifactLoader elementArtifactLoader = loadArtifactLoader();
 
     @Override
     public void start() {
@@ -65,9 +89,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 throw new IllegalStateException("Already started");
             }
 
-            // Initialize artifact loader SPI
-            initializeArtifactLoader();
-
             // Create scheduler with daemon thread
             scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
                 final var thread = new Thread(r, "element-runtime-service");
@@ -75,18 +96,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 return thread;
             });
 
-            // Run initial reconcile immediately
-            scheduler.execute(this::safeReconcile);
-
             // Schedule periodic reconciliation
             scheduler.scheduleAtFixedRate(
                     this::safeReconcile,
-                    pollIntervalSeconds,
-                    pollIntervalSeconds,
+                    0,
+                    getPollIntervalSeconds(),
                     TimeUnit.SECONDS
             );
 
-            logger.info("ElementRuntimeService started with poll interval of {} seconds", pollIntervalSeconds);
+            logger.info("ElementRuntimeService started with poll interval of {} seconds", getPollIntervalSeconds());
 
         }
     }
@@ -94,27 +112,30 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     @Override
     public void stop() {
         try (var mon = Monitor.enter(lock)) {
+
             if (scheduler == null) {
-                logger.warn("ElementRuntimeService not started");
-                return;
+                throw new IllegalStateException("Already stopped");
             }
 
             logger.info("Stopping ElementRuntimeService...");
 
             // Shutdown scheduler
             scheduler.shutdown();
+
             try {
-                if (!scheduler.awaitTermination(30, TimeUnit.SECONDS)) {
+                if (!scheduler.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                     scheduler.shutdownNow();
                 }
             } catch (InterruptedException ex) {
                 scheduler.shutdownNow();
                 Thread.currentThread().interrupt();
             }
+
             scheduler = null;
 
             // Unload all active deployments
             final var deploymentIds = new ArrayList<>(activeDeployments.keySet());
+
             for (final String deploymentId : deploymentIds) {
                 try {
                     doUnloadDeployment(deploymentId);
@@ -123,12 +144,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 }
             }
 
+            activeDeployments.clear();
             logger.info("ElementRuntimeService stopped");
+
         }
+
     }
 
     @Override
-    public List<RuntimeRecord> getActiveDeployments() {
+    public List<RuntimeRecord> getActiveRuntimes() {
         try (var mon = Monitor.enter(lock)) {
             return activeDeployments.values()
                     .stream()
@@ -141,27 +165,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                             active.errors()
                     ))
                     .toList();
-        }
-    }
-
-    /**
-     * Initializes the ElementArtifactLoader SPI.
-     */
-    private void initializeArtifactLoader() {
-        try {
-            final var loader = ServiceLoader.load(ElementArtifactLoader.class);
-            final var optional = loader.findFirst();
-            if (optional.isPresent()) {
-                elementArtifactLoader = optional.get();
-                artifactLoaderAvailable = true;
-                logger.info("ElementArtifactLoader SPI available: {}", elementArtifactLoader.getClass().getName());
-            } else {
-                artifactLoaderAvailable = false;
-                logger.warn("ElementArtifactLoader SPI not available. Maven-based artifact loading disabled.");
-            }
-        } catch (Exception ex) {
-            artifactLoaderAvailable = false;
-            logger.warn("Failed to load ElementArtifactLoader SPI. Maven-based artifact loading disabled.", ex);
         }
     }
 
@@ -234,6 +237,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // Unload deployments no longer in database (deleted or state changed)
             final var activeIds = new ArrayList<>(activeDeployments.keySet());
+
             for (final String activeId : activeIds) {
                 if (!dbDeploymentIds.contains(activeId)) {
                     try {
@@ -266,6 +270,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         RuntimeStatus status = RuntimeStatus.CLEAN;
 
         try {
+
             logs.add("Starting deployment load for " + deploymentId);
 
             // Create subordinate registry for this deployment
@@ -359,8 +364,22 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             // Build ClassLoader chain: System -> API -> SPI
             logs.add("Building ClassLoader chain");
             final var systemClassLoader = getClass().getClassLoader();
-            final var apiClassLoader = resolveClassLoader(systemClassLoader, repositories, deployment.apiArtifacts(), logs, warnings);
-            final var spiClassLoader = resolveClassLoader(apiClassLoader, repositories, deployment.spiArtifacts(), logs, warnings);
+
+            final var apiClassLoader = resolveClassLoader(
+                    systemClassLoader,
+                    repositories,
+                    deployment.apiArtifacts(),
+                    logs,
+                    warnings
+            );
+
+            final var spiClassLoader = resolveClassLoader(
+                    apiClassLoader,
+                    repositories,
+                    deployment.spiArtifacts(),
+                    logs,
+                    warnings
+            );
 
             // Determine code source strategy
             if (hasElmFromLargeObject(deployment)) {
@@ -445,11 +464,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                                                final List<String> logs,
                                                final List<Throwable> errors) {
         try {
-            if (!artifactLoaderAvailable) {
-                final var message = "Deployment " + deployment.id() + " requires ELM artifact but ElementArtifactLoader SPI not available";
-                logs.add("ERROR: " + message);
-                throw new IllegalStateException(message);
-            }
 
             logs.add("Resolving ELM artifact from repositories");
             // Resolve artifact
@@ -482,12 +496,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                                                     final List<String> logs,
                                                     final List<Throwable> errors) {
         try {
-            if (!artifactLoaderAvailable) {
-                final var message = "Deployment " + deployment.id() +
-                        " requires element artifacts but ElementArtifactLoader SPI not available";
-                logs.add("ERROR: " + message);
-                throw new IllegalStateException(message);
-            }
 
             logs.add("Resolving element artifacts from repositories");
             // Resolve classloader with element artifacts
@@ -551,13 +559,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                                            final List<String> logs,
                                            final List<String> warnings) {
         if (coordinates == null || coordinates.isEmpty()) {
-            return parent;
-        }
-
-        if (!artifactLoaderAvailable) {
-            final var warning = "Cannot resolve artifacts " + coordinates + " - ElementArtifactLoader SPI not available";
-            logger.warn(warning);
-            warnings.add(warning);
             return parent;
         }
 

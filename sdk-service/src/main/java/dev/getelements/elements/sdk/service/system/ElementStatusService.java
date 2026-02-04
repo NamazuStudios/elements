@@ -1,9 +1,10 @@
-package dev.getelements.elements.sdk.service.application;
+package dev.getelements.elements.sdk.service.system;
 
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
-import dev.getelements.elements.sdk.model.application.ApplicationStatus;
+import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
 import dev.getelements.elements.sdk.model.system.ElementMetadata;
+import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 @ElementPublic
 @ElementServiceExport
 @ElementServiceExport(name = UNSCOPED)
-public interface ApplicationStatusService {
+public interface ElementStatusService {
 
     /**
      * Gets all system elements available to be deployed.
@@ -27,10 +28,17 @@ public interface ApplicationStatusService {
     List<ElementMetadata> getAllSystemElements();
 
     /**
-     * Gets all deployments for all applications.
+     * Gets all deployments for all runtimes.
      *
-     * @return all deployments
+     * @return the list of runtimes.
      */
-    List<ApplicationStatus> getAllDeployments();
+    List<ElementRuntimeStatus> getAllRuntimes();
+
+    /**
+     * Gets all deployments for all containers.
+     *
+     * @return the list of all containers.
+     */
+    List<ElementContainerStatus> getAllContainers();
 
 }

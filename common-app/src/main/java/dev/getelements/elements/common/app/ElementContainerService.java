@@ -1,6 +1,7 @@
 package dev.getelements.elements.common.app;
 
 import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 
@@ -45,12 +46,14 @@ public interface ElementContainerService {
             ContainerStatus status,
             Set<URI> uris,
             List<String> logs,
-            List<Throwable> errors) {
+            List<Throwable> errors,
+            List<Element> elements) {
 
         public ContainerRecord {
             uris = uris == null ? Set.of() : Set.copyOf(uris);
             logs = logs == null ? List.of() : List.copyOf(logs);
             errors = errors == null ? List.of() : List.copyOf(errors);
+            elements = elements == null ? List.of() : List.copyOf(elements);
         }
 
         /**
@@ -69,7 +72,8 @@ public interface ElementContainerService {
                     ContainerStatus.FAILED,
                     null,
                     List.copyOf(logs),
-                    List.of(error)
+                    List.of(error),
+                    List.of()
             );
         }
 
@@ -89,7 +93,8 @@ public interface ElementContainerService {
                     ContainerStatus.FAILED,
                     Set.of(),
                     List.copyOf(logs),
-                    List.copyOf(causes)
+                    List.copyOf(causes),
+                    List.of()
             );
         }
 

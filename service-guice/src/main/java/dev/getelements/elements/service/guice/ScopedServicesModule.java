@@ -40,6 +40,7 @@ import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import dev.getelements.elements.sdk.service.rewardissuance.RewardIssuanceService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
 import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
+import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
@@ -377,7 +378,7 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OpenApiCodegenServiceProvider.class)
                 .in(scope);
 
-        bind(ApplicationStatusService.class)
+        bind(ElementStatusService.class)
                 .toProvider(ApplicationStatusServiceProvider.class)
                 .in(scope);
 

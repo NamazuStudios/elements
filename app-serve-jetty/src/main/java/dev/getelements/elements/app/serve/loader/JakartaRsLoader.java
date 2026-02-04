@@ -1,8 +1,6 @@
 package dev.getelements.elements.app.serve.loader;
 
 import dev.getelements.elements.app.serve.AppServeConstants;
-import dev.getelements.elements.common.app.ApplicationElementService.ApplicationElementRecord;
-import dev.getelements.elements.common.app.ElementRuntimeService;
 import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -54,32 +52,6 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
     private HttpContextRoot httpContextRoot;
 
     private AuthFilterFeature authFilterFeature;
-
-    @Override
-    public void load(final PendingDeployment pending, final ApplicationElementRecord record, final Element element) {
-        try (var mon = Monitor.enter(lock)) {
-
-            final var deployed = activeDeployments
-                    .stream()
-                    .anyMatch(d -> d.element().equals(element));
-
-            if (deployed) {
-                pending.logWarningf("WARNING: Detected existing deployment for %s.", record.applicationId());
-                logger.warn("{}/{} is already deployed. Skipping.",
-                        record.applicationId(),
-                        element.getElementRecord().definition().name());
-            } else {
-                element.getServiceLocator()
-                        .findInstance(Application.class)
-                        .map(Supplier::get)
-                        .filter(a -> Application.class != a.getClass())
-                        .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
-                        .map(a -> deploy(pending, element, a))
-                        .ifPresent(activeDeployments::add);
-            }
-
-        }
-    }
 
     private JettyDeploymentRecord deploy(final PendingDeployment pending,
                                          final Element element,
@@ -173,7 +145,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                     .anyMatch(d -> d.element().equals(element));
 
             if (deployed) {
-                final var appId = record.applicationId() != null ? record.applicationId() : "system";
+                final var appId = record.deployment().id();
                 pending.logWarningf("WARNING: Detected existing deployment for %s.", appId);
                 logger.warn("{}/{} is already deployed. Skipping.",
                         appId,
@@ -185,7 +157,10 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
                         .filter(a -> Application.class != a.getClass())
                         .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
                         .map(a -> deploy(pending, element, a))
-                        .ifPresent(activeDeployments::add);
+                        .ifPresent(deploymentRecord -> {
+                            activeDeployments.add(deploymentRecord);
+                            pending.element(element);
+                        });
             }
 
         }

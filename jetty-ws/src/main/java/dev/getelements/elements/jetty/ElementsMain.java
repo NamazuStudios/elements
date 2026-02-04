@@ -54,17 +54,9 @@ public class ElementsMain {
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
                 new ElementsCoreModule(),
+                new ElementRuntimeServiceModule(),
                 new FileSystemElementStorageGitLoaderModule(),
-                new ElementsWebServiceComponentModule(services),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        if (services.contains(app_node) || services.contains(app_serve)) {
-                            install(new ApplicationElementServiceModule());
-                            install(new ElementRuntimeServiceModule());
-                        }
-                    }
-                }
+                new ElementsWebServiceComponentModule(services)
         );
 
         final var elements = injector.getInstance(ElementsWebServices.class);

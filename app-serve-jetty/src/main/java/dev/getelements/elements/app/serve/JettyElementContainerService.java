@@ -4,6 +4,7 @@ import dev.getelements.elements.app.serve.loader.Loader;
 import dev.getelements.elements.common.app.ElementContainerService;
 import dev.getelements.elements.common.app.ElementRuntimeService;
 import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
@@ -36,13 +37,13 @@ public class JettyElementContainerService implements ElementContainerService {
 
     private final Map<String, ActiveContainer> activeContainers = new HashMap<>();
 
-    private ElementRuntimeService elementRuntimeService;
-
     private Set<Loader> loaders;
 
     private int pollIntervalSeconds;
 
     private ScheduledExecutorService scheduler;
+
+    private ElementRuntimeService elementRuntimeService;
 
     @Override
     public void start() {
@@ -121,7 +122,8 @@ public class JettyElementContainerService implements ElementContainerService {
                             active.status(),
                             active.uris(),
                             active.logs(),
-                            active.errors()
+                            active.errors(),
+                            active.elements()
                     ))
                     .toList();
         }
@@ -150,7 +152,7 @@ public class JettyElementContainerService implements ElementContainerService {
             final List<RuntimeRecord> activeRuntimes;
 
             try {
-                activeRuntimes = getElementRuntimeService().getActiveDeployments();
+                activeRuntimes = getElementRuntimeService().getActiveRuntimes();
             } catch (Exception ex) {
                 logger.error("Failed to fetch active runtimes", ex);
                 return;
@@ -201,6 +203,7 @@ public class JettyElementContainerService implements ElementContainerService {
 
             // Unmount containers no longer in runtime
             final var activeIds = new ArrayList<>(activeContainers.keySet());
+
             for (final String activeId : activeIds) {
                 if (!runtimeDeploymentIds.contains(activeId)) {
                     try {
@@ -225,6 +228,7 @@ public class JettyElementContainerService implements ElementContainerService {
         final var logs = new ArrayList<String>();
         final var warnings = new ArrayList<String>();
         final var errors = new ArrayList<Throwable>();
+        final var elements = new ArrayList<Element>();
 
         logs.add("Starting container mount for deployment " + deploymentId);
 
@@ -234,7 +238,8 @@ public class JettyElementContainerService implements ElementContainerService {
                     uris::add,
                     logs::add,
                     warnings::add,
-                    errors::add
+                    errors::add,
+                    elements::add
             );
 
             // Run all loaders
@@ -251,6 +256,7 @@ public class JettyElementContainerService implements ElementContainerService {
             if (!warnings.isEmpty()) {
                 status = WARNINGS;
             }
+
             if (!errors.isEmpty()) {
                 status = UNSTABLE;
             }
@@ -263,7 +269,8 @@ public class JettyElementContainerService implements ElementContainerService {
                     status,
                     Set.copyOf(uris),
                     logs,
-                    errors
+                    errors,
+                    elements
             );
 
             activeContainers.put(deploymentId, active);
@@ -278,7 +285,8 @@ public class JettyElementContainerService implements ElementContainerService {
                     FAILED,
                     Set.of(),
                     logs,
-                    errors
+                    errors,
+                    elements
             );
 
             activeContainers.put(deploymentId, failedContainer);
@@ -332,12 +340,14 @@ public class JettyElementContainerService implements ElementContainerService {
             ContainerStatus status,
             Set<URI> uris,
             List<String> logs,
-            List<Throwable> errors
+            List<Throwable> errors,
+            List<Element> elements
     ) {
         ActiveContainer {
             uris = uris != null ? Set.copyOf(uris) : Set.of();
             logs = logs != null ? List.copyOf(logs) : List.of();
             errors = errors != null ? List.copyOf(errors) : List.of();
+            elements = elements != null ? List.copyOf(elements) : List.of();
         }
     }
 

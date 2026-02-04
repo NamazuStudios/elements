@@ -4,15 +4,13 @@ import com.google.inject.PrivateModule;
 import dev.getelements.elements.app.serve.guice.AppServeModule;
 import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
 import dev.getelements.elements.app.serve.loader.JakartaWebsocketLoader;
-import dev.getelements.elements.common.app.ApplicationDeploymentService;
+import dev.getelements.elements.common.app.ElementContainerService;
 import org.eclipse.jetty.server.Handler;
 
 import java.util.Collection;
 import java.util.List;
 
 import static com.google.inject.name.Names.named;
-import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
-import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_serve;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 
@@ -35,6 +33,9 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
     protected void configure() {
 
         expose(Handler.class);
+        expose(ElementContainerService.class);
+
+        install(new AppServeModule());
 
         install(new PrivateModule() {
             @Override
@@ -51,12 +52,6 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
 
             }
         });
-
-        // If we specify app_serve, then we install an run the components.
-        if (elementsWebServiceComponents.contains(app_serve)) {
-            install(new AppServeModule());
-            expose(ApplicationDeploymentService.class).annotatedWith(named(APP_SERVE));
-        }
 
     }
 
