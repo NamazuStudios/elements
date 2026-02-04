@@ -19,52 +19,44 @@ import static java.util.List.*;
  *
  * <ul>
  *     <li>If the {@link Path} can load using {@link java.nio.file.FileSystems#newFileSystem(Path)}, it will load</li>
- *     <li>If thd {@link Path} is a directory, it will assume all files in the directory make up the {@link Element}</li>
- *     <li>If thd {@link Path} is a not found or otherwise empty, it will return an empty {@link Stream}</li>
- *     <li>For each directory in the {@link Path}, it will create a new subordinate {@link ElementRegistry}</li>
- *     <li>Each loaded {@link Element} will follow the hierarchy of the directory.</li>
- *     <li>Empty directories, or directories containing directories will be skipped.</li>
- *     <li>Aside from those specified (lib and classpath), directory names are irrelevant. All {@link Element} metadata will come from the annotations.</li>
+ *     <li>If the {@link Path} is a directory, each subdirectory is scanned as a potential Element</li>
+ *     <li>If the {@link Path} is not found or otherwise empty, it will return an empty {@link Stream}</li>
+ *     <li>Each subdirectory containing Element configuration becomes an independent {@link Element}</li>
+ *     <li>Element directory names are irrelevant. All {@link Element} metadata comes from the annotations.</li>
  * </ul>
  *
- * When searching each directory, the ElementPathLoader will look for the following files/directories to determine the
+ * When searching each element directory, the ElementPathLoader will look for the following files/directories to determine the
  * makings of the {@link Element}.
  *
  * <ul>
  *    <li>dev.getelements.element.attributes.properties - custom attributes for the Element</li>
- *    <li>api - every file is assumed to be a jar file, shared among all Elements in a directory</li>
+ *    <li>api - every file is assumed to be a jar file, shared among all Elements in the deployment</li>
+ *    <li>spi - every file is assumed to be a jar file, Service Provider Interface specific to that Element</li>
  *    <li>lib - every file is assumed to be a jar file, specific to that Element only</li>
  *    <li>classpath - every file inside this directory is added to the classpath</li>
  * </ul>
  *
- * For example, let's say we have the following directories with the following Elements define inside each of them:
+ * For example, let's say we have the following deployment structure with Elements defined:
  * <ul>
- *     <li>foo - com.example.foo</li>
- *     <li>foo/a - com.example.foo.a</li>
- *     <li>foo/b - com.example.foo.b</li>
- *     <li>bar - com.example.bar</li>
- *     <li>bar/a - com.example.bar.a</li>
- *     <li>bar/b - com.example.bar.b</li>
+ *     <li>deployment/api/ - shared API jars</li>
+ *     <li>deployment/foo/ - com.example.foo Element</li>
+ *     <li>deployment/bar/ - com.example.bar Element</li>
+ *     <li>deployment/baz/ - com.example.baz Element</li>
  * </ul>
  *
- * This will result in six {@link ElementRegistry} instances and {@link Element} instances chained as follows:
- *
- * <ul>
- *     <li>Root</li>
- *     <li>Root -> Foo</li>
- *     <li>Root -> Foo -> A</li>
- *     <li>Root -> Foo -> B</li>
- *     <li>Root</li>
- *     <li>Root -> Bar</li>
- *     <li>Root -> Bar -> A</li>
- *     <li>Root -> Bar -> B</li>
- * </ul>
+ * This will result in three independent {@link Element} instances, each with its own classloader hierarchy:
+ * API → SPI → Implementation.
  *
  * Changes for 3.6 and up. The "api" directory is now supported. Any jars in this directory are shared among all
- * Elements in the same directory and any subdirectories. This enables each Element to share common API jars without
- * exposing its own implementation jars to its peers. API jars should be as lean as absolutely possible, containing only
- * the interfaces and data types needed to interact with the Element's services. When scanning a directory structure,
- * the loader will first look for an "api" directory and load any jars found there into the classpath before loading.
+ * Elements in the deployment. This enables each Element to share common API jars without exposing its own
+ * implementation jars to its peers. API jars should be as lean as absolutely possible, containing only
+ * the interfaces and data types needed to interact with the Element's services.
+ *
+ * Changes for 3.7 and up. The "spi" directory is now supported, and the loading model has been simplified to a flat
+ * structure. Each element directory is independent with no nesting. The classloader hierarchy for each Element is:
+ * API (shared) → SPI (per-element) → Implementation (per-element). The SPI layer allows developers to attach Service
+ * Provider Interface jars at deployment time, enabling Elements to communicate through a common API while maintaining
+ * deployment-time flexibility for their service provider implementations.
  */
 public interface ElementPathLoader {
 
@@ -93,6 +85,12 @@ public interface ElementPathLoader {
      * @since 3.6
      */
     String API_DIR = "api";
+
+    /**
+     * The SPI directory.
+     * @since 3.7
+     */
+    String SPI_DIR = "spi";
 
     /**
      * The library directory name.

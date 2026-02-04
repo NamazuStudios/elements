@@ -30,7 +30,7 @@ public class ApiElementLoaderTest {
 
     private static final TestArtifactRegistry testArtifactRegistry = new TestArtifactRegistry();
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(NestedElementPathLoaderTest.class);
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(ApiElementLoaderTest.class);
 
     private final Path baseDirectory = temporaryFiles.createTempDirectory();
 
@@ -61,8 +61,8 @@ public class ApiElementLoaderTest {
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
 
-        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(LIB_DIR));
-        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(LIB_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(SPI_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(SPI_DIR));
 
         testArtifactRegistry.unpackArtifact(VARIANT_A, variantADirectory.resolve(CLASSPATH_DIR));
         testArtifactRegistry.unpackArtifact(VARIANT_B, variantBDirectory.resolve(CLASSPATH_DIR));

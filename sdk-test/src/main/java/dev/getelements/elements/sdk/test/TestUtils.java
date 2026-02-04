@@ -9,12 +9,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
+import static dev.getelements.elements.sdk.ElementPathLoader.SPI_DIR;
 import static java.nio.file.Files.createDirectories;
 
 public class TestUtils {
     public static void layoutSkeletonElement(final Path parent, final Map<?, ?> attributes) throws IOException {
 
         createDirectories(parent);
+        createDirectories(parent.resolve(SPI_DIR));
         createDirectories(parent.resolve(LIB_DIR));
         createDirectories(parent.resolve(ElementPathLoader.CLASSPATH_DIR));
 

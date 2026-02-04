@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.CLASSPATH_DIR;
-import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
+import static dev.getelements.elements.sdk.ElementPathLoader.SPI_DIR;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
@@ -25,7 +25,7 @@ public class FlatElementPathLoaderTest {
 
     private static final TestArtifactRegistry testArtifactRegistry = new TestArtifactRegistry();
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(NestedElementPathLoaderTest.class);
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(FlatElementPathLoaderTest.class);
 
     private final Path baseDirectory = temporaryFiles.createTempDirectory();
 
@@ -51,8 +51,8 @@ public class FlatElementPathLoaderTest {
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
 
-        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(LIB_DIR));
-        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(LIB_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(SPI_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(SPI_DIR));
 
         testArtifactRegistry.unpackArtifact(VARIANT_A, variantADirectory.resolve(CLASSPATH_DIR));
         testArtifactRegistry.unpackArtifact(VARIANT_B, variantBDirectory.resolve(CLASSPATH_DIR));

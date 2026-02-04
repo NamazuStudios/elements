@@ -62,6 +62,10 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         return isDirectory(path) && API_DIR.equals(path.getFileName().toString());
     }
 
+    private static boolean isSpiDirectory(final Path path) {
+        return isDirectory(path) && SPI_DIR.equals(path.getFileName().toString());
+    }
+
     private static boolean isLibDirectory(final Path path) {
         return isDirectory(path) && LIB_DIR.equals(path.getFileName().toString());
     }
@@ -184,16 +188,25 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path path,
             final ClassLoader baseClassLoader) {
 
-        Stream<Element> result = Stream.empty();
+        final var elements = new ArrayList<Element>();
 
         try (final var directory = newDirectoryStream(path)) {
-            final var record = ElementPathRecord.from(registry, baseClassLoader, directory);
-            final var elements = record.load();
+            // Scan for element directories (subdirectories that contain element configuration)
+            for (final var subpath : directory) {
+                if (isDirectory(subpath) && !isApiDirectory(subpath) && !isPathInHiddenHierarchy(subpath)) {
+                    try (final var elementDirectory = newDirectoryStream(subpath)) {
+                        final var record = ElementPathRecord.from(registry, baseClassLoader, subpath, elementDirectory);
+                        if (record.isValidElement()) {
+                            elements.add(record.loadElement());
+                        }
+                    }
+                }
+            }
             return elements.stream();
         } catch (IOException ex) {
             throw new SdkException(ex);
         } catch (Exception ex) {
-            result.forEach(Element::close);
+            elements.forEach(Element::close);
             throw ex;
         }
 
@@ -204,9 +217,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     }
 
     private void collectApiJarsRecursive(final Path path, final List<URL> apiClasspath) {
-        if (isLibDirectory(path) || isClasspathDirectory(path) || isAttributesFiles(path)) {
-            // Skip lib, classpath, and attributes files
-            return;
+        if (isSpiDirectory(path) || isLibDirectory(path) || isClasspathDirectory(path) || isAttributesFiles(path)) {
+            logger.debug("Skipping implementation path {} while collectin API jars.", path);
         } else if (isPathInHiddenHierarchy(path)) {
             logger.debug("Skipping hidden path {} while collecting API jars.", path);
         } else if (isApiDirectory(path)) {
@@ -233,84 +245,60 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     }
 
     private record ElementPathRecord(
+            Path elementPath,
+            Path spi,
             Path libs,
             Path classpath,
             Path attributesFile,
-            List<Path> directories,
             ClassLoader baseClassLoader,
-            MutableElementRegistry registry,
-            Element parent) {
+            MutableElementRegistry registry) {
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
                                              final ClassLoader baseClassLoader,
+                                             final Path elementPath,
                                              final DirectoryStream<Path> directory) {
 
-            Path libs, classpath, attributesFile;
-            libs = classpath = attributesFile = null;
-
-            final var directories = new ArrayList<Path>();
+            Path spi, libs, classpath, attributesFile;
+            spi = libs = classpath = attributesFile = null;
 
             for (var subpath : directory) {
-                if (isLibDirectory(subpath)) {
+                if (isSpiDirectory(subpath)) {
+                    spi = subpath;
+                } else if (isLibDirectory(subpath)) {
                     libs = subpath;
                 } else if (isClasspathDirectory(subpath)) {
                     classpath = subpath;
                 } else if (isAttributesFiles(subpath)) {
                     attributesFile = subpath;
-                } else if (isDirectory(subpath)) {
-                    directories.add(subpath);
                 } else if (isPathInHiddenHierarchy(subpath)) {
                     logger.debug("Skipping hidden path: {}.", subpath);
-                } else {
-                    logger.warn("Unexpected path in Element definition: {}, ignoring.", subpath);
+                } else if (!isDirectory(subpath)) {
+                    logger.warn("Unexpected file in Element definition: {}, ignoring.", subpath);
                 }
             }
 
             return new ElementPathRecord(
+                    elementPath,
+                    spi,
                     libs,
                     classpath,
                     attributesFile,
-                    List.copyOf(directories),
                     baseClassLoader,
-                    registry,
-                    null
+                    registry
             );
 
         }
 
-        public ElementPathRecord descendant(final Element parent, final DirectoryStream<Path> directory) {
-
-            Path libs, classpath, attributesFile;
-            libs = classpath = attributesFile = null;
-
-            final var directories = new ArrayList<Path>();
-
-            for (var subpath : directory) {
-                if (isLibDirectory(subpath)) {
-                    libs = subpath;
-                } else if (isClasspathDirectory(subpath)) {
-                    classpath = subpath;
-                } else if (isAttributesFiles(subpath)) {
-                    attributesFile = subpath;
-                } else if (isDirectory(subpath)) {
-                    directories.add(subpath);
-                } else if (isPathInHiddenHierarchy(subpath)) {
-                    logger.debug("Skipping hidden path: {}.", subpath);
-                } else if (!isApiDirectory(subpath.getParent())) {
-                    logger.warn("Unexpected path in Element definition: {}, ignoring.", subpath);
-                }
+        public Stream<URL> spiUrls() {
+            try {
+                return spi() == null
+                        ? Stream.empty()
+                        : list(spi())
+                            .filter(DirectoryElementPathLoader::isJarFile)
+                            .map(DirectoryElementPathLoader::toUrl);
+            } catch (IOException ex) {
+                throw new SdkException(ex);
             }
-
-            return new ElementPathRecord(
-                    libs,
-                    classpath,
-                    attributesFile,
-                    directories,
-                    baseClassLoader(),
-                    registry(),
-                    parent
-            );
-
         }
 
         public Stream<URL> libsUrls() {
@@ -331,8 +319,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     : Stream.of(toUrl(classpath()));
         }
 
-        public boolean isValidClasspath() {
-            return classpath() != null || libs() != null;
+        public boolean isValidElement() {
+            return spi() != null || classpath() != null || libs() != null;
         }
 
         public URL[] allClasspathUrls() {
@@ -358,75 +346,60 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         }
 
-        public List<Element> load() {
+        public Element loadElement() {
 
-            final var results = new ArrayList<Element>();
+            logger.debug("Loading element from: {}", elementPath());
 
-            Element element = parent();
-
-            if (isValidClasspath()) {
-
-                logger.debug("Loading classpath: {}", directories());
-
-                try {
-                    final var elementLoader = getLoader();
-                    element = registry().register(elementLoader);
-                    results.add(element);
-                } catch (SdkElementNotFoundException ex) {
-                    logger.warn(
-                            "{} has valid classpath but no elements were found.",
-                            directories().stream().map(Path::toString).collect(joining(",")),
-                            ex);
-                }
-            } else {
-                logger.debug("Skipping load of elements from {}", directories());
+            try {
+                final var elementLoader = getLoader();
+                return registry().register(elementLoader);
+            } catch (SdkElementNotFoundException ex) {
+                logger.warn("Element directory {} has valid configuration but no elements were found.", elementPath(), ex);
+                throw ex;
             }
-
-            for (var subDirectory : directories()) {
-                try (final var subDirectoryStream = newDirectoryStream(subDirectory)) {
-                    final var descendant = descendant(element, subDirectoryStream);
-                    results.addAll(descendant.load());
-                } catch (IOException ex) {
-                    throw new SdkException(ex);
-                } catch (Exception ex) {
-                    results.forEach(Element::close);
-                    throw ex;
-                }
-            }
-
-            return results;
 
         }
 
         private ElementLoader getLoader() {
 
-            final var urls = allClasspathUrls();
+            final var spiUrls = spiUrls().toArray(URL[]::new);
+            final var implUrls = allClasspathUrls();
             final var attributes = loadAttributes();
 
-            final var classLoaderName = String.format("%s={%s}",
+            // Build the classloader hierarchy: API -> SPI -> Implementation
+            // The baseClassLoader is the shared API classloader (or system classloader)
+
+            // Create SPI classloader if there are SPI jars
+            final var spiClassLoader = spiUrls.length > 0
+                    ? new URLClassLoader(
+                            String.format("%s-spi[%s]", ELEMENT_PATH_ENV, elementPath().getFileName()),
+                            spiUrls,
+                            baseClassLoader)
+                    : baseClassLoader;
+
+            // Create implementation classloader with SPI as parent
+            final var classLoaderName = String.format("%s[%s]",
                     ELEMENT_PATH_ENV,
-                    Stream
-                            .of(urls)
-                            .map(URL::toString)
-                            .collect(joining())
+                    elementPath().getFileName()
             );
 
+            // Load ElementLoaderFactory from the framework classloader (where sdk-spi is loaded)
+            final var frameworkClassLoader = DirectoryElementPathLoader.class.getClassLoader();
+
             return ServiceLoader
-                    .load(ElementLoaderFactory.class, baseClassLoader)
+                    .load(ElementLoaderFactory.class, frameworkClassLoader)
                     .stream()
                     .findFirst()
                     .orElseThrow(() -> new SdkException(
                             "No SPI for " + ElementLoaderFactory.class.getName() + " " +
-                            "found in " + baseClassLoader.getName()
+                            "found in framework classloader"
                     ))
                     .get()
                     .getIsolatedLoaderWithParent(
                             attributes,
                             baseClassLoader,
-                            cl -> new URLClassLoader(classLoaderName, urls, cl),
-                            parent() == null
-                                    ? baseClassLoader
-                                    : parent().getElementRecord().classLoader(),
+                            cl -> new URLClassLoader(classLoaderName, implUrls, cl),
+                            spiClassLoader,
                             edr -> registry
                                     .stream()
                                     .map(element -> element.getElementRecord().definition().name())
