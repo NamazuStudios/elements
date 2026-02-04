@@ -184,9 +184,18 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path path,
             final ClassLoader baseClassLoader) {
 
-        // baseClassLoader is expected to already contain the API jars
-        // We pass it as the sharedClassLoader since APIs are now pre-loaded
-        return doLoadWithSharedClasspath(registry, path, baseClassLoader, baseClassLoader);
+        Stream<Element> result = Stream.empty();
+
+        try (final var directory = newDirectoryStream(path)) {
+            final var record = ElementPathRecord.from(registry, baseClassLoader, directory);
+            final var elements = record.load();
+            return elements.stream();
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        } catch (Exception ex) {
+            result.forEach(Element::close);
+            throw ex;
+        }
 
     }
 
@@ -223,97 +232,17 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         }
     }
 
-    private Stream<Element> doLoadWithSharedClasspath(
-            final MutableElementRegistry registry,
-            final Path path,
-            final ClassLoader baseClassLoader,
-            final ClassLoader sharedClassloader) {
-
-        Stream<Element> result = Stream.empty();
-
-        try (final var directory = newDirectoryStream(path)) {
-            final var record = ElementPathRecord.from(registry, baseClassLoader, sharedClassloader, directory);
-            final var elements = record.load();
-            return elements.stream();
-        } catch (IOException ex) {
-            throw new SdkException(ex);
-        } catch (Exception ex) {
-            result.forEach(Element::close);
-            throw ex;
-        }
-
-    }
-
-    private record SharedClasspathRecord(
-            Path path,
-            List<URL> classpath
-    ) {
-
-        public static SharedClasspathRecord from(final Path path) {
-            return new SharedClasspathRecord(path, new ArrayList<>());
-        }
-
-        public SharedClasspathRecord build() {
-            build(path());
-            return this;
-        }
-
-        public ClassLoader newClassLoader() {
-            return new URLClassLoader(classpath.toArray(URL[]::new), null);
-        }
-
-        private void build(final Path path) {
-            if (isLibDirectory(path)) {
-                logger.trace("Not including library directory {} in shared classpath.", path);
-            } else if (isClasspathDirectory(path)) {
-                logger.trace("Not including classpath directory {} in shared classpath.", path);
-            } else if (isAttributesFiles(path)) {
-                logger.trace("Skipping attributes file {} while evaluating shared classpath.", path);
-            } else if (isPathInHiddenHierarchy(path)) {
-                logger.debug("Skipping hidden path {} while evaluating shared classpath.", path);
-            } else if (isApiDirectory(path)) {
-
-                logger.info("Including API directory {} in shared classpath.", path);
-
-                try (final var ds = newDirectoryStream(path)) {
-                    for (final var subPath : ds) {
-                        if (isJarFile(subPath)) {
-                            classpath.add(toUrl(subPath));
-                            logger.debug("Added {} to shared classpath.", subPath);
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new SdkException(e);
-                }
-
-            } else if (isDirectory(path)) {
-                try (final var ds = newDirectoryStream(path)) {
-                    for (final var subPath : ds) {
-                        build(subPath);
-                    }
-                } catch (IOException e) {
-                    throw new SdkException(e);
-                }
-            } else {
-                logger.info("Skipping {} while evaluating shared classpath. Not a directory.", path);
-            }
-        }
-
-    }
-
     private record ElementPathRecord(
             Path libs,
             Path classpath,
             Path attributesFile,
             List<Path> directories,
             ClassLoader baseClassLoader,
-            ClassLoader sharedClassLoader,
             MutableElementRegistry registry,
             Element parent) {
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
                                              final ClassLoader baseClassLoader,
-                                             final ClassLoader sharedClassLoader,
                                              final DirectoryStream<Path> directory) {
 
             Path libs, classpath, attributesFile;
@@ -343,7 +272,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile,
                     List.copyOf(directories),
                     baseClassLoader,
-                    sharedClassLoader,
                     registry,
                     null
             );
@@ -368,7 +296,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     directories.add(subpath);
                 } else if (isPathInHiddenHierarchy(subpath)) {
                     logger.debug("Skipping hidden path: {}.", subpath);
-                } else {
+                } else if (!isApiDirectory(subpath.getParent())) {
                     logger.warn("Unexpected path in Element definition: {}, ignoring.", subpath);
                 }
             }
@@ -379,7 +307,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile,
                     directories,
                     baseClassLoader(),
-                    sharedClassLoader(),
                     registry(),
                     parent
             );
@@ -498,7 +425,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             baseClassLoader,
                             cl -> new URLClassLoader(classLoaderName, urls, cl),
                             parent() == null
-                                    ? sharedClassLoader()
+                                    ? baseClassLoader
                                     : parent().getElementRecord().classLoader(),
                             edr -> registry
                                     .stream()

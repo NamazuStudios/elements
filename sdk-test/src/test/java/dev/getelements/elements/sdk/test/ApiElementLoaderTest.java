@@ -75,10 +75,14 @@ public class ApiElementLoaderTest {
         final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
+        final var apiClassLoader = elementPathLoader
+                .buildApiClassLoader(baseDirectory)
+                .get();
+
         final var loadedElements = elementPathLoader.load(
                 elementRegistry,
                 baseDirectory,
-                getSystemClassLoader()
+                apiClassLoader
         ).toList();
 
         logger.info("Loaded Elements.");
