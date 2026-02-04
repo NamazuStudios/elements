@@ -32,39 +32,20 @@ public record ElementDeployment(
         )
         Application application,
 
-        @Schema(description =
-                "List of API artifact identifiers to include in the Element. These will be shared system wide " +
-                "available to all Elements installed within the scope of the Element."
-        )
-        List<String> apiArtifacts,
-
-        @Schema(description =
-                "List of SPI (Service Provider Implementation) artifact identifiers to include in the Element. For " +
-                "most use cases, SPI artifacts are required. The requested SPI must be compatible with the requested " +
-                "API, Namazu Elements version, and the Element itself. Technically, this can be blank or null which " +
-                "means that the SPIs must appear embedded in the Element itself which is not recommended practice."
-        )
-        List<String> spiArtifacts,
-
-        @Schema(description =
-                "The list of general element artifact identifiers to include in the Element. Invalid if using an " +
-                "ELM artifact as an ELM artifact can encapsulate the entire element definition including " +
-                "dependencies. May be empty or null."
-        )
-        List<String> elementArtifacts,
-
         @Valid
         @Schema(description =
-                "The large object which houses the actual ELM file. The elm file may have contents indicating that " +
-                "the Element will be loaded from the LargeObject instead of the artifact or classpath specifier."
+                "The large object which houses the actual ELM file. If present, Elements can be loaded from " +
+                "this uploaded ELM file in addition to any Element definitions."
         )
         LargeObjectReference elm,
 
+        @Valid
         @Schema(description =
-                "A single ELM artifact identifier to include in the Element. Invalid if using general element " +
-                "artifacts or an elm file."
+                "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
+                "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
+                "single ELM artifact coordinate."
         )
-        String elmArtifact,
+        List<ElementDefinition> elements,
 
         @Schema(description =
                 "Flag indicating whether to use the default artifact repositories in addition to any provided. The " +
@@ -100,14 +81,14 @@ public record ElementDeployment(
 ) implements ElementDeploymentRequest {
 
         /**
-         * In addition to the existing logic, this checks that the {@link LargeObject} contains content.
+         * A deployment is ready if it has Element definitions or an uploaded ELM file.
          *
          * @return true if ready
          */
         @Override
             public boolean ready() {
                 return ElementDeploymentRequest.super.ready() ||
-                       elm() != null && LargeObjectState.UPLOADED.equals(elm().getState());
+                       (elm() != null && LargeObjectState.UPLOADED.equals(elm().getState()));
             }
 
 }

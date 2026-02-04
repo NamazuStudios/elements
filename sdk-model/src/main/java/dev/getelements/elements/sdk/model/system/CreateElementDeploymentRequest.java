@@ -22,32 +22,13 @@ public record CreateElementDeploymentRequest(
         )
         String applicationNameOrId,
 
+        @Valid
         @Schema(description =
-                "List of API artifact identifiers to include in the Element. These will be shared system wide " +
-                "available to all Elements installed within the scope of the Element."
+                "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
+                "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
+                "single ELM artifact coordinate."
         )
-        List<String> apiArtifacts,
-
-        @Schema(description =
-                "List of SPI (Service Provider Implementation) artifact identifiers to include in the Element. For " +
-                "most use cases, SPI artifacts are required. The requested SPI must be compatible with the requested " +
-                "API, Namazu Elements version, and the Element itself. Technically, this can be blank or null which " +
-                "means that the SPIs must appear embedded in the Element itself which is not recommended practice."
-        )
-        List<String> spiArtifacts,
-
-        @Schema(description =
-                "A single ELM artifact identifier to include in the Element. Invalid if using general element " +
-                "artifacts."
-        )
-        String elmArtifact,
-
-        @Schema(description =
-                "The list of general element artifact identifiers to include in the Element. Invalid if using an " +
-                "ELM artifact as an ELM artifact can encapsulate the entire element definition including " +
-                "dependencies. May be empty or null."
-        )
-        List<String> elementArtifacts,
+        List<ElementDefinition> elements,
 
         @Schema(description =
                 "Flag indicating whether to use the default artifact repositories in addition to any provided. The " +

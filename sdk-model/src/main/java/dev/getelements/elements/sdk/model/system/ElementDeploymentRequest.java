@@ -18,28 +18,21 @@ public interface ElementDeploymentRequest {
     ElementDeploymentState state();
 
     /**
-     * Returns the singular ELM artifact. May be null or empty, indicating that there is no ELM artifact specified.
-     * @return the elm artifact
-     */
-    String elmArtifact();
-
-    /**
-     * Returns artifact coordinates making up the Element. May be null or empty, indicating that there is not ELM
-     * artifact specified.
+     * Returns the list of Element definitions. May be null or empty, indicating that there are no Element
+     * definitions specified.
      *
-     * @return the Element's artifacts
+     * @return the Element definitions
      */
-    List<String> elementArtifacts();
+    List<ElementDefinition> elements();
 
     /**
-     * Indicate if the deployment is ready. Ready means that there is at least an ELM artifact or list of artifacts
-     * specified. Depending on implementation, additional conditions may apply.
+     * Indicate if the deployment is ready. Ready means that there is at least one Element definition specified.
+     * Depending on implementation, additional conditions may apply.
      *
      * @return true if ready
      */
     default boolean ready() {
-        return elmArtifact() != null && !elmArtifact().isBlank() ||
-               elementArtifacts() != null && elementArtifacts().isEmpty();
+        return elements() != null && !elements().isEmpty();
     }
 
     /**
