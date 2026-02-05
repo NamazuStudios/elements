@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.exception.SdkArtifactNotFoundException;
 import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +28,6 @@ public interface ElementArtifactLoader {
      * @param first the first coordinates
      * @param additional the additional coordinates
      * @return the {@link ClassLoader}
-     * @throws SdkArtifactNotFoundException if one or more of the requested artifacts can't be found
      */
     default ClassLoader getClassLoader(final ClassLoader parent,
                                        final Set<ArtifactRepository> repositories,
@@ -106,6 +106,16 @@ public interface ElementArtifactLoader {
                                   final String coordinates) {
         return findArtifact(repositories, coordinates).orElseThrow(SdkArtifactNotFoundException::new);
     }
+
+    /**
+     * Finds the classpath for a particular artifact, including all transient dependencies.
+     *
+     * @param repositories the repositories to search
+     * @param coordinates the coordinates
+     *
+     * @return a stream of {@link Artifact}s
+     */
+    Stream<Artifact> findClasspathForArtifact(Set<ArtifactRepository> repositories, String coordinates);
 
     /**
      * Finds the artifact with the repositories and coordinates.

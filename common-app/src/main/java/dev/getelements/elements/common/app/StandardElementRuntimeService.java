@@ -21,12 +21,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 
@@ -361,6 +363,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 logs.add("Configured " + repositories.size() + " artifact repository(ies)");
             }
 
+            // Create deployment directory structure
+            logs.add("Creating deployment directory structure");
+            final var deploymentDir = temporaryFiles.createTempDirectory(deploymentId);
+            tempFiles.add(deploymentDir);
+            logs.add("Created deployment directory: " + deploymentDir);
+
             final var allElements = new ArrayList<Element>();
 
             // Strategy 1: Load from uploaded ELM file if present
@@ -380,6 +388,31 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
                     final var elements = loadFromElementDefinition(
                             definition,
+                            deployment,
+                            deploymentDir,
+                            registry,
+                            repositories,
+                            tempFiles,
+                            logs,
+                            warnings,
+                            errors
+                    );
+                    allElements.addAll(elements);
+                }
+            }
+
+            // Strategy 3: Process each ElementPackageDefinition
+            if (deployment.packages() != null && !deployment.packages().isEmpty()) {
+                logs.add("Processing " + deployment.packages().size() + " element package(s)");
+
+                for (int i = 0; i < deployment.packages().size(); i++) {
+                    final var packageDef = deployment.packages().get(i);
+                    logs.add("Processing element package " + (i + 1) + "/" + deployment.packages().size());
+
+                    final var elements = loadFromPackageDefinition(
+                            packageDef,
+                            deployment,
+                            deploymentDir,
                             registry,
                             repositories,
                             tempFiles,
@@ -464,40 +497,135 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     /**
      * Loads elements from a single ElementDefinition.
      */
-    private List<Element> loadFromElementDefinition(final dev.getelements.elements.sdk.model.system.ElementDefinition definition,
-                                                     final MutableElementRegistry registry,
-                                                     final Set<ArtifactRepository> repositories,
-                                                     final List<Path> tempFiles,
-                                                     final List<String> logs,
-                                                     final List<String> warnings,
-                                                     final List<Throwable> errors) throws IOException {
+    private List<Element> loadFromElementDefinition(
+            final dev.getelements.elements.sdk.model.system.ElementDefinition definition,
+            final ElementDeployment deployment,
+            final Path deploymentDir,
+            final MutableElementRegistry registry,
+            final Set<ArtifactRepository> repositories,
+            final List<Path> tempFiles,
+            final List<String> logs,
+            final List<String> warnings,
+            final List<Throwable> errors) throws IOException {
         try {
             final var systemClassLoader = getClass().getClassLoader();
 
-            // Check if this definition uses an ELM artifact
+            // Check if this definition uses an ELM artifact with path-based deployment
             if (definition.elmArtifact() != null && !definition.elmArtifact().isBlank()) {
-                logs.add("Loading from ELM artifact: " + definition.elmArtifact());
 
-                // Resolve the ELM artifact
-                final var artifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
-                final var artifactPath = artifact.path();
-                logs.add("Resolved ELM artifact to path: " + artifactPath);
+                if (definition.path() != null && !definition.path().isBlank()) {
+                    // Strategy: Structured deployment with ELM + separate artifacts
+                    logs.add("Loading from ELM artifact with structured deployment: " + definition.elmArtifact());
+                    logs.add("Deployment path: " + definition.path());
 
-                // Build API classloader from this ELM
-                final var pathLoader = ElementPathLoader.newDefaultInstance();
-                final var apiClassLoader = pathLoader.buildApiClassLoader(null, artifactPath);
+                    // Create element path directory
+                    final var elementPath = deploymentDir.resolve(definition.path());
+                    Files.createDirectories(elementPath);
+                    logs.add("Created element directory: " + elementPath);
 
-                // Load elements from the ELM
-                final var elements = pathLoader.load(registry, artifactPath, apiClassLoader).toList();
-                logs.add("Loaded " + elements.size() + " element(s) from ELM artifact");
+                    // Create subdirectories for artifacts
+                    final var apiDir = elementPath.resolve(ElementPathLoader.API_DIR);
+                    final var spiDir = elementPath.resolve(ElementPathLoader.SPI_DIR);
+                    final var libDir = elementPath.resolve(ElementPathLoader.LIB_DIR);
+                    Files.createDirectories(apiDir);
+                    Files.createDirectories(spiDir);
+                    Files.createDirectories(libDir);
 
-                // Log each element's name
-                for (final var element : elements) {
-                    final var elementName = element.getElementRecord().definition().name();
-                    logs.add("  - Element: " + elementName);
+                    // Gather and place API artifacts
+                    if (definition.apiArtifacts() != null && !definition.apiArtifacts().isEmpty()) {
+                        logs.add("Gathering " + definition.apiArtifacts().size() + " API artifact(s)");
+                        for (final var coordinate : definition.apiArtifacts()) {
+                            copyArtifactWithDependencies(coordinate, repositories, apiDir, logs);
+                        }
+                    }
+
+                    // Gather and place SPI artifacts
+                    if (definition.spiArtifacts() != null && !definition.spiArtifacts().isEmpty()) {
+                        logs.add("Gathering " + definition.spiArtifacts().size() + " SPI artifact(s)");
+                        for (final var coordinate : definition.spiArtifacts()) {
+                            copyArtifactWithDependencies(coordinate, repositories, spiDir, logs);
+                        }
+                    }
+
+                    // Gather and place implementation artifacts (from elementArtifacts or elmArtifact)
+                    if (definition.elementArtifacts() != null && !definition.elementArtifacts().isEmpty()) {
+                        logs.add("Gathering " + definition.elementArtifacts().size() + " element artifact(s)");
+                        for (final var coordinate : definition.elementArtifacts()) {
+                            copyArtifactWithDependencies(coordinate, repositories, libDir, logs);
+                        }
+                    }
+
+                    // Also copy the ELM artifact itself to lib
+                    logs.add("Resolving ELM artifact: " + definition.elmArtifact());
+                    final var elmArtifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
+                    final var elmDestination = libDir.resolve(elmArtifact.path().getFileName());
+                    Files.copy(elmArtifact.path(), elmDestination, StandardCopyOption.REPLACE_EXISTING);
+                    logs.add("Copied ELM artifact to: " + elmDestination);
+
+                    // Load using LoadConfiguration with AttributesLoader
+                    final var pathLoader = ElementPathLoader.newDefaultInstance();
+                    final var baseAttributes = new SimpleAttributes.Builder()
+                            .setAttributes(deployment.attributes())
+                            .build();
+
+                    final var config = ElementPathLoader.LoadConfiguration.builder()
+                            .registry(registry)
+                            .path(elementPath)
+                            .attributesProvider((attrs, path) -> {
+                                // Merge deployment attributes with element-specific attributes
+                                final var builder = new SimpleAttributes.Builder().from(baseAttributes);
+                                if (definition.attributes() != null) {
+                                    builder.setAttributes(definition.attributes());
+                                }
+                                return builder.build();
+                            })
+                            .build();
+
+                    final var elements = pathLoader.load(config).toList();
+                    logs.add("Loaded " + elements.size() + " element(s) from structured deployment");
+
+                    for (final var element : elements) {
+                        final var elementName = element.getElementRecord().definition().name();
+                        logs.add("  - Element: " + elementName);
+                    }
+
+                    return elements;
+
+                } else {
+                    // Legacy strategy: Load ELM directly without structured deployment
+                    logs.add("Loading from ELM artifact (legacy): " + definition.elmArtifact());
+
+                    // Resolve the ELM artifact
+                    final var artifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
+                    final var artifactPath = artifact.path();
+                    logs.add("Resolved ELM artifact to path: " + artifactPath);
+
+                    // Load elements from the ELM using LoadConfiguration
+                    final var pathLoader = ElementPathLoader.newDefaultInstance();
+
+                    final var config = ElementPathLoader.LoadConfiguration.builder()
+                            .registry(registry)
+                            .path(artifactPath)
+                            .attributesProvider((attrs, path) -> {
+                                final var builder = new SimpleAttributes.Builder()
+                                        .setAttributes(deployment.attributes());
+                                if (definition.attributes() != null) {
+                                    builder.setAttributes(definition.attributes());
+                                }
+                                return builder.build();
+                            })
+                            .build();
+
+                    final var elements = pathLoader.load(config).toList();
+                    logs.add("Loaded " + elements.size() + " element(s) from ELM artifact");
+
+                    for (final var element : elements) {
+                        final var elementName = element.getElementRecord().definition().name();
+                        logs.add("  - Element: " + elementName);
+                    }
+
+                    return elements;
                 }
-
-                return elements;
 
             } else {
                 // Build classloader chain from Maven artifacts: System -> (API+SPI) -> Element
@@ -552,6 +680,94 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             logs.add("Failed to load from ElementDefinition: " + ex.getMessage());
             errors.add(ex);
             throw ex;
+        }
+    }
+
+    /**
+     * Loads elements from an ElementPackageDefinition.
+     */
+    private List<Element> loadFromPackageDefinition(
+            final dev.getelements.elements.sdk.model.system.ElementPackageDefinition packageDef,
+            final ElementDeployment deployment,
+            final Path deploymentDir,
+            final MutableElementRegistry registry,
+            final Set<ArtifactRepository> repositories,
+            final List<Path> tempFiles,
+            final List<String> logs,
+            final List<String> warnings,
+            final List<Throwable> errors) throws IOException {
+        try {
+            logs.add("Loading from package ELM artifact: " + packageDef.elmArtifact());
+
+            // Resolve the ELM artifact
+            final var elmArtifact = elementArtifactLoader.getArtifact(repositories, packageDef.elmArtifact());
+            final var elmPath = elmArtifact.path();
+            logs.add("Resolved package ELM to: " + elmPath);
+
+            // Load elements using LoadConfiguration with per-path attributes
+            final var pathLoader = ElementPathLoader.newDefaultInstance();
+
+            final var config = ElementPathLoader.LoadConfiguration.builder()
+                    .registry(registry)
+                    .path(elmPath)
+                    .attributesProvider((attrs, elementPath) -> {
+                        // Build base attributes from deployment
+                        final var builder = new SimpleAttributes.Builder()
+                                .setAttributes(deployment.attributes());
+
+                        // Apply per-path attributes if configured
+                        if (packageDef.pathAttributes() != null) {
+                            final var pathStr = elementPath.toString();
+                            final var pathAttrs = packageDef.pathAttributes().get(pathStr);
+                            if (pathAttrs != null) {
+                                logs.add("Applying path-specific attributes for: " + pathStr);
+                                builder.setAttributes(pathAttrs);
+                            }
+                        }
+
+                        return builder.build();
+                    })
+                    .build();
+
+            final var elements = pathLoader.load(config).toList();
+            logs.add("Loaded " + elements.size() + " element(s) from package");
+
+            for (final var element : elements) {
+                final var elementName = element.getElementRecord().definition().name();
+                logs.add("  - Element: " + elementName);
+            }
+
+            return elements;
+
+        } catch (Exception ex) {
+            logs.add("Failed to load from ElementPackageDefinition: " + ex.getMessage());
+            errors.add(ex);
+            throw ex;
+        }
+    }
+
+    /**
+     * Copies an artifact and its transitive dependencies to a target directory.
+     */
+    private void copyArtifactWithDependencies(
+            final String coordinates,
+            final Set<ArtifactRepository> repositories,
+            final Path targetDir,
+            final List<String> logs) throws IOException {
+
+        logs.add("Resolving artifact with dependencies: " + coordinates);
+
+        final var artifacts = elementArtifactLoader.findClasspathForArtifact(repositories, coordinates).toList();
+
+        logs.add("Found " + artifacts.size() + " artifact(s) including dependencies");
+
+        for (final var artifact : artifacts) {
+            final var sourcePath = artifact.path();
+            final var fileName = sourcePath.getFileName();
+            final var destinationPath = targetDir.resolve(fileName);
+
+            Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+            logs.add("Copied artifact: " + fileName);
         }
     }
 

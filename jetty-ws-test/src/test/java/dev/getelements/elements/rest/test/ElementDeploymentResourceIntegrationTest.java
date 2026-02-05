@@ -65,11 +65,15 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:spi:1.0.0"),
                 null,
                 "com.example:elm:1.0.0"
+        ,
+                null,
+                null
         );
 
         final var request = new CreateElementDeploymentRequest(
                 null, // global deployment
                 List.of(elementDefinition),
+                null, // packages
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
@@ -107,11 +111,15 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:spi:2.0.0"),
                 List.of("com.example:element-impl:2.0.0"),
                 null
+        ,
+                null,
+                null
         );
 
         final var request = new CreateElementDeploymentRequest(
                 null,
                 List.of(elementDefinition),
+                null, // packages
                 false,
                 List.of(),
                 null,
@@ -240,10 +248,14 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:spi-updated:1.1.0"),
                 null,
                 "com.example:elm-updated:1.1.0"
+        ,
+                null,
+                null
         );
 
         final var request = new UpdateElementDeploymentRequest(
                 List.of(elementDefinition),
+                null, // packages
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
@@ -281,10 +293,14 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of(),
                 List.of("com.example:element:1.0.0"),
                 null
+        ,
+                null,
+                null
         );
 
         final var request = new UpdateElementDeploymentRequest(
                 List.of(elementDefinition),
+                null, // packages
                 false,
                 List.of(),
                 null,
@@ -355,11 +371,15 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:spi:1.0.0"),
                 null,
                 "com.example:elm:1.0.0"
+        ,
+                null,
+                null
         );
 
         final var request = new CreateElementDeploymentRequest(
                 null,
                 List.of(elementDefinition),
+                null, // packages
                 true,
                 List.of(),
                 null,

@@ -80,6 +80,8 @@ public class MongoElementDeploymentDaoTest {
                 List.of("com.example:api:1.0"),
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
+                null,
+                null,
                 null
         );
 
@@ -88,6 +90,7 @@ public class MongoElementDeploymentDaoTest {
                 application,
                 null,
                 List.of(elementDefinition),
+                null,
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
@@ -122,7 +125,9 @@ public class MongoElementDeploymentDaoTest {
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
                 null,
-                "com.example:elm:1.0"
+                "com.example:elm:1.0",
+                null,
+                null
         );
 
         final var deployment = new ElementDeployment(
@@ -130,6 +135,7 @@ public class MongoElementDeploymentDaoTest {
                 null,
                 null,
                 List.of(elementDefinition),
+                null,
                 false,
                 List.of(),
                 null,
@@ -251,6 +257,12 @@ public class MongoElementDeploymentDaoTest {
                         : List.of(),
                 deployment.elements() != null && !deployment.elements().isEmpty()
                         ? deployment.elements().get(0).elmArtifact()
+                        : null,
+                deployment.elements() != null && !deployment.elements().isEmpty()
+                        ? deployment.elements().get(0).path()
+                        : null,
+                deployment.elements() != null && !deployment.elements().isEmpty()
+                        ? deployment.elements().get(0).attributes()
                         : null
         );
 
@@ -259,6 +271,7 @@ public class MongoElementDeploymentDaoTest {
                 deployment.application(),
                 deployment.elm(),
                 List.of(updatedDefinition),
+                deployment.packages(),
                 deployment.useDefaultRepositories(),
                 deployment.repositories(),
                 deployment.attributes(),

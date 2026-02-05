@@ -47,6 +47,13 @@ public record ElementDeployment(
         )
         List<ElementDefinition> elements,
 
+        @Valid
+        @Schema(description =
+                "List of Element package definitions specifying ELM artifacts to deploy with per-path attribute " +
+                "configuration. Each package can contain multiple elements with individualized attribute mappings."
+        )
+        List<ElementPackageDefinition> packages,
+
         @Schema(description =
                 "Flag indicating whether to use the default artifact repositories in addition to any provided. The " +
                 "actual repositories included will be those defined by the system's default configuration at " +

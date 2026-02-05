@@ -4,6 +4,7 @@ import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
 import java.util.List;
+import java.util.Map;
 
 @Embedded
 public class MongoElementDefinition {
@@ -19,6 +20,12 @@ public class MongoElementDefinition {
 
     @Property
     private String elmArtifact;
+
+    @Property
+    private String path;
+
+    @Property
+    private Map<String, Object> attributes;
 
     public List<String> getApiArtifacts() {
         return apiArtifacts;
@@ -50,6 +57,22 @@ public class MongoElementDefinition {
 
     public void setElmArtifact(String elmArtifact) {
         this.elmArtifact = elmArtifact;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 
 }

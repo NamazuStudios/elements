@@ -70,7 +70,38 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
     }
 
     @Override
-    public Optional<Artifact> findArtifact(Set<ArtifactRepository> repositories, String coordinates) {
+    public Stream<Artifact> findClasspathForArtifact(Set<ArtifactRepository> repositories, String coordinates) {
+
+        final MavenResolvedArtifact[] resolvedArtifacts;
+
+        try {
+            resolvedArtifacts = configurableSystem(repositories)
+                    .resolve(coordinates)
+                    .withoutTransitivity()
+                    .asResolvedArtifact();
+        } catch (RuntimeException ex) {
+            if (isNotFound(ex)) {
+
+                logger.info("Unable to resolve artifact coordinates: [{}]",
+                        String.join(",", coordinates),
+                        ex
+                );
+
+                return Stream.empty();
+
+            } else {
+                throw new SdkException(ex);
+            }
+        }
+
+        return Stream
+                .of(resolvedArtifacts)
+                .map(a -> new Artifact(a.asFile().toPath(), a.getExtension()));
+
+    }
+
+    @Override
+    public Optional<Artifact> findArtifact(final Set<ArtifactRepository> repositories, final String coordinates) {
 
         final MavenResolvedArtifact resolvedArtifact;
 

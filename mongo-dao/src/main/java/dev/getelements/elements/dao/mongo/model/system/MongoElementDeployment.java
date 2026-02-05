@@ -27,6 +27,9 @@ public class MongoElementDeployment {
     private List<MongoElementDefinition> elements;
 
     @Property
+    private List<MongoElementPackageDefinition> packages;
+
+    @Property
     private boolean useDefaultRepositories;
 
     @Property
@@ -71,6 +74,14 @@ public class MongoElementDeployment {
 
     public void setElements(List<MongoElementDefinition> elements) {
         this.elements = elements;
+    }
+
+    public List<MongoElementPackageDefinition> getPackages() {
+        return packages;
+    }
+
+    public void setPackages(List<MongoElementPackageDefinition> packages) {
+        this.packages = packages;
     }
 
     public boolean isUseDefaultRepositories() {
