@@ -13,13 +13,11 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.*;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
-import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.nio.file.Files.createDirectories;
 import static java.util.stream.Collectors.toSet;
 import static org.testng.Assert.assertEquals;
