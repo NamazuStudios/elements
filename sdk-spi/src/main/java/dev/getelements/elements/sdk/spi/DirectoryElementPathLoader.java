@@ -121,7 +121,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         }
 
         // Return ApiClassLoader (handles FileSystem cleanup) even if classpath is empty
-        return new ApiClassLoader(classpath.toArray(URL[]::new), fileSystems, parent);
+        return new ElementApiClassLoader(classpath.toArray(URL[]::new), fileSystems, parent);
 
     }
 
@@ -459,7 +459,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             final var classLoaderName = "%s[%s]".formatted(
                     ELEMENT_PATH_ENV,
-                    elementPath().getFileName()
+                    elementPath()
             );
 
             return ServiceLoader

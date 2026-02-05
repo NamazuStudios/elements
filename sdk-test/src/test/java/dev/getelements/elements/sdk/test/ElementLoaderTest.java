@@ -15,6 +15,7 @@ import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_A;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.VARIANT_B;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.element.TestService.*;
+import static java.lang.Thread.currentThread;
 
 public class ElementLoaderTest {
 
@@ -70,7 +71,13 @@ public class ElementLoaderTest {
 
         final var loader = ElementLoaderFactory
                 .getDefault()
-                .getIsolatedLoader(attributes, cl -> new URLClassLoader(elementUrls, cl));
+                .getIsolatedLoaderWithParent(
+                        attributes,
+                        currentThread().getContextClassLoader(),
+                        cl -> new URLClassLoader(elementUrls, cl),
+                        new PermittedTypesClassLoader(),
+                        e -> true
+                );
 
         element = elementRegistry.register(loader);
         elementName = element.getElementRecord().definition().name();

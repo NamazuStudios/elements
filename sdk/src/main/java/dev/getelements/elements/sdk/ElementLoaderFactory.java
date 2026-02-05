@@ -5,15 +5,15 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+
+import static java.lang.Thread.currentThread;
 
 /**
  * <p>
@@ -63,6 +63,16 @@ import java.util.stream.Stream;
  * permitted types from the base classloader.
  * </p>
  *
+ * <h3>Practical Note on PermittedTypesClassLoader Placement</h3>
+ * <p>
+ * In virtually all scenarios, if {@link dev.getelements.elements.sdk.PermittedTypesClassLoader} is used for
+ * selective type borrowing, it must be placed in the parent classloader hierarchy (not as the base classloader).
+ * {@link dev.getelements.elements.sdk.PermittedTypesClassLoader} acts as a filtering layer that can wrap any
+ * classloader to provide selective type access. While it typically wraps the same classloader used as the base
+ * classloader, it doesn't have to. Placing it in the parent ensures proper delegation and type visibility control
+ * during Element loading.
+ * </p>
+ *
  * <h2>VM Restrictions and Warnings</h2>
  * <p>
  * Some VM restrictions apply when using isolated classloaders. If an Element accesses the system classloader
@@ -109,7 +119,7 @@ public interface ElementLoaderFactory {
             ClassLoaderConstructor classLoaderCtor) {
         return getIsolatedLoader(
                 attributes,
-                getClass().getClassLoader(),
+                currentThread().getContextClassLoader(),
                 classLoaderCtor,
                 r -> true);
     }
@@ -175,9 +185,10 @@ public interface ElementLoaderFactory {
             Predicate<ElementDefinitionRecord> selector) {
         return getIsolatedLoader(
                 attributes,
-                getClass().getClassLoader(),
+                currentThread().getContextClassLoader(),
                 classLoaderCtor,
-                selector);
+                selector
+        );
     }
 
     /**
@@ -378,7 +389,7 @@ public interface ElementLoaderFactory {
             Attributes attributes,
             Predicate<ElementDefinitionRecord> selector) {
         return findElementDefinitionRecord(
-                getClass().getClassLoader(),
+                currentThread().getContextClassLoader(),
                 attributes,
                 selector
         );
@@ -438,6 +449,6 @@ public interface ElementLoaderFactory {
      * </p>
      */
     @FunctionalInterface
-    interface ClassLoaderConstructor extends Function<ClassLoader, ClassLoader> {};
+    interface ClassLoaderConstructor extends Function<ClassLoader, ClassLoader> {}
 
 }

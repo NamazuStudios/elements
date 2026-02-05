@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.test;
 
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.PermittedTypesClassLoader;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.slf4j.Logger;
@@ -75,7 +76,8 @@ public class ApiElementLoaderTest {
         final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
-        final var apiClassLoader = elementPathLoader.buildApiClassLoader(null, baseDirectory);
+        final var parent = new PermittedTypesClassLoader();
+        final var apiClassLoader = elementPathLoader.buildApiClassLoader(parent, baseDirectory);
 
         final var loadedElements = elementPathLoader.load(
                 elementRegistry,

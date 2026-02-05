@@ -9,7 +9,6 @@ import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -18,20 +17,24 @@ import static java.util.stream.Collectors.joining;
  * A URLClassLoader that manages the lifecycle of FileSystem instances opened for ELM files.
  * When this classloader is closed, it also closes all associated FileSystems to release resources.
  */
-public class ApiClassLoader extends URLClassLoader {
+public class ElementApiClassLoader extends URLClassLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApiClassLoader.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElementApiClassLoader.class);
 
     private final List<FileSystem> fileSystems;
 
+    static {
+        registerAsParallelCapable();
+    }
+
     /**
-     * Creates a new ApiClassLoader with the specified URLs, FileSystems, and parent ClassLoader.
+     * Creates a new ElementApiClassLoader with the specified URLs, FileSystems, and parent ClassLoader.
      *
      * @param urls the URLs from which to load classes and resources
      * @param fileSystems the FileSystems to close when this classloader is closed
      * @param parent the parent ClassLoader, or null to use the bootstrap classloader
      */
-    public ApiClassLoader(final URL[] urls, final List<FileSystem> fileSystems, final ClassLoader parent) {
+    public ElementApiClassLoader(final URL[] urls, final List<FileSystem> fileSystems, final ClassLoader parent) {
 
         super("API=[%s]".formatted(
                 Stream.concat(
