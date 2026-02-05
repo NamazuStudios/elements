@@ -145,6 +145,8 @@ public class ElementClassLoader extends ClassLoader {
             } catch (final ClassNotFoundException e) {
                 final var delegateClass = delegate.loadClass(name);
                 return processVisibilityAnnotations(delegateClass);
+            } catch (NoClassDefFoundError e) {
+                throw e;
             }
         }
     }

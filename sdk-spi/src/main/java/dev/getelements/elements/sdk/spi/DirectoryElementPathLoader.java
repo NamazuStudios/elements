@@ -135,19 +135,39 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         }
 
         try (final var ds = newDirectoryStream(path)) {
+
+            // First pass: collect JARs from top-level "api" directory if it exists
+            final var topLevelApi = path.resolve(API_DIR);
+            if (isApiDirectory(topLevelApi)) {
+                logger.info("Found top-level API directory: {}", topLevelApi);
+                try (final var jarStream = newDirectoryStream(topLevelApi)) {
+                    for (final var jarPath : jarStream) {
+                        if (isJarFile(jarPath)) {
+                            apiClasspath.add(toUrl(jarPath));
+                            logger.debug("Added top-level API jar: {}", jarPath);
+                        }
+                    }
+                }
+            }
+
+            // Second pass: for each subdirectory that isn't "api", check if it contains an "api" subdirectory
             for (final var subPath : ds) {
-                if (isApiDirectory(subPath)) {
-                    logger.info("Found API directory: {}", subPath);
-                    try (final var jarStream = newDirectoryStream(subPath)) {
-                        for (final var jarPath : jarStream) {
-                            if (isJarFile(jarPath)) {
-                                apiClasspath.add(toUrl(jarPath));
-                                logger.debug("Added API jar: {}", jarPath);
+                if (isDirectory(subPath) && !isApiDirectory(subPath)) {
+                    final var elementApi = subPath.resolve(API_DIR);
+                    if (isApiDirectory(elementApi)) {
+                        logger.info("Found element API directory: {}", elementApi);
+                        try (final var jarStream = newDirectoryStream(elementApi)) {
+                            for (final var jarPath : jarStream) {
+                                if (isJarFile(jarPath)) {
+                                    apiClasspath.add(toUrl(jarPath));
+                                    logger.debug("Added element API jar: {}", jarPath);
+                                }
                             }
                         }
                     }
                 }
             }
+
         } catch (IOException e) {
             throw new SdkException(e);
         }
@@ -264,7 +284,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         try (final var directory = newDirectoryStream(path)) {
 
             for (final var subpath : directory) {
-                if (isDirectory(subpath)) {
+                if (isDirectory(subpath) && !isApiDirectory(subpath)) {
                     try (final var elementDirectory = newDirectoryStream(subpath)) {
 
                         // If the Element provides its own SPI, we will include it. This is not required and
@@ -294,10 +314,27 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             return elements.stream();
 
         } catch (IOException ex) {
-            elements.forEach(Element::close);
+
+            elements.forEach(el -> {
+                try {
+                    el.close();
+                } catch (Exception suppressed) {
+                    ex.addSuppressed(suppressed);
+                }
+            });
+
             throw new SdkException(ex);
+
         } catch (Exception ex) {
-            elements.forEach(Element::close);
+
+            elements.forEach(el -> {
+                try {
+                    el.close();
+                } catch (Exception suppressed) {
+                    ex.addSuppressed(suppressed);
+                }
+            });
+
             throw ex;
         }
 
