@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 @Embedded
-public class MongoElementDefinition {
+public class MongoElementPathDefinition {
 
     @Property
     private List<String> apiArtifacts;

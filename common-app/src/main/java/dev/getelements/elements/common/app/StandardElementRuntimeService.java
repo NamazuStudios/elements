@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
+import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
@@ -28,7 +29,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 
@@ -498,7 +498,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * Loads elements from a single ElementDefinition.
      */
     private List<Element> loadFromElementDefinition(
-            final dev.getelements.elements.sdk.model.system.ElementDefinition definition,
+            final ElementPathDefinition definition,
             final ElementDeployment deployment,
             final Path deploymentDir,
             final MutableElementRegistry registry,
@@ -564,16 +564,20 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
                     // Load using LoadConfiguration with AttributesLoader
                     final var pathLoader = ElementPathLoader.newDefaultInstance();
-                    final var baseAttributes = new SimpleAttributes.Builder()
-                            .setAttributes(deployment.attributes())
-                            .build();
 
                     final var config = ElementPathLoader.LoadConfiguration.builder()
                             .registry(registry)
                             .path(elementPath)
                             .attributesProvider((attrs, path) -> {
-                                // Merge deployment attributes with element-specific attributes
-                                final var builder = new SimpleAttributes.Builder().from(baseAttributes);
+                                // Start with deployment-level path attributes
+                                final var builder = new SimpleAttributes.Builder();
+                                if (deployment.pathAttributes() != null) {
+                                    final var pathAttrs = deployment.pathAttributes().get(path.toString());
+                                    if (pathAttrs != null) {
+                                        builder.setAttributes(pathAttrs);
+                                    }
+                                }
+                                // Merge with element-specific attributes
                                 if (definition.attributes() != null) {
                                     builder.setAttributes(definition.attributes());
                                 }
@@ -607,8 +611,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                             .registry(registry)
                             .path(artifactPath)
                             .attributesProvider((attrs, path) -> {
-                                final var builder = new SimpleAttributes.Builder()
-                                        .setAttributes(deployment.attributes());
+                                // Start with deployment-level path attributes
+                                final var builder = new SimpleAttributes.Builder();
+                                if (deployment.pathAttributes() != null) {
+                                    final var pathAttrs = deployment.pathAttributes().get(path.toString());
+                                    if (pathAttrs != null) {
+                                        builder.setAttributes(pathAttrs);
+                                    }
+                                }
+                                // Merge with element-specific attributes
                                 if (definition.attributes() != null) {
                                     builder.setAttributes(definition.attributes());
                                 }
@@ -711,17 +722,23 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     .registry(registry)
                     .path(elmPath)
                     .attributesProvider((attrs, elementPath) -> {
-                        // Build base attributes from deployment
-                        final var builder = new SimpleAttributes.Builder()
-                                .setAttributes(deployment.attributes());
+                        final var pathStr = elementPath.toString();
+                        final var builder = new SimpleAttributes.Builder();
 
-                        // Apply per-path attributes if configured
+                        // Start with deployment-level path attributes
+                        if (deployment.pathAttributes() != null) {
+                            final var deploymentPathAttrs = deployment.pathAttributes().get(pathStr);
+                            if (deploymentPathAttrs != null) {
+                                builder.setAttributes(deploymentPathAttrs);
+                            }
+                        }
+
+                        // Apply package-specific per-path attributes
                         if (packageDef.pathAttributes() != null) {
-                            final var pathStr = elementPath.toString();
-                            final var pathAttrs = packageDef.pathAttributes().get(pathStr);
-                            if (pathAttrs != null) {
+                            final var packagePathAttrs = packageDef.pathAttributes().get(pathStr);
+                            if (packagePathAttrs != null) {
                                 logs.add("Applying path-specific attributes for: " + pathStr);
-                                builder.setAttributes(pathAttrs);
+                                builder.setAttributes(packagePathAttrs);
                             }
                         }
 

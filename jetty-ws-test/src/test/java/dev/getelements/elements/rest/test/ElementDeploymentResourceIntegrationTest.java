@@ -2,7 +2,6 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.system.*;
-import dev.getelements.elements.sdk.record.ArtifactRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
@@ -60,7 +59,7 @@ public class ElementDeploymentResourceIntegrationTest {
 
     @Test(groups = "createDeployment")
     public void testCreateElementDeploymentWithArtifacts() {
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of("com.example:api:1.0.0"),
                 List.of("com.example:spi:1.0.0"),
                 null,
@@ -106,7 +105,7 @@ public class ElementDeploymentResourceIntegrationTest {
 
     @Test(groups = "createDeployment")
     public void testCreateElementDeploymentWithElementArtifacts() {
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of("com.example:api:2.0.0"),
                 List.of("com.example:spi:2.0.0"),
                 List.of("com.example:element-impl:2.0.0"),
@@ -141,7 +140,7 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(created.elements().size(), 1);
         assertEquals(created.elements().get(0).elementArtifacts(), elementDefinition.elementArtifacts());
         assertFalse(created.useDefaultRepositories());
-        assertEquals(created.state(), ElementDeploymentState.UNLOADED);
+        assertEquals(created.state(), ElementDeploymentState.ENABLED);
     }
 
     @Test(
@@ -243,7 +242,7 @@ public class ElementDeploymentResourceIntegrationTest {
     public void testUpdateElementDeployment() {
         assertNotNull(createdDeploymentId, "Deployment ID should be set from create test");
 
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of("com.example:api-updated:1.1.0"),
                 List.of("com.example:spi-updated:1.1.0"),
                 null,
@@ -288,7 +287,7 @@ public class ElementDeploymentResourceIntegrationTest {
             dependsOnGroups = "fetchDeployment"
     )
     public void testUpdateElementDeploymentNotFound() {
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of(),
                 List.of(),
                 List.of("com.example:element:1.0.0"),
@@ -366,7 +365,7 @@ public class ElementDeploymentResourceIntegrationTest {
 
     @Test(groups = "accessControl")
     public void testRegularUserCannotCreateDeployment() {
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of("com.example:api:1.0.0"),
                 List.of("com.example:spi:1.0.0"),
                 null,

@@ -23,7 +23,7 @@ public interface ElementDeploymentRequest {
      *
      * @return the Element definitions
      */
-    List<ElementDefinition> elements();
+    List<ElementPathDefinition> elements();
 
     /**
      * Indicate if the deployment is ready. Ready means that there is at least one Element definition specified.

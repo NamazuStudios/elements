@@ -132,10 +132,10 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
             builder.with(unset("repositories"));
         }
 
-        if (mongoElementDeployment.getAttributes() != null) {
-            builder.with(set("attributes", mongoElementDeployment.getAttributes()));
+        if (mongoElementDeployment.getPathAttributes() != null) {
+            builder.with(set("pathAttributes", mongoElementDeployment.getPathAttributes()));
         } else {
-            builder.with(unset("attributes"));
+            builder.with(unset("pathAttributes"));
         }
 
         if (mongoElementDeployment.getState() != null) {

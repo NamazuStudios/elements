@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk.model.system;
 
-import dev.getelements.elements.sdk.record.ArtifactRepository;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 
@@ -28,7 +27,7 @@ public record CreateElementDeploymentRequest(
                 "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
                 "single ELM artifact coordinate."
         )
-        List<ElementDefinition> elements,
+        List<ElementPathDefinition> elements,
 
         @Valid
         @Schema(description =
@@ -51,10 +50,11 @@ public record CreateElementDeploymentRequest(
         List<ElementArtifactRepository> repositories,
 
         @Schema(description =
-                "Custom attributes to pass to the Element at load time. These key-value pairs will be merged with " +
-                "any default attributes and made available to the Element during initialization."
+                "Map of element paths to their custom attributes. The key is the path inside the ELM for each Element " +
+                "in the ELM file, and the value is a map of custom attributes to pass to that specific element " +
+                "at load time via the AttributesLoader mechanism."
         )
-        Map<String, Object> attributes,
+        Map<String, Map<String, Object>> pathAttributes,
 
         @Schema(description =
                 "Sets the state of the deployment. When creating, the creation will only take place if the " +

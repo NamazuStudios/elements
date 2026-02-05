@@ -17,11 +17,10 @@ public record ElementPackageDefinition(
         String elmArtifact,
 
         @Schema(description =
-                "Map of element paths to their custom attributes. The key is the path on disk where the element " +
-                "will be deployed (matching the subdirectory structure within the ELM), and the value is a map " +
-                "of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
+                "Map of element paths to their custom attributes. The key is the inside the ELM for each Element " +
+                "inside the ELM file. and the value is a map of custom attributes to pass to that specific element " +
+                "at load time via the AttributesLoader mechanism."
         )
         Map<String, Map<String, Object>> pathAttributes
 
-) {
-}
+) {}

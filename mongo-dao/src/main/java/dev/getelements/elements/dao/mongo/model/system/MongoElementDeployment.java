@@ -24,7 +24,7 @@ public class MongoElementDeployment {
     private MongoLargeObject elm;
 
     @Property
-    private List<MongoElementDefinition> elements;
+    private List<MongoElementPathDefinition> elements;
 
     @Property
     private List<MongoElementPackageDefinition> packages;
@@ -36,7 +36,7 @@ public class MongoElementDeployment {
     private List<ArtifactRepository> repositories;
 
     @Property
-    private Map<String, Object> attributes;
+    private Map<String, Map<String, Object>> pathAttributes;
 
     @Property
     private ElementDeploymentState state;
@@ -68,11 +68,11 @@ public class MongoElementDeployment {
         this.elm = elm;
     }
 
-    public List<MongoElementDefinition> getElements() {
+    public List<MongoElementPathDefinition> getElements() {
         return elements;
     }
 
-    public void setElements(List<MongoElementDefinition> elements) {
+    public void setElements(List<MongoElementPathDefinition> elements) {
         this.elements = elements;
     }
 
@@ -100,12 +100,12 @@ public class MongoElementDeployment {
         this.repositories = repositories;
     }
 
-    public Map<String, Object> getAttributes() {
-        return attributes;
+    public Map<String, Map<String, Object>> getPathAttributes() {
+        return pathAttributes;
     }
 
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
+    public void setPathAttributes(Map<String, Map<String, Object>> pathAttributes) {
+        this.pathAttributes = pathAttributes;
     }
 
     public ElementDeploymentState getState() {

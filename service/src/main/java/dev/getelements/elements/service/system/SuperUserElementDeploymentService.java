@@ -24,7 +24,6 @@ import jakarta.inject.Provider;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_MIME_TYPE;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
-import static dev.getelements.elements.sdk.service.system.ElementDeploymentService.*;
 
 public class SuperUserElementDeploymentService implements ElementDeploymentService {
 
@@ -59,11 +58,10 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     null,
                     application,
                     largeObjectReference,
-                    request.elements(),
+                    request.pathAttributes(), request.elements(),
                     request.packages(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    request.attributes(),
                     request.effectiveState(),
                     0L
             );
@@ -110,11 +108,11 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     existing.id(),
                     existing.application(),
                     largeObjectReference,
+                    request.pathAttributes(),
                     request.elements(),
                     request.packages(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    request.attributes(),
                     request.effectiveState(),
                     existing.version()
             );

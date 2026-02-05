@@ -9,7 +9,7 @@ import java.util.Map;
         "Defines the classpath configuration for Elements within a deployment. Can specify either Maven " +
         "artifact coordinates (api, spi, element lists) or a single ELM artifact coordinate."
 )
-public record ElementDefinition(
+public record ElementPathDefinition(
 
         @Schema(description =
                 "List of API artifact coordinates. These artifacts will be loaded into a shared API classloader " +

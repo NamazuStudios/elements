@@ -1,17 +1,17 @@
 package dev.getelements.elements.dao.mongo.mapper;
 
-import dev.getelements.elements.dao.mongo.model.system.MongoElementDefinition;
-import dev.getelements.elements.sdk.model.system.ElementDefinition;
+import dev.getelements.elements.dao.mongo.model.system.MongoElementPathDefinition;
+import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import org.mapstruct.Mapper;
 
 @Mapper
-public interface MongoElementDefinitionMapper extends MapperRegistry.ReversibleMapper<MongoElementDefinition, ElementDefinition> {
+public interface MongoElementDefinitionMapper extends MapperRegistry.ReversibleMapper<MongoElementPathDefinition, ElementPathDefinition> {
 
     @Override
-    ElementDefinition forward(MongoElementDefinition source);
+    ElementPathDefinition forward(MongoElementPathDefinition source);
 
     @Override
-    MongoElementDefinition reverse(ElementDefinition source);
+    MongoElementPathDefinition reverse(ElementPathDefinition source);
 
 }

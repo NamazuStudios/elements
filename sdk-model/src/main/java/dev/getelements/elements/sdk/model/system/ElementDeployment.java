@@ -2,7 +2,6 @@ package dev.getelements.elements.sdk.model.system;
 
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.Application;
-import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,13 +38,20 @@ public record ElementDeployment(
         )
         LargeObjectReference elm,
 
+        @Schema(description =
+                "Map of element paths to their custom attributes. The key is the path inside the ELM for each Element " +
+                "in the ELM file, and the value is a map of custom attributes to pass to that specific element " +
+                "at load time via the AttributesLoader mechanism."
+        )
+        Map<String, Map<String, Object>> pathAttributes,
+
         @Valid
         @Schema(description =
                 "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
                 "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
                 "single ELM artifact coordinate."
         )
-        List<ElementDefinition> elements,
+        List<ElementPathDefinition> elements,
 
         @Valid
         @Schema(description =
@@ -66,12 +72,6 @@ public record ElementDeployment(
                 "List of artifact repositories to use for resolving the specified artifacts and their dependencies. " +
                 "All artifacts and their dependencies must be found within these repositories.")
         List<ElementArtifactRepository> repositories,
-
-        @Schema(description =
-                "Custom attributes to pass to the Element at load time. These key-value pairs will be merged with " +
-                "any default attributes and made available to the Element during initialization."
-        )
-        Map<String, Object> attributes,
 
         @Schema(description =
                 "The state of the deployment. Only deployments in the ENABLED state will be deployed to nodes in the " +

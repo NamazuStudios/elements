@@ -4,10 +4,9 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
-import dev.getelements.elements.sdk.model.system.ElementDefinition;
+import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
-import dev.getelements.elements.sdk.record.ArtifactRepository;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -76,7 +75,7 @@ public class MongoElementDeploymentDaoTest {
     public void testCreateDeploymentWithApplication() {
         final var application = getApplicationTestFactory().createMockApplication(getClass());
 
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of("com.example:api:1.0"),
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
@@ -89,11 +88,10 @@ public class MongoElementDeploymentDaoTest {
                 null,
                 application,
                 null,
-                List.of(elementDefinition),
+                null, List.of(elementDefinition),
                 null,
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
-                null,
                 ElementDeploymentState.ENABLED,
                 0L
         );
@@ -121,7 +119,7 @@ public class MongoElementDeploymentDaoTest {
 
     @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithoutApplication() {
-        final var elementDefinition = new ElementDefinition(
+        final var elementDefinition = new ElementPathDefinition(
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
                 null,
@@ -134,11 +132,10 @@ public class MongoElementDeploymentDaoTest {
                 null,
                 null,
                 null,
-                List.of(elementDefinition),
+                null, List.of(elementDefinition),
                 null,
                 false,
                 List.of(),
-                null,
                 ElementDeploymentState.UNLOADED,
                 0L
         );
@@ -249,7 +246,7 @@ public class MongoElementDeploymentDaoTest {
             dataProvider = "allDeployments"
     )
     public void testUpdateStateAndArtifacts(final ElementDeployment deployment) {
-        final var updatedDefinition = new ElementDefinition(
+        final var updatedDefinition = new ElementPathDefinition(
                 List.of("com.example:api-updated:2.0"),
                 List.of("com.example:spi-updated:2.0"),
                 deployment.elements() != null && !deployment.elements().isEmpty()
@@ -270,11 +267,11 @@ public class MongoElementDeploymentDaoTest {
                 deployment.id(),
                 deployment.application(),
                 deployment.elm(),
+                deployment.pathAttributes(), 
                 List.of(updatedDefinition),
                 deployment.packages(),
                 deployment.useDefaultRepositories(),
                 deployment.repositories(),
-                deployment.attributes(),
                 ElementDeploymentState.DISABLED,
                 deployment.version()
         );
