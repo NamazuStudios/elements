@@ -1,17 +1,16 @@
 package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
 import static java.util.List.*;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Used to load {@link Element} instances from local paths on disk. As a single Element may span multiple sources for
@@ -111,14 +110,174 @@ public interface ElementPathLoader {
     String ATTRIBUTES_PROPERTIES_FILE = "dev.getelements.element.attributes.properties";
 
     /**
+     * Configuration for loading Elements from paths. Provides sensible defaults for all optional parameters.
+     * Use {@link #builder()} to construct instances with a fluent API.
+     *
+     * @param registry the registry to load Elements into (required)
+     * @param paths the paths to scan for Elements (required)
+     * @param parent the parent classloader for delegation (nullable, defaults to bootstrap)
+     * @param baseClassLoader the base classloader for selective type borrowing (nullable, defaults to this class's classloader)
+     * @param attributesProvider function to provide Attributes for each Element path (nullable, defaults to properties file reader)
+     * @since 3.7
+     */
+    record LoadConfiguration(
+            MutableElementRegistry registry,
+            Collection<Path> paths,
+            ClassLoader parent,
+            ClassLoader baseClassLoader,
+            AttributesLoader attributesProvider
+    ) {
+
+        /**
+         * Creates a new builder for LoadConfiguration.
+         *
+         * @return a new builder instance
+         */
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        /**
+         * Builder for LoadConfiguration with fluent API and automatic defaults.
+         */
+        public static final class Builder {
+
+            private MutableElementRegistry registry;
+
+            private Collection<Path> paths;
+
+            private ClassLoader parent;
+
+            private ClassLoader baseClassLoader;
+
+            private AttributesLoader attributesLoader = (attributes, path) -> attributes;
+
+            private Builder() {}
+
+            /**
+             * Sets the registry to load Elements into.
+             *
+             * @param registry the registry (required)
+             * @return this builder
+             */
+            public Builder registry(final MutableElementRegistry registry) {
+                this.registry = requireNonNull(registry, "registry");
+                return this;
+            }
+
+            /**
+             * Sets the paths to scan for Elements.
+             *
+             * @param paths the collection of paths (required)
+             * @return this builder
+             */
+            public Builder paths(final Collection<Path> paths) {
+                this.paths = requireNonNull(paths, "paths");
+                return this;
+            }
+
+            /**
+             * Sets a single path to scan for Elements.
+             *
+             * @param path the path (required)
+             * @return this builder
+             */
+            public Builder path(final Path path) {
+                this.paths = Set.of(requireNonNull(path, "path"));
+                return this;
+            }
+
+            /**
+             * Sets the parent classloader for delegation.
+             *
+             * @param parent the parent classloader (null for bootstrap)
+             * @return this builder
+             */
+            public Builder parent(final ClassLoader parent) {
+                this.parent = parent;
+                return this;
+            }
+
+            /**
+             * Sets the base classloader for selective type borrowing.
+             *
+             * @param baseClassLoader the base classloader
+             * @return this builder
+             */
+            public Builder baseClassLoader(final ClassLoader baseClassLoader) {
+                this.baseClassLoader = baseClassLoader;
+                return this;
+            }
+
+            /**
+             * Sets the function to provide Attributes for each Element path.
+             *
+             * @param attributesLoader the attributes provider function
+             * @return this builder
+             */
+            public Builder attributesProvider(final AttributesLoader attributesLoader) {
+
+                this.attributesLoader = attributesLoader == null
+                    ? (attributes, path) -> attributes
+                    : attributesLoader;
+
+                return this;
+
+            }
+
+            /**
+             * Builds the LoadConfiguration with defaults applied for unspecified optional parameters.
+             *
+             * @return the configured LoadConfiguration
+             * @throws NullPointerException if required parameters (registry, paths) are not set
+             */
+            public LoadConfiguration build() {
+
+                requireNonNull(registry, "registry must be set");
+                requireNonNull(paths, "paths must be set");
+
+                // Apply defaults for optional parameters
+                final var finalParent = parent; // null is valid (bootstrap)
+
+                final var finalBaseClassLoader = baseClassLoader != null
+                        ? baseClassLoader
+                        : ElementPathLoader.class.getClassLoader();
+
+                return new LoadConfiguration(
+                        registry,
+                        paths,
+                        finalParent,
+                        finalBaseClassLoader,
+                        attributesLoader
+                );
+
+            }
+        }
+
+    }
+
+    /**
+     * Loads Elements using the specified configuration. This is the canonical load method;
+     * all other load methods delegate to this one. Implementations should override this method
+     * to provide their Element loading logic.
+     *
+     * @param config the load configuration
+     * @return a stream of loaded Elements
+     * @since 3.7
+     */
+    Stream<Element> load(LoadConfiguration config);
+
+    /**
      * Loads all {@link Element} into the supplied registry, using the globally configured ELEMENTPATH as the
      * source location.
      *
      * @param registry the registry to receive the loaded {@link Element}s
      */
     default Stream<Element> load(final MutableElementRegistry registry) {
-        final var path = Path.of(getenv(ELEMENT_PATH_ENV));
-        return load(registry, path);
+        return load(LoadConfiguration.builder()
+                .registry(registry)
+                .path(Path.of(getenv(ELEMENT_PATH_ENV)))
+                .build());
     }
 
     /**
@@ -138,8 +297,13 @@ public interface ElementPathLoader {
      * @return a {@link Stream} of {@link Element} instances
      * @see ElementLoader
      */
-    default Stream<Element> load(final MutableElementRegistry registry, final Path path) {
-        return load(registry, Set.of(path));
+    default Stream<Element> load(
+            final MutableElementRegistry registry,
+            final Path path) {
+        return load(LoadConfiguration.builder()
+                .registry(registry)
+                .path(path)
+                .build());
     }
 
     /**
@@ -160,76 +324,13 @@ public interface ElementPathLoader {
      * @return a {@link Stream} of {@link Element} instances from all paths
      * @see ElementLoader
      */
-    default Stream<Element> load(final MutableElementRegistry registry, final Collection<Path> paths) {
-
-        final var elements = new ArrayList<Element>();
-        final var apiClassLoader = buildApiClassLoader(null, paths);
-
-        try {
-
-            // Build the list of all Elements we're trying to load
-            for (final var path : paths) {
-                final var fromPath = load(registry, path, apiClassLoader).toList();
-                elements.addAll(fromPath);
-            }
-
-            // Attach close handlers to all elements for reference counting This ensures that any FileSystems
-            // referenced by the underlying API Classpath are closed when all Elements no longer need them.
-            // These are likely open file descriptors to the backing ELM files to the element's implementation.
-
-            if (!elements.isEmpty()) {
-
-                final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
-
-                elements.forEach(element -> element.onClose(el -> {
-                    if (counter.decrementAndGet() == 0) {
-                        try {
-                            apiClassLoader.close();
-                        } catch (IOException ex) {
-                            final var logger = LoggerFactory.getLogger(getClass());
-                            logger.error("Caught exception closing API Classloader.", ex);
-                            throw new SdkException("Error closing API classloader.", ex);
-                        }
-                    }
-                }));
-
-            } else {
-                // No elements loaded, close the API classloader immediately
-                try {
-                    apiClassLoader.close();
-                } catch (IOException ex) {
-                    throw new SdkException(ex);
-                }
-            }
-
-        } catch (Exception ex) {
-
-            final var logger = LoggerFactory.getLogger(getClass());
-            logger.error("Caught exception loading Element.", ex);
-
-            try {
-                apiClassLoader.close();
-            } catch (IOException e) {
-                logger.error("Caught exception closing api classloader.", ex);
-                ex.addSuppressed(ex);
-            }
-
-            for (var element : elements) {
-                try {
-                    element.close();
-                } catch (Exception e) {
-                    logger.error("Caught exception closing previously loaded Element.", ex);
-                    ex.addSuppressed(e);
-                }
-            }
-
-            throw ex;
-
-        }
-
-        return elements.stream();
-
-
+    default Stream<Element> load(
+            final MutableElementRegistry registry,
+            final Collection<Path> paths) {
+        return load(LoadConfiguration.builder()
+                .registry(registry)
+                .paths(paths)
+                .build());
     }
 
     /**
@@ -247,8 +348,16 @@ public interface ElementPathLoader {
      * @return a {@link Stream} of {@link Element} instances
      * @see ElementLoader
      */
-    default Stream<Element> load(final MutableElementRegistry registry, final Path path, final ClassLoader parent) {
-        return load(registry, path, parent, getClass().getClassLoader());
+    default Stream<Element> load(
+            final MutableElementRegistry registry,
+            final Path path,
+            final ClassLoader parent) {
+        return load(LoadConfiguration.builder()
+                .registry(registry)
+                .path(path)
+                .parent(parent)
+                .build()
+        );
     }
 
     /**
@@ -269,7 +378,18 @@ public interface ElementPathLoader {
      * @since 3.7
      * @see ElementLoader
      */
-    Stream<Element> load(MutableElementRegistry registry, Path path, ClassLoader parent, ClassLoader baseClassLoader);
+    default Stream<Element> load(
+            final MutableElementRegistry registry,
+            final Path path,
+            final ClassLoader parent,
+            final ClassLoader baseClassLoader) {
+        return load(LoadConfiguration.builder()
+                .registry(registry)
+                .path(path)
+                .parent(parent)
+                .baseClassLoader(baseClassLoader)
+                .build());
+    }
 
     /**
      * Builds a classloader containing API jars from a collection of paths. Each path may be:
@@ -327,6 +447,15 @@ public interface ElementPathLoader {
      * @since 3.7
      */
     Optional<ClassLoader> findSpiClassLoader(ClassLoader parent, Path path);
+
+    /**
+     * Loads a properties file given the base attributes and the {@link Path} to the Element's root. The loader will
+     * try to load the {@link Attributes} from the file at "dev.getelements.element.attributes.properties" under the
+     * path. If the file does not exist, then the attributes will be empty. The PropertiesFileLoader implementation will
+     * have the opportunity to supply its own modifications to the supplied Attributes.
+     */
+    @FunctionalInterface
+    interface AttributesLoader extends BiFunction<Attributes, Path, Attributes> {}
 
     /**
      * Creates a new instance of the {@link ElementPathLoader} using the system default SPI.

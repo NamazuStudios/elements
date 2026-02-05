@@ -16,6 +16,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.*;
@@ -80,6 +81,82 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     @Override
     public URLClassLoader buildApiClassLoader(final ClassLoader parent, final Collection<Path> paths) {
         return buildJarClassLoader(parent, paths, this::collectApiJars, "API");
+    }
+
+    @Override
+    public Stream<Element> load(final LoadConfiguration config) {
+
+        final var elements = new ArrayList<Element>();
+        final var apiClassLoader = buildApiClassLoader(config.parent(), config.paths());
+
+        try {
+
+            // Build the list of all Elements we're trying to load
+            for (final var path : config.paths()) {
+                final var fromPath = loadWithAttributes(
+                        config.registry(),
+                        path,
+                        apiClassLoader,
+                        config.baseClassLoader(),
+                        config.attributesProvider()
+                ).toList();
+                elements.addAll(fromPath);
+            }
+
+            // Attach close handlers to all elements for reference counting. This ensures that any FileSystems
+            // referenced by the underlying API Classpath are closed when all Elements no longer need them.
+            // These are likely open file descriptors to the backing ELM files.
+
+            if (!elements.isEmpty()) {
+
+                final var counter = new AtomicInteger(elements.size());
+
+                elements.forEach(element -> element.onClose(el -> {
+                    if (counter.decrementAndGet() == 0) {
+                        try {
+                            apiClassLoader.close();
+                        } catch (IOException ex) {
+                            logger.error("Caught exception closing API Classloader.", ex);
+                            throw new SdkException("Error closing API classloader.", ex);
+                        }
+                    }
+                }));
+
+            } else {
+                // No elements loaded, close the API classloader immediately
+                try {
+                    apiClassLoader.close();
+                } catch (IOException ex) {
+                    throw new SdkException(ex);
+                }
+            }
+
+        } catch (Exception ex) {
+
+            logger.error("Caught exception loading Element.", ex);
+
+            try {
+                apiClassLoader.close();
+            } catch (IOException e) {
+                logger.error("Caught exception closing api classloader.", e);
+                ex.addSuppressed(e);
+            }
+
+            for (var element : elements) {
+                try {
+                    element.close();
+                } catch (Exception e) {
+                    logger.error("Caught exception closing previously loaded Element.", e);
+                    ex.addSuppressed(e);
+                }
+            }
+
+            throw ex;
+
+        }
+
+        return elements.stream();
+
     }
 
     private URLClassLoader buildJarClassLoader(
@@ -213,8 +290,72 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         return jars.isEmpty()
                 ? Optional.empty()
-                : Optional.of(new URLClassLoader(jars.toArray(URL[]::new), parent));
+                : Optional.of(new URLClassLoader(
+                        "SPI=%s".formatted(path),
+                        jars.toArray(URL[]::new), parent)
+                );
 
+    }
+
+    /**
+     * Internal method that loads Elements with custom attributes provider.
+     */
+    private Stream<Element> loadWithAttributes(
+            final MutableElementRegistry registry,
+            final Path path,
+            final ClassLoader parent,
+            final ClassLoader baseClassLoader,
+            final AttributesLoader attributesProvider) {
+        try {
+
+            // Try to open as a FileSystem (for ELM/zip files)
+            final var fs = FileSystems.newFileSystem(path);
+            final var root = fs.getPath("/");
+            final var elements = doLoadWithAttributes(registry, root, parent, baseClassLoader, attributesProvider).toList();
+
+            if (elements.isEmpty()) {
+                // No elements loaded, close the FileSystem immediately
+                try {
+                    fs.close();
+                } catch (IOException e) {
+                    logger.error("Error closing FileSystem for {}", path, e);
+                }
+                return Stream.empty();
+            }
+
+            // Attach close handlers to all elements using reference counting
+            final var counter = new AtomicInteger(elements.size());
+
+            elements.forEach(element -> element.onClose(el -> {
+                if (counter.decrementAndGet() == 0) {
+                    try {
+                        fs.close();
+                    } catch (IOException e) {
+                        logger.error("Error closing FileSystem for {}", path, e);
+                    }
+                }
+            }));
+
+            return elements.stream();
+
+        } catch (ProviderNotFoundException ex) {
+            // Not a zip/ELM file, try as directory
+            if (Files.isDirectory(path)) {
+                return doLoadWithAttributes(registry, path, parent, baseClassLoader, attributesProvider);
+            } else {
+                logger.warn("{} not a directory. Skipping.", path);
+                return Stream.empty();
+            }
+        } catch (NoSuchFileException ex) {
+            logger.warn("{} not found. Skipping.", path);
+            return Stream.empty();
+        } catch (FileSystemAlreadyExistsException ex) {
+            logger.warn("FileSystem already exists for {}. Using existing.", path);
+            final var fs = FileSystems.getFileSystem(path.toUri());
+            return doLoadWithAttributes(registry, fs.getPath("/"), parent, baseClassLoader, attributesProvider);
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        }
     }
 
     @Override
@@ -241,7 +382,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
 
             // Attach close handlers to all elements using reference counting
-            final var counter = new java.util.concurrent.atomic.AtomicInteger(elements.size());
+            final var counter = new AtomicInteger(elements.size());
 
             elements.forEach(element -> element.onClose(el -> {
                 if (counter.decrementAndGet() == 0) {
@@ -273,11 +414,15 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     }
 
-    private Stream<Element> doLoad(
+    /**
+     * Internal method with attributes provider support.
+     */
+    private Stream<Element> doLoadWithAttributes(
             final MutableElementRegistry registry,
             final Path path,
             final ClassLoader parent,
-            final ClassLoader baseClassLoader) {
+            final ClassLoader baseClassLoader,
+            final AttributesLoader attributesProvider) {
 
         final var elements = new ArrayList<Element>();
 
@@ -297,10 +442,11 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                                 elementClassLoader,
                                 baseClassLoader,
                                 subpath,
-                                elementDirectory
+                                elementDirectory,
+                                attributesProvider
                         );
 
-                        // Check that the Element is valid and can be loaded. If conditions are ment, then
+                        // Check that the Element is valid and can be loaded. If conditions are met, then
                         // load the Element
 
                         if (record.isValidElement()) {
@@ -340,6 +486,17 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     }
 
+    /**
+     * Delegates to doLoadWithAttributes with a pass-through attributes provider.
+     */
+    private Stream<Element> doLoad(
+            final MutableElementRegistry registry,
+            final Path path,
+            final ClassLoader parent,
+            final ClassLoader baseClassLoader) {
+        return doLoadWithAttributes(registry, path, parent, baseClassLoader, (attrs, p) -> attrs);
+    }
+
     private record ElementPathRecord(
             Path elementPath,
             Path libs,
@@ -347,13 +504,15 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             Path attributesFile,
             ClassLoader elementParent,
             ClassLoader baseClassLoader,
-            MutableElementRegistry registry) {
+            MutableElementRegistry registry,
+            AttributesLoader attributesProvider) {
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
                                              final ClassLoader elementParent,
                                              final ClassLoader baseClassLoader,
                                              final Path elementPath,
-                                             final DirectoryStream<Path> directory) {
+                                             final DirectoryStream<Path> directory,
+                                             final AttributesLoader attributesProvider) {
 
             Path libs, classpath, attributesFile;
             libs = classpath = attributesFile = null;
@@ -385,7 +544,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     attributesFile,
                     elementParent,
                     baseClassLoader,
-                    registry
+                    registry,
+                    attributesProvider
             );
 
         }
@@ -418,20 +578,25 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         public Attributes loadAttributes() {
 
+            // First, load base attributes from properties file (if it exists)
+            final Attributes baseAttributes;
             if (attributesFile() == null) {
-                return Attributes.emptyAttributes();
+                baseAttributes = Attributes.emptyAttributes();
+            } else {
+                try (
+                        var fis = new FileInputStream(attributesFile().toFile());
+                        var bis = new BufferedInputStream(fis)
+                ) {
+                    final var properties = new Properties();
+                    properties.load(bis);
+                    baseAttributes = PropertiesAttributes.wrap(properties);
+                } catch (IOException ex) {
+                    throw new SdkException(ex);
+                }
             }
 
-            try (
-                    var fis = new FileInputStream(attributesFile().toFile());
-                    var bis = new BufferedInputStream(fis)
-            ) {
-                final var properties = new Properties();
-                properties.load(bis);
-                return PropertiesAttributes.wrap(properties);
-            } catch (IOException ex) {
-                throw new SdkException(ex);
-            }
+            // Apply the attributes provider to allow customization
+            return attributesProvider().apply(baseAttributes, elementPath());
 
         }
 
@@ -473,7 +638,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     .get()
                     .getIsolatedLoaderWithParent(
                             attributes,
-                            getClass().getClassLoader(),
+                            baseClassLoader(),
                             cl -> new URLClassLoader(classLoaderName, implUrls, cl),
                             elementParent(),
                             el -> true

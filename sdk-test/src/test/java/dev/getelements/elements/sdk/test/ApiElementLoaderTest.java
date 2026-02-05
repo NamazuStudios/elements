@@ -77,12 +77,11 @@ public class ApiElementLoaderTest {
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
         final var parent = new PermittedTypesClassLoader();
-        final var apiClassLoader = elementPathLoader.buildApiClassLoader(parent, baseDirectory);
 
         final var loadedElements = elementPathLoader.load(
                 elementRegistry,
                 baseDirectory,
-                apiClassLoader
+                parent
         ).toList();
 
         logger.info("Loaded Elements.");
