@@ -1,9 +1,9 @@
 package dev.getelements.elements.service.application;
 
-import dev.getelements.elements.common.app.ElementContainerService;
-import dev.getelements.elements.common.app.ElementContainerService.ContainerRecord;
-import dev.getelements.elements.common.app.ElementRuntimeService;
-import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementContainerService.ContainerRecord;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
 import dev.getelements.elements.sdk.model.system.ElementMetadata;

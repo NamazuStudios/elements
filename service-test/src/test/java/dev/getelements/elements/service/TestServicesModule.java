@@ -1,10 +1,9 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.cdnserve.guice.FileSystemCdnGitLoaderModule;
-import dev.getelements.elements.common.app.ElementContainerService;
-import dev.getelements.elements.common.app.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
-import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.service.guice.ServicesModule;
 import org.mockito.Mockito;
 

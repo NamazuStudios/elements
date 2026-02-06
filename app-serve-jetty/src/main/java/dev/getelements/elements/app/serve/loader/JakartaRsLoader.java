@@ -1,7 +1,7 @@
 package dev.getelements.elements.app.serve.loader;
 
 import dev.getelements.elements.app.serve.AppServeConstants;
-import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;

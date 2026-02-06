@@ -115,6 +115,7 @@
         <module>sdk-local-test</module>
         <module>sdk-local-maven</module>
         <module>sdk-dao</module>
+        <module>sdk-deployment</module>
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>
@@ -565,6 +566,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-spi-shrinkwrap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-deployment</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -1,4 +1,4 @@
-package dev.getelements.elements.common.app;
+package dev.getelements.elements.sdk.deployment;
 
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;

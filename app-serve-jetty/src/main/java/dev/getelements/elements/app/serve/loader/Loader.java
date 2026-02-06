@@ -1,6 +1,6 @@
 package dev.getelements.elements.app.serve.loader;
 
-import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

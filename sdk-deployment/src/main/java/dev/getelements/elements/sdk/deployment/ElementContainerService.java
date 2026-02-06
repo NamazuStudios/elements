@@ -1,6 +1,6 @@
-package dev.getelements.elements.common.app;
+package dev.getelements.elements.sdk.deployment;
 
-import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
@@ -55,7 +55,7 @@ public interface ElementContainerService {
      * Aggregates the deployment information for an {@link Application}. This includes the
      * {@link ElementDeployment} as well as any URIs it exposes.
      *
-     * @param status the {@link ApplicationDeploymentService.DeploymentStatus}
+     * @param status the {@link ContainerRecord}
      * @param runtime the {@link RuntimeRecord}
      * @param logs a set of very brief logs produced during deployment.
      * @param uris the set of URIs exposed by the deployment
@@ -77,11 +77,11 @@ public interface ElementContainerService {
         }
 
         /**
-         * Creates a {@link ApplicationDeploymentService.DeploymentRecord} indicating an unsuccessful deployment.
+         * Creates a {@link ContainerRecord} indicating an unsuccessful deployment.
          *
          * @param logs the logs produced during deployment
          * @param error the error produced during deployment
-         * @return a {@link ApplicationDeploymentService.DeploymentRecord}
+         * @return a {@link ContainerRecord}
          */
         public static ContainerRecord fail(
                 final RuntimeRecord runtime,
@@ -98,11 +98,11 @@ public interface ElementContainerService {
         }
 
         /**
-         * Creates a {@link ApplicationDeploymentService.DeploymentRecord} indicating an unsuccessful deployment.
+         * Creates a {@link ContainerRecord} indicating an unsuccessful deployment.
          *
          * @param logs the logs produced during deployment
          * @param causes the errors produced during deployment
-         * @return a {@link ApplicationDeploymentService.DeploymentRecord}
+         * @return a {@link ContainerRecord}
          */
         public static ContainerRecord fail(
                 final RuntimeRecord runtime,

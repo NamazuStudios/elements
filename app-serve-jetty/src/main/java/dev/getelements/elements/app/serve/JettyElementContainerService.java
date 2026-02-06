@@ -1,9 +1,9 @@
 package dev.getelements.elements.app.serve;
 
 import dev.getelements.elements.app.serve.loader.Loader;
-import dev.getelements.elements.common.app.ElementContainerService;
-import dev.getelements.elements.common.app.ElementRuntimeService;
-import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static dev.getelements.elements.common.app.ElementContainerService.ContainerStatus.*;
+import static dev.getelements.elements.sdk.deployment.ElementContainerService.ContainerStatus.*;
 
 /**
  * Jetty implementation of {@link ElementContainerService} that polls the {@link ElementRuntimeService}

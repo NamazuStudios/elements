@@ -1,7 +1,7 @@
 package dev.getelements.elements.service.util;
 
-import dev.getelements.elements.common.app.ElementContainerService.ContainerRecord;
-import dev.getelements.elements.common.app.ElementContainerService.ContainerStatus;
+import dev.getelements.elements.sdk.deployment.ElementContainerService.ContainerRecord;
+import dev.getelements.elements.sdk.deployment.ElementContainerService.ContainerStatus;
 import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import org.mapstruct.Mapper;

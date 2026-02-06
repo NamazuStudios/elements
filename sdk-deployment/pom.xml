@@ -11,23 +11,14 @@
         <version>3.7.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>common-app</artifactId>
-    <name>${project.artifactId}</name>
+    <artifactId>sdk-deployment</artifactId>
     <version>3.7.0-SNAPSHOT</version>
-    <url>https://namazustudios.com</url>
+    <name>sdk-deployment</name>
 
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-model</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-cluster</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
@@ -39,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-deployment</artifactId>
+            <artifactId>sdk-model</artifactId>
         </dependency>
     </dependencies>
 

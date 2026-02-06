@@ -7,7 +7,7 @@ import dev.getelements.elements.app.serve.loader.AuthFilterFeature;
 import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
 import dev.getelements.elements.app.serve.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.app.serve.loader.Loader;
-import dev.getelements.elements.common.app.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.servlet.security.HttpServletBearerAuthenticationFilter;
 import dev.getelements.elements.servlet.security.HttpServletElementScopeFilter;
 import dev.getelements.elements.servlet.security.HttpServletHeaderProfileOverrideFilter;

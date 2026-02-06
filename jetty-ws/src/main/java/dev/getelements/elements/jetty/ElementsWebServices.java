@@ -1,7 +1,7 @@
 package dev.getelements.elements.jetty;
 
-import dev.getelements.elements.common.app.ElementContainerService;
-import dev.getelements.elements.common.app.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import jakarta.inject.Inject;

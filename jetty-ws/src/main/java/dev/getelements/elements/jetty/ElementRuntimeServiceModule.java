@@ -1,8 +1,8 @@
 package dev.getelements.elements.jetty;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.common.app.ElementRuntimeService;
-import dev.getelements.elements.common.app.StandardElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.StandardElementRuntimeService;
 
 /**
  * Guice module for {@link ElementRuntimeService}.
