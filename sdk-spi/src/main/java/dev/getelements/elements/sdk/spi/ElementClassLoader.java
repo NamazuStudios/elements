@@ -14,13 +14,12 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Map;
 
 import static dev.getelements.elements.sdk.spi.UrlUtils.toUrl;
-import static dev.getelements.elements.sdk.spi.UrlUtils.toUrls;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**

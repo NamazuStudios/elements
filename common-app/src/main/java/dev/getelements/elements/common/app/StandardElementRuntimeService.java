@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
+import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.Monitor;
@@ -17,20 +18,21 @@ import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static java.nio.file.Files.copy;
+import static java.nio.file.Files.createDirectories;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Standard implementation of {@link ElementRuntimeService} that polls the database for
@@ -82,6 +84,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private ScheduledExecutorService scheduler;
 
     private final ElementArtifactLoader elementArtifactLoader = loadArtifactLoader();
+
+    private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
 
     @Override
     public void start() {
@@ -161,12 +165,101 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     .map(active -> new RuntimeRecord(
                             active.deployment(),
                             active.status(),
+                            active.isTransient(),
                             active.registry(),
                             active.elements(),
+                            active.tempFiles(),
                             active.logs(),
                             active.errors()
                     ))
                     .toList();
+        }
+    }
+
+    @Override
+    public RuntimeRecord loadTransientDeployment(final TransientDeploymentRequest request) {
+        try (var mon = Monitor.enter(lock)) {
+
+            if (scheduler == null) {
+                throw new IllegalStateException("Service not started");
+            }
+
+            // Generate unique ID for transient deployment
+            final var deploymentId = "transient-" + UUID.randomUUID();
+
+            // Check for ID collision (extremely unlikely but safe)
+            if (activeDeployments.containsKey(deploymentId)) {
+                throw new IllegalArgumentException("Deployment ID collision: " + deploymentId);
+            }
+
+            logger.info("Loading transient deployment with ID: {}", deploymentId);
+
+            // Build ElementDeployment from request
+            final var deployment = new ElementDeployment(
+                    deploymentId,
+                    request.application(),
+                    null,  // no large object for Maven-based deployments
+                    request.pathAttributes(),
+                    request.elements(),
+                    request.packages(),
+                    request.useDefaultRepositories(),
+                    request.repositories(),
+                    ElementDeploymentState.ENABLED,
+                    0L  // version not relevant for transient
+            );
+
+            // Load the deployment
+            doLoadDeployment(deployment, true);
+
+            // Return runtime record
+            final var activeDeployment = activeDeployments.get(deploymentId);
+
+            if (activeDeployment == null) {
+                throw new InternalException("Deployment not found after loading: " + deploymentId);
+            }
+
+            return new RuntimeRecord(
+                    activeDeployment.deployment(),
+                    activeDeployment.status(),
+                    true,  // isTransient
+                    activeDeployment.registry(),
+                    activeDeployment.elements(),
+                    activeDeployment.tempFiles(),
+                    activeDeployment.logs(),
+                    activeDeployment.errors()
+            );
+
+        }
+    }
+
+    @Override
+    public boolean unloadTransientDeployment(final String deploymentId) {
+        try (var mon = Monitor.enter(lock)) {
+
+            if (scheduler == null) {
+                throw new IllegalStateException("Service not started");
+            }
+
+            // Check if deployment exists
+            final var active = activeDeployments.get(deploymentId);
+            if (active == null) {
+                logger.warn("Deployment not found: {}", deploymentId);
+                return false;
+            }
+
+            // Check if it's a transient deployment
+            if (!active.isTransient()) {
+                logger.warn("Attempted to unload non-transient deployment: {}", deploymentId);
+                return false;
+            }
+
+            logger.info("Unloading transient deployment: {}", deploymentId);
+
+            // Unload the deployment
+            doUnloadDeployment(deploymentId);
+
+            return true;
+
         }
     }
 
@@ -216,7 +309,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 if (active == null) {
                     // New deployment - load it
                     try {
-                        doLoadDeployment(deployment);
+                        doLoadDeployment(deployment, false);  // Not transient
                         logger.info("Loaded deployment: {}", deploymentId);
                     } catch (Exception ex) {
                         logger.error("Failed to load deployment: {}", deploymentId, ex);
@@ -225,7 +318,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     // Version changed - reload
                     try {
                         doUnloadDeployment(deploymentId);
-                        doLoadDeployment(deployment);
+                        doLoadDeployment(deployment, false);  // Not transient
                         logger.info("Reloaded deployment: {} (version {} -> {})",
                                 deploymentId, active.deployment().version(), deployment.version());
                     } catch (Exception ex) {
@@ -238,10 +331,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             }
 
             // Unload deployments no longer in database (deleted or state changed)
-            final var activeIds = new ArrayList<>(activeDeployments.keySet());
+            // Skip transient deployments - they are managed separately
+            for (final var entry : activeDeployments.entrySet()) {
+                final var activeId = entry.getKey();
+                final var active = entry.getValue();
 
-            for (final String activeId : activeIds) {
-                if (!dbDeploymentIds.contains(activeId)) {
+                if (!dbDeploymentIds.contains(activeId) && !active.isTransient()) {
                     try {
                         doUnloadDeployment(activeId);
                         logger.info("Unloaded deployment: {}", activeId);
@@ -259,13 +354,14 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     /**
      * Loads a deployment.
      */
-    private void doLoadDeployment(final ElementDeployment deployment) {
+    private void doLoadDeployment(final ElementDeployment deployment, final boolean isTransient) {
 
         final var deploymentId = deployment.id();
         final var tempFiles = new ArrayList<Path>();
         final var logs = new ArrayList<String>();
         final var errors = new ArrayList<Throwable>();
         final var warnings = new ArrayList<String>();
+        final var fileSystems = new ArrayList<FileSystem>();
 
         MutableElementRegistry registry = null;
         List<Element> elements = null;
@@ -280,7 +376,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             logs.add("Created subordinate registry");
 
             // Determine code source and load
-            elements = loadElements(deployment, registry, tempFiles, logs, warnings, errors);
+            elements = loadElements(deployment, registry, tempFiles, fileSystems, logs, warnings, errors);
             logs.add("Loaded " + elements.size() + " element(s)");
 
             // Determine final status
@@ -298,9 +394,11 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             final var active = new ActiveDeployment(
                     deployment,
                     status,
+                    isTransient,
                     registry,
                     elements,
                     tempFiles,
+                    fileSystems,
                     logs,
                     errors
             );
@@ -308,6 +406,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             activeDeployments.put(deploymentId, active);
 
         } catch (Exception ex) {
+
             logs.add("Deployment failed: " + ex.getMessage());
             errors.add(ex);
             status = RuntimeStatus.FAILED;
@@ -316,12 +415,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             final var failedDeployment = new ActiveDeployment(
                     deployment,
                     status,
+                    isTransient,
                     registry,
                     elements != null ? elements : List.of(),
                     tempFiles,
+                    fileSystems,
                     logs,
                     errors
             );
+
             activeDeployments.put(deploymentId, failedDeployment);
 
             // Clean up on failure
@@ -329,108 +431,232 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 try {
                     registry.close();
                 } catch (Exception closeEx) {
+                    ex.addSuppressed(closeEx);
                     logger.warn("Error closing registry after failed load for deployment {}", deploymentId, closeEx);
                 }
             }
+
             for (final Path tempFile : tempFiles) {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException ioEx) {
+                    ex.addSuppressed(ioEx);
                     logger.warn("Failed to delete temp file {} after failed load", tempFile, ioEx);
                 }
             }
+
         }
     }
 
     /**
      * Loads elements based on the deployment's code source strategy.
+     * Uses a stage-then-load approach: first stages all element sources into paths,
+     * then loads all elements in a single operation using ElementPathLoader.
      */
     private List<Element> loadElements(final ElementDeployment deployment,
                                         final MutableElementRegistry registry,
                                         final List<Path> tempFiles,
+                                        final List<FileSystem> fileSystems,
                                         final List<String> logs,
                                         final List<String> warnings,
                                         final List<Throwable> errors) throws IOException {
+
         final var deploymentId = deployment.id();
 
         try {
+
             // Build repository set
             logs.add("Building artifact repository set");
             final var repositories = buildRepositorySet(deployment);
+
             if (repositories.isEmpty()) {
                 warnings.add("No artifact repositories configured");
             } else {
-                logs.add("Configured " + repositories.size() + " artifact repository(ies)");
+                repositories.forEach(r -> {
+                    if (r.isDefault()) {
+                        logs.add("Using default repository.");
+                    } else {
+                        logs.add("Using repository %s at %s".formatted(r.id(), r.url()));
+                    }
+                });
             }
 
             // Create deployment directory structure
             logs.add("Creating deployment directory structure");
             final var deploymentDir = temporaryFiles.createTempDirectory(deploymentId);
+
             tempFiles.add(deploymentDir);
             logs.add("Created deployment directory: " + deploymentDir);
 
-            final var allElements = new ArrayList<Element>();
+            // Create shared PermittedTypesClassLoader for this deployment
+            logs.add("Creating PermittedTypesClassLoader for deployment");
+            final var permittedTypesClassLoader = new PermittedTypesClassLoader();
 
-            // Strategy 1: Load from uploaded ELM file if present
+            // PHASE A: STAGING
+            // Collect all element source paths into a list
+            logs.add("=== Phase A: Staging all element sources ===");
+            final var elementPaths = new ArrayList<Path>();
+            final var attributePaths = new HashMap<Path, Attributes>();
+
+            // Strategy 1: Stage uploaded ELM from LargeObject if present
             if (hasElmFromLargeObject(deployment)) {
-                logs.add("Loading elements from uploaded ELM file");
-                final var elmElements = loadFromLargeObject(deployment, registry, tempFiles, logs, errors, repositories);
-                allElements.addAll(elmElements);
+                logs.add("Staging elements from uploaded ELM file");
+                try {
+                    stageFromLargeObject(deployment, tempFiles, fileSystems, logs, errors, elementPaths, attributePaths);
+                } catch (Exception ex) {
+                    logs.add("Failed to stage from LargeObject: " + ex.getMessage());
+                    errors.add(ex);
+                }
+            } else if (deployment.elm() != null) {
+                logs.add("ELM LargeObject is in state %s".formatted(deployment.elm().getState()));
+            } else {
+                logs.add("No ELM configured");
             }
 
-            // Strategy 2: Process each ElementDefinition
+            // Strategy 2: Stage each ElementDefinition
             if (deployment.elements() != null && !deployment.elements().isEmpty()) {
-                logs.add("Processing " + deployment.elements().size() + " element definition(s)");
+
+                logs.add("Staging " + deployment.elements().size() + " element definition(s)");
 
                 for (int i = 0; i < deployment.elements().size(); i++) {
-                    final var definition = deployment.elements().get(i);
-                    logs.add("Processing element definition " + (i + 1) + "/" + deployment.elements().size());
 
-                    final var elements = loadFromElementDefinition(
-                            definition,
-                            deployment,
-                            deploymentDir,
-                            registry,
-                            repositories,
-                            tempFiles,
-                            logs,
-                            warnings,
-                            errors
-                    );
-                    allElements.addAll(elements);
+                    final var definition = deployment.elements().get(i);
+                    logs.add("Staging element definition " + (i + 1) + "/" + deployment.elements().size());
+
+                    try {
+                        stageFromElementDefinition(
+                                definition,
+                                deploymentDir,
+                                repositories,
+                                tempFiles,
+                                logs,
+                                warnings,
+                                errors,
+                                elementPaths,
+                                attributePaths
+                        );
+                    } catch (Exception ex) {
+                        logs.add("Failed to stage element definition: " + ex.getMessage());
+                        errors.add(ex);
+                    }
+
                 }
             }
 
-            // Strategy 3: Process each ElementPackageDefinition
+            // Strategy 3: Stage each ElementPackageDefinition
             if (deployment.packages() != null && !deployment.packages().isEmpty()) {
-                logs.add("Processing " + deployment.packages().size() + " element package(s)");
+
+                logs.add("Staging " + deployment.packages().size() + " element package(s)");
 
                 for (int i = 0; i < deployment.packages().size(); i++) {
                     final var packageDef = deployment.packages().get(i);
-                    logs.add("Processing element package " + (i + 1) + "/" + deployment.packages().size());
+                    logs.add("Staging element package " + (i + 1) + "/" + deployment.packages().size());
 
-                    final var elements = loadFromPackageDefinition(
-                            packageDef,
-                            deployment,
-                            deploymentDir,
-                            registry,
-                            repositories,
-                            tempFiles,
-                            logs,
-                            warnings,
-                            errors
-                    );
-                    allElements.addAll(elements);
+                    try {
+                        stageFromPackageDefinition(
+                                packageDef,
+                                repositories,
+                                tempFiles,
+                                fileSystems,
+                                logs,
+                                warnings,
+                                errors,
+                                elementPaths,
+                                attributePaths
+                        );
+                    } catch (Exception ex) {
+                        logs.add("Failed to stage package definition: " + ex.getMessage());
+                        errors.add(ex);
+                    }
                 }
+
             }
 
+            // Check if any paths were staged successfully
+            if (elementPaths.isEmpty()) {
+                final var message = "No elements staged successfully for deployment " + deploymentId;
+                logs.add("ERROR: " + message);
+                throw new IllegalStateException(message);
+            }
+
+            logs.add("Staged " + elementPaths.size() + " element path(s)");
+
+            // PHASE B: LOADING
+            // Load all elements in a single operation
+            logs.add("=== Phase B: Loading all elements ===");
+
+            final List<Element> allElements;
+
+            try {
+                // Build API classloader from all element paths
+                logs.add("Building API classloader from all element paths");
+
+                final var apiClassLoader = pathLoader.buildApiClassLoader(permittedTypesClassLoader, elementPaths);
+                final var unconsumedAttributePaths = new HashSet<>(attributePaths.keySet());
+
+                // Load all elements using LoadConfiguration
+                logs.add("Loading elements from " + elementPaths.size() + " path(s)");
+                final var config = ElementPathLoader.LoadConfiguration.builder()
+                        .registry(registry)
+                        .paths(elementPaths)
+                        .parent(apiClassLoader)
+                        .baseClassLoader(permittedTypesClassLoader)
+                        .attributesProvider((baseAttrs, elementPath) -> {
+
+                            // Look up pre-computed attributes for this path
+                            final var resolved = attributePaths.getOrDefault(
+                                    elementPath.toAbsolutePath(),
+                                    Attributes.emptyAttributes()
+                            );
+
+                            // Create the base attributes found in the deployment
+                            final var finalAttributes = new SimpleAttributes.Builder()
+                                    .from(baseAttrs)
+                                    .from(resolved)
+                                    .build();
+
+                            if (unconsumedAttributePaths.remove(elementPath)) {
+                                logs.add("Applied attributes to element at path: %s:%s\n%s".formatted(
+                                        elementPath.getFileSystem(),
+                                        elementPath,
+                                        String.join(" -> \n", finalAttributes.getAttributeNames())
+                                ));
+                            } else {
+                                warnings.add("Previously consumed attributes to element at path: " + elementPath);
+                            }
+
+                            return finalAttributes;  // Fallback to base attributes from properties file
+
+                        })
+                        .build();
+
+                if (!unconsumedAttributePaths.isEmpty()) {
+                    warnings.add("Unconsumed attributes from element at path:\n%s".formatted(
+                        unconsumedAttributePaths
+                                .stream()
+                                .map(p -> " -> %s:%s".formatted(p.getFileSystem(), p))
+                                .collect(Collectors.joining(", "))
+                    ));
+                }
+
+                allElements = pathLoader.load(config).toList();
+                logs.add("Successfully loaded " + allElements.size() + " element(s)");
+
+            } catch (Exception ex) {
+                logs.add("Failed to load elements: " + ex.getMessage());
+                errors.add(ex);
+                throw ex;
+            }
+
+            // PHASE C: STATUS DETERMINATION
+            // Status was already determined at doLoadDeployment level based on errors/warnings
+            // Just return the elements
             if (allElements.isEmpty()) {
                 final var message = "Deployment " + deploymentId + " produced no elements";
                 logs.add("ERROR: " + message);
                 throw new IllegalStateException(message);
             }
 
-            logs.add("Successfully loaded " + allElements.size() + " total element(s)");
             return allElements;
 
         } catch (Exception ex) {
@@ -443,324 +669,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * Checks if the deployment has an ELM file uploaded to LargeObject.
      */
     private boolean hasElmFromLargeObject(final ElementDeployment deployment) {
-        return deployment.elm() != null &&
-               LargeObjectState.UPLOADED.equals(deployment.elm().getState());
-    }
-
-    /**
-     * Loads elements from an ELM file stored in LargeObject.
-     */
-    private List<Element> loadFromLargeObject(final ElementDeployment deployment,
-                                               final MutableElementRegistry registry,
-                                               final List<Path> tempFiles,
-                                               final List<String> logs,
-                                               final List<Throwable> errors,
-                                               final Set<ArtifactRepository> repositories) throws IOException {
-        try {
-            final var elmRef = deployment.elm();
-            final var elmId = elmRef.getId();
-
-            logs.add("Downloading ELM file from LargeObject: " + elmId);
-
-            // Download ELM to temp file
-            final var tempPath = temporaryFiles.createTempFile(deployment.id(), ".elm");
-            tempFiles.add(tempPath);
-
-            try (final InputStream in = getLargeObjectBucket().readObject(elmId);
-                 final OutputStream out = Files.newOutputStream(tempPath)) {
-                in.transferTo(out);
-            }
-
-            logs.add("Downloaded ELM to temporary file: " + tempPath);
-
-            // Load via ElementPathLoader
-            final var pathLoader = ElementPathLoader.newDefaultInstance();
-
-            // Build API classloader from the ELM
-            logs.add("Building API classloader from ELM");
-            final var systemClassLoader = getClass().getClassLoader();
-            final var apiClassLoader = pathLoader.buildApiClassLoader(null, tempPath);
-
-            logs.add("Loading Elements from ELM file");
-            final var elements = pathLoader.load(registry, tempPath, apiClassLoader).toList();
-
-            logs.add("Successfully loaded " + elements.size() + " element(s) from ELM file");
-            return elements;
-
-        } catch (Exception ex) {
-            logs.add("Failed to load from LargeObject: " + ex.getMessage());
-            errors.add(ex);
-            throw ex;
-        }
-    }
-
-    /**
-     * Loads elements from a single ElementDefinition.
-     */
-    private List<Element> loadFromElementDefinition(
-            final ElementPathDefinition definition,
-            final ElementDeployment deployment,
-            final Path deploymentDir,
-            final MutableElementRegistry registry,
-            final Set<ArtifactRepository> repositories,
-            final List<Path> tempFiles,
-            final List<String> logs,
-            final List<String> warnings,
-            final List<Throwable> errors) throws IOException {
-        try {
-            final var systemClassLoader = getClass().getClassLoader();
-
-            // Check if this definition uses an ELM artifact with path-based deployment
-            if (definition.elmArtifact() != null && !definition.elmArtifact().isBlank()) {
-
-                if (definition.path() != null && !definition.path().isBlank()) {
-                    // Strategy: Structured deployment with ELM + separate artifacts
-                    logs.add("Loading from ELM artifact with structured deployment: " + definition.elmArtifact());
-                    logs.add("Deployment path: " + definition.path());
-
-                    // Create element path directory
-                    final var elementPath = deploymentDir.resolve(definition.path());
-                    Files.createDirectories(elementPath);
-                    logs.add("Created element directory: " + elementPath);
-
-                    // Create subdirectories for artifacts
-                    final var apiDir = elementPath.resolve(ElementPathLoader.API_DIR);
-                    final var spiDir = elementPath.resolve(ElementPathLoader.SPI_DIR);
-                    final var libDir = elementPath.resolve(ElementPathLoader.LIB_DIR);
-                    Files.createDirectories(apiDir);
-                    Files.createDirectories(spiDir);
-                    Files.createDirectories(libDir);
-
-                    // Gather and place API artifacts
-                    if (definition.apiArtifacts() != null && !definition.apiArtifacts().isEmpty()) {
-                        logs.add("Gathering " + definition.apiArtifacts().size() + " API artifact(s)");
-                        for (final var coordinate : definition.apiArtifacts()) {
-                            copyArtifactWithDependencies(coordinate, repositories, apiDir, logs);
-                        }
-                    }
-
-                    // Gather and place SPI artifacts
-                    if (definition.spiArtifacts() != null && !definition.spiArtifacts().isEmpty()) {
-                        logs.add("Gathering " + definition.spiArtifacts().size() + " SPI artifact(s)");
-                        for (final var coordinate : definition.spiArtifacts()) {
-                            copyArtifactWithDependencies(coordinate, repositories, spiDir, logs);
-                        }
-                    }
-
-                    // Gather and place implementation artifacts (from elementArtifacts or elmArtifact)
-                    if (definition.elementArtifacts() != null && !definition.elementArtifacts().isEmpty()) {
-                        logs.add("Gathering " + definition.elementArtifacts().size() + " element artifact(s)");
-                        for (final var coordinate : definition.elementArtifacts()) {
-                            copyArtifactWithDependencies(coordinate, repositories, libDir, logs);
-                        }
-                    }
-
-                    // Also copy the ELM artifact itself to lib
-                    logs.add("Resolving ELM artifact: " + definition.elmArtifact());
-                    final var elmArtifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
-                    final var elmDestination = libDir.resolve(elmArtifact.path().getFileName());
-                    Files.copy(elmArtifact.path(), elmDestination, StandardCopyOption.REPLACE_EXISTING);
-                    logs.add("Copied ELM artifact to: " + elmDestination);
-
-                    // Load using LoadConfiguration with AttributesLoader
-                    final var pathLoader = ElementPathLoader.newDefaultInstance();
-
-                    final var config = ElementPathLoader.LoadConfiguration.builder()
-                            .registry(registry)
-                            .path(elementPath)
-                            .attributesProvider((attrs, path) -> {
-                                // Start with deployment-level path attributes
-                                final var builder = new SimpleAttributes.Builder();
-                                if (deployment.pathAttributes() != null) {
-                                    final var pathAttrs = deployment.pathAttributes().get(path.toString());
-                                    if (pathAttrs != null) {
-                                        builder.setAttributes(pathAttrs);
-                                    }
-                                }
-                                // Merge with element-specific attributes
-                                if (definition.attributes() != null) {
-                                    builder.setAttributes(definition.attributes());
-                                }
-                                return builder.build();
-                            })
-                            .build();
-
-                    final var elements = pathLoader.load(config).toList();
-                    logs.add("Loaded " + elements.size() + " element(s) from structured deployment");
-
-                    for (final var element : elements) {
-                        final var elementName = element.getElementRecord().definition().name();
-                        logs.add("  - Element: " + elementName);
-                    }
-
-                    return elements;
-
-                } else {
-                    // Legacy strategy: Load ELM directly without structured deployment
-                    logs.add("Loading from ELM artifact (legacy): " + definition.elmArtifact());
-
-                    // Resolve the ELM artifact
-                    final var artifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
-                    final var artifactPath = artifact.path();
-                    logs.add("Resolved ELM artifact to path: " + artifactPath);
-
-                    // Load elements from the ELM using LoadConfiguration
-                    final var pathLoader = ElementPathLoader.newDefaultInstance();
-
-                    final var config = ElementPathLoader.LoadConfiguration.builder()
-                            .registry(registry)
-                            .path(artifactPath)
-                            .attributesProvider((attrs, path) -> {
-                                // Start with deployment-level path attributes
-                                final var builder = new SimpleAttributes.Builder();
-                                if (deployment.pathAttributes() != null) {
-                                    final var pathAttrs = deployment.pathAttributes().get(path.toString());
-                                    if (pathAttrs != null) {
-                                        builder.setAttributes(pathAttrs);
-                                    }
-                                }
-                                // Merge with element-specific attributes
-                                if (definition.attributes() != null) {
-                                    builder.setAttributes(definition.attributes());
-                                }
-                                return builder.build();
-                            })
-                            .build();
-
-                    final var elements = pathLoader.load(config).toList();
-                    logs.add("Loaded " + elements.size() + " element(s) from ELM artifact");
-
-                    for (final var element : elements) {
-                        final var elementName = element.getElementRecord().definition().name();
-                        logs.add("  - Element: " + elementName);
-                    }
-
-                    return elements;
-                }
-
-            } else {
-                // Build classloader chain from Maven artifacts: System -> (API+SPI) -> Element
-                logs.add("Building classloader chain from Maven artifacts");
-
-                // Combine API and SPI artifacts into a single classloader
-                final var apiSpiCoordinates = new ArrayList<String>();
-                if (definition.apiArtifacts() != null) {
-                    apiSpiCoordinates.addAll(definition.apiArtifacts());
-                }
-                if (definition.spiArtifacts() != null) {
-                    apiSpiCoordinates.addAll(definition.spiArtifacts());
-                }
-
-                final var apiSpiClassLoader = resolveClassLoader(
-                        systemClassLoader,
-                        repositories,
-                        apiSpiCoordinates,
-                        logs,
-                        warnings
-                );
-
-                final var elementClassLoader = resolveClassLoader(
-                        apiSpiClassLoader,
-                        repositories,
-                        definition.elementArtifacts(),
-                        logs,
-                        warnings
-                );
-
-                // Use ElementLoaderFactory for isolated loading
-                logs.add("Creating isolated Element loader");
-                final var loaderFactory = ElementLoaderFactory.getDefault();
-                final var attributes = SimpleAttributes.newDefaultInstance();
-
-                final var loader = loaderFactory.getIsolatedLoader(
-                        attributes,
-                        elementClassLoader,
-                        cl -> cl
-                );
-
-                logs.add("Registering Element with registry");
-                final var element = registry.register(loader);
-                final var elementName = element.getElementRecord().definition().name();
-                logs.add("Successfully loaded 1 element from Maven artifacts");
-                logs.add("  - Element: " + elementName);
-
-                return List.of(element);
-            }
-
-        } catch (Exception ex) {
-            logs.add("Failed to load from ElementDefinition: " + ex.getMessage());
-            errors.add(ex);
-            throw ex;
-        }
-    }
-
-    /**
-     * Loads elements from an ElementPackageDefinition.
-     */
-    private List<Element> loadFromPackageDefinition(
-            final dev.getelements.elements.sdk.model.system.ElementPackageDefinition packageDef,
-            final ElementDeployment deployment,
-            final Path deploymentDir,
-            final MutableElementRegistry registry,
-            final Set<ArtifactRepository> repositories,
-            final List<Path> tempFiles,
-            final List<String> logs,
-            final List<String> warnings,
-            final List<Throwable> errors) throws IOException {
-        try {
-            logs.add("Loading from package ELM artifact: " + packageDef.elmArtifact());
-
-            // Resolve the ELM artifact
-            final var elmArtifact = elementArtifactLoader.getArtifact(repositories, packageDef.elmArtifact());
-            final var elmPath = elmArtifact.path();
-            logs.add("Resolved package ELM to: " + elmPath);
-
-            // Load elements using LoadConfiguration with per-path attributes
-            final var pathLoader = ElementPathLoader.newDefaultInstance();
-
-            final var config = ElementPathLoader.LoadConfiguration.builder()
-                    .registry(registry)
-                    .path(elmPath)
-                    .attributesProvider((attrs, elementPath) -> {
-                        final var pathStr = elementPath.toString();
-                        final var builder = new SimpleAttributes.Builder();
-
-                        // Start with deployment-level path attributes
-                        if (deployment.pathAttributes() != null) {
-                            final var deploymentPathAttrs = deployment.pathAttributes().get(pathStr);
-                            if (deploymentPathAttrs != null) {
-                                builder.setAttributes(deploymentPathAttrs);
-                            }
-                        }
-
-                        // Apply package-specific per-path attributes
-                        if (packageDef.pathAttributes() != null) {
-                            final var packagePathAttrs = packageDef.pathAttributes().get(pathStr);
-                            if (packagePathAttrs != null) {
-                                logs.add("Applying path-specific attributes for: " + pathStr);
-                                builder.setAttributes(packagePathAttrs);
-                            }
-                        }
-
-                        return builder.build();
-                    })
-                    .build();
-
-            final var elements = pathLoader.load(config).toList();
-            logs.add("Loaded " + elements.size() + " element(s) from package");
-
-            for (final var element : elements) {
-                final var elementName = element.getElementRecord().definition().name();
-                logs.add("  - Element: " + elementName);
-            }
-
-            return elements;
-
-        } catch (Exception ex) {
-            logs.add("Failed to load from ElementPackageDefinition: " + ex.getMessage());
-            errors.add(ex);
-            throw ex;
-        }
+        return deployment.elm() != null && LargeObjectState.UPLOADED.equals(deployment.elm().getState());
     }
 
     /**
@@ -782,10 +691,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             final var sourcePath = artifact.path();
             final var fileName = sourcePath.getFileName();
             final var destinationPath = targetDir.resolve(fileName);
-
-            Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+            copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
             logs.add("Copied artifact: " + fileName);
         }
+
     }
 
     /**
@@ -811,35 +720,282 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     }
 
     /**
-     * Resolves a ClassLoader for the given artifacts, or returns the parent if no artifacts.
+     * Stages elements from an ElementPackageDefinition.
+     * Resolves the elmArtifact from Maven and validates it as an ELM file.
+     * Does not load the elements - only prepares the path for loading.
+     *
+     * @param definition       the element package definition
+     * @param repositories     the artifact repositories
+     * @param tempFiles        list to track temporary files for cleanup
+     * @param fileSystems      list to track opened file systems for cleanup
+     * @param logs             list to append log messages to
+     * @param warnings         list to append warnings to
+     * @param errors           list to append errors to
+     * @param elementPaths     list to add the staged path to
+     * @param attributePaths   map to track attributes per path
      */
-    private ClassLoader resolveClassLoader(final ClassLoader parent,
-                                           final Set<ArtifactRepository> repositories,
-                                           final List<String> coordinates,
-                                           final List<String> logs,
-                                           final List<String> warnings) {
-        if (coordinates == null || coordinates.isEmpty()) {
-            return parent;
-        }
-
+    private void stageFromPackageDefinition(
+            final ElementPackageDefinition definition,
+            final Set<ArtifactRepository> repositories,
+            final List<Path> tempFiles,
+            final List<FileSystem> fileSystems,
+            final List<String> logs,
+            final List<String> warnings,
+            final List<Throwable> errors,
+            final List<Path> elementPaths,
+            final Map<Path, Attributes> attributePaths) {
         try {
-            logs.add("Resolving ClassLoader for artifacts: " + coordinates);
-            final var coords = new HashSet<>(coordinates);
-            final Optional<ClassLoader> optional = elementArtifactLoader.findClassLoader(parent, repositories, coords);
 
-            if (optional.isPresent()) {
-                logs.add("Successfully resolved ClassLoader for " + coordinates.size() + " artifact(s)");
-                return optional.get();
-            } else {
-                warnings.add("Could not resolve artifacts: " + coordinates);
-                return parent;
+            logs.add("Staging from package ELM artifact: " + definition.elmArtifact());
+
+            // Resolve the ELM artifact
+            final var elmArtifact = elementArtifactLoader.getArtifact(repositories, definition.elmArtifact());
+
+            final var elmPath = elmArtifact
+                    .path()
+                    .toAbsolutePath();
+
+            logs.add("Resolved package ELM to: " + elmPath);
+
+            // Validate the ELM file
+            validateElmFile(elmPath, logs, errors);
+
+            final var fileSystem = FileSystems.newFileSystem(elmPath);
+            fileSystems.add(fileSystem);
+
+            final var fileSystemRoot = fileSystem
+                    .getRootDirectories()
+                    .iterator()
+                    .next()
+                    .toAbsolutePath();
+
+            elementPaths.add(fileSystemRoot);
+
+            if (definition.pathAttributes() != null) {
+                definition.pathAttributes().forEach((path, attributesMap) -> {
+
+                    final var attributes = new SimpleAttributes.Builder()
+                            .setAttributes(attributesMap)
+                            .build();
+
+                    final var fileSystemPath = fileSystem
+                            .getPath(path)
+                            .toAbsolutePath();
+
+                    attributePaths.put(fileSystemPath, attributes);
+
+                });
             }
+
+            logs.add("Successfully staged package ELM");
+
         } catch (Exception ex) {
-            final var warning = "Error resolving artifacts " + coordinates + ": " + ex.getMessage();
-            logger.warn(warning, ex);
-            warnings.add(warning);
-            return parent;
+            logs.add("Failed to stage from ElementPackageDefinition: " + ex.getMessage());
+            errors.add(ex);
         }
+    }
+
+    /**
+     * Stages elements from an ElementPathDefinition.
+     * Creates a directory structure and copies Maven artifacts (api, spi, element) into subdirectories.
+     * Does not load the elements - only prepares the path for loading.
+     *
+     * @param definition     the element path definition
+     * @param deploymentDir  the deployment directory root
+     * @param repositories   the artifact repositories
+     * @param tempFiles      list to track temporary files for cleanup
+     * @param logs           list to append log messages to
+     * @param warnings       list to append warnings to
+     * @param errors         list to append errors to
+     * @param elementPaths   list to add the staged path to
+     * @param attributePaths map to track attributes per path
+     */
+    private void stageFromElementDefinition(final ElementPathDefinition definition,
+                                            final Path deploymentDir,
+                                            final Set<ArtifactRepository> repositories,
+                                            final List<Path> tempFiles,
+                                            final List<String> logs,
+                                            final List<String> warnings,
+                                            final List<Throwable> errors,
+                                            final List<Path> elementPaths,
+                                            final Map<Path, Attributes> attributePaths) {
+        try {
+
+            logs.add("Staging from Maven artifacts");
+
+            // Generate unique subdirectory name
+            final var elementPath = deploymentDir
+                    .resolve(definition.path())
+                    .toAbsolutePath();
+
+            createDirectories(elementPath);
+
+            logs.add("Created element directory: " + elementPath);
+
+            // Create subdirectories for artifacts
+            final var apiDir = elementPath.resolve(ElementPathLoader.API_DIR);
+            final var spiDir = elementPath.resolve(ElementPathLoader.SPI_DIR);
+            final var libDir = elementPath.resolve(ElementPathLoader.LIB_DIR);
+
+            createDirectories(apiDir);
+            createDirectories(spiDir);
+            createDirectories(libDir);
+
+            // Gather and place API artifacts
+            if (definition.apiArtifacts() != null && !definition.apiArtifacts().isEmpty()) {
+
+                logs.add("Gathering " + definition.apiArtifacts().size() + " API artifact(s)");
+
+                for (final var coordinate : definition.apiArtifacts()) {
+                    copyArtifactWithDependencies(coordinate, repositories, apiDir, logs);
+                }
+
+            }
+
+            // Gather and place SPI artifacts
+            if (definition.spiArtifacts() != null && !definition.spiArtifacts().isEmpty()) {
+                logs.add("Gathering " + definition.spiArtifacts().size() + " SPI artifact(s)");
+                for (final var coordinate : definition.spiArtifacts()) {
+                    copyArtifactWithDependencies(coordinate, repositories, spiDir, logs);
+                }
+            }
+
+            // Gather and place implementation artifacts
+            if (definition.elementArtifacts() != null && !definition.elementArtifacts().isEmpty()) {
+                logs.add("Gathering " + definition.elementArtifacts().size() + " element artifact(s)");
+                for (final var coordinate : definition.elementArtifacts()) {
+                    copyArtifactWithDependencies(coordinate, repositories, libDir, logs);
+                }
+            }
+
+            // In a path based configuration we can just drop the properties file to disk
+            // in the appropriate place on disk and let it be read later by the element path loader
+
+            final var attributes = new SimpleAttributes.Builder()
+                    .setAttributes(definition.attributes())
+                    .build();
+
+            // Add to element paths for later loading
+            elementPaths.add(elementPath);
+            attributePaths.put(elementPath, attributes);
+
+            logs.add("Successfully staged from Maven artifacts");
+
+        } catch (Exception ex) {
+            logs.add("Failed to stage from ElementDefinition: " + ex.getMessage());
+            errors.add(ex);
+        }
+    }
+
+    /**
+     * Stages an ELM file from LargeObject by downloading it to a temp location.
+     * Does not load the elements - only prepares the path for loading.
+     *
+     * @param deployment     the deployment containing the LargeObject reference
+     * @param tempFiles      list to track temporary files for cleanup
+     * @param fileSystems    list to track opened file systems for cleanup
+     * @param logs           list to append log messages to
+     * @param errors         list to append errors to
+     * @param elementPaths   list to add the staged path to
+     * @param attributePaths map to track attributes per path
+     */
+    private void stageFromLargeObject(final ElementDeployment deployment,
+                                      final List<Path> tempFiles,
+                                      final List<FileSystem> fileSystems,
+                                      final List<String> logs,
+                                      final List<Throwable> errors,
+                                      final List<Path> elementPaths,
+                                      final Map<Path, Attributes> attributePaths) {
+        try {
+
+            final var elmRef = deployment.elm();
+            final var elmId = elmRef.getId();
+
+            logs.add("Downloading ELM file from LargeObject: " + elmId);
+
+            // Download ELM to temp file
+            final var tempPath = temporaryFiles.createTempFile(deployment.id(), ".elm");
+            tempFiles.add(tempPath);
+
+            try (final InputStream in = getLargeObjectBucket().readObject(elmId);
+                 final OutputStream out = Files.newOutputStream(tempPath)) {
+                in.transferTo(out);
+            }
+
+            logs.add("Downloaded ELM to temporary file: " + tempPath);
+
+            // Validate the ELM file
+            validateElmFile(tempPath, logs, errors);
+
+            final var fileSystem = FileSystems.newFileSystem(tempPath);
+            fileSystems.add(fileSystem);
+
+            // Add to element paths for later loading
+            final var fileSystemRoot = fileSystem
+                    .getRootDirectories()
+                    .iterator()
+                    .next()
+                    .toAbsolutePath();
+
+            elementPaths.add(fileSystemRoot);
+            logs.add("Successfully staged ELM from LargeObject.");
+
+            // Gather the paths for the attributes
+            if (deployment.pathAttributes() != null) {
+                deployment.pathAttributes().forEach((path, attributesMap) -> {
+
+                    final var attributes = new SimpleAttributes.Builder()
+                            .setAttributes(attributesMap)
+                            .build();
+
+                    final var fileSystemPath = fileSystem
+                            .getPath(path)
+                            .toAbsolutePath();
+
+                    attributePaths.put(fileSystemPath, attributes);
+
+                });
+            }
+
+        } catch (Exception ex) {
+            logs.add("Failed to stage from LargeObject: " + ex.getMessage());
+            errors.add(ex);
+        }
+    }
+
+    /**
+     * Validates that a file is a proper ELM file.
+     * Checks both the file extension and ZIP format validity.
+     *
+     * @param elmPath the path to validate
+     * @param logs the list to append log messages to
+     * @param errors the list to append errors to
+     * @throws IllegalArgumentException if validation fails
+     */
+    private void validateElmFile(final Path elmPath, final List<String> logs, final List<Throwable> errors) {
+
+        // Check extension
+        if (!elmPath.toString().endsWith(".elm")) {
+            final var msg = "Artifact is not an ELM file: " + elmPath;
+            logs.add(msg);
+            final var ex = new InternalException(msg);
+            errors.add(ex);
+            throw ex;
+        }
+
+        // Verify it's a valid ZIP
+        try (final var zis = new ZipInputStream(Files.newInputStream(elmPath))) {
+            if (zis.getNextEntry() == null) {
+                throw new InternalException("ELM file is empty or corrupted");
+            }
+        } catch (IOException ex) {
+            final var msg = "ELM file is not a valid ZIP: " + elmPath;
+            logs.add("ERROR: " + msg);
+            final var wrappedEx = new InternalException(msg, ex);
+            errors.add(wrappedEx);
+            throw wrappedEx;
+        }
+
     }
 
     /**
@@ -894,9 +1050,11 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private record ActiveDeployment(
             ElementDeployment deployment,
             RuntimeStatus status,
+            boolean isTransient,
             MutableElementRegistry registry,
             List<Element> elements,
             List<Path> tempFiles,
+            List<FileSystem> filesystems,
             List<String> logs,
             List<Throwable> errors
     ) implements AutoCloseable {
@@ -925,6 +1083,13 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 }
             }
 
+            for (final FileSystem fileSystem : filesystems) {
+                try {
+                    fileSystem.close();
+                } catch (IOException ex) {
+                    logger.warn("Failed to close file system {} for deployment {}", fileSystem, deployment.id(), ex);
+                }
+            }
         }
     }
 

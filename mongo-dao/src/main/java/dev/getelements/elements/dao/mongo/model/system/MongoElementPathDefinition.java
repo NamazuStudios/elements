@@ -19,9 +19,6 @@ public class MongoElementPathDefinition {
     private List<String> elementArtifacts;
 
     @Property
-    private String elmArtifact;
-
-    @Property
     private String path;
 
     @Property
@@ -49,14 +46,6 @@ public class MongoElementPathDefinition {
 
     public void setElementArtifacts(List<String> elementArtifacts) {
         this.elementArtifacts = elementArtifacts;
-    }
-
-    public String getElmArtifact() {
-        return elmArtifact;
-    }
-
-    public void setElmArtifact(String elmArtifact) {
-        this.elmArtifact = elmArtifact;
     }
 
     public String getPath() {

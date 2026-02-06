@@ -80,7 +80,6 @@ public class MongoElementDeploymentDaoTest {
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
                 null,
-                null,
                 null
         );
 
@@ -123,7 +122,6 @@ public class MongoElementDeploymentDaoTest {
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
                 null,
-                "com.example:elm:1.0",
                 null,
                 null
         );
@@ -147,7 +145,6 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(created.elements().size(), 1);
         assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
         assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
-        assertEquals(created.elements().get(0).elmArtifact(), "com.example:elm:1.0");
         assertFalse(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.UNLOADED);
 
@@ -252,9 +249,6 @@ public class MongoElementDeploymentDaoTest {
                 deployment.elements() != null && !deployment.elements().isEmpty()
                         ? deployment.elements().get(0).elementArtifacts()
                         : List.of(),
-                deployment.elements() != null && !deployment.elements().isEmpty()
-                        ? deployment.elements().get(0).elmArtifact()
-                        : null,
                 deployment.elements() != null && !deployment.elements().isEmpty()
                         ? deployment.elements().get(0).path()
                         : null,

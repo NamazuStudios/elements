@@ -12,6 +12,13 @@ import java.util.Map;
 public record ElementPathDefinition(
 
         @Schema(description =
+                "The path on disk where this element will be deployed within the deployment directory structure. " +
+                "This path is used as the subdirectory name for organizing element artifacts when expanded from " +
+                "organized on disk."
+        )
+        String path,
+
+        @Schema(description =
                 "List of API artifact coordinates. These artifacts will be loaded into a shared API classloader " +
                 "accessible to all Elements. Ignored if elmArtifact is specified."
         )
@@ -28,20 +35,6 @@ public record ElementPathDefinition(
                 "Ignored if elmArtifact is specified."
         )
         List<String> elementArtifacts,
-
-        @Schema(description =
-                "A single ELM artifact coordinate. If specified, this ELM will be used instead of the " +
-                "apiArtifacts, spiArtifacts, and elementArtifacts lists. The ELM contains all necessary " +
-                "API, SPI, and Element code."
-        )
-        String elmArtifact,
-
-        @Schema(description =
-                "The path on disk where this element will be deployed within the deployment directory structure. " +
-                "This path is used as the subdirectory name for organizing element artifacts when expanded from " +
-                "an ELM file."
-        )
-        String path,
 
         @Schema(description =
                 "Custom attributes specific to this element path. These key-value pairs will be passed to the " +

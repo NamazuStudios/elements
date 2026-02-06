@@ -3,9 +3,15 @@ package dev.getelements.elements.common.app;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
+import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
+import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service that polls the database for {@link dev.getelements.elements.sdk.model.system.ElementDeployment} records
@@ -33,24 +39,72 @@ public interface ElementRuntimeService {
 
     /**
      * Gets all active {@link ElementDeployment} instances as a copy or snapshot of the internal state of the
-     * deployments.
+     * deployments. This includes both persistent (database-backed) and transient deployments.
      *
      * @return all active deployments.
      */
     List<RuntimeRecord> getActiveRuntimes();
 
     /**
+     * Unloads a transient deployment by ID.
+     *
+     * @param deploymentId the deployment ID to unload
+     * @return true if the deployment was found and unloaded, false if not found or not transient
+     * @throws IllegalStateException if the service is not started
+     */
+    boolean unloadTransientDeployment(String deploymentId);
+
+    /**
+     * Loads a transient deployment from Maven coordinates for testing and development.
+     * The service assigns a unique ID and loads the deployment immediately without persisting to the database.
+     * Transient deployments are excluded from database reconciliation and remain loaded until explicitly
+     * unloaded or the service is stopped.
+     *
+     * @param request the Maven-based deployment configuration
+     * @return the runtime record for the loaded deployment
+     * @throws IllegalStateException if the service is not started
+     */
+    RuntimeRecord loadTransientDeployment(TransientDeploymentRequest request);
+
+    /**
+     * Configuration for loading a transient deployment from Maven artifact coordinates.
+     * The service will assign an ID and manage the deployment lifecycle.
+     *
+     * @param application the application context (null for system-wide deployment)
+     * @param pathAttributes custom attributes per element path (may be null)
+     * @param elements list of path-based element definitions (may be null)
+     * @param packages list of package-based element definitions (may be null)
+     * @param useDefaultRepositories whether to include default Maven repositories
+     * @param repositories additional artifact repositories for resolution (may be empty)
+     */
+    record TransientDeploymentRequest(
+            Application application,
+            Map<String, Map<String, Object>> pathAttributes,
+            List<ElementPathDefinition> elements,
+            List<ElementPackageDefinition> packages,
+            boolean useDefaultRepositories,
+            List<ElementArtifactRepository> repositories
+    ) {}
+
+    /**
      * Represents an active element runtime.
      *
      * @param deployment the underlying {@link ElementDeployment}
+     * @param status the runtime status indicating load success or failure
+     * @param isTransient true if this is a transient (non-persistent) deployment
      * @param registry the {@link ElementRegistry} used to manage the Elements
      * @param elements the {@link Element}s loaded in this deployment
+     * @param tempFiles temporary files created during deployment loading
+     * @param logs log messages from the loading process
+     * @param errors errors encountered during loading
      */
     record RuntimeRecord(
             ElementDeployment deployment,
             RuntimeStatus status,
+            boolean isTransient,
             ElementRegistry registry,
             List<Element> elements,
+            List<Path> tempFiles,
             List<String> logs,
             List<Throwable> errors
     ) {}

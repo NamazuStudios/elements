@@ -173,7 +173,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 // Try to open as a FileSystem (for ELM/zip files)
                 final var fs = FileSystems.newFileSystem(path);
                 fileSystems.add(fs); // Keep it open
-                final var root = fs.getPath("/");
+                final var root = fs.getRootDirectories().iterator().next();
                 collector.accept(root, classpath);
             } catch (ProviderNotFoundException ex) {
                 // Not a zip/ELM file, try as directory
@@ -506,6 +506,13 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             ClassLoader baseClassLoader,
             MutableElementRegistry registry,
             AttributesLoader attributesProvider) {
+
+        public ElementPathRecord {
+            elementPath = elementPath.toAbsolutePath();
+            libs = libs.toAbsolutePath();
+            classpath = classpath.toAbsolutePath();
+            attributesFile = attributesFile.toAbsolutePath();
+        }
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
                                              final ClassLoader elementParent,

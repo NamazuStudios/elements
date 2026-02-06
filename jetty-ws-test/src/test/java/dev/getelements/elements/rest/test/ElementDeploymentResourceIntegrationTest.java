@@ -95,7 +95,6 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(created.elements().size(), 1);
         assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
         assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
-        assertEquals(created.elements().get(0).elmArtifact(), elementDefinition.elmArtifact());
         assertTrue(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.DISABLED);
         assertEquals(created.version(), 0L);
@@ -109,8 +108,6 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of("com.example:api:2.0.0"),
                 List.of("com.example:spi:2.0.0"),
                 List.of("com.example:element-impl:2.0.0"),
-                null
-        ,
                 null,
                 null
         );
@@ -163,7 +160,6 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(deployment.id(), createdDeploymentId);
         assertNotNull(deployment.elements());
         assertEquals(deployment.elements().size(), 1);
-        assertEquals(deployment.elements().get(0).elmArtifact(), "com.example:elm:1.0.0");
     }
 
     @Test(
@@ -277,7 +273,6 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(updated.elements().size(), 1);
         assertEquals(updated.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
         assertEquals(updated.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
-        assertEquals(updated.elements().get(0).elmArtifact(), elementDefinition.elmArtifact());
         assertEquals(updated.state(), ElementDeploymentState.ENABLED);
         assertEquals(updated.version(), 1L, "Version should be incremented after update");
     }
