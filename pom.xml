@@ -81,7 +81,7 @@
         <module>common-git</module>
         <module>common-jetty</module>
         <module>cdn-serve</module>
-        <module>app-serve-jetty</module>
+        <module>deployment-jetty</module>
         <module>app-node</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
@@ -415,7 +415,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>app-serve-jetty</artifactId>
+                <artifactId>deployment-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
