@@ -1,4 +1,4 @@
-package dev.getelements.elements.jetty;
+package dev.getelements.elements.deployment.jetty.guice;
 
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;

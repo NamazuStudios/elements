@@ -54,7 +54,7 @@ public class ElementsMain {
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
                 new ElementsCoreModule(),
-                new ElementRuntimeServiceModule(),
+                new dev.getelements.elements.deployment.jetty.guice.DeploymentElementModule(),
                 new FileSystemElementStorageGitLoaderModule(),
                 new ElementsWebServiceComponentModule(services)
         );

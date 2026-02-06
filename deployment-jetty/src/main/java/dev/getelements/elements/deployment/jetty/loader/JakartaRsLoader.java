@@ -1,6 +1,6 @@
 package dev.getelements.elements.deployment.jetty.loader;
 
-import dev.getelements.elements.deployment.jetty.AppServeConstants;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -33,7 +33,7 @@ import static org.glassfish.jersey.server.ResourceConfig.forApplication;
  * Searches an {@link Element} for a service of type {@link Application} and loads it into the application container
  * making all types specified in the {@link Application} available as RESTful API Calls.
  */
-public class JakartaRsLoader implements AppServeConstants, Loader {
+public class JakartaRsLoader implements Loader {
 
     private static final Logger logger = LoggerFactory.getLogger(JakartaRsLoader.class);
 
@@ -66,7 +66,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
         final var prefix = element
                 .getElementRecord()
                 .attributes()
-                .getAttributeOptional(APPLICATION_PREFIX)
+                .getAttributeOptional(ElementContainerService.APPLICATION_PREFIX)
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
                 .filter(Predicate.not(String::isBlank))
@@ -84,7 +84,7 @@ public class JakartaRsLoader implements AppServeConstants, Loader {
         final var enableAuth = element
                 .getElementRecord()
                 .attributes()
-                .getAttributeOptional(ENABLE_ELEMENTS_AUTH)
+                .getAttributeOptional(ElementContainerService.ENABLE_ELEMENTS_AUTH)
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
                 .map(Boolean::parseBoolean)
