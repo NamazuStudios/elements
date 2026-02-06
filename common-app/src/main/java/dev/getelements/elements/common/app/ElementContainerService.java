@@ -10,9 +10,29 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The Element Container Service is responsible for
+ * The Element Container Service is responsible for managing Element containers.
+ * It mounts and unmounts containers in response to runtime deployments.
+ *
+ * <h3>Container Lifecycle Events</h3>
+ * The service publishes the following events:
+ * <ul>
+ *     <li>{@link #CONTAINER_MOUNTED} - when a container is mounted</li>
+ *     <li>{@link #CONTAINER_UNMOUNTED} - when a container is unmounted</li>
+ * </ul>
  */
 public interface ElementContainerService {
+
+    /**
+     * Event published when a container is mounted.
+     * Event arguments: deploymentId (String), status (ContainerStatus), record (ContainerRecord)
+     */
+    String CONTAINER_MOUNTED = "dev.getelements.elements.container.mounted";
+
+    /**
+     * Event published when a container is unmounted.
+     * Event arguments: deploymentId (String)
+     */
+    String CONTAINER_UNMOUNTED = "dev.getelements.elements.container.unmounted";
 
     /**
      * Starts the container service.

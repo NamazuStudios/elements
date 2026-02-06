@@ -76,10 +76,10 @@ public class MongoElementDeploymentDaoTest {
         final var application = getApplicationTestFactory().createMockApplication(getClass());
 
         final var elementDefinition = new ElementPathDefinition(
+                null,
                 List.of("com.example:api:1.0"),
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
-                null,
                 null
         );
 
@@ -119,9 +119,9 @@ public class MongoElementDeploymentDaoTest {
     @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithoutApplication() {
         final var elementDefinition = new ElementPathDefinition(
+                null,
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
-                null,
                 null,
                 null
         );
@@ -244,14 +244,14 @@ public class MongoElementDeploymentDaoTest {
     )
     public void testUpdateStateAndArtifacts(final ElementDeployment deployment) {
         final var updatedDefinition = new ElementPathDefinition(
+                deployment.elements() != null && !deployment.elements().isEmpty()
+                        ? deployment.elements().get(0).path()
+                        : null,
                 List.of("com.example:api-updated:2.0"),
                 List.of("com.example:spi-updated:2.0"),
                 deployment.elements() != null && !deployment.elements().isEmpty()
                         ? deployment.elements().get(0).elementArtifacts()
                         : List.of(),
-                deployment.elements() != null && !deployment.elements().isEmpty()
-                        ? deployment.elements().get(0).path()
-                        : null,
                 deployment.elements() != null && !deployment.elements().isEmpty()
                         ? deployment.elements().get(0).attributes()
                         : null

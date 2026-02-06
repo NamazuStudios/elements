@@ -18,7 +18,9 @@ import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -32,7 +34,6 @@ import java.util.zip.ZipInputStream;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createDirectories;
-import static java.util.Objects.requireNonNull;
 
 /**
  * Standard implementation of {@link ElementRuntimeService} that polls the database for
@@ -113,6 +114,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             logger.info("ElementRuntimeService started with poll interval of {} seconds", getPollIntervalSeconds());
 
         }
+
+        // Publish event OUTSIDE the lock to prevent double-locking issues
+        publishRuntimeServiceStarted();
     }
 
     @Override
@@ -155,6 +159,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         }
 
+        // Publish event OUTSIDE the lock to prevent double-locking issues
+        publishRuntimeServiceStopped();
     }
 
     @Override
@@ -178,6 +184,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     @Override
     public RuntimeRecord loadTransientDeployment(final TransientDeploymentRequest request) {
+        RuntimeRecord record;
+
         try (var mon = Monitor.enter(lock)) {
 
             if (scheduler == null) {
@@ -209,31 +217,24 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             );
 
             // Load the deployment
-            doLoadDeployment(deployment, true);
+            record = doLoadDeployment(deployment, true);
 
-            // Return runtime record
-            final var activeDeployment = activeDeployments.get(deploymentId);
-
-            if (activeDeployment == null) {
-                throw new InternalException("Deployment not found after loading: " + deploymentId);
+            if (record == null) {
+                throw new InternalException("Deployment load returned null for: " + deploymentId);
             }
 
-            return new RuntimeRecord(
-                    activeDeployment.deployment(),
-                    activeDeployment.status(),
-                    true,  // isTransient
-                    activeDeployment.registry(),
-                    activeDeployment.elements(),
-                    activeDeployment.tempFiles(),
-                    activeDeployment.logs(),
-                    activeDeployment.errors()
-            );
-
         }
+
+        // Publish event OUTSIDE the lock
+        publishRuntimeLoaded(record);
+
+        return record;
     }
 
     @Override
     public boolean unloadTransientDeployment(final String deploymentId) {
+        boolean unloaded;
+
         try (var mon = Monitor.enter(lock)) {
 
             if (scheduler == null) {
@@ -257,10 +258,16 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // Unload the deployment
             doUnloadDeployment(deploymentId);
-
-            return true;
+            unloaded = true;
 
         }
+
+        // Publish event OUTSIDE the lock
+        if (unloaded) {
+            publishRuntimeUnloaded(deploymentId);
+        }
+
+        return unloaded;
     }
 
     /**
@@ -278,6 +285,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * Reconciles database state with in-memory state.
      */
     private void reconcile() {
+
+        // Collect events to publish outside the lock
+        final var loadedRecords = new ArrayList<RuntimeRecord>();
+        final var unloadedDeploymentIds = new ArrayList<String>();
 
         try (var mon = Monitor.enter(lock)) {
 
@@ -309,7 +320,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 if (active == null) {
                     // New deployment - load it
                     try {
-                        doLoadDeployment(deployment, false);  // Not transient
+                        final var record = doLoadDeployment(deployment, false);  // Not transient
+                        if (record != null) {
+                            loadedRecords.add(record);
+                        }
                         logger.info("Loaded deployment: {}", deploymentId);
                     } catch (Exception ex) {
                         logger.error("Failed to load deployment: {}", deploymentId, ex);
@@ -318,7 +332,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     // Version changed - reload
                     try {
                         doUnloadDeployment(deploymentId);
-                        doLoadDeployment(deployment, false);  // Not transient
+                        unloadedDeploymentIds.add(deploymentId);
+
+                        final var record = doLoadDeployment(deployment, false);  // Not transient
+                        if (record != null) {
+                            loadedRecords.add(record);
+                        }
                         logger.info("Reloaded deployment: {} (version {} -> {})",
                                 deploymentId, active.deployment().version(), deployment.version());
                     } catch (Exception ex) {
@@ -339,6 +358,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 if (!dbDeploymentIds.contains(activeId) && !active.isTransient()) {
                     try {
                         doUnloadDeployment(activeId);
+                        unloadedDeploymentIds.add(activeId);
                         logger.info("Unloaded deployment: {}", activeId);
                     } catch (Exception ex) {
                         logger.error("Failed to unload deployment: {}", activeId, ex);
@@ -349,12 +369,23 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             logger.debug("Reconciliation complete. Active deployments: {}", activeDeployments.size());
         }
 
+        // Publish events OUTSIDE the lock
+        for (final var record : loadedRecords) {
+            publishRuntimeLoaded(record);
+        }
+
+        for (final var deploymentId : unloadedDeploymentIds) {
+            publishRuntimeUnloaded(deploymentId);
+        }
+
     }
 
     /**
      * Loads a deployment.
+     * NOTE: This method is called within a lock. Caller must publish events outside the lock.
+     * @return the RuntimeRecord for the loaded deployment, or null if load failed catastrophically
      */
-    private void doLoadDeployment(final ElementDeployment deployment, final boolean isTransient) {
+    private RuntimeRecord doLoadDeployment(final ElementDeployment deployment, final boolean isTransient) {
 
         final var deploymentId = deployment.id();
         final var tempFiles = new ArrayList<Path>();
@@ -405,6 +436,18 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             activeDeployments.put(deploymentId, active);
 
+            // Return runtime record for event publishing (outside lock)
+            return new RuntimeRecord(
+                    deployment,
+                    status,
+                    isTransient,
+                    registry,
+                    elements,
+                    tempFiles,
+                    logs,
+                    errors
+            );
+
         } catch (Exception ex) {
 
             logs.add("Deployment failed: " + ex.getMessage());
@@ -426,6 +469,18 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             activeDeployments.put(deploymentId, failedDeployment);
 
+            // Return failed runtime record for event publishing
+            final var failedRecord = new RuntimeRecord(
+                    deployment,
+                    status,
+                    isTransient,
+                    registry,
+                    elements != null ? elements : List.of(),
+                    tempFiles,
+                    logs,
+                    errors
+            );
+
             // Clean up on failure
             if (registry != null) {
                 try {
@@ -445,6 +500,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 }
             }
 
+            return failedRecord;
         }
     }
 
@@ -1005,6 +1061,72 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         final var active = activeDeployments.remove(deploymentId);
         if (active != null) {
             active.close();
+        }
+    }
+
+    /**
+     * Publishes runtime service started event.
+     */
+    private void publishRuntimeServiceStarted() {
+        try {
+            final var event = Event.builder()
+                    .named(ElementRuntimeService.RUNTIME_SERVICE_STARTED)
+                    .build();
+            getRootElementRegistry().publish(event);
+            logger.debug("Published runtime service started event");
+        } catch (Exception ex) {
+            logger.error("Failed to publish runtime service started event", ex);
+        }
+    }
+
+    /**
+     * Publishes runtime service stopped event.
+     */
+    private void publishRuntimeServiceStopped() {
+        try {
+            final var event = Event.builder()
+                    .named(ElementRuntimeService.RUNTIME_SERVICE_STOPPED)
+                    .build();
+            getRootElementRegistry().publish(event);
+            logger.debug("Published runtime service stopped event");
+        } catch (Exception ex) {
+            logger.error("Failed to publish runtime service stopped event", ex);
+        }
+    }
+
+    /**
+     * Publishes runtime loaded event with the runtime record.
+     */
+    private void publishRuntimeLoaded(final RuntimeRecord record) {
+        try {
+            final var event = Event.builder()
+                    .named(ElementRuntimeService.RUNTIME_LOADED)
+                    .argument(record.deployment().id())
+                    .argument(record.status())
+                    .argument(record.isTransient())
+                    .argument(record)
+                    .build();
+            getRootElementRegistry().publish(event);
+            logger.debug("Published runtime loaded event for deployment: {}", record.deployment().id());
+        } catch (Exception ex) {
+            logger.error("Failed to publish runtime loaded event for deployment: {}",
+                    record.deployment().id(), ex);
+        }
+    }
+
+    /**
+     * Publishes runtime unloaded event with the deployment ID.
+     */
+    private void publishRuntimeUnloaded(final String deploymentId) {
+        try {
+            final var event = Event.builder()
+                    .named(ElementRuntimeService.RUNTIME_UNLOADED)
+                    .argument(deploymentId)
+                    .build();
+            getRootElementRegistry().publish(event);
+            logger.debug("Published runtime unloaded event for deployment: {}", deploymentId);
+        } catch (Exception ex) {
+            logger.error("Failed to publish runtime unloaded event for deployment: {}", deploymentId, ex);
         }
     }
 

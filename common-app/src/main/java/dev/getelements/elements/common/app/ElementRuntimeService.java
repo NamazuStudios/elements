@@ -18,8 +18,39 @@ import java.util.Map;
  * and manages the runtime lifecycle of Element plugins. Each deployment gets its own subordinate
  * {@link dev.getelements.elements.sdk.MutableElementRegistry}. The service reconciles database state with
  * in-memory state on a configurable interval: loading ENABLED deployments, unloading DISABLED/deleted ones.
+ *
+ * <h3>Runtime Lifecycle Events</h3>
+ * The service publishes the following events:
+ * <ul>
+ *     <li>{@link #RUNTIME_SERVICE_STARTED} - when the service starts</li>
+ *     <li>{@link #RUNTIME_SERVICE_STOPPED} - when the service stops</li>
+ *     <li>{@link #RUNTIME_LOADED} - when a runtime deployment is loaded</li>
+ *     <li>{@link #RUNTIME_UNLOADED} - when a runtime deployment is unloaded</li>
+ * </ul>
  */
 public interface ElementRuntimeService {
+
+    /**
+     * Event published when the runtime service is started.
+     */
+    String RUNTIME_SERVICE_STARTED = "dev.getelements.elements.runtime.service.started";
+
+    /**
+     * Event published when the runtime service is stopped.
+     */
+    String RUNTIME_SERVICE_STOPPED = "dev.getelements.elements.runtime.service.stopped";
+
+    /**
+     * Event published when a runtime deployment is loaded.
+     * Event arguments: deploymentId (String), status (RuntimeStatus), isTransient (Boolean), record (RuntimeRecord)
+     */
+    String RUNTIME_LOADED = "dev.getelements.elements.runtime.loaded";
+
+    /**
+     * Event published when a runtime deployment is unloaded.
+     * Event arguments: deploymentId (String)
+     */
+    String RUNTIME_UNLOADED = "dev.getelements.elements.runtime.unloaded";
 
     /**
      * The attribute key for the poll interval in seconds. Default is 30 seconds.

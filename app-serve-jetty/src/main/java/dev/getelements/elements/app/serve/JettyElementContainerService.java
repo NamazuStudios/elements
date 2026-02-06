@@ -5,6 +5,8 @@ import dev.getelements.elements.common.app.ElementContainerService;
 import dev.getelements.elements.common.app.ElementRuntimeService;
 import dev.getelements.elements.common.app.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
@@ -44,6 +46,8 @@ public class JettyElementContainerService implements ElementContainerService {
     private ScheduledExecutorService scheduler;
 
     private ElementRuntimeService elementRuntimeService;
+
+    private ElementRegistry rootElementRegistry;
 
     @Override
     public void start() {
@@ -137,6 +141,93 @@ public class JettyElementContainerService implements ElementContainerService {
             sync();
         } catch (Exception ex) {
             logger.error("Error during container synchronization", ex);
+        }
+    }
+
+    /**
+     * Event consumer for RuntimeLoaded events from ElementRuntimeService.
+     * Immediately mounts the container when a runtime is loaded.
+     */
+    @dev.getelements.elements.sdk.annotation.ElementEventConsumer(ElementRuntimeService.RUNTIME_LOADED)
+    public void onRuntimeLoaded(final String deploymentId,
+                                final ElementRuntimeService.RuntimeStatus status,
+                                final boolean isTransient,
+                                final RuntimeRecord record) {
+        ContainerRecord mountedRecord = null;
+
+        try (var mon = Monitor.enter(lock)) {
+            logger.info("Received RuntimeLoaded event for deployment: {}", deploymentId);
+
+            // Skip failed runtimes
+            if (status == ElementRuntimeService.RuntimeStatus.FAILED) {
+                logger.debug("Skipping failed runtime: {}", deploymentId);
+                return;
+            }
+
+            // Check if already mounted
+            final var existing = activeContainers.get(deploymentId);
+            if (existing != null) {
+                logger.warn("Container already mounted for deployment: {}, remounting", deploymentId);
+                doUnmount(deploymentId);
+            }
+
+            // Mount the new runtime
+            try {
+                doMount(record);
+                logger.info("Mounted container in response to RuntimeLoaded event: {}", deploymentId);
+
+                // Capture the mounted container for event publishing
+                final var active = activeContainers.get(deploymentId);
+                if (active != null) {
+                    mountedRecord = new ContainerRecord(
+                            active.runtime(),
+                            active.status(),
+                            active.uris(),
+                            active.logs(),
+                            active.errors(),
+                            active.elements()
+                    );
+                }
+            } catch (Exception ex) {
+                logger.error("Failed to mount container for deployment: {}", deploymentId, ex);
+            }
+        }
+
+        // Publish event OUTSIDE the lock
+        if (mountedRecord != null) {
+            publishContainerMounted(mountedRecord);
+        }
+    }
+
+    /**
+     * Event consumer for RuntimeUnloaded events from ElementRuntimeService.
+     * Immediately unmounts the container when a runtime is unloaded.
+     */
+    @dev.getelements.elements.sdk.annotation.ElementEventConsumer(ElementRuntimeService.RUNTIME_UNLOADED)
+    public void onRuntimeUnloaded(final String deploymentId) {
+        boolean unmounted = false;
+
+        try (var mon = Monitor.enter(lock)) {
+            logger.info("Received RuntimeUnloaded event for deployment: {}", deploymentId);
+
+            // Unmount the container if it exists
+            final var existing = activeContainers.get(deploymentId);
+            if (existing != null) {
+                try {
+                    doUnmount(deploymentId);
+                    logger.info("Unmounted container in response to RuntimeUnloaded event: {}", deploymentId);
+                    unmounted = true;
+                } catch (Exception ex) {
+                    logger.error("Failed to unmount container for deployment: {}", deploymentId, ex);
+                }
+            } else {
+                logger.debug("No container found for unloaded deployment: {}", deploymentId);
+            }
+        }
+
+        // Publish event OUTSIDE the lock
+        if (unmounted) {
+            publishContainerUnmounted(deploymentId);
         }
     }
 
@@ -330,6 +421,53 @@ public class JettyElementContainerService implements ElementContainerService {
     @Inject
     public void setPollIntervalSeconds(@Named(POLL_INTERVAL_SECONDS) final int pollIntervalSeconds) {
         this.pollIntervalSeconds = pollIntervalSeconds;
+    }
+
+    public ElementRegistry getRootElementRegistry() {
+        return rootElementRegistry;
+    }
+
+    @Inject
+    public void setRootElementRegistry(@Named(dev.getelements.elements.sdk.ElementRegistry.ROOT) final ElementRegistry rootElementRegistry) {
+        this.rootElementRegistry = rootElementRegistry;
+    }
+
+    /**
+     * Publishes ContainerMounted event with the container record.
+     * NOTE: Should be called OUTSIDE the lock to prevent double-locking.
+     */
+    private void publishContainerMounted(final ContainerRecord record) {
+        try {
+            final var event = Event.builder()
+                    .named(ElementContainerService.CONTAINER_MOUNTED)
+                    .argument(record.runtime().deployment().id())
+                    .argument(record.status())
+                    .argument(record)
+                    .build();
+            getRootElementRegistry().publish(event);
+            logger.debug("Published container mounted event for deployment: {}",
+                    record.runtime().deployment().id());
+        } catch (Exception ex) {
+            logger.error("Failed to publish container mounted event for deployment: {}",
+                    record.runtime().deployment().id(), ex);
+        }
+    }
+
+    /**
+     * Publishes ContainerUnmounted event with the deployment ID.
+     * NOTE: Should be called OUTSIDE the lock to prevent double-locking.
+     */
+    private void publishContainerUnmounted(final String deploymentId) {
+        try {
+            final var event = Event.builder()
+                    .named(ElementContainerService.CONTAINER_UNMOUNTED)
+                    .argument(deploymentId)
+                    .build();
+            getRootElementRegistry().publish(event);
+            logger.debug("Published container unmounted event for deployment: {}", deploymentId);
+        } catch (Exception ex) {
+            logger.error("Failed to publish container unmounted event for deployment: {}", deploymentId, ex);
+        }
     }
 
     /**
