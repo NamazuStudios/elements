@@ -1,4 +1,4 @@
-package dev.getelements.elements.app.serve.loader;
+package dev.getelements.elements.deployment.jetty.loader;
 
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
@@ -21,8 +21,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
-import static dev.getelements.elements.app.serve.AppServeConstants.APPLICATION_PREFIX;
-import static dev.getelements.elements.app.serve.AppServeConstants.ENABLE_ELEMENTS_AUTH;
+import static dev.getelements.elements.deployment.jetty.AppServeConstants.APPLICATION_PREFIX;
+import static dev.getelements.elements.deployment.jetty.AppServeConstants.ENABLE_ELEMENTS_AUTH;
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure;
 

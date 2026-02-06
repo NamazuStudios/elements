@@ -1,12 +1,12 @@
-package dev.getelements.elements.app.serve.guice;
+package dev.getelements.elements.deployment.jetty.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.multibindings.Multibinder;
-import dev.getelements.elements.app.serve.JettyElementContainerService;
-import dev.getelements.elements.app.serve.loader.AuthFilterFeature;
-import dev.getelements.elements.app.serve.loader.JakartaRsLoader;
-import dev.getelements.elements.app.serve.loader.JakartaWebsocketLoader;
-import dev.getelements.elements.app.serve.loader.Loader;
+import dev.getelements.elements.deployment.jetty.JettyElementContainerService;
+import dev.getelements.elements.deployment.jetty.loader.AuthFilterFeature;
+import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
+import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
+import dev.getelements.elements.deployment.jetty.loader.Loader;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.servlet.security.HttpServletBearerAuthenticationFilter;
 import dev.getelements.elements.servlet.security.HttpServletElementScopeFilter;

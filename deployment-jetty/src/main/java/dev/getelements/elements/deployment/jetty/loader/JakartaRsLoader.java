@@ -1,6 +1,6 @@
-package dev.getelements.elements.app.serve.loader;
+package dev.getelements.elements.deployment.jetty.loader;
 
-import dev.getelements.elements.app.serve.AppServeConstants;
+import dev.getelements.elements.deployment.jetty.AppServeConstants;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;

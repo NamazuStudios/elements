@@ -2,7 +2,7 @@ package dev.getelements.elements.jetty;
 
 import com.google.inject.PrivateModule;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
-import dev.getelements.elements.sdk.deployment.StandardElementRuntimeService;
+import dev.getelements.elements.deployment.jetty.StandardElementRuntimeService;
 
 /**
  * Guice module for {@link ElementRuntimeService}.

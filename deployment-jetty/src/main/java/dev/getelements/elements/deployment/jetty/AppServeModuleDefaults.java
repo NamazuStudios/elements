@@ -1,4 +1,4 @@
-package dev.getelements.elements.app.serve;
+package dev.getelements.elements.deployment.jetty;
 
 import dev.getelements.elements.config.ModuleDefaults;
 

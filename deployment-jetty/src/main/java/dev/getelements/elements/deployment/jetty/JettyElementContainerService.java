@@ -1,6 +1,6 @@
-package dev.getelements.elements.app.serve;
+package dev.getelements.elements.deployment.jetty;
 
-import dev.getelements.elements.app.serve.loader.Loader;
+import dev.getelements.elements.deployment.jetty.loader.Loader;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;

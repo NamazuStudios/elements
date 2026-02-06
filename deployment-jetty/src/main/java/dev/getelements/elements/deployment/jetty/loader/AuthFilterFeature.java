@@ -1,4 +1,4 @@
-package dev.getelements.elements.app.serve.loader;
+package dev.getelements.elements.deployment.jetty.loader;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
