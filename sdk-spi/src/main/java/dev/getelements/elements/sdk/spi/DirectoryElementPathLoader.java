@@ -508,10 +508,10 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             AttributesLoader attributesProvider) {
 
         public ElementPathRecord {
-            elementPath = elementPath.toAbsolutePath();
-            libs = libs.toAbsolutePath();
-            classpath = classpath.toAbsolutePath();
-            attributesFile = attributesFile.toAbsolutePath();
+            elementPath = elementPath == null ? null : elementPath.toAbsolutePath();
+            libs = libs == null ? null : libs.toAbsolutePath();
+            classpath = classpath == null ? null : classpath.toAbsolutePath();
+            attributesFile = attributesFile == null ? null : attributesFile.toAbsolutePath();
         }
 
         public static ElementPathRecord from(final MutableElementRegistry registry,
