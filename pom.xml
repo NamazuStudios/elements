@@ -38,7 +38,6 @@
         </developer>
     </developers>
     <modules>
-        <module>common-app</module>
         <module>common-util</module>
         <module>common-servlet</module>
         <module>rest-api</module>
@@ -220,11 +219,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>common-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

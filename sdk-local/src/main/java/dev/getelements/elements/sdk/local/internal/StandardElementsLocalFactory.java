@@ -26,24 +26,13 @@ public class StandardElementsLocalFactory implements ElementsLocalFactory {
         final var classpath = record.classpath().toArray(URL[]::new);
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
+        // TODO: EL-317 Fixes the LocalSDK to use Artifact Resolution instead of local files from disk
+
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
                 new ElementsCoreModule(() -> record.attributes().asProperties(defaultConfigurationSupplier.get())),
                 new FileSystemElementStorageGitLoaderModule(),
-                new ElementsWebServiceComponentModule(),
-                new LocalApplicationElementServiceModule(record.elements()),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-
-                        bind(ElementsLocal.class)
-                                .to(StandardElementsLocal.class).asEagerSingleton();
-
-                        bind(ElementLoaderFactory.ClassLoaderConstructor.class)
-                                .toInstance(parent -> new URLClassLoader(classpath, parent));
-
-                    }
-                }
+                new ElementsWebServiceComponentModule()
         );
 
         return injector.getInstance(ElementsLocal.class);
