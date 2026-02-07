@@ -93,14 +93,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             // Build the list of all Elements we're trying to load
             for (final var path : config.paths()) {
-                final var fromPath = loadWithAttributes(
-                        config.registry(),
-                        path,
-                        apiClassLoader,
-                        config.baseClassLoader(),
-                        config.spiLoader(),
-                        config.attributesProvider()
-                ).toList();
+                final var fromPath = loadElementsFromPath(path, apiClassLoader, config).toList();
                 elements.addAll(fromPath);
             }
 
@@ -301,27 +294,17 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     /**
      * Internal method that loads Elements with custom attributes provider.
      */
-    private Stream<Element> loadWithAttributes(
-            final MutableElementRegistry registry,
+    private Stream<Element> loadElementsFromPath(
             final Path path,
-            final ClassLoader parent,
-            final ClassLoader baseClassLoader,
-            final SpiLoader spiLoader,
-            final AttributesLoader attributesProvider) {
+            final ClassLoader apiClassLoader,
+            final LoadConfiguration config) {
         try {
 
             // Try to open as a FileSystem (for ELM/zip files)
             final var fs = FileSystems.newFileSystem(path);
             final var root = fs.getPath("/");
 
-            final var elements = doLoadWithAttributes(
-                    registry,
-                    root,
-                    parent,
-                    baseClassLoader,
-                    spiLoader,
-                    attributesProvider
-            ).toList();
+            final var elements = doLoadElementsFromPath(root, apiClassLoader, config).toList();
 
             if (elements.isEmpty()) {
                 // No elements loaded, close the FileSystem immediately
@@ -351,14 +334,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         } catch (ProviderNotFoundException ex) {
             // Not a zip/ELM file, try as directory
             if (Files.isDirectory(path)) {
-                return doLoadWithAttributes(
-                        registry,
-                        path,
-                        parent,
-                        baseClassLoader,
-                        spiLoader,
-                        attributesProvider
-                );
+                return doLoadElementsFromPath(path, apiClassLoader, config);
             } else {
                 logger.warn("{} not a directory. Skipping.", path);
                 return Stream.empty();
@@ -369,85 +345,20 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         } catch (FileSystemAlreadyExistsException ex) {
             logger.warn("FileSystem already exists for {}. Using existing.", path);
             final var fs = FileSystems.getFileSystem(path.toUri());
-            return doLoadWithAttributes(
-                    registry,
-                    fs.getPath("/"),
-                    parent,
-                    baseClassLoader,
-                    spiLoader,
-                    attributesProvider
-            );
+            return doLoadElementsFromPath(fs.getPath("/"), apiClassLoader, config);
         } catch (IOException ex) {
             throw new SdkException(ex);
         }
     }
 
-    @Override
-    public Stream<Element> load(
-            final MutableElementRegistry registry,
-            final Path path,
-            final ClassLoader parent,
-            final ClassLoader baseClassLoader) {
-        try {
-
-            // Try to open as a FileSystem (for ELM/zip files)
-            final var fs = FileSystems.newFileSystem(path);
-            final var root = fs.getPath("/");
-            final var elements = doLoad(registry, root, parent, baseClassLoader).toList();
-
-            if (elements.isEmpty()) {
-                // No elements loaded, close the FileSystem immediately
-                try {
-                    fs.close();
-                } catch (IOException e) {
-                    logger.error("Error closing FileSystem for {}", path, e);
-                }
-                return Stream.empty();
-            }
-
-            // Attach close handlers to all elements using reference counting
-            final var counter = new AtomicInteger(elements.size());
-
-            elements.forEach(element -> element.onClose(el -> {
-                if (counter.decrementAndGet() == 0) {
-                    try {
-                        fs.close();
-                        logger.debug("Closed FileSystem for {} after all elements closed", path);
-                    } catch (IOException e) {
-                        logger.error("Error closing FileSystem for {}", path, e);
-                    }
-                }
-            }));
-
-            return elements.stream();
-
-        } catch (ProviderNotFoundException ex) {
-            // Not a zip/ELM file, try as directory
-            if (Files.isDirectory(path)) {
-                return doLoad(registry, path, parent, baseClassLoader);
-            } else {
-                logger.warn("{} not a directory. Skipping.", path);
-                return Stream.empty();
-            }
-        } catch (final NoSuchFileException ex) {
-            logger.warn("{} does not exist. Skipping.", path);
-            return Stream.empty();
-        } catch (final IOException ex) {
-            throw new SdkException(ex);
-        }
-
-    }
 
     /**
      * Internal method with attributes provider support.
      */
-    private Stream<Element> doLoadWithAttributes(
-            final MutableElementRegistry registry,
+    private Stream<Element> doLoadElementsFromPath(
             final Path path,
-            final ClassLoader parent,
-            final ClassLoader baseClassLoader,
-            final SpiLoader spiLoader,
-            final AttributesLoader attributesProvider) {
+            final ClassLoader apiClassLoader,
+            final LoadConfiguration config) {
 
         final var elements = new ArrayList<Element>();
 
@@ -460,17 +371,22 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         // If the Element provides its own SPI, we will include it. This is not required and
                         // in that case we will assume it's on the parent provided and use the parent instead.
 
-                        final var spiClassLoader = spiLoader.apply(parent, path);
-                        final var elementClassLoader = findSpiClassLoader(spiClassLoader, subpath).orElse(parent);
+                        final var spiClassLoader = findSpiClassLoader(apiClassLoader, subpath)
+                                .orElse(apiClassLoader);
+
+                        final var elementClassLoader = config
+                                .spiLoader()
+                                .apply(spiClassLoader, path);
 
                         // Construct the record with everything needed to make the new Element
+
                         final var record = ElementPathRecord.from(
-                                registry,
+                                config.registry(),
                                 elementClassLoader,
-                                baseClassLoader,
+                                config.baseClassLoader(),
                                 subpath,
                                 elementDirectory,
-                                attributesProvider
+                                config.attributesProvider()
                         );
 
                         // Check that the Element is valid and can be loaded. If conditions are met, then
@@ -516,20 +432,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     /**
      * Delegates to doLoadWithAttributes with a pass-through attributes provider.
      */
-    private Stream<Element> doLoad(
-            final MutableElementRegistry registry,
-            final Path path,
-            final ClassLoader parent,
-            final ClassLoader baseClassLoader) {
-        return doLoadWithAttributes(
-                registry,
-                path,
-                parent,
-                baseClassLoader,
-                (cl, p) -> cl,
-                (attrs, p) -> attrs
-        );
-    }
 
     private record ElementPathRecord(
             Path elementPath,
