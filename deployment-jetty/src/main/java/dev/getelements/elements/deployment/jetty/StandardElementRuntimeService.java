@@ -648,15 +648,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 // Build API classloader from all element paths
                 logs.add("Building API classloader from all element paths");
 
-                final var apiClassLoader = pathLoader.buildApiClassLoader(permittedTypesClassLoader, elementPaths);
+                final var permittedTypesClassloader = new PermittedTypesClassLoader();
                 final var unconsumedAttributePaths = new HashSet<>(attributePaths.keySet());
 
                 // Load all elements using LoadConfiguration
                 logs.add("Loading elements from " + elementPaths.size() + " path(s)");
                 final var config = ElementPathLoader.LoadConfiguration.builder()
+                        .parent(permittedTypesClassloader)
                         .registry(registry)
                         .paths(elementPaths)
-                        .parent(apiClassLoader)
                         .baseClassLoader(permittedTypesClassLoader)
                         .attributesProvider((baseAttrs, elementPath) -> {
 
@@ -687,16 +687,17 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         })
                         .build();
 
+                allElements = pathLoader.load(config).toList();
+
                 if (!unconsumedAttributePaths.isEmpty()) {
                     warnings.add("Unconsumed attributes from element at path:\n%s".formatted(
-                        unconsumedAttributePaths
-                                .stream()
-                                .map(p -> " -> %s:%s".formatted(p.getFileSystem(), p))
-                                .collect(Collectors.joining(", "))
+                            unconsumedAttributePaths
+                                    .stream()
+                                    .map(p -> " -> %s:%s".formatted(p.getFileSystem(), p))
+                                    .collect(Collectors.joining(", "))
                     ));
                 }
 
-                allElements = pathLoader.load(config).toList();
                 logs.add("Successfully loaded " + allElements.size() + " element(s)");
 
             } catch (Exception ex) {
@@ -742,7 +743,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         final var artifacts = elementArtifactLoader.findClasspathForArtifact(repositories, coordinates).toList();
 
-        logs.add("Found " + artifacts.size() + " artifact(s) including dependencies");
+        logs.add("Found %d artifact(s) including dependencies %s".formatted(artifacts.size(), coordinates));
 
         for (final var artifact : artifacts) {
             final var sourcePath = artifact.path();

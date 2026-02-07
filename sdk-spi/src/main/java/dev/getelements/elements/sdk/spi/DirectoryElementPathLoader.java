@@ -135,13 +135,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             logger.error("Caught exception loading Element.", ex);
 
-            try {
-                apiClassLoader.close();
-            } catch (IOException e) {
-                logger.error("Caught exception closing api classloader.", e);
-                ex.addSuppressed(e);
-            }
-
             for (var element : elements) {
                 try {
                     element.close();
@@ -149,6 +142,13 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     logger.error("Caught exception closing previously loaded Element.", e);
                     ex.addSuppressed(e);
                 }
+            }
+
+            try {
+                apiClassLoader.close();
+            } catch (IOException e) {
+                logger.error("Caught exception closing api classloader.", e);
+                ex.addSuppressed(e);
             }
 
             throw ex;

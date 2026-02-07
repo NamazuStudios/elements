@@ -125,8 +125,7 @@ public interface ElementPathLoader {
             Collection<Path> paths,
             ClassLoader parent,
             ClassLoader baseClassLoader,
-            AttributesLoader attributesProvider
-    ) {
+            AttributesLoader attributesProvider    ) {
 
         /**
          * Creates a new builder for LoadConfiguration.
