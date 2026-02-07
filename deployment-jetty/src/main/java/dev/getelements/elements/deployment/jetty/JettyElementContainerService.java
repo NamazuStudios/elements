@@ -391,8 +391,15 @@ public class JettyElementContainerService implements ElementContainerService {
     private void doUnmount(final String deploymentId) {
         final var active = activeContainers.remove(deploymentId);
         if (active != null) {
-            // TODO: Actually unregister handlers from Jetty
-            // This will require changes to Loader interface to support cleanup
+            // Unload handlers from all loaders
+            for (final Loader loader : getLoaders()) {
+                try {
+                    loader.unload(active.runtime());
+                } catch (Exception ex) {
+                    logger.error("Error unloading handlers for deployment {} from loader {}",
+                            deploymentId, loader.getClass().getSimpleName(), ex);
+                }
+            }
             logger.info("Unmounted container for deployment {}", deploymentId);
         }
     }

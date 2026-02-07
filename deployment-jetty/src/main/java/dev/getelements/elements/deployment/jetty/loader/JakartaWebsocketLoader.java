@@ -171,6 +171,30 @@ public class JakartaWebsocketLoader implements Loader {
 
     }
 
+    @Override
+    public void unload(final Element element) {
+        try (var mon = Monitor.enter(lock)) {
+            final var deployment = activeDeployments.stream()
+                    .filter(d -> d.element().equals(element))
+                    .findFirst()
+                    .orElse(null);
+
+            if (deployment != null) {
+                activeDeployments.remove(deployment);
+
+                try {
+                    deployment.handler().stop();
+                    getSequence().removeHandler(deployment.handler());
+                    logger.info("Unloaded WebSocket handler for element: {}",
+                            element.getElementRecord().definition().name());
+                } catch (Exception ex) {
+                    logger.error("Failed to cleanly unload WebSocket handler for element: {}",
+                            element.getElementRecord().definition().name(), ex);
+                }
+            }
+        }
+    }
+
     private static String getWebSocketScheme(final PendingDeployment pending, final URI contextPathURI) {
 
         final var contextPathURIHost = contextPathURI.getHost();

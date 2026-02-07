@@ -137,6 +137,30 @@ public class JakartaRsLoader implements Loader {
     }
 
     @Override
+    public void unload(final Element element) {
+        try (var mon = Monitor.enter(lock)) {
+            final var deployment = activeDeployments.stream()
+                    .filter(d -> d.element().equals(element))
+                    .findFirst()
+                    .orElse(null);
+
+            if (deployment != null) {
+                activeDeployments.remove(deployment);
+
+                try {
+                    deployment.handler().stop();
+                    getSequence().removeHandler(deployment.handler());
+                    logger.info("Unloaded REST handler for element: {}",
+                            element.getElementRecord().definition().name());
+                } catch (Exception ex) {
+                    logger.error("Failed to cleanly unload REST handler for element: {}",
+                            element.getElementRecord().definition().name(), ex);
+                }
+            }
+        }
+    }
+
+    @Override
     public void load(final PendingDeployment pending, final RuntimeRecord record, final Element element) {
         try (var mon = Monitor.enter(lock)) {
 

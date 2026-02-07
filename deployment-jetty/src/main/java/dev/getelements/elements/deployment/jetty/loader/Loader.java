@@ -35,6 +35,24 @@ public interface Loader {
     void load(PendingDeployment pending, RuntimeRecord record, Element element);
 
     /**
+     * Unloads handlers for the elements in the supplied {@link RuntimeRecord}.
+     * This should clean up any Jetty handlers or resources that were registered during load.
+     *
+     * @param record the record to unload
+     */
+    default void unload(final RuntimeRecord record) {
+        record.elements().forEach(this::unload);
+    }
+
+    /**
+     * Unloads handlers for a specific {@link Element}.
+     * This should clean up any Jetty handlers or resources that were registered for this element.
+     *
+     * @param element the element to unload
+     */
+    void unload(Element element);
+
+    /**
      * Provides context and  callbacks for pending deployments.
      *
      * @param uris a predicate that returns true if the URI is new, false if it has already been recorded.
