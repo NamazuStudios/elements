@@ -36,6 +36,9 @@ public class MongoElementDeployment {
     private List<ArtifactRepository> repositories;
 
     @Property
+    private Map<String, List<String>> pathSpiClassPaths;
+
+    @Property
     private Map<String, Map<String, Object>> pathAttributes;
 
     @Property
@@ -98,6 +101,14 @@ public class MongoElementDeployment {
 
     public void setRepositories(List<ArtifactRepository> repositories) {
         this.repositories = repositories;
+    }
+
+    public Map<String, List<String>> getPathSpiClassPaths() {
+        return pathSpiClassPaths;
+    }
+
+    public void setPathSpiClassPaths(Map<String, List<String>> pathSpiClassPaths) {
+        this.pathSpiClassPaths = pathSpiClassPaths;
     }
 
     public Map<String, Map<String, Object>> getPathAttributes() {

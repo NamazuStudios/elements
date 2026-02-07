@@ -131,6 +131,7 @@ public interface ElementRuntimeService {
      */
     record TransientDeploymentRequest(
             Application application,
+            Map<String, List<String>> pathSpiClasspath,
             Map<String, Map<String, Object>> pathAttributes,
             List<ElementPathDefinition> elements,
             List<ElementPackageDefinition> packages,
@@ -143,6 +144,17 @@ public interface ElementRuntimeService {
          */
         public TransientDeploymentRequest {
             // Create immutable copies of path attributes with nested maps
+
+            if (pathSpiClasspath != null) {
+                pathSpiClasspath = pathSpiClasspath.entrySet().stream()
+                        .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                                java.util.Map.Entry::getKey,
+                                entry -> entry.getValue() == null
+                                        ? java.util.List.of()
+                                        : java.util.List.copyOf(entry.getValue())
+                        ));
+            }
+
             if (pathAttributes != null) {
                 pathAttributes = pathAttributes.entrySet().stream()
                         .collect(java.util.stream.Collectors.toUnmodifiableMap(
@@ -157,6 +169,7 @@ public interface ElementRuntimeService {
             elements = elements == null ? null : java.util.List.copyOf(elements);
             packages = packages == null ? null : java.util.List.copyOf(packages);
             repositories = repositories == null ? null : java.util.List.copyOf(repositories);
+
         }
 
         /**
@@ -173,6 +186,7 @@ public interface ElementRuntimeService {
          */
         public static final class Builder {
             private Application application;
+            private Map<String, List<String>> pathSpiClasspath;
             private Map<String, Map<String, Object>> pathAttributes;
             private List<ElementPathDefinition> elements;
             private List<ElementPackageDefinition> packages;
@@ -216,6 +230,23 @@ public interface ElementRuntimeService {
                     this.pathAttributes = new java.util.HashMap<>();
                 }
                 this.pathAttributes.put(path, attributes);
+                return this;
+            }
+
+            /**
+             * Sets the SPI Classpath for a specific path within the deployment.
+             *
+             * @param path the path
+             * @param classpath the classpath
+             * @return this instance
+             */
+            public Builder addPathSpiClasspath(final String path, final List<String> classpath) {
+
+                if (this.pathSpiClasspath == null) {
+                    this.pathSpiClasspath = new java.util.HashMap<>();
+                }
+
+                this.pathSpiClasspath.put(path, classpath);
                 return this;
             }
 
@@ -331,6 +362,7 @@ public interface ElementRuntimeService {
             public TransientDeploymentRequest build() {
                 return new TransientDeploymentRequest(
                         application,
+                        pathSpiClasspath,
                         pathAttributes,
                         elements,
                         packages,

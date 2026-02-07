@@ -39,6 +39,12 @@ public record ElementDeployment(
         LargeObjectReference elm,
 
         @Schema(description =
+                "Map of element paths to a custom SPI class paths. This allows for an individual SPI specification " +
+                "for each Element contained within the ELM file in the large object."
+        )
+        Map<String, List<String>> pathSpiClassPaths,
+
+        @Schema(description =
                 "Map of element paths to their custom attributes. The key is the path inside the ELM for each Element " +
                 "in the ELM file, and the value is a map of custom attributes to pass to that specific element " +
                 "at load time via the AttributesLoader mechanism."
