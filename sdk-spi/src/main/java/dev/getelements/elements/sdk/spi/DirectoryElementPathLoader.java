@@ -98,6 +98,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         path,
                         apiClassLoader,
                         config.baseClassLoader(),
+                        config.spiLoader(),
                         config.attributesProvider()
                 ).toList();
                 elements.addAll(fromPath);
@@ -305,13 +306,22 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path path,
             final ClassLoader parent,
             final ClassLoader baseClassLoader,
+            final SpiLoader spiLoader,
             final AttributesLoader attributesProvider) {
         try {
 
             // Try to open as a FileSystem (for ELM/zip files)
             final var fs = FileSystems.newFileSystem(path);
             final var root = fs.getPath("/");
-            final var elements = doLoadWithAttributes(registry, root, parent, baseClassLoader, attributesProvider).toList();
+
+            final var elements = doLoadWithAttributes(
+                    registry,
+                    root,
+                    parent,
+                    baseClassLoader,
+                    spiLoader,
+                    attributesProvider
+            ).toList();
 
             if (elements.isEmpty()) {
                 // No elements loaded, close the FileSystem immediately
@@ -341,7 +351,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         } catch (ProviderNotFoundException ex) {
             // Not a zip/ELM file, try as directory
             if (Files.isDirectory(path)) {
-                return doLoadWithAttributes(registry, path, parent, baseClassLoader, attributesProvider);
+                return doLoadWithAttributes(
+                        registry,
+                        path,
+                        parent,
+                        baseClassLoader,
+                        spiLoader,
+                        attributesProvider
+                );
             } else {
                 logger.warn("{} not a directory. Skipping.", path);
                 return Stream.empty();
@@ -352,7 +369,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         } catch (FileSystemAlreadyExistsException ex) {
             logger.warn("FileSystem already exists for {}. Using existing.", path);
             final var fs = FileSystems.getFileSystem(path.toUri());
-            return doLoadWithAttributes(registry, fs.getPath("/"), parent, baseClassLoader, attributesProvider);
+            return doLoadWithAttributes(
+                    registry,
+                    fs.getPath("/"),
+                    parent,
+                    baseClassLoader,
+                    spiLoader,
+                    attributesProvider
+            );
         } catch (IOException ex) {
             throw new SdkException(ex);
         }
@@ -422,6 +446,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path path,
             final ClassLoader parent,
             final ClassLoader baseClassLoader,
+            final SpiLoader spiLoader,
             final AttributesLoader attributesProvider) {
 
         final var elements = new ArrayList<Element>();
@@ -434,7 +459,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
                         // If the Element provides its own SPI, we will include it. This is not required and
                         // in that case we will assume it's on the parent provided and use the parent instead.
-                        final var elementClassLoader = findSpiClassLoader(parent, subpath).orElse(parent);
+
+                        final var spiClassLoader = spiLoader.apply(parent, path);
+                        final var elementClassLoader = findSpiClassLoader(spiClassLoader, subpath).orElse(parent);
 
                         // Construct the record with everything needed to make the new Element
                         final var record = ElementPathRecord.from(
@@ -494,7 +521,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path path,
             final ClassLoader parent,
             final ClassLoader baseClassLoader) {
-        return doLoadWithAttributes(registry, path, parent, baseClassLoader, (attrs, p) -> attrs);
+        return doLoadWithAttributes(
+                registry,
+                path,
+                parent,
+                baseClassLoader,
+                (cl, p) -> cl,
+                (attrs, p) -> attrs
+        );
     }
 
     private record ElementPathRecord(

@@ -207,7 +207,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             final var deployment = new ElementDeployment(
                     deploymentId,
                     request.application(),
-                    null,  // no large object for Maven-based deployments
+                    null,
+                    request.pathSpiClasspath(),
                     request.pathAttributes(),
                     request.elements(),
                     request.packages(),
@@ -658,7 +659,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .registry(registry)
                         .paths(elementPaths)
                         .baseClassLoader(permittedTypesClassLoader)
-                        .attributesProvider((baseAttrs, elementPath) -> {
+                        .attributesLoader((baseAttrs, elementPath) -> {
 
                             // Look up pre-computed attributes for this path
                             final var resolved = attributePaths.getOrDefault(
@@ -912,18 +913,24 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // Gather and place SPI artifacts
             if (definition.spiArtifacts() != null && !definition.spiArtifacts().isEmpty()) {
+
                 logs.add("Gathering " + definition.spiArtifacts().size() + " SPI artifact(s)");
+
                 for (final var coordinate : definition.spiArtifacts()) {
                     copyArtifactWithDependencies(coordinate, repositories, spiDir, logs);
                 }
+
             }
 
             // Gather and place implementation artifacts
             if (definition.elementArtifacts() != null && !definition.elementArtifacts().isEmpty()) {
+
                 logs.add("Gathering " + definition.elementArtifacts().size() + " element artifact(s)");
+
                 for (final var coordinate : definition.elementArtifacts()) {
                     copyArtifactWithDependencies(coordinate, repositories, libDir, logs);
                 }
+
             }
 
             // In a path based configuration we can just drop the properties file to disk

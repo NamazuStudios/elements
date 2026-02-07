@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.test;
 
+import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.PermittedTypesClassLoader;
@@ -59,6 +60,8 @@ public class ApiElementLoaderTest {
 
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
+
+        final var elementArtifactLoader = ElementArtifactLoader.newDefaultInstance();
 
         testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(SPI_DIR));
         testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(SPI_DIR));

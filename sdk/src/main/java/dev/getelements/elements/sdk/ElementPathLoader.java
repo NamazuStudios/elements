@@ -117,6 +117,7 @@ public interface ElementPathLoader {
      * @param paths the paths to scan for Elements (required)
      * @param parent the parent classloader for delegation (nullable, defaults to bootstrap)
      * @param baseClassLoader the base classloader for selective type borrowing (nullable, defaults to this class's classloader)
+     * @param spiLoader the SPI loader
      * @param attributesProvider function to provide Attributes for each Element path (nullable, defaults to properties file reader)
      * @since 3.7
      */
@@ -125,7 +126,8 @@ public interface ElementPathLoader {
             Collection<Path> paths,
             ClassLoader parent,
             ClassLoader baseClassLoader,
-            AttributesLoader attributesProvider    ) {
+            SpiLoader spiLoader,
+            AttributesLoader attributesProvider) {
 
         /**
          * Creates a new builder for LoadConfiguration.
@@ -148,6 +150,8 @@ public interface ElementPathLoader {
             private ClassLoader parent;
 
             private ClassLoader baseClassLoader;
+
+            private SpiLoader spiLoader = (parent, path) -> parent;
 
             private AttributesLoader attributesLoader = (attributes, path) -> attributes;
 
@@ -209,12 +213,28 @@ public interface ElementPathLoader {
             }
 
             /**
+             * Provides the SPI loader.
+             *
+             * @param spiLoader the spi loader
+             * @return this instance
+             */
+            public Builder spiProvider(final SpiLoader spiLoader) {
+
+                this.spiLoader = spiLoader == null
+                        ? (parent, path) -> parent
+                        : spiLoader;
+
+                return this;
+
+            }
+
+            /**
              * Sets the function to provide Attributes for each Element path.
              *
              * @param attributesLoader the attributes provider function
              * @return this builder
              */
-            public Builder attributesProvider(final AttributesLoader attributesLoader) {
+            public Builder attributesLoader(final AttributesLoader attributesLoader) {
 
                 this.attributesLoader = attributesLoader == null
                     ? (attributes, path) -> attributes
@@ -247,6 +267,7 @@ public interface ElementPathLoader {
                         paths,
                         finalParent,
                         finalBaseClassLoader,
+                        spiLoader,
                         attributesLoader
                 );
 
@@ -446,6 +467,15 @@ public interface ElementPathLoader {
      * @since 3.7
      */
     Optional<ClassLoader> findSpiClassLoader(ClassLoader parent, Path path);
+
+    /**
+     * Loads a ClassLoader given the parent ClassLoader and the path of the Element itself. This is useful for when you
+     * need to externalize an SPI which is not bundled in an ELM file nor placed on disk in the standard location. THis
+     * makes it possible to separate the SPI from an ELM distribution on a per-Element basis. If no modifications to the
+     * Classpath are necessary, then it is safe to simply return the ClassLoader provided.
+     */
+    @FunctionalInterface
+    interface SpiLoader extends BiFunction<ClassLoader, Path, ClassLoader> {}
 
     /**
      * Loads a properties file given the base attributes and the {@link Path} to the Element's root. The loader will
