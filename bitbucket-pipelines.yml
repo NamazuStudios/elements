@@ -33,6 +33,7 @@ pipelines:
             - "self.hosted"
           script:
             - make setup_release
+            - make install_no_tests
             - make clean
             - make build_central
             - make deploy
@@ -101,6 +102,7 @@ pipelines:
             - maven
           script:
             - make setup
+            - make install_no_tests
             - make clean
             - make build_github
             - make docker
@@ -121,6 +123,7 @@ pipelines:
           - maven
         script:
           - make setup
+          - make install_no_tests
           - make clean
           - make build_github
           - make docker

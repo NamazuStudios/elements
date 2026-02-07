@@ -21,16 +21,16 @@ clean:
 install_no_tests:
 	mvn -DskipTests install > /dev/null
 
-build: install_no_tests
+build:
 	mvn --no-transfer-progress -B install
 
-build_github: install_no_tests
+build_github:
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
-build_central: install_no_tests
+build_central:
 	mvn --no-transfer-progress -B -Pcentral-publish,github-publish install
 
-deploy: install_no_tests
+deploy:
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:
