@@ -1,14 +1,18 @@
 package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkArtifactNotFoundException;
+import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.lang.Thread.currentThread;
 
 /**
  * An interface to load artifacts from coordinates. Artifacts are bundles of code, typically in jar form, that can
@@ -126,5 +130,18 @@ public interface ElementArtifactLoader {
      * @return an {@link Optional} with the artifact
      */
     Optional<Artifact> findArtifact(Set<ArtifactRepository> repositories, String coordinates);
+
+    /**
+     * Gets a new default instance of the {@link ElementArtifactLoader}.
+     *
+     * @return the {@link ElementArtifactLoader}
+     */
+    static ElementArtifactLoader newDefaultInstance() {
+        return ServiceLoader.load(ElementArtifactLoader.class, currentThread().getContextClassLoader())
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new SdkException("No ElementArtifactLoader SPI Found"))
+                .get();
+    }
 
 }

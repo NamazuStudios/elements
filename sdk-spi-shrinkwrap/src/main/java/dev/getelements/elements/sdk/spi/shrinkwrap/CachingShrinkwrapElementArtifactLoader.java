@@ -77,7 +77,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         try {
             resolvedArtifacts = configurableSystem(repositories)
                     .resolve(coordinates)
-                    .withoutTransitivity()
+                    .withTransitivity()
                     .asResolvedArtifact();
         } catch (RuntimeException ex) {
             if (isNotFound(ex)) {

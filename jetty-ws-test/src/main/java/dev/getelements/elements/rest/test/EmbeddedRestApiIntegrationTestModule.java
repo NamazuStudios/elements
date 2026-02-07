@@ -48,7 +48,6 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
         install(new JettyServerModule());
         install(new ElementsCoreModule(configurationSupplier));
         install(new ElementsWebServiceComponentModule());
-        install(new TestApplicationAssetLoaderModule());
 
         final var applicationDaoProvider = getProvider(ApplicationDao.class);
 

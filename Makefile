@@ -18,16 +18,19 @@ help:
 clean:
 	mvn --no-transfer-progress -B clean
 
-build:
+install_no_tests:
+    mvn -DskipTests install > /dev/null
+
+build: install_no_tests
 	mvn --no-transfer-progress -B install
 
-build_github:
+build_github: install_no_tests
 	mvn --no-transfer-progress -B -Pgithub-publish install
 
-build_central:
+build_central: install_no_tests
 	mvn --no-transfer-progress -B -Pcentral-publish,github-publish install
 
-deploy:
+deploy: install_no_tests
 	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish deploy
 
 docker:

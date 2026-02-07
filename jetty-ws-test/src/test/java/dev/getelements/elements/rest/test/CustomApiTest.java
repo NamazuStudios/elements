@@ -1,15 +1,23 @@
 package dev.getelements.elements.rest.test;
 
+import dev.getelements.elements.sdk.ElementArtifactLoader;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
+import dev.getelements.elements.sdk.record.ArtifactRepository;
+import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.Response;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_APP_SERVE_RS_ROOT;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -33,7 +41,55 @@ public class CustomApiTest {
     @Named(TEST_APP_SERVE_RS_ROOT)
     private String appServeRoot;
 
+    @Inject
+    private ElementRuntimeService runtimeService;
+
     private Message message;
+
+    @BeforeClass
+    public void deployCustomApi() {
+
+        final var version = System.getProperty("maven.version");
+
+        if (version == null) {
+            throw new IllegalStateException("`maven.version` property is null. This test requires a Maven project");
+        }
+
+        final var spi = "dev.getelements.elements:sdk-spi-guice:%s".formatted(version);
+        final var restApi = "dev.getelements.elements:sdk-test-element-rs:%s".formatted(version);
+
+        final var loader = ElementArtifactLoader.newDefaultInstance();
+        final var spiClasspath = loader.findClasspathForArtifact(ArtifactRepository.DEFAULTS, spi).toList();
+        final var resApiClasspath = loader.findClasspathForArtifact(ArtifactRepository.DEFAULTS, restApi).toList();
+
+        if (spiClasspath.isEmpty()) {
+            throw new IllegalStateException(
+                    ("%s artifact not found. Make sure you ran `mvn -DskipTests install` on the whole project before " +
+                      "running this test.").formatted(spi)
+            );
+        }
+
+        if (resApiClasspath.isEmpty()) {
+            throw new IllegalStateException(
+                    ("%s artifact not found. Make sure you ran `mvn -DskipTests install` on " +
+                     "the whole project before running this test.").formatted(restApi)
+            );
+        }
+
+        final var restApiDeployment = ElementRuntimeService.TransientDeploymentRequest.builder()
+                .useDefaultRepositories(true)
+                .addElement(new ElementPathDefinition(
+                        "rs",
+                        List.of(),
+                        List.of(spi),
+                        List.of(restApi),
+                        Map.of()
+                ))
+                .build();
+
+        runtimeService.loadTransientDeployment(restApiDeployment);
+
+    }
 
     @Test
     public void createNewMessage() {

@@ -136,7 +136,210 @@ public interface ElementRuntimeService {
             List<ElementPackageDefinition> packages,
             boolean useDefaultRepositories,
             List<ElementArtifactRepository> repositories
-    ) {}
+    ) {
+
+        /**
+         * Canonical constructor that ensures all collections are immutable copies.
+         */
+        public TransientDeploymentRequest {
+            // Create immutable copies of path attributes with nested maps
+            if (pathAttributes != null) {
+                pathAttributes = pathAttributes.entrySet().stream()
+                        .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                                java.util.Map.Entry::getKey,
+                                entry -> entry.getValue() == null
+                                        ? java.util.Map.of()
+                                        : java.util.Map.copyOf(entry.getValue())
+                        ));
+            }
+
+            // Create immutable copies of lists
+            elements = elements == null ? null : java.util.List.copyOf(elements);
+            packages = packages == null ? null : java.util.List.copyOf(packages);
+            repositories = repositories == null ? null : java.util.List.copyOf(repositories);
+        }
+
+        /**
+         * Creates a new builder for TransientDeploymentRequest.
+         *
+         * @return a new builder instance
+         */
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        /**
+         * Builder for TransientDeploymentRequest.
+         */
+        public static final class Builder {
+            private Application application;
+            private Map<String, Map<String, Object>> pathAttributes;
+            private List<ElementPathDefinition> elements;
+            private List<ElementPackageDefinition> packages;
+            private boolean useDefaultRepositories = true;
+            private List<ElementArtifactRepository> repositories;
+
+            private Builder() {
+            }
+
+            /**
+             * Sets the application context.
+             *
+             * @param application the application context (null for system-wide deployment)
+             * @return this builder
+             */
+            public Builder application(final Application application) {
+                this.application = application;
+                return this;
+            }
+
+            /**
+             * Sets the path attributes map.
+             *
+             * @param pathAttributes custom attributes per element path
+             * @return this builder
+             */
+            public Builder pathAttributes(final Map<String, Map<String, Object>> pathAttributes) {
+                this.pathAttributes = pathAttributes;
+                return this;
+            }
+
+            /**
+             * Adds attributes for a specific element path.
+             *
+             * @param path the element path
+             * @param attributes the attributes to add for this path
+             * @return this builder
+             */
+            public Builder addPathAttributes(final String path, final Map<String, Object> attributes) {
+                if (this.pathAttributes == null) {
+                    this.pathAttributes = new java.util.HashMap<>();
+                }
+                this.pathAttributes.put(path, attributes);
+                return this;
+            }
+
+            /**
+             * Adds a single attribute for a specific element path.
+             *
+             * @param path the element path
+             * @param key the attribute key
+             * @param value the attribute value
+             * @return this builder
+             */
+            public Builder addPathAttribute(final String path, final String key, final Object value) {
+                if (this.pathAttributes == null) {
+                    this.pathAttributes = new java.util.HashMap<>();
+                }
+                this.pathAttributes
+                        .computeIfAbsent(path, k -> new java.util.HashMap<>())
+                        .put(key, value);
+                return this;
+            }
+
+            /**
+             * Sets the list of path-based element definitions.
+             *
+             * @param elements list of path-based element definitions
+             * @return this builder
+             */
+            public Builder elements(final List<ElementPathDefinition> elements) {
+                this.elements = elements;
+                return this;
+            }
+
+            /**
+             * Adds a single path-based element definition.
+             *
+             * @param element the element definition to add
+             * @return this builder
+             */
+            public Builder addElement(final ElementPathDefinition element) {
+                if (this.elements == null) {
+                    this.elements = new java.util.ArrayList<>();
+                }
+                this.elements.add(element);
+                return this;
+            }
+
+            /**
+             * Sets the list of package-based element definitions.
+             *
+             * @param packages list of package-based element definitions
+             * @return this builder
+             */
+            public Builder packages(final List<ElementPackageDefinition> packages) {
+                this.packages = packages;
+                return this;
+            }
+
+            /**
+             * Adds a single package-based element definition.
+             *
+             * @param packageDef the package definition to add
+             * @return this builder
+             */
+            public Builder addPackage(final ElementPackageDefinition packageDef) {
+                if (this.packages == null) {
+                    this.packages = new java.util.ArrayList<>();
+                }
+                this.packages.add(packageDef);
+                return this;
+            }
+
+            /**
+             * Sets whether to use default Maven repositories.
+             *
+             * @param useDefaultRepositories true to include default repositories
+             * @return this builder
+             */
+            public Builder useDefaultRepositories(final boolean useDefaultRepositories) {
+                this.useDefaultRepositories = useDefaultRepositories;
+                return this;
+            }
+
+            /**
+             * Sets the list of artifact repositories.
+             *
+             * @param repositories list of artifact repositories
+             * @return this builder
+             */
+            public Builder repositories(final List<ElementArtifactRepository> repositories) {
+                this.repositories = repositories;
+                return this;
+            }
+
+            /**
+             * Adds a single artifact repository.
+             *
+             * @param repository the artifact repository to add
+             * @return this builder
+             */
+            public Builder addRepository(final ElementArtifactRepository repository) {
+                if (this.repositories == null) {
+                    this.repositories = new java.util.ArrayList<>();
+                }
+                this.repositories.add(repository);
+                return this;
+            }
+
+            /**
+             * Builds the TransientDeploymentRequest.
+             *
+             * @return a new TransientDeploymentRequest instance
+             */
+            public TransientDeploymentRequest build() {
+                return new TransientDeploymentRequest(
+                        application,
+                        pathAttributes,
+                        elements,
+                        packages,
+                        useDefaultRepositories,
+                        repositories
+                );
+            }
+        }
+    }
 
     /**
      * Represents an active element runtime.
