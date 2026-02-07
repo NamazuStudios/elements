@@ -1,6 +1,7 @@
 package dev.getelements.elements.deployment.jetty;
 
 import dev.getelements.elements.deployment.jetty.loader.Loader;
+import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
@@ -148,7 +149,7 @@ public class JettyElementContainerService implements ElementContainerService {
      * Event consumer for RuntimeLoaded events from ElementRuntimeService.
      * Immediately mounts the container when a runtime is loaded.
      */
-    @dev.getelements.elements.sdk.annotation.ElementEventConsumer(ElementRuntimeService.RUNTIME_LOADED)
+    @ElementEventConsumer(ElementRuntimeService.RUNTIME_LOADED)
     public void onRuntimeLoaded(final String deploymentId,
                                 final ElementRuntimeService.RuntimeStatus status,
                                 final boolean isTransient,
@@ -203,7 +204,7 @@ public class JettyElementContainerService implements ElementContainerService {
      * Event consumer for RuntimeUnloaded events from ElementRuntimeService.
      * Immediately unmounts the container when a runtime is unloaded.
      */
-    @dev.getelements.elements.sdk.annotation.ElementEventConsumer(ElementRuntimeService.RUNTIME_UNLOADED)
+    @ElementEventConsumer(ElementRuntimeService.RUNTIME_UNLOADED)
     public void onRuntimeUnloaded(final String deploymentId) {
         boolean unmounted = false;
 

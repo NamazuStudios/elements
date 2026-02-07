@@ -1,23 +1,23 @@
-package dev.getelements.elements.deployment.jetty.guice;
-
-import com.google.inject.PrivateModule;
-import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
-import dev.getelements.elements.deployment.jetty.StandardElementRuntimeService;
-
-/**
- * Guice module for {@link ElementRuntimeService}.
- */
-public class ElementRuntimeServiceModule extends PrivateModule {
-
-    @Override
-    protected void configure() {
-
-        expose(ElementRuntimeService.class);
-
-        bind(ElementRuntimeService.class)
-                .to(StandardElementRuntimeService.class)
-                .asEagerSingleton();
-
-    }
-
-}
+//package dev.getelements.elements.deployment.jetty.guice;
+//
+//import com.google.inject.PrivateModule;
+//import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+//import dev.getelements.elements.deployment.jetty.StandardElementRuntimeService;
+//
+///**
+// * Guice module for {@link ElementRuntimeService}.
+// */
+//public class ElementRuntimeServiceModule extends PrivateModule {
+//
+//    @Override
+//    protected void configure() {
+//
+//        expose(ElementRuntimeService.class);
+//
+//        bind(ElementRuntimeService.class)
+//                .to(StandardElementRuntimeService.class)
+//                .asEagerSingleton();
+//
+//    }
+//
+//}

@@ -3,6 +3,8 @@ package dev.getelements.elements.sdk.deployment;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
+import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
@@ -28,6 +30,25 @@ import java.util.Map;
  *     <li>{@link #RUNTIME_UNLOADED} - when a runtime deployment is unloaded</li>
  * </ul>
  */
+@ElementPublic
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_SERVICE_STARTED,
+        description = "Published when the runtime service is started."
+)
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_SERVICE_STOPPED,
+        description = "Published when the runtime service is stopped."
+)
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_LOADED,
+        parameters = {String.class, ElementRuntimeService.RuntimeStatus.class, Boolean.class, ElementRuntimeService.RuntimeRecord.class},
+        description = "Published when a runtime deployment is loaded. Arguments: deploymentId, status, isTransient, record"
+)
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_UNLOADED,
+        parameters = String.class,
+        description = "Published when a runtime deployment is unloaded. Arguments: deploymentId"
+)
 public interface ElementRuntimeService {
 
     /**

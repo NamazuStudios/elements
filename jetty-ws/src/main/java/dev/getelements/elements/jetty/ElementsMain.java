@@ -1,16 +1,13 @@
 package dev.getelements.elements.jetty;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
 import dev.getelements.elements.rt.git.FileSystemElementStorageGitLoaderModule;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
-import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_node;
-import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_serve;
 
 public class ElementsMain {
 
@@ -54,7 +51,7 @@ public class ElementsMain {
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
                 new ElementsCoreModule(),
-                new dev.getelements.elements.deployment.jetty.guice.DeploymentElementModule(),
+                new JettySdkElementModule(),
                 new FileSystemElementStorageGitLoaderModule(),
                 new ElementsWebServiceComponentModule(services)
         );

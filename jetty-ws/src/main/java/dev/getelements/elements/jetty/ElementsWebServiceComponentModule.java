@@ -1,10 +1,11 @@
 package dev.getelements.elements.jetty;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.deployment.jetty.guice.AppServeModule;
+import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import org.eclipse.jetty.server.Handler;
 
 import java.util.Collection;
@@ -33,25 +34,15 @@ public class ElementsWebServiceComponentModule extends PrivateModule {
     protected void configure() {
 
         expose(Handler.class);
-        expose(ElementContainerService.class);
 
-        install(new AppServeModule());
+        // Installs all the components for the core system.
+        install(new ElementsServletContextModule());
+        install(new ElementsServletModule(elementsWebServiceComponents));
 
-        install(new PrivateModule() {
-            @Override
-            protected void configure() {
-
-                // Installs all the components for the core system.
-                install(new ElementsServletContextModule());
-                install(new ElementsServletModule(elementsWebServiceComponents));
-
-                // Exposes all the handlers for the core system.
-                expose(Handler.class);
-                expose(Handler.Sequence.class).annotatedWith(named(JakartaRsLoader.HANDLER_SEQUENCE));
-                expose(Handler.Sequence.class).annotatedWith(named(JakartaWebsocketLoader.HANDLER_SEQUENCE));
-
-            }
-        });
+        // Exposes all the handlers for the core system.
+        expose(Handler.class);
+        expose(Handler.Sequence.class).annotatedWith(named(JakartaRsLoader.HANDLER_SEQUENCE));
+        expose(Handler.Sequence.class).annotatedWith(named(JakartaWebsocketLoader.HANDLER_SEQUENCE));
 
     }
 
