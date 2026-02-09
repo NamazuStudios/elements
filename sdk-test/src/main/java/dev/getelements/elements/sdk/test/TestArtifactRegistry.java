@@ -1,6 +1,9 @@
 package dev.getelements.elements.sdk.test;
 
+import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.record.Artifact;
+import dev.getelements.elements.sdk.record.ArtifactRepository;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,80 +12,22 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.isDirectory;
 
 /**
  * A helper class to find the test artifacts in the project. Not intended to be used outside the SDK integration
- * tests. This searches the current working directory for "test-element-artifacts" and works it way upward until
- * it can find a set of test artifacts.
+ * tests. This uses the {@link ElementArtifactLoader} (introduced in 3.7) to load test artifacts from the local
+ * Maven repository.
  */
 public class TestArtifactRegistry {
 
-    private static final String JAR_EXTENSION = ".jar";
-
-    private static final String TEST_ELEMENT_JARS = "test-element-artifacts";
-
-    private static final Path artifactRoot = determineArtifactRoot();
-
-    private static final Pattern ARTIFACT_PATTERN = Pattern.compile("^(.+?)-(\\d+(?:\\.\\d+)*(?:-SNAPSHOT)?)\\.jar$");
-
-    /**
-     * Tests the artifact for the jar file name.
-     *
-     * @param artifact the artifact
-     * @param jarFile the jar file name
-     * @return true if the artifact matches the jar file name
-     */
-    public static boolean isArtifact(final TestElementArtifact artifact, final String jarFile) {
-        return isArtifact(artifact.getArtifact(), jarFile);
-    }
-
-    /**
-     * Tests the jar file name for the artifact name.
-     *
-     * @param artifactName the artifact name
-     * @param jarFile the jar file name
-     * @return the artifact name
-     */
-    public static boolean isArtifact(final String artifactName, final String jarFile) {
-        final var result = ARTIFACT_PATTERN.matcher(jarFile);
-        return result.find() && result.group(1).equals(artifactName);
-    }
-
-    private static Path determineArtifactRoot() {
-
-        var dir = Path.of(".").toAbsolutePath().normalize();
-
-        do {
-
-            final var artifactPath = dir.resolve(TEST_ELEMENT_JARS);
-
-            if (isDirectory(artifactPath)) {
-                return artifactPath;
-            } else {
-                dir = dir.getParent();
-            }
-
-        } while (dir != null);
-
-        return null;
-
-    }
-
-    public TestArtifactRegistry() {
-        if (artifactRoot == null) {
-            throw new IllegalStateException(
-                    "Unable to determine artifact root from: " +
-                    Path.of(".").toAbsolutePath()
-            );
-        }
-    }
+    private final ElementArtifactLoader elementArtifactLoader = ElementArtifactLoader.newDefaultInstance();
 
     /**
      * Finds the SPI of the artifact with the artifact name.
@@ -107,14 +52,15 @@ public class TestArtifactRegistry {
      *
      * @param spi the SPI
      * @return the URL of the artifact
-     * @throws java.util.NoSuchElementException if the artifact wasn't found
      */
     public Stream<Path> findSpiPaths(final TestElementSpi spi) {
-        try {
-            return Files.list(artifactRoot.resolve(spi.getBase()));
-        } catch (IOException ex) {
-            throw new SdkException(ex);
-        }
+
+        final var repositories = ArtifactRepository.DEFAULTS;
+
+        return spi.getSpiCoordinates()
+                .flatMap(c -> elementArtifactLoader.findClasspathForArtifact(repositories, c))
+                .map(Artifact::path);
+
     }
 
     /**
@@ -140,64 +86,13 @@ public class TestArtifactRegistry {
      * @throws java.util.NoSuchElementException if the artifact wasn't found
      */
     public Path findArtifactPath(final TestElementArtifact artifact) {
-        try {
-            return Files.list(artifactRoot)
-                    .filter(p -> isArtifact(artifact, p.getFileName().toString()))
-                    .findFirst()
-                    .get();
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
 
-    /**
-     * Finds the Path of the bundle with the bundle name.
-     *
-     * @param bundle the artifact
-     * @return the Path of the artifact
-     * @throws java.util.NoSuchElementException if the artifact wasn't found
-     */
-    public Path findBundlePath(final TestElementBundle bundle) {
-        try {
-            return Files.list(artifactRoot)
-                    .filter(Files::isDirectory)
-                    .filter(path -> path.getFileName().toString().equals(bundle.getDirectoryName()))
-                    .findFirst()
-                    .get();
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
-    }
+        final var coordinates = artifact.getCoordinates();
 
-    /**
-     * Copies all artifacts in the bundle to the specified directory.
-     *
-     * @param bundle the bundle
-     * @param destination the bundle destination
-     * @throws java.util.NoSuchElementException if the artifact wasn't found
-     */
-    public void copyBundleTo(final TestElementBundle bundle,
-                             final Path destination) {
-
-        if (!isDirectory(destination)) {
-            throw new IllegalArgumentException(destination + " is not a directory");
-        }
-
-        final var sourceDirectory = findBundlePath(bundle);
-        try {
-            Files.list(sourceDirectory)
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().endsWith(JAR_EXTENSION))
-                    .forEach(p -> {
-                        try {
-                            Files.copy(p, destination.resolve(p.getFileName()));
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        return elementArtifactLoader
+                .findArtifact(ArtifactRepository.DEFAULTS, coordinates)
+                .map(Artifact::path)
+                .orElseThrow(NoSuchElementException::new);
 
     }
 

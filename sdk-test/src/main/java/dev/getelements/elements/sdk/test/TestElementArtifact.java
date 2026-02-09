@@ -8,40 +8,53 @@ import java.util.Map;
 public enum TestElementArtifact {
 
     API(
-            "sdk-test-api",
+            "dev.getelements.elements:sdk-test-api:%s",
             "dev.getelements.elements.sdk.test.element"
     ),
     BASE(
-            "sdk-test-element",
+            "dev.getelements.elements:sdk-test-element:%s",
             "dev.getelements.elements.sdk.test.element"
     ),
     VARIANT_A(
-            "sdk-test-element-a",
+            "dev.getelements.elements:sdk-test-element-a:%s",
             "dev.getelements.elements.sdk.test.element.a"
     ),
-    VARIANT_B("sdk-test-element-b",
+    VARIANT_B("dev.getelements.elements:sdk-test-element-b:%s",
             "dev.getelements.elements.sdk.test.element.b"
     ),
-    JAKARTA_RS("sdk-test-element-rs",
+    JAKARTA_RS("dev.getelements.elements:sdk-test-element-rs:%s",
             "dev.getelements.elements.sdk.test.element.rs"
     ),
-    JAKARTA_WS("sdk-test-element-ws",
+    JAKARTA_WS("dev.getelements.elements:sdk-test-element-ws:%s",
             "dev.getelements.elements.sdk.test.element.ws"
     );
 
-    private final String artifact;
+    private final String coordinates;
 
     private final String elementName;
 
     private final Map<?, ?> attributes = Map.of("dev.getelements.test.variant", toString());
 
-    TestElementArtifact(final String artifact, final String elementName) {
-        this.artifact = artifact;
+    TestElementArtifact(final String coordinates, final String elementName) {
+
+        // Ensures validity of format string without checking the system define
+        coordinates.formatted("");
+
+        this.coordinates = coordinates;
         this.elementName = elementName;
+
     }
 
-    public String getArtifact() {
-        return artifact;
+    public String getCoordinates() {
+
+        final var version = System.getProperty("maven.version");
+
+        if (version == null) {
+            throw new IllegalStateException("`maven.version` property is null. This test requires a Maven project");
+        }
+
+        return coordinates.formatted(version);
+
     }
 
     public String getElementName() {

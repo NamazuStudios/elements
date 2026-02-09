@@ -12,7 +12,6 @@ import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -160,6 +159,10 @@ public class PermittedTypesClassLoader extends ClassLoader {
     private Class<?> processVisibilityAnnotations(final Class<?> aClass) throws ClassNotFoundException {
 
         final var aClassPackage = aClass.getPackage();
+
+        if (aClassPackage.getName().startsWith("jakarta.inject")) {
+            return aClass;
+        }
 
         if (permittedTypes.stream().anyMatch(t -> t.test(aClass))) {
             return aClass;

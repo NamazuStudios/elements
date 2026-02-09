@@ -70,7 +70,8 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
     }
 
     @Override
-    public Stream<Artifact> findClasspathForArtifact(Set<ArtifactRepository> repositories, String coordinates) {
+    public Stream<Artifact> findClasspathForArtifact(final Set<ArtifactRepository> repositories,
+                                                     final String coordinates) {
 
         final MavenResolvedArtifact[] resolvedArtifacts;
 

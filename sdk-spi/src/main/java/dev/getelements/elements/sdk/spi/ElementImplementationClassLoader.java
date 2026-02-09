@@ -107,11 +107,11 @@ import static java.util.Objects.requireNonNull;
  * @see ElementRecord
  * @see dev.getelements.elements.sdk.PermittedTypesClassLoader
  */
-public class ElementClassLoader extends ClassLoader {
+public class ElementImplementationClassLoader extends ClassLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(ElementClassLoader.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElementImplementationClassLoader.class);
 
-    private static final ClassLoaderUtils utils = new ClassLoaderUtils(ElementClassLoader.class);
+    private static final ClassLoaderUtils utils = new ClassLoaderUtils(ElementImplementationClassLoader.class);
 
     private static final Map<String, String> BUILTIN_RESOURCES = Map.of(
             "META-INF/services/dev.getelements.elements.sdk.ElementSupplier",
@@ -129,7 +129,7 @@ public class ElementClassLoader extends ClassLoader {
     }
 
     /**
-     * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
+     * Creates a new instance of {@link ElementImplementationClassLoader} with the specified delegate class loader. The delegate
      * loader will be the sources for classes that are not found in this class loader. This is typically the system
      * class path and the Element's class path.
      *
@@ -137,19 +137,19 @@ public class ElementClassLoader extends ClassLoader {
      *
      * @param delegate the delegate class loader to use for loading classes that are not found in this class loader.
      */
-    public ElementClassLoader(final ClassLoader delegate) {
+    public ElementImplementationClassLoader(final ClassLoader delegate) {
         this(delegate, null);
     }
 
     /**
-     * Creates a new instance of {@link ElementClassLoader} with the specified delegate class loader. The delegate
+     * Creates a new instance of {@link ElementImplementationClassLoader} with the specified delegate class loader. The delegate
      * loader will be the sources for classes that are not found in this class loader. This is typically the system
      * class path and the Element's class path.
      *
      * @param delegate the delegate class loader to use for loading classes that are not found in this class loader.
      * @param parent the parent class loader to use for loading classes that are not found in this class loader.
      */
-    public ElementClassLoader(final ClassLoader delegate, final ClassLoader parent) {
+    public ElementImplementationClassLoader(final ClassLoader delegate, final ClassLoader parent) {
         super("Element Class Loader", parent);
         this.delegate = requireNonNull(delegate, "delegate");
     }

@@ -34,7 +34,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ClassLoader parent,
             final Predicate<ElementDefinitionRecord> selector) {
 
-        final var isolated = new ElementClassLoader(baseClassLoader, parent);
+        final var isolated = new ElementImplementationClassLoader(baseClassLoader, parent);
         final var classLoader = classLoaderCtor.apply(isolated);
         final var elementDefinitionRecord = scanForModuleDefinition(classLoader, selector);
 

@@ -341,6 +341,10 @@ public interface ElementLoaderFactory {
      * with an explicit parent classloader forming the delegation parent of the implementation classloader.
      * </p>
      *
+     * <p>
+     * Note: The {@link Element} must have an {@link ElementLoader} SPI implementation defined on its classpath.
+     * </p>
+     *
      * @param attributes the attributes to use
      * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
      * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
