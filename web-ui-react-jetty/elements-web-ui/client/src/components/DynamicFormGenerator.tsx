@@ -144,7 +144,7 @@ export function DynamicFormGenerator({
                 </SelectContent>
               </Select>
               {fieldSchema.description && (
-                <FormDescription>{fieldSchema.description}</FormDescription>
+                <FormDescription className="break-words">{fieldSchema.description}</FormDescription>
               )}
               <FormMessage />
             </FormItem>
@@ -169,10 +169,10 @@ export function DynamicFormGenerator({
                   data-testid={`checkbox-${fieldName}`}
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
+              <div className="space-y-1 leading-none min-w-0">
                 <FormLabel>{displayLabel}</FormLabel>
                 {fieldSchema.description && (
-                  <FormDescription>{fieldSchema.description}</FormDescription>
+                  <FormDescription className="break-words">{fieldSchema.description}</FormDescription>
                 )}
               </div>
             </FormItem>
@@ -218,7 +218,7 @@ export function DynamicFormGenerator({
                 />
               </FormControl>
               {fieldSchema.description && (
-                <FormDescription>{fieldSchema.description}</FormDescription>
+                <FormDescription className="break-words">{fieldSchema.description}</FormDescription>
               )}
               <FormMessage />
             </FormItem>
@@ -249,7 +249,7 @@ export function DynamicFormGenerator({
                 />
               </FormControl>
               {fieldSchema.description && (
-                <FormDescription>{fieldSchema.description}</FormDescription>
+                <FormDescription className="break-words">{fieldSchema.description}</FormDescription>
               )}
               <FormMessage />
             </FormItem>
@@ -279,7 +279,7 @@ export function DynamicFormGenerator({
               />
             </FormControl>
             {fieldSchema.description && (
-              <FormDescription>{fieldSchema.description}</FormDescription>
+              <FormDescription className="break-words">{fieldSchema.description}</FormDescription>
             )}
             <FormMessage />
           </FormItem>
@@ -290,7 +290,7 @@ export function DynamicFormGenerator({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 min-w-0">
         {/* Path Parameters Section */}
         {pathParams.length > 0 && (
           <div className="space-y-4 pb-4 border-b">
@@ -382,7 +382,7 @@ export function DynamicFormGenerator({
                         )}
                       </FormControl>
                       {param.description && (
-                        <FormDescription className="text-xs">
+                        <FormDescription className="text-xs break-words">
                           {param.description}
                         </FormDescription>
                       )}
