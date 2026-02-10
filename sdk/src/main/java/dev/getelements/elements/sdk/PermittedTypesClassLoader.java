@@ -160,10 +160,6 @@ public class PermittedTypesClassLoader extends ClassLoader {
 
         final var aClassPackage = aClass.getPackage();
 
-        if (aClassPackage.getName().startsWith("jakarta.inject")) {
-            return aClass;
-        }
-
         if (permittedTypes.stream().anyMatch(t -> t.test(aClass))) {
             return aClass;
         } else if (permittedPackages.stream().anyMatch(p -> p.test(aClassPackage))) {

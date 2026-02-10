@@ -57,4 +57,16 @@ import java.util.function.Predicate;
  * @see ElementPublic
  * @see ElementPrivate
  */
-public interface PermittedPackages extends Predicate<Package> {}
+public interface PermittedPackages extends Predicate<Package> {
+
+    /**
+     * Gets the description of the permitted packages. This is intended to return a meaningful description of what
+     * and why the permitted packages are shared with the underlying isolated Element.
+     *
+     * @return the description
+     */
+    default String getDescription() {
+        return getClass().getSimpleName();
+    }
+
+}

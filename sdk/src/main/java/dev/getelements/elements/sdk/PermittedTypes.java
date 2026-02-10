@@ -48,4 +48,16 @@ import java.util.function.Predicate;
  * @see ElementPublic
  * @see ElementPrivate
  */
-public interface PermittedTypes extends Predicate<Class<?>> {}
+public interface PermittedTypes extends Predicate<Class<?>> {
+
+    /**
+     * Gets the description of the permitted types. This is intended to return a meaningful description of what
+     * and why the permitted types are shared with the underlying isolated Element.
+     *
+     * @return the description
+     */
+    default String getDescription() {
+        return getClass().getSimpleName();
+    }
+
+}

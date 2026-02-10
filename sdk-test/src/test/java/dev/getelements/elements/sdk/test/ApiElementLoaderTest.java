@@ -61,8 +61,6 @@ public class ApiElementLoaderTest {
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
 
-        final var elementArtifactLoader = ElementArtifactLoader.newDefaultInstance();
-
         testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(SPI_DIR));
         testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(SPI_DIR));
 

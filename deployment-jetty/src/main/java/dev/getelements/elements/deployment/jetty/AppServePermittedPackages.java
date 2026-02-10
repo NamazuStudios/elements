@@ -23,4 +23,10 @@ public class AppServePermittedPackages implements PermittedPackages {
                 .anyMatch(aPackageName::startsWith);
     }
 
+    @Override
+    public String getDescription() {
+        return "Permits RESTFul Web Services (jakarta rs) and WebSockets (jakarta.websocket) as well as validation " +
+               "(jakarta.validation). Additionally permits OAS types to be used within an Element.";
+    }
+
 }
