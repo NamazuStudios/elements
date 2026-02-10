@@ -180,7 +180,7 @@ public class MongoProfileDao implements ProfileDao {
             query.filter(eq("user", mongoUser.get()));
         }
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, this::transform, new FindOptions());
 
     }
 
