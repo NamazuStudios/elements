@@ -1,38 +1,56 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Pencil, Trash2, ExternalLink, Info, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Plus, Pencil, Trash2, ExternalLink, Info, Lock, User } from 'lucide-react';
-import { ResourceOperations } from '@/lib/openapi-analyzer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ResourceOperations, OpenAPIOperation, OpenAPIParameter } from '@/lib/openapi-analyzer';
 import { getApiPath, apiClient } from '@/lib/api-client';
+
+class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
 
 interface DynamicResourceViewProps {
   resource: ResourceOperations;
   spec: any;
-  baseUrl?: string; // Optional base URL for element APIs (defaults to /api/proxy/api/rest for core API)
+  baseUrl?: string;
+  customHeaders?: Record<string, string>;
   onCreateClick?: () => void;
   onEditClick?: (item: any) => void;
   onDeleteClick?: (item: any) => void;
+  onGetClick?: () => void;
 }
 
 export function DynamicResourceView({
   resource,
   spec,
-  baseUrl = '/api/proxy/api/rest', // Default to core API
+  baseUrl = '/api/proxy/api/rest',
+  customHeaders,
   onCreateClick,
   onEditClick,
   onDeleteClick,
+  onGetClick,
 }: DynamicResourceViewProps) {
   const [page, setPage] = useState(0);
-  const [useCustomToken, setUseCustomToken] = useState(false);
-  const [customToken, setCustomToken] = useState('');
   const [requestedPath, setRequestedPath] = useState<string | null>(null);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   
+  const paginationParamNames = ['offset', 'count', 'limit', 'page', 'size', 'pagesize'];
+  const listQueryParams: OpenAPIParameter[] = (resource.list?.queryParams || [])
+    .filter(p => !paginationParamNames.includes(p.name.toLowerCase()));
+
   // Read page size from settings (localStorage)
   const getPageSize = () => {
     const saved = localStorage.getItem('admin-results-per-page');
@@ -46,18 +64,30 @@ export function DynamicResourceView({
       const newPageSize = getPageSize();
       if (newPageSize !== pageSize) {
         setPageSize(newPageSize);
-        setPage(0); // Reset to first page when page size changes
+        setPage(0);
       }
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [pageSize]);
 
+  // Reset filters when switching resources
+  useEffect(() => {
+    setFilterValues({});
+    setFiltersExpanded(false);
+    setPage(0);
+  }, [resource.resourceName]);
+
   // Build query parameters for list endpoint
   const queryParams = new URLSearchParams();
   if (resource.list?.isPaginated) {
     queryParams.set('offset', (page * pageSize).toString());
     queryParams.set('count', pageSize.toString());
+  }
+  for (const [key, value] of Object.entries(filterValues)) {
+    if (value !== '' && value !== undefined) {
+      queryParams.set(key, value);
+    }
   }
 
   // Build the base path (without environment-specific prefix yet)
@@ -80,83 +110,38 @@ export function DynamicResourceView({
   const responseContentType = getResponseContentType();
   const isJsonResponse = responseContentType.includes('json');
 
-  // Analyze security requirements from OpenAPI spec
-  const getSecurityRequirements = () => {
-    // For element endpoints, ONLY check operation-level security (ignore global security)
-    // This allows elements to have global security definitions while selectively
-    // enforcing auth on specific operations
-    const operationSecurity = resource.list?.operation?.security;
-    
-    // If operation has empty security array, explicitly no auth required
-    if (operationSecurity && operationSecurity.length === 0) return null;
-    
-    // ONLY use operation-level security, do NOT fall back to global spec security
-    const securityToUse = operationSecurity;
-    
-    // If no security at all, treat as no auth required
-    if (!securityToUse || securityToUse.length === 0) return null;
-    
-    // Get security schemes from components
-    const securitySchemes = spec?.components?.securitySchemes || {};
-    
-    // Parse security requirements
-    const requirements = securityToUse.flatMap((secReq: { [key: string]: string[] }) => 
-      Object.keys(secReq).map(schemeName => ({
-        name: schemeName,
-        scheme: securitySchemes[schemeName],
-        scopes: secReq[schemeName]
-      }))
-    );
-    
-    return requirements.length > 0 ? requirements : null;
-  };
-
-  const securityRequirements = getSecurityRequirements();
-  
-  // Check if auth is required - look for any security scheme with apiKey type
-  // This handles both Elements-SessionSecret and session_secret naming variations
-  const requiresAuth = securityRequirements?.some((req: { name: string; scheme: any; scopes: string[] }) => {
-    // If we have a scheme definition, check its properties
-    if (req.scheme) {
-      return req.scheme.type === 'apiKey' && 
-             (req.scheme.name === 'Elements-SessionSecret' || req.name === 'session_secret');
-    }
-    // If no scheme definition found, but the security requirement is named session_secret, treat as auth required
-    return req.name === 'session_secret';
-  }) ?? false; // Default to false if securityRequirements is null/undefined
-
-  // Reset requestedPath when token settings change (user must click Send Request again)
-  useEffect(() => {
-    setRequestedPath(null);
-  }, [useCustomToken, customToken]);
-
-  // Determine which token to use
-  const getAuthToken = () => {
-    // Always send token if we have one (backend may require auth even if not in spec)
-    // Use custom token if explicitly enabled, otherwise use current session token
-    if (useCustomToken) return customToken;
-    return apiClient.getSessionToken() || '';
-  };
-
-  // Fetch data from list endpoint - use basePath in queryKey for consistent cache invalidation
-  // Note: We don't include useCustomToken/customToken in queryKey because we manually control fetching
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [basePath, page, pageSize],
+    queryKey: [basePath, page, pageSize, filterValues],
     queryFn: async () => {
-      // Use getApiPath to handle production vs development mode
       const fullUrl = await getApiPath(pathWithQuery);
       
       const headers: Record<string, string> = {};
-      const token = getAuthToken();
+      const token = customHeaders?.['Elements-SessionSecret'] || apiClient.getSessionToken() || '';
       if (token) {
         headers['Elements-SessionSecret'] = token;
       }
+      if (customHeaders?.['Elements-ProfileId']) {
+        headers['Elements-ProfileId'] = customHeaders['Elements-ProfileId'];
+      }
       
-      // Set Accept header based on expected response type
       headers['Accept'] = responseContentType;
       
       const response = await fetch(fullUrl, { headers });
-      if (!response.ok) throw new Error(`Failed to fetch: ${response.statusText}`);
+      if (!response.ok) {
+        let errorDetail = '';
+        try {
+          const errorBody = await response.text();
+          try {
+            const parsed = JSON.parse(errorBody);
+            errorDetail = parsed.message || parsed.error || parsed.detail || errorBody;
+          } catch {
+            errorDetail = errorBody;
+          }
+        } catch {
+          errorDetail = response.statusText;
+        }
+        throw new HttpError(response.status, errorDetail || `${response.status} ${response.statusText}`);
+      }
       
       // Handle different response content types
       if (isJsonResponse) {
@@ -265,6 +250,18 @@ export function DynamicResourceView({
   };
 
   const anyOperation = getAnyOperation();
+
+  const getOperationResponseType = (operation?: OpenAPIOperation) => {
+    if (!operation?.responses) return null;
+    const successResponse = operation.responses['200'] || operation.responses['201'] || operation.responses['default'];
+    if (!successResponse?.content) return null;
+    return Object.keys(successResponse.content)[0] || null;
+  };
+
+  const getOperationRequestType = (operation?: OpenAPIOperation) => {
+    if (!operation?.requestBody?.content) return null;
+    return Object.keys(operation.requestBody.content)[0] || null;
+  };
   
   // Handler for sending request
   const handleSendRequest = () => {
@@ -337,169 +334,19 @@ export function DynamicResourceView({
         </Alert>
       )}
 
-      {/* Authentication Options */}
-      {requiresAuth && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Lock className="w-4 h-4" />
-              Authentication Required
-            </CardTitle>
-            <CardDescription className="text-xs">
-              This endpoint requires authentication via Elements-SessionSecret header
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="use-current-session"
-                  checked={!useCustomToken}
-                  onChange={() => setUseCustomToken(false)}
-                  className="cursor-pointer"
-                  data-testid="radio-use-current-session"
-                />
-                <Label htmlFor="use-current-session" className="cursor-pointer flex items-center gap-1 text-sm">
-                  <User className="w-3 h-3" />
-                  Use Current Session
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="use-custom-token"
-                  checked={useCustomToken}
-                  onChange={() => setUseCustomToken(true)}
-                  className="cursor-pointer"
-                  data-testid="radio-use-custom-token"
-                />
-                <Label htmlFor="use-custom-token" className="cursor-pointer text-sm">
-                  Override with Custom Token
-                </Label>
-              </div>
-            </div>
-            
-            {useCustomToken && (
-              <div className="space-y-2">
-                <Label htmlFor="custom-token" className="text-xs">Session Token</Label>
-                <Input
-                  id="custom-token"
-                  type="text"
-                  placeholder="Enter session token..."
-                  value={customToken}
-                  onChange={(e) => setCustomToken(e.target.value)}
-                  className="font-mono text-xs"
-                  data-testid="input-custom-token"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Use the Core API explorer to create a session for a different user if needed
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Request Controls */}
-      {resource.list && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Request:</span>
-                <Badge variant="outline" className="font-mono text-xs">
-                  {resource.list.method} {resource.list.path}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={handleSendRequest}
-                  disabled={isLoading}
-                  data-testid="button-send-request"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    'Send Request'
-                  )}
-                </Button>
-                {data && !error && (
-                  <Badge variant="secondary" className="text-xs">
-                    Request successful
-                  </Badge>
-                )}
-              </div>
-            </div>
-            
-            {/* Error Display */}
-            {error && (
-              <Alert className="mt-4 border-destructive">
-                <AlertDescription className="text-destructive">
-                  <div className="flex items-start gap-2">
-                    <span className="font-semibold">Error:</span>
-                    <span>{error instanceof Error ? error.message : 'Failed to load data'}</span>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold" data-testid={`text-${resource.resourceName}-title`}>
-            {getResourceDisplayName()}
-          </h2>
-          {anyOperation?.summary && (
-            <p className="text-sm font-medium text-foreground mt-1">
-              {anyOperation.summary}
-            </p>
-          )}
-          {anyOperation?.description && (
-            <p className="text-sm text-muted-foreground mt-1">
-              {anyOperation.description}
-            </p>
-          )}
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            {resource.list && (
-              <>
-                <Badge variant="outline" className="text-xs font-mono">
-                  {resource.list.method} {resource.list.path}
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {resource.list ? 'List' : 'Endpoint'}
-                </Badge>
-              </>
-            )}
-            {!resource.list && resource.create && resource.create.length > 0 && (
-              <Badge variant="outline" className="text-xs font-mono">
-                {resource.create[0].method} {resource.create[0].path}
-              </Badge>
-            )}
-            <Badge variant="secondary" className="text-xs">
-              {responseContentType}
-            </Badge>
-            {anyOperation?.operationId && (
-              <Badge variant="outline" className="text-xs text-muted-foreground">
-                {anyOperation.operationId}
-              </Badge>
-            )}
-          </div>
-        </div>
-        
-        {resource.create && resource.create.length > 0 && onCreateClick && (
-          <Button
-            onClick={onCreateClick}
-            data-testid={`button-create-${resource.resourceName}`}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create {getResourceDisplayName()}
-          </Button>
+      <div>
+        <h2 className="text-2xl font-bold" data-testid={`text-${resource.resourceName}-title`}>
+          {getResourceDisplayName()}
+        </h2>
+        {anyOperation?.summary && (
+          <p className="text-sm font-medium text-foreground mt-1">
+            {anyOperation.summary}
+          </p>
+        )}
+        {anyOperation?.description && (
+          <p className="text-sm text-muted-foreground mt-1">
+            {anyOperation.description}
+          </p>
         )}
       </div>
 
@@ -507,80 +354,303 @@ export function DynamicResourceView({
       {((resource.create && resource.create.length > 0) || 
         (resource.update && resource.update.length > 0) || 
         (resource.delete && resource.delete.length > 0) ||
-        resource.get) && (
+        resource.get ||
+        resource.list) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Available Endpoints</CardTitle>
             <CardDescription>
-              {resource.list 
-                ? 'Test these endpoints directly or use the table actions below' 
-                : 'Click the buttons below to test each endpoint'}
+              Click an endpoint to test it
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {resource.create?.map((createOp, idx) => onCreateClick && (
-                <Button 
-                  key={`create-${idx}`}
-                  variant="outline"
-                  size="sm"
-                  onClick={onCreateClick}
-                  data-testid={`button-test-create-${resource.resourceName}-${idx}`}
-                  className="font-mono text-xs"
-                >
-                  POST {createOp.path}
-                </Button>
+            <div className="space-y-2">
+              {resource.list && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendRequest}
+                      disabled={isLoading}
+                      data-testid={`button-test-list-${resource.resourceName}`}
+                      className="font-mono text-xs shrink-0"
+                    >
+                      {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                      GET {resource.list.path}
+                    </Button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {resource.list.operation.operationId && (
+                        <span className="text-xs text-muted-foreground">{resource.list.operation.operationId}</span>
+                      )}
+                      {getOperationResponseType(resource.list.operation) && (
+                        <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(resource.list.operation)}</Badge>
+                      )}
+                      {resource.list.isPaginated && (
+                        <Badge variant="secondary" className="text-[10px]">paginated</Badge>
+                      )}
+                      {data && !error && requestedPath && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-green-600 dark:text-green-400 cursor-pointer"
+                          onClick={() => document.getElementById('list-results-section')?.scrollIntoView({ behavior: 'smooth' })}
+                          data-testid="badge-success-status"
+                        >
+                          200
+                        </Badge>
+                      )}
+                      {error && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-destructive cursor-pointer"
+                          onClick={() => document.getElementById('list-error-section')?.scrollIntoView({ behavior: 'smooth' })}
+                          data-testid="badge-error-status"
+                        >
+                          {error instanceof HttpError ? error.status : 'error'}
+                        </Badge>
+                      )}
+                      {listQueryParams.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFiltersExpanded(!filtersExpanded)}
+                          className="text-xs gap-1"
+                          data-testid="button-toggle-filters"
+                        >
+                          <Filter className="w-3 h-3" />
+                          Filters ({listQueryParams.length})
+                          {filtersExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {filtersExpanded && listQueryParams.length > 0 && (
+                    <div className="ml-4 p-3 rounded-md border border-border/50 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground">Query Parameters</span>
+                        {Object.values(filterValues).some(v => v !== '') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setFilterValues({}); setPage(0); }}
+                            className="text-xs"
+                            data-testid="button-clear-filters"
+                          >
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {listQueryParams.map(param => {
+                          const paramSchema = param.schema;
+                          return (
+                            <div key={param.name} className="space-y-1">
+                              <Label htmlFor={`filter-${param.name}`} className="text-xs flex items-center gap-1">
+                                {param.name}
+                                {param.required && <span className="text-destructive">*</span>}
+                                {paramSchema?.type && (
+                                  <span className="text-muted-foreground font-normal">({paramSchema.type})</span>
+                                )}
+                              </Label>
+                              {paramSchema?.enum ? (
+                                <Select
+                                  value={filterValues[param.name] || ''}
+                                  onValueChange={(val) => {
+                                    setFilterValues(prev => ({ ...prev, [param.name]: val === '__clear__' ? '' : val }));
+                                    setPage(0);
+                                  }}
+                                >
+                                  <SelectTrigger className="text-xs" data-testid={`select-filter-${param.name}`}>
+                                    <SelectValue placeholder={param.description || `Select ${param.name}`} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="__clear__">-- None --</SelectItem>
+                                    {paramSchema.enum.map((option: string) => (
+                                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : paramSchema?.type === 'boolean' ? (
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    id={`filter-${param.name}`}
+                                    checked={filterValues[param.name] === 'true'}
+                                    onCheckedChange={(checked) => {
+                                      setFilterValues(prev => ({ ...prev, [param.name]: checked ? 'true' : '' }));
+                                      setPage(0);
+                                    }}
+                                    data-testid={`checkbox-filter-${param.name}`}
+                                  />
+                                </div>
+                              ) : (
+                                <Input
+                                  id={`filter-${param.name}`}
+                                  type={paramSchema?.type === 'integer' || paramSchema?.type === 'number' ? 'number' : 'text'}
+                                  placeholder={param.description || (paramSchema?.default !== undefined ? `Default: ${paramSchema.default}` : `Enter ${param.name}`)}
+                                  value={filterValues[param.name] || ''}
+                                  onChange={(e) => {
+                                    setFilterValues(prev => ({ ...prev, [param.name]: e.target.value }));
+                                    setPage(0);
+                                  }}
+                                  className="text-xs"
+                                  data-testid={`input-filter-${param.name}`}
+                                />
+                              )}
+                              {param.description && (
+                                <p className="text-[10px] text-muted-foreground">{param.description}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {resource.create?.map((createOp, idx) => (
+                <div key={`create-${idx}`} className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
+                  {onCreateClick ? (
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={onCreateClick}
+                      data-testid={`button-test-create-${resource.resourceName}-${idx}`}
+                      className="font-mono text-xs shrink-0"
+                    >
+                      POST {createOp.path}
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-xs font-mono px-3 py-1.5 shrink-0">
+                      POST {createOp.path}
+                    </Badge>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {createOp.operation.operationId && (
+                      <span className="text-xs text-muted-foreground">{createOp.operation.operationId}</span>
+                    )}
+                    {getOperationRequestType(createOp.operation) && (
+                      <Badge variant="secondary" className="text-[10px]">{getOperationRequestType(createOp.operation)}</Badge>
+                    )}
+                    {getOperationResponseType(createOp.operation) && getOperationResponseType(createOp.operation) !== getOperationRequestType(createOp.operation) && (
+                      <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(createOp.operation)}</Badge>
+                    )}
+                  </div>
+                </div>
               ))}
               {resource.get && (
-                <Badge variant="outline" className="text-xs font-mono px-3 py-1.5">
-                  GET {resource.get.path}
-                </Badge>
+                <div className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
+                  {onGetClick ? (
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={onGetClick}
+                      data-testid={`button-test-get-${resource.resourceName}`}
+                      className="font-mono text-xs shrink-0"
+                    >
+                      GET {resource.get.path}
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-xs font-mono px-3 py-1.5 shrink-0">
+                      GET {resource.get.path}
+                    </Badge>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {resource.get.operation.operationId && (
+                      <span className="text-xs text-muted-foreground">{resource.get.operation.operationId}</span>
+                    )}
+                    {getOperationResponseType(resource.get.operation) && (
+                      <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(resource.get.operation)}</Badge>
+                    )}
+                  </div>
+                </div>
               )}
-              {resource.update?.map((updateOp, idx) => onEditClick && (
-                <Button 
-                  key={`update-${idx}`}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    // Create a mock item with path params for the user to fill
-                    const mockItem: any = { _operationIndex: idx };
-                    updateOp.pathParams.forEach(param => {
-                      mockItem[param] = '';
-                    });
-                    onEditClick(mockItem);
-                  }}
-                  data-testid={`button-test-update-${resource.resourceName}-${idx}`}
-                  className="font-mono text-xs"
-                >
-                  PUT {updateOp.path}
-                </Button>
+              {resource.update?.map((updateOp, idx) => (
+                <div key={`update-${idx}`} className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
+                  {onEditClick ? (
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const mockItem: any = { _operationIndex: idx };
+                        updateOp.pathParams.forEach(param => {
+                          mockItem[param] = '';
+                        });
+                        onEditClick(mockItem);
+                      }}
+                      data-testid={`button-test-update-${resource.resourceName}-${idx}`}
+                      className="font-mono text-xs shrink-0"
+                    >
+                      PUT {updateOp.path}
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-xs font-mono px-3 py-1.5 shrink-0">
+                      PUT {updateOp.path}
+                    </Badge>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {updateOp.operation.operationId && (
+                      <span className="text-xs text-muted-foreground">{updateOp.operation.operationId}</span>
+                    )}
+                    {getOperationRequestType(updateOp.operation) && (
+                      <Badge variant="secondary" className="text-[10px]">{getOperationRequestType(updateOp.operation)}</Badge>
+                    )}
+                    {getOperationResponseType(updateOp.operation) && getOperationResponseType(updateOp.operation) !== getOperationRequestType(updateOp.operation) && (
+                      <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(updateOp.operation)}</Badge>
+                    )}
+                  </div>
+                </div>
               ))}
-              {resource.delete?.map((deleteOp, idx) => onDeleteClick && (
-                <Button 
-                  key={`delete-${idx}`}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    // Create a mock item with path params for the user to fill
-                    const mockItem: any = { _operationIndex: idx };
-                    deleteOp.pathParams.forEach(param => {
-                      mockItem[param] = '';
-                    });
-                    onDeleteClick(mockItem);
-                  }}
-                  data-testid={`button-test-delete-${resource.resourceName}-${idx}`}
-                  className="font-mono text-xs"
-                >
-                  DELETE {deleteOp.path}
-                </Button>
+              {resource.delete?.map((deleteOp, idx) => (
+                <div key={`delete-${idx}`} className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
+                  {onDeleteClick ? (
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const mockItem: any = { _operationIndex: idx };
+                        deleteOp.pathParams.forEach(param => {
+                          mockItem[param] = '';
+                        });
+                        onDeleteClick(mockItem);
+                      }}
+                      data-testid={`button-test-delete-${resource.resourceName}-${idx}`}
+                      className="font-mono text-xs shrink-0"
+                    >
+                      DELETE {deleteOp.path}
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-xs font-mono px-3 py-1.5 shrink-0">
+                      DELETE {deleteOp.path}
+                    </Badge>
+                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {deleteOp.operation.operationId && (
+                      <span className="text-xs text-muted-foreground">{deleteOp.operation.operationId}</span>
+                    )}
+                    {getOperationResponseType(deleteOp.operation) && (
+                      <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(deleteOp.operation)}</Badge>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
 
+      {resource.list && error && (
+        <Alert id="list-error-section" className="border-destructive">
+          <AlertDescription className="text-destructive">
+            <div className="flex items-start gap-2">
+              <span className="font-semibold">Error:</span>
+              <span>{error instanceof Error ? error.message : 'Failed to load data'}</span>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {resource.list && (
-        <Card>
+        <Card id="list-results-section">
           <CardContent className="p-0">
             {isTextResponse ? (
               <div className="p-6">

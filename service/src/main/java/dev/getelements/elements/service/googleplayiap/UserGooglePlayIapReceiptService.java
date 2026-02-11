@@ -99,15 +99,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
         final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
             final var receiptDao = tx.getDao(ReceiptDao.class);
-            final var convertedReceipt = convertReceipt(receiptDao.createReceipt(receipt));
-
-            getElementRegistry().publish(Event.builder()
-                    .argument(convertedReceipt)
-                    .argument(tx)
-                    .named(GOOGLE_PLAY_IAP_RECEIPT_CREATED)
-                    .build());
-
-            return convertedReceipt;
+            return convertReceipt(receiptDao.createReceipt(receipt));
         });
 
         getElementRegistry().publish(Event.builder()

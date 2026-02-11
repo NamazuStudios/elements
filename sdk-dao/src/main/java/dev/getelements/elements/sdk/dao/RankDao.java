@@ -28,7 +28,7 @@ public interface RankDao {
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
-     * allows the the result set to be skipped forward to make the supplied {@link Profile} appear in= the result
+     * allows the result set to be skipped forward to make the supplied {@link Profile} appear in the result
      * set.
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
@@ -43,7 +43,7 @@ public interface RankDao {
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
-     * allows the the result set to be skipped forward to make the supplied {@link Profile} appear int the result
+     * allows the result set to be skipped forward to make the supplied {@link Profile} appear int the result
      * set.
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
@@ -60,7 +60,7 @@ public interface RankDao {
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
-     * allows the the result set to be skipped forward to make the supplied {@link Profile} appear int the result
+     * allows the result set to be skipped forward to make the supplied {@link Profile} appear int the result
      * set.
      * <p>
      * Additionally this will filter the results to only include friends of the supplied {@link Profile}.
@@ -78,7 +78,7 @@ public interface RankDao {
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
-     * allows the the result set to be skipped forward to make the supplied {@link Profile} appear int the result
+     * allows the result set to be skipped forward to make the supplied {@link Profile} appear int the result
      * set.
      *
      * @param leaderboardNameOrId the value of {@link Leaderboard#getId()} or {@link Leaderboard#getName()}
@@ -96,7 +96,7 @@ public interface RankDao {
 
     /**
      * Given the {@link Leaderboard} name or ID, this will return all {@link Rank} instances sorted in order.  This
-     * allows the the result set to be skipped forward to make the supplied {@link Profile} appear int the result
+     * allows the result set to be skipped forward to make the supplied {@link Profile} appear int the result
      * set.
      * <p>
      * Additionally this will filter the results to only include friends of the supplied {@link Profile}.

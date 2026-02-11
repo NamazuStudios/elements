@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.mongo.metadata;
 
+import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoCommandException;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.metadata.MongoMetadata;
@@ -7,6 +9,7 @@ import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
 import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
+import dev.getelements.elements.sdk.model.exception.ConflictException;
 import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
 import dev.getelements.elements.sdk.model.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.sdk.model.metadata.Metadata;
@@ -148,24 +151,29 @@ public class MongoMetadataDao implements MetadataDao {
         );
 
         final var mongoMetadata = getBeanMapper().map(metadata, MongoMetadata.class);
-
         final var options = new ModifyOptions()
                 .upsert(false)
                 .returnDocument(AFTER);
 
-        final var updated = getDatastore().find(MongoMetadata.class)
-                .filter(eq("_id", objectId), exists("name"))
-                .modify(options,
-                        (mongoMetadata.getMetadataSpec() == null ? unset("metadataSpec") : set("metadataSpec", mongoMetadata.getMetadataSpec())),
-                        set("metadata", mongoMetadata.getMetadata()),
-                        set("accessLevel", metadata.getAccessLevel())
-                );
+        try {
+            final var updated = getDatastore().find(MongoMetadata.class)
+                    .filter(eq("_id", objectId), exists("name"))
+                    .modify(options,
+                            (mongoMetadata.getMetadataSpec() == null ? unset("metadataSpec") : set("metadataSpec", mongoMetadata.getMetadataSpec())),
+                            set("name", mongoMetadata.getName()),
+                            set("metadata", mongoMetadata.getMetadata()),
+                            set("accessLevel", mongoMetadata.getAccessLevel())
+                    );
 
-        if (updated == null) {
-            throw new MetadataNotFoundException("Metadata with id not found.");
+            if (updated == null) {
+                throw new MetadataNotFoundException("Metadata with id not found.");
+            }
+
+            return transform(updated);
+
+        } catch (MongoCommandException ex) {
+            throw new ConflictException("Metadata with name " + metadata.getName() + " already exists.");
         }
-
-        return transform(updated);
     }
 
     @Override

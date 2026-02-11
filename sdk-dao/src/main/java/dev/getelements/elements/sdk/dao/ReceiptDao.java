@@ -5,7 +5,6 @@ import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
-import dev.getelements.elements.sdk.model.match.MultiMatch;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -24,7 +23,7 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 @ElementEventProducer(
         value = ReceiptDao.RECEIPT_CREATED,
         parameters = {Receipt.class, Transaction.class},
-        description = "Called when a new receipt is created. " +
+        description = "Called when a new receipt is created. This variant includes the transaction so that reactions to this event can be performed in the same transaction." +
                 "If the raw receipt data needs to be parsed, check the scheme to determine the corresponding class:\n" +
                 "GOOGLE_IAP_SCHEME -> GooglePlayIapReceipt\n" +
                 "OCULUS_IAP_SCHEME -> OculusIapReceipt\n" +
