@@ -21,7 +21,7 @@ public class Metadata implements Serializable {
     @Schema(description = "The metadata object's database assigned unique ID.")
     private String id;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Read.class})
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Read.class, ValidationGroups.Update.class})
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     @Schema(description = "A unique name for the metadata object.")
     private String name;
