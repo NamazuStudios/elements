@@ -378,7 +378,7 @@ public class JettyElementContainerService implements ElementContainerService {
             activeContainers.put(deploymentId, active);
 
         } catch (Exception ex) {
-            logs.add("Container mount failed: " + ex.getMessage());
+            warnings.add("Container mount failed: " + ex.getMessage());
             errors.add(ex);
 
             // Store failed container
