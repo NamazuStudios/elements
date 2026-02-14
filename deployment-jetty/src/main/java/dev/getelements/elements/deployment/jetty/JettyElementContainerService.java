@@ -140,8 +140,7 @@ public class JettyElementContainerService implements ElementContainerService {
      */
     private void safeSync() {
         try {
-            // TODO REstore This
-//            sync();
+            sync();
         } catch (Exception ex) {
             logger.error("Error during container synchronization", ex);
         }

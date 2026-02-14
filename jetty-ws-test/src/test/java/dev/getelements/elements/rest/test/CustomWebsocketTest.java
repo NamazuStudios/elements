@@ -1,5 +1,9 @@
 package dev.getelements.elements.rest.test;
 
+import dev.getelements.elements.sdk.ElementArtifactLoader;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
+import dev.getelements.elements.sdk.record.ArtifactRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.websocket.*;
@@ -10,12 +14,17 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_APP_SERVE_WS_ROOT;
+import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
+import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_WS;
+import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static java.lang.String.format;
 
 public class CustomWebsocketTest {
@@ -31,11 +40,58 @@ public class CustomWebsocketTest {
     @Named(TEST_APP_SERVE_WS_ROOT)
     private String appServeRoot;
 
+    @Inject
+    private ElementRuntimeService runtimeService;
+
     private WebSocketContainer container;
 
     @BeforeClass
     public void setup() {
         container = ContainerProvider.getWebSocketContainer();
+    }
+
+    @BeforeClass
+    public void deployCustomWebsockets() {
+
+        final var loader = ElementArtifactLoader.newDefaultInstance();
+
+        final var spiClasspath = loader.findClasspathForArtifact(
+                ArtifactRepository.DEFAULTS,
+                GUICE_7_0_X.getCoordinates()
+        ).toList();
+
+        final var resApiClasspath = loader.findClasspathForArtifact(
+                ArtifactRepository.DEFAULTS,
+                JAKARTA_WS.getCoordinates()
+        ).toList();
+
+        if (spiClasspath.isEmpty()) {
+            throw new IllegalStateException(
+                    ("%s artifact not found. Make sure you ran `mvn -DskipTests install` on the whole project before " +
+                     "running this test.").formatted(GUICE_7_0_X.getAllCoordinates())
+            );
+        }
+
+        if (resApiClasspath.isEmpty()) {
+            throw new IllegalStateException(
+                    ("%s artifact not found. Make sure you ran `mvn -DskipTests install` on " +
+                     "the whole project before running this test.").formatted(resApiClasspath)
+            );
+        }
+
+        final var restApiDeployment = ElementRuntimeService.TransientDeploymentRequest.builder()
+                .useDefaultRepositories(true)
+                .addElement(new ElementPathDefinition(
+                        "rs",
+                        List.of(),
+                        GUICE_7_0_X.getAllCoordinates().toList(),
+                        JAKARTA_WS.getAllCoordinates().toList(),
+                        Map.of()
+                ))
+                .build();
+
+        runtimeService.loadTransientDeployment(restApiDeployment);
+
     }
 
     @Test
