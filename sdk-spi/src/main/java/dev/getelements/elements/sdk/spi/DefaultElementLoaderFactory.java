@@ -320,20 +320,22 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ElementDefinitionRecord elementDefinitionRecord,
             final List<ElementServiceRecord> elementServiceRecords) {
 
-        final var serviceInterfaces = elementServiceRecords
-                .stream()
-                .flatMap(ElementServiceRecord::exposedTypes)
-                .toList();
+        // Build service lookup structures for fast access and validation
+        final var serviceRecordByClass = new java.util.HashMap<Class<?>, ElementServiceRecord>();
+        elementServiceRecords.forEach(esr -> {
+            // Add all exposed interfaces
+            esr.export().exposed().forEach(exposedClass ->
+                    serviceRecordByClass.put(exposedClass, esr));
+            // Add implementation class
+            serviceRecordByClass.put(esr.implementation().type(), esr);
+        });
+        final var validServiceClasses = serviceRecordByClass.keySet();
 
+        // Scan ALL classes in Element package (no restriction to service classes)
         final var classGraph = new ClassGraph()
                 .ignoreParentClassLoaders()
                 .overrideClassLoaders(classLoader)
-                .enableAllInfo()
-                .acceptClasses(serviceInterfaces
-                        .stream()
-                        .map(Class::getName)
-                        .toArray(String[]::new)
-                );
+                .enableAllInfo();
 
         elementDefinitionRecord.acceptPackages(
                 classGraph::acceptPackages,
@@ -342,6 +344,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         try (var result = classGraph.scan()) {
 
+            // Find all methods with @ElementEventConsumer annotation
             final var methods = result
                     .getClassesWithMethodAnnotation(ElementEventConsumer.class)
                     .stream()
@@ -353,28 +356,159 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                             .toList()
                     ));
 
-            final var interfaceMethods = elementServiceRecords.stream()
-                    .flatMap(esr -> esr
-                            .export()
-                            .exposed()
-                            .stream()
-                            .filter(methods::containsKey)
-                            .flatMap(interfaceType -> methods.get(interfaceType)
-                                    .stream()
-                                    .flatMap(method -> ElementEventConsumerRecord.from(esr, method)))
-                    );
+            // Process all found methods and route appropriately
+            return methods.entrySet().stream()
+                    .flatMap(entry -> {
+                        final var declaringClass = entry.getKey();
+                        final var classMethods = entry.getValue();
 
-            final var implementationExposedMethods = elementServiceRecords.stream()
-                    .filter(esr -> methods.containsKey(esr.implementation().type()))
-                    .flatMap(esr -> methods.get(esr.implementation().type())
-                            .stream()
-                            .flatMap(method -> ElementEventConsumerRecord.from(esr, method))
-                    );
-
-            return Stream.concat(interfaceMethods, implementationExposedMethods).collect(toList());
+                        return classMethods.stream()
+                                .flatMap(method -> processEventConsumer(
+                                        method,
+                                        declaringClass,
+                                        serviceRecordByClass,
+                                        validServiceClasses
+                                ));
+                    })
+                    .collect(toList());
 
         }
 
+    }
+
+    /**
+     * Processes a single event consumer method and creates appropriate ElementEventConsumerRecord(s).
+     * Handles both direct service methods and methods that route via another service.
+     *
+     * @param method the method with @ElementEventConsumer annotation
+     * @param declaringClass the class that declares the method
+     * @param serviceRecordByClass map of service classes to their records
+     * @param validServiceClasses set of all valid service classes for validation
+     * @return stream of ElementEventConsumerRecord instances
+     */
+    private Stream<ElementEventConsumerRecord<?>> processEventConsumer(
+            final java.lang.reflect.Method method,
+            final Class<?> declaringClass,
+            final java.util.Map<Class<?>, ElementServiceRecord> serviceRecordByClass,
+            final java.util.Set<Class<?>> validServiceClasses) {
+
+        final var annotation = method.getAnnotation(ElementEventConsumer.class);
+        final var viaRef = annotation.via();
+        final var viaClass = viaRef.value();
+
+        // Check if method uses 'via' routing
+        if (viaClass != ElementEventConsumer.None.class) {
+            // Route via specified service
+            return createConsumerViaService(
+                    method,
+                    viaRef,
+                    serviceRecordByClass,
+                    validServiceClasses
+            );
+        } else {
+            // Default: Method must be on an exported service
+            return createConsumerDirect(
+                    method,
+                    declaringClass,
+                    serviceRecordByClass
+            );
+        }
+    }
+
+    /**
+     * Creates event consumer record for a method that routes via another service.
+     * Validates that the via service exists and creates a consumer record using that service's key.
+     *
+     * @param method the consumer method
+     * @param viaRef the service reference to route through
+     * @param serviceRecordByClass map of service classes to records
+     * @param validServiceClasses set of valid service classes
+     * @return stream of ElementEventConsumerRecord
+     */
+    private Stream<ElementEventConsumerRecord<?>> createConsumerViaService(
+            final java.lang.reflect.Method method,
+            final ElementServiceReference viaRef,
+            final java.util.Map<Class<?>, ElementServiceRecord> serviceRecordByClass,
+            final java.util.Set<Class<?>> validServiceClasses) {
+
+        final var viaClass = viaRef.value();
+        final var viaName = viaRef.name();
+
+        // Validate: via class must be an exported service
+        if (!validServiceClasses.contains(viaClass)) {
+            throw new SdkException(String.format(
+                    "Method %s.%s specifies via=%s, but %s is not an exported service in this Element. " +
+                    "Available services: %s",
+                    method.getDeclaringClass().getName(),
+                    method.getName(),
+                    viaClass.getName(),
+                    viaClass.getName(),
+                    validServiceClasses.stream().map(Class::getName).collect(toList())
+            ));
+        }
+
+        // Lookup: Find the service record for the via class
+        final var serviceRecord = serviceRecordByClass.get(viaClass);
+        if (serviceRecord == null) {
+            throw new SdkException(String.format(
+                    "Service record not found for via class: %s (method: %s.%s)",
+                    viaClass.getName(),
+                    method.getDeclaringClass().getName(),
+                    method.getName()
+            ));
+        }
+
+        // Validate: If viaName is specified, verify the service record has that name
+        if (!viaName.isBlank()) {
+            final var exportName = serviceRecord.export().name();
+            if (!viaName.equals(exportName)) {
+                throw new SdkException(String.format(
+                        "Method %s.%s specifies via service name '%s', but service %s has name '%s'",
+                        method.getDeclaringClass().getName(),
+                        method.getName(),
+                        viaName,
+                        viaClass.getName(),
+                        exportName.isEmpty() ? "(unnamed)" : exportName
+                ));
+            }
+        }
+
+        // Create consumer record using the via service's record
+        // This will cause dispatch to look up via serviceLocator.findInstance(viaClass)
+        return ElementEventConsumerRecord.from(serviceRecord, method);
+    }
+
+    /**
+     * Creates event consumer record for a method directly on an exported service.
+     * This is the original behavior - the declaring class must be an exported service.
+     *
+     * @param method the consumer method
+     * @param declaringClass the class declaring the method
+     * @param serviceRecordByClass map of service classes to records
+     * @return stream of ElementEventConsumerRecord
+     */
+    private Stream<ElementEventConsumerRecord<?>> createConsumerDirect(
+            final java.lang.reflect.Method method,
+            final Class<?> declaringClass,
+            final java.util.Map<Class<?>, ElementServiceRecord> serviceRecordByClass) {
+
+        // Lookup: Find service record for declaring class
+        final var serviceRecord = serviceRecordByClass.get(declaringClass);
+
+        if (serviceRecord == null) {
+            throw new SdkException(String.format(
+                    "Method %s.%s has @ElementEventConsumer but %s is not an exported service. " +
+                    "Either add @ElementServiceExport to %s or use via=@ElementServiceReference(...) " +
+                    "to route through an exported service.",
+                    declaringClass.getName(),
+                    method.getName(),
+                    declaringClass.getName(),
+                    declaringClass.getName()
+            ));
+        }
+
+        // Create standard consumer record
+        return ElementEventConsumerRecord.from(serviceRecord, method);
     }
 
     private ElementLoader newSharedLoader(final ElementRecord elementRecord) {
@@ -387,7 +521,9 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             try {
                 final var ctor = aClass.getConstructor();
                 return ctor.newInstance();
-            } catch (InvocationTargetException | NoSuchMethodException | InstantiationException |
+            } catch (InvocationTargetException |
+                     NoSuchMethodException |
+                     InstantiationException |
                      IllegalAccessException e) {
                 throw new SdkException(e);
             }
@@ -413,7 +549,9 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             try {
                 final var ctor = aClass.getConstructor();
                 return ctor.newInstance();
-            } catch (InvocationTargetException | NoSuchMethodException | InstantiationException |
+            } catch (InvocationTargetException |
+                     NoSuchMethodException |
+                     InstantiationException |
                      IllegalAccessException e) {
                 throw new SdkException(e);
             }

@@ -2,6 +2,7 @@ package dev.getelements.elements.deployment.jetty;
 
 import dev.getelements.elements.deployment.jetty.loader.Loader;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
+import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
@@ -139,6 +140,7 @@ public class JettyElementContainerService implements ElementContainerService {
      */
     private void safeSync() {
         try {
+            // TODO REstore This
 //            sync();
         } catch (Exception ex) {
             logger.error("Error during container synchronization", ex);
@@ -149,7 +151,10 @@ public class JettyElementContainerService implements ElementContainerService {
      * Event consumer for RuntimeLoaded events from ElementRuntimeService.
      * Immediately mounts the container when a runtime is loaded.
      */
-    @ElementEventConsumer(ElementRuntimeService.RUNTIME_LOADED)
+    @ElementEventConsumer(
+            value = ElementRuntimeService.RUNTIME_LOADED,
+            via = @ElementServiceReference(ElementContainerService.class)
+    )
     public void onRuntimeLoaded(final ElementRuntimeService.RuntimeRecord runtimeRecord) {
 
         final var status = runtimeRecord.status();
@@ -207,7 +212,10 @@ public class JettyElementContainerService implements ElementContainerService {
      * Event consumer for RuntimeUnloaded events from ElementRuntimeService.
      * Immediately unmounts the container when a runtime is unloaded.
      */
-    @ElementEventConsumer(ElementRuntimeService.RUNTIME_UNLOADED)
+    @ElementEventConsumer(
+            value = ElementRuntimeService.RUNTIME_UNLOADED,
+            via = @ElementServiceReference(ElementContainerService.class)
+    )
     public void onRuntimeUnloaded(final String deploymentId) {
         boolean unmounted = false;
 

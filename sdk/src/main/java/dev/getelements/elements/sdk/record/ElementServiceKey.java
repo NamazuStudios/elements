@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.record;
 
 import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -37,6 +38,16 @@ public record ElementServiceKey<ServiceT>(Class<ServiceT> type, String name) {
      */
     public boolean isNamed() {
         return !name.isEmpty();
+    }
+
+    /**
+     * Forms an instance of {@link ElementServiceKey} from an instance of {@link ElementServiceReference}.
+     *
+     * @param elementServiceReference the reference
+     * @return the key
+     */
+    public static ElementServiceKey<?> from(final ElementServiceReference elementServiceReference) {
+        return new ElementServiceKey<>(elementServiceReference.value(), elementServiceReference.name());
     }
 
     /**
