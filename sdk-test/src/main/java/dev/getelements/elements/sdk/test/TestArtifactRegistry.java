@@ -57,7 +57,7 @@ public class TestArtifactRegistry {
 
         final var repositories = ArtifactRepository.DEFAULTS;
 
-        return spi.getSpiCoordinates()
+        return spi.getAllCoordinates()
                 .flatMap(c -> elementArtifactLoader.findClasspathForArtifact(repositories, c))
                 .map(Artifact::path);
 

@@ -1,6 +1,8 @@
 package dev.getelements.elements.sdk.test;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Represents a specific test artifact in the collection of test assets.
@@ -55,6 +57,10 @@ public enum TestElementArtifact {
 
         return coordinates.formatted(version);
 
+    }
+
+    public Stream<String> getAllCoordinates() {
+        return Stream.of(getCoordinates());
     }
 
     public String getElementName() {

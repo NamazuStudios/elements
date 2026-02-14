@@ -6,6 +6,10 @@ import dev.getelements.elements.sdk.annotation.ElementPublic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
@@ -203,5 +207,31 @@ public class PermittedTypesClassLoader extends ClassLoader {
         throw new ClassNotFoundException(aClass.getName());
 
     }
+
+//    @Override
+//    public URL getResource(String name) {
+//        try {
+//            Method findResource = ClassLoader.class.getDeclaredMethod("findResource", String.class);
+//            findResource.setAccessible(true);
+//            return (URL) findResource.invoke(delegate, name);
+//        } catch (Exception e) {
+//            logger.debug("Failed to invoke findResource on delegate", e);
+//            return null;
+//        }
+//    }
+//
+//    @Override
+//    public Enumeration<URL> getResources(String name) throws IOException {
+//        try {
+//            Method findResources = ClassLoader.class.getDeclaredMethod("findResources", String.class);
+//            findResources.setAccessible(true);
+//            @SuppressWarnings("unchecked")
+//            Enumeration<URL> resources = (Enumeration<URL>) findResources.invoke(delegate, name);
+//            return resources;
+//        } catch (Exception e) {
+//            logger.debug("Failed to invoke findResources on delegate", e);
+//            return java.util.Collections.emptyEnumeration();
+//        }
+//    }
 
 }

@@ -97,7 +97,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
         return Stream
                 .of(resolvedArtifacts)
-                .map(a -> new Artifact(a.asFile().toPath(), a.getExtension()));
+                .map(CachingShrinkwrapElementArtifactLoader::toArtifact);
 
     }
 
@@ -126,9 +126,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
             }
         }
 
-        final var path = resolvedArtifact.asFile().toPath();
-        final var artifact = new Artifact(path, resolvedArtifact.getExtension());
-
+        final var artifact = toArtifact(resolvedArtifact);
         return Optional.of(artifact);
 
     }
@@ -165,6 +163,19 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
         return false;
 
+    }
+
+    private static Artifact toArtifact(final MavenResolvedArtifact mavenResolvedArtifact) {
+        final var coordinate = mavenResolvedArtifact.getCoordinate();
+        return new Artifact(
+                mavenResolvedArtifact.asFile().toPath(),
+                coordinate.getGroupId(),
+                coordinate.getArtifactId(),
+                coordinate.getVersion(),
+                coordinate.getClassifier(),
+                coordinate.getPackaging().toString(),
+                mavenResolvedArtifact.getExtension()
+        );
     }
 
 }

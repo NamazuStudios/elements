@@ -16,6 +16,9 @@ public record ElementRuntimeStatus(
         @Schema(description = "The status of the runtime.")
         String status,
 
+        @Schema(description = "A readout of temporary files that are associated with the deployment.")
+        List<String> tempFiles,
+
         @Schema(description = "A list of logs related to the deployment of the runtime.")
         List<String> logs,
 

@@ -139,7 +139,7 @@ public class JettyElementContainerService implements ElementContainerService {
      */
     private void safeSync() {
         try {
-            sync();
+//            sync();
         } catch (Exception ex) {
             logger.error("Error during container synchronization", ex);
         }
@@ -150,13 +150,15 @@ public class JettyElementContainerService implements ElementContainerService {
      * Immediately mounts the container when a runtime is loaded.
      */
     @ElementEventConsumer(ElementRuntimeService.RUNTIME_LOADED)
-    public void onRuntimeLoaded(final String deploymentId,
-                                final ElementRuntimeService.RuntimeStatus status,
-                                final boolean isTransient,
-                                final RuntimeRecord record) {
+    public void onRuntimeLoaded(final ElementRuntimeService.RuntimeRecord runtimeRecord) {
+
+        final var status = runtimeRecord.status();
+        final var deploymentId = runtimeRecord.deployment().id();
+
         ContainerRecord mountedRecord = null;
 
         try (var mon = Monitor.enter(lock)) {
+
             logger.info("Received RuntimeLoaded event for deployment: {}", deploymentId);
 
             // Skip failed runtimes
@@ -174,7 +176,7 @@ public class JettyElementContainerService implements ElementContainerService {
 
             // Mount the new runtime
             try {
-                doMount(record);
+                doMount(runtimeRecord);
                 logger.info("Mounted container in response to RuntimeLoaded event: {}", deploymentId);
 
                 // Capture the mounted container for event publishing
@@ -198,6 +200,7 @@ public class JettyElementContainerService implements ElementContainerService {
         if (mountedRecord != null) {
             publishContainerMounted(mountedRecord);
         }
+
     }
 
     /**

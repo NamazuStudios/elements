@@ -41,13 +41,13 @@ import java.util.Map;
 )
 @ElementEventProducer(
         value = ElementRuntimeService.RUNTIME_LOADED,
-        parameters = {String.class, ElementRuntimeService.RuntimeStatus.class, Boolean.class, ElementRuntimeService.RuntimeRecord.class},
-        description = "Published when a runtime deployment is loaded. Arguments: deploymentId, status, isTransient, record"
+        parameters = ElementRuntimeService.RuntimeRecord.class,
+        description = "Published when a runtime deployment is loaded."
 )
 @ElementEventProducer(
         value = ElementRuntimeService.RUNTIME_UNLOADED,
         parameters = String.class,
-        description = "Published when a runtime deployment is unloaded. Arguments: deploymentId"
+        description = "Published when a runtime deployment is unloaded."
 )
 public interface ElementRuntimeService {
 
@@ -394,7 +394,14 @@ public interface ElementRuntimeService {
             List<Path> tempFiles,
             List<String> logs,
             List<Throwable> errors
-    ) {}
+    ) {
+        public RuntimeRecord {
+            logs = logs == null ? null : java.util.List.copyOf(logs);
+            errors = errors == null ? null : java.util.List.copyOf(errors);
+            elements = elements == null ? null : java.util.List.copyOf(elements);
+            tempFiles = tempFiles == null ? null : java.util.List.copyOf(tempFiles);
+        }
+    }
 
     /**
      * Indicates the runtime status.

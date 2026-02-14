@@ -31,22 +31,30 @@ public enum TestElementSpi {
     }
 
     /**
-     * Gets the fully qualified coordinates for this SPI.
-     * @return the coordinates
+     * Gets the coordinates for the SPI only.
+     *
+     * @return the spi coordinates
      */
-    public Stream<String> getSpiCoordinates() {
-
+    public String getCoordinates() {
         final var version = System.getProperty("maven.version");
 
         if (version == null) {
             throw new IllegalStateException("`maven.version` property is null. This test requires a Maven project");
         }
 
+        return spiCoordinates.formatted(version);
+    }
+
+    /**
+     * Gets the fully qualified coordinates for this SPI.
+     *
+     * @return the coordinates
+     */
+    public Stream<String> getAllCoordinates() {
         return Stream.concat(
-                Stream.of(spiCoordinates.formatted(version)),
+                Stream.of(getCoordinates()),
                 Stream.of(supportingCoordinates)
         );
-
     }
 
 }

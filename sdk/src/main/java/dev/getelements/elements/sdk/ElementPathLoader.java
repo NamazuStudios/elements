@@ -4,12 +4,16 @@ import dev.getelements.elements.sdk.exception.SdkException;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
-import static java.util.List.*;
+import static java.lang.Thread.currentThread;
+import static java.util.List.of;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -255,17 +259,14 @@ public interface ElementPathLoader {
                 requireNonNull(registry, "registry must be set");
                 requireNonNull(paths, "paths must be set");
 
-                // Apply defaults for optional parameters
-                final var finalParent = parent; // null is valid (bootstrap)
-
                 final var finalBaseClassLoader = baseClassLoader != null
                         ? baseClassLoader
-                        : ElementPathLoader.class.getClassLoader();
+                        : currentThread().getContextClassLoader();
 
                 return new LoadConfiguration(
                         registry,
                         paths,
-                        finalParent,
+                        parent,
                         finalBaseClassLoader,
                         spiLoader,
                         attributesLoader
