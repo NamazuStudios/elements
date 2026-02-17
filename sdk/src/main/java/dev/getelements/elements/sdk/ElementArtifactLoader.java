@@ -5,7 +5,6 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;

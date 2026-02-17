@@ -136,13 +136,11 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         var config = Maven.configureResolver();
 
         for (var repository : repositories) {
-
             if (repository.isDefault()) {
                 config = config.withMavenCentralRepo(true);
             } else {
                 config = config.withRemoteRepo(repository.id(), repository.url(), DEFAULT_LAYOUT);
             }
-
         }
 
         return config;

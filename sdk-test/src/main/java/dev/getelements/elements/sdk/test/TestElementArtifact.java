@@ -21,13 +21,16 @@ public enum TestElementArtifact {
             "dev.getelements.elements:sdk-test-element-a:%s",
             "dev.getelements.elements.sdk.test.element.a"
     ),
-    VARIANT_B("dev.getelements.elements:sdk-test-element-b:%s",
+    VARIANT_B(
+            "dev.getelements.elements:sdk-test-element-b:%s",
             "dev.getelements.elements.sdk.test.element.b"
     ),
-    JAKARTA_RS("dev.getelements.elements:sdk-test-element-rs:%s",
+    JAKARTA_RS(
+            "dev.getelements.elements:sdk-test-element-rs:%s",
             "dev.getelements.elements.sdk.test.element.rs"
     ),
-    JAKARTA_WS("dev.getelements.elements:sdk-test-element-ws:%s",
+    JAKARTA_WS(
+            "dev.getelements.elements:sdk-test-element-ws:%s",
             "dev.getelements.elements.sdk.test.element.ws"
     );
 
@@ -38,13 +41,10 @@ public enum TestElementArtifact {
     private final Map<?, ?> attributes = Map.of("dev.getelements.test.variant", toString());
 
     TestElementArtifact(final String coordinates, final String elementName) {
-
         // Ensures validity of format string without checking the system define
         coordinates.formatted("");
-
         this.coordinates = coordinates;
         this.elementName = elementName;
-
     }
 
     public String getCoordinates() {
