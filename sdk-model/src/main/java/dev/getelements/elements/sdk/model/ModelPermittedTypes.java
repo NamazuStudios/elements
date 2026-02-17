@@ -14,7 +14,6 @@ public class ModelPermittedTypes implements PermittedTypes {
             "org.eclipse.persistence.internal.jaxb.WrappedValue"
     );
 
-    @Override
     public String getDescription() {
         return "Permits org.eclipse.persistence.internal.jaxb.WrappedValue due to known issue with Eclipse's " +
                "implementation of JAXb / MOXy - https://bugs.eclipse.org/bugs/show_bug.cgi?id=398723";

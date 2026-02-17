@@ -18,7 +18,6 @@ public class ModelPermittedPackages implements PermittedPackages {
         return PERMITTED_PACKAGES.contains(aPackage.getName());
     }
 
-    @Override
     public String getDescription() {
         return "Permits javax.inject and javax.validation (both used in the model package).";
     }
