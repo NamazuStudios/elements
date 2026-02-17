@@ -44,4 +44,13 @@ public record ElementPathDefinition(
         Map<String, Object> attributes
 
 ) {
+        /**
+         * Canonical constructor ensuring all collections are immutable copies.
+         */
+        public ElementPathDefinition {
+                apiArtifacts = apiArtifacts == null ? null : List.copyOf(apiArtifacts);
+                spiArtifacts = spiArtifacts == null ? null : List.copyOf(spiArtifacts);
+                elementArtifacts = elementArtifacts == null ? null : List.copyOf(elementArtifacts);
+                attributes = attributes == null ? null : Map.copyOf(attributes);
+        }
 }

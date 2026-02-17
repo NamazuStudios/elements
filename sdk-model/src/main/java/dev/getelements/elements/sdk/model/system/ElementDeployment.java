@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Null;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Schema(description =
         "Represents the deployment configuration for an Element within the system. This includes details about " +
@@ -92,6 +93,27 @@ public record ElementDeployment(
         long version
 
 ) implements ElementDeploymentRequest {
+
+        /**
+         * Canonical constructor ensuring all collections are immutable copies.
+         */
+        public ElementDeployment {
+                pathSpiClassPaths = pathSpiClassPaths == null ? null :
+                        Map.copyOf(pathSpiClassPaths.entrySet().stream()
+                                .collect(Collectors.toUnmodifiableMap(
+                                        Map.Entry::getKey,
+                                        e -> List.copyOf(e.getValue())
+                                )));
+                pathAttributes = pathAttributes == null ? null :
+                        Map.copyOf(pathAttributes.entrySet().stream()
+                                .collect(Collectors.toUnmodifiableMap(
+                                        Map.Entry::getKey,
+                                        e -> Map.copyOf(e.getValue())
+                                )));
+                elements = elements == null ? null : List.copyOf(elements);
+                packages = packages == null ? null : List.copyOf(packages);
+                repositories = repositories == null ? null : List.copyOf(repositories);
+        }
 
         /**
          * A deployment is ready if it has Element definitions or an uploaded ELM file.

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Schema(description =
         "Defines a package of Elements from a single ELM artifact with per-path attribute configuration. " +
@@ -30,4 +31,22 @@ public record ElementPackageDefinition(
         )
         Map<String, Map<String, Object>> pathAttributes
 
-) {}
+) {
+        /**
+         * Canonical constructor ensuring all collections are immutable copies.
+         */
+        public ElementPackageDefinition {
+                pathSpiClassPaths = pathSpiClassPaths == null ? null :
+                        Map.copyOf(pathSpiClassPaths.entrySet().stream()
+                                .collect(Collectors.toUnmodifiableMap(
+                                        Map.Entry::getKey,
+                                        e -> List.copyOf(e.getValue())
+                                )));
+                pathAttributes = pathAttributes == null ? null :
+                        Map.copyOf(pathAttributes.entrySet().stream()
+                                .collect(Collectors.toUnmodifiableMap(
+                                        Map.Entry::getKey,
+                                        e -> Map.copyOf(e.getValue())
+                                )));
+        }
+}
