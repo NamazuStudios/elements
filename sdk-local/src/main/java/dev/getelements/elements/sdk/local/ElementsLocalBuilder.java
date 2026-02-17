@@ -93,11 +93,18 @@ public interface ElementsLocalBuilder {
     ElementsLocalBuilder withSourceRoot(Path path);
 
     /**
-     * Configures an {@link ElementDeployment} based on the builder. The supplied {@link Consumer} must perform all
-     * the operations to configure the {@link ElementDeployment} using the {@link ElementDeploymentBuilder} which will
-     * be
+     * Configures an {@link ElementDeployment} based on the builder. The resulting
      */
-    ElementsLocalBuilder withDeployment(Consumer<ElementDeploymentBuilder> elementDeploymentBuilderConsumer);
+    default ElementsLocalBuilder withDeployment(final Consumer<ElementDeploymentBuilder> builderConsumer) {
+        final var builder = ElementDeploymentBuilder.builder();
+        builderConsumer.accept(builder);
+        return withDeployment(builder.build());
+    }
+
+    /**
+     * Configures an {@link ElementDeployment}.
+     */
+    ElementsLocalBuilder withDeployment(ElementDeployment elementDeployment);
 
     /**
      * Builds the {@link ElementsLocal} instance

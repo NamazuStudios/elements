@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
+import static java.nio.file.Files.isRegularFile;
+
 public class Maven {
 
     private static final Logger logger = LoggerFactory.getLogger(Maven.class);
@@ -51,21 +53,15 @@ public class Maven {
 
     }
 
-    private static void check() {
-
-        final var pom = Path.of("pom.xml");
-
-        if (!Files.exists(pom)) {
-
-            logger.error(
-                    "No POM exists at '{}'. Check that you are running from the project directory.",
-                    pom.toAbsolutePath()
-            );
-
-            throw new SdkException("Maven pom.xml file is required but not found.");
-
-        }
-
+    /**
+     * Checks that the pom exists at the supplied path.
+     *
+     * @param path the parent directory containing the pom.
+     * @return true if a pom exists, false otherwise
+     */
+    public static boolean pomExistsAtPath(final Path path) {
+        final var pom = path.resolve(POM_XML);
+        return isRegularFile(pom);
     }
 
     /**
@@ -83,8 +79,6 @@ public class Maven {
      * @param args the arguments
      */
     public static void mvn(final Path workingDirectory, final String ... args) {
-
-        check();
 
         final int exit;
 

@@ -52,7 +52,6 @@
         <module>rt-jeromq-guice</module>
         <module>rt-server</module>
         <module>rt-server-git</module>
-        <module>rt-server-git-guice</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
         <module>rt-server-cluster</module>
