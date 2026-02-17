@@ -1,6 +1,8 @@
 package dev.getelements.elements.deployment.jetty;
 
 import dev.getelements.elements.sdk.*;
+import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
+import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
@@ -1114,6 +1116,48 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     @Inject
     public void setPollIntervalSeconds(@Named(POLL_INTERVAL_SECONDS) final int pollIntervalSeconds) {
         this.pollIntervalSeconds = pollIntervalSeconds;
+    }
+
+    /**
+     * Called by the event handler to reconcile a newly created deployment.
+     *
+     * @param elementDeployment the deployment
+     */
+    @ElementEventConsumer(
+            value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_CREATED,
+            via = @ElementServiceReference(ElementRuntimeService.class)
+    )
+    public void onDeploymentCreated(final ElementDeployment elementDeployment) {
+        logger.info("Element deployment created: {}. Reconciling.", elementDeployment.id());
+        safeReconcile();
+    }
+
+    /**
+     * Called by the event handler to reconcile a newly updated deployment.
+     *
+     * @param elementDeployment the deployment
+     */
+    @ElementEventConsumer(
+            value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_UPDATED,
+            via = @ElementServiceReference(ElementRuntimeService.class)
+    )
+    public void onDeploymentUpdated(final ElementDeployment elementDeployment) {
+        logger.info("Element deployment updated: {}. Reconciling.", elementDeployment.id());
+        safeReconcile();
+    }
+
+    /**
+     * Called by the event handler to reconcile a recently deleted deployment.
+     *
+     * @param elementDeployment the deployment
+     */
+    @ElementEventConsumer(
+            value = ElementDeploymentDao.ELEMENT_DEPLOYMENT_DELETED,
+            via = @ElementServiceReference(ElementRuntimeService.class)
+    )
+    public void onDeploymentDeleted(final ElementDeployment elementDeployment) {
+        logger.info("Element deployment deleted: {}. Reconciling.", elementDeployment.id());
+        safeReconcile();
     }
 
     /**

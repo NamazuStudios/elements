@@ -14,6 +14,8 @@ public class Maven {
 
     private static final Logger logger = LoggerFactory.getLogger(Maven.class);
 
+    public static final String POM_XML = "pom.xml";
+
     public static final String MAVEN_EXECUTABLE;
 
     public static final String MAVEN_EXECUTABLE_ENV = "MAVEN_EXECUTABLE";
@@ -67,11 +69,20 @@ public class Maven {
     }
 
     /**
-     * Runs Maven with the specified arguments.
+     * Runs maven in the current working directory.
+     *
+     * @param args the maven args
+     */
+    public static void mvn(final String ... args) {
+        mvn(Path.of("."), args);
+    }
+
+    /**
+     * Runs Maven with the specified arguments in the specified directory.
      *
      * @param args the arguments
      */
-    public static void mvn(final String ... args) {
+    public static void mvn(final Path workingDirectory, final String ... args) {
 
         check();
 
@@ -80,8 +91,10 @@ public class Maven {
         try {
 
             final var command = Stream.concat(Stream.of(MAVEN_EXECUTABLE), Stream.of(args)).toArray(String[]::new);
-            final var pb = new ProcessBuilder(command);
-            pb.redirectErrorStream(true);
+
+            final var pb = new ProcessBuilder(command)
+                    .directory(workingDirectory.toFile())
+                    .redirectErrorStream(true);
 
             // Start the process
             final var proc = pb.start();

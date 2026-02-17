@@ -12,7 +12,6 @@ import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModu
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
-import dev.getelements.elements.rt.git.FileSystemElementStorageGitLoaderModule;
 import dev.getelements.elements.rt.guice.SimpleExecutorsModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.remote.Instance;
@@ -79,7 +78,6 @@ public class ApplicationNode {
             new MongoGridFSLargeObjectBucketModule(),
             new SimpleRemoteInvokerRegistryModule(),
             new ValidationModule(),
-            new FileSystemElementStorageGitLoaderModule(),
             new WorkerInstanceModule(),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
             new AppNodeServicesModule(),

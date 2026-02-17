@@ -1,56 +1,58 @@
 package dev.getelements.elements.sdk.local.maven;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import dev.getelements.elements.config.DefaultConfigurationSupplier;
+import dev.getelements.elements.jetty.ElementsCoreModule;
+import dev.getelements.elements.jetty.ElementsWebServiceComponentModule;
+import dev.getelements.elements.jetty.JettyServerModule;
 import dev.getelements.elements.sdk.Attributes;
-import dev.getelements.elements.sdk.exception.SdkException;
-import dev.getelements.elements.sdk.local.*;
-import dev.getelements.elements.sdk.local.internal.ClasspathUtils;
+import dev.getelements.elements.sdk.local.ElementsLocal;
+import dev.getelements.elements.sdk.local.ElementsLocalBuilder;
+import dev.getelements.elements.sdk.model.system.ElementDeploymentBuilder;
 
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
-import static dev.getelements.elements.sdk.local.maven.Maven.mvn;
-import static java.util.Objects.requireNonNull;
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+import static com.google.inject.name.Names.named;
+import static dev.getelements.elements.sdk.local.maven.Maven.POM_XML;
+import static dev.getelements.elements.sdk.local.maven.MavenElementsLocal.SOURCE_DIRECTORIES;
 
 public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
-    public static final String MAVEN_PHASE;
+    private Attributes attributes = Attributes.emptyAttributes();
 
-    public static final String ELEMENT_CLASSPATH;
+    private List<Path> sourceRoots = new ArrayList<>();
 
-    public static final String MAVEN_PHASE_ENV = "MAVEN_PHASE";
+    private List<ElementDeploymentBuilder> elementDeploymentBuilders = new ArrayList<>();
 
-    public static final String ELEMENT_CLASSPATH_ENV = "SDK_LOCAL_CLASSPATH";
-
-    public static final String MAVEN_PHASE_PROPERTY = "dev.getelements.elements.mvn.phase";
-
-    public static final String ELEMENT_CLASSPATH_PROPERTY = "dev.getelements.elements.mvn.element.classpath";
-
-    static {
-
-        final var pathSeparator = System.getProperty("path.separator");
-
-        final var defaultElementClasspath = String.join(
-                pathSeparator,
-                "target/classes",
-                "target/element-libs/*"
-        );
-
-        MAVEN_PHASE = System.getenv(MavenElementsLocalBuilder.MAVEN_PHASE_ENV) != null
-                ? System.getenv(MavenElementsLocalBuilder.MAVEN_PHASE_ENV)
-                : System.getProperty(MavenElementsLocalBuilder.MAVEN_PHASE_PROPERTY, "generate-resources");
-
-        ELEMENT_CLASSPATH = System.getenv(MavenElementsLocalBuilder.ELEMENT_CLASSPATH_ENV) != null
-                ? System.getenv(MavenElementsLocalBuilder.ELEMENT_CLASSPATH_ENV)
-                : System.getProperty(MavenElementsLocalBuilder.ELEMENT_CLASSPATH_PROPERTY, defaultElementClasspath);
-
-        if (!MAVEN_PHASE.isBlank()) {
-            mvn(MAVEN_PHASE);
+    @Override
+    public ElementsLocalBuilder withSourceRoot(final Path path) {
+        if (path == null) {
+            throw new IllegalArgumentException("Source path cannot be null");
+        } else if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException("Source path is a directory");
         }
+
+        final var pom = path.resolve(POM_XML);
+
+        if (!Files.isRegularFile(pom)) {
+            throw new IllegalArgumentException("Source path %s has no %s".formatted(path, POM_XML));
+        }
+
+        sourceRoots.add(path);
+        return this;
 
     }
 
-    private Attributes attributes = Attributes.emptyAttributes();
-
-    private final List<ElementsLocalApplicationElementRecord> localElements = new ArrayList<>();
+    @Override
+    public ElementsLocalBuilder withDeployment(final Consumer<ElementDeploymentBuilder> elementDeploymentBuilderConsumer) {
+        return null;
+    }
 
     @Override
     public ElementsLocalBuilder withAttributes(final Attributes attributes) {
@@ -59,36 +61,24 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
     }
 
     @Override
-    public ElementsLocalBuilder withElementNamed(
-            final String applicationNameOrId,
-            final String elementName,
-            final Attributes attributes) {
-        requireNonNull(applicationNameOrId, "applicationNameOrId");
-        requireNonNull(elementName, "aPacakge");
-        requireNonNull(attributes, "attributes");
-        localElements.add(new ElementsLocalApplicationElementRecord(applicationNameOrId, elementName, attributes));
-        return this;
-    }
-
-    @Override
     public ElementsLocal build() {
 
-        final var elementClasspath = ClasspathUtils.parse(ELEMENT_CLASSPATH);
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-        final var factoryRecord = new ElementsLocalFactoryRecord(
-                attributes,
-                elementClasspath,
-                localElements
+        final var injector = Guice.createInjector(
+                new JettyServerModule(),
+                new ElementsCoreModule(() -> attributes.asProperties(defaultConfigurationSupplier.get())),
+                new ElementsWebServiceComponentModule(),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        final var sourceRootBinder = newSetBinder(binder(), Path.class, named(SOURCE_DIRECTORIES));
+                        sourceRoots.forEach(path -> sourceRootBinder.addBinding().toInstance(path));
+                    }
+                }
         );
 
-        final var factory = ServiceLoader
-                .load(ElementsLocalFactory.class, getClass().getClassLoader())
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new SdkException("Unable to find SPI for " + ElementsLocalFactory.class.getName()))
-                .get();
-
-        return factory.create(factoryRecord);
+        return injector.getInstance(ElementsLocal.class);
 
     }
 

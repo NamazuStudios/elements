@@ -27,8 +27,7 @@ public final class ElementDeploymentBuilder {
     private ElementDeploymentState state;
     private long version;
 
-    private ElementDeploymentBuilder() {
-    }
+    private ElementDeploymentBuilder() {}
 
     /**
      * Creates a new builder instance.
