@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("elements/deployment")
 public class ElementDeploymentResource {
@@ -17,12 +18,15 @@ public class ElementDeploymentResource {
     private ElementDeploymentService deploymentService;
 
     @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public ElementDeployment createElementDeployment(final CreateElementDeploymentRequest request) {
         getValidationHelper().validateModel(request);
         return getDeploymentService().createElementDeployment(request);
     }
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Pagination<ElementDeployment> getElementDeployments(
             @QueryParam("offset") @DefaultValue("0")  final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
@@ -31,6 +35,7 @@ public class ElementDeploymentResource {
     }
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{deploymentId}")
     public ElementDeployment getElementDeployment(
             @PathParam("deploymentId")
@@ -39,6 +44,8 @@ public class ElementDeploymentResource {
     }
 
     @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{deploymentId}")
     public ElementDeployment updateElementDeployment(
             @PathParam("deploymentId")
