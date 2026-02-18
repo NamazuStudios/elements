@@ -76,7 +76,7 @@ public class MongoElementDeploymentDaoTest {
         final var application = getApplicationTestFactory().createMockApplication(getClass());
 
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "element",
                 List.of("com.example:api:1.0"),
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
@@ -121,7 +121,7 @@ public class MongoElementDeploymentDaoTest {
     @Test(groups = "createElementDeployment")
     public void testCreateDeploymentWithoutApplication() {
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "element-global",
                 List.of("com.example:api-global:1.0"),
                 List.of("com.example:spi-global:1.0"),
                 null,

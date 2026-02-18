@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.model.system;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import java.util.List;
 import java.util.Map;
@@ -13,10 +14,10 @@ import java.util.Map;
 public record ElementPathDefinition(
 
         @NotNull
+        @Pattern(regexp = "[^/\\\\]+", message = "path must be a single path segment with no '/' or '\\' characters")
         @Schema(description =
-                "The path on disk where this element will be deployed within the deployment directory structure. " +
-                "This path is used as the subdirectory name for organizing element artifacts when expanded from " +
-                "organized on disk."
+                "The single directory name where this element will be deployed within the deployment directory " +
+                "structure. Must not contain '/' as it represents a single path segment."
         )
         String path,
 

@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -89,15 +90,17 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     private final Lock lock = new ReentrantLock();
 
-    private final Map<String, ActiveDeployment> activeDeployments = new HashMap<>();
+    private final AtomicLong transientCounter = new AtomicLong();
 
-    private ScheduledExecutorService scheduler;
+    private final Map<String, ActiveDeployment> activeDeployments = new HashMap<>();
 
     private final ElementArtifactLoader elementArtifactLoader = loadArtifactLoader();
 
     private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
 
     private ValidationHelper validationHelper;
+
+    private ScheduledExecutorService scheduler;
 
     @Override
     public void start() {
@@ -198,7 +201,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             getValidationHelper().validateModel(request);
 
             // Generate unique ID for transient deployment
-            final var deploymentId = "transient-" + UUID.randomUUID();
+            final var deploymentId = "t%012X".formatted(transientCounter.incrementAndGet());
 
             // Check for ID collision (extremely unlikely but safe)
             if (activeDeployments.containsKey(deploymentId)) {
@@ -420,7 +423,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     new HashMap<>(),
                     new HashMap<>(),
                     elementArtifactLoader,
-                    new HashSet<>()
+                    new HashSet<>(),
+                    temporaryFiles
             );
 
             elements = loadElements(context);
@@ -1193,7 +1197,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             Map<Path, List<String>> spiPaths,
             Map<Path, Attributes> attributePaths,
             ElementArtifactLoader artifactLoader,
-            Set<ArtifactRepository> repositories
+            Set<ArtifactRepository> repositories,
+            TemporaryFiles temporaryFiles
     ) {
 
         public DeploymentContext {
