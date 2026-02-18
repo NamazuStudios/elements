@@ -3,13 +3,14 @@ package dev.getelements.elements.sdk.local.maven;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
+import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
 import dev.getelements.elements.jetty.ElementsCoreModule;
 import dev.getelements.elements.jetty.ElementsWebServiceComponentModule;
 import dev.getelements.elements.jetty.JettyServerModule;
 import dev.getelements.elements.sdk.Attributes;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.local.ElementsLocal;
 import dev.getelements.elements.sdk.local.ElementsLocalBuilder;
-import dev.getelements.elements.sdk.model.system.ElementDeployment;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +21,7 @@ import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.local.maven.Maven.POM_XML;
 import static dev.getelements.elements.sdk.local.maven.Maven.pomExistsAtPath;
+import static dev.getelements.elements.sdk.local.maven.MavenElementsLocal.DEPLOYMENTS;
 import static dev.getelements.elements.sdk.local.maven.MavenElementsLocal.SOURCE_DIRECTORIES;
 
 public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
@@ -28,7 +30,7 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
     private List<Path> sourceRoots = new ArrayList<>();
 
-    private List<ElementDeployment> deployments = new ArrayList<>();
+    private List<TransientDeploymentRequest> deployments = new ArrayList<>();
 
     @Override
     public ElementsLocalBuilder withSourceRoot(final Path path) {
@@ -47,8 +49,8 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
     }
 
     @Override
-    public ElementsLocalBuilder withDeployment(final ElementDeployment elementDeployment) {
-        deployments.add(elementDeployment);
+    public ElementsLocalBuilder withDeployment(final TransientDeploymentRequest transientDeploymentRequest) {
+        deployments.add(transientDeploymentRequest);
         return this;
     }
 
@@ -65,13 +67,28 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
 
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
+                new JettySdkElementModule(),
                 new ElementsCoreModule(() -> attributes.asProperties(defaultConfigurationSupplier.get())),
                 new ElementsWebServiceComponentModule(),
                 new AbstractModule() {
                     @Override
                     protected void configure() {
+
                         final var sourceRootBinder = newSetBinder(binder(), Path.class, named(SOURCE_DIRECTORIES));
                         sourceRoots.forEach(path -> sourceRootBinder.addBinding().toInstance(path));
+                        bind(ElementsLocal.class).to(MavenElementsLocal.class);
+
+                        final var deploymentsBinder = newSetBinder(
+                                binder(),
+                                TransientDeploymentRequest.class,
+                                named(DEPLOYMENTS)
+                        );
+
+                        deployments.forEach(deployment -> deploymentsBinder
+                                .addBinding()
+                                .toInstance(deployment)
+                        );
+
                     }
                 }
         );

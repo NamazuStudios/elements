@@ -3,13 +3,13 @@ package dev.getelements.elements.sdk.local.maven;
 import dev.getelements.elements.jetty.ElementsWebServices;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.local.ElementsLocal;
 import dev.getelements.elements.sdk.util.Monitor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,11 +19,15 @@ import static dev.getelements.elements.sdk.local.maven.Maven.mvn;
 
 public class MavenElementsLocal implements ElementsLocal {
 
+    public static final String DEPLOYMENTS = "dev.getelements.elements.sdk.local.maven.deployments";
+
     public static final String SOURCE_DIRECTORIES = "dev.getelements.elements.sdk.local.maven.source.directories";
 
     private final Lock lock = new ReentrantLock();
 
     private Set<Path> sourceDirectories;
+
+    private Set<TransientDeploymentRequest> deployments;
 
     private ElementsWebServices elementsWebServices;
 
@@ -39,6 +43,8 @@ public class MavenElementsLocal implements ElementsLocal {
         try (var mon = Monitor.enter(lock)) {
             getElementsWebServices().start();
         }
+
+        getDeployments().forEach(getRuntimeService()::loadTransientDeployment);
 
         return this;
 
@@ -65,6 +71,15 @@ public class MavenElementsLocal implements ElementsLocal {
                 getElementsWebServices().stop();
             }
         }
+    }
+
+    public Set<TransientDeploymentRequest> getDeployments() {
+        return deployments;
+    }
+
+    @Inject
+    public void setDeployments(@Named(DEPLOYMENTS) Set<TransientDeploymentRequest> deployments) {
+        this.deployments = deployments;
     }
 
     public Set<Path> getSourceDirectories() {

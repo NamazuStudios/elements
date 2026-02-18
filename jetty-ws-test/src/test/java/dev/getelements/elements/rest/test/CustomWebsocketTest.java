@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import jakarta.inject.Inject;
@@ -22,7 +23,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_APP_SERVE_WS_ROOT;
-import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_WS;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static java.lang.String.format;
@@ -79,7 +79,7 @@ public class CustomWebsocketTest {
             );
         }
 
-        final var restApiDeployment = ElementRuntimeService.TransientDeploymentRequest.builder()
+        final var restApiDeployment = TransientDeploymentRequest.builder()
                 .useDefaultRepositories(true)
                 .addElement(new ElementPathDefinition(
                         "rs",

@@ -2,16 +2,17 @@ package dev.getelements.elements.sdk.local;
 
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest.Builder;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
-import dev.getelements.elements.sdk.model.system.ElementDeploymentBuilder;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.ServiceLoader;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static dev.getelements.elements.sdk.Attributes.emptyAttributes;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -95,16 +96,16 @@ public interface ElementsLocalBuilder {
     /**
      * Configures an {@link ElementDeployment} based on the builder. The resulting
      */
-    default ElementsLocalBuilder withDeployment(final Consumer<ElementDeploymentBuilder> builderConsumer) {
-        final var builder = ElementDeploymentBuilder.builder();
-        builderConsumer.accept(builder);
-        return withDeployment(builder.build());
+    default ElementsLocalBuilder withDeployment(final Function<Builder, TransientDeploymentRequest> builderFunction) {
+        final var builder = TransientDeploymentRequest.builder();
+        final var deployment = builderFunction.apply(builder);
+        return withDeployment(deployment);
     }
 
     /**
      * Configures an {@link ElementDeployment}.
      */
-    ElementsLocalBuilder withDeployment(ElementDeployment elementDeployment);
+    ElementsLocalBuilder withDeployment(TransientDeploymentRequest elementDeployment);
 
     /**
      * Builds the {@link ElementsLocal} instance

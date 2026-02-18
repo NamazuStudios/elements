@@ -30,10 +30,6 @@
             <artifactId>sdk-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-test-element</artifactId>
-        </dependency>
-        <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
@@ -48,6 +44,11 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-spi-shrinkwrap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-test-element</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

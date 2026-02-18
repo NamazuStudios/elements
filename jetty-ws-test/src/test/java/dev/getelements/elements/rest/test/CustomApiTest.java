@@ -2,6 +2,7 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import jakarta.inject.Inject;
@@ -23,7 +24,6 @@ import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toSet;
 
 public class CustomApiTest {
 
@@ -77,7 +77,7 @@ public class CustomApiTest {
             );
         }
 
-        final var restApiDeployment = ElementRuntimeService.TransientDeploymentRequest.builder()
+        final var restApiDeployment = TransientDeploymentRequest.builder()
                 .useDefaultRepositories(true)
                 .addElement(new ElementPathDefinition(
                         "rs",

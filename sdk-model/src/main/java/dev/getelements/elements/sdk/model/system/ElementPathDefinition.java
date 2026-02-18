@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.model.system;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.Map;
 )
 public record ElementPathDefinition(
 
+        @NotNull
         @Schema(description =
                 "The path on disk where this element will be deployed within the deployment directory structure. " +
                 "This path is used as the subdirectory name for organizing element artifacts when expanded from " +
@@ -31,8 +33,7 @@ public record ElementPathDefinition(
         List<String> spiArtifacts,
 
         @Schema(description =
-                "List of Element implementation artifact coordinates. These contain the actual Element code. " +
-                "Ignored if elmArtifact is specified."
+                "List of Element implementation artifact coordinates. These contain the actual Element code. "
         )
         List<String> elementArtifacts,
 

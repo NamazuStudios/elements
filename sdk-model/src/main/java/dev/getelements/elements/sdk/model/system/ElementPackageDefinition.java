@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.model.system;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 )
 public record ElementPackageDefinition(
 
+        @NotNull
         @Schema(description =
                 "The ELM artifact coordinate to resolve and deploy. This ELM file will be downloaded, extracted, " +
                 "and its contents organized into the deployment directory structure."
