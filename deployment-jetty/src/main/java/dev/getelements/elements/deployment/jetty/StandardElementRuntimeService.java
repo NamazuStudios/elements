@@ -14,7 +14,6 @@ import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
-import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
@@ -26,10 +25,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,16 +39,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
+import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
-import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createDirectories;
-import static java.util.Objects.requireNonNull;
 
 /**
  * Standard implementation of {@link ElementRuntimeService} that polls the database for
  * {@link ElementDeployment} records and manages their runtime lifecycle.
  */
 public class StandardElementRuntimeService implements ElementRuntimeService {
+
+    private static final String ELEMENT_DEFAULT_PATH = "element";
 
     private static final long SHUTDOWN_TIMEOUT_SECONDS = 90;
 
@@ -201,7 +201,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             getValidationHelper().validateModel(request);
 
             // Generate unique ID for transient deployment
-            final var deploymentId = "t%012X".formatted(transientCounter.incrementAndGet());
+            final var deploymentId = "T%012X".formatted(transientCounter.incrementAndGet());
 
             // Check for ID collision (extremely unlikely but safe)
             if (activeDeployments.containsKey(deploymentId)) {
@@ -392,93 +392,29 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      */
     private RuntimeRecord doLoadDeployment(final ElementDeployment deployment, final boolean isTransient) {
 
-        final var deploymentId = deployment.id();
-        final var tempFiles = new ArrayList<Path>();
-        final var logs = new ArrayList<String>();
-        final var errors = new ArrayList<Throwable>();
-        final var fileSystems = new ArrayList<FileSystem>();
-
-        MutableElementRegistry registry = null;
-        List<Element> elements = null;
-        RuntimeStatus status = RuntimeStatus.CLEAN;
+        List<Element> elements = List.of();
+        final var registry = getRootElementRegistry().newSubordinateRegistry();
+        final var context = DeploymentContext.create(deployment, registry, elementArtifactLoader, temporaryFiles);
 
         try {
 
-            logs.add("Starting deployment load for " + deploymentId);
-
-            // Create subordinate registry for this deployment
-            registry = getRootElementRegistry().newSubordinateRegistry();
-            logs.add("Created subordinate registry");
-
-            // Determine code source and load
-            final var context = new DeploymentContext(
-                    deployment,
-                    registry,
-                    tempFiles,
-                    fileSystems,
-                    logs,
-                    new ArrayList<>(),
-                    errors,
-                    new ArrayList<>(),
-                    new HashMap<>(),
-                    new HashMap<>(),
-                    elementArtifactLoader,
-                    new HashSet<>(),
-                    temporaryFiles
-            );
+            context.logs().add("Starting deployment load for %s".formatted(context.deployment().id()));
 
             elements = loadElements(context);
-            logs.add("Loaded " + elements.size() + " element(s)");
-
-            // Determine final status
-            if (!context.errors().isEmpty()) {
-                status = RuntimeStatus.UNSTABLE;
-                logs.add("Deployment completed with " + errors.size() + " error(s)");
-            } else if (!context.warnings().isEmpty()) {
-                status = RuntimeStatus.WARNINGS;
-                logs.add("Deployment completed with " + context.warnings().size() + " warning(s)");
-            } else {
-                logs.add("Deployment completed successfully");
-            }
+            context.logs().add("Loaded " + elements.size() + " element(s)");
 
             // Track active deployment
-            final var active = new ActiveDeployment(
-                    deployment,
-                    status,
-                    isTransient,
-                    registry,
-                    elements,
-                    context.tempFiles(),
-                    context.fileSystems(),
-                    context.logs(),
-                    context.errors()
-            );
-
-            activeDeployments.put(deploymentId, active);
+            final var active = ActiveDeployment.fromCompleted(isTransient, elements, context);
+            activeDeployments.put(context.deployment().id(), active);
 
             // Return runtime record for event publishing (outside lock)
             return active.toRuntimeRecord();
 
         } catch (Exception ex) {
 
-            logs.add("Deployment failed: " + ex.getMessage());
-            errors.add(ex);
-            status = RuntimeStatus.FAILED;
-
             // Store failed deployment
-            final var failedDeployment = new ActiveDeployment(
-                    deployment,
-                    status,
-                    isTransient,
-                    registry,
-                    elements != null ? elements : List.of(),
-                    tempFiles,
-                    fileSystems,
-                    logs,
-                    errors
-            );
-
-            activeDeployments.put(deploymentId, failedDeployment);
+            final var failedDeployment = ActiveDeployment.fromFailure(isTransient, elements, ex, context);
+            activeDeployments.put(context.deployment().id(), failedDeployment);
 
             // Return failed runtime record for event publishing
             final var failedRecord = failedDeployment.toRuntimeRecord();
@@ -489,11 +425,14 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     registry.close();
                 } catch (Exception closeEx) {
                     ex.addSuppressed(closeEx);
-                    logger.warn("Error closing registry after failed load for deployment {}", deploymentId, closeEx);
+                    logger.warn("Error closing registry after failed load for deployment {}",
+                            context.deployment().id(),
+                            closeEx
+                    );
                 }
             }
 
-            for (final Path tempFile : tempFiles) {
+            for (final Path tempFile : context.tempFiles()) {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException ioEx) {
@@ -517,9 +456,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         try {
 
-            // Build repository set
-            context.logs().add("Building artifact repository set");
-
             if (context.repositories().isEmpty()) {
                 context.warnings().add("No artifact repositories configured");
             } else {
@@ -532,13 +468,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 });
             }
 
-            // Create deployment directory structure
-            context.logs().add("Creating deployment directory structure");
-
-            // Create shared PermittedTypesClassLoader for this deployment
-            context.logs().add("Creating PermittedTypesClassLoader for deployment");
-            final var permittedTypesClassLoader = new PermittedTypesClassLoader();
-
             // PHASE A: STAGING
             // Collect all element source paths into a list
             context.logs().add("=== Phase A: Staging all element sources ===");
@@ -547,7 +476,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             if (hasElmFromLargeObject(context.deployment())) {
                 context.logs().add("Staging elements from uploaded ELM file");
                 try {
-                    stageFromLargeObject(context.deployment(), context);
+                    stageFromLargeObject(context);
                 } catch (Exception ex) {
                     context.logs().add("Failed to stage from LargeObject: " + ex.getMessage());
                     context.errors().add(ex);
@@ -561,12 +490,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             // Strategy 2: Stage each ElementDefinition
             if (context.deployment().elements() != null && !context.deployment().elements().isEmpty()) {
 
-                final var deploymentDir = temporaryFiles.createTempDirectory(deploymentId);
-                context.elementPaths().add(deploymentDir);
-
-                context.logs().add("Created deployment directory: " + deploymentDir);
-                context.tempFiles().add(deploymentDir);
-
                 context.logs().add("Staging " + context.deployment().elements().size() + " element definition(s)");
 
                 for (int i = 0; i < context.deployment().elements().size(); i++) {
@@ -579,11 +502,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     );
 
                     try {
-                        stageFromElementDefinition(
-                                definition,
-                                deploymentDir,
-                                context
-                        );
+                        stageFromElementDefinition(definition, context);
                     } catch (Exception ex) {
                         context.logs().add("Failed to stage element definition: " + ex.getMessage());
                         context.errors().add(ex);
@@ -784,33 +703,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             context.elementPaths().add(fileSystemRoot);
 
-            if (definition.pathSpiClassPaths() != null) {
-                definition.pathSpiClassPaths().forEach((path, classPath) -> {
-
-                    final var fileSystemPath = fileSystem
-                            .getPath(path)
-                            .toAbsolutePath();
-
-                    context.spiPaths().put(fileSystemPath, classPath);
-
-                });
-            }
-
-            if (definition.pathAttributes() != null) {
-                definition.pathAttributes().forEach((path, attributesMap) -> {
-
-                    final var attributes = new SimpleAttributes.Builder()
-                            .setAttributes(attributesMap)
-                            .build();
-
-                    final var fileSystemPath = fileSystem
-                            .getPath(path)
-                            .toAbsolutePath();
-
-                    context.attributePaths().put(fileSystemPath, attributes);
-
-                });
-            }
 
             context.logs().add("Successfully staged package ELM");
 
@@ -826,20 +718,19 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * Does not load the elements - only prepares the path for loading.
      *
      * @param definition    the element path definition
-     * @param deploymentDir the deployment directory root
      * @param context       the deployment context containing registry, temp files, file systems, logs, warnings, errors,
      *                      element paths, SPI paths, and attribute paths
      */
     private void stageFromElementDefinition(final ElementPathDefinition definition,
-                                            final Path deploymentDir,
                                             final DeploymentContext context) {
         try {
 
             context.logs().add("Staging from Maven artifacts");
 
             // Generate unique subdirectory name
-            final var elementPath = deploymentDir
-                    .resolve(definition.path())
+            final var elementPath = context
+                    .createDeploymentDirectory()
+                    .resolve(definition.path() == null ? ELEMENT_DEFAULT_PATH : definition.path())
                     .toAbsolutePath();
 
             createDirectories(elementPath);
@@ -910,22 +801,24 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * Stages an ELM file from LargeObject by downloading it to a temp location.
      * Does not load the elements - only prepares the path for loading.
      *
-     * @param deployment the deployment containing the LargeObject reference
      * @param context    the deployment context containing registry, temp files, file systems, logs, warnings, errors,
      *                   element paths, SPI paths, and attribute paths
      */
-    private void stageFromLargeObject(final ElementDeployment deployment,
-                                      final DeploymentContext context) {
+    private void stageFromLargeObject(final DeploymentContext context) {
         try {
 
-            final var elmRef = deployment.elm();
+            final var deployment = context.deployment();
+            final var elmRef = context.deployment().elm();
             final var elmId = elmRef.getId();
 
             context.logs().add("Downloading ELM file from LargeObject: " + elmId);
 
             // Download ELM to temp file
-            final var tempPath = temporaryFiles.createTempFile(deployment.id(), ".elm");
-            context.tempFiles().add(tempPath);
+
+            final var tempPath = context.createTempFile(
+                    "deployment-%s-".formatted(deployment.id()),
+                    "large-object-%s.%s".formatted(elmId, ELM_EXTENSION)
+            );
 
             try (final InputStream in = getLargeObjectBucket().readObject(elmId);
                  final OutputStream out = Files.newOutputStream(tempPath)) {
@@ -950,39 +843,37 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             context.elementPaths().add(fileSystemRoot);
             context.logs().add("Successfully staged ELM from LargeObject.");
 
-            if (deployment.pathSpiClassPaths() != null) {
-                deployment.pathSpiClassPaths().forEach((path, classPath) -> {
-
-                    final var fileSystemPath = fileSystem
-                            .getPath(path)
-                            .toAbsolutePath();
-
-                    context.spiPaths().put(fileSystemPath, classPath);
-
-                });
-            }
-
-            // Gather the paths for the attributes
-            if (deployment.pathAttributes() != null) {
-                deployment.pathAttributes().forEach((path, attributesMap) -> {
-
-                    final var attributes = new SimpleAttributes.Builder()
-                            .setAttributes(attributesMap)
-                            .build();
-
-                    final var fileSystemPath = fileSystem
-                            .getPath(path)
-                            .toAbsolutePath();
-
-                    context.attributePaths().put(fileSystemPath, attributes);
-
-                });
-            }
+            applyPathMappings(deployment.pathSpiClassPaths(), deployment.pathAttributes(), fileSystem, context);
 
         } catch (Exception ex) {
             context.logs().add("Failed to stage from LargeObject: " + ex.getMessage());
             context.errors().add(ex);
         }
+    }
+
+    private void applyPathMappings(
+            final Map<String, List<String>> pathSpiClassPaths,
+            final Map<String, Map<String, Object>> pathAttributes,
+            final FileSystem fileSystem,
+            final DeploymentContext context) {
+
+        if (pathSpiClassPaths != null) {
+            pathSpiClassPaths.forEach((path, classPath) -> {
+                final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
+                context.spiPaths().put(fileSystemPath, classPath);
+            });
+        }
+
+        if (pathAttributes != null) {
+            pathAttributes.forEach((path, attributesMap) -> {
+                final var attributes = new SimpleAttributes.Builder()
+                        .setAttributes(attributesMap)
+                        .build();
+                final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
+                context.attributePaths().put(fileSystemPath, attributes);
+            });
+        }
+
     }
 
     /**
@@ -1181,167 +1072,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     }
 
     /**
-     * Encapsulates the mutable context used during element deployment operations.
-     * This record groups together the registry and various tracking lists that are
-     * passed through the deployment pipeline.
-     */
-    private record DeploymentContext(
-            ElementDeployment deployment,
-            MutableElementRegistry registry,
-            List<Path> tempFiles,
-            List<FileSystem> fileSystems,
-            List<String> logs,
-            List<String> warnings,
-            List<Throwable> errors,
-            List<Path> elementPaths,
-            Map<Path, List<String>> spiPaths,
-            Map<Path, Attributes> attributePaths,
-            ElementArtifactLoader artifactLoader,
-            Set<ArtifactRepository> repositories,
-            TemporaryFiles temporaryFiles
-    ) {
-
-        public DeploymentContext {
-            requireNonNull(deployment, "deployment");
-            repositories = repositories == null ? new HashSet<>() : repositories;
-            buildRepositories(deployment, repositories);
-        }
-
-        private static void buildRepositories(
-                final ElementDeployment deployment,
-                final Set<ArtifactRepository> repositories) {
-
-            // Add default repositories if requested
-            if (deployment.useDefaultRepositories()) {
-                repositories.addAll(ArtifactRepository.DEFAULTS);
-            }
-
-            // Add explicit repositories
-            if (deployment.repositories() != null) {
-                deployment.repositories()
-                        .stream()
-                        .map(ear -> new ArtifactRepository(ear.id(), ear.url()))
-                        .forEach(repositories::add);
-            }
-
-        }
-
-        /**
-         * Creates a custom SPI classloader for the given element path if custom SPI dependencies are configured.
-         * If no custom SPI is configured, returns the parent classloader.
-         *
-         * @param parent           the parent classloader
-         * @param elementPath      the element path to create SPI classloader for
-         * @return a classloader with the SPI dependencies, or the parent if no custom SPI
-         * @throws IOException if artifact resolution or file operations fail
-         */
-        public ClassLoader createSpiClassLoaderFor(final ClassLoader parent, final Path elementPath) {
-
-            final var spiClassPath = spiPaths.get(elementPath);
-
-            if (spiClassPath == null) {
-                logs.add("%s uses default SPI. Not loading SPI".formatted(elementPath));
-                return parent;
-            }
-
-            final var spiTarget = temporaryFiles.createTempDirectory("spi");
-            tempFiles.add(spiTarget);
-
-            for (final var coordinates : spiClassPath) {
-                try {
-                    copyArtifactWithDependencies(coordinates, spiTarget);
-                } catch (IOException e) {
-                    warnings.add(
-                            "Caught IO Exception assembling classpath %s"
-                                    .formatted(e.getMessage())
-                    );
-                    errors.add(e);
-                }
-            }
-
-            // Collect all JAR files in the spiTarget directory for the classloader
-            URL[] jarUrls;
-
-            try (final var pathStream = Files.walk(spiTarget, 1)) {
-                jarUrls = pathStream
-                        .filter(p -> p.toString().endsWith(".jar"))
-                        .map(p -> {
-                            try {
-                                return p.toUri().toURL();
-                            } catch (MalformedURLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        })
-                        .toArray(URL[]::new);
-            } catch (IOException e) {
-                jarUrls = new URL[0];
-                warnings.add("Caught IO Exception assembling classpath %s".formatted(e.getMessage()));
-                errors.add(e);
-            }
-
-            if (jarUrls.length == 0) {
-                warnings.add("No JAR files found in SPI directory for path: " + elementPath);
-            }
-
-            return new URLClassLoader(jarUrls, parent);
-
-        }
-
-        /**
-         * Copies a Maven artifact and its transitive dependencies to a target directory.
-         * Logs the resolution and copying process to the deployment logs.
-         *
-         * @param coordinates the Maven coordinates (e.g., "groupId:artifactId:version")
-         * @param targetDir   the target directory to copy artifacts into
-         * @throws IOException if artifact resolution or file copying fails
-         */
-        public void copyArtifactWithDependencies(
-                final String coordinates,
-                final Path targetDir
-        ) throws IOException {
-
-            logs.add("Resolving artifact with dependencies: " + coordinates);
-
-            final var artifacts = artifactLoader.findClasspathForArtifact(repositories, coordinates).toList();
-            logs.add("Found %d artifact(s) including dependencies %s".formatted(artifacts.size(), coordinates));
-
-            for (final var artifact : artifacts) {
-
-                final var sourcePath = artifact.path();
-                final var fileName = "%s.%s.%s.%s".formatted(
-                        artifact.group(),
-                        artifact.id(),
-                        artifact.version(),
-                        artifact.extension()
-                );
-
-                final var destinationPath = targetDir.resolve(fileName);
-                copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-                logs.add("Copied artifact: " + fileName);
-
-            }
-
-        }
-
-        public Attributes createAttributesForPath(final Attributes baseAttrs, final Path elementPath) {
-
-            // Look up pre-computed attributes for this path
-            final var resolved = attributePaths().getOrDefault(
-                    elementPath.toAbsolutePath(),
-                    Attributes.emptyAttributes()
-            );
-
-            // Create the base attributes found in the deployment
-            return new SimpleAttributes.Builder()
-                    .from(baseAttrs)
-                    .from(resolved)
-                    .build();
-
-        }
-
-    }
-
-    /**
      * Tracks an active deployment's runtime state.
      */
     private record ActiveDeployment(
@@ -1355,6 +1085,14 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             List<String> logs,
             List<Throwable> errors
     ) implements AutoCloseable {
+
+        public ActiveDeployment {
+            elements = List.copyOf(elements);
+            tempFiles = List.copyOf(tempFiles);
+            filesystems = List.copyOf(filesystems);
+            logs = List.copyOf(logs);
+            errors = List.copyOf(errors);
+        }
 
         /**
          * Converts this active deployment to a RuntimeRecord for external visibility.
@@ -1373,6 +1111,66 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     logs,
                     errors
             );
+        }
+
+        public static ActiveDeployment fromCompleted(
+                final boolean isTransient,
+                final List<Element> elements,
+                final DeploymentContext deploymentContext) {
+
+            final RuntimeStatus status;
+
+            // Determine final status
+            if (!deploymentContext.errors().isEmpty()) {
+                status = RuntimeStatus.UNSTABLE;
+                deploymentContext
+                        .logs()
+                        .add("Deployment completed with %s error(s)".formatted(deploymentContext.errors().size()));
+            } else if (!deploymentContext.warnings().isEmpty()) {
+                status = RuntimeStatus.WARNINGS;
+                deploymentContext
+                        .logs()
+                        .add("Deployment completed with %s warning(s)".formatted(deploymentContext.warnings().size()));
+            } else {
+                status = RuntimeStatus.CLEAN;
+                deploymentContext.logs().add("Deployment completed successfully");
+            }
+
+            return new ActiveDeployment(
+                    deploymentContext.deployment(),
+                    status,
+                    isTransient,
+                    deploymentContext.registry(),
+                    elements != null ? elements : List.of(),
+                    deploymentContext.tempFiles(),
+                    deploymentContext.fileSystems(),
+                    deploymentContext.logs(),
+                    deploymentContext.errors()
+            );
+
+        }
+
+        public static ActiveDeployment fromFailure(final boolean isTransient,
+                                                   final List<Element> elements,
+                                                   final Exception failureCause,
+                                                   final DeploymentContext deploymentContext) {
+
+            deploymentContext.logs().add("Deployment failed: %s".formatted(failureCause.getMessage()));
+            deploymentContext.errors().add(failureCause);
+
+            // Store failed deployment
+            return new ActiveDeployment(
+                    deploymentContext.deployment(),
+                    RuntimeStatus.FAILED,
+                    isTransient,
+                    deploymentContext.registry(),
+                    elements,
+                    deploymentContext.tempFiles(),
+                    deploymentContext.fileSystems(),
+                    deploymentContext.logs(),
+                    deploymentContext.errors()
+            );
+
         }
 
         @Override

@@ -171,8 +171,7 @@ public class TemporaryFiles {
         final Path path;
 
         try {
-            final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
-            path = Files.createTempDirectory(root.get(), fullPrefix);
+            path = Files.createTempDirectory(root.get(), prefix);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -217,8 +216,7 @@ public class TemporaryFiles {
         final Path path;
 
         try {
-            final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
-            path = Files.createTempFile(root.get(), fullPrefix, suffix);
+            path = Files.createTempFile(root.get(), prefix, suffix);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }

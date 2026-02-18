@@ -13,11 +13,11 @@ import java.util.Map;
 )
 public record ElementPathDefinition(
 
-        @NotNull
         @Pattern(regexp = "[^/\\\\]+", message = "path must be a single path segment with no '/' or '\\' characters")
         @Schema(description =
                 "The single directory name where this element will be deployed within the deployment directory " +
-                "structure. Must not contain '/' as it represents a single path segment."
+                "structure. Must not contain '/' as it represents a single path segment. This is optional and can " +
+                "be assigned at deployment time."
         )
         String path,
 
