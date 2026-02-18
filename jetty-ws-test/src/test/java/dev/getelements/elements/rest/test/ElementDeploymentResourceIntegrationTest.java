@@ -60,7 +60,7 @@ public class ElementDeploymentResourceIntegrationTest {
     @Test(groups = "createDeployment")
     public void testCreateElementDeploymentWithArtifacts() {
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "example",
                 List.of("com.example:api:1.0.0"),
                 List.of("com.example:spi:1.0.0"),
                 null,
@@ -103,7 +103,7 @@ public class ElementDeploymentResourceIntegrationTest {
     @Test(groups = "createDeployment")
     public void testCreateElementDeploymentWithElementArtifacts() {
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "example",
                 List.of("com.example:api:2.0.0"),
                 List.of("com.example:spi:2.0.0"),
                 List.of("com.example:element-impl:2.0.0"),
@@ -237,7 +237,7 @@ public class ElementDeploymentResourceIntegrationTest {
         assertNotNull(createdDeploymentId, "Deployment ID should be set from create test");
 
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "example",
                 List.of("com.example:api-updated:1.1.0"),
                 List.of("com.example:spi-updated:1.1.0"),
                 null,
@@ -279,7 +279,7 @@ public class ElementDeploymentResourceIntegrationTest {
     )
     public void testUpdateElementDeploymentNotFound() {
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "example",
                 List.of(),
                 List.of(),
                 List.of("com.example:element:1.0.0"),
@@ -355,7 +355,7 @@ public class ElementDeploymentResourceIntegrationTest {
     @Test(groups = "accessControl")
     public void testRegularUserCannotCreateDeployment() {
         final var elementDefinition = new ElementPathDefinition(
-                null,
+                "example",
                 List.of("com.example:api:1.0.0"),
                 List.of("com.example:spi:1.0.0"),
                 null,
