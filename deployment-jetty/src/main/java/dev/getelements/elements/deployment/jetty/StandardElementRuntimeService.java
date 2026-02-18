@@ -6,12 +6,14 @@ import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
+import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
@@ -94,6 +96,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private final ElementArtifactLoader elementArtifactLoader = loadArtifactLoader();
 
     private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
+
+    private ValidationHelper validationHelper;
 
     @Override
     public void start() {
@@ -189,6 +193,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             if (scheduler == null) {
                 throw new IllegalStateException("Service not started");
             }
+
+            // Validate the request
+            getValidationHelper().validateModel(request);
 
             // Generate unique ID for transient deployment
             final var deploymentId = "transient-" + UUID.randomUUID();
@@ -1116,6 +1123,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     @Inject
     public void setPollIntervalSeconds(@Named(POLL_INTERVAL_SECONDS) final int pollIntervalSeconds) {
         this.pollIntervalSeconds = pollIntervalSeconds;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(final ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
     /**

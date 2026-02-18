@@ -22,12 +22,32 @@
             <artifactId>sdk-local</artifactId>
         </dependency>
         <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-local-maven</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-spi-shrinkwrap</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>mongo-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-client-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
         </dependency>
     </dependencies>
 
