@@ -26,7 +26,8 @@ public class AppServePermittedPackages implements PermittedPackages {
     @Override
     public String getDescription() {
         return "Permits RESTFul Web Services (jakarta rs) and WebSockets (jakarta.websocket) as well as validation " +
-               "(jakarta.validation). Additionally permits OAS types to be used within an Element.";
+               "(jakarta.validation). Additionally permits OAS types to be used within an Element. This includes " +
+               "io.swagger.v3.oas annotations and io.swagger.v3.jaxrs2.integration types as well.";
     }
 
 }

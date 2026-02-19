@@ -2,10 +2,7 @@ package dev.getelements.elements.sdk.service.system;
 
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
-import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
-import dev.getelements.elements.sdk.model.system.ElementMetadata;
-import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
-import dev.getelements.elements.sdk.model.system.ElementSpi;
+import dev.getelements.elements.sdk.model.system.*;
 
 import java.util.List;
 
@@ -48,5 +45,11 @@ public interface ElementStatusService {
      * @return the list of all containers.
      */
     List<ElementContainerStatus> getAllContainers();
+
+    /**
+     * Lists al {@link ElementFeature}s that can be used by an Element.
+     * @return the features
+     */
+    List<ElementFeature> getAllFeatures();
 
 }

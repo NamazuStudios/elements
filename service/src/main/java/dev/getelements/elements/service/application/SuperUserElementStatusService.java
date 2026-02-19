@@ -1,19 +1,20 @@
 package dev.getelements.elements.service.application;
 
+import dev.getelements.elements.sdk.PermittedPackages;
+import dev.getelements.elements.sdk.PermittedTypes;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementContainerService.ContainerRecord;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.ElementRegistry;
-import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
-import dev.getelements.elements.sdk.model.system.ElementMetadata;
-import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
-import dev.getelements.elements.sdk.model.system.ElementSpi;
+import dev.getelements.elements.sdk.model.system.*;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.stream.Stream;
 
 public class SuperUserElementStatusService implements ElementStatusService {
 
@@ -58,6 +59,23 @@ public class SuperUserElementStatusService implements ElementStatusService {
                 .stream()
                 .map(mapper::forward)
                 .toList();
+
+    }
+
+    @Override
+    public List<ElementFeature> getAllFeatures() {
+
+        final var types = ServiceLoader.load(PermittedTypes.class)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .map(pt -> new ElementFeature(pt.getClass().getName(), pt.getDescription()));
+
+        final var packages = ServiceLoader.load(PermittedPackages.class)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .map(pp -> new ElementFeature(pp.getClass().getName(), pp.getDescription()));
+
+        return Stream.concat(types, packages).toList();
 
     }
 
