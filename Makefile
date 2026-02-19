@@ -16,7 +16,7 @@ help:
 	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
 
 clean:
-	mvn --no-transfer-progress -B clean
+	mvn --no-transfer-progress -B -q clean
 
 install_no_tests:
 	mvn -DskipTests --no-transfer-progress -q install
