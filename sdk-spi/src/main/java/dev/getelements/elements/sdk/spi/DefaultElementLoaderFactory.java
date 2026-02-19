@@ -66,6 +66,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementConsumedEvents = scanForConsumedEvents(classLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(classLoader, elementDefinitionRecord);
         final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
+        final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
+        final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
         // The Module Records and Services
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
@@ -83,6 +85,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
+                elementTypeRequests,
+                elementPackageRequests,
                 classLoader
         );
 
@@ -157,6 +161,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementConsumedEvents = scanForConsumedEvents(localClassLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(localClassLoader, elementDefinitionRecord);
         final var elementDependencies = ElementDependencyRecord.fromPackage(aPackage).toList();
+        final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(aPackage).toList();
+        final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(aPackage).toList();
 
         // The Module Records and Services
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
@@ -174,6 +180,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
+                elementTypeRequests,
+                elementPackageRequests,
                 localClassLoader
         );
 

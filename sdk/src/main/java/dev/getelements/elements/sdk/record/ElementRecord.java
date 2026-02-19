@@ -16,6 +16,8 @@ import java.util.Optional;
  * @param services a list of {@link ElementServiceRecord} housing all services in the Element
  * @param attributes the actual loaded {@link Attributes} for the Element
  * @param defaultAttributes the default attributes of the {@link Element}
+ * @param typeRequests a list of {@link ElementTypeRequestRecord} declaring additional type visibility requests
+ * @param packageRequests a list of {@link ElementPackageRequestRecord} declaring additional package visibility requests
  * @param classLoader the {@link ClassLoader} used to load the {@link Element}
  */
 public record ElementRecord(
@@ -27,6 +29,8 @@ public record ElementRecord(
         List<ElementDependencyRecord> dependencies,
         Attributes attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes,
+        List<ElementTypeRequestRecord> typeRequests,
+        List<ElementPackageRequestRecord> packageRequests,
         ClassLoader classLoader) {
 
     public ElementRecord {
@@ -34,6 +38,8 @@ public record ElementRecord(
         consumedEvents = List.copyOf(consumedEvents);
         defaultAttributes = List.copyOf(defaultAttributes);
         dependencies = List.copyOf(dependencies);
+        typeRequests = List.copyOf(typeRequests);
+        packageRequests = List.copyOf(packageRequests);
     }
 
     /**
