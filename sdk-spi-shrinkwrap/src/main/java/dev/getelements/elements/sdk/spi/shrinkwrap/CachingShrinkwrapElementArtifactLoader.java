@@ -159,7 +159,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
     }
 
-    public static boolean isNotFound(Throwable t) {
+    private static boolean isNotFound(Throwable t) {
 
         for (Throwable c = t; c != null; c = c.getCause()) {
 
