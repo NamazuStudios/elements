@@ -94,6 +94,7 @@
         <module>jetty-ws-test</module>
         <module>web-ui-react-jetty</module>
         <module>sdk</module>
+        <module>sdk-bom</module>
         <module>sdk-spi</module>
         <module>sdk-spi-guice</module>
         <module>sdk-spi-shrinkwrap</module>
@@ -121,7 +122,6 @@
         <module>common-mapstruct</module>
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
-        <module>sdk-bom</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
