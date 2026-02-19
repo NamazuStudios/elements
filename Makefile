@@ -19,7 +19,7 @@ clean:
 	mvn --no-transfer-progress -B clean
 
 install_no_tests:
-	mvn -DskipTests install > /dev/null
+	mvn -DskipTests install
 
 build:
 	mvn --no-transfer-progress -B install
