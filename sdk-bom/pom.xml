@@ -25,30 +25,35 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-model</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-dao</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-service</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-util</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Guice Integration -->
@@ -57,6 +62,7 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-guice</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- SPI -->
@@ -65,18 +71,21 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-spi</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-spi-guice</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-spi-shrinkwrap</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Optional SDK Extensions -->
@@ -85,42 +94,49 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-cluster</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-deployment</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-jakarta-rs</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-local</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-local-maven</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-logback</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-mongo</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Test Support -->
@@ -149,43 +165,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-mongo-test</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <!-- Test Elements -->
-
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-test-element</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-test-element-a</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-test-element-b</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-test-element-rs</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-test-element-ws</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
