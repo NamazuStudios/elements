@@ -7,7 +7,9 @@ import dev.getelements.elements.sdk.annotation.ElementLocal;
 import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.record.ElementPackageRequestRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
+import dev.getelements.elements.sdk.record.ElementTypeRequestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +68,12 @@ import static java.util.Objects.requireNonNull;
  *
  * <li><b>Registered Service Check:</b> If the class is a registered service (exposed via the Element's service
  * exports), it is implicitly permitted and returned.</li>
+ *
+ * <li><b>TypeRequest Check:</b> If any {@link dev.getelements.elements.sdk.record.ElementTypeRequestRecord} in the
+ * {@link ElementRecord} permits the binary class name, the class is returned.</li>
+ *
+ * <li><b>PackageRequest Check:</b> If any {@link dev.getelements.elements.sdk.record.ElementPackageRequestRecord}
+ * in the {@link ElementRecord} permits the class's package name, the class is returned.</li>
  *
  * <li><b>Default Deny:</b> Otherwise, the class is denied with {@link ClassNotFoundException}.</li>
  * </ol>
@@ -241,12 +249,32 @@ public class ElementImplementationClassLoader extends ClassLoader {
             return aClass;
         }
 
-        logger.trace("{} or {}'s package ({}) must have @{} annotation or be exposed via @{}",
+        final var isTypeRequested = getElementRecord()
+                .typeRequests()
+                .stream()
+                .anyMatch(r -> r.test(aClass.getName()));
+
+        if (isTypeRequested) {
+            return aClass;
+        }
+
+        final var isPackageRequested = getElementRecord()
+                .packageRequests()
+                .stream()
+                .anyMatch(r -> r.test(aClass.getPackageName()));
+
+        if (isPackageRequested) {
+            return aClass;
+        }
+
+        logger.trace("{} or {}'s package ({}) must have @{} annotation, be exposed via @{}, or declared via @{} or @{}",
                 aClass.getSimpleName(),
                 aClass.getSimpleName(),
                 aClassPackage,
                 ElementPublic.class.getSimpleName(),
-                ElementDefinition.class.getSimpleName()
+                ElementDefinition.class.getSimpleName(),
+                ElementTypeRequestRecord.class.getSimpleName(),
+                ElementPackageRequestRecord.class.getSimpleName()
         );
 
         throw new ClassNotFoundException(aClass.getName());
