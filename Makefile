@@ -19,19 +19,19 @@ clean:
 	mvn --no-transfer-progress -B clean
 
 install_no_tests:
-	mvn -DskipTests install
+	mvn -DskipTests --no-transfer-progress -q install
 
 build:
-	mvn --no-transfer-progress -B install
+	mvn --no-transfer-progress -B -q install
 
 build_github:
-	mvn --no-transfer-progress -B -Pgithub-publish install
+	mvn --no-transfer-progress -B -q -Pgithub-publish install
 
 build_central:
-	mvn --no-transfer-progress -B -Pcentral-publish,github-publish install
+	mvn --no-transfer-progress -B -q -Pcentral-publish,github-publish install
 
 deploy:
-	mvn -DskipTests --no-transfer-progress -B -Pcentral-publish deploy
+	mvn -DskipTests --no-transfer-progress -B  -q -Pcentral-publish deploy
 
 docker:
 	make -C docker-config internal
