@@ -148,11 +148,62 @@ public class PermittedTypesClassLoader extends ClassLoader {
     @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         synchronized (getClassLoadingLock(name)) {
+
+            final var already = findLoadedClass(name);
+
+            if (already != null) {
+                return already;
+            }
+
             try {
-                return super.loadClass(name, resolve);
-            } catch (final ClassNotFoundException e) {
-                final var delegateClass = delegate.loadClass(name);
-                return processVisibilityAnnotations(delegateClass);
+
+                final var fromDelegate = delegate.loadClass(name);
+                final var fromDelegateLoader = fromDelegate.getClassLoader();
+
+                // Bootstrap/platform classes (null classloader) bypass visibility rules — they
+                // are always permitted and can never be duplicated by application code.
+                if (fromDelegateLoader == null) {
+                    return fromDelegate;
+                }
+
+                // Detect duplicate class definitions: if the parent hierarchy resolves the same
+                // name to a *different* Class object, two distinct definitions are on the
+                // classpath. This is a deployment error — log it and consistently use the
+                // delegate version to avoid class-identity mismatches at runtime.
+                final var parent = getParent();
+
+                if (parent != null) {
+                    try {
+                        final var fromParent = parent.loadClass(name);
+                        if (fromParent != fromDelegate) {
+                            final var parentLoaderName = fromParent.getClassLoader() != null
+                                    ? fromParent.getClassLoader().getName()
+                                    : "bootstrap";
+                            logger.warn(
+                                    "{}: duplicate class definition for {} — delegate [{}] and parent [{}] " +
+                                    "provide different versions; this is a deployment error. Using delegate version.",
+                                    getName(), name,
+                                    fromDelegateLoader.getName(),
+                                    parentLoaderName
+                            );
+                        }
+                    } catch (ClassNotFoundException ignored) {
+                        // Normal case: class exists only in the delegate, no duplication.
+                    }
+                }
+
+                return processVisibilityAnnotations(fromDelegate);
+
+            } catch (ClassNotFoundException e) {
+                // Class not in delegate at all; fall back to the parent hierarchy.
+                // This handles classes that live exclusively in the parent (e.g. JDK classes
+                // that the delegate's own classpath does not cover).
+                try {
+                    return super.loadClass(name, resolve);
+                } catch (NoClassDefFoundError err) {
+                    logger.trace("{} cannot load class {}", getName(), name, err);
+                    throw err;
+                }
             } catch (NoClassDefFoundError e) {
                 logger.trace("{} cannot load class {}", getName(), name, e);
                 throw e;
@@ -207,31 +258,5 @@ public class PermittedTypesClassLoader extends ClassLoader {
         throw new ClassNotFoundException(aClass.getName());
 
     }
-
-//    @Override
-//    public URL getResource(String name) {
-//        try {
-//            Method findResource = ClassLoader.class.getDeclaredMethod("findResource", String.class);
-//            findResource.setAccessible(true);
-//            return (URL) findResource.invoke(delegate, name);
-//        } catch (Exception e) {
-//            logger.debug("Failed to invoke findResource on delegate", e);
-//            return null;
-//        }
-//    }
-//
-//    @Override
-//    public Enumeration<URL> getResources(String name) throws IOException {
-//        try {
-//            Method findResources = ClassLoader.class.getDeclaredMethod("findResources", String.class);
-//            findResources.setAccessible(true);
-//            @SuppressWarnings("unchecked")
-//            Enumeration<URL> resources = (Enumeration<URL>) findResources.invoke(delegate, name);
-//            return resources;
-//        } catch (Exception e) {
-//            logger.debug("Failed to invoke findResources on delegate", e);
-//            return java.util.Collections.emptyEnumeration();
-//        }
-//    }
 
 }
