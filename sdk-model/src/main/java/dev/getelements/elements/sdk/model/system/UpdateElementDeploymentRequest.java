@@ -50,6 +50,12 @@ public record UpdateElementDeploymentRequest(
         )
         Map<String, Map<String, Object>> pathAttributes,
 
+        @Schema(description =
+                "Map of element paths to builtin SPI configurations. This allows for an individual SPI specification " +
+                "for each Element contained within the ELM file in the large object."
+        )
+        Map<String, List<String>> pathSpiBuiltins,
+
         @NotNull
         @Schema(description =
                 "Sets the state of the deployment. When updating, the change will only take place if the deployment " +

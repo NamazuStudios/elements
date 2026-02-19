@@ -16,6 +16,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
@@ -78,15 +79,19 @@ public class MongoElementDeploymentDaoTest {
         final var elementDefinition = new ElementPathDefinition(
                 "element",
                 List.of("com.example:api:1.0"),
+                null,
                 List.of("com.example:spi:1.0"),
                 List.of("com.example:element:1.0"),
                 null
         );
 
+        final var pathSpiBuiltins = Map.of("element", List.of("DEFAULT"));
+
         final var deployment = new ElementDeployment(
                 null,
                 application,
                 null,
+                pathSpiBuiltins,
                 null,
                 null,
                 List.of(elementDefinition),
@@ -110,6 +115,8 @@ public class MongoElementDeploymentDaoTest {
         assertTrue(created.useDefaultRepositories());
         assertEquals(created.repositories().size(), 1);
         assertEquals(created.state(), ElementDeploymentState.ENABLED);
+        assertEquals(created.pathSpiBuiltins(), pathSpiBuiltins,
+                "pathSpiBuiltins should round-trip correctly after create");
 
         // Verify event was fired
         assertTrue(createdDeployments.stream().anyMatch(d -> d.id().equals(created.id())),
@@ -123,12 +130,14 @@ public class MongoElementDeploymentDaoTest {
         final var elementDefinition = new ElementPathDefinition(
                 "element-global",
                 List.of("com.example:api-global:1.0"),
+                null,
                 List.of("com.example:spi-global:1.0"),
                 null,
                 null
         );
 
         final var deployment = new ElementDeployment(
+                null,
                 null,
                 null,
                 null,
@@ -252,6 +261,7 @@ public class MongoElementDeploymentDaoTest {
                         ? deployment.elements().get(0).path()
                         : null,
                 List.of("com.example:api-updated:2.0"),
+                null,
                 List.of("com.example:spi-updated:2.0"),
                 deployment.elements() != null && !deployment.elements().isEmpty()
                         ? deployment.elements().get(0).elementArtifacts()
@@ -261,10 +271,13 @@ public class MongoElementDeploymentDaoTest {
                         : null
         );
 
+        final var updatedPathSpiBuiltins = Map.of("element", List.of("GUICE_7_0_0"));
+
         final var updated = new ElementDeployment(
                 deployment.id(),
                 deployment.application(),
                 deployment.elm(),
+                updatedPathSpiBuiltins,
                 deployment.pathSpiClassPaths(),
                 deployment.pathAttributes(),
                 List.of(updatedDefinition),
@@ -283,6 +296,8 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(result.elements().get(0).spiArtifacts(), List.of("com.example:spi-updated:2.0"));
         assertEquals(result.state(), ElementDeploymentState.DISABLED);
         assertEquals(result.version(), deployment.version() + 1, "Version should be incremented on update");
+        assertEquals(result.pathSpiBuiltins(), updatedPathSpiBuiltins,
+                "pathSpiBuiltins should be updated correctly");
 
         // Verify event was fired
         assertTrue(updatedDeployments.stream().anyMatch(d -> d.id().equals(result.id())),

@@ -11,7 +11,7 @@ import static dev.getelements.elements.sdk.SystemVersion.CURRENT;
 /**
  * The recommended loader SPIs based on the current system version and configurations.
  */
-public enum RecommendedLoaderSpi {
+public enum BuiltinSpi {
 
     DEFAULT(
             CURRENT.version(),
@@ -31,14 +31,14 @@ public enum RecommendedLoaderSpi {
     ),
     GUICE_7_0_0_NO_GUAVA(
             CURRENT.version(),
-            "Guice 7.0.0 loader without Guava (must specify your own compatible with Guice 7.0.0.",
+            "Guice 7.0.0 loader without Guava (must specify your own compatible with Guice 7.0.0)",
             "dev.getelements.elements:sdk-spi-guice:%s".formatted(CURRENT.version()),
             "com.google.guice:guice:7.0.0",
             "aopalliance:aopalliance:1.0"
     ),
     GUICE_7_0_0_GUAVA_33_1_0(
             CURRENT.version(),
-            "Guice 7.0.0 loader with Guava version 33.1.0.",
+            "Guice 7.0.0 loader with Guava version 33.1.0 (Explicit).",
             "dev.getelements.elements:sdk-spi-guice:%s".formatted(CURRENT.version()),
             "com.google.guice:guice:7.0.0",
             "com.google.guava:guava:33.1.0-jre",
@@ -51,9 +51,9 @@ public enum RecommendedLoaderSpi {
 
     private final List<String> coordinates;
 
-    RecommendedLoaderSpi(final String version,
-                         final String description,
-                         final String ... coordinates) {
+    BuiltinSpi(final String version,
+               final String description,
+               final String ... coordinates) {
         this.version = version;
         this.description = description;
         this.coordinates = List.of(coordinates);
@@ -65,8 +65,17 @@ public enum RecommendedLoaderSpi {
      * @param id the identifier
      * @return an {@link Optional} containing the SPI
      */
-    public static Optional<RecommendedLoaderSpi> findRecommendedLoaderSpi(final String id) {
+    public static Optional<BuiltinSpi> findRecommendedLoaderSpi(final String id) {
         return Stream.of(values()).filter(spi -> spi.version.equals(id)).findFirst();
+    }
+
+    /**
+     * Returns the Maven artifact coordinates for this builtin SPI.
+     *
+     * @return an unmodifiable list of Maven coordinate strings
+     */
+    public List<String> coordinates() {
+        return coordinates;
     }
 
     /**

@@ -57,6 +57,12 @@ public record CreateElementDeploymentRequest(
         Map<String, Map<String, Object>> pathAttributes,
 
         @Schema(description =
+                "Map of element paths to builtin SPI configurations. This allows for an individual SPI specification " +
+                "for each Element contained within the ELM file in the large object."
+        )
+        Map<String, List<String>> pathSpiBuiltins,
+
+        @Schema(description =
                 "Sets the state of the deployment. When creating, the creation will only take place if the " +
                 "deployment meets all the requirements. For example, it will not be possible to put the deployment " +
                 "in the ENABLED or DISABLED state if there is not enough code loaded to attempt to load an Element. " +

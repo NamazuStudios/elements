@@ -98,7 +98,7 @@ public interface ElementRuntimeService {
      *
      * @return the list of recommended loaders.
      */
-    List<ElementSpi> getRecommendedLoaders();
+    List<ElementSpi> getBuiltinSpis();
 
     /**
      * Unloads a transient deployment by ID.

@@ -28,6 +28,12 @@ public record ElementPathDefinition(
         List<String> apiArtifacts,
 
         @Schema(description =
+                "List of SPI (Service Provider Implementation) builtins. These provide the implementation of Element " +
+                "framework services."
+        )
+        List<String> spiBuiltins,
+
+        @Schema(description =
                 "List of SPI (Service Provider Implementation) artifact coordinates. These provide the " +
                 "implementation of Element framework services."
         )
@@ -51,6 +57,7 @@ public record ElementPathDefinition(
          */
         public ElementPathDefinition {
                 apiArtifacts = apiArtifacts == null ? null : List.copyOf(apiArtifacts);
+                spiBuiltins = spiBuiltins == null ? null : List.copyOf(spiBuiltins);
                 spiArtifacts = spiArtifacts == null ? null : List.copyOf(spiArtifacts);
                 elementArtifacts = elementArtifacts == null ? null : List.copyOf(elementArtifacts);
                 attributes = attributes == null ? null : Map.copyOf(attributes);

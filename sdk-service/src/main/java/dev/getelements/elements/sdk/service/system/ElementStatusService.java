@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
 import dev.getelements.elements.sdk.model.system.ElementMetadata;
 import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
+import dev.getelements.elements.sdk.model.system.ElementSpi;
 
 import java.util.List;
 
@@ -19,6 +20,13 @@ import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 @ElementServiceExport
 @ElementServiceExport(name = UNSCOPED)
 public interface ElementStatusService {
+
+    /**
+     * Gets all builtin SPIs.
+     *
+     * @return all builtin SPIs
+     */
+    List<ElementSpi> getAllBuiltinSpis();
 
     /**
      * Gets all system elements available to be deployed.

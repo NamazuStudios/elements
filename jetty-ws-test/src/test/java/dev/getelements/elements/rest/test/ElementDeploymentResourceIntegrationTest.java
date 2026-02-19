@@ -14,6 +14,7 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
@@ -62,10 +63,13 @@ public class ElementDeploymentResourceIntegrationTest {
         final var elementDefinition = new ElementPathDefinition(
                 "example",
                 List.of("com.example:api:1.0.0"),
+                null,
                 List.of("com.example:spi:1.0.0"),
                 null,
                 null
         );
+
+        final var pathSpiBuiltins = Map.of("example", List.of("DEFAULT"));
 
         final var request = new CreateElementDeploymentRequest(
                 null, // global deployment
@@ -74,6 +78,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
+                pathSpiBuiltins,
                 ElementDeploymentState.DISABLED
         );
 
@@ -96,6 +101,8 @@ public class ElementDeploymentResourceIntegrationTest {
         assertTrue(created.useDefaultRepositories());
         assertEquals(created.state(), ElementDeploymentState.DISABLED);
         assertEquals(created.version(), 0L);
+        assertEquals(created.pathSpiBuiltins(), pathSpiBuiltins,
+                "pathSpiBuiltins should round-trip correctly in create response");
 
         createdDeploymentId = created.id();
     }
@@ -105,6 +112,7 @@ public class ElementDeploymentResourceIntegrationTest {
         final var elementDefinition = new ElementPathDefinition(
                 "example",
                 List.of("com.example:api:2.0.0"),
+                null,
                 List.of("com.example:spi:2.0.0"),
                 List.of("com.example:element-impl:2.0.0"),
                 null
@@ -116,6 +124,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // packages
                 false,
                 List.of(),
+                null,
                 null,
                 ElementDeploymentState.UNLOADED
         );
@@ -239,10 +248,13 @@ public class ElementDeploymentResourceIntegrationTest {
         final var elementDefinition = new ElementPathDefinition(
                 "example",
                 List.of("com.example:api-updated:1.1.0"),
+                null,
                 List.of("com.example:spi-updated:1.1.0"),
                 null,
                 null
         );
+
+        final var updatedPathSpiBuiltins = Map.of("example", List.of("GUICE_7_0_0"));
 
         final var request = new UpdateElementDeploymentRequest(
                 List.of(elementDefinition),
@@ -250,6 +262,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
+                updatedPathSpiBuiltins,
                 ElementDeploymentState.ENABLED
         );
 
@@ -271,6 +284,8 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(updated.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
         assertEquals(updated.state(), ElementDeploymentState.ENABLED);
         assertEquals(updated.version(), 1L, "Version should be incremented after update");
+        assertEquals(updated.pathSpiBuiltins(), updatedPathSpiBuiltins,
+                "pathSpiBuiltins should be updated correctly");
     }
 
     @Test(
@@ -281,6 +296,7 @@ public class ElementDeploymentResourceIntegrationTest {
         final var elementDefinition = new ElementPathDefinition(
                 "example",
                 List.of(),
+                null,
                 List.of(),
                 List.of("com.example:element:1.0.0"),
                 null
@@ -291,6 +307,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // packages
                 false,
                 List.of(),
+                null,
                 null,
                 ElementDeploymentState.DISABLED
         );
@@ -357,6 +374,7 @@ public class ElementDeploymentResourceIntegrationTest {
         final var elementDefinition = new ElementPathDefinition(
                 "example",
                 List.of("com.example:api:1.0.0"),
+                null,
                 List.of("com.example:spi:1.0.0"),
                 null,
                 null
@@ -368,6 +386,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // packages
                 true,
                 List.of(),
+                null,
                 null,
                 ElementDeploymentState.DISABLED
         );

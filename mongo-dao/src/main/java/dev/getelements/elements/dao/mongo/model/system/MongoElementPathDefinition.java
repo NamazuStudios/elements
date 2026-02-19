@@ -13,6 +13,9 @@ public class MongoElementPathDefinition {
     private List<String> apiArtifacts;
 
     @Property
+    private List<String> spiBuiltins;
+
+    @Property
     private List<String> spiArtifacts;
 
     @Property
@@ -30,6 +33,14 @@ public class MongoElementPathDefinition {
 
     public void setApiArtifacts(List<String> apiArtifacts) {
         this.apiArtifacts = apiArtifacts;
+    }
+
+    public List<String> getSpiBuiltins() {
+        return spiBuiltins;
+    }
+
+    public void setSpiBuiltins(List<String> spiBuiltins) {
+        this.spiBuiltins = spiBuiltins;
     }
 
     public List<String> getSpiArtifacts() {

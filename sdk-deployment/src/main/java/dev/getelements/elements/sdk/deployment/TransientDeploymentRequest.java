@@ -307,6 +307,7 @@ public record TransientDeploymentRequest(
 
             private String path;
             private List<String> apiArtifacts = new ArrayList<>();
+            private List<String> spiBuiltins = new ArrayList<>();
             private List<String> spiArtifacts = new ArrayList<>();
             private List<String> elementArtifacts = new ArrayList<>();
             private Map<String, Object> attributes = new HashMap<>();
@@ -348,6 +349,28 @@ public record TransientDeploymentRequest(
              */
             public ElementPathDefinitionBuilder<ParentT> addApiArtifact(final String artifact) {
                 this.apiArtifacts.add(artifact);
+                return this;
+            }
+
+            /**
+             * Sets the SPI builtins list.
+             *
+             * @param spiBuiltins the SPI builtins list
+             * @return this builder
+             */
+            public ElementPathDefinitionBuilder<ParentT> spiBuiltins(final List<String> spiBuiltins) {
+                this.spiBuiltins = spiBuiltins != null ? new ArrayList<>(spiBuiltins) : new ArrayList<>();
+                return this;
+            }
+
+            /**
+             * Adds a SPI builtin name.
+             *
+             * @param builtin the SPI builtin name
+             * @return this builder
+             */
+            public ElementPathDefinitionBuilder<ParentT> addSpiBuiltin(final String builtin) {
+                this.spiBuiltins.add(builtin);
                 return this;
             }
 
@@ -449,6 +472,7 @@ public record TransientDeploymentRequest(
                 return new ElementPathDefinition(
                         path,
                         apiArtifacts.isEmpty() ? null : apiArtifacts,
+                        spiBuiltins.isEmpty() ? null : spiBuiltins,
                         spiArtifacts.isEmpty() ? null : spiArtifacts,
                         elementArtifacts.isEmpty() ? null : elementArtifacts,
                         attributes.isEmpty() ? null : attributes
@@ -477,6 +501,7 @@ public record TransientDeploymentRequest(
             private final Consumer<ElementPackageDefinition> consumer;
 
             private String elmArtifact;
+            private Map<String, List<String>> pathSpiBuiltins = new HashMap<>();
             private Map<String, List<String>> pathSpiClassPaths = new HashMap<>();
             private Map<String, Map<String, Object>> pathAttributes = new HashMap<>();
 
@@ -495,6 +520,49 @@ public record TransientDeploymentRequest(
              */
             public ElementPackageDefinitionBuilder<ParentT> elmArtifact(final String elmArtifact) {
                 this.elmArtifact = elmArtifact;
+                return this;
+            }
+
+            /**
+             * Sets the path SPI builtins map.
+             *
+             * @param pathSpiBuiltins the path SPI builtins map
+             * @return this builder
+             */
+            public ElementPackageDefinitionBuilder<ParentT> pathSpiBuiltins(
+                    final Map<String, List<String>> pathSpiBuiltins) {
+                this.pathSpiBuiltins = pathSpiBuiltins != null ?
+                        new HashMap<>(pathSpiBuiltins) : new HashMap<>();
+                return this;
+            }
+
+            /**
+             * Adds a path SPI builtin entry.
+             *
+             * @param path the element path
+             * @param builtins the SPI builtin names
+             * @return this builder
+             */
+            public ElementPackageDefinitionBuilder<ParentT> pathSpiBuiltin(
+                    final String path,
+                    final List<String> builtins) {
+                this.pathSpiBuiltins.put(path, builtins);
+                return this;
+            }
+
+            /**
+             * Adds a single builtin name to a path's SPI builtins.
+             *
+             * @param path the element path
+             * @param builtin the SPI builtin name to add
+             * @return this builder
+             */
+            public ElementPackageDefinitionBuilder<ParentT> addPathSpiBuiltin(
+                    final String path,
+                    final String builtin) {
+                this.pathSpiBuiltins
+                        .computeIfAbsent(path, k -> new ArrayList<>())
+                        .add(builtin);
                 return this;
             }
 
@@ -579,6 +647,7 @@ public record TransientDeploymentRequest(
             public ElementPackageDefinition build() {
                 return new ElementPackageDefinition(
                         elmArtifact,
+                        pathSpiBuiltins.isEmpty() ? null : pathSpiBuiltins,
                         pathSpiClassPaths.isEmpty() ? null : pathSpiClassPaths,
                         pathAttributes.isEmpty() ? null : pathAttributes
                 );

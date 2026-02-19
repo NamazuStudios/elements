@@ -213,6 +213,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     deploymentId,
                     request.application(),
                     null,
+                    null,
                     request.pathSpiClasspath(),
                     request.pathAttributes(),
                     request.elements(),
@@ -279,9 +280,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * @return the loaders
      */
     @Override
-    public List<ElementSpi> getRecommendedLoaders() {
-        return Stream.of(RecommendedLoaderSpi.values())
-                .map(RecommendedLoaderSpi::toElementSpi)
+    public List<ElementSpi> getBuiltinSpis() {
+        return Stream.of(BuiltinSpi.values())
+                .map(BuiltinSpi::toElementSpi)
                 .toList();
     }
 
@@ -713,6 +714,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             context.elementPaths().add(fileSystemRoot);
 
+            applyPathMappings(definition.pathSpiBuiltins(), definition.pathSpiClassPaths(), definition.pathAttributes(), fileSystem, context);
 
             context.logs().add("Successfully staged package ELM");
 
@@ -853,7 +855,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             context.elementPaths().add(fileSystemRoot);
             context.logs().add("Successfully staged ELM from LargeObject.");
 
-            applyPathMappings(deployment.pathSpiClassPaths(), deployment.pathAttributes(), fileSystem, context);
+            applyPathMappings(deployment.pathSpiBuiltins(), deployment.pathSpiClassPaths(), deployment.pathAttributes(), fileSystem, context);
 
         } catch (Exception ex) {
             context.logs().add("Failed to stage from LargeObject: " + ex.getMessage());
@@ -862,10 +864,24 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     }
 
     private void applyPathMappings(
+            final Map<String, List<String>> pathSpiBuiltins,
             final Map<String, List<String>> pathSpiClassPaths,
             final Map<String, Map<String, Object>> pathAttributes,
             final FileSystem fileSystem,
             final DeploymentContext context) {
+
+        if (pathSpiBuiltins != null) {
+            pathSpiBuiltins.forEach((path, names) -> {
+                final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
+                names.stream()
+                        .flatMap(name -> resolveBuiltinSpi(name, context).stream())
+                        .forEach(coord ->
+                                context.spiPaths()
+                                        .computeIfAbsent(fileSystemPath, k -> new ArrayList<>())
+                                        .add(coord)
+                        );
+            });
+        }
 
         if (pathSpiClassPaths != null) {
             pathSpiClassPaths.forEach((path, classPath) -> {
@@ -884,6 +900,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             });
         }
 
+    }
+
+    private List<String> resolveBuiltinSpi(final String name, final DeploymentContext context) {
+        try {
+            return BuiltinSpi.valueOf(name).coordinates();
+        } catch (IllegalArgumentException e) {
+            context.warnings().add("Unknown builtin SPI name: " + name);
+            return List.of();
+        }
     }
 
     /**

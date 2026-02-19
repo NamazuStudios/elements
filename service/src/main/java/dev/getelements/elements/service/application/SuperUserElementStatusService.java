@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
 import dev.getelements.elements.sdk.model.system.ElementMetadata;
 import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
+import dev.getelements.elements.sdk.model.system.ElementSpi;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import jakarta.inject.Inject;
@@ -23,6 +24,11 @@ public class SuperUserElementStatusService implements ElementStatusService {
     private ElementRuntimeService elementRuntimeService;
 
     private ElementContainerService elementContainerService;
+
+    @Override
+    public List<ElementSpi> getAllBuiltinSpis() {
+        return getElementRuntimeService().getBuiltinSpis();
+    }
 
     @Override
     public List<ElementMetadata> getAllSystemElements() {

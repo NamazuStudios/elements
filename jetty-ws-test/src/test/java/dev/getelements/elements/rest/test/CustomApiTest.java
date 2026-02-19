@@ -82,6 +82,7 @@ public class CustomApiTest {
                 .addElement(new ElementPathDefinition(
                         "rs",
                         List.of(),
+                        null,
                         GUICE_7_0_X.getAllCoordinates().toList(),
                         JAKARTA_RS.getAllCoordinates().toList(),
                         Map.of()

@@ -13,6 +13,9 @@ public class MongoElementPackageDefinition {
     private String elmArtifact;
 
     @Property
+    private Map<String, List<String>> pathSpiBuiltins;
+
+    @Property
     private Map<String, List<String>> pathSpiClassPaths;
 
     @Property
@@ -24,6 +27,14 @@ public class MongoElementPackageDefinition {
 
     public void setElmArtifact(String elmArtifact) {
         this.elmArtifact = elmArtifact;
+    }
+
+    public Map<String, List<String>> getPathSpiBuiltins() {
+        return pathSpiBuiltins;
+    }
+
+    public void setPathSpiBuiltins(Map<String, List<String>> pathSpiBuiltins) {
+        this.pathSpiBuiltins = pathSpiBuiltins;
     }
 
     public Map<String, List<String>> getPathSpiClassPaths() {
