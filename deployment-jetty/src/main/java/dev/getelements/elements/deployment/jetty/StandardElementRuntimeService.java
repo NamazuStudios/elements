@@ -775,6 +775,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 context.logs().add("Gathering " + definition.spiBuiltins().size() + " SPI builtin(s)");
 
                 for (final var name : definition.spiBuiltins()) {
+                    context.logs().add("Gathering Builtin: '%s'".formatted(name));
                     for (final var coordinate : resolveBuiltinSpi(name, context)) {
                         context.copyArtifactWithDependencies(coordinate, spiDir);
                     }
@@ -890,7 +891,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .flatMap(name -> resolveBuiltinSpi(name, context).stream())
                         .forEach(coord ->
                                 context.spiPaths()
-                                        .computeIfAbsent(fileSystemPath, k -> new ArrayList<>())
+                                        .computeIfAbsent(fileSystemPath, k -> new HashSet<>())
                                         .add(coord)
                         );
             });
@@ -900,7 +901,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             pathSpiClassPaths.forEach((path, classPath) -> {
                 final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
                 context.spiPaths()
-                        .computeIfAbsent(fileSystemPath, k -> new ArrayList<>())
+                        .computeIfAbsent(fileSystemPath, k -> new HashSet<>())
                         .addAll(classPath);
             });
         }

@@ -4,9 +4,11 @@ import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
+import org.jboss.shrinkwrap.resolver.api.ResolvedArtifact;
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
+import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,8 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         "org.eclipse.aether.transfer.MetadataNotFoundException"
     );
 
+    private static final Set<ScopeType> PERMITTED_SCOPES = Set.of(ScopeType.COMPILE, ScopeType.RUNTIME);
+
     @Override
     public Optional<ClassLoader> findClassLoader(final ClassLoader parent,
                                                  final Set<ArtifactRepository> repositories,
@@ -38,10 +42,16 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
         try {
 
-            files = configurableSystem(repositories)
+            final var artifacts = configurableSystem(repositories)
                     .resolve(coordinates)
                     .withTransitivity()
-                    .asFile();
+                    .asResolvedArtifact();
+
+            files = Stream.of(artifacts)
+                    .filter(a -> !a.isOptional())
+                    .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
+                    .map(ResolvedArtifact::asFile)
+                    .toArray(File[]::new);
 
         } catch (RuntimeException ex) {
             if (isNotFound(ex)) {
@@ -97,6 +107,8 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
         return Stream
                 .of(resolvedArtifacts)
+                .filter(a -> !a.isOptional())
+                .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
                 .map(CachingShrinkwrapElementArtifactLoader::toArtifact);
 
     }

@@ -37,7 +37,7 @@ record DeploymentContext(
         List<String> warnings,
         List<Throwable> errors,
         List<Path> elementPaths,
-        Map<Path, List<String>> spiPaths,
+        Map<Path, Set<String>> spiPaths,
         Map<Path, Attributes> attributePaths,
         ElementArtifactLoader artifactLoader,
         Set<ArtifactRepository> repositories,

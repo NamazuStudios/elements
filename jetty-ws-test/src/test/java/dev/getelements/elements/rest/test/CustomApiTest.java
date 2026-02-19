@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.system.ElementContainerStatus;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
+import dev.getelements.elements.sdk.model.system.ElementSpi;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -26,6 +27,7 @@ import java.util.Map;
 import static dev.getelements.elements.rest.test.TestUtils.TEST_API_ROOT;
 import static dev.getelements.elements.rest.test.TestUtils.TEST_APP_SERVE_RS_ROOT;
 import static dev.getelements.elements.sdk.model.Headers.SESSION_SECRET;
+import static dev.getelements.elements.sdk.test.TestElementArtifact.API;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -41,6 +43,8 @@ public class CustomApiTest {
     }
 
     private static final String MESSAGE_ENDPOINT = "/myapp/message";
+
+    private static final String OPENAPI_ENDPOINT = "/myapp/openapi.json";
 
     @Inject
     private Client client;
@@ -100,9 +104,9 @@ public class CustomApiTest {
                 .useDefaultRepositories(true)
                 .addElement(new ElementPathDefinition(
                         "rs",
+                        API.getAllCoordinates().toList(),
+                        List.of("DEFAULT"),
                         List.of(),
-                        null,
-                        GUICE_7_0_X.getAllCoordinates().toList(),
                         JAKARTA_RS.getAllCoordinates().toList(),
                         Map.of()
                 ))
@@ -218,6 +222,42 @@ public class CustomApiTest {
                 .anyMatch(element -> "dev.getelements.elements.sdk.test.element.rs".equals(element.definition().name()));
 
         Assert.assertTrue(found, "Expected element 'dev.getelements.elements.sdk.test.element.rs' not found in any container.");
+
+    }
+
+    @Test
+    public void testOpenApiSpecIsAvailable() {
+
+        final var response = client
+                .target(appServeRoot + OPENAPI_ENDPOINT)
+                .request(APPLICATION_JSON)
+                .get();
+
+        Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+
+        final var body = response.readEntity(String.class);
+        Assert.assertNotNull(body);
+        Assert.assertFalse(body.isBlank(), "Expected a non-empty OpenAPI specification.");
+
+    }
+
+    @Test
+    public void testBuiltinSpisAreReturned() {
+
+        final var spis = client
+                .target(apiRoot + "/elements/builtin_spi")
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superuserContext.getSessionSecret())
+                .get(new GenericType<List<ElementSpi>>() {});
+
+        Assert.assertNotNull(spis);
+        Assert.assertFalse(spis.isEmpty(), "Expected at least one builtin SPI to be returned.");
+        spis.forEach(spi -> {
+            Assert.assertNotNull(spi.id(), "SPI id must not be null");
+            Assert.assertNotNull(spi.version(), "SPI version must not be null");
+            Assert.assertNotNull(spi.coordinates(), "SPI coordinates must not be null");
+            Assert.assertFalse(spi.coordinates().isEmpty(), "SPI coordinates must not be empty");
+        });
 
     }
 

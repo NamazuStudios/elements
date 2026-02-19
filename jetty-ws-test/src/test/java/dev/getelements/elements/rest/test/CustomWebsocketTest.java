@@ -106,8 +106,8 @@ public class CustomWebsocketTest {
                 .addElement(new ElementPathDefinition(
                         "rs",
                         List.of(),
-                        null,
-                        GUICE_7_0_X.getAllCoordinates().toList(),
+                        List.of("DEFAULT"),
+                        List.of(),
                         JAKARTA_WS.getAllCoordinates().toList(),
                         Map.of()
                 ))
