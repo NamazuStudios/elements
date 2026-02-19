@@ -129,7 +129,7 @@ public interface ElementRuntimeService {
      * @param isTransient true if this is a transient (non-persistent) deployment
      * @param registry the {@link ElementRegistry} used to manage the Elements
      * @param elements the {@link Element}s loaded in this deployment
-     * @param tempFiles temporary files created during deployment loading
+     * @param deploymentFiles temporary files created during deployment loading
      * @param logs log messages from the loading process
      * @param errors errors encountered during loading
      */
@@ -139,7 +139,7 @@ public interface ElementRuntimeService {
             boolean isTransient,
             ElementRegistry registry,
             List<Element> elements,
-            List<Path> tempFiles,
+            List<Path> deploymentFiles,
             List<String> logs,
             List<Throwable> errors
     ) {
@@ -147,7 +147,7 @@ public interface ElementRuntimeService {
             logs = logs == null ? null : java.util.List.copyOf(logs);
             errors = errors == null ? null : java.util.List.copyOf(errors);
             elements = elements == null ? null : java.util.List.copyOf(elements);
-            tempFiles = tempFiles == null ? null : java.util.List.copyOf(tempFiles);
+            deploymentFiles = deploymentFiles == null ? null : java.util.List.copyOf(deploymentFiles);
         }
     }
 

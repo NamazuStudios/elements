@@ -7,8 +7,6 @@ import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,7 +29,7 @@ import static java.util.Objects.requireNonNull;
 record DeploymentContext(
         ElementDeployment deployment,
         MutableElementRegistry registry,
-        List<Path> tempFiles,
+        List<Path> deploymentFiles,
         List<FileSystem> fileSystems,
         List<String> logs,
         List<String> warnings,
@@ -111,7 +109,7 @@ record DeploymentContext(
         }
 
         final var spiTarget = temporaryFiles.createTempDirectory("spi");
-        tempFiles.add(spiTarget);
+        deploymentFiles.add(spiTarget);
 
         for (final var coordinates : spiClassPath) {
             try {
@@ -184,7 +182,7 @@ record DeploymentContext(
             final var destinationPath = targetDir.resolve(fileName);
             copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
             logs.add("Copied artifact: %s".formatted(fileName));
-            tempFiles.add(destinationPath);
+            deploymentFiles.add(destinationPath);
 
         }
 
@@ -218,7 +216,7 @@ record DeploymentContext(
     }
 
     /**
-     * Creates a temporary file with prefix and suffix. Logs the file to the {@link DeploymentContext#tempFiles()} such
+     * Creates a temporary file with prefix and suffix. Logs the file to the {@link DeploymentContext#deploymentFiles()} such
      * that it can be reported and later cleaned up.
      *
      * @param prefix the prefix
@@ -227,7 +225,7 @@ record DeploymentContext(
      */
     public Path createTempFile(final String prefix, final String suffix) {
         final var file = temporaryFiles.createTempFile(prefix, suffix);
-        tempFiles.add(file);
+        deploymentFiles.add(file);
         return file;
     }
 

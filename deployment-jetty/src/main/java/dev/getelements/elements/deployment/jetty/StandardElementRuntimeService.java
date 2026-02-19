@@ -443,7 +443,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 }
             }
 
-            for (final Path tempFile : context.tempFiles()) {
+            for (final Path tempFile : context.deploymentFiles()) {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException ioEx) {
@@ -1131,7 +1131,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             boolean isTransient,
             MutableElementRegistry registry,
             List<Element> elements,
-            List<Path> tempFiles,
+            List<Path> deploymentFiles,
             List<FileSystem> filesystems,
             List<String> logs,
             List<Throwable> errors
@@ -1139,7 +1139,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         public ActiveDeployment {
             elements = List.copyOf(elements);
-            tempFiles = List.copyOf(tempFiles);
+            deploymentFiles = List.copyOf(deploymentFiles);
             filesystems = List.copyOf(filesystems);
             logs = List.copyOf(logs);
             errors = List.copyOf(errors);
@@ -1158,7 +1158,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     registry,
                     elements,
-                    tempFiles,
+                    deploymentFiles,
                     logs,
                     errors
             );
@@ -1193,7 +1193,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     deploymentContext.registry(),
                     elements != null ? elements : List.of(),
-                    deploymentContext.tempFiles(),
+                    deploymentContext.deploymentFiles(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.errors()
@@ -1216,7 +1216,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     deploymentContext.registry(),
                     elements,
-                    deploymentContext.tempFiles(),
+                    deploymentContext.deploymentFiles(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.errors()
@@ -1235,7 +1235,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             }
 
             // Clean up temp files
-            for (final Path tempFile : tempFiles) {
+            for (final Path tempFile : deploymentFiles) {
                 try {
                     Files.deleteIfExists(tempFile);
                 } catch (IOException ex) {
