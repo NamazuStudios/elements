@@ -9,10 +9,7 @@ import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
-import dev.getelements.elements.sdk.model.system.ElementDeployment;
-import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
-import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
-import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
+import dev.getelements.elements.sdk.model.system.*;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
@@ -37,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
@@ -273,6 +271,18 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         }
 
         return unloaded;
+    }
+
+    /**
+     * Gets all recommended loaders.
+     *
+     * @return the loaders
+     */
+    @Override
+    public List<ElementSpi> getRecommendedLoaders() {
+        return Stream.of(RecommendedLoaderSpi.values())
+                .map(RecommendedLoaderSpi::toElementSpi)
+                .toList();
     }
 
     /**

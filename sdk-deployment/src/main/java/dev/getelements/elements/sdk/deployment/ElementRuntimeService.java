@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
+import dev.getelements.elements.sdk.model.system.ElementSpi;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -91,6 +92,13 @@ public interface ElementRuntimeService {
      * @return all active deployments.
      */
     List<RuntimeRecord> getActiveRuntimes();
+
+    /**
+     * Returns a list of recommended loaders SPI implementation.
+     *
+     * @return the list of recommended loaders.
+     */
+    List<ElementSpi> getRecommendedLoaders();
 
     /**
      * Unloads a transient deployment by ID.

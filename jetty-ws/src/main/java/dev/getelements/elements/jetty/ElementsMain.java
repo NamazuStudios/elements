@@ -2,6 +2,7 @@ package dev.getelements.elements.jetty;
 
 import com.google.inject.Guice;
 import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
+import dev.getelements.elements.sdk.SystemVersion;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -43,7 +44,7 @@ public class ElementsMain {
 
     private static void run(final OptionSet options) {
 
-        BuildPropertiesVersionService.logVersion();
+        SystemVersion.CURRENT.logVersion();
 
         final var services = servicesOptionSpec.values(options);
 

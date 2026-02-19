@@ -1,6 +1,7 @@
 package dev.getelements.elements.setup;
 
 import com.google.inject.Guice;
+import dev.getelements.elements.sdk.SystemVersion;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 import dev.getelements.elements.setup.commands.Root;
 import dev.getelements.elements.setup.guice.SetupCommandModule;
@@ -25,7 +26,7 @@ public class Setup {
      */
     public void run(final String[] args) throws Exception {
 
-        BuildPropertiesVersionService.logVersion();
+        SystemVersion.CURRENT.logVersion();
 
         final var injector = Guice.createInjector(
             new SetupCommonModule(),
