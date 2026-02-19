@@ -292,7 +292,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private void safeReconcile() {
         try {
             reconcile();
-        } catch (Exception ex) {
+        } catch (OutOfMemoryError oom) {
+            throw oom;
+        } catch (Throwable ex) {
             logger.error("Error during reconciliation", ex);
         }
     }
@@ -421,7 +423,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             // Return runtime record for event publishing (outside lock)
             return active.toRuntimeRecord();
 
-        } catch (Exception ex) {
+        } catch (LinkageError | Exception ex) {
 
             // Store failed deployment
             final var failedDeployment = ActiveDeployment.fromFailure(isTransient, elements, ex, context);
@@ -1203,7 +1205,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         public static ActiveDeployment fromFailure(final boolean isTransient,
                                                    final List<Element> elements,
-                                                   final Exception failureCause,
+                                                   final Throwable failureCause,
                                                    final DeploymentContext deploymentContext) {
 
             deploymentContext.logs().add("Deployment failed: %s".formatted(failureCause.getMessage()));

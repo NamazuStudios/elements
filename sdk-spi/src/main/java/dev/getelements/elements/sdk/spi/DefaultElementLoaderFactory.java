@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.*;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
-import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
+import dev.getelements.elements.sdk.ElementReflectionUtils;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.FieldInfo;

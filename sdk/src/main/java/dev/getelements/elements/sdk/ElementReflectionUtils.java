@@ -1,12 +1,12 @@
-package dev.getelements.elements.sdk.util.reflection;
+package dev.getelements.elements.sdk;
 
-import dev.getelements.elements.sdk.ElementStandardBeanProperties;
 import dev.getelements.elements.sdk.exception.SdkException;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 import static java.lang.String.format;
 
@@ -37,6 +37,16 @@ public class ElementReflectionUtils implements ElementStandardBeanProperties {
     }
 
     /**
+     * Gets the corresponding package-info {@link Class} from the supplied {@link Class}.
+     *
+     * @param cls the class
+     * @return the package-info {@link Class}
+     */
+    public Class<?> getPackageInfo(final Class<?> cls) {
+        return getPackageInfo(cls.getPackageName(), cls.getClassLoader());
+    }
+
+    /**
      * Gets the package-info {@link Class} for the supplied package name.
      *
      * @param name the package name
@@ -50,6 +60,49 @@ public class ElementReflectionUtils implements ElementStandardBeanProperties {
         } catch (ClassNotFoundException ex) {
             throw new SdkException(ex);
         }
+    }
+
+    /**
+     * Finds the package-info {@link Class} for the supplied package name, returning empty if none exists.
+     *
+     * @param name the package name
+     * @return an {@link Optional} containing the package-info {@link Class}, or empty if not found
+     */
+    public Optional<Class<?>> findPackageInfo(final String name) {
+        return findPackageInfo(name, getClass().getClassLoader());
+    }
+
+    /**
+     * Finds the corresponding package-info {@link Class} from the supplied {@link Class},
+     * returning empty if none exists.
+     *
+     * @param cls the class
+     * @return an {@link Optional} containing the package-info {@link Class}, or empty if not found
+     */
+    public Optional<Class<?>> findPackageInfo(final Class<?> cls) {
+        return findPackageInfo(cls.getPackageName(), cls.getClassLoader());
+    }
+
+    /**
+     * Finds the package-info {@link Class} for the supplied package name using the given classloader,
+     * returning empty if none exists.
+     *
+     * @param name the package name
+     * @param classLoader the {@link ClassLoader} to use
+     * @return an {@link Optional} containing the package-info {@link Class}, or empty if not found
+     */
+    public Optional<Class<?>> findPackageInfo(final String name, final ClassLoader classLoader) {
+
+        if (classLoader == null) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(classLoader.loadClass(format("%s.package-info", name)));
+        } catch (ClassNotFoundException ex) {
+            return Optional.empty();
+        }
+
     }
 
     /**
