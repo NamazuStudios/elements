@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>dev.getelements.elements</groupId>
+        <artifactId>eci-elements</artifactId>
+        <version>3.7.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>sdk-bom</artifactId>
+    <name>sdk-bom</name>
+    <packaging>pom</packaging>
+
+    <description>
+        Bill of Materials for all Namazu Elements SDK modules. Import this BOM to get consistent,
+        compatible versions of all SDK artifacts without specifying individual versions.
+    </description>
+
+    <dependencyManagement>
+        <dependencies>
+
+            <!-- Core SDK -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-dao</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Guice Integration -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- SPI -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-spi-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-spi-shrinkwrap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Optional SDK Extensions -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-cluster</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-deployment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-jakarta-rs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-local</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-local-maven</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-logback</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-mongo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Test Support -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-api</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-local-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-mongo-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Test Elements -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-a</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-b</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-rs</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-ws</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>
