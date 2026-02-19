@@ -769,6 +769,19 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             }
 
+            // Gather and place SPI builtin artifacts
+            if (definition.spiBuiltins() != null && !definition.spiBuiltins().isEmpty()) {
+
+                context.logs().add("Gathering " + definition.spiBuiltins().size() + " SPI builtin(s)");
+
+                for (final var name : definition.spiBuiltins()) {
+                    for (final var coordinate : resolveBuiltinSpi(name, context)) {
+                        context.copyArtifactWithDependencies(coordinate, spiDir);
+                    }
+                }
+
+            }
+
             // Gather and place SPI artifacts
             if (definition.spiArtifacts() != null && !definition.spiArtifacts().isEmpty()) {
 
@@ -886,7 +899,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         if (pathSpiClassPaths != null) {
             pathSpiClassPaths.forEach((path, classPath) -> {
                 final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
-                context.spiPaths().put(fileSystemPath, classPath);
+                context.spiPaths()
+                        .computeIfAbsent(fileSystemPath, k -> new ArrayList<>())
+                        .addAll(classPath);
             });
         }
 
