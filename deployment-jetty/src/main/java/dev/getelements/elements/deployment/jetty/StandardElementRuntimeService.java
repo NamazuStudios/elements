@@ -744,7 +744,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             // Generate unique subdirectory name
             final var elementPath = context
                     .createDeploymentDirectory()
-                    .resolve(definition.path() == null ? ELEMENT_DEFAULT_PATH : definition.path())
+                    .resolve(definition.path() == null || definition.path().isBlank()
+                            ? ELEMENT_DEFAULT_PATH
+                            : definition.path()
+                    )
                     .toAbsolutePath();
 
             createDirectories(elementPath);
