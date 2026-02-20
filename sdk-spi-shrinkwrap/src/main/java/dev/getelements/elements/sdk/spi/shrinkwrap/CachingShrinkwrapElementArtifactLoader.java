@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.spi.shrinkwrap;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
+import dev.getelements.elements.sdk.exception.SdkArtifactNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -98,7 +99,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
                         ex
                 );
 
-                return Stream.empty();
+                throw new SdkArtifactNotFoundException(ex);
 
             } else {
                 throw new SdkException(ex);
@@ -131,7 +132,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
                         ex
                 );
 
-                return Optional.empty();
+                throw new SdkArtifactNotFoundException(ex);
 
             } else {
                 throw new SdkException(ex);
