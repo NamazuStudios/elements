@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +48,9 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
   const [selectedDistinctItemName, setSelectedDistinctItemName] = useState<string>('');
   const [fungibleQuantity, setFungibleQuantity] = useState<string>('1');
   const [distinctMetadata, setDistinctMetadata] = useState<Array<{ key: string; value: string }>>([]);
+
+  const fungibleSelectionMade = useRef(false);
+  const distinctSelectionMade = useRef(false);
 
   // State for editing inventory
   const [editFungibleOpen, setEditFungibleOpen] = useState(false);
@@ -741,7 +744,12 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCreateFungibleOpen(false)}
+                onClick={() => {
+                  setCreateFungibleOpen(false);
+                  setSelectedFungibleItemId('');
+                  setSelectedFungibleItemName('');
+                  setFungibleQuantity('1');
+                }}
                 data-testid="button-cancel-fungible"
               >
                 Cancel
@@ -850,7 +858,12 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setCreateDistinctOpen(false)}
+                onClick={() => {
+                  setCreateDistinctOpen(false);
+                  setSelectedDistinctItemId('');
+                  setSelectedDistinctItemName('');
+                  setDistinctMetadata([]);
+                }}
                 data-testid="button-cancel-distinct"
               >
                 Cancel
@@ -1042,13 +1055,15 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
       <ItemSearchDialog
         open={fungibleItemSearchOpen}
         onOpenChange={(open) => {
-          setFungibleItemSearchOpen(open);
-          if (!open && !selectedFungibleItemId) {
-            // Reset if dialog closed without selection
+          if (!open && !fungibleSelectionMade.current) {
+            setSelectedFungibleItemId('');
             setSelectedFungibleItemName('');
           }
+          fungibleSelectionMade.current = false;
+          setFungibleItemSearchOpen(open);
         }}
         onSelect={(itemId, item) => {
+          fungibleSelectionMade.current = true;
           setSelectedFungibleItemId(itemId);
           setSelectedFungibleItemName(item.name || item.displayName || itemId);
         }}
@@ -1060,13 +1075,15 @@ export function InventoryViewer({ userId, username }: InventoryViewerProps) {
       <ItemSearchDialog
         open={distinctItemSearchOpen}
         onOpenChange={(open) => {
-          setDistinctItemSearchOpen(open);
-          if (!open && !selectedDistinctItemId) {
-            // Reset if dialog closed without selection
+          if (!open && !distinctSelectionMade.current) {
+            setSelectedDistinctItemId('');
             setSelectedDistinctItemName('');
           }
+          distinctSelectionMade.current = false;
+          setDistinctItemSearchOpen(open);
         }}
         onSelect={(itemId, item) => {
+          distinctSelectionMade.current = true;
           setSelectedDistinctItemId(itemId);
           setSelectedDistinctItemName(item.name || item.displayName || itemId);
         }}

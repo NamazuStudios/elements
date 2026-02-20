@@ -54,11 +54,11 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
     staleTime: Infinity, // Config shouldn't change during runtime
   });
   
-  // Fetch all applications with installed elements from the Elements backend
+  // Fetch all element containers (applications with installed elements) from the Elements backend
   const { data: applicationStatuses } = useQuery<ApplicationStatus[]>({
-    queryKey: ['/api/proxy/api/rest/elements/application'],
+    queryKey: ['/api/rest/elements/container'],
     enabled: true,
-    staleTime: 30000, // Cache for 30 seconds
+    staleTime: 30000,
   });
 
   // Fix element URI by replacing localhost with actual backend URL
@@ -127,6 +127,18 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                 >
                   <Icons.Box className="w-4 h-4" />
                   <span>Core Elements</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Element Deployments */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setLocation('/element-deployments')}
+                  isActive={location === '/element-deployments'}
+                  data-testid="link-element-deployments"
+                >
+                  <Icons.Rocket className="w-4 h-4" />
+                  <span>Deployments</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 

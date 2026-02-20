@@ -58,11 +58,6 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'id', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
       { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
       { name: 'description', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'gitBranch', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'scriptRepoUrl', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'httpDocumentationUrl', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
-      { name: 'httpDocumentationUiUrl', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
-      { name: 'httpTunnelEndpointUrl', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
       { name: 'attributes', type: 'object', required: false, isArray: false, isMap: true },
       { name: 'applicationConfiguration', type: 'object', required: false, isArray: true, isMap: false },
     ],
@@ -72,8 +67,6 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     fields: [
       { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
       { name: 'description', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'gitBranch', type: 'string', required: false, isArray: false, isMap: false },
-      { name: 'scriptRepoUrl', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'attributes', type: 'object', required: false, isArray: false, isMap: true },
       { name: 'applicationConfiguration', type: 'object', required: false, isArray: true, isMap: false },
     ],
@@ -126,7 +119,6 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     name: 'MatchmakingApplicationConfiguration',
     fields: [
       { name: 'id', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
-      { name: 'success', type: 'object', required: false, isArray: false, isMap: false, description: 'The callback definition for when a successful match is made' },
       { name: 'matchmaker', type: 'object', required: false, isArray: false, isMap: false, description: 'The matchmaker service reference to use' },
       { name: 'maxProfiles', type: 'number', required: false, isArray: false, isMap: false, description: 'The maximum number of profiles that can be matched in a single match' },
       { name: 'metadata', type: 'object', required: false, isArray: false, isMap: false, description: 'Metadata for this matchmaking configuration, copied to the match when created' },
@@ -442,7 +434,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
   'metadata/MetadataUpdateRequest': {
     name: 'MetadataUpdateRequest',
     fields: [
-      // Note: name field is NOT included in update - it cannot be updated
+      { name: 'name', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadataSpec', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: false, isArray: false, isMap: false },
       { name: 'accessLevel', type: 'enum', required: false, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The minimum level of access required to view this metadata' },
@@ -518,6 +510,18 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'count', type: 'number', required: false, isArray: false, isMap: false, readOnly: true },
       { name: 'expiry', type: 'number', required: false, isArray: false, isMap: false },
       { name: 'created', type: 'number', required: false, isArray: false, isMap: false, readOnly: true },
+    ],
+  },
+
+  // Receipt models
+  'receipt/CreateReceiptRequest': {
+    name: 'CreateReceiptRequest',
+    fields: [
+      { name: 'originalTransactionId', type: 'string', required: true, isArray: false, isMap: false, description: 'The id of the original transaction as provided by the payment processor.' },
+      { name: 'schema', type: 'string', required: true, isArray: false, isMap: false, description: 'The id of the receipt provider in reverse-dns notation, e.g. com.company.platform' },
+      { name: 'userId', type: 'string', required: true, isArray: false, isMap: false, description: 'The database id, name, or email of the User associated with this receipt.' },
+      { name: 'purchaseTime', type: 'number', required: true, isArray: false, isMap: false, description: 'The time that the purchase was made (ms since Unix epoch).' },
+      { name: 'body', type: 'string', required: true, isArray: false, isMap: false, description: 'The string representation of the raw receipt data.' },
     ],
   },
 };

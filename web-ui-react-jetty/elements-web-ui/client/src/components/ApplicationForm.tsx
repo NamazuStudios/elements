@@ -57,13 +57,13 @@ const iosConfigSchema = z.object({
 const matchmakingConfigSchema = z.object({
   ...commonConfigFields,
   '@class': z.literal('dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration'),
-  success: z.any().optional(),
   matchmaker: z.any().optional(),
   maxProfiles: z.number({
     required_error: 'Max Profiles is required',
     invalid_type_error: 'Max Profiles must be a number',
   }).min(2, 'Max Profiles must be 2 or greater'),
   metadata: z.any().optional(),
+  metadataSpec: z.any().optional(),
 });
 
 const oculusConfigSchema = z.object({
@@ -89,16 +89,11 @@ const createApplicationSchema = (mode: 'create' | 'update') => z.object({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  gitBranch: z.string().optional(),
-  scriptRepoUrl: z.string().optional(),
   attributes: z.record(z.any()).optional(),
   // Only validate applicationConfiguration in create mode
   applicationConfiguration: mode === 'create' 
     ? z.array(applicationConfigSchema).optional()
     : z.any().optional(),
-  httpDocumentationUrl: z.string().optional(),
-  httpDocumentationUiUrl: z.string().optional(),
-  httpTunnelEndpointUrl: z.string().optional(),
 });
 
 type ApplicationFormData = z.infer<ReturnType<typeof createApplicationSchema>>;
@@ -236,12 +231,6 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
       name: initialData.name || '',
       description: initialData.description || '',
       attributes: initialData.attributes || {},
-      // Only include system fields if they exist in initialData (update mode)
-      ...(initialData.gitBranch && { gitBranch: initialData.gitBranch }),
-      ...(initialData.scriptRepoUrl && { scriptRepoUrl: initialData.scriptRepoUrl }),
-      ...(initialData.httpDocumentationUrl && { httpDocumentationUrl: initialData.httpDocumentationUrl }),
-      ...(initialData.httpDocumentationUiUrl && { httpDocumentationUiUrl: initialData.httpDocumentationUiUrl }),
-      ...(initialData.httpTunnelEndpointUrl && { httpTunnelEndpointUrl: initialData.httpTunnelEndpointUrl }),
     },
   });
 
@@ -250,7 +239,7 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
     console.log('ApplicationForm mode:', mode);
     
     // System-generated read-only fields that should never be sent
-    const systemFields = ['gitBranch', 'scriptRepoUrl', 'httpDocumentationUrl', 'httpDocumentationUiUrl', 'httpTunnelEndpointUrl'];
+    const systemFields: string[] = [];
     
     const cleanedData = Object.fromEntries(
       Object.entries(data).filter(([key, value]) => {
@@ -316,109 +305,6 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
               </CardContent>
             </Card>
 
-            {mode === 'update' && (watchedValues.gitBranch || watchedValues.scriptRepoUrl || watchedValues.httpDocumentationUrl || watchedValues.httpDocumentationUiUrl || watchedValues.httpTunnelEndpointUrl) && (
-              <Card>
-                <CardContent className="pt-6 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3">System Information (Read-only)</h3>
-                    <p className="text-sm text-muted-foreground mb-4">These values are automatically assigned by the system</p>
-                  </div>
-
-                  {watchedValues.gitBranch && (
-                    <div className="space-y-2">
-                      <Label>Git Branch</Label>
-                      <Input
-                        value={watchedValues.gitBranch}
-                        readOnly
-                        className="bg-muted"
-                        data-testid="input-gitBranch-readonly"
-                      />
-                    </div>
-                  )}
-
-                  {watchedValues.scriptRepoUrl && (
-                    <div className="space-y-2">
-                      <Label>Script Repository URL</Label>
-                      <Input
-                        value={watchedValues.scriptRepoUrl}
-                        readOnly
-                        className="bg-muted"
-                        data-testid="input-scriptRepoUrl-readonly"
-                      />
-                    </div>
-                  )}
-
-                  {watchedValues.httpDocumentationUrl && (
-                    <div className="space-y-2">
-                      <Label>HTTP Documentation URL</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={watchedValues.httpDocumentationUrl}
-                          readOnly
-                          className="flex-1 bg-muted"
-                          data-testid="input-httpDocumentationUrl"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => window.open(watchedValues.httpDocumentationUrl, '_blank')}
-                          data-testid="button-open-httpDocumentationUrl"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {watchedValues.httpDocumentationUiUrl && (
-                    <div className="space-y-2">
-                      <Label>HTTP Documentation UI URL</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={watchedValues.httpDocumentationUiUrl}
-                          readOnly
-                          className="flex-1 bg-muted"
-                          data-testid="input-httpDocumentationUiUrl"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => window.open(watchedValues.httpDocumentationUiUrl, '_blank')}
-                          data-testid="button-open-httpDocumentationUiUrl"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {watchedValues.httpTunnelEndpointUrl && (
-                    <div className="space-y-2">
-                      <Label>HTTP Tunnel Endpoint URL</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={watchedValues.httpTunnelEndpointUrl}
-                          readOnly
-                          className="flex-1 bg-muted"
-                          data-testid="input-httpTunnelEndpointUrl"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => window.open(watchedValues.httpTunnelEndpointUrl, '_blank')}
-                          data-testid="button-open-httpTunnelEndpointUrl"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
 
             {/* Application Configurations Section - Only available in update mode */}
             {mode === 'update' && (

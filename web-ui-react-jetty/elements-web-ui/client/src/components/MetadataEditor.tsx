@@ -32,17 +32,26 @@ interface MetadataSpec {
 interface MetadataEditorProps {
   value?: Record<string, any>;
   specId?: string;
-  onChange: (metadata: Record<string, any>, specId: string) => void;
+  initialSpec?: any;
+  onChange: (metadata: Record<string, any>, specId: string, spec?: any) => void;
   mode: 'create' | 'update';
   onValidationChange?: (isValid: boolean, errors: string[]) => void;
 }
 
-export function MetadataEditor({ value, specId, onChange, mode, onValidationChange }: MetadataEditorProps) {
-  const [selectedSpecId, setSelectedSpecId] = useState<string>('');
+export function MetadataEditor({ value, specId, initialSpec, onChange, mode, onValidationChange }: MetadataEditorProps) {
+  const [selectedSpecId, setSelectedSpecId] = useState<string>(() => {
+    if (specId) {
+      if (typeof specId === 'object' && specId !== null && 'id' in specId) {
+        return (specId as { id: string }).id || '';
+      }
+      return specId;
+    }
+    return '';
+  });
   const [metadataValues, setMetadataValues] = useState<Record<string, any>>(value || {});
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [specSearchOpen, setSpecSearchOpen] = useState(false);
-  const [selectedSpecName, setSelectedSpecName] = useState<string>('');
+  const [selectedSpecName, setSelectedSpecName] = useState<string>(initialSpec?.name || '');
 
   // Fetch available metadata specs using proxy
   const { data: specsResponse, isLoading: specsLoading } = useQuery<{ objects: MetadataSpec[] }>({
@@ -77,6 +86,17 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
       }
     }
   }, [specId]);
+
+  // When specId is missing but initialSpec has a name, resolve by name from available specs
+  useEffect(() => {
+    if (!selectedSpecId && initialSpec?.name && specs.length > 0) {
+      const match = specs.find(s => s.name === initialSpec.name);
+      if (match) {
+        setSelectedSpecId(match.id);
+        setSelectedSpecName(match.name);
+      }
+    }
+  }, [selectedSpecId, initialSpec, specs]);
 
   // Initialize metadata values from prop (only on mount or when value substantially changes)
   useEffect(() => {
@@ -183,8 +203,8 @@ export function MetadataEditor({ value, specId, onChange, mode, onValidationChan
   // Notify parent of metadata changes (separate from validation to avoid loops)
   useEffect(() => {
     // Always notify parent of metadata changes, even without a spec
-    onChange(metadataValues, selectedSpecId || '');
-  }, [metadataValues, selectedSpecId]);
+    onChange(metadataValues, selectedSpecId || '', selectedSpec || undefined);
+  }, [metadataValues, selectedSpecId, selectedSpec]);
 
   const handleSpecChange = (newSpecId: string) => {
     if (newSpecId === 'none') {

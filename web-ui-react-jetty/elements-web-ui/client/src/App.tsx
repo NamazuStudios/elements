@@ -18,6 +18,7 @@ import InstalledElements from "@/pages/InstalledElements";
 import DynamicApiExplorer from "@/pages/DynamicApiExplorer";
 import ElementApiExplorer from "@/pages/ElementApiExplorer";
 import CoreElements from "@/pages/CoreElements";
+import ElementDeployments from "@/pages/ElementDeployments";
 import NotFound from "@/pages/not-found";
 
 function ResourceRoute() {
@@ -100,6 +101,9 @@ function Routes() {
         </Route>
         <Route path="/core-elements">
           <CoreElements />
+        </Route>
+        <Route path="/element-deployments">
+          <ElementDeployments />
         </Route>
         <Route path="/element-api-explorer">
           <ElementApiExplorer />

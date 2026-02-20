@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Plus, Pencil, Trash2, RefreshCw, FileJson, FormInput, Calendar, AlertCircle, Copy, Search, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, FileJson, FormInput, Calendar, AlertCircle, Copy, Search, ChevronLeft, ChevronRight, Package, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getResourceSchema, type ModelSchema } from '@/lib/schema-parser';
@@ -57,6 +57,8 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   const [schema, setSchema] = useState<ModelSchema | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [draftRefreshKey, setDraftRefreshKey] = useState(0);
+  const [viewReceiptOpen, setViewReceiptOpen] = useState(false);
+  const [viewReceiptData, setViewReceiptData] = useState<any>(null);
   const [searchInput, setSearchInput] = useState(''); // Input value (not debounced)
   const [searchTerm, setSearchTerm] = useState(''); // Actual search query (debounced)
   const [filterUserId, setFilterUserId] = useState(''); // User ID filter for Receipts
@@ -765,6 +767,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           return filteredKeys;
         }
         
+        // Custom column filtering for Receipts resource
+        if (resourceName === 'Receipts') {
+          const filteredKeys = keys.filter(k => k !== 'body');
+          return filteredKeys;
+        }
+
         // Custom column filtering for Smart Contracts resource
         if (resourceName === 'Smart Contracts') {
           // Remove addresses and metadata columns
@@ -1015,6 +1023,13 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                           }
                         }
                         
+                        // Custom rendering for Receipts resource
+                        if (resourceName === 'Receipts') {
+                          if (col === 'user' && typeof cellValue === 'object' && cellValue !== null) {
+                            cellValue = cellValue?.id || '';
+                          }
+                        }
+
                         // Custom rendering for Smart Contracts resource
                         if (resourceName === 'Smart Contracts') {
                           if (col === 'vault' && typeof cellValue === 'object' && cellValue !== null) {
@@ -1059,6 +1074,19 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                       })}
                       <TableCell className="w-[140px] sticky right-0 bg-background border-l z-10">
                         <div className="flex items-center justify-center gap-1">
+                    {resourceName === 'Receipts' && !item._isDraft && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setViewReceiptData(item);
+                          setViewReceiptOpen(true);
+                        }}
+                        data-testid={`button-view-receipt-${idx}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
                     {resourceName === 'Schedules' && !item._isDraft && (
                       <Button
                         variant="ghost"
@@ -1578,6 +1606,30 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
               <DialogTitle>Inventory for {selectedUser.name || selectedUser.id}</DialogTitle>
             </DialogHeader>
             <InventoryViewer userId={selectedUser.id} username={selectedUser.name || selectedUser.id} />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {viewReceiptOpen && viewReceiptData && (
+        <Dialog open={viewReceiptOpen} onOpenChange={(open) => {
+          setViewReceiptOpen(open);
+          if (!open) setViewReceiptData(null);
+        }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Receipt Details</DialogTitle>
+              <DialogDescription>Full receipt information</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {Object.entries(viewReceiptData).filter(([key]) => key !== '_isDraft').map(([key, value]) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-muted-foreground">{formatColumnName(key)}</span>
+                  <pre className="text-sm bg-muted p-2 rounded-md overflow-x-auto whitespace-pre-wrap break-all" data-testid={`receipt-field-${key}`}>
+                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value ?? '')}
+                  </pre>
+                </div>
+              ))}
+            </div>
           </DialogContent>
         </Dialog>
       )}

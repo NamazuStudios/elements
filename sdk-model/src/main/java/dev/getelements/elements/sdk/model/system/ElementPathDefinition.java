@@ -40,7 +40,7 @@ public record ElementPathDefinition(
         List<String> spiArtifacts,
 
         @Schema(description =
-                "List of Element implementation artifact coordinates. These contain the actual Element code. "
+                "List of Element implementation artifact coordinates. These contain the actual Element code."
         )
         List<String> elementArtifacts,
 

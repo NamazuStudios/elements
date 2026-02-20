@@ -6,7 +6,8 @@ import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle, RotateCcw } from 'lucide-react';
+import { Loader2, AlertCircle, RotateCcw, Search, X } from 'lucide-react';
+import { UserSearchDialog } from './UserSearchDialog';
 import { FormFieldGenerator } from './FormFieldGenerator';
 import { MetadataEditor } from './MetadataEditor';
 import { MetadataSpecPropertyEditor } from './MetadataSpecPropertyEditor';
@@ -46,6 +47,8 @@ export function DynamicResourceForm({
   const [showDraftRestore, setShowDraftRestore] = useState(false);
   const [metadataValid, setMetadataValid] = useState(true);
   const [metadataValidationErrors, setMetadataValidationErrors] = useState<string[]>([]);
+  const [userPickerOpen, setUserPickerOpen] = useState(false);
+  const [selectedUserName, setSelectedUserName] = useState('');
 
   // Draft management
   const { saveDraft, loadDraft, clearDraft, hasDraft } = useFormDraft({
@@ -688,6 +691,67 @@ export function DynamicResourceForm({
       return null;
     }
     
+    // For Receipts, use a user picker for the userId field
+    if (resourceName === 'Receipts' && field.name === 'userId') {
+      return (
+        <FormField
+          key={field.name}
+          control={form.control}
+          name={field.name}
+          render={({ field: formField }) => (
+            <FormItem data-testid="form-field-userId">
+              <FormLabel>
+                User {field.required && <span className="text-destructive">*</span>}
+              </FormLabel>
+              <FormControl>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 justify-start gap-2"
+                    onClick={() => setUserPickerOpen(true)}
+                    data-testid="button-select-user"
+                  >
+                    <Search className="w-4 h-4" />
+                    {formField.value
+                      ? (selectedUserName || formField.value)
+                      : 'Select a user...'}
+                  </Button>
+                  {formField.value && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        formField.onChange('');
+                        setSelectedUserName('');
+                      }}
+                      data-testid="button-clear-user"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </FormControl>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">{field.description}</p>
+              )}
+              <FormMessage />
+              <UserSearchDialog
+                open={userPickerOpen}
+                onOpenChange={setUserPickerOpen}
+                onSelect={(userId, user) => {
+                  formField.onChange(userId);
+                  setSelectedUserName(user?.name || user?.email || userId);
+                }}
+                currentUserId={formField.value}
+              />
+            </FormItem>
+          )}
+        />
+      );
+    }
+
     // For resources with metadata fields, use MetadataEditor for the metadata field
     if (hasMetadataFields && field.name === 'metadata') {
       return (
@@ -879,18 +943,9 @@ export function DynamicResourceForm({
 
   return (
     <Card className="flex flex-col">
-      <CardHeader className="flex-shrink-0">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <CardTitle>{mode === 'create' ? 'Create' : 'Update'} {resourceName}</CardTitle>
-            <CardDescription>
-              {mode === 'create' 
-                ? `Fill in the form below to create a new ${resourceName.toLowerCase().replace(/s$/, '')}`
-                : `Update the fields below to modify this auth scheme`
-              }
-            </CardDescription>
-          </div>
-          {showDraftRestore && (
+      {showDraftRestore && (
+        <CardHeader className="flex-shrink-0">
+          <div className="flex items-start justify-end gap-4">
             <Button
               type="button"
               variant="outline"
@@ -902,13 +957,13 @@ export function DynamicResourceForm({
               <RotateCcw className="w-4 h-4 mr-2" />
               Restore Draft
             </Button>
-          )}
-        </div>
-      </CardHeader>
+          </div>
+        </CardHeader>
+      )}
       <CardContent className="flex-1 overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col h-full">
-            <div className="space-y-4 pb-4">
+            <div className="space-y-4 pt-4 pb-4">
               {(() => {
                 // For resources with metadata fields, ensure metadataSpec field appears before metadata field
                 if (hasMetadataFields) {
