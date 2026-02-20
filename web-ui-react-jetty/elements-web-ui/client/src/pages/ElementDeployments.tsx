@@ -24,7 +24,7 @@ interface ElementArtifactRepository {
 interface ElementPathDefinition {
   path: string;
   apiArtifacts?: string[];
-  spiBuiltins?: string;
+  spiBuiltins?: string[];
   spiArtifacts?: string[];
   elementArtifacts?: string[];
   attributes?: Record<string, any>;
@@ -112,7 +112,7 @@ function deploymentToFormData(d: ElementDeployment): FormData {
     elements: (d.elements || []).map(e => ({
       path: e.path || '',
       apiArtifacts: e.apiArtifacts || [],
-      spiBuiltins: e.spiBuiltins || '',
+      spiBuiltins: Array.isArray(e.spiBuiltins) ? e.spiBuiltins : (e.spiBuiltins ? [e.spiBuiltins] : []),
       spiArtifacts: e.spiArtifacts || [],
       elementArtifacts: e.elementArtifacts || [],
       attributes: e.attributes || {},
@@ -363,9 +363,10 @@ export default function ElementDeployments() {
   };
 
   const mapElements = (els: ElementPathDefinition[]) => els.map(e => {
-    const el: any = { path: e.path };
+    const el: any = {};
+    if (e.path && e.path.trim()) el.path = e.path;
     if (e.apiArtifacts && e.apiArtifacts.length > 0) el.apiArtifacts = e.apiArtifacts.filter(a => a.trim());
-    if (e.spiBuiltins && e.spiBuiltins.trim()) el.spiBuiltins = e.spiBuiltins;
+    if (e.spiBuiltins && e.spiBuiltins.length > 0) el.spiBuiltins = e.spiBuiltins;
     if (e.spiArtifacts && e.spiArtifacts.length > 0) el.spiArtifacts = e.spiArtifacts.filter(a => a.trim());
     if (e.elementArtifacts && e.elementArtifacts.length > 0) el.elementArtifacts = e.elementArtifacts.filter(a => a.trim());
     if (e.attributes && Object.keys(e.attributes).length > 0) el.attributes = e.attributes;
@@ -1315,50 +1316,78 @@ function PathKeyValueMapEditor({
   );
 }
 
-function SpiBuiltinSelect({
+function SpiBuiltinEditor({
   value,
   onChange,
   available,
   loading,
   testIdPrefix,
 }: {
-  value: string;
-  onChange: (val: string) => void;
+  value: string[];
+  onChange: (val: string[]) => void;
   available: ElementSpi[];
   loading: boolean;
   testIdPrefix: string;
 }) {
+  const predefinedIds = available.map(s => s.id);
+  const selectedPredefined = value.find(v => predefinedIds.includes(v)) || '';
+  const customEntries = value.filter(v => !predefinedIds.includes(v));
+
+  const onPredefinedChange = (id: string) => {
+    const withoutPredefined = value.filter(v => !predefinedIds.includes(v));
+    if (id) {
+      onChange([id, ...withoutPredefined]);
+    } else {
+      onChange(withoutPredefined);
+    }
+  };
+
+  const onCustomChange = (vals: string[]) => {
+    const predefined = value.filter(v => predefinedIds.includes(v));
+    onChange([...predefined, ...vals]);
+  };
+
   return (
-    <div className="space-y-1">
-      <Label className="text-xs">SPI Builtin</Label>
-      {loading ? (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="w-3 h-3 animate-spin" />
-          Loading available SPIs...
-        </div>
-      ) : available.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic">No builtin SPIs available from the server.</p>
-      ) : (
-        <Select
-          value={value || '__none__'}
-          onValueChange={(v) => onChange(v === '__none__' ? '' : v)}
-        >
-          <SelectTrigger data-testid={`${testIdPrefix}-trigger`}>
-            <SelectValue placeholder="Select a builtin SPI" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">None</SelectItem>
-            {available.map((spi) => (
-              <SelectItem key={spi.id} value={spi.id} data-testid={`${testIdPrefix}-option-${spi.id}`}>
-                {spi.id}{spi.description ? ` — ${spi.description}` : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-      <p className="text-xs text-muted-foreground">
-        Framework-provided SPI implementation to use for this element path.
-      </p>
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <Label className="text-xs">SPI Builtin</Label>
+        {loading ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Loading available SPIs...
+          </div>
+        ) : available.length === 0 ? (
+          <p className="text-xs text-muted-foreground italic">No builtin SPIs available from the server.</p>
+        ) : (
+          <Select
+            value={selectedPredefined || '__none__'}
+            onValueChange={(v) => onPredefinedChange(v === '__none__' ? '' : v)}
+          >
+            <SelectTrigger data-testid={`${testIdPrefix}-trigger`}>
+              <SelectValue placeholder="Select a builtin SPI" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">None</SelectItem>
+              {available.map((spi) => (
+                <SelectItem key={spi.id} value={spi.id} data-testid={`${testIdPrefix}-option-${spi.id}`}>
+                  {spi.id}{spi.description ? ` — ${spi.description}` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Framework-provided SPI implementation to use for this element path.
+        </p>
+      </div>
+      <ArtifactListEditor
+        label="Additional SPI Builtins (optional)"
+        values={customEntries}
+        onChange={onCustomChange}
+        placeholder="custom-spi-builtin"
+        description="Additional builtin SPI names beyond the predefined selection above."
+        testIdPrefix={`${testIdPrefix}-custom`}
+      />
     </div>
   );
 }
@@ -1378,7 +1407,7 @@ function ElementDefinitionEditor({
     onChange([...elements, {
       path: '',
       apiArtifacts: [],
-      spiBuiltins: availableSpis.length > 0 ? availableSpis[0].id : '',
+      spiBuiltins: availableSpis.some(s => s.id === 'DEFAULT') ? ['DEFAULT'] : [],
       spiArtifacts: [],
       elementArtifacts: [],
       attributes: {},
@@ -1426,7 +1455,7 @@ function ElementDefinitionEditor({
               </Button>
             </div>
             <div className="space-y-1">
-              <Label htmlFor={`el-path-${i}`} className="text-xs">Path</Label>
+              <Label htmlFor={`el-path-${i}`} className="text-xs">Path (optional)</Label>
               <Input
                 id={`el-path-${i}`}
                 value={el.path}
@@ -1439,8 +1468,8 @@ function ElementDefinitionEditor({
                 Single directory name where this element is deployed. Must not contain "/" or "\".
               </p>
             </div>
-            <SpiBuiltinSelect
-              value={el.spiBuiltins || ''}
+            <SpiBuiltinEditor
+              value={el.spiBuiltins || []}
               onChange={(val) => updateElement(i, { ...el, spiBuiltins: val })}
               available={availableSpis}
               loading={spisLoading}
