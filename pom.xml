@@ -115,6 +115,7 @@
         <module>sdk-local-maven</module>
         <module>sdk-dao</module>
         <module>sdk-deployment</module>
+        <module>sdk-element-standard</module>
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>

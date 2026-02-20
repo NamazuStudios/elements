@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>${rootArtifactId}</artifactId>
+        <groupId>${groupId}</groupId>
+        <version>${version}</version>
+    </parent>
+
+    <artifactId>${artifactId}</artifactId>
+    <version>${version}</version>
+
+    <name>API For Element ${groupId}:${artifactId}-${version}</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>classified-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>${api.classifier}</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <!--
+        In any given Deployment, API artifacts attach to a common classpath. To avoid dependency conflicts and other
+        related problems, we strongly recommend that the dependency graph of an Element API is as lean as absolutely
+        possible. The API interfaces focus on interfaces, plain DTOs (POJO beans or record types), and helper classes that
+        depend only on the core Elements API and the Java standard APIs. The Namazu Elements runtime provides various
+        standard APIs like jakarta.inject, jakarta.validation, jakarta.rs, jakarta.ws etc. Refer to the Namazu Elements
+        manual for what is specifically provided.
+        -->
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>

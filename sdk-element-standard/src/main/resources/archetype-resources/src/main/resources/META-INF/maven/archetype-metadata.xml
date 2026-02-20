@@ -1,0 +1,32 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8"?>
+<archetype-descriptor
+        name="basic"
+        xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0 http://maven.apache.org/xsd/archetype-descriptor-1.0.0.xsd">
+
+    <fileSet filtered="true" packaged="false">
+        <directory/>
+        <includes>
+            <include>pom.xml</include>
+        </includes>
+    </fileSet>
+
+    <fileSet filtered="true" packaged="false">
+        <directory>api</directory>
+        <includes>
+            <include>pom.xml</include>
+        </includes>
+    </fileSet>
+
+    <fileSet filtered="true" packaged="false">
+        <directory>element</directory>
+        <includes>
+            <include>pom.xml</include>
+        </includes>
+    </fileSet>
+
+</archetype-descriptor>
