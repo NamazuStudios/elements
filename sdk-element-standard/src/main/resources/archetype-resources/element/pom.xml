@@ -91,6 +91,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
                 <executions>
                     <!--
                         Copies dependent artifacts carrying the "element-api" classifier that belong to this
@@ -179,11 +180,15 @@
 
             <!--
                 Attaches the .elm archive to the build so it is installed and deployed alongside
-                the standard jar artifact.
+                the standard jar artifact. After mvn install the artifact is available in the
+                local Maven repository as:
+                    com.example.element:element:1.0-SNAPSHOT:elm
+                and can be published to a remote repository with mvn deploy.
             -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>attach-elm</id>

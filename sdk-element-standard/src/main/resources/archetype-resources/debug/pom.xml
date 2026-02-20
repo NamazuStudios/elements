@@ -15,6 +15,13 @@
     <version>${version}</version>
     <name>${artifactId}</name>
 
+    <!--
+        Only include the local runtime and never include your pom. The LocalSDK is just a way to run Namazu Elements is
+        just a thin wrapper around a fully configured instance of Namazu Elements. The dependencies here should only be
+        the ones you would use in a deployment environment. THe configuration here should almost never need any changes
+        to a majority of Element authors.
+    -->
+
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>

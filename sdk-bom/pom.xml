@@ -210,28 +210,24 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test</artifactId>
                 <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test-api</artifactId>
                 <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-local-test</artifactId>
                 <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-mongo-test</artifactId>
                 <version>${project.version}</version>
-                <scope>test</scope>
             </dependency>
 
         </dependencies>
