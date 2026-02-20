@@ -10,6 +10,9 @@ public interface AuthSchemes {
      */
     String AUTH_BEARER = "auth_bearer";
 
+    /**
+     * Specifies the session_secret scheme used with the Elements-SessionSecret: headers.
+     */
     String SESSION_SECRET = "session_secret";
 
 }

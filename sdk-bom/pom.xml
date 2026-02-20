@@ -65,6 +65,12 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>${guice.version}</version>
+            </dependency>
+
             <!-- SPI -->
 
             <dependency>
@@ -115,14 +121,12 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-local</artifactId>
                 <version>${project.version}</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-local-maven</artifactId>
                 <version>${project.version}</version>
-                <scope>provided</scope>
             </dependency>
 
             <dependency>
@@ -136,6 +140,67 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-mongo</artifactId>
                 <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Builtin Library Support -->
+
+            <dependency>
+                <groupId>jakarta.websocket</groupId>
+                <artifactId>jakarta.websocket-client-api</artifactId>
+                <version>${jakarta.websocket.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${jakarta.validation.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.websocket</groupId>
+                <artifactId>jakarta.websocket-all</artifactId>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.ws.rs</groupId>
+                <artifactId>jakarta.ws.rs-api</artifactId>
+                <version>${jakarta.ws.rs.api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.websocket</groupId>
+                <artifactId>jakarta.websocket-api</artifactId>
+                <version>${jakarta.websocket.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>${jakarta.inject.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-jaxrs2-jakarta</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
                 <scope>provided</scope>
             </dependency>
 
