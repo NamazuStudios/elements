@@ -148,6 +148,7 @@ public class MetadataApiTest {
         request.setMetadataSpec(workingMetadataSpec);
         request.setMetadata(metadata);
         request.setAccessLevel(User.Level.USER);
+        request.setName(workingMetadata.getName() + "_updated");
 
         final var response = client
                 .target(format("%s/metadata/%s", apiRoot, workingMetadata.getId()))
@@ -161,8 +162,8 @@ public class MetadataApiTest {
 
         assertNotNull(metadataObject);
         assertNotNull(metadataObject.getId());
-        assertEquals(User.Level.USER, metadataObject.getAccessLevel());
-        assertEquals("test_metadata", metadataObject.getName());
+        assertEquals(request.getAccessLevel(), metadataObject.getAccessLevel());
+        assertEquals(request.getName(), metadataObject.getName());
         assertEquals(metadata, metadataObject.getMetadata());
         assertEquals(workingMetadataSpec, metadataObject.getMetadataSpec());
 

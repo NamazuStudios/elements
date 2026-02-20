@@ -101,7 +101,7 @@ public interface RewardIssuanceDao {
     InventoryItem redeem(final RewardIssuance rewardIssuance);
 
     /**
-     * Deltes a {@link RewardIssuance} with the supplied id.
+     * Deletes a {@link RewardIssuance} with the supplied id.
      *
      * @param id the id
      */

@@ -45,6 +45,7 @@ public class SuperUserMetadataService implements MetadataService {
 
         final var metadata = new Metadata();
         metadata.setId(metadataId);
+        metadata.setName(updateMetadataRequest.getName());
         metadata.setMetadata(updateMetadataRequest.getMetadata());
         metadata.setMetadataSpec(updateMetadataRequest.getMetadataSpec());
         metadata.setAccessLevel(updateMetadataRequest.getAccessLevel());

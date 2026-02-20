@@ -20,6 +20,7 @@ import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.model.schema.MetadataSpecPropertyType.*;
@@ -128,7 +129,7 @@ public class MongoMetadataDaoTest {
         metadataUpdate.setId(metadata.getId());
         metadataUpdate.setMetadataSpec(metadata.getMetadataSpec());
         metadataUpdate.setAccessLevel(metadata.getAccessLevel());
-        metadataUpdate.setName("dkfhasakdsfhaks");
+        metadataUpdate.setName(UUID.randomUUID().toString());
 
         final var map = metadata.getMetadata();
         map.put("UpdateKey", "value7");
@@ -137,11 +138,15 @@ public class MongoMetadataDaoTest {
 
         final var updatedMetadata = getMetadataDao().updateMetadata(metadataUpdate);
 
-        //Name shouldn't be updatable
-        assertNotEquals(updatedMetadata.getName(), metadataUpdate.getName());
+        assertEquals(updatedMetadata.getName(), metadataUpdate.getName());
         assertEquals(updatedMetadata.getAccessLevel(), metadataUpdate.getAccessLevel());
         assertEquals(updatedMetadata.getMetadata().size(), metadataUpdate.getMetadata().size());
         assertEquals(updatedMetadata.getMetadata().get("UpdateKey"), metadataUpdate.getMetadata().get("UpdateKey"));
+
+        metadataList.stream().filter(m -> m.getId().equals(updatedMetadata.getId())).findFirst().ifPresent(m -> {
+            m.setMetadata(updatedMetadata.getMetadata());
+            m.setName(updatedMetadata.getName());
+        });
     }
 
     @Test(groups = "fetch", dependsOnGroups = "update", dataProvider = "intermediateMetadataDataProvider")
@@ -150,8 +155,8 @@ public class MongoMetadataDaoTest {
         final var deserializedItem = fetched.getMetadata().get("ItemKey");
         final var mapper = new ObjectMapper();
         final var serializedItem =  mapper.convertValue(deserializedItem, Item.class);
-        fetched.getMetadata().put("ItemKey", serializedItem);
 
+        assertTrue(serializedItem.getClass().isAssignableFrom(Item.class));
         assertEquals(fetched, metadata);
     }
 

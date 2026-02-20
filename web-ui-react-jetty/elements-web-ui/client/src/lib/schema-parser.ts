@@ -268,6 +268,7 @@ export async function getResourceSchema(
     'Matchmaking': 'matchmaking',
     'Notifications': 'notification',
     'Settings': 'setting',
+    'Receipts': 'receipt',
   };
   
   // Map resource names to Java model names
@@ -295,6 +296,7 @@ export async function getResourceSchema(
     'Matchmaking': 'Matchmaking',
     'Notifications': 'Notification',
     'Settings': 'Setting',
+    'Receipts': 'Receipt',
   };
   
   const resourcePath = resourcePathMap[resourceName];
@@ -305,12 +307,20 @@ export async function getResourceSchema(
     return null;
   }
   
-  // Try specific request model first
+  // Try specific request model first (suffix pattern: e.g. UserCreateRequest)
   const requestSuffix = operation === 'create' ? 'CreateRequest' : 'UpdateRequest';
   const requestModel = await fetchJavaModel(resourcePath, `${baseModelName}${requestSuffix}`);
   
   if (requestModel) {
     return requestModel;
+  }
+
+  // Try prefix pattern (e.g. CreateReceiptRequest)
+  const requestPrefix = operation === 'create' ? 'Create' : 'Update';
+  const prefixModel = await fetchJavaModel(resourcePath, `${requestPrefix}${baseModelName}Request`);
+
+  if (prefixModel) {
+    return prefixModel;
   }
   
   // Fall back to base model
