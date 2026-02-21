@@ -23,6 +23,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-test-api</artifactId>
+            <classifier>${api.classifier}</classifier>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>jakarta.websocket</groupId>
             <artifactId>jakarta.websocket-api</artifactId>
             <scope>provided</scope>
@@ -33,5 +40,139 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+
+            <!--
+                This run of the maven-dependency-plugin builds the ELM file containing the Element formatted in
+                the specific layout the loader understands.
+            -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <!--
+                        Copies dependent artifacts carrying the "element-api" classifier that belong to this
+                        project's groupId into the "api" directory of the staging area. These are the API jars
+                        exported to other Elements.
+                    -->
+                    <execution>
+                        <id>elm-copy-api-deps</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${elm.staging.dir}/api</outputDirectory>
+                            <includeGroupIds>${project.groupId}</includeGroupIds>
+                            <includeClassifiers>${api.classifier}</includeClassifiers>
+                            <prependGroupId>true</prependGroupId>
+                        </configuration>
+                    </execution>
+                    <!--
+                        Copies all non-provided dependencies into the "lib" directory of the staging area.
+                        These are the runtime libraries bundled with the Element.
+                    -->
+                    <execution>
+                        <id>elm-copy-lib-deps</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${elm.staging.dir}/lib</outputDirectory>
+                            <excludeScope>provided</excludeScope>
+                            <prependGroupId>true</prependGroupId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <!--
+                        Stages compiled classes and src/main/resources contents into the "classpath" directory.
+                        Runs in prepare-package so the staging area is complete before the archive is created.
+                    -->
+                    <execution>
+                        <id>elm-stage-classpath</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy todir="${elm.staging.dir}/classpath" failonerror="false">
+                                    <fileset dir="${project.build.outputDirectory}" erroronmissingdir="false" includes="**/*"/>
+                                </copy>
+                                <copy todir="${elm.staging.dir}/classpath" failonerror="false">
+                                    <fileset dir="${basedir}/src/main/resources" erroronmissingdir="false" includes="**/*"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!--
+                        Creates the .elm archive from the fully staged directory. Ensures all three top-level
+                        directories exist so the archive structure is always consistent.
+                    -->
+                    <execution>
+                        <id>elm-create-archive</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${elm.staging.dir}/api"/>
+                                <mkdir dir="${elm.staging.dir}/lib"/>
+                                <mkdir dir="${elm.staging.dir}/classpath"/>
+                                <zip destfile="${elm.staging.dir}.elm" basedir="${elm.staging.dir}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Attaches the .elm archive to the build so it is installed and deployed alongside
+                the standard jar artifact. After mvn install the artifact is available in the
+                local Maven repository as:
+                    com.example.element:element:1.0-SNAPSHOT:elm
+                and can be published to a remote repository with mvn deploy.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-elm</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${elm.staging.dir}.elm</file>
+                                    <type>elm</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <properties>
+        <elm.staging.dir>${project.build.directory}/${project.groupId}.${project.artifactId}-${project.version}</elm.staging.dir>
+    </properties>
 
 </project>
