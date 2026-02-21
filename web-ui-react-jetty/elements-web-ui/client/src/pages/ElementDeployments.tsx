@@ -12,9 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
-import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, RefreshCw, X, Upload, HardDrive, Package, Database, FileUp, Check } from 'lucide-react';
-
-type DeploymentType = 'artifact' | 'package' | 'largeObject' | null;
+import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, RefreshCw, X, Upload, HardDrive, Package, Database, Check, Sparkles } from 'lucide-react';
 
 interface ElementArtifactRepository {
   id: string;
@@ -227,10 +225,10 @@ export default function ElementDeployments() {
   const [selectedDeployment, setSelectedDeployment] = useState<ElementDeployment | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...emptyFormData });
   const [wizardStep, setWizardStep] = useState(0);
-  const [deploymentType, setDeploymentType] = useState<DeploymentType>(null);
   const [elmUploadDialogOpen, setElmUploadDialogOpen] = useState(false);
   const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any } | null>(null);
-  const [wizardCreatedElm, setWizardCreatedElm] = useState<{ deploymentId: string; elmId: string } | null>(null);
+  const [wizardCreatedDeployment, setWizardCreatedDeployment] = useState<{ deploymentId: string; elmId?: string } | null>(null);
+  const [featuresDialogOpen, setFeaturesDialogOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery<PaginatedResponse>({
     queryKey: ['/api/rest/elements/deployment', { offset, count, search }],
@@ -250,19 +248,17 @@ export default function ElementDeployments() {
     },
     onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/deployment'] });
-      if (created?.elm?.id && deploymentType === 'largeObject') {
-        setWizardCreatedElm({ deploymentId: created.id, elmId: created.elm.id });
-        setWizardStep(4);
-        toast({ title: 'Deployment Created', description: 'You can now upload the .elm file, or skip this step.' });
-      } else if (created?.elm?.id) {
-        setCreateDialogOpen(false);
-        setElmUploadTarget({ deploymentId: created.id, elm: created.elm });
-        setElmUploadDialogOpen(true);
-        toast({ title: 'Deployment Created', description: 'Now you can upload the .elm file.' });
-      } else {
-        setCreateDialogOpen(false);
-        toast({ title: 'Success', description: 'Deployment created successfully' });
-      }
+      setWizardCreatedDeployment({
+        deploymentId: created.id,
+        elmId: created?.elm?.id,
+      });
+      setWizardStep(3);
+      toast({
+        title: 'Deployment Created',
+        description: created?.elm?.id
+          ? 'You can now upload the .elm file, or skip this step.'
+          : 'Deployment created successfully. You can close this dialog.',
+      });
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message || 'Failed to create deployment', variant: 'destructive' });
@@ -346,8 +342,7 @@ export default function ElementDeployments() {
   const openCreateDialog = () => {
     setFormData({ ...emptyFormData, elements: [], packages: [], repositories: [] });
     setWizardStep(0);
-    setDeploymentType(null);
-    setWizardCreatedElm(null);
+    setWizardCreatedDeployment(null);
     setCreateDialogOpen(true);
   };
 
@@ -381,16 +376,13 @@ export default function ElementDeployments() {
     return pk;
   });
 
-  const buildBody = (typeOverride?: DeploymentType) => {
-    const type = typeOverride || null;
+  const buildBody = () => {
     const body: any = {
       state: formData.state,
       useDefaultRepositories: formData.useDefaultRepositories,
     };
-    const includeElements = !type || type === 'artifact';
-    const includePackages = !type || type === 'package';
-    if (includeElements) body.elements = mapElements(formData.elements);
-    if (includePackages) body.packages = mapPackages(formData.packages);
+    if (formData.elements.length > 0) body.elements = mapElements(formData.elements);
+    if (formData.packages.length > 0) body.packages = mapPackages(formData.packages);
     body.repositories = formData.repositories.filter(r => r.id.trim() || r.url.trim());
     if (formData.pathAttributes && Object.keys(formData.pathAttributes).length > 0) {
       body.pathAttributes = formData.pathAttributes;
@@ -402,7 +394,7 @@ export default function ElementDeployments() {
   };
 
   const handleCreate = () => {
-    const body = buildBody(deploymentType);
+    const body = buildBody();
     body.state = 'ENABLED';
     if (formData.appNameOrId.trim()) {
       body.applicationNameOrId = formData.appNameOrId.trim();
@@ -442,10 +434,16 @@ export default function ElementDeployments() {
               Manage Element deployment configurations
             </p>
           </div>
-          <Button onClick={openCreateDialog} data-testid="button-create-deployment">
-            <Plus className="w-4 h-4 mr-2" />
-            New Deployment
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setFeaturesDialogOpen(true)} data-testid="button-view-features">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Features
+            </Button>
+            <Button onClick={openCreateDialog} data-testid="button-create-deployment">
+              <Plus className="w-4 h-4 mr-2" />
+              New Deployment
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -605,28 +603,23 @@ export default function ElementDeployments() {
       <Dialog open={createDialogOpen} onOpenChange={(open) => {
         setCreateDialogOpen(open);
         if (!open) {
-          setWizardCreatedElm(null);
+          setWizardCreatedDeployment(null);
           setWizardStep(0);
-          setDeploymentType(null);
         }
       }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Element Deployment</DialogTitle>
             <DialogDescription>
-              {wizardStep === 0 && 'Choose how you want to deploy your Elements.'}
-              {wizardStep === 1 && 'Configure the specifics for your chosen deployment type.'}
-              {wizardStep === 2 && 'Set common deployment options.'}
-              {wizardStep === 3 && 'Review your deployment configuration before creating.'}
-              {wizardStep === 4 && 'Your deployment has been created. Upload your .elm file now, or do it later.'}
+              {wizardStep === 0 && 'Add element definitions and/or package configurations for your deployment.'}
+              {wizardStep === 1 && 'Set common deployment options.'}
+              {wizardStep === 2 && 'Review your deployment configuration before creating.'}
+              {wizardStep === 3 && 'Your deployment has been created.'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex items-center gap-1 mb-2" data-testid="wizard-stepper">
-            {(deploymentType === 'largeObject'
-              ? ['Type', 'Configure', 'Settings', 'Review', 'Upload']
-              : ['Type', 'Configure', 'Settings', 'Review']
-            ).map((label, i, arr) => (
+            {['Configure', 'Settings', 'Review', 'Upload'].map((label, i, arr) => (
               <div key={label} className="flex items-center gap-1 flex-1">
                 <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0 ${
                   i < wizardStep ? 'bg-primary text-primary-foreground' :
@@ -642,67 +635,17 @@ export default function ElementDeployments() {
           </div>
 
           {wizardStep === 0 && (
-            <div className="space-y-3" data-testid="wizard-step-type">
-              <div className="grid gap-3">
-                <Card
-                  className={`cursor-pointer transition-colors ${deploymentType === 'artifact' ? 'border-primary ring-1 ring-primary' : 'hover-elevate'}`}
-                  onClick={() => setDeploymentType('artifact')}
-                  data-testid="card-type-artifact"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Database className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
-                      <div>
-                        <p className="font-medium text-sm">Maven Artifact Definitions</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Specify Maven artifact coordinates (group:artifact:version). Elements fetches the JARs from Maven Central automatically. Best for open-source Elements published to Maven.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card
-                  className={`cursor-pointer transition-colors ${deploymentType === 'package' ? 'border-primary ring-1 ring-primary' : 'hover-elevate'}`}
-                  onClick={() => setDeploymentType('package')}
-                  data-testid="card-type-package"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Package className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
-                      <div>
-                        <p className="font-medium text-sm">ELM Package from Maven</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Deploy a pre-packaged ELM artifact from Maven Central. The ELM contains bundled elements with per-path SPI and attribute configuration.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card
-                  className={`cursor-pointer transition-colors ${deploymentType === 'largeObject' ? 'border-primary ring-1 ring-primary' : 'hover-elevate'}`}
-                  onClick={() => setDeploymentType('largeObject')}
-                  data-testid="card-type-large-object"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <FileUp className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
-                      <div>
-                        <p className="font-medium text-sm">Upload ELM File</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Upload your own .elm file directly. No Maven required. Best for custom game backend code that isn't published anywhere.
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="space-y-4" data-testid="wizard-step-configure">
+              <WizardConfigStep
+                formData={formData}
+                setFormData={setFormData}
+              />
             </div>
           )}
 
           {wizardStep === 1 && (
-            <div className="space-y-4" data-testid="wizard-step-configure">
-              <WizardConfigStep
-                deploymentType={deploymentType!}
+            <div className="space-y-4" data-testid="wizard-step-settings">
+              <WizardSettingsStep
                 formData={formData}
                 setFormData={setFormData}
               />
@@ -710,79 +653,83 @@ export default function ElementDeployments() {
           )}
 
           {wizardStep === 2 && (
-            <div className="space-y-4" data-testid="wizard-step-settings">
-              <WizardSettingsStep
-                formData={formData}
-                setFormData={setFormData}
-                deploymentType={deploymentType!}
-              />
-            </div>
-          )}
-
-          {wizardStep === 3 && (
             <div className="space-y-4" data-testid="wizard-step-review">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline">{
-                  deploymentType === 'artifact' ? 'Maven Artifact Definitions' :
-                  deploymentType === 'package' ? 'ELM Package from Maven' :
-                  'Upload ELM File'
-                }</Badge>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                {formData.elements.length > 0 && (
+                  <Badge variant="outline">{formData.elements.length} Element Definition{formData.elements.length !== 1 ? 's' : ''}</Badge>
+                )}
+                {formData.packages.length > 0 && (
+                  <Badge variant="outline">{formData.packages.length} Package{formData.packages.length !== 1 ? 's' : ''}</Badge>
+                )}
                 {formData.appNameOrId && (
                   <Badge variant="secondary">App: {formData.appNameOrId}</Badge>
                 )}
               </div>
               <ScrollArea className="h-[50vh] w-full rounded-md border">
                 <pre className="p-4 text-xs font-mono whitespace-pre-wrap" data-testid="text-create-json-preview">
-                  {JSON.stringify((() => { const b = buildBody(deploymentType); b.state = 'ENABLED'; if (formData.appNameOrId.trim()) b.applicationNameOrId = formData.appNameOrId; return b; })(), null, 2)}
+                  {JSON.stringify((() => { const b = buildBody(); b.state = 'ENABLED'; if (formData.appNameOrId.trim()) b.applicationNameOrId = formData.appNameOrId; return b; })(), null, 2)}
                 </pre>
               </ScrollArea>
             </div>
           )}
 
-          {wizardStep === 4 && wizardCreatedElm && (
+          {wizardStep === 3 && (
             <div className="space-y-4" data-testid="wizard-step-upload">
-              <div className="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
-                <HardDrive className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
-                <div className="flex-1 min-w-0 space-y-1 text-sm">
-                  <div className="text-muted-foreground" data-testid="text-wizard-elm-deployment-id">
-                    Deployment: <span className="font-mono font-medium text-foreground">{wizardCreatedElm.deploymentId}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate" data-testid="text-wizard-elm-object-id">
-                    Large Object ID: {wizardCreatedElm.elmId}
+              {wizardCreatedDeployment && (
+                <div className="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
+                  <HardDrive className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0 space-y-1 text-sm">
+                    <div className="text-muted-foreground" data-testid="text-wizard-deployment-id">
+                      Deployment: <span className="font-mono font-medium text-foreground">{wizardCreatedDeployment.deploymentId}</span>
+                    </div>
+                    {wizardCreatedDeployment.elmId && (
+                      <div className="text-xs text-muted-foreground truncate" data-testid="text-wizard-elm-object-id">
+                        Large Object ID: {wizardCreatedDeployment.elmId}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-              <ElmDropZone
-                onFile={(file) => handleElmFileUpload(file, wizardCreatedElm.elmId)}
-                uploading={elmUploadMutation.isPending}
-                testIdPrefix="wizard-elm"
-              />
-              <p className="text-xs text-muted-foreground">
-                This step is optional. You can also upload the .elm file later from the edit dialog.
-              </p>
+              )}
+              {wizardCreatedDeployment?.elmId ? (
+                <>
+                  <ElmDropZone
+                    onFile={(file) => handleElmFileUpload(file, wizardCreatedDeployment.elmId!)}
+                    uploading={elmUploadMutation.isPending}
+                    testIdPrefix="wizard-elm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Upload your .elm file now, or skip and do it later from the edit dialog.
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No ELM file is associated with this deployment. You can upload one later from the edit dialog if needed.
+                </p>
+              )}
             </div>
           )}
 
           <DialogFooter className="gap-2">
-            {wizardStep > 0 && wizardStep < 4 && (
+            {wizardStep > 0 && wizardStep < 3 && (
               <Button variant="outline" onClick={() => setWizardStep(s => s - 1)} data-testid="button-wizard-back">
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Back
               </Button>
             )}
             <div className="flex-1" />
-            {wizardStep < 4 && (
+            {wizardStep < 3 && (
               <Button variant="outline" onClick={() => setCreateDialogOpen(false)} data-testid="button-cancel-create">
                 Cancel
               </Button>
             )}
-            {wizardStep < 3 && (
+            {wizardStep < 2 && (
               <Button
                 onClick={() => setWizardStep(s => s + 1)}
                 disabled={
-                  (wizardStep === 0 && !deploymentType) ||
-                  (wizardStep === 1 && deploymentType === 'artifact' && formData.elements.length === 0) ||
-                  (wizardStep === 1 && deploymentType === 'package' && (formData.packages.length === 0 || formData.packages.some(p => !p.elmArtifact.trim())))
+                  wizardStep === 0 && (
+                    (formData.elements.length === 0 && formData.packages.length === 0) ||
+                    formData.packages.some(p => !p.elmArtifact.trim())
+                  )
                 }
                 data-testid="button-wizard-next"
               >
@@ -790,7 +737,7 @@ export default function ElementDeployments() {
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             )}
-            {wizardStep === 3 && (
+            {wizardStep === 2 && (
               <Button
                 onClick={handleCreate}
                 disabled={createMutation.isPending || formHasErrors}
@@ -800,16 +747,16 @@ export default function ElementDeployments() {
                 Create Deployment
               </Button>
             )}
-            {wizardStep === 4 && (
+            {wizardStep === 3 && (
               <Button
                 variant="outline"
                 onClick={() => {
                   setCreateDialogOpen(false);
-                  setWizardCreatedElm(null);
+                  setWizardCreatedDeployment(null);
                 }}
                 data-testid="button-wizard-done"
               >
-                {elmUploadMutation.isSuccess ? 'Done' : 'Skip for Now'}
+                {elmUploadMutation.isSuccess ? 'Done' : wizardCreatedDeployment?.elmId ? 'Skip for Now' : 'Done'}
               </Button>
             )}
           </DialogFooter>
@@ -953,7 +900,66 @@ export default function ElementDeployments() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FeaturesDialog open={featuresDialogOpen} onOpenChange={setFeaturesDialogOpen} />
     </div>
+  );
+}
+
+interface ElementFeature {
+  name: string;
+  description: string;
+}
+
+function FeaturesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { data: features, isLoading } = useQuery<ElementFeature[]>({
+    queryKey: ['/api/rest/elements/features'],
+    queryFn: async () => {
+      return apiClient.request<ElementFeature[]>('/api/rest/elements/features');
+    },
+    enabled: open,
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Element Features</DialogTitle>
+          <DialogDescription>
+            Permitted features of the system that can be exposed to Elements.
+          </DialogDescription>
+        </DialogHeader>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : !features || features.length === 0 ? (
+          <div className="py-6 text-center text-sm text-muted-foreground">
+            No features available.
+          </div>
+        ) : (
+          <ScrollArea className="max-h-[400px]">
+            <div className="space-y-2 pr-2 overflow-x-auto">
+              {features.map((feature, idx) => (
+                <Card key={feature.name || idx} data-testid={`card-feature-${idx}`}>
+                  <CardContent className="p-3">
+                    <p className="font-mono text-sm font-medium whitespace-nowrap" data-testid={`text-feature-name-${idx}`}>{feature.name}</p>
+                    {feature.description && (
+                      <p className="text-xs text-muted-foreground mt-1" data-testid={`text-feature-desc-${idx}`}>{feature.description}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-close-features">
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1678,12 +1684,186 @@ function RepositoryEditor({
   );
 }
 
+function ElementDefinitionSubDialog({
+  open,
+  onOpenChange,
+  element,
+  onSave,
+  availableSpis,
+  spisLoading,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  element: ElementPathDefinition;
+  onSave: (el: ElementPathDefinition) => void;
+  availableSpis: ElementSpi[];
+  spisLoading: boolean;
+}) {
+  const [draft, setDraft] = useState<ElementPathDefinition>(element);
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setDraft({ ...element });
+  }
+  prevOpenRef.current = open;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <DialogHeader>
+          <DialogTitle>Element Definition</DialogTitle>
+          <DialogDescription>
+            Configure the classpath and artifacts for an Element to deploy.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Path (optional)</Label>
+            <Input
+              value={draft.path}
+              onChange={(e) => setDraft({ ...draft, path: e.target.value })}
+              placeholder="my-element"
+              className="font-mono text-xs"
+              data-testid="input-subdialog-element-path"
+            />
+            <p className="text-xs text-muted-foreground">
+              Single directory name where this element is deployed. Must not contain "/" or "\".
+            </p>
+          </div>
+          <SpiBuiltinEditor
+            value={draft.spiBuiltins || []}
+            onChange={(val) => setDraft({ ...draft, spiBuiltins: val })}
+            available={availableSpis}
+            loading={spisLoading}
+            testIdPrefix="subdialog-el-spi-builtin"
+          />
+          <ArtifactListEditor
+            label="SPI Artifacts (optional)"
+            values={draft.spiArtifacts || []}
+            onChange={(vals) => setDraft({ ...draft, spiArtifacts: vals })}
+            placeholder="com.example:spi-artifact:1.0"
+            testIdPrefix="subdialog-el-spi-art"
+          />
+          <ArtifactListEditor
+            label="Element Artifacts *"
+            values={draft.elementArtifacts || []}
+            onChange={(vals) => setDraft({ ...draft, elementArtifacts: vals })}
+            placeholder="com.example:element-artifact:1.0"
+            description="Element implementation artifact coordinates."
+            testIdPrefix="subdialog-el-elem"
+          />
+          <ArtifactListEditor
+            label="API Artifacts (optional)"
+            values={draft.apiArtifacts || []}
+            onChange={(vals) => setDraft({ ...draft, apiArtifacts: vals })}
+            placeholder="com.example:api-artifact:1.0"
+            testIdPrefix="subdialog-el-api"
+          />
+          <KeyValueEditor
+            value={draft.attributes || {}}
+            onChange={(attrs) => setDraft({ ...draft, attributes: attrs })}
+            label="Attributes"
+            testIdPrefix="subdialog-el-attrs"
+            keyPlaceholder="attribute key"
+            valuePlaceholder="attribute value"
+          />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-subdialog-cancel-element">
+            Cancel
+          </Button>
+          <Button onClick={() => { onSave(draft); onOpenChange(false); }} data-testid="button-subdialog-save-element">
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PackageDefinitionSubDialog({
+  open,
+  onOpenChange,
+  pkg,
+  onSave,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  pkg: ElementPackageDefinition;
+  onSave: (p: ElementPackageDefinition) => void;
+}) {
+  const [draft, setDraft] = useState<ElementPackageDefinition>(pkg);
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setDraft({ ...pkg });
+  }
+  prevOpenRef.current = open;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <DialogHeader>
+          <DialogTitle>Package Configuration</DialogTitle>
+          <DialogDescription>
+            Configure an ELM package artifact with per-path SPI and attribute settings.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs">ELM Artifact *</Label>
+            <Input
+              value={draft.elmArtifact}
+              onChange={(e) => setDraft({ ...draft, elmArtifact: e.target.value })}
+              placeholder="com.example:my-elm:1.0"
+              className="font-mono text-xs"
+              data-testid="input-subdialog-package-elm"
+            />
+            <p className="text-xs text-muted-foreground">
+              The ELM artifact coordinate to resolve and deploy.
+            </p>
+          </div>
+          <PathClassPathsEditor
+            value={draft.pathSpiBuiltins || {}}
+            onChange={(val) => setDraft({ ...draft, pathSpiBuiltins: val })}
+            label="SPI Builtin Path Mapping"
+            description="Map of element paths to builtin SPI configurations."
+            testIdPrefix="subdialog-pkg-spi-builtins"
+          />
+          <PathClassPathsEditor
+            value={draft.pathSpiClassPaths || {}}
+            onChange={(val) => setDraft({ ...draft, pathSpiClassPaths: val })}
+            label="SPI Classpath Path Mapping"
+            description="Map of element paths to custom SPI class paths."
+            testIdPrefix="subdialog-pkg-spi-cp"
+          />
+          <PathKeyValueMapEditor
+            value={draft.pathAttributes || {}}
+            onChange={(val) => setDraft({ ...draft, pathAttributes: val })}
+            label="Path Attributes"
+            description="Map of element paths to their custom attributes."
+            testIdPrefix="subdialog-pkg-attrs"
+          />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-subdialog-cancel-package">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => { onSave(draft); onOpenChange(false); }}
+            disabled={!draft.elmArtifact.trim()}
+            data-testid="button-subdialog-save-package"
+          >
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function WizardConfigStep({
-  deploymentType,
   formData,
   setFormData,
 }: {
-  deploymentType: DeploymentType;
   formData: FormData;
   setFormData: (fd: FormData) => void;
 }) {
@@ -1707,68 +1887,229 @@ function WizardConfigStep({
     staleTime: 60000,
   });
 
-  if (deploymentType === 'artifact') {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Add one or more Element definitions. Each defines a set of Maven artifact coordinates that Elements will fetch and load.
-        </p>
-        <ElementDefinitionEditor
-          elements={formData.elements}
-          onChange={(elements) => update({ elements })}
-          availableSpis={availableSpis}
-          spisLoading={spisLoading}
-        />
-      </div>
-    );
-  }
+  const [elementDialogOpen, setElementDialogOpen] = useState(false);
+  const [packageDialogOpen, setPackageDialogOpen] = useState(false);
+  const [editingElementIndex, setEditingElementIndex] = useState<number | null>(null);
+  const [editingPackageIndex, setEditingPackageIndex] = useState<number | null>(null);
 
-  if (deploymentType === 'package') {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Add one or more ELM packages. Each specifies an ELM artifact coordinate from Maven, along with per-path SPI and attribute configuration.
-        </p>
-        <PackageDefinitionEditor
-          packages={formData.packages}
-          onChange={(packages) => update({ packages })}
-        />
-      </div>
-    );
-  }
+  const newElementDefault = (): ElementPathDefinition => ({
+    path: '',
+    apiArtifacts: [],
+    spiBuiltins: availableSpis.some(s => s.id === 'DEFAULT') ? ['DEFAULT'] : [],
+    spiArtifacts: [],
+    elementArtifacts: [],
+    attributes: {},
+  });
 
-  if (deploymentType === 'largeObject') {
-    return (
-      <div className="space-y-3">
-        <div className="p-4 border rounded-md bg-muted/30">
-          <div className="flex items-start gap-3">
-            <FileUp className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
-            <div className="space-y-2">
-              <p className="text-sm font-medium">ELM File Upload</p>
-              <p className="text-xs text-muted-foreground">
-                No additional configuration is needed here. After creating the deployment, you can upload your .elm file in the next step. The server will register a Large Object placeholder for the upload.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                You can configure per-path SPI builtins and attributes in the next step to tell Elements how to load each element path within your ELM.
-              </p>
-            </div>
-          </div>
+  const newPackageDefault = (): ElementPackageDefinition => ({
+    elmArtifact: '',
+    pathSpiBuiltins: {},
+    pathSpiClassPaths: {},
+    pathAttributes: {},
+  });
+
+  const [editingElement, setEditingElement] = useState<ElementPathDefinition>(newElementDefault());
+  const [editingPackage, setEditingPackage] = useState<ElementPackageDefinition>(newPackageDefault());
+
+  const openAddElement = () => {
+    setEditingElementIndex(null);
+    setEditingElement(newElementDefault());
+    setElementDialogOpen(true);
+  };
+
+  const openEditElement = (index: number) => {
+    setEditingElementIndex(index);
+    setEditingElement({ ...formData.elements[index] });
+    setElementDialogOpen(true);
+  };
+
+  const saveElement = (el: ElementPathDefinition) => {
+    if (editingElementIndex !== null) {
+      const copy = [...formData.elements];
+      copy[editingElementIndex] = el;
+      update({ elements: copy });
+    } else {
+      update({ elements: [...formData.elements, el] });
+    }
+  };
+
+  const removeElement = (index: number) => {
+    update({ elements: formData.elements.filter((_, i) => i !== index) });
+  };
+
+  const openAddPackage = () => {
+    setEditingPackageIndex(null);
+    setEditingPackage(newPackageDefault());
+    setPackageDialogOpen(true);
+  };
+
+  const openEditPackage = (index: number) => {
+    setEditingPackageIndex(index);
+    setEditingPackage({ ...formData.packages[index] });
+    setPackageDialogOpen(true);
+  };
+
+  const savePackage = (pkg: ElementPackageDefinition) => {
+    if (editingPackageIndex !== null) {
+      const copy = [...formData.packages];
+      copy[editingPackageIndex] = pkg;
+      update({ packages: copy });
+    } else {
+      update({ packages: [...formData.packages, pkg] });
+    }
+  };
+
+  const removePackage = (index: number) => {
+    update({ packages: formData.packages.filter((_, i) => i !== index) });
+  };
+
+  const hasItems = formData.elements.length > 0 || formData.packages.length > 0;
+
+  const getElementLabel = (el: ElementPathDefinition, index: number) => {
+    if (el.path && el.path.trim()) return el.path;
+    if (el.elementArtifacts && el.elementArtifacts.length > 0 && el.elementArtifacts[0].trim()) {
+      return el.elementArtifacts[0];
+    }
+    return `Element Definition ${index + 1}`;
+  };
+
+  const getPackageLabel = (pkg: ElementPackageDefinition, index: number) => {
+    if (pkg.elmArtifact && pkg.elmArtifact.trim()) return pkg.elmArtifact;
+    return `Package ${index + 1}`;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-sm text-muted-foreground">
+          Add element definitions and/or package configurations. A single deployment can contain both types.
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={openAddElement}
+            data-testid="button-add-element-config"
+          >
+            <Database className="w-4 h-4 mr-2" />
+            Add Element Definition
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={openAddPackage}
+            data-testid="button-add-package-config"
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Add Package
+          </Button>
         </div>
       </div>
-    );
-  }
 
-  return null;
+      {!hasItems && (
+        <div className="py-8 text-center border-2 border-dashed rounded-md">
+          <p className="text-sm text-muted-foreground">No configurations added yet.</p>
+          <p className="text-xs text-muted-foreground mt-1">Use the buttons above to add element definitions or packages.</p>
+        </div>
+      )}
+
+      {hasItems && (
+        <div className="space-y-2">
+          {formData.elements.map((el, i) => (
+            <div
+              key={`el-${i}`}
+              className="flex items-center justify-between gap-3 p-3 border rounded-md"
+              data-testid={`config-item-element-${i}`}
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Database className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="font-mono text-sm truncate" data-testid={`text-element-label-${i}`}>
+                  {getElementLabel(el, i)}
+                </span>
+                <Badge variant="secondary" className="shrink-0">Element</Badge>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => openEditElement(i)}
+                  data-testid={`button-edit-element-${i}`}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => removeElement(i)}
+                  data-testid={`button-remove-element-${i}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          {formData.packages.map((pkg, i) => (
+            <div
+              key={`pkg-${i}`}
+              className="flex items-center justify-between gap-3 p-3 border rounded-md"
+              data-testid={`config-item-package-${i}`}
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="font-mono text-sm truncate" data-testid={`text-package-label-${i}`}>
+                  {getPackageLabel(pkg, i)}
+                </span>
+                <Badge variant="secondary" className="shrink-0">Package</Badge>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => openEditPackage(i)}
+                  data-testid={`button-edit-package-${i}`}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => removePackage(i)}
+                  data-testid={`button-remove-package-${i}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <ElementDefinitionSubDialog
+        open={elementDialogOpen}
+        onOpenChange={setElementDialogOpen}
+        element={editingElement}
+        onSave={saveElement}
+        availableSpis={availableSpis}
+        spisLoading={spisLoading}
+      />
+
+      <PackageDefinitionSubDialog
+        open={packageDialogOpen}
+        onOpenChange={setPackageDialogOpen}
+        pkg={editingPackage}
+        onSave={savePackage}
+      />
+    </div>
+  );
 }
 
 function WizardSettingsStep({
   formData,
   setFormData,
-  deploymentType,
 }: {
   formData: FormData;
   setFormData: (fd: FormData) => void;
-  deploymentType: DeploymentType;
 }) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
 
@@ -1841,9 +2182,7 @@ function WizardSettingsStep({
           testIdPrefix="wizard-path-spi-builtins"
         />
         <p className="text-xs text-muted-foreground">
-          {deploymentType === 'largeObject'
-            ? 'Per-path builtin SPI configurations for Elements in the uploaded ELM file. The key is the element path inside the ELM, and the value is the list of builtin SPI names.'
-            : 'Per-path builtin SPI configurations at the deployment level. Applies to ELM elements. The key is the element path, and the value is the list of builtin SPI names.'}
+          Per-path builtin SPI configurations at the deployment level. The key is the element path, and the value is the list of builtin SPI names.
         </p>
         <PathKeyValueMapEditor
           value={formData.pathAttributes}
