@@ -27,7 +27,7 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
                     .pathAttribute(
                             "dev.getelements.elements.sdk-test-element-rs",
                             APPLICATION_PREFIX,
-                            "/myapp_maven"
+                            "/" + appPath()
                     )
                 .endElementPackage()
                 .elementPackage()
@@ -36,7 +36,7 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
                     .pathAttribute(
                             "dev.getelements.elements.sdk-test-element-ws",
                             APPLICATION_PREFIX,
-                            "/myapp_maven"
+                            "/" + appPath()
                     )
                 .endElementPackage()
                 .build();
