@@ -13,7 +13,7 @@ public enum TestElementSpi {
      */
     GUICE_7_0_X(
             "dev.getelements.elements:sdk-spi-guice:%s",
-            "com.google.guice:guice:7.0.0",
+            "com.google.inject:guice:7.0.0",
             "com.google.guava:guava:33.1.0-jre",
             "aopalliance:aopalliance:1.0"
     );

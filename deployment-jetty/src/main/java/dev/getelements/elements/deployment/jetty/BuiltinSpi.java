@@ -17,7 +17,7 @@ public enum BuiltinSpi {
             CURRENT.version(),
             "The default loader.",
             "dev.getelements.elements:sdk-spi-guice:%s".formatted(CURRENT.version()),
-            "com.google.guice:guice:7.0.0",
+            "com.google.inject:guice:7.0.0",
             "com.google.guava:guava:33.1.0-jre",
             "aopalliance:aopalliance:1.0"
     ),
@@ -25,7 +25,7 @@ public enum BuiltinSpi {
             CURRENT.version(),
             "Guice 7.0.0 loader with default Guava version.",
             "dev.getelements.elements:sdk-spi-guice:%s".formatted(CURRENT.version()),
-            "com.google.guice:guice:7.0.0",
+            "com.google.inject:guice:7.0.0",
             "com.google.guava:guava:33.1.0-jre",
             "aopalliance:aopalliance:1.0"
     ),
@@ -33,14 +33,14 @@ public enum BuiltinSpi {
             CURRENT.version(),
             "Guice 7.0.0 loader without Guava (must specify your own compatible with Guice 7.0.0)",
             "dev.getelements.elements:sdk-spi-guice:%s".formatted(CURRENT.version()),
-            "com.google.guice:guice:7.0.0",
+            "com.google.inject:guice:7.0.0",
             "aopalliance:aopalliance:1.0"
     ),
     GUICE_7_0_0_GUAVA_33_1_0(
             CURRENT.version(),
             "Guice 7.0.0 loader with Guava version 33.1.0 (Explicit).",
             "dev.getelements.elements:sdk-spi-guice:%s".formatted(CURRENT.version()),
-            "com.google.guice:guice:7.0.0",
+            "com.google.inject:guice:7.0.0",
             "com.google.guava:guava:33.1.0-jre",
             "aopalliance:aopalliance:1.0"
     );

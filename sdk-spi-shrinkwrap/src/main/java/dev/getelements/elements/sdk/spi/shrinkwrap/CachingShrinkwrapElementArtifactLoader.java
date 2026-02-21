@@ -146,7 +146,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
     private ConfigurableMavenResolverSystem configurableSystem(final Set<ArtifactRepository> repositories) {
 
-        var config = Maven.configureResolver();
+        var config = Maven.configureResolver().withClassPathResolution(false);
 
         for (var repository : repositories) {
             if (repository.isDefault()) {

@@ -48,7 +48,17 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     private static URL toUrl(final Path path) {
         try {
-            return path.toUri().toURL();
+
+            final var url = path.toUri().toURL();
+            final var urlString = url.toString();
+
+            if (isRegularFile(path) || isDirectory(path) && urlString.endsWith("/")) {
+                return url;
+            }
+
+            final var directoryUrlString = "%s/".formatted(urlString);
+            return new URL(directoryUrlString);
+
         } catch (MalformedURLException ex) {
             throw new SdkException(ex);
         }
@@ -376,7 +386,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
                         final var elementClassLoader = config
                                 .spiLoader()
-                                .apply(spiClassLoader, path);
+                                .apply(spiClassLoader, subpath);
 
                         // Construct the record with everything needed to make the new Element
 
