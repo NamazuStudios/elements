@@ -1,5 +1,10 @@
 package dev.getelements.elements.sdk.record;
 
+import dev.getelements.elements.sdk.exception.SdkException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -34,4 +39,18 @@ public record Artifact(
         String version,
         String packaging,
         String classifier,
-        String extension) {}
+        String extension) {
+
+    /**
+     * Opens an {@link InputStream} to read the artifact's contents.
+     * @return the input stream
+     */
+    public InputStream read() {
+        try {
+            return Files.newInputStream(path());
+        } catch (IOException e) {
+            throw new SdkException(e);
+        }
+    }
+
+}

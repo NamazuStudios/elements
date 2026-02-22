@@ -56,42 +56,6 @@ public class MultipartLargeObjectResource {
 
     }
 
-    // disabled, until overriding of mongo ID will be handled
-//    @PUT
-//    @Path("{largeObjectId}")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    @Consumes(MediaType.MULTIPART_FORM_DATA)
-//    @Operation( summary = "Creates a LargeObject")
-//    public LargeObject updateLargeObject(
-//            @PathParam("largeObjectId") final String largeObjectId,
-//            @FormDataParam("object") final FormDataBodyPart objectBodyPart,
-//            @FormDataParam("metadata") final UpdateLargeObjectRequest updateLargeObjectRequest) {
-//
-//        if (updateLargeObjectRequest.getMimeType() == null) {
-//            updateLargeObjectRequest.setMimeType(objectBodyPart.getName());
-//        }
-//
-//        if (updateLargeObjectRequest.getRead() == null) {
-//            updateLargeObjectRequest.setRead(SubjectRequest.newDefaultRequest());
-//        }
-//
-//        if (updateLargeObjectRequest.getWrite() == null) {
-//            updateLargeObjectRequest.setWrite(SubjectRequest.newDefaultRequest());
-//        }
-//
-//        if (updateLargeObjectRequest.getDelete() == null) {
-//            updateLargeObjectRequest.setDelete(SubjectRequest.newDefaultRequest());
-//        }
-//
-//        try {
-//            final var stream = objectBodyPart.getValueAs(InputStream.class);
-//            return getLargeObjectService().updateLargeObject(largeObjectId, updateLargeObjectRequest, stream);
-//        } catch (IOException ex) {
-//            throw new InternalException("Caught exception processing upload.");
-//        }
-//
-//    }
-
     public LargeObjectService getLargeObjectService() {
         return largeObjectService;
     }

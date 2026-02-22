@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
+import static org.glassfish.jersey.CommonProperties.MOXY_JSON_FEATURE_DISABLE;
 import static org.glassfish.jersey.server.ResourceConfig.forApplication;
 
 /**
@@ -107,6 +108,14 @@ public class JakartaRsLoader implements Loader {
         }
 
         final var config = forApplication(application).register(OpenApiResource.class);
+
+        if (!config.hasProperty(MOXY_JSON_FEATURE_DISABLE)) {
+            // We know this interferes with the user-supplied OAS specification so we eliminate it if the application
+            // doesn't specify one way or another. We assume the application provides its own support for JSON or
+            // whatever media types it wants.
+            config.property(MOXY_JSON_FEATURE_DISABLE, true);
+        }
+
         final var container = new ServletContainer(config);
         final var holder = new ServletHolder(container);
 
@@ -117,6 +126,7 @@ public class JakartaRsLoader implements Loader {
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(contextPath);
+        servletContextHandler.setClassLoader(application.getClass().getClassLoader());
         servletContextHandler.addServlet(holder, "/*");
 
         if (enableAuth) {

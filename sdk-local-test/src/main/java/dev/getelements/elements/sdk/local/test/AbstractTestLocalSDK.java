@@ -34,6 +34,19 @@ public abstract class AbstractTestLocalSDK {
     }
 
     @Test
+    public void testGetOas() {
+        try (final var client = ClientBuilder.newClient()) {
+
+            final var response = client.target("http://localhost:8181/app/rest/" + appPath() + "/openapi.json")
+                    .request()
+                    .get();
+
+            Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+
+        }
+    }
+
+    @Test
     public void testGetMessages() {
         try (final var client = ClientBuilder.newClient()) {
 

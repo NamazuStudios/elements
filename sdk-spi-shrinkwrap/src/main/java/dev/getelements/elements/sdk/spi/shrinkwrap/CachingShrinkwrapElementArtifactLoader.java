@@ -132,7 +132,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
                         ex
                 );
 
-                throw new SdkArtifactNotFoundException(ex);
+                return Optional.empty();
 
             } else {
                 throw new SdkException(ex);

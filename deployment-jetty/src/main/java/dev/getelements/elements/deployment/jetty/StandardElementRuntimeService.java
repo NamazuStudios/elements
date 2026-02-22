@@ -5,9 +5,11 @@ import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
+import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.model.system.*;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
@@ -77,6 +79,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             throw new InternalException("Failed to load ElementArtifactLoader SPI. Maven-based artifact loading is required.", ex);
         }
     }
+
+    private LargeObjectDao largeObjectDao;
 
     private LargeObjectBucket largeObjectBucket;
 
@@ -206,14 +210,21 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 throw new IllegalArgumentException("Deployment ID collision: " + deploymentId);
             }
 
+            LargeObjectReference largeObjectReference = null;
+
+            if (request.elmLargeObjectId() != null) {
+                final var largeObject = largeObjectDao.getLargeObject(request.elmLargeObjectId());
+                largeObjectReference = LargeObjectReference.fromLargeObject(largeObject);
+            }
+
             logger.info("Loading transient deployment with ID: {}", deploymentId);
 
             // Build ElementDeployment from request
             final var deployment = new ElementDeployment(
                     deploymentId,
                     request.application(),
-                    null,
-                    null,
+                    largeObjectReference,
+                    request.pathSpiBuiltins(),
                     request.pathSpiClasspath(),
                     request.pathAttributes(),
                     request.elements(),
@@ -1058,6 +1069,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         this.elementDeploymentDao = elementDeploymentDao;
     }
 
+    public LargeObjectDao getLargeObjectDao() {
+        return largeObjectDao;
+    }
+
+    @Inject
+    public void setLargeObjectDao(LargeObjectDao largeObjectDao) {
+        this.largeObjectDao = largeObjectDao;
+    }
+
     public LargeObjectBucket getLargeObjectBucket() {
         return largeObjectBucket;
     }
@@ -1136,6 +1156,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             boolean isTransient,
             MutableElementRegistry registry,
             List<Element> elements,
+            List<Path> elementPaths,
             List<Path> deploymentFiles,
             List<FileSystem> filesystems,
             List<String> logs,
@@ -1163,6 +1184,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     registry,
                     elements,
+                    elementPaths,
                     deploymentFiles,
                     logs,
                     errors
@@ -1198,6 +1220,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     deploymentContext.registry(),
                     elements != null ? elements : List.of(),
+                    deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
@@ -1221,6 +1244,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     deploymentContext.registry(),
                     elements,
+                    deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),

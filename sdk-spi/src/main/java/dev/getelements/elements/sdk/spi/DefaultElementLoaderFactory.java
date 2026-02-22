@@ -15,6 +15,7 @@ import io.github.classgraph.MethodInfo;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -549,9 +550,13 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
             final var loader = ServiceLoader.load(ElementLoader.class, classLoader);
 
-            return loader.findFirst().orElseThrow(() -> new SdkException(
-                    "No SPI (Service Provider Implementation) for " + ElementLoader.class.getName())
-            );
+            try {
+                return loader.findFirst().orElseThrow(() -> new SdkException(
+                        "No SPI (Service Provider Implementation) for " + ElementLoader.class.getName())
+                );
+            } catch (ServiceConfigurationError error) {
+                throw new SdkException(error);
+            }
 
         } else {
             try {

@@ -10,7 +10,8 @@ public class ModelPermittedPackages implements PermittedPackages {
 
     private static final List<String> PERMITTED_PACKAGES = List.of(
             "jakarta.inject",
-            "jakarta.validation"
+            "jakarta.validation",
+            "io.swagger.v3.oas.annotations"
     );
 
     @Override

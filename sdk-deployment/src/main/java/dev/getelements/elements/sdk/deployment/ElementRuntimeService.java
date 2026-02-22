@@ -139,6 +139,7 @@ public interface ElementRuntimeService {
             boolean isTransient,
             ElementRegistry registry,
             List<Element> elements,
+            List<Path> elementPaths,
             List<Path> deploymentFiles,
             List<String> logs,
             List<Throwable> errors

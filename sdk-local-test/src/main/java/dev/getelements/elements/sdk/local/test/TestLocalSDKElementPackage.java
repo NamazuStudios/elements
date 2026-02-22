@@ -8,7 +8,6 @@ import org.testng.annotations.BeforeClass;
 import static dev.getelements.elements.sdk.deployment.ElementContainerService.APPLICATION_PREFIX;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_WS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
 

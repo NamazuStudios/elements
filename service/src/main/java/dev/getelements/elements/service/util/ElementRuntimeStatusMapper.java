@@ -30,7 +30,7 @@ public interface ElementRuntimeStatusMapper extends MapperRegistry.Mapper<Runtim
             return TemporaryFiles.getTemporaryRoot().relativize(path).toString();
         }
 
-        return path.toString();
+        return "%s@%s".formatted(path.getFileSystem(), path);
 
     }
 
