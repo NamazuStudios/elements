@@ -11,7 +11,8 @@ public class AppServePermittedPackages implements PermittedPackages {
             "jakarta.servlet",
             "jakarta.websocket",
             "jakarta.validation",
-            "io.swagger.v3.oas.annotations",
+            "io.swagger.v3.oas.annotations"
+            ,
             "io.swagger.v3.jaxrs2.integration"
     );
 

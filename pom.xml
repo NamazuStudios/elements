@@ -146,11 +146,11 @@
         <testng.version>7.10.2</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>3.5.4</surefire.version>
-        <jackson.version>2.18.2</jackson.version>
+        <jackson.version>2.20.1</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.12</reflections.version>
         <classgraph.version>4.8.175</classgraph.version>
-        <swagger.version>2.2.22</swagger.version>
+        <swagger.version>2.2.43</swagger.version>
         <rocoto.version>6.2</rocoto.version>
         <orgjson.version>20230227</orgjson.version>
         <libphonenumber.version>8.13.27</libphonenumber.version>
@@ -178,7 +178,7 @@
         <morphia.version>2.4.14</morphia.version>
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
-        <kotlin.version>1.5.10</kotlin.version>
+        <kotlin.version>1.9.25</kotlin.version>
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
         <google-api-client.version>2.0.0</google-api-client.version>
         <near-java-api.version>0.2.0</near-java-api.version>
@@ -729,36 +729,6 @@
                 <version>${rocoto.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-cbor</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-jaxb-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>jakarta.inject</groupId>
                 <artifactId>jakarta.inject-api</artifactId>
                 <version>${jakarta.inject.version}</version>
@@ -1017,6 +987,14 @@
                 <scope>import</scope>
             </dependency>
             <!-- Third Party Dependencies (With Specific Exclusions) -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-jaxrs2-jakarta</artifactId>

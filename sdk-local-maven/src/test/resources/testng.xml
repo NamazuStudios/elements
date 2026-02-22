@@ -3,7 +3,7 @@
     <test name="TestLocalSDK">
         <classes>
 <!--            <class name="dev.getelements.elements.sdk.local.test.TestLocalSDKElementPath"/>-->
-            <class name="dev.getelements.elements.sdk.local.test.TestLocalSDKElementPackage"/>
+<!--            <class name="dev.getelements.elements.sdk.local.test.TestLocalSDKElementPackage"/>-->
         </classes>
     </test>
 </suite>

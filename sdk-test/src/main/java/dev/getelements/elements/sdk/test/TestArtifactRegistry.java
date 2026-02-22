@@ -16,6 +16,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.file.Files.isDirectory;
@@ -105,7 +106,7 @@ public class TestArtifactRegistry {
      * @throws java.util.NoSuchElementException if the artifact wasn't found
      */
     public void copySpiTo(final TestElementSpi spi, final Path destination) throws IOException {
-        for (final var source : findSpiPaths(spi).toList()) {
+        for (final var source : findSpiPaths(spi).collect(Collectors.toSet())) {
             Files.copy(source, isDirectory(destination)
                     ? destination.resolve(source.getFileName())
                     : destination

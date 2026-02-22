@@ -1,13 +1,18 @@
 package dev.getelements.elements.sdk.local.test;
 
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
 
 import static dev.getelements.elements.sdk.deployment.ElementContainerService.APPLICATION_PREFIX;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_WS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
+
+    private static final Logger logger = LoggerFactory.getLogger(TestLocalSDKElementPackage.class);
 
     private final SharedLocalSDK shared = SharedLocalSDK.getInstance();
 
@@ -17,7 +22,7 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
     }
 
     @BeforeClass
-    public void setUpLocalRunner() {
+    public void setUpLocalRunner() throws InterruptedException {
 
         final var deployment = TransientDeploymentRequest.builder()
                 .useDefaultRepositories(true)
@@ -27,7 +32,7 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
                     .pathAttribute(
                             "dev.getelements.elements.sdk-test-element-rs",
                             APPLICATION_PREFIX,
-                            "/" + appPath()
+                            appPath()
                     )
                 .endElementPackage()
                 .elementPackage()
@@ -36,12 +41,13 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
                     .pathAttribute(
                             "dev.getelements.elements.sdk-test-element-ws",
                             APPLICATION_PREFIX,
-                            "/" + appPath()
+                            appPath()
                     )
                 .endElementPackage()
                 .build();
 
-        shared.getElementsLocal().getRuntimeService().loadTransientDeployment(deployment);
+        final var result = shared.getElementsLocal().getRuntimeService().loadTransientDeployment(deployment);
+        logger.info("Loaded deployment {}", result.deployment().id());
 
     }
 
