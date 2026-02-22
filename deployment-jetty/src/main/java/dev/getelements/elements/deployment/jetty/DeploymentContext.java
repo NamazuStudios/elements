@@ -3,6 +3,7 @@ package dev.getelements.elements.deployment.jetty;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
@@ -197,10 +198,16 @@ record DeploymentContext(
         );
 
         // Create the base attributes found in the deployment
-        return new SimpleAttributes.Builder()
+        final var builder = new SimpleAttributes.Builder()
                 .from(baseAttrs)
-                .from(resolved)
-                .build();
+                .from(resolved);
+
+        // If the deployment is scoped to an Application, inject APPLICATION_ATTRIBUTE for all elements
+        if (deployment().application() != null) {
+            builder.setAttribute(Application.APPLICATION_ATTRIBUTE, deployment().application());
+        }
+
+        return builder.build();
 
     }
 
