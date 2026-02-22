@@ -79,6 +79,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 pathSpiBuiltins,
+                null,
                 ElementDeploymentState.DISABLED
         );
 
@@ -124,6 +125,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // packages
                 false,
                 List.of(),
+                null,
                 null,
                 null,
                 ElementDeploymentState.UNLOADED
@@ -263,6 +265,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 updatedPathSpiBuiltins,
+                null,
                 ElementDeploymentState.ENABLED
         );
 
@@ -307,6 +310,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // packages
                 false,
                 List.of(),
+                null,
                 null,
                 null,
                 ElementDeploymentState.DISABLED
@@ -386,6 +390,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // packages
                 true,
                 List.of(),
+                null,
                 null,
                 null,
                 ElementDeploymentState.DISABLED
