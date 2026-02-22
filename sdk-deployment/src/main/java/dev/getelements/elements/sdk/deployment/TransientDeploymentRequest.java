@@ -1,11 +1,11 @@
 package dev.getelements.elements.sdk.deployment;
 
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +18,7 @@ import java.util.function.Consumer;
  * The service will assign an ID and manage the deployment lifecycle.
  *
  * @param application            the application context (null for system-wide deployment)
+ * @param elmLargeObjectId          the id of a {@link LargeObject} to hold the ELM (may be null)
  * @param pathAttributes         custom attributes per element path (may be null)
  * @param elements               list of path-based element definitions (may be null)
  * @param packages               list of package-based element definitions (may be null)
@@ -27,6 +28,10 @@ import java.util.function.Consumer;
 public record TransientDeploymentRequest(
 
         Application application,
+
+        String elmLargeObjectId,
+
+        Map<String, List<String>> pathSpiBuiltins,
 
         Map<String, List<String>> pathSpiClasspath,
 
@@ -50,6 +55,16 @@ public record TransientDeploymentRequest(
      */
     public TransientDeploymentRequest {
         // Create immutable copies of path attributes with nested maps
+
+        if (pathSpiBuiltins != null) {
+            pathSpiBuiltins = pathSpiBuiltins.entrySet().stream()
+                    .collect(java.util.stream.Collectors.toUnmodifiableMap(
+                            Map.Entry::getKey,
+                            entry -> entry.getValue() == null
+                                    ? List.of()
+                                    : List.copyOf(entry.getValue())
+                    ));
+        }
 
         if (pathSpiClasspath != null) {
             pathSpiClasspath = pathSpiClasspath.entrySet().stream()
@@ -92,6 +107,8 @@ public record TransientDeploymentRequest(
      */
     public static final class Builder {
         private Application application;
+        private String elmLargeObjectId;
+        private Map<String, List<String>> pathSpiBuiltins;
         private Map<String, List<String>> pathSpiClasspath;
         private Map<String, Map<String, Object>> pathAttributes;
         private List<ElementPathDefinition> elements;
@@ -110,6 +127,62 @@ public record TransientDeploymentRequest(
          */
         public Builder application(final Application application) {
             this.application = application;
+            return this;
+        }
+
+        /**
+         * Sets the large object ID for the ELM.
+         *
+         * @param elmLargeObjectId the id of a {@link dev.getelements.elements.sdk.model.largeobject.LargeObject} to hold the ELM
+         * @return this builder
+         */
+        public Builder elmLargeObjectId(final String elmLargeObjectId) {
+            this.elmLargeObjectId = elmLargeObjectId;
+            return this;
+        }
+
+        /**
+         * Adds SPI builtins for a specific element path.
+         *
+         * @param path     the element path
+         * @param builtins the SPI builtin names
+         * @return this builder
+         */
+        public Builder addPathSpiBuiltins(final String path, final List<String> builtins) {
+            if (this.pathSpiBuiltins == null) {
+                this.pathSpiBuiltins = new java.util.HashMap<>();
+            }
+            this.pathSpiBuiltins.put(path, builtins);
+            return this;
+        }
+
+        /**
+         * Adds a single SPI builtin for a specific element path.
+         *
+         * @param path    the element path
+         * @param builtin the SPI builtin name
+         * @return this builder
+         */
+        public Builder addPathSpiBuiltin(final String path, final String builtin) {
+            if (this.pathSpiBuiltins == null) {
+                this.pathSpiBuiltins = new java.util.HashMap<>();
+            }
+            this.pathSpiBuiltins.computeIfAbsent(path, k -> new java.util.ArrayList<>()).add(builtin);
+            return this;
+        }
+
+        /**
+         * Adds a single SPI class path entry for a specific element path.
+         *
+         * @param path      the element path
+         * @param classPath the SPI class path entry
+         * @return this builder
+         */
+        public Builder addPathSpiClassPath(final String path, final String classPath) {
+            if (this.pathSpiClasspath == null) {
+                this.pathSpiClasspath = new java.util.HashMap<>();
+            }
+            this.pathSpiClasspath.computeIfAbsent(path, k -> new java.util.ArrayList<>()).add(classPath);
             return this;
         }
 
@@ -286,6 +359,8 @@ public record TransientDeploymentRequest(
         public TransientDeploymentRequest build() {
             return new TransientDeploymentRequest(
                     application,
+                    elmLargeObjectId,
+                    pathSpiBuiltins,
                     pathSpiClasspath,
                     pathAttributes,
                     elements,

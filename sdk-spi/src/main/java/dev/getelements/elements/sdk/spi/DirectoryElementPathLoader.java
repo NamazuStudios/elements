@@ -509,7 +509,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         ? Stream.empty()
                         : list(libs())
                             .filter(DirectoryElementPathLoader::isJarFile)
-                            .map(DirectoryElementPathLoader::toUrl);
+                            .map(libJar -> libJar.getFileSystem() == FileSystems.getDefault()
+                                    ? toUrl(libJar)
+                                    : UrlUtils.forPath(libJar));
             } catch (IOException ex) {
                 throw new SdkException(ex);
             }
