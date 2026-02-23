@@ -7,9 +7,11 @@ import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementSpi;
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service that polls the database for {@link dev.getelements.elements.sdk.model.system.ElementDeployment} records
@@ -129,7 +131,9 @@ public interface ElementRuntimeService {
      * @param isTransient true if this is a transient (non-persistent) deployment
      * @param registry the {@link ElementRegistry} used to manage the Elements
      * @param elements the {@link Element}s loaded in this deployment
+     * @param elementPaths the paths of staged element directories
      * @param deploymentFiles temporary files created during deployment loading
+     * @param elementManifests manifests parsed from each element's manifest properties file, keyed by element path
      * @param logs log messages from the loading process
      * @param errors errors encountered during loading
      */
@@ -141,6 +145,7 @@ public interface ElementRuntimeService {
             List<Element> elements,
             List<Path> elementPaths,
             List<Path> deploymentFiles,
+            Map<Path, ElementManifestRecord> elementManifests,
             List<String> logs,
             List<Throwable> errors
     ) {
@@ -149,6 +154,7 @@ public interface ElementRuntimeService {
             errors = errors == null ? null : java.util.List.copyOf(errors);
             elements = elements == null ? null : java.util.List.copyOf(elements);
             deploymentFiles = deploymentFiles == null ? null : java.util.List.copyOf(deploymentFiles);
+            elementManifests = elementManifests == null ? Map.of() : Map.copyOf(elementManifests);
         }
     }
 

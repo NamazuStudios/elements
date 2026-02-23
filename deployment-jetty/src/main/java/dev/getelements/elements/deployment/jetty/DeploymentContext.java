@@ -2,7 +2,10 @@ package dev.getelements.elements.deployment.jetty;
 
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.ElementArtifactLoader;
+import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.SystemVersion;
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -38,13 +41,18 @@ record DeploymentContext(
         List<Path> elementPaths,
         Map<Path, Set<String>> spiPaths,
         Map<Path, Attributes> attributePaths,
+        Map<Path, ElementManifestRecord> manifests,
         ElementArtifactLoader artifactLoader,
+        ElementPathLoader pathLoader,
         Set<ArtifactRepository> repositories,
-        TemporaryFiles temporaryFiles
+        TemporaryFiles temporaryFiles,
+        Set<Path> unconsumedSpiPaths,
+        Set<Path> unconsumedAttributePaths
 ) {
 
     public DeploymentContext {
         requireNonNull(deployment, "deployment");
+        requireNonNull(pathLoader, "pathLoader");
         repositories = repositories == null ? new HashSet<>() : repositories;
         buildRepositories(deployment, repositories);
     }
@@ -53,6 +61,7 @@ record DeploymentContext(
             final ElementDeployment deployment,
             final MutableElementRegistry registry,
             final ElementArtifactLoader artifactLoader,
+            final ElementPathLoader pathLoader,
             final TemporaryFiles temporaryFiles
     ) {
         return new DeploymentContext(
@@ -66,9 +75,13 @@ record DeploymentContext(
                 new ArrayList<>(),
                 new HashMap<>(),
                 new HashMap<>(),
+                new HashMap<>(),
                 artifactLoader,
+                pathLoader,
                 new HashSet<>(),
-                temporaryFiles
+                temporaryFiles,
+                new HashSet<>(),
+                new HashSet<>()
         );
     }
 
@@ -234,6 +247,128 @@ record DeploymentContext(
         final var file = temporaryFiles.createTempFile(prefix, suffix);
         deploymentFiles.add(file);
         return file;
+    }
+
+    /**
+     * Stores the supplied manifest for the given element path and applies any builtin SPIs it declares. If the
+     * element path already has explicit SPI configuration in {@link #spiPaths()}, manifest-declared builtins are
+     * skipped so that deployment-level overrides take precedence.
+     *
+     * @param manifest    the parsed manifest for the element
+     * @param elementPath the root path of the individual element
+     * @return {@code true} if manifest-declared builtin SPIs were injected into {@link #spiPaths()},
+     *         {@code false} otherwise
+     */
+    public boolean applyManifest(final ElementManifestRecord manifest, final Path elementPath) {
+
+        manifests.put(elementPath, manifest);
+
+        if (!SystemVersion.UNKNOWN.equals(manifest.version())) {
+            logs.add("Manifest at %s: version=%s, revision=%s, buildTime=%s".formatted(
+                    elementPath,
+                    manifest.version().version(),
+                    manifest.version().revision(),
+                    manifest.version().timestamp()));
+        }
+
+        if (manifest.builtinSpis().isEmpty() || spiPaths.containsKey(elementPath)) {
+            return false;
+        }
+
+        logs.add("Applying %d manifest builtin SPI(s) for element at %s".formatted(
+                manifest.builtinSpis().size(), elementPath));
+
+        for (final var name : manifest.builtinSpis()) {
+            resolveBuiltinSpi(name).forEach(coord ->
+                    spiPaths.computeIfAbsent(elementPath, k -> new HashSet<>()).add(coord)
+            );
+        }
+
+        if (spiPaths.containsKey(elementPath)) {
+            unconsumedSpiPaths.add(elementPath);
+        }
+
+        return true;
+
+    }
+
+    /**
+     * Resolves a builtin SPI name to its Maven artifact coordinates. Logs a warning if the name is unknown.
+     *
+     * @param name the {@link BuiltinSpi} enum name
+     * @return the list of Maven coordinate strings, or an empty list if unrecognised
+     */
+    public List<String> resolveBuiltinSpi(final String name) {
+        try {
+            return BuiltinSpi.valueOf(name).coordinates();
+        } catch (IllegalArgumentException e) {
+            warnings.add("Unknown builtin SPI name: " + name);
+            return List.of();
+        }
+    }
+
+    /**
+     * Reads and applies the manifest for the element at the given path, then creates the SPI classloader.
+     * Intended for use as an {@link ElementPathLoader.SpiLoader} method reference.
+     *
+     * @param parent      the parent classloader
+     * @param elementPath the path to the element
+     * @return the SPI classloader, or the parent classloader if no custom SPI is configured
+     */
+    public ClassLoader loadSpiForPath(final ClassLoader parent, final Path elementPath) {
+
+        applyManifest(pathLoader.readAndParseManifest(elementPath), elementPath);
+
+        final var result = createSpiClassLoaderFor(parent, elementPath);
+
+        if (unconsumedSpiPaths.remove(elementPath)) {
+            logs.add("Applied SPI to element at path: %s:%s".formatted(
+                    elementPath.getFileSystem(),
+                    elementPath
+            ));
+        } else if (parent == result) {
+            logs.add("Using default SPI for path: %s:%s".formatted(
+                    elementPath.getFileSystem(),
+                    elementPath
+            ));
+        } else {
+            warnings.add("Previously consumed SPI classpath to element at path %s:%s ".formatted(
+                    elementPath.getFileSystem(),
+                    elementPath
+            ));
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Creates the final {@link Attributes} for the element at the given path and logs the result.
+     * Intended for use as an {@link ElementPathLoader.AttributesLoader} method reference.
+     *
+     * @param baseAttrs   the base attributes passed by the loader
+     * @param elementPath the path to the element
+     * @return the resolved attributes
+     */
+    public Attributes loadAttributesForPath(final Attributes baseAttrs, final Path elementPath) {
+
+        final var finalAttributes = createAttributesForPath(baseAttrs, elementPath);
+
+        if (unconsumedAttributePaths.remove(elementPath)) {
+            logs.add("Applied attributes to element at path: %s:%s\n%s".formatted(
+                    elementPath.getFileSystem(),
+                    elementPath,
+                    String.join(" -> \n", finalAttributes.getAttributeNames())
+            ));
+        } else {
+            warnings.add("Previously consumed attributes to element at path %s:%s ".formatted(
+                    elementPath.getFileSystem(),
+                    elementPath
+            ));
+        }
+
+        return finalAttributes;
+
     }
 
 }

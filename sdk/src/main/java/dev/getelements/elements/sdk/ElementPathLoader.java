@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -112,6 +113,15 @@ public interface ElementPathLoader {
      * code and configuration at deployment time.
      */
     String ATTRIBUTES_PROPERTIES_FILE = "dev.getelements.element.attributes.properties";
+
+    /**
+     * The name of the manifest file for a particular {@link Element}. Uses the {@link java.util.Properties} format.
+     * The manifest may declare version metadata and a list of builtin SPI names the element requires. If absent, the
+     * element is treated as having no manifest.
+     *
+     * @since 3.7
+     */
+    String MANIFEST_PROPERTIES_FILE = "dev.getelements.element.manifest.properties";
 
     /**
      * Configuration for loading Elements from paths. Provides sensible defaults for all optional parameters.
@@ -468,6 +478,31 @@ public interface ElementPathLoader {
      * @since 3.7
      */
     Optional<ClassLoader> findSpiClassLoader(ClassLoader parent, Path path);
+
+    /**
+     * Reads the manifest for a single {@link Element} at the given path. The path must point to the root directory of
+     * one individual element (i.e. a subdirectory within a deployment, not the deployment root itself). The
+     * implementation should look for {@link #MANIFEST_PROPERTIES_FILE} under that path and return its contents as
+     * {@link Attributes}. If the file is absent or unreadable, an empty {@link Attributes} must be returned.
+     *
+     * <p>
+     * This method must work for paths in any {@link java.nio.file.FileSystem}, including zip/ELM-backed file systems.
+     * </p>
+     *
+     * @param path the root directory of a single Element
+     * @return the manifest {@link Attributes}, or empty {@link Attributes} if no manifest is present
+     * @since 3.7
+     */
+    Attributes readManifest(Path path);
+
+    /**
+     * Reads the {@link ElementManifestRecord}
+     * @param path
+     */
+    default ElementManifestRecord readAndParseManifest(final Path path) {
+        final var attributes = readManifest(path);
+        return ElementManifestRecord.from(attributes);
+    }
 
     /**
      * Loads a ClassLoader given the parent ClassLoader and the path of the Element itself. This is useful for when you

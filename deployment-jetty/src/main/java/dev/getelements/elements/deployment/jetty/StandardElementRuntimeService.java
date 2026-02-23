@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -418,7 +419,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         List<Element> elements = List.of();
         final var registry = getRootElementRegistry().newSubordinateRegistry();
-        final var context = DeploymentContext.create(deployment, registry, elementArtifactLoader, temporaryFiles);
+        final var context = DeploymentContext.create(deployment, registry, elementArtifactLoader, pathLoader, temporaryFiles);
 
         try {
 
@@ -581,8 +582,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 context.logs().add("Building API classloader from all element paths");
 
                 final var permittedTypesClassloader = new PermittedTypesClassLoader();
-                final var unconsumedSpiPaths = new HashSet<>(context.spiPaths().keySet());
-                final var unconsumedAttributePaths = new HashSet<>(context.attributePaths().keySet());
 
                 // Load all elements using LoadConfiguration
                 context.logs().add("Loading elements from " + context.elementPaths().size() + " path(s)");
@@ -590,66 +589,24 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .parent(permittedTypesClassloader)
                         .registry(context.registry())
                         .paths(context.elementPaths())
-                        .spiProvider((parent, elementPath) -> {
-
-                            final var result = context.createSpiClassLoaderFor(parent, elementPath);
-
-                            if (unconsumedSpiPaths.remove(elementPath)) {
-                                context.logs().add("Applied attributes to element at path: %s:%s".formatted(
-                                        elementPath.getFileSystem(),
-                                        elementPath
-                                ));
-                            } else if (parent == result) {
-                                context.logs().add("Using default SPI for path: %s:%s".formatted(
-                                        elementPath.getFileSystem(),
-                                        elementPath
-                                ));
-                            } else {
-                                context.warnings().add("Previously consumed SPI classpath to element at path %s:%s ".formatted(
-                                        elementPath.getFileSystem(),
-                                        elementPath
-                                ));
-                            }
-
-                            return result;
-
-                        })
-                        .attributesLoader((baseAttrs, elementPath) -> {
-
-                            final var finalAttributes =  context.createAttributesForPath(baseAttrs, elementPath);
-
-                            if (unconsumedAttributePaths.remove(elementPath)) {
-                                context.logs().add("Applied attributes to element at path: %s:%s\n%s".formatted(
-                                        elementPath.getFileSystem(),
-                                        elementPath,
-                                        String.join(" -> \n", finalAttributes.getAttributeNames())
-                                ));
-                            } else {
-                                context.warnings().add("Previously consumed attributes to element at path %s:%s ".formatted(
-                                        elementPath.getFileSystem(),
-                                        elementPath
-                                ));
-                            }
-
-                            return finalAttributes;
-
-                        })
+                        .spiProvider(context::loadSpiForPath)
+                        .attributesLoader(context::loadAttributesForPath)
                         .build();
 
                 allElements = pathLoader.load(config).toList();
 
-                if (!unconsumedSpiPaths.isEmpty()) {
+                if (!context.unconsumedSpiPaths().isEmpty()) {
                     context.warnings().add("Unconsumed SPI paths from element at path:\n%s".formatted(
-                            unconsumedAttributePaths
+                            context.unconsumedSpiPaths()
                                     .stream()
                                     .map(p -> " -> %s:%s".formatted(p.getFileSystem(), p))
                                     .collect(Collectors.joining(", "))
                     ));
                 }
 
-                if (!unconsumedAttributePaths.isEmpty()) {
+                if (!context.unconsumedAttributePaths().isEmpty()) {
                     context.warnings().add("Unconsumed attributes from element at path:\n%s".formatted(
-                            unconsumedAttributePaths
+                            context.unconsumedAttributePaths()
                                     .stream()
                                     .map(p -> " -> %s:%s".formatted(p.getFileSystem(), p))
                                     .collect(Collectors.joining(", "))
@@ -792,7 +749,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
                 for (final var name : definition.spiBuiltins()) {
                     context.logs().add("Gathering Builtin: '%s'".formatted(name));
-                    for (final var coordinate : resolveBuiltinSpi(name, context)) {
+                    for (final var coordinate : context.resolveBuiltinSpi(name)) {
                         context.copyArtifactWithDependencies(coordinate, spiDir);
                     }
                 }
@@ -830,6 +787,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // Add to element paths for later loading
             context.attributePaths().put(elementPath, attributes);
+            context.unconsumedAttributePaths().add(elementPath);
 
             context.logs().add("Successfully staged from Maven artifacts");
 
@@ -904,12 +862,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             pathSpiBuiltins.forEach((path, names) -> {
                 final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
                 names.stream()
-                        .flatMap(name -> resolveBuiltinSpi(name, context).stream())
+                        .flatMap(name -> context.resolveBuiltinSpi(name).stream())
                         .forEach(coord ->
                                 context.spiPaths()
                                         .computeIfAbsent(fileSystemPath, k -> new HashSet<>())
                                         .add(coord)
                         );
+                if (context.spiPaths().containsKey(fileSystemPath)) {
+                    context.unconsumedSpiPaths().add(fileSystemPath);
+                }
             });
         }
 
@@ -919,6 +880,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 context.spiPaths()
                         .computeIfAbsent(fileSystemPath, k -> new HashSet<>())
                         .addAll(classPath);
+                context.unconsumedSpiPaths().add(fileSystemPath);
             });
         }
 
@@ -929,18 +891,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .build();
                 final var fileSystemPath = fileSystem.getPath(path).toAbsolutePath();
                 context.attributePaths().put(fileSystemPath, attributes);
+                context.unconsumedAttributePaths().add(fileSystemPath);
             });
         }
 
-    }
-
-    private List<String> resolveBuiltinSpi(final String name, final DeploymentContext context) {
-        try {
-            return BuiltinSpi.valueOf(name).coordinates();
-        } catch (IllegalArgumentException e) {
-            context.warnings().add("Unknown builtin SPI name: " + name);
-            return List.of();
-        }
     }
 
     /**
@@ -1158,6 +1112,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             List<Element> elements,
             List<Path> elementPaths,
             List<Path> deploymentFiles,
+            Map<Path, ElementManifestRecord> manifests,
             List<FileSystem> filesystems,
             List<String> logs,
             List<Throwable> errors
@@ -1166,6 +1121,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         public ActiveDeployment {
             elements = List.copyOf(elements);
             deploymentFiles = List.copyOf(deploymentFiles);
+            manifests = Map.copyOf(manifests);
             filesystems = List.copyOf(filesystems);
             logs = List.copyOf(logs);
             errors = List.copyOf(errors);
@@ -1186,6 +1142,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     elements,
                     elementPaths,
                     deploymentFiles,
+                    manifests,
                     logs,
                     errors
             );
@@ -1222,6 +1179,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     elements != null ? elements : List.of(),
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
+                    deploymentContext.manifests(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.errors()
@@ -1246,6 +1204,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     elements,
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
+                    deploymentContext.manifests(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.errors()

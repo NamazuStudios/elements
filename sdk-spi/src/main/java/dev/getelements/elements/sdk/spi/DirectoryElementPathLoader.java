@@ -89,6 +89,28 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     }
 
     @Override
+    public Attributes readManifest(final Path path) {
+
+        final var manifestPath = path.resolve(MANIFEST_PROPERTIES_FILE);
+
+        if (!isRegularFile(manifestPath)) {
+            return Attributes.emptyAttributes();
+        }
+
+        final var properties = new Properties();
+
+        try (final var is = newInputStream(manifestPath)) {
+            properties.load(is);
+        } catch (IOException ex) {
+            logger.warn("Failed to read manifest at {}: {}", manifestPath, ex.getMessage());
+            return Attributes.emptyAttributes();
+        }
+
+        return PropertiesAttributes.wrap(properties);
+
+    }
+
+    @Override
     public URLClassLoader buildApiClassLoader(final ClassLoader parent, final Collection<Path> paths) {
         return buildJarClassLoader(parent, paths, this::collectApiJars, "API");
     }
