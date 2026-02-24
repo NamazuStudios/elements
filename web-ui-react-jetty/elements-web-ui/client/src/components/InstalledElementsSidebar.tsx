@@ -98,6 +98,17 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
                   <span>Runtimes</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setLocation('/elm-inspector')}
+                  isActive={location === '/elm-inspector'}
+                  data-testid="link-elm-inspector"
+                >
+                  <Icons.ScanSearch className="w-4 h-4" />
+                  <span>ELM Inspector</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </CollapsibleContent>
