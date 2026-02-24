@@ -496,8 +496,9 @@ public interface ElementPathLoader {
     Attributes readManifest(Path path);
 
     /**
-     * Reads the {@link ElementManifestRecord}
-     * @param path
+     * Reads the {@link ElementManifestRecord} from the {@link Path}.
+     *
+     * @param path the {@link Path}
      */
     default ElementManifestRecord readAndParseManifest(final Path path) {
         final var attributes = readManifest(path);

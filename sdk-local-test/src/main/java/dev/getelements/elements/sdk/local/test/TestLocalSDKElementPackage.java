@@ -26,7 +26,6 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
         final var deployment = TransientDeploymentRequest.builder()
                 .useDefaultRepositories(true)
                 .elementPackage()
-                    .addPathSpiBuiltin("dev.getelements.elements.sdk-test-element-rs", "DEFAULT")
                     .elmArtifact(JAKARTA_RS.getCoordinatesForElm())
                     .pathAttribute(
                             "dev.getelements.elements.sdk-test-element-rs",
@@ -35,7 +34,6 @@ public class TestLocalSDKElementPackage extends AbstractTestLocalSDK {
                     )
                 .endElementPackage()
                 .elementPackage()
-                    .addPathSpiBuiltin("dev.getelements.elements.sdk-test-element-ws", "DEFAULT")
                     .elmArtifact(JAKARTA_WS.getCoordinatesForElm())
                     .pathAttribute(
                             "dev.getelements.elements.sdk-test-element-ws",

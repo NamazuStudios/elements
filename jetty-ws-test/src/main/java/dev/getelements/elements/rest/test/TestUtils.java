@@ -25,8 +25,8 @@ public class TestUtils {
     private final Injector unixFSInjector;
 
     private TestUtils() {
-        final var unixFSModule = new EmbeddedRestApiIntegrationTestModule();
-        unixFSInjector = createInjector(unixFSModule);
+        final var module = new EmbeddedRestApiIntegrationTestModule();
+        unixFSInjector = createInjector(module);
     }
 
     /**

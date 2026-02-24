@@ -276,7 +276,9 @@ record DeploymentContext(
         }
 
         logs.add("Applying %d manifest builtin SPI(s) for element at %s".formatted(
-                manifest.builtinSpis().size(), elementPath));
+                manifest.builtinSpis().size(),
+                elementPath)
+        );
 
         for (final var name : manifest.builtinSpis()) {
             resolveBuiltinSpi(name).forEach(coord ->

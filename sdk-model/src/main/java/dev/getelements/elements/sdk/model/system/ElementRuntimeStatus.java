@@ -1,8 +1,11 @@
 package dev.getelements.elements.sdk.model.system;
 
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @Schema(description =
         "Reports the status of an element runtime, which is a deployed in-memory Element. An in-memory " +
@@ -26,6 +29,9 @@ public record ElementRuntimeStatus(
         List<String> logs,
 
         @Schema(description = "A list of Elements included in the runtime.")
-        List<ElementMetadata> elements
+        List<ElementMetadata> elements,
+
+        @Schema(description = "A mapping of paths to manifests of loaded elements.")
+        Map<String, ElementManifestRecord> elementManifests
 
 ) {}

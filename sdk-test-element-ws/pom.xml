@@ -118,6 +118,33 @@
                         </configuration>
                     </execution>
                     <!--
+                        Writes the element manifest properties file into the root of the element directory.
+                        The loader reads this file to obtain version metadata and required builtin SPIs.
+                    -->
+                    <execution>
+                        <id>elm-write-manifest</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${elm.element.dir}" />
+                                <exec executable="git" outputproperty="git.revision" failifexecutionfails="false" errorproperty="git.error">
+                                    <arg value="rev-parse" />
+                                    <arg value="HEAD" />
+                                </exec>
+                                <property name="git.revision" value="UNKNOWN" />
+                                <echo file="${elm.element.dir}/dev.getelements.element.manifest.properties" append="false">
+Element-Version=${project.version}
+Element-Build-Time=${maven.build.timestamp}
+Element-Revision=${git.revision}
+Element-Builtin-Spis=${elm.builtin.spis}
+                                </echo>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!--
                         Creates the .elm archive from the fully staged directory. Ensures all three top-level
                         directories exist so the archive structure is always consistent.
                     -->
@@ -173,6 +200,7 @@
     </build>
 
     <properties>
+        <elm.builtin.spis>DEFAULT</elm.builtin.spis>
         <elm.staging.dir>${project.build.directory}/${project.groupId}.${project.artifactId}-${project.version}</elm.staging.dir>
         <elm.element.dir>${elm.staging.dir}/${project.groupId}.${project.artifactId}</elm.element.dir>
     </properties>
