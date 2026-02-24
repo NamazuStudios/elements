@@ -6,6 +6,8 @@ import dev.getelements.elements.sdk.SystemVersion;
 import java.util.Arrays;
 import java.util.List;
 
+import static dev.getelements.elements.sdk.SystemVersion.UNKNOWN;
+
 /**
  * Parsed content of the Element manifest properties file ({@code dev.getelements.element.manifest.properties}).
  * Element authors place this file at the root of their element directory to declare version metadata and the names
@@ -52,8 +54,13 @@ public record ElementManifestRecord(
      */
     public static final String ELEMENT_BUILTIN_SPIS = "Element-Builtin-Spis";
 
+    /**
+     * A constant for an empty manifest.
+     */
+    public static final ElementManifestRecord EMPTY = new ElementManifestRecord(UNKNOWN, List.of());
+
     public ElementManifestRecord {
-        version = version == null ? SystemVersion.UNKNOWN : version;
+        version = version == null ? UNKNOWN : version;
         builtinSpis = builtinSpis == null ? List.of() : List.copyOf(builtinSpis);
     }
 
@@ -72,9 +79,9 @@ public record ElementManifestRecord(
         final var t = (String) attributes.getAttribute(ELEMENT_BUILD_TIME);
 
         final var systemVersion = new SystemVersion(
-                v != null ? v : SystemVersion.UNKNOWN.version(),
-                r != null ? r : SystemVersion.UNKNOWN.revision(),
-                t != null ? t : SystemVersion.UNKNOWN.timestamp()
+                v != null ? v : UNKNOWN.version(),
+                r != null ? r : UNKNOWN.revision(),
+                t != null ? t : UNKNOWN.timestamp()
         );
 
         final var raw = (String) attributes.getAttribute(ELEMENT_BUILTIN_SPIS);
@@ -96,7 +103,7 @@ public record ElementManifestRecord(
      * @return an empty {@link ElementManifestRecord}
      */
     public static ElementManifestRecord empty() {
-        return new ElementManifestRecord(SystemVersion.UNKNOWN, List.of());
+        return new ElementManifestRecord(UNKNOWN, List.of());
     }
 
 }

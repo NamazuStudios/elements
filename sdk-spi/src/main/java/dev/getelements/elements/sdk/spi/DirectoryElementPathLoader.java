@@ -3,6 +3,8 @@ package dev.getelements.elements.sdk.spi;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
+import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +109,101 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         }
 
         return PropertiesAttributes.wrap(properties);
+
+    }
+
+    private Attributes readAttributes(final Path path) {
+
+        final var attributesPath = path.resolve(ATTRIBUTES_PROPERTIES_FILE);
+
+        if (!isRegularFile(attributesPath)) {
+            return Attributes.emptyAttributes();
+        }
+
+        final var properties = new Properties();
+
+        try (final var is = newInputStream(attributesPath)) {
+            properties.load(is);
+        } catch (IOException ex) {
+            logger.warn("Failed to read attributes at {}: {}", attributesPath, ex.getMessage());
+            return Attributes.emptyAttributes();
+        }
+
+        return PropertiesAttributes.wrap(properties);
+
+    }
+
+    @Override
+    public ElementPathRecord readElement(final Path path) {
+
+        final var attributes = readAttributes(path);
+        final var manifest = ElementManifestRecord.from(readManifest(path));
+
+        final var api = collectDirEntries(path.resolve(API_DIR));
+        final var spi = collectDirEntries(path.resolve(SPI_DIR));
+        final var lib = collectDirEntries(path.resolve(LIB_DIR));
+        final var classpath = collectDirEntriesRecursive(path.resolve(CLASSPATH_DIR));
+
+        return new ElementPathRecord(path, api, spi, lib, classpath, attributes, manifest);
+
+    }
+
+    private List<Path> collectDirEntries(final Path dir) {
+
+        if (!isDirectory(dir)) {
+            return List.of();
+        }
+
+        final var entries = new ArrayList<Path>();
+
+        try (final var ds = newDirectoryStream(dir)) {
+            for (final var entry : ds) {
+                entries.add(entry);
+            }
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        }
+
+        return List.copyOf(entries);
+
+    }
+
+    private List<Path> collectDirEntriesRecursive(final Path dir) {
+
+        if (!isDirectory(dir)) {
+            return List.of();
+        }
+
+        try (final var walk = Files.walk(dir)) {
+            return walk
+                    .filter(p -> !p.equals(dir))
+                    .toList();
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        }
+
+    }
+
+    @Override
+    public Stream<ElementPathRecord> readElementPaths(final Path path) {
+
+        if (!isDirectory(path)) {
+            return Stream.empty();
+        }
+
+        final var records = new ArrayList<ElementPathRecord>();
+
+        try (final var ds = newDirectoryStream(path)) {
+            for (final var subpath : ds) {
+                if (isDirectory(subpath) && !isApiDirectory(subpath) && !isPathInHiddenHierarchy(subpath)) {
+                    records.add(readElement(subpath));
+                }
+            }
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        }
+
+        return records.stream();
 
     }
 
@@ -412,7 +509,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
                         // Construct the record with everything needed to make the new Element
 
-                        final var record = ElementPathRecord.from(
+                        final var record = ElementPathLoaderRecord.from(
                                 config.registry(),
                                 elementClassLoader,
                                 config.baseClassLoader(),
@@ -465,7 +562,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
      * Delegates to doLoadWithAttributes with a pass-through attributes provider.
      */
 
-    private record ElementPathRecord(
+    private record ElementPathLoaderRecord(
             Path elementPath,
             Path libs,
             Path classpath,
@@ -475,19 +572,19 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             MutableElementRegistry registry,
             AttributesLoader attributesProvider) {
 
-        public ElementPathRecord {
+        public ElementPathLoaderRecord {
             elementPath = elementPath == null ? null : elementPath.toAbsolutePath();
             libs = libs == null ? null : libs.toAbsolutePath();
             classpath = classpath == null ? null : classpath.toAbsolutePath();
             attributesFile = attributesFile == null ? null : attributesFile.toAbsolutePath();
         }
 
-        public static ElementPathRecord from(final MutableElementRegistry registry,
-                                             final ClassLoader elementParent,
-                                             final ClassLoader baseClassLoader,
-                                             final Path elementPath,
-                                             final DirectoryStream<Path> directory,
-                                             final AttributesLoader attributesProvider) {
+        public static ElementPathLoaderRecord from(final MutableElementRegistry registry,
+                                                   final ClassLoader elementParent,
+                                                   final ClassLoader baseClassLoader,
+                                                   final Path elementPath,
+                                                   final DirectoryStream<Path> directory,
+                                                   final AttributesLoader attributesProvider) {
 
             Path libs, classpath, attributesFile;
             libs = classpath = attributesFile = null;
@@ -512,7 +609,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 }
             }
 
-            return new ElementPathRecord(
+            return new ElementPathLoaderRecord(
                     elementPath,
                     libs,
                     classpath,

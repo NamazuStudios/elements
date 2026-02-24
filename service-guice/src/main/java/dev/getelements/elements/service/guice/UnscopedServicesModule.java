@@ -24,6 +24,7 @@ import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
+import dev.getelements.elements.sdk.service.system.ElementInspectorService;
 import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
@@ -75,6 +76,7 @@ import dev.getelements.elements.service.receipt.SuperuserReceiptService;
 import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
+import dev.getelements.elements.service.system.SuperUserElementInspectorService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
@@ -316,6 +318,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(ElementDeploymentService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserElementDeploymentService.class);
+
+        bind(ElementInspectorService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserElementInspectorService.class);
 
         bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultUserConfiguration.class).asEagerSingleton();

@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk;
 
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
+import dev.getelements.elements.sdk.record.ElementPathRecord;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -493,7 +494,9 @@ public interface ElementPathLoader {
      * @return the manifest {@link Attributes}, or empty {@link Attributes} if no manifest is present
      * @since 3.7
      */
-    Attributes readManifest(Path path);
+    default Attributes readManifest(Path path) {
+        return readElement(path).attributes();
+    }
 
     /**
      * Reads the {@link ElementManifestRecord} from the {@link Path}.
@@ -501,9 +504,24 @@ public interface ElementPathLoader {
      * @param path the {@link Path}
      */
     default ElementManifestRecord readAndParseManifest(final Path path) {
-        final var attributes = readManifest(path);
-        return ElementManifestRecord.from(attributes);
+        return readElement(path).manifest();
     }
+
+    /**
+     * Reads the {@link ElementPathRecord} from the supplied path.
+     * @param path the path
+     * @return the path
+     */
+    ElementPathRecord readElement(Path path);
+
+    /**
+     * Scans all sub-paths of the supplied {@link Path} producing an instance of {@link ElementPathRecord} for the
+     * specific element contained therein.
+     *
+     * @param path the path
+     * @return the {@link ElementPathRecord}
+     */
+    Stream<ElementPathRecord> readElementPaths(Path path);
 
     /**
      * Loads a ClassLoader given the parent ClassLoader and the path of the Element itself. This is useful for when you
