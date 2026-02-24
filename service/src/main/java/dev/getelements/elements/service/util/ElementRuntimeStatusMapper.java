@@ -6,6 +6,8 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.mapstruct.Mapper;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
 
 @Mapper(uses = {ElementMetadataMapper.class})
@@ -31,6 +33,25 @@ public interface ElementRuntimeStatusMapper extends MapperRegistry.Mapper<Runtim
         }
 
         return "%s@%s".formatted(path.getFileSystem(), path);
+
+    }
+
+    /**
+     * Converts the exception to a string by printing its stacktrace to the string.
+     *
+     * @param throwable the throwable
+     * @return a string from the throwable
+     */
+    static String exceptionToString(final Throwable throwable) {
+
+        if (throwable == null) {
+            return null;
+        }
+
+        final var writer = new StringWriter();
+        final var printer = new PrintWriter(writer);
+        throwable.printStackTrace(printer);
+        return writer.toString();
 
     }
 

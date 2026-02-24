@@ -28,6 +28,12 @@ public record ElementRuntimeStatus(
         @Schema(description = "A list of logs related to the deployment of the runtime.")
         List<String> logs,
 
+        @Schema(description = "A list of warnings related to the deployment of the runtime.")
+        List<String> warnings,
+
+        @Schema(description = "A list of errors related to the deployment of the runtime.")
+        List<String> errors,
+
         @Schema(description = "A list of Elements included in the runtime.")
         List<ElementMetadata> elements,
 

@@ -147,6 +147,7 @@ public interface ElementRuntimeService {
             List<Path> deploymentFiles,
             Map<Path, ElementManifestRecord> elementManifests,
             List<String> logs,
+            List<String> warnings,
             List<Throwable> errors
     ) {
         public RuntimeRecord {

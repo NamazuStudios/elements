@@ -105,6 +105,25 @@ record DeploymentContext(
     }
 
     /**
+     * Appends an INFO-level message to the deployment log.
+     *
+     * @param message the message to log
+     */
+    public void log(final String message) {
+        logs.add("INFO: %s".formatted(message));
+    }
+
+    /**
+     * Appends a WARN-level message to the warnings list and to the deployment log.
+     *
+     * @param message the message to log
+     */
+    public void warn(final String message) {
+        logs.add("WARN: %s".formatted(message));
+        warnings.add(message);
+    }
+
+    /**
      * Creates a custom SPI classloader for the given element path if custom SPI dependencies are configured.
      * If no custom SPI is configured, returns the parent classloader.
      *
@@ -118,7 +137,7 @@ record DeploymentContext(
         final var spiClassPath = spiPaths.get(elementPath);
 
         if (spiClassPath == null) {
-            logs.add("%s uses default SPI. Not loading SPI".formatted(elementPath));
+            log("%s uses default SPI. Not loading SPI".formatted(elementPath));
             return parent;
         }
 
@@ -129,7 +148,7 @@ record DeploymentContext(
             try {
                 copyArtifactWithDependencies(coordinates, spiTarget);
             } catch (IOException e) {
-                warnings.add(
+                warn(
                         "Caught IO Exception assembling classpath %s"
                                 .formatted(e.getMessage())
                 );
@@ -153,12 +172,12 @@ record DeploymentContext(
                     .toArray(URL[]::new);
         } catch (IOException e) {
             jarUrls = new URL[0];
-            warnings.add("Caught IO Exception assembling classpath %s".formatted(e.getMessage()));
+            warn("Caught IO Exception assembling classpath %s".formatted(e.getMessage()));
             errors.add(e);
         }
 
         if (jarUrls.length == 0) {
-            warnings.add("No JAR files found in SPI directory for path: " + elementPath);
+            warn("No JAR files found in SPI directory for path: " + elementPath);
         }
 
         return new URLClassLoader(jarUrls, parent);
@@ -178,10 +197,10 @@ record DeploymentContext(
             final Path targetDir
     ) throws IOException {
 
-        logs.add("Resolving artifact with dependencies: " + coordinates);
+        log("Resolving artifact with dependencies: " + coordinates);
 
         final var artifacts = artifactLoader.findClasspathForArtifact(repositories, coordinates).toList();
-        logs.add("Found %d artifact(s) including dependencies %s".formatted(artifacts.size(), coordinates));
+        log("Found %d artifact(s) including dependencies %s".formatted(artifacts.size(), coordinates));
 
         for (final var artifact : artifacts) {
 
@@ -195,7 +214,7 @@ record DeploymentContext(
 
             final var destinationPath = targetDir.resolve(fileName);
             copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-            logs.add("Copied artifact: %s".formatted(fileName));
+            log("Copied artifact: %s".formatted(fileName));
             deploymentFiles.add(destinationPath);
 
         }
@@ -264,7 +283,7 @@ record DeploymentContext(
         manifests.put(elementPath, manifest);
 
         if (!SystemVersion.UNKNOWN.equals(manifest.version())) {
-            logs.add("Manifest at %s: version=%s, revision=%s, buildTime=%s".formatted(
+            log("Manifest at %s: version=%s, revision=%s, buildTime=%s".formatted(
                     elementPath,
                     manifest.version().version(),
                     manifest.version().revision(),
@@ -275,7 +294,7 @@ record DeploymentContext(
             return false;
         }
 
-        logs.add("Applying %d manifest builtin SPI(s) for element at %s".formatted(
+        log("Applying %d manifest builtin SPI(s) for element at %s".formatted(
                 manifest.builtinSpis().size(),
                 elementPath)
         );
@@ -304,7 +323,7 @@ record DeploymentContext(
         try {
             return BuiltinSpi.valueOf(name).coordinates();
         } catch (IllegalArgumentException e) {
-            warnings.add("Unknown builtin SPI name: " + name);
+            warn("Unknown builtin SPI name: " + name);
             return List.of();
         }
     }
@@ -324,17 +343,17 @@ record DeploymentContext(
         final var result = createSpiClassLoaderFor(parent, elementPath);
 
         if (unconsumedSpiPaths.remove(elementPath)) {
-            logs.add("Applied SPI to element at path: %s:%s".formatted(
+            log("Applied SPI to element at path: %s:%s".formatted(
                     elementPath.getFileSystem(),
                     elementPath
             ));
         } else if (parent == result) {
-            logs.add("Using default SPI for path: %s:%s".formatted(
+            log("Using default SPI for path: %s:%s".formatted(
                     elementPath.getFileSystem(),
                     elementPath
             ));
         } else {
-            warnings.add("Previously consumed SPI classpath to element at path %s:%s ".formatted(
+            warn("Previously consumed SPI classpath to element at path %s:%s ".formatted(
                     elementPath.getFileSystem(),
                     elementPath
             ));
@@ -357,15 +376,10 @@ record DeploymentContext(
         final var finalAttributes = createAttributesForPath(baseAttrs, elementPath);
 
         if (unconsumedAttributePaths.remove(elementPath)) {
-            logs.add("Applied attributes to element at path: %s:%s\n%s".formatted(
+            log("Applied attributes to element at path: %s:%s\n%s".formatted(
                     elementPath.getFileSystem(),
                     elementPath,
                     String.join(" -> \n", finalAttributes.getAttributeNames())
-            ));
-        } else {
-            warnings.add("Previously consumed attributes to element at path %s:%s ".formatted(
-                    elementPath.getFileSystem(),
-                    elementPath
             ));
         }
 
