@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementPathRecordMetadata;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.service.system.ElementInspectorService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import jakarta.inject.Inject;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.ProviderNotFoundException;
 import java.util.List;
 import dev.getelements.elements.sdk.record.Artifact;
@@ -51,6 +53,7 @@ public class SuperUserElementInspectorService implements ElementInspectorService
             try (final var fs = FileSystems.newFileSystem(tempFile)) {
                 final var root = fs.getPath("/");
                 return elementPathLoader.readElementPaths(root)
+                        .map(ElementPathRecord::relativize)
                         .map(r -> getMapperRegistry().map(r, ElementPathRecordMetadata.class))
                         .toList();
             } catch (ProviderNotFoundException ex) {
@@ -77,6 +80,7 @@ public class SuperUserElementInspectorService implements ElementInspectorService
         try (final var fs = FileSystems.newFileSystem(artifact.path())) {
             final var root = fs.getPath("/");
             return elementPathLoader.readElementPaths(root)
+                    .map(ElementPathRecord::relativize)
                     .map(r -> getMapperRegistry().map(r, ElementPathRecordMetadata.class))
                     .toList();
         } catch (IOException | ProviderNotFoundException ex) {

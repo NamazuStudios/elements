@@ -26,4 +26,34 @@ public record ElementPathRecord(
         List<Path> classpath,
         Attributes attributes,
         ElementManifestRecord manifest
-) {}
+) {
+
+    /**
+     * Returns a copy of this {@link ElementPathRecord} relative to the value of {@link #path()}. Throwing an
+     * {@link IllegalStateException} if any of the contained paths are not part of the parent path. Additionally, this
+     * shortens the root path to just its filename.
+     *
+     * @return a relativized {@link ElementPathRecord}
+     */
+    public ElementPathRecord relativize() {
+        return new ElementPathRecord(
+            path.getFileName(),
+            api.stream().map(this::relativize).toList(),
+            spi.stream().map(this::relativize).toList(),
+            lib.stream().map(this::relativize).toList(),
+            classpath.stream().map(this::relativize).toList(),
+            attributes,
+            manifest
+        );
+    }
+
+    private Path relativize(final Path p) {
+
+        if (!p.startsWith(path)) {
+            throw new IllegalStateException("Path " + p + " is not under root " + path);
+        }
+
+        return path.relativize(p);
+    }
+
+}
