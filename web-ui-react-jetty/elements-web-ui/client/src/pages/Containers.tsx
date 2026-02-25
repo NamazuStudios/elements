@@ -98,7 +98,7 @@ function getContainerDotColor(container: ElementContainerStatus): string {
 }
 
 export default function Containers() {
-  const [selectedContainer, setSelectedContainer] = useState<number | null>(null);
+  const [selectedContainerId, setSelectedContainerId] = useState<string | null>(null);
 
   const { data: containers, isLoading, error } = useQuery<ElementContainerStatus[]>({
     queryKey: ['/api/rest/elements/container'],
@@ -112,7 +112,9 @@ export default function Containers() {
     );
   }
 
-  const selected = selectedContainer !== null ? containers?.[selectedContainer] : null;
+  const selected = selectedContainerId !== null
+    ? (containers?.find(c => c.runtime?.deployment?.id === selectedContainerId) ?? null)
+    : null;
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -154,11 +156,11 @@ export default function Containers() {
       )}
 
       {selected ? (
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 flex-1 min-h-0">
           <Button
             variant="outline"
             className="self-start"
-            onClick={() => setSelectedContainer(null)}
+            onClick={() => setSelectedContainerId(null)}
             data-testid="button-back-containers"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -170,9 +172,9 @@ export default function Containers() {
         <div className="space-y-3">
           {containers?.map((container, idx) => (
             <Card
-              key={idx}
+              key={container.runtime?.deployment?.id ?? idx}
               className="hover-elevate cursor-pointer"
-              onClick={() => setSelectedContainer(idx)}
+              onClick={() => setSelectedContainerId(container.runtime?.deployment?.id ?? null)}
               data-testid={`card-container-${idx}`}
             >
               <CardContent className="p-4">
@@ -222,7 +224,7 @@ export default function Containers() {
 
 function ContainerDetail({ container }: { container: ElementContainerStatus }) {
   return (
-    <Card>
+    <Card className="flex flex-col flex-1 min-h-0">
       <CardContent className="p-4 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
           <Container className="w-5 h-5" />
@@ -259,7 +261,9 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
             <TabsTrigger value="json" data-testid="tab-container-json">Raw JSON</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4 space-y-4">
+          <TabsContent value="overview" className="mt-4">
+            <ScrollArea className="h-[calc(100vh-23rem)] w-full">
+              <div className="space-y-4 pr-4">
             {container.runtime?.errors && container.runtime.errors.length > 0 && (
               <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3 space-y-1.5">
                 <div className="flex items-center gap-1.5">
@@ -268,11 +272,11 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
                     {container.runtime.errors.length} Error{container.runtime.errors.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <ul className="space-y-0.5 ml-5">
+                <div className="space-y-1.5">
                   {container.runtime.errors.map((err, i) => (
-                    <li key={i} className="font-mono text-xs text-destructive/80">{err}</li>
+                    <ExpandableMessage key={i} text={err} colorClass="text-destructive/80" />
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
@@ -283,11 +287,11 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
                     {container.runtime.warnings.length} Warning{container.runtime.warnings.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <ul className="space-y-0.5 ml-5">
+                <div className="space-y-1.5">
                   {container.runtime.warnings.map((warn, i) => (
-                    <li key={i} className="font-mono text-xs text-yellow-700 dark:text-yellow-400">{warn}</li>
+                    <ExpandableMessage key={i} text={warn} colorClass="text-yellow-700 dark:text-yellow-400" />
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {container.uris && container.uris.length > 0 && (
@@ -363,10 +367,20 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
                 </CollapsibleContent>
               </Collapsible>
             )}
+              </div>
+            </ScrollArea>
           </TabsContent>
 
           <TabsContent value="elements" className="mt-4">
-            <ElementsGrid elements={container.elements} />
+            {container.elements && container.elements.length > 0 ? (
+              <ScrollArea className="h-[calc(100vh-23rem)] w-full">
+                <div className="pr-4">
+                  <ElementsGrid elements={container.elements} />
+                </div>
+              </ScrollArea>
+            ) : (
+              <ElementsGrid elements={container.elements} />
+            )}
           </TabsContent>
 
           <TabsContent value="logs" className="mt-4">
@@ -377,7 +391,7 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
           </TabsContent>
 
           <TabsContent value="json" className="mt-4">
-            <ScrollArea className="h-[500px] w-full rounded-md border">
+            <ScrollArea className="h-[calc(100vh-23rem)] w-full rounded-md border">
               <pre className="p-4 text-xs font-mono">
                 {JSON.stringify(container, null, 2)}
               </pre>
@@ -533,12 +547,15 @@ function LogsView({ containerLogs, runtimeLogs }: { containerLogs?: string[]; ru
     return <p className="text-sm text-muted-foreground italic">No logs available.</p>;
   }
 
+  const hasBoth = containerLogs && containerLogs.length > 0 && runtimeLogs && runtimeLogs.length > 0;
+  const scrollHeight = hasBoth ? 'h-[calc(50vh-14rem)]' : 'h-[calc(100vh-23rem)]';
+
   return (
     <div className="space-y-4">
       {containerLogs && containerLogs.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Container Logs</h3>
-          <ScrollArea className="h-[200px] w-full rounded-md border">
+          <ScrollArea className={`${scrollHeight} w-full rounded-md border`}>
             <div className="p-3 space-y-0.5">
               {containerLogs.map((log, i) => (
                 <p key={i} className="font-mono text-[11px] text-muted-foreground">{log}</p>
@@ -550,7 +567,7 @@ function LogsView({ containerLogs, runtimeLogs }: { containerLogs?: string[]; ru
       {runtimeLogs && runtimeLogs.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Runtime Logs</h3>
-          <ScrollArea className="h-[200px] w-full rounded-md border">
+          <ScrollArea className={`${scrollHeight} w-full rounded-md border`}>
             <div className="p-3 space-y-0.5">
               {runtimeLogs.map((log, i) => (
                 <p key={i} className="font-mono text-[11px] text-muted-foreground">{log}</p>
@@ -558,6 +575,32 @@ function LogsView({ containerLogs, runtimeLogs }: { containerLogs?: string[]; ru
             </div>
           </ScrollArea>
         </div>
+      )}
+    </div>
+  );
+}
+
+function ExpandableMessage({ text, colorClass, maxLines = 4 }: {
+  text: string;
+  colorClass: string;
+  maxLines?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = text.split('\n');
+  const isTruncated = lines.length > maxLines;
+  const visible = expanded ? lines : lines.slice(0, maxLines);
+  return (
+    <div>
+      <pre className={`font-mono text-xs ${colorClass} whitespace-pre-wrap break-all`}>
+        {visible.join('\n')}
+      </pre>
+      {isTruncated && (
+        <button
+          className={`text-xs ${colorClass} opacity-60 hover:opacity-100 mt-0.5 underline`}
+          onClick={() => setExpanded(e => !e)}
+        >
+          {expanded ? 'Show less' : `+${lines.length - maxLines} more lines`}
+        </button>
       )}
     </div>
   );

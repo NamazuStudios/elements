@@ -90,7 +90,7 @@ function getRuntimeDotColor(runtime: ElementRuntimeStatus): string {
 }
 
 export default function Runtimes() {
-  const [selectedRuntime, setSelectedRuntime] = useState<number | null>(null);
+  const [selectedRuntimeId, setSelectedRuntimeId] = useState<string | null>(null);
 
   const { data: runtimes, isLoading, error } = useQuery<ElementRuntimeStatus[]>({
     queryKey: ['/api/rest/elements/runtime'],
@@ -104,7 +104,9 @@ export default function Runtimes() {
     );
   }
 
-  const selected = selectedRuntime !== null ? runtimes?.[selectedRuntime] : null;
+  const selected = selectedRuntimeId !== null
+    ? (runtimes?.find(r => r.deployment?.id === selectedRuntimeId) ?? null)
+    : null;
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -146,11 +148,11 @@ export default function Runtimes() {
       )}
 
       {selected ? (
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 flex-1 min-h-0">
           <Button
             variant="outline"
             className="self-start"
-            onClick={() => setSelectedRuntime(null)}
+            onClick={() => setSelectedRuntimeId(null)}
             data-testid="button-back-runtimes"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -162,9 +164,9 @@ export default function Runtimes() {
         <div className="space-y-3">
           {runtimes?.map((runtime, idx) => (
             <Card
-              key={idx}
+              key={runtime.deployment?.id ?? idx}
               className="hover-elevate cursor-pointer"
-              onClick={() => setSelectedRuntime(idx)}
+              onClick={() => setSelectedRuntimeId(runtime.deployment?.id ?? null)}
               data-testid={`card-runtime-${idx}`}
             >
               <CardContent className="p-4">
@@ -214,7 +216,7 @@ export default function Runtimes() {
 
 function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
   return (
-    <Card>
+    <Card className="flex flex-col flex-1 min-h-0">
       <CardContent className="p-4 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
           <Cpu className="w-5 h-5" />
@@ -247,7 +249,9 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
             <TabsTrigger value="json" data-testid="tab-runtime-json">Raw JSON</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4 space-y-4">
+          <TabsContent value="overview" className="mt-4">
+            <ScrollArea className="h-[calc(100vh-23rem)] w-full">
+              <div className="space-y-4 pr-4">
             {runtime.errors && runtime.errors.length > 0 && (
               <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3 space-y-1.5">
                 <div className="flex items-center gap-1.5">
@@ -256,11 +260,11 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
                     {runtime.errors.length} Error{runtime.errors.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <ul className="space-y-0.5 ml-5">
+                <div className="space-y-1.5">
                   {runtime.errors.map((err, i) => (
-                    <li key={i} className="font-mono text-xs text-destructive/80">{err}</li>
+                    <ExpandableMessage key={i} text={err} colorClass="text-destructive/80" />
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {runtime.warnings && runtime.warnings.length > 0 && (
@@ -271,11 +275,11 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
                     {runtime.warnings.length} Warning{runtime.warnings.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <ul className="space-y-0.5 ml-5">
+                <div className="space-y-1.5">
                   {runtime.warnings.map((warn, i) => (
-                    <li key={i} className="font-mono text-xs text-yellow-700 dark:text-yellow-400">{warn}</li>
+                    <ExpandableMessage key={i} text={warn} colorClass="text-yellow-700 dark:text-yellow-400" />
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {runtime.deployment && (
@@ -321,13 +325,16 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
                 </CollapsibleContent>
               </Collapsible>
             )}
+              </div>
+            </ScrollArea>
           </TabsContent>
 
           <TabsContent value="elements" className="mt-4">
             {!runtime.elements || runtime.elements.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No elements in this runtime.</p>
             ) : (
-              <div className="space-y-3">
+              <ScrollArea className="h-[calc(100vh-23rem)] w-full">
+                <div className="space-y-3 pr-4">
                 {runtime.elements.filter(e => e != null).map((element, idx) => (
                   <Card key={idx} data-testid={`card-runtime-element-${idx}`}>
                     <CardContent className="p-3 space-y-2">
@@ -363,7 +370,8 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
+                </div>
+              </ScrollArea>
             )}
           </TabsContent>
 
@@ -371,7 +379,7 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
             {!runtime.deploymentFiles || runtime.deploymentFiles.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No deployment files.</p>
             ) : (
-              <ScrollArea className="h-[300px] w-full rounded-md border">
+              <ScrollArea className="h-[calc(100vh-23rem)] w-full rounded-md border">
                 <div className="p-3 space-y-0.5">
                   {runtime.deploymentFiles.map((file, i) => (
                     <p key={i} className="font-mono text-xs text-muted-foreground">{file}</p>
@@ -385,7 +393,7 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
             {!runtime.logs || runtime.logs.length === 0 ? (
               <p className="text-sm text-muted-foreground italic">No logs available.</p>
             ) : (
-              <ScrollArea className="h-[300px] w-full rounded-md border">
+              <ScrollArea className="h-[calc(100vh-23rem)] w-full rounded-md border">
                 <div className="p-3 space-y-0.5">
                   {runtime.logs.map((log, i) => (
                     <p key={i} className="font-mono text-[11px] text-muted-foreground">{log}</p>
@@ -396,7 +404,7 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
           </TabsContent>
 
           <TabsContent value="json" className="mt-4">
-            <ScrollArea className="h-[500px] w-full rounded-md border">
+            <ScrollArea className="h-[calc(100vh-23rem)] w-full rounded-md border">
               <pre className="p-4 text-xs font-mono">
                 {JSON.stringify(runtime, null, 2)}
               </pre>
@@ -496,6 +504,32 @@ function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ExpandableMessage({ text, colorClass, maxLines = 4 }: {
+  text: string;
+  colorClass: string;
+  maxLines?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const lines = text.split('\n');
+  const isTruncated = lines.length > maxLines;
+  const visible = expanded ? lines : lines.slice(0, maxLines);
+  return (
+    <div>
+      <pre className={`font-mono text-xs ${colorClass} whitespace-pre-wrap break-all`}>
+        {visible.join('\n')}
+      </pre>
+      {isTruncated && (
+        <button
+          className={`text-xs ${colorClass} opacity-60 hover:opacity-100 mt-0.5 underline`}
+          onClick={() => setExpanded(e => !e)}
+        >
+          {expanded ? 'Show less' : `+${lines.length - maxLines} more lines`}
+        </button>
+      )}
     </div>
   );
 }

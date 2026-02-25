@@ -1084,7 +1084,9 @@ function KeyValueEditor({
   const entries = Object.entries(value || {});
 
   const addEntry = () => {
-    const newKey = `key${entries.length + 1}`;
+    let counter = entries.length + 1;
+    let newKey = `key${counter}`;
+    while (newKey in value) newKey = `key${++counter}`;
     onChange({ ...value, [newKey]: '' });
   };
 
@@ -1181,7 +1183,9 @@ function PathClassPathsEditor({
   const entries = Object.entries(value || {});
 
   const addPath = () => {
-    const newKey = `path${entries.length + 1}`;
+    let counter = entries.length + 1;
+    let newKey = `path${counter}`;
+    while (newKey in value) newKey = `path${++counter}`;
     onChange({ ...value, [newKey]: [''] });
   };
 
@@ -1289,7 +1293,9 @@ function PathKeyValueMapEditor({
   const entries = Object.entries(value || {});
 
   const addPath = () => {
-    const newKey = `path${entries.length + 1}`;
+    let counter = entries.length + 1;
+    let newKey = `path${counter}`;
+    while (newKey in value) newKey = `path${++counter}`;
     onChange({ ...value, [newKey]: {} });
   };
 
@@ -1911,6 +1917,10 @@ function WizardConfigStep({
 
   const { toast } = useToast();
 
+  // Keep a ref to the latest formData so async callbacks always see current state.
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+
   const elmInspectMutation = useMutation({
     mutationFn: async (file: File) => {
       const fd = new FormData();
@@ -1937,7 +1947,8 @@ function WizardConfigStep({
         spiArtifacts: [],
         elementArtifacts: [],
       }));
-      update({ elements: [...formData.elements, ...newElements] });
+      const current = formDataRef.current;
+      setFormData({ ...current, elements: [...current.elements, ...newElements] });
       toast({
         title: 'ELM Imported',
         description: `Added ${newElements.length} element definition${newElements.length !== 1 ? 's' : ''} from the ELM file.`,
