@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Container, RefreshCw, ExternalLink, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Loader2, Container, RefreshCw, ExternalLink, ChevronDown, ChevronRight, ArrowLeft, AlertTriangle, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { queryClient } from '@/lib/queryClient';
 
@@ -32,12 +32,21 @@ interface ElementDeployment {
   [key: string]: any;
 }
 
+interface ElementManifestRecord {
+  version?: { version: string; revision: string; timestamp: string };
+  builtinSpis?: string[];
+}
+
 interface ElementRuntimeStatus {
   deployment: ElementDeployment;
   status: string;
+  elementPaths: string[];
   deploymentFiles: string[];
   logs: string[];
+  warnings: string[];
+  errors: string[];
   elements: ElementMetadata[];
+  elementManifests: Record<string, ElementManifestRecord>;
 }
 
 interface ElementContainerStatus {
@@ -80,6 +89,12 @@ function getStatusVariant(status: string): 'default' | 'secondary' | 'destructiv
     default:
       return 'outline';
   }
+}
+
+function getContainerDotColor(container: ElementContainerStatus): string {
+  if (container.runtime?.errors?.length) return 'bg-red-500';
+  if (container.runtime?.warnings?.length) return 'bg-yellow-500';
+  return getStatusColor(container.status);
 }
 
 export default function Containers() {
@@ -164,7 +179,7 @@ export default function Containers() {
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStatusColor(container.status)}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getContainerDotColor(container)}`} />
                       <span className="font-mono text-sm font-medium" data-testid={`text-container-deployment-${idx}`}>
                         {container.runtime?.deployment?.id || `Container ${idx + 1}`}
                       </span>
@@ -172,15 +187,25 @@ export default function Containers() {
                         {container.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-4 text-xs flex-wrap">
+                      {container.runtime?.errors && container.runtime.errors.length > 0 && (
+                        <span className="flex items-center gap-1 text-destructive font-medium">
+                          <AlertCircle className="w-3 h-3" />{container.runtime.errors.length} error{container.runtime.errors.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
+                        <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
+                          <AlertTriangle className="w-3 h-3" />{container.runtime.warnings.length} warning{container.runtime.warnings.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
                       {container.elements && container.elements.length > 0 && (
-                        <span>{container.elements.length} element{container.elements.length !== 1 ? 's' : ''}</span>
+                        <span className="text-muted-foreground">{container.elements.length} element{container.elements.length !== 1 ? 's' : ''}</span>
                       )}
                       {container.uris && container.uris.length > 0 && (
-                        <span>{container.uris.length} URI{container.uris.length !== 1 ? 's' : ''}</span>
+                        <span className="text-muted-foreground">{container.uris.length} URI{container.uris.length !== 1 ? 's' : ''}</span>
                       )}
                       {container.logs && container.logs.length > 0 && (
-                        <span>{container.logs.length} log entr{container.logs.length !== 1 ? 'ies' : 'y'}</span>
+                        <span className="text-muted-foreground">{container.logs.length} log entr{container.logs.length !== 1 ? 'ies' : 'y'}</span>
                       )}
                     </div>
                   </div>
@@ -212,6 +237,18 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
               Runtime: {container.runtime.status}
             </Badge>
           )}
+          {container.runtime?.errors && container.runtime.errors.length > 0 && (
+            <Badge variant="destructive" className="gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {container.runtime.errors.length} error{container.runtime.errors.length !== 1 ? 's' : ''}
+            </Badge>
+          )}
+          {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
+            <Badge variant="outline" className="gap-1 text-yellow-600 dark:text-yellow-500 border-yellow-500/50">
+              <AlertTriangle className="w-3 h-3" />
+              {container.runtime.warnings.length} warning{container.runtime.warnings.length !== 1 ? 's' : ''}
+            </Badge>
+          )}
         </div>
 
         <Tabs defaultValue="overview">
@@ -223,12 +260,42 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
           </TabsList>
 
           <TabsContent value="overview" className="mt-4 space-y-4">
+            {container.runtime?.errors && container.runtime.errors.length > 0 && (
+              <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">
+                    {container.runtime.errors.length} Error{container.runtime.errors.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <ul className="space-y-0.5 ml-5">
+                  {container.runtime.errors.map((err, i) => (
+                    <li key={i} className="font-mono text-xs text-destructive/80">{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
+              <div className="rounded-md border border-yellow-500/50 bg-yellow-500/5 p-3 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                  <span className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                    {container.runtime.warnings.length} Warning{container.runtime.warnings.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <ul className="space-y-0.5 ml-5">
+                  {container.runtime.warnings.map((warn, i) => (
+                    <li key={i} className="font-mono text-xs text-yellow-700 dark:text-yellow-400">{warn}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {container.uris && container.uris.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-medium">URIs</h3>
+                <h3 className="text-sm font-medium">Endpoints</h3>
                 <div className="space-y-1">
                   {container.uris.map((uri, i) => (
-                    <div key={i} className="flex items-center gap-2">
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/20">
                       <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                       <span className="font-mono text-xs break-all" data-testid={`text-uri-${i}`}>{uri}</span>
                     </div>
@@ -238,12 +305,21 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
             )}
 
             {container.runtime?.deployment && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Deployment</h3>
-                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-                  {JSON.stringify(container.runtime.deployment, null, 2)}
-                </pre>
-              </div>
+              <DeploymentInfoSection deployment={container.runtime.deployment} />
+            )}
+
+            {container.runtime?.elementPaths && container.runtime.elementPaths.length > 0 && (
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover-elevate rounded-md px-1">
+                  Element Paths ({container.runtime.elementPaths.length})
+                  <ChevronDown className="w-3 h-3" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-0.5">
+                  {container.runtime.elementPaths.map((p, i) => (
+                    <p key={i} className="font-mono text-xs text-muted-foreground break-all">{p}</p>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
             )}
 
             {container.runtime?.deploymentFiles && container.runtime.deploymentFiles.length > 0 && (
@@ -252,12 +328,38 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
                   Deployment Files ({container.runtime.deploymentFiles.length})
                   <ChevronDown className="w-3 h-3" />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  <div className="space-y-1">
-                    {container.runtime.deploymentFiles.map((file, i) => (
-                      <p key={i} className="font-mono text-xs text-muted-foreground">{file}</p>
-                    ))}
-                  </div>
+                <CollapsibleContent className="mt-2 space-y-0.5">
+                  {container.runtime.deploymentFiles.map((file, i) => (
+                    <p key={i} className="font-mono text-xs text-muted-foreground">{file}</p>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
+            {container.runtime?.elementManifests && Object.keys(container.runtime.elementManifests).length > 0 && (
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover-elevate rounded-md px-1">
+                  Element Manifests ({Object.keys(container.runtime.elementManifests).length})
+                  <ChevronDown className="w-3 h-3" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-2">
+                  {Object.entries(container.runtime.elementManifests).map(([key, manifest]) => (
+                    <div key={key} className="rounded-md border p-2 space-y-1">
+                      <p className="font-mono text-xs font-medium break-all">{key}</p>
+                      {manifest.version && (
+                        <p className="text-xs text-muted-foreground">
+                          v{manifest.version.version} · {manifest.version.revision}
+                        </p>
+                      )}
+                      {manifest.builtinSpis && manifest.builtinSpis.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {manifest.builtinSpis.map(spi => (
+                            <Badge key={spi} variant="secondary" className="text-[10px]">{spi}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </CollapsibleContent>
               </Collapsible>
             )}
@@ -284,6 +386,98 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
         </Tabs>
       </CardContent>
     </Card>
+  );
+}
+
+function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }) {
+  const [extraOpen, setExtraOpen] = useState(false);
+  const { id, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, ...rest } = deployment;
+  const extraKeys = Object.keys(rest);
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium">Deployment</h3>
+      <div className="rounded-md border divide-y">
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-3 items-center">
+          {id && (
+            <>
+              <span className="text-xs text-muted-foreground">ID</span>
+              <span className="font-mono text-xs break-all">{id}</span>
+            </>
+          )}
+          {state && (
+            <>
+              <span className="text-xs text-muted-foreground">State</span>
+              <span>
+                <Badge
+                  variant={state === 'ENABLED' ? 'default' : state === 'DISABLED' ? 'secondary' : 'outline'}
+                  className="text-xs"
+                >
+                  {state}
+                </Badge>
+              </span>
+            </>
+          )}
+          {version !== undefined && (
+            <>
+              <span className="text-xs text-muted-foreground">Version</span>
+              <span className="text-xs font-mono">v{version}</span>
+            </>
+          )}
+          {application && (
+            <>
+              <span className="text-xs text-muted-foreground">Application</span>
+              <span className="text-xs">{application.name || application.id}</span>
+            </>
+          )}
+          {typeof useDefaultRepositories === 'boolean' && (
+            <>
+              <span className="text-xs text-muted-foreground">Default Repos</span>
+              <span className="text-xs">{useDefaultRepositories ? 'Yes' : 'No'}</span>
+            </>
+          )}
+          {Array.isArray(elements) && elements.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Elements</span>
+              <span className="text-xs">{elements.length}</span>
+            </>
+          )}
+          {Array.isArray(packages) && packages.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Packages</span>
+              <span className="text-xs">{packages.length}</span>
+            </>
+          )}
+          {Array.isArray(repositories) && repositories.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Repositories</span>
+              <span className="text-xs">{repositories.length}</span>
+            </>
+          )}
+          {elm && (
+            <>
+              <span className="text-xs text-muted-foreground">ELM</span>
+              <span className="font-mono text-xs truncate">{elm.id}</span>
+            </>
+          )}
+        </div>
+        {extraKeys.length > 0 && (
+          <div className="p-3">
+            <Collapsible open={extraOpen} onOpenChange={setExtraOpen}>
+              <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                {extraOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                Additional properties ({extraKeys.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <pre className="bg-muted/50 p-2 rounded text-[10px] overflow-auto">
+                  {JSON.stringify(rest, null, 2)}
+                </pre>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

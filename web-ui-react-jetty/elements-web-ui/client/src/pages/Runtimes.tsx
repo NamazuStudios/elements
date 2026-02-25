@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Cpu, RefreshCw, ChevronDown, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Loader2, Cpu, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, AlertTriangle, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { queryClient } from '@/lib/queryClient';
 
@@ -32,12 +32,21 @@ interface ElementDeployment {
   [key: string]: any;
 }
 
+interface ElementManifestRecord {
+  version?: { version: string; revision: string; timestamp: string };
+  builtinSpis?: string[];
+}
+
 interface ElementRuntimeStatus {
   deployment: ElementDeployment;
   status: string;
+  elementPaths: string[];
   deploymentFiles: string[];
   logs: string[];
+  warnings: string[];
+  errors: string[];
   elements: ElementMetadata[];
+  elementManifests: Record<string, ElementManifestRecord>;
 }
 
 function getStatusColor(status: string) {
@@ -72,6 +81,12 @@ function getStatusVariant(status: string): 'default' | 'secondary' | 'destructiv
     default:
       return 'outline';
   }
+}
+
+function getRuntimeDotColor(runtime: ElementRuntimeStatus): string {
+  if (runtime.errors?.length) return 'bg-red-500';
+  if (runtime.warnings?.length) return 'bg-yellow-500';
+  return getStatusColor(runtime.status);
 }
 
 export default function Runtimes() {
@@ -156,7 +171,7 @@ export default function Runtimes() {
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStatusColor(runtime.status)}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getRuntimeDotColor(runtime)}`} />
                       <span className="font-mono text-sm font-medium" data-testid={`text-runtime-deployment-${idx}`}>
                         {runtime.deployment?.id || `Runtime ${idx + 1}`}
                       </span>
@@ -164,15 +179,25 @@ export default function Runtimes() {
                         {runtime.status}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                    <div className="flex items-center gap-4 text-xs flex-wrap">
+                      {runtime.errors && runtime.errors.length > 0 && (
+                        <span className="flex items-center gap-1 text-destructive font-medium">
+                          <AlertCircle className="w-3 h-3" />{runtime.errors.length} error{runtime.errors.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {runtime.warnings && runtime.warnings.length > 0 && (
+                        <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
+                          <AlertTriangle className="w-3 h-3" />{runtime.warnings.length} warning{runtime.warnings.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
                       {runtime.elements && runtime.elements.length > 0 && (
-                        <span>{runtime.elements.length} element{runtime.elements.length !== 1 ? 's' : ''}</span>
+                        <span className="text-muted-foreground">{runtime.elements.length} element{runtime.elements.length !== 1 ? 's' : ''}</span>
                       )}
                       {runtime.deploymentFiles && runtime.deploymentFiles.length > 0 && (
-                        <span>{runtime.deploymentFiles.length} file{runtime.deploymentFiles.length !== 1 ? 's' : ''}</span>
+                        <span className="text-muted-foreground">{runtime.deploymentFiles.length} file{runtime.deploymentFiles.length !== 1 ? 's' : ''}</span>
                       )}
                       {runtime.logs && runtime.logs.length > 0 && (
-                        <span>{runtime.logs.length} log entr{runtime.logs.length !== 1 ? 'ies' : 'y'}</span>
+                        <span className="text-muted-foreground">{runtime.logs.length} log entr{runtime.logs.length !== 1 ? 'ies' : 'y'}</span>
                       )}
                     </div>
                   </div>
@@ -199,6 +224,18 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
           <Badge variant={getStatusVariant(runtime.status)}>
             {runtime.status}
           </Badge>
+          {runtime.errors && runtime.errors.length > 0 && (
+            <Badge variant="destructive" className="gap-1">
+              <AlertCircle className="w-3 h-3" />
+              {runtime.errors.length} error{runtime.errors.length !== 1 ? 's' : ''}
+            </Badge>
+          )}
+          {runtime.warnings && runtime.warnings.length > 0 && (
+            <Badge variant="outline" className="gap-1 text-yellow-600 dark:text-yellow-500 border-yellow-500/50">
+              <AlertTriangle className="w-3 h-3" />
+              {runtime.warnings.length} warning{runtime.warnings.length !== 1 ? 's' : ''}
+            </Badge>
+          )}
         </div>
 
         <Tabs defaultValue="overview">
@@ -211,13 +248,78 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
           </TabsList>
 
           <TabsContent value="overview" className="mt-4 space-y-4">
-            {runtime.deployment && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Deployment</h3>
-                <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-                  {JSON.stringify(runtime.deployment, null, 2)}
-                </pre>
+            {runtime.errors && runtime.errors.length > 0 && (
+              <div className="rounded-md border border-destructive/50 bg-destructive/5 p-3 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">
+                    {runtime.errors.length} Error{runtime.errors.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <ul className="space-y-0.5 ml-5">
+                  {runtime.errors.map((err, i) => (
+                    <li key={i} className="font-mono text-xs text-destructive/80">{err}</li>
+                  ))}
+                </ul>
               </div>
+            )}
+            {runtime.warnings && runtime.warnings.length > 0 && (
+              <div className="rounded-md border border-yellow-500/50 bg-yellow-500/5 p-3 space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                  <span className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                    {runtime.warnings.length} Warning{runtime.warnings.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <ul className="space-y-0.5 ml-5">
+                  {runtime.warnings.map((warn, i) => (
+                    <li key={i} className="font-mono text-xs text-yellow-700 dark:text-yellow-400">{warn}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {runtime.deployment && (
+              <DeploymentInfoSection deployment={runtime.deployment} />
+            )}
+            {runtime.elementPaths && runtime.elementPaths.length > 0 && (
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-sm font-medium hover-elevate rounded-md px-1">
+                  Element Paths ({runtime.elementPaths.length})
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-0.5">
+                  {runtime.elementPaths.map((p, i) => (
+                    <p key={i} className="font-mono text-xs text-muted-foreground break-all">{p}</p>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+            {runtime.elementManifests && Object.keys(runtime.elementManifests).length > 0 && (
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-sm font-medium hover-elevate rounded-md px-1">
+                  Element Manifests ({Object.keys(runtime.elementManifests).length})
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-2">
+                  {Object.entries(runtime.elementManifests).map(([key, manifest]) => (
+                    <div key={key} className="rounded-md border p-2 space-y-1">
+                      <p className="font-mono text-xs font-medium break-all">{key}</p>
+                      {manifest.version && (
+                        <p className="text-xs text-muted-foreground">
+                          v{manifest.version.version} · {manifest.version.revision}
+                        </p>
+                      )}
+                      {manifest.builtinSpis && manifest.builtinSpis.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {manifest.builtinSpis.map(spi => (
+                            <Badge key={spi} variant="secondary" className="text-[10px]">{spi}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
             )}
           </TabsContent>
 
@@ -303,5 +405,97 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
         </Tabs>
       </CardContent>
     </Card>
+  );
+}
+
+function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }) {
+  const [extraOpen, setExtraOpen] = useState(false);
+  const { id, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, ...rest } = deployment;
+  const extraKeys = Object.keys(rest);
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium">Deployment</h3>
+      <div className="rounded-md border divide-y">
+        <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 p-3 items-center">
+          {id && (
+            <>
+              <span className="text-xs text-muted-foreground">ID</span>
+              <span className="font-mono text-xs break-all">{id}</span>
+            </>
+          )}
+          {state && (
+            <>
+              <span className="text-xs text-muted-foreground">State</span>
+              <span>
+                <Badge
+                  variant={state === 'ENABLED' ? 'default' : state === 'DISABLED' ? 'secondary' : 'outline'}
+                  className="text-xs"
+                >
+                  {state}
+                </Badge>
+              </span>
+            </>
+          )}
+          {version !== undefined && (
+            <>
+              <span className="text-xs text-muted-foreground">Version</span>
+              <span className="text-xs font-mono">v{version}</span>
+            </>
+          )}
+          {application && (
+            <>
+              <span className="text-xs text-muted-foreground">Application</span>
+              <span className="text-xs">{application.name || application.id}</span>
+            </>
+          )}
+          {typeof useDefaultRepositories === 'boolean' && (
+            <>
+              <span className="text-xs text-muted-foreground">Default Repos</span>
+              <span className="text-xs">{useDefaultRepositories ? 'Yes' : 'No'}</span>
+            </>
+          )}
+          {Array.isArray(elements) && elements.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Elements</span>
+              <span className="text-xs">{elements.length}</span>
+            </>
+          )}
+          {Array.isArray(packages) && packages.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Packages</span>
+              <span className="text-xs">{packages.length}</span>
+            </>
+          )}
+          {Array.isArray(repositories) && repositories.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Repositories</span>
+              <span className="text-xs">{repositories.length}</span>
+            </>
+          )}
+          {elm && (
+            <>
+              <span className="text-xs text-muted-foreground">ELM</span>
+              <span className="font-mono text-xs truncate">{elm.id}</span>
+            </>
+          )}
+        </div>
+        {extraKeys.length > 0 && (
+          <div className="p-3">
+            <Collapsible open={extraOpen} onOpenChange={setExtraOpen}>
+              <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                {extraOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                Additional properties ({extraKeys.length})
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <pre className="bg-muted/50 p-2 rounded text-[10px] overflow-auto">
+                  {JSON.stringify(rest, null, 2)}
+                </pre>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

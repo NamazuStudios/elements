@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
-import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, RefreshCw, X, Upload, HardDrive, Package, Database, Check, Sparkles } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText } from 'lucide-react';
 
 interface ElementArtifactRepository {
   id: string;
@@ -71,6 +71,14 @@ const DEPLOYMENT_STATES_EDIT = ['ENABLED', 'DISABLED'] as const;
 interface ElementSpi {
   id: string;
   description?: string;
+}
+
+interface ElmInspectorRecord {
+  path: string;
+  attributes: Record<string, unknown>;
+  manifest?: {
+    builtinSpis?: string[];
+  };
 }
 
 function getStateBadgeVariant(state: string): 'default' | 'secondary' | 'outline' | 'destructive' {
@@ -135,14 +143,23 @@ function ElmDropZone({
   uploading,
   buttonLabel,
   testIdPrefix,
+  fileName: externalFileName,
 }: {
   onFile: (file: File) => void;
   uploading: boolean;
   buttonLabel?: string;
   testIdPrefix: string;
+  fileName?: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [internalFileName, setInternalFileName] = useState<string | null>(null);
+  const displayFileName = internalFileName ?? externalFileName ?? null;
+
+  const handleFile = useCallback((file: File) => {
+    setInternalFileName(file.name);
+    onFile(file);
+  }, [onFile]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -150,9 +167,9 @@ function ElmDropZone({
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file && !uploading) {
-      onFile(file);
+      handleFile(file);
     }
-  }, [onFile, uploading]);
+  }, [handleFile, uploading]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -166,13 +183,17 @@ function ElmDropZone({
     setDragOver(false);
   }, []);
 
+  const hasFile = !!displayFileName && !uploading;
+
   return (
     <div
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       className={`flex flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed p-6 transition-colors ${
-        dragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+        dragOver ? 'border-primary bg-primary/5' :
+        hasFile ? 'border-primary/40 bg-primary/5' :
+        'border-muted-foreground/25'
       } ${uploading ? 'opacity-60 pointer-events-none' : ''}`}
       data-testid={`${testIdPrefix}-dropzone`}
     >
@@ -182,7 +203,7 @@ function ElmDropZone({
         accept=".elm"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) onFile(file);
+          if (file) handleFile(file);
           if (fileInputRef.current) fileInputRef.current.value = '';
         }}
         className="hidden"
@@ -190,14 +211,21 @@ function ElmDropZone({
       />
       {uploading ? (
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      ) : hasFile ? (
+        <FileText className="w-8 h-8 text-primary" />
       ) : (
         <Upload className="w-8 h-8 text-muted-foreground" />
       )}
       <div className="text-center space-y-1">
-        <p className="text-sm font-medium">
-          {uploading ? 'Uploading...' : 'Drag and drop your .elm file here'}
+        <p
+          className={`text-sm font-medium truncate max-w-sm ${hasFile ? 'text-primary' : ''}`}
+          title={displayFileName ?? undefined}
+        >
+          {uploading ? 'Uploading...' : displayFileName ?? 'Drag and drop your .elm file here'}
         </p>
-        <p className="text-xs text-muted-foreground">or</p>
+        <p className="text-xs text-muted-foreground">
+          {hasFile ? 'Drag and drop to replace, or' : 'or'}
+        </p>
       </div>
       <Button
         variant="outline"
@@ -206,7 +234,7 @@ function ElmDropZone({
         disabled={uploading}
         data-testid={`${testIdPrefix}-button`}
       >
-        {buttonLabel || 'Browse Files'}
+        {buttonLabel || (hasFile ? 'Replace File' : 'Browse Files')}
       </Button>
     </div>
   );
@@ -228,6 +256,7 @@ export default function ElementDeployments() {
   const [elmUploadDialogOpen, setElmUploadDialogOpen] = useState(false);
   const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any } | null>(null);
   const [wizardCreatedDeployment, setWizardCreatedDeployment] = useState<{ deploymentId: string; elmId?: string } | null>(null);
+  const [wizardElmFile, setWizardElmFile] = useState<File | null>(null);
   const [featuresDialogOpen, setFeaturesDialogOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery<PaginatedResponse>({
@@ -253,11 +282,16 @@ export default function ElementDeployments() {
         elmId: created?.elm?.id,
       });
       setWizardStep(3);
+      if (wizardElmFile && created?.elm?.id) {
+        elmUploadMutation.mutate({ largeObjectId: created.elm.id, file: wizardElmFile });
+      }
       toast({
         title: 'Deployment Created',
-        description: created?.elm?.id
-          ? 'You can now upload the .elm file, or skip this step.'
-          : 'Deployment created successfully. You can close this dialog.',
+        description: wizardElmFile && created?.elm?.id
+          ? 'Uploading the ELM file automatically...'
+          : created?.elm?.id
+            ? 'You can now upload the .elm file, or skip this step.'
+            : 'Deployment created successfully. You can close this dialog.',
       });
     },
     onError: (error: any) => {
@@ -343,6 +377,7 @@ export default function ElementDeployments() {
     setFormData({ ...emptyFormData, elements: [], packages: [], repositories: [] });
     setWizardStep(0);
     setWizardCreatedDeployment(null);
+    setWizardElmFile(null);
     setCreateDialogOpen(true);
   };
 
@@ -604,6 +639,7 @@ export default function ElementDeployments() {
         setCreateDialogOpen(open);
         if (!open) {
           setWizardCreatedDeployment(null);
+          setWizardElmFile(null);
           setWizardStep(0);
         }
       }}>
@@ -639,6 +675,7 @@ export default function ElementDeployments() {
               <WizardConfigStep
                 formData={formData}
                 setFormData={setFormData}
+                onFileSelected={setWizardElmFile}
               />
             </div>
           )}
@@ -695,6 +732,7 @@ export default function ElementDeployments() {
                   <ElmDropZone
                     onFile={(file) => handleElmFileUpload(file, wizardCreatedDeployment.elmId!)}
                     uploading={elmUploadMutation.isPending}
+                    fileName={wizardElmFile?.name}
                     testIdPrefix="wizard-elm"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -1863,11 +1901,52 @@ function PackageDefinitionSubDialog({
 function WizardConfigStep({
   formData,
   setFormData,
+  onFileSelected,
 }: {
   formData: FormData;
   setFormData: (fd: FormData) => void;
+  onFileSelected?: (file: File) => void;
 }) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
+
+  const { toast } = useToast();
+
+  const elmInspectMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append('elm', file);
+      const fullPath = await getApiPath('/api/rest/elm/inspector/upload');
+      const headers: Record<string, string> = {};
+      const token = apiClient.getSessionToken();
+      if (token) headers['Elements-SessionSecret'] = token;
+      const response = await fetch(fullPath, { method: 'POST', body: fd, headers, credentials: 'include' });
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        let msg = `Inspection failed: ${response.status}`;
+        try { msg = JSON.parse(text).message ?? msg; } catch { if (text) msg = text; }
+        throw new Error(msg);
+      }
+      return response.json() as Promise<ElmInspectorRecord[]>;
+    },
+    onSuccess: (records) => {
+      const newElements: ElementPathDefinition[] = records.map(r => ({
+        path: r.path,
+        spiBuiltins: r.manifest?.builtinSpis ?? [],
+        attributes: r.attributes as Record<string, any>,
+        apiArtifacts: [],
+        spiArtifacts: [],
+        elementArtifacts: [],
+      }));
+      update({ elements: [...formData.elements, ...newElements] });
+      toast({
+        title: 'ELM Imported',
+        description: `Added ${newElements.length} element definition${newElements.length !== 1 ? 's' : ''} from the ELM file.`,
+      });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Import Failed', description: err.message, variant: 'destructive' });
+    },
+  });
 
   const { data: availableSpis = [], isLoading: spisLoading } = useQuery<ElementSpi[]>({
     queryKey: ['/api/rest/elements/builtin_spi'],
@@ -1980,6 +2059,24 @@ function WizardConfigStep({
 
   return (
     <div className="space-y-4">
+      <div className="space-y-2">
+        <div>
+          <p className="text-sm font-medium">Import from ELM file</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Upload an .elm file to auto-populate element paths and SPI settings from its manifest.
+          </p>
+        </div>
+        <ElmDropZone
+          onFile={(file) => {
+            onFileSelected?.(file);
+            elmInspectMutation.mutate(file);
+          }}
+          uploading={elmInspectMutation.isPending}
+          buttonLabel="Browse ELM file"
+          testIdPrefix="wizard-import-elm"
+        />
+      </div>
+
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm text-muted-foreground">
           Add element definitions and/or package configurations. A single deployment can contain both types.
@@ -2112,6 +2209,7 @@ function WizardSettingsStep({
   setFormData: (fd: FormData) => void;
 }) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const { data: applications = [], isLoading: appsLoading } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ['/api/rest/application', 'picker'],
@@ -2150,49 +2248,65 @@ function WizardSettingsStep({
         </p>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="wizardUseDefaultRepos"
-            checked={formData.useDefaultRepositories}
-            onCheckedChange={(checked) => update({ useDefaultRepositories: !!checked })}
-            data-testid="checkbox-use-default-repos"
-          />
-          <Label htmlFor="wizardUseDefaultRepos" className="cursor-pointer">
-            Use default artifact repositories (includes Maven Central)
-          </Label>
-        </div>
-        <p className="text-xs text-muted-foreground ml-6">
-          Recommended: this should generally always be checked unless you have a specific reason to disable it.
-        </p>
-      </div>
+      <div className="border-t pt-1">
+        <button
+          type="button"
+          className="flex items-center gap-2 w-full py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
+          onClick={() => setAdvancedOpen(v => !v)}
+          data-testid="button-toggle-advanced-settings"
+        >
+          {advancedOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+          Advanced Settings
+        </button>
 
-      <div className="border-t pt-4">
-        <RepositoryEditor
-          repositories={formData.repositories}
-          onChange={(repositories) => update({ repositories })}
-        />
-      </div>
+        {advancedOpen && (
+          <div className="space-y-5 pt-2">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="wizardUseDefaultRepos"
+                  checked={formData.useDefaultRepositories}
+                  onCheckedChange={(checked) => update({ useDefaultRepositories: !!checked })}
+                  data-testid="checkbox-use-default-repos"
+                />
+                <Label htmlFor="wizardUseDefaultRepos" className="cursor-pointer">
+                  Use default artifact repositories (includes Maven Central)
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">
+                Recommended: this should generally always be checked unless you have a specific reason to disable it.
+              </p>
+            </div>
 
-      <div className="border-t pt-4 space-y-4">
-        <PathClassPathsEditor
-          value={formData.pathSpiBuiltins}
-          onChange={(val) => update({ pathSpiBuiltins: val })}
-          label="Deployment Path SPI Builtins"
-          testIdPrefix="wizard-path-spi-builtins"
-        />
-        <p className="text-xs text-muted-foreground">
-          Per-path builtin SPI configurations at the deployment level. The key is the element path, and the value is the list of builtin SPI names.
-        </p>
-        <PathKeyValueMapEditor
-          value={formData.pathAttributes}
-          onChange={(val) => update({ pathAttributes: val })}
-          label="Deployment Path Attributes"
-          testIdPrefix="wizard-path-attrs"
-        />
-        <p className="text-xs text-muted-foreground">
-          Per-path custom attributes passed at load time via the AttributesLoader mechanism.
-        </p>
+            <div className="border-t pt-4">
+              <RepositoryEditor
+                repositories={formData.repositories}
+                onChange={(repositories) => update({ repositories })}
+              />
+            </div>
+
+            <div className="border-t pt-4 space-y-4">
+              <PathClassPathsEditor
+                value={formData.pathSpiBuiltins}
+                onChange={(val) => update({ pathSpiBuiltins: val })}
+                label="Deployment Path SPI Builtins"
+                testIdPrefix="wizard-path-spi-builtins"
+              />
+              <p className="text-xs text-muted-foreground">
+                Per-path builtin SPI configurations at the deployment level. The key is the element path, and the value is the list of builtin SPI names.
+              </p>
+              <PathKeyValueMapEditor
+                value={formData.pathAttributes}
+                onChange={(val) => update({ pathAttributes: val })}
+                label="Deployment Path Attributes"
+                testIdPrefix="wizard-path-attrs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Per-path custom attributes passed at load time via the AttributesLoader mechanism.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
