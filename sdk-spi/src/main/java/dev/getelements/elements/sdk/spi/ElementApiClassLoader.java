@@ -37,15 +37,20 @@ public class ElementApiClassLoader extends URLClassLoader {
     public ElementApiClassLoader(final URL[] urls, final List<FileSystem> fileSystems, final ClassLoader parent) {
 
         super("API=[%s]".formatted(
-                Stream.concat(
-                        Stream.of(urls).map(URL::toString),
-                        fileSystems.stream().map("fs:%s"::formatted)
-                ).collect(joining(","))
-        ), urls, parent);
+                    Stream.concat(
+                            Stream.of(urls).map(URL::toString),
+                            fileSystems.stream().map("fs:%s"::formatted)
+                    ).collect(joining(","))
+            ),
+            urls,
+            parent
+        );
 
         this.fileSystems = fileSystems != null ? List.copyOf(fileSystems) : List.of();
 
     }
+
+
 
     /**
      * Closes this classloader and all associated FileSystems.

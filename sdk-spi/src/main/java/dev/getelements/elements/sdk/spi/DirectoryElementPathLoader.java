@@ -320,7 +320,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
         }
 
-        // Return ApiClassLoader (handles FileSystem cleanup) even if classpath is empty
+
         return new ElementApiClassLoader(classpath.toArray(URL[]::new), fileSystems, parent);
 
     }
@@ -330,6 +330,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
      * Scans immediate children of path for api/ subdirectory.
      */
     private void collectApiJars(final Path path, final List<URL> apiClasspath) {
+
         if (!isDirectory(path) || isPathInHiddenHierarchy(path)) {
             return;
         }
@@ -343,8 +344,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 try (final var jarStream = newDirectoryStream(topLevelApi)) {
                     for (final var jarPath : jarStream) {
                         if (isJarFile(jarPath)) {
-                            apiClasspath.add(toUrl(jarPath));
+
+                            apiClasspath.add(jarPath.getFileSystem() == FileSystems.getDefault()
+                                    ? toUrl(jarPath)
+                                    : UrlUtils.forPath(jarPath)
+                            );
+
                             logger.debug("Added top-level API jar: {}", jarPath);
+
                         }
                     }
                 }
@@ -359,8 +366,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         try (final var jarStream = newDirectoryStream(elementApi)) {
                             for (final var jarPath : jarStream) {
                                 if (isJarFile(jarPath)) {
-                                    apiClasspath.add(toUrl(jarPath));
+
+                                    apiClasspath.add(jarPath.getFileSystem() == FileSystems.getDefault()
+                                            ? toUrl(jarPath)
+                                            : UrlUtils.forPath(jarPath)
+                                    );
+
                                     logger.debug("Added element API jar: {}", jarPath);
+
                                 }
                             }
                         }
@@ -630,7 +643,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             .filter(DirectoryElementPathLoader::isJarFile)
                             .map(libJar -> libJar.getFileSystem() == FileSystems.getDefault()
                                     ? toUrl(libJar)
-                                    : UrlUtils.forPath(libJar));
+                                    : UrlUtils.forPath(libJar)
+                            );
             } catch (IOException ex) {
                 throw new SdkException(ex);
             }
