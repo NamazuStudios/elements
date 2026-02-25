@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight, ChevronDown, Filter, Check, RefreshCw } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { getApiPath } from '@/lib/config';
@@ -50,6 +51,16 @@ interface LargeObjectResponse {
   approximation: boolean;
   objects: LargeObject[];
 }
+
+const SEARCH_PRESETS = [
+  { label: 'State - EMPTY',      value: 'state:EMPTY'       },
+  { label: 'State - UPLOADED',   value: 'state:UPLOADED'    },
+  { label: 'Type - None',        value: 'mimeType:'         },
+  { label: 'Type - Image',       value: 'mimeType:image'    },
+  { label: 'Type - Zip',         value: 'mimeType:zip'      },
+  { label: 'Path',               value: 'path:'             },
+  { label: 'Original File Name', value: 'originalFilename:' },
+];
 
 export default function LargeObjects() {
   const { toast } = useToast();
@@ -518,19 +529,54 @@ export default function LargeObjects() {
                 {response ? `${response.total} object${response.total !== 1 ? 's' : ''} in storage` : 'All large objects in storage'}
               </CardDescription>
             </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search objects..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(0);
-                }}
-                className="pl-9"
-                data-testid="input-search-objects"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative w-56">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search objects..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(0);
+                  }}
+                  className="pl-9"
+                  data-testid="input-search-objects"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={SEARCH_PRESETS.some(p => p.value === searchQuery) ? 'border-primary text-primary' : ''}
+                    data-testid="button-filter-presets"
+                  >
+                    <Filter className="w-4 h-4 mr-1.5" />
+                    Filter Presets
+                    <ChevronDown className="w-3 h-3 ml-1.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Filter Presets</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {SEARCH_PRESETS.map(preset => (
+                    <DropdownMenuItem
+                      key={preset.value}
+                      onClick={() => {
+                        setSearchQuery(q => q === preset.value ? '' : preset.value);
+                        setCurrentPage(0);
+                      }}
+                      data-testid={`preset-${preset.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <span className="w-4 mr-2 flex-shrink-0">
+                        {searchQuery === preset.value && <Check className="w-4 h-4 text-primary" />}
+                      </span>
+                      {preset.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

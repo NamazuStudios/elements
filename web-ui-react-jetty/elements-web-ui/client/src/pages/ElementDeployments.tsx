@@ -1940,7 +1940,7 @@ function WizardConfigStep({
     },
     onSuccess: (records) => {
       const newElements: ElementPathDefinition[] = records.map(r => ({
-        path: r.path,
+        path: r.path.replace(/^\/+/, ''),
         spiBuiltins: r.manifest?.builtinSpis ?? [],
         attributes: r.attributes as Record<string, any>,
         apiArtifacts: [],
