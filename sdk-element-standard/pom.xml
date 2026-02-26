@@ -4,7 +4,7 @@
 
   <groupId>dev.getelements.elements</groupId>
   <artifactId>sdk-element-standard</artifactId>
-  <version>3.7.4-SNAPSHOT</version>
+  <version>3.7.5-SNAPSHOT</version>
   <packaging>maven-archetype</packaging>
 
   <name>parent-archetype</name>
