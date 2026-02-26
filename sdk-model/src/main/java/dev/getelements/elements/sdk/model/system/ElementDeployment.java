@@ -3,7 +3,6 @@ package dev.getelements.elements.sdk.model.system;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
-import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
