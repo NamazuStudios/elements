@@ -39,7 +39,7 @@ public class GuiceSpiModule extends PrivateModule {
         final var attributes = elementRecord.attributes().asProperties();
         final var iterator = attributes.entrySet().iterator();
 
-        while (!iterator.hasNext()) {
+        while (iterator.hasNext()) {
             final var entry = iterator.next();
             if (entry.getValue() == null) iterator.remove();
         }
