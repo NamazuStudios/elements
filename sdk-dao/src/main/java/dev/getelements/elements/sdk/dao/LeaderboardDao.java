@@ -51,10 +51,20 @@ public interface LeaderboardDao {
      * Updates an existing {@link Leaderboard} instance.  Throwing an instance of {@link LeaderboardNotFoundException}
      * if the {@link Leaderboard} does not exist.
      *
+     * @param leaderboard         the {@link Leaderboard}
+     * @return the {@link Leaderboard}
+     */
+    Leaderboard updateLeaderboard(Leaderboard leaderboard);
+
+    /**
+     * Updates an existing {@link Leaderboard} instance.  Throwing an instance of {@link LeaderboardNotFoundException}
+     * if the {@link Leaderboard} does not exist.
+     *
      * @param leaderboardNameOrId the name or identifier {@link Leaderboard#getId()}, {@link Leaderboard#getName()}
      * @param leaderboard         the {@link Leaderboard}
      * @return the {@link Leaderboard}
      */
+    @Deprecated
     Leaderboard updateLeaderboard(String leaderboardNameOrId, Leaderboard leaderboard);
 
     /**

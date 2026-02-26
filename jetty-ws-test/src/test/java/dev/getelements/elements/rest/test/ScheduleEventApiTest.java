@@ -120,7 +120,7 @@ public class ScheduleEventApiTest {
 
         final var steps = List.of(step1, step2);
 
-        final var createMission = new Mission();
+        final var createMission = new CreateMissionRequest();
         createMission.setName("test_schedule_event");
         createMission.setDisplayName("test_schedule_display_name");
         createMission.setDescription("test_schedule_description");

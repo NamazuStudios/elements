@@ -163,7 +163,7 @@ public class MongoProfileDao implements ProfileDao {
         if (applicationNameOrId != null) {
 
             final var mongoApplication = getMongoApplicationDao()
-                    .findActiveMongoApplication(applicationNameOrId)
+                    .findMongoApplicationOptional(applicationNameOrId)
                     .orElse(null);
 
             if (mongoApplication == null) return new Pagination<>();
@@ -180,7 +180,7 @@ public class MongoProfileDao implements ProfileDao {
             query.filter(eq("user", mongoUser.get()));
         }
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, this::transform, new FindOptions());
 
     }
 
@@ -459,7 +459,7 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     private MongoApplication getMongoApplicationFromProfile(final Profile profile) {
-        return getMongoApplicationDao().getActiveMongoApplication(profile.getApplication().getId());
+        return getMongoApplicationDao().getMongoApplication(profile.getApplication().getId());
     }
 
     private MongoLargeObject getMongoLargeObjectFromProfile(final Profile profile) {

@@ -1,9 +1,11 @@
 package dev.getelements.elements.sdk.service.mission;
 
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.mission.CreateMissionRequest;
 import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 
 import java.util.List;
 
@@ -50,16 +52,26 @@ public interface MissionService {
      * @param mission the {@link Mission} to update
      * @return the {@link Mission} as it was written to the database
      */
+    @Deprecated
     Mission updateMission(String missionNameOrId, Mission mission);
 
     /**
-     * Creates a new {@link Mission}.  The ID of the mission, as specified by {@link Mission#getId()},
-     * should be null and will be assigned.
+     * Updates the {@link Mission}. The {@link Mission#getId()} method is
+     * used to key the {@link Mission}.
      *
-     * @param mission the {@link Mission} to create
+     * @param missionNameOrId the name or id of the mission to update
+     * @param mission the {@link UpdateMissionRequest} parameters to update
+     * @return the {@link Mission} as it was written to the database
+     */
+    Mission updateMission(String missionNameOrId, UpdateMissionRequest mission);
+
+    /**
+     * Creates a new {@link Mission}.
+     *
+     * @param mission the properties for the new {@link Mission} to create
      * @return the {@link Mission} as it was created by the service.
      */
-    Mission createMission(Mission mission);
+    Mission createMission(CreateMissionRequest request);
 
     /**
      * Deletes the {@link Mission} with the supplied id or name.

@@ -39,7 +39,7 @@ public class MongoDeploymentDao implements DeploymentDao {
 
     @Override
     public Pagination<Deployment> getDeployments(String applicationId, final int offset, final int count) {
-        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var application = getMongoApplicationDao().getMongoApplication(applicationId);
         final var query = getDatastore().find(MongoDeployment.class);
         query.filter(eq("application", application));
         return getMongoDBUtils().paginationFromQuery(query, offset, count, Deployment.class);
@@ -54,7 +54,7 @@ public class MongoDeploymentDao implements DeploymentDao {
     @Override
     public Deployment getDeployment(final String applicationId, final String deploymentId) {
 
-        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var application = getMongoApplicationDao().getMongoApplication(applicationId);
         final var objectId = getMongoDBUtils().parseOrThrow(deploymentId, DeploymentNotFoundException::new);
         final var query = getDatastore().find(MongoDeployment.class);
 
@@ -70,7 +70,7 @@ public class MongoDeploymentDao implements DeploymentDao {
     @Override
     public Deployment getCurrentDeployment(String applicationId) {
 
-        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var application = getMongoApplicationDao().getMongoApplication(applicationId);
         final var query = getDatastore().find(MongoDeployment.class);
 
         query.filter(
@@ -88,7 +88,7 @@ public class MongoDeploymentDao implements DeploymentDao {
     @Override
     public Deployment updateDeployment(String applicationId, Deployment deployment) {
 
-        final var application = getMongoApplicationDao().getActiveMongoApplication(deployment.getApplication().getId());
+        final var application = getMongoApplicationDao().getMongoApplication(deployment.getApplication().getId());
         final var query = getDatastore().find(MongoDeployment.class);
 
         query.filter(
@@ -146,7 +146,7 @@ public class MongoDeploymentDao implements DeploymentDao {
     @Override
     public void deleteDeployment(String applicationId, String deploymentId) {
 
-        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var application = getMongoApplicationDao().getMongoApplication(applicationId);
         final var objectId = getMongoDBUtils().parseOrThrow(deploymentId, DeploymentNotFoundException::new);
         final var query = getDatastore().find(MongoDeployment.class);
 

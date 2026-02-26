@@ -18,7 +18,7 @@ import java.util.List;
 public interface ScheduleProgressDao {
 
     /**
-     * Gets all {@link Progress} instances with the supplied profile, schedule, and offet, count
+     * Gets all {@link Progress} instances with the supplied profile, schedule, and offset, count
      *
      * @param profileId {@link Profile} identifier
      * @param scheduleNameOrId the {@link Schedule} name or ID
@@ -50,7 +50,7 @@ public interface ScheduleProgressDao {
 
     /**
      * Deletes {@link Progress} instances for {@link Mission}s not in the supplied list. If no other {@link Schedule}
-     * links the {@link Mission}, then this will permamently remove the {@link Progress} instances.
+     * links the {@link Mission}, then this will permanently remove the {@link Progress} instances.
      *
      * @param scheduleNameOrId the {@link Schedule} name or ID
      * @param profileId {@link Profile} identifier
