@@ -146,7 +146,7 @@ The following are deprecated and slated for removal:
 
 ### RT system
 
-The RT sub-project ("Real Time") is a background worker application for long-running workloads dispatched over the network. It makes up the backend communication system of Elements and is based on JeroMQ.
+The RT sub-project ("Real Time") is a background worker application for long-running workloads dispatched over the network. It makes up the backend communication system of Elements and is based on JeroMQ. We have plans to decomission these parts of the codebase and replace with a more robust system. These components have been slowly dismantled over the 3.x releases and will be replaced with an improved system.
 
 ---
 
