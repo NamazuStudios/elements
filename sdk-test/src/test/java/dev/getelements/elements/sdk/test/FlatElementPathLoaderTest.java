@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.test;
 
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.PermittedTypesClassLoader;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.testng.annotations.BeforeClass;
@@ -13,7 +14,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.CLASSPATH_DIR;
-import static dev.getelements.elements.sdk.ElementPathLoader.LIB_DIR;
+import static dev.getelements.elements.sdk.ElementPathLoader.SPI_DIR;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
@@ -25,7 +26,7 @@ public class FlatElementPathLoaderTest {
 
     private static final TestArtifactRegistry testArtifactRegistry = new TestArtifactRegistry();
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(NestedElementPathLoaderTest.class);
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(FlatElementPathLoaderTest.class);
 
     private final Path baseDirectory = temporaryFiles.createTempDirectory();
 
@@ -51,8 +52,8 @@ public class FlatElementPathLoaderTest {
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
 
-        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(LIB_DIR));
-        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(LIB_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(SPI_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(SPI_DIR));
 
         testArtifactRegistry.unpackArtifact(VARIANT_A, variantADirectory.resolve(CLASSPATH_DIR));
         testArtifactRegistry.unpackArtifact(VARIANT_B, variantBDirectory.resolve(CLASSPATH_DIR));
@@ -65,10 +66,12 @@ public class FlatElementPathLoaderTest {
         final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
+        final var parent = new PermittedTypesClassLoader();
+
         final var loadedElements = elementPathLoader.load(
                 elementRegistry,
                 baseDirectory,
-                getSystemClassLoader()
+                parent
         ).toList();
 
         final var inRegistry = elementRegistry.stream().toList();

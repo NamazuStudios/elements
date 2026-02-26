@@ -1,15 +1,13 @@
 package dev.getelements.elements.jetty;
 
-import dev.getelements.elements.common.app.ApplicationDeploymentService;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
+import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static dev.getelements.elements.common.app.ApplicationDeploymentService.APP_SERVE;
 
 public class ElementsWebServices implements Runnable {
 
@@ -20,7 +18,9 @@ public class ElementsWebServices implements Runnable {
 
     private Instance instance;
 
-    private ApplicationDeploymentService appServeApplicationDeploymentService;
+    private ElementRuntimeService elementRuntimeService;
+
+    private ElementContainerService elementContainerService;
 
     public void start() {
 
@@ -32,7 +32,8 @@ public class ElementsWebServices implements Runnable {
             throw new InternalException("Could not deployAvailableApplications Jetty server.", ex);
         }
 
-        getAppServeApplicationDeploymentService().deployAvailableApplications();
+        getElementRuntimeService().start();
+        getElementContainerService().start();
 
     }
 
@@ -45,6 +46,18 @@ public class ElementsWebServices implements Runnable {
     }
 
     public void stop() {
+
+        try {
+            getElementContainerService().stop();
+        } catch (Exception ex) {
+            logger.error("Caught exception stopping ElementRuntimeService.", ex);
+        }
+
+        try {
+            getElementRuntimeService().stop();
+        } catch (Exception ex) {
+            logger.error("Caught exception stopping ElementRuntimeService.", ex);
+        }
 
         try {
             getServer().stop();
@@ -78,13 +91,22 @@ public class ElementsWebServices implements Runnable {
         this.instance = instance;
     }
 
-    public ApplicationDeploymentService getAppServeApplicationDeploymentService() {
-        return appServeApplicationDeploymentService;
+    public ElementRuntimeService getElementRuntimeService() {
+        return elementRuntimeService;
     }
 
     @Inject
-    public void setAppServeApplicationDeploymentService(@Named(APP_SERVE) ApplicationDeploymentService appServeApplicationDeploymentService) {
-        this.appServeApplicationDeploymentService = appServeApplicationDeploymentService;
+    public void setElementRuntimeService(ElementRuntimeService elementRuntimeService) {
+        this.elementRuntimeService = elementRuntimeService;
+    }
+
+    public ElementContainerService getElementContainerService() {
+        return elementContainerService;
+    }
+
+    @Inject
+    public void setElementContainerService(ElementContainerService elementContainerService) {
+        this.elementContainerService = elementContainerService;
     }
 
 }

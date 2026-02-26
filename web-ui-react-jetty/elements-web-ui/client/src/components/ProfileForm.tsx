@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Trash2, Plus, Package } from 'lucide-react';
+import { Trash2, Plus, Package, HardDrive, Upload, Loader2, ImageIcon } from 'lucide-react';
 import { InventoryViewer } from './InventoryViewer';
 import { UserSearchDialog } from './UserSearchDialog';
 import { ApplicationSearchDialog } from './ApplicationSearchDialog';
+import { apiClient, getApiPath } from '@/lib/api-client';
 import { useFormDraft } from '@/hooks/use-form-draft';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,7 +21,6 @@ const profileSchema = z.object({
   user: z.string().min(1, 'User is required'),
   application: z.string().min(1, 'Application is required'),
   displayName: z.string().optional(),
-  imageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   metadata: z.record(z.string(), z.any()).optional(),
 });
 
@@ -40,6 +42,12 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
   const [selectedAppName, setSelectedAppName] = useState<string>('');
+  const [selectedImageObject, setSelectedImageObject] = useState<any>(initialData?.imageObject || null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imagePreviewLoading, setImagePreviewLoading] = useState(false);
+  const [imagePreviewError, setImagePreviewError] = useState(false);
+  const [previewVersion, setPreviewVersion] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [metadataEntries, setMetadataEntries] = useState<Array<{ key: string; value: string }>>(
     initialData?.metadata ? Object.entries(initialData.metadata).map(([key, value]) => ({ 
       key, 
@@ -61,7 +69,6 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
       user: initialData?.user?.id || initialData?.user || '',
       application: initialData?.application?.id || initialData?.application || '',
       displayName: initialData?.displayName || '',
-      imageUrl: initialData?.imageUrl || '',
       metadata: initialData?.metadata || {},
     },
   });
@@ -84,10 +91,71 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
       user: { id: data.user },
       application: { id: data.application },
       displayName: data.displayName || undefined,
-      imageUrl: data.imageUrl || undefined,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     };
     onSubmit(payload);
+  };
+
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!selectedImageObject?.id) {
+        throw new Error('No image object to upload to');
+      }
+      const formData = new FormData();
+      formData.append('file', file);
+      const uploadPath = `/api/rest/large_object/${selectedImageObject.id}/content`;
+      const fullPath = await getApiPath(uploadPath);
+      const headers: HeadersInit = {};
+      const sessionToken = apiClient.getSessionToken();
+      if (sessionToken) {
+        headers['Elements-SessionSecret'] = sessionToken;
+      }
+      const response = await fetch(fullPath, {
+        method: 'PUT',
+        body: formData,
+        credentials: 'include',
+        headers,
+      });
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          return await response.json();
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    },
+    onSuccess: (updatedObject) => {
+      if (updatedObject) {
+        setSelectedImageObject(updatedObject);
+      }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setPreviewVersion((v) => v + 1);
+      toast({
+        title: 'Image Updated',
+        description: 'The image content has been uploaded successfully.',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Upload Failed',
+        description: error.message || 'Failed to upload image content',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      uploadImageMutation.mutate(file);
+    }
   };
 
   const addMetadataEntry = () => {
@@ -104,7 +172,7 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
     setMetadataEntries(updated);
   };
 
-  // Initialize selected names from initialData
+  // Initialize selected names and image object from initialData
   useEffect(() => {
     if (initialData?.user) {
       const userName = typeof initialData.user === 'object' 
@@ -118,7 +186,58 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
         : initialData.application;
       setSelectedAppName(appName);
     }
+    setSelectedImageObject(initialData?.imageObject || null);
+    setPreviewVersion(0);
   }, [initialData]);
+
+  useEffect(() => {
+    if (!selectedImageObject?.id) {
+      setImagePreviewUrl(null);
+      setImagePreviewError(false);
+      return;
+    }
+    let cancelled = false;
+    const loadPreview = async () => {
+      setImagePreviewLoading(true);
+      setImagePreviewError(false);
+      try {
+        const cdnPath = `/cdn/object/${selectedImageObject.id}`;
+        const fullPath = await getApiPath(cdnPath);
+        const headers: Record<string, string> = {};
+        const sessionToken = apiClient.getSessionToken();
+        if (sessionToken) {
+          headers['Elements-SessionSecret'] = sessionToken;
+        }
+        const response = await fetch(fullPath, { headers, credentials: 'include' });
+        if (!response.ok) throw new Error('Failed to load');
+        const blob = await response.blob();
+        if (!cancelled) {
+          const url = URL.createObjectURL(blob);
+          setImagePreviewUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setImagePreviewError(true);
+          setImagePreviewUrl(null);
+        }
+      } finally {
+        if (!cancelled) setImagePreviewLoading(false);
+      }
+    };
+    loadPreview();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedImageObject?.id, previewVersion]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    };
+  }, [imagePreviewUrl]);
 
   // Sync form data with parent component for JSON editor
   useEffect(() => {
@@ -142,7 +261,6 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
         user: values.user ? { id: values.user } : undefined,
         application: values.application ? { id: values.application } : undefined,
         displayName: values.displayName || undefined,
-        imageUrl: values.imageUrl || undefined,
         metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       };
 
@@ -215,20 +333,80 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
             )}
           />
 
-          {/* Image URL */}
-          <FormField
-            control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image URL</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="https://example.com/image.png" data-testid="input-image-url" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          {/* Image Object (LargeObjectReference) - content upload */}
+          <div className="space-y-2">
+            <FormLabel>Image Object</FormLabel>
+            {selectedImageObject ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
+                  <div className="w-16 h-16 rounded-md border bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                    {imagePreviewLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    ) : imagePreviewUrl ? (
+                      <img
+                        src={imagePreviewUrl}
+                        alt="Profile image preview"
+                        className="w-full h-full object-cover"
+                        data-testid="img-image-preview"
+                      />
+                    ) : (
+                      <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1 text-sm">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium truncate" data-testid="text-image-object-name">{selectedImageObject.path || selectedImageObject.originalFilename || selectedImageObject.id}</span>
+                      {selectedImageObject.state && (
+                        <Badge variant="secondary" className="text-xs" data-testid="badge-image-state">
+                          {selectedImageObject.state}
+                        </Badge>
+                      )}
+                    </div>
+                    {selectedImageObject.mimeType && (
+                      <div className="text-muted-foreground" data-testid="text-image-mime-type">
+                        MIME: {selectedImageObject.mimeType}
+                      </div>
+                    )}
+                    <div className="text-xs text-muted-foreground truncate" data-testid="text-image-object-id">
+                      ID: {selectedImageObject.id}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    data-testid="input-image-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadImageMutation.isPending}
+                    data-testid="button-upload-image"
+                  >
+                    {uploadImageMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    {uploadImageMutation.isPending ? 'Uploading...' : 'Upload New Image'}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    Replaces the content of this large object
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground" data-testid="text-no-image-object">
+                No image object assigned to this profile.
+              </p>
             )}
-          />
+          </div>
 
           {/* Metadata Key-Value Editor */}
           <div className="space-y-3">
@@ -375,6 +553,7 @@ export function ProfileForm({ mode, initialData, onSubmit, onCancel, isPending, 
           setSelectedAppName(app.displayName || app.name || appId);
         }}
       />
+
     </>
   );
 }

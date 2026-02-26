@@ -25,6 +25,22 @@ public class LargeObjectReference implements Serializable {
     @Schema(description = "Date of last modification")
     private Date lastModified;
 
+    /**
+     * Creates a {@link LargeObjectReference} from the {@link LargeObject}.
+     *
+     * @param largeObject the large object
+     * @return the new {@link LargeObjectReference}
+     */
+    public static LargeObjectReference fromLargeObject(LargeObject largeObject) {
+        final var largeObjectReference = new LargeObjectReference();
+        largeObjectReference.id = largeObject.getId();
+        largeObjectReference.url = largeObject.getUrl();
+        largeObjectReference.mimeType = largeObject.getMimeType();
+        largeObjectReference.state = largeObject.getState();
+        largeObjectReference.lastModified = largeObject.getLastModified();
+        return largeObjectReference;
+    }
+
     public String getId() {
         return id;
     }

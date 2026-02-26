@@ -1,0 +1,191 @@
+package dev.getelements.elements.sdk.deployment;
+
+import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
+import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.model.system.ElementDeployment;
+import dev.getelements.elements.sdk.model.system.ElementSpi;
+import dev.getelements.elements.sdk.record.ElementManifestRecord;
+
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Service that polls the database for {@link dev.getelements.elements.sdk.model.system.ElementDeployment} records
+ * and manages the runtime lifecycle of Element plugins. Each deployment gets its own subordinate
+ * {@link dev.getelements.elements.sdk.MutableElementRegistry}. The service reconciles database state with
+ * in-memory state on a configurable interval: loading ENABLED deployments, unloading DISABLED/deleted ones.
+ *
+ * <h3>Runtime Lifecycle Events</h3>
+ * The service publishes the following events:
+ * <ul>
+ *     <li>{@link #RUNTIME_SERVICE_STARTED} - when the service starts</li>
+ *     <li>{@link #RUNTIME_SERVICE_STOPPED} - when the service stops</li>
+ *     <li>{@link #RUNTIME_LOADED} - when a runtime deployment is loaded</li>
+ *     <li>{@link #RUNTIME_UNLOADED} - when a runtime deployment is unloaded</li>
+ * </ul>
+ */
+@ElementPublic
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_SERVICE_STARTED,
+        description = "Published when the runtime service is started."
+)
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_SERVICE_STOPPED,
+        description = "Published when the runtime service is stopped."
+)
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_LOADED,
+        parameters = ElementRuntimeService.RuntimeRecord.class,
+        description = "Published when a runtime deployment is loaded."
+)
+@ElementEventProducer(
+        value = ElementRuntimeService.RUNTIME_UNLOADED,
+        parameters = String.class,
+        description = "Published when a runtime deployment is unloaded."
+)
+public interface ElementRuntimeService {
+
+    /**
+     * Event published when the runtime service is started.
+     */
+    String RUNTIME_SERVICE_STARTED = "dev.getelements.elements.runtime.service.started";
+
+    /**
+     * Event published when the runtime service is stopped.
+     */
+    String RUNTIME_SERVICE_STOPPED = "dev.getelements.elements.runtime.service.stopped";
+
+    /**
+     * Event published when a runtime deployment is loaded.
+     * Event arguments: deploymentId (String), status (RuntimeStatus), isTransient (Boolean), record (RuntimeRecord)
+     */
+    String RUNTIME_LOADED = "dev.getelements.elements.runtime.loaded";
+
+    /**
+     * Event published when a runtime deployment is unloaded.
+     * Event arguments: deploymentId (String)
+     */
+    String RUNTIME_UNLOADED = "dev.getelements.elements.runtime.unloaded";
+
+    /**
+     * The attribute key for the poll interval in seconds. Default is 30 seconds.
+     */
+    @ElementDefaultAttribute(value = "30", description = "Poll interval in seconds for Element deployment changes.")
+    String POLL_INTERVAL_SECONDS = "dev.getelements.elements.runtime.poll.interval.seconds";
+
+    /**
+     * Starts the runtime service. This begins the polling loop that reconciles Element deployments.
+     */
+    void start();
+
+    /**
+     * Stops the runtime service. This stops the polling loop and unloads all active deployments.
+     */
+    void stop();
+
+    /**
+     * Gets all active {@link ElementDeployment} instances as a copy or snapshot of the internal state of the
+     * deployments. This includes both persistent (database-backed) and transient deployments.
+     *
+     * @return all active deployments.
+     */
+    List<RuntimeRecord> getActiveRuntimes();
+
+    /**
+     * Returns a list of recommended loaders SPI implementation.
+     *
+     * @return the list of recommended loaders.
+     */
+    List<ElementSpi> getBuiltinSpis();
+
+    /**
+     * Unloads a transient deployment by ID.
+     *
+     * @param deploymentId the deployment ID to unload
+     * @return true if the deployment was found and unloaded, false if not found or not transient
+     * @throws IllegalStateException if the service is not started
+     */
+    boolean unloadTransientDeployment(String deploymentId);
+
+    /**
+     * Loads a transient deployment from Maven coordinates for testing and development.
+     * The service assigns a unique ID and loads the deployment immediately without persisting to the database.
+     * Transient deployments are excluded from database reconciliation and remain loaded until explicitly
+     * unloaded or the service is stopped.
+     *
+     * @param request the Maven-based deployment configuration
+     * @return the runtime record for the loaded deployment
+     * @throws IllegalStateException if the service is not started
+     */
+    RuntimeRecord loadTransientDeployment(TransientDeploymentRequest request);
+
+    /**
+     * Represents an active element runtime.
+     *
+     * @param deployment the underlying {@link ElementDeployment}
+     * @param status the runtime status indicating load success or failure
+     * @param isTransient true if this is a transient (non-persistent) deployment
+     * @param registry the {@link ElementRegistry} used to manage the Elements
+     * @param elements the {@link Element}s loaded in this deployment
+     * @param elementPaths the paths of staged element directories
+     * @param deploymentFiles temporary files created during deployment loading
+     * @param elementManifests manifests parsed from each element's manifest properties file, keyed by element path
+     * @param logs log messages from the loading process
+     * @param errors errors encountered during loading
+     */
+    record RuntimeRecord(
+            ElementDeployment deployment,
+            RuntimeStatus status,
+            boolean isTransient,
+            ElementRegistry registry,
+            List<Element> elements,
+            List<Path> elementPaths,
+            List<Path> deploymentFiles,
+            Map<Path, ElementManifestRecord> elementManifests,
+            List<String> logs,
+            List<String> warnings,
+            List<Throwable> errors
+    ) {
+        public RuntimeRecord {
+            logs = logs == null ? null : java.util.List.copyOf(logs);
+            errors = errors == null ? null : java.util.List.copyOf(errors);
+            elements = elements == null ? null : java.util.List.copyOf(elements);
+            deploymentFiles = deploymentFiles == null ? null : java.util.List.copyOf(deploymentFiles);
+            elementManifests = elementManifests == null ? Map.of() : Map.copyOf(elementManifests);
+        }
+    }
+
+    /**
+     * Indicates the runtime status.
+     */
+    enum RuntimeStatus {
+
+        /**
+         * The runtime loaded successfully.
+         */
+        CLEAN,
+
+        /**
+         * Indicates that the runtime loaded successfully and there were warnings associated with the process.
+         */
+        WARNINGS,
+
+        /**
+         * Indicates that there were exceptions, which were caught, in the loading process. At least one Element
+         * failed to properly load.
+         */
+        UNSTABLE,
+
+        /**
+         * The deployment has failed due to one reason or another due to the inability to load the application or
+         * its elements.
+         */
+        FAILED
+
+    }
+
+}

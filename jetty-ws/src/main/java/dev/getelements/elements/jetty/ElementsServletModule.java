@@ -125,12 +125,6 @@
                 module.accept(bindings);
             }
 
-            if (components.remove(code)) {
-                final var module = new CodeServeModule();
-                install(module);
-                module.accept(bindings);
-            }
-
             if (components.remove(web_ui)) {
                 final var module = new WebUiReactModule();
                 install(module);

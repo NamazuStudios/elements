@@ -65,14 +65,22 @@ export function ApplicationConfigurationDialog({
   const [configurationType, setConfigurationType] = useState<ConfigurationType | null>(initialConfigurationType);
   const [configValue, setConfigValue] = useState<any>(value);
   const [isSaving, setIsSaving] = useState(false);
+  const [dialogKey, setDialogKey] = useState(0);
   const { toast } = useToast();
 
   // Reset state when dialog opens or props change
+  // Deep clone the value so edits don't mutate the original data
+  // Increment dialogKey to force child components to remount and reset their internal state
   useEffect(() => {
     if (open) {
       setConfigurationType(initialConfigurationType);
-      setConfigValue(value);
+      try {
+        setConfigValue(JSON.parse(JSON.stringify(value)));
+      } catch {
+        setConfigValue({ ...value });
+      }
       setIsSaving(false);
+      setDialogKey(k => k + 1);
     }
   }, [open, initialConfigurationType, value]);
 
@@ -140,6 +148,7 @@ export function ApplicationConfigurationDialog({
 
         <div className="flex-1 overflow-y-auto py-4">
           <ApplicationConfigurationEditor
+            key={dialogKey}
             value={configValue}
             onChange={setConfigValue}
             configurationType={configurationType as ConfigurationType}

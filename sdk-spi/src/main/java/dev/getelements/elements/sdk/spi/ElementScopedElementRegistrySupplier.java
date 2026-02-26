@@ -9,7 +9,7 @@ import dev.getelements.elements.sdk.annotation.ElementLocal;
  * Factory type for the {@link ElementScopedElementRegistry}. This holds single static instance which it always returns.
  * It is intended to be used within the SPI implementation and not directly.
  *
- * The {@link ElementClassLoader} copies and re-defines this class for itself such that there is separate static
+ * The {@link ElementImplementationClassLoader} copies and re-defines this class for itself such that there is separate static
  * instance per class-loader ensuring that an {@link Element} has it's own unique instance.
  */
 @ElementLocal

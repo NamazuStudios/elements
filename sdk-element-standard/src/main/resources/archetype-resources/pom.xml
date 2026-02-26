@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>${groupId}</groupId>
+    <artifactId>${artifactId}</artifactId>
+    <version>${version}</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <encoding>UTF-8</encoding>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <swagger.version>2.2.22</swagger.version>
+        <guice.version>7.0.0</guice.version>
+        <rs.api>4.0.0</rs.api>
+        <jakarta.websocket.version>2.1.0</jakarta.websocket.version>
+        <crossfire.version>1.0.4</crossfire.version>
+        <servlet.api>6.1.0</servlet.api>
+        <logback.version>1.2.3</logback.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <elements.version>${elementsVersion}</elements.version>
+        <api.classifier>${project.groupId}.api</api.classifier>
+    </properties>
+
+    <!--
+        Everything in dependencyManagement serves the purpose of centralizing the versions and configurations of
+        artifacts used. Every project will refer to this section when including them on the classpath. This is
+        configured this way to deliberately avoid confusion over what should be scoped properly.
+    -->
+    <dependencyManagement>
+        <dependencies>
+
+            <!--
+                The BOM for Namazu Elements incorporates all the official SDK packages. The packages are provided
+                with correct scope and version matching the requested version.
+            -->
+
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-bom</artifactId>
+                <version>${elements.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--
+                The Element's API and Implementation. Note that the API is provided meaning that it will not be packaged
+                directly with the Element. Rather it will be added to the bundle as an API dependency. This is important
+                when exporting the Element's interfaces to other Elements within the system.
+            -->
+
+            <dependency>
+                <groupId>${groupId}</groupId>
+                <artifactId>api</artifactId>
+                <version>${project.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>${groupId}</groupId>
+                <artifactId>api</artifactId>
+                <version>${project.version}</version>
+                <classifier>${api.classifier}</classifier>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.example.element</groupId>
+                <artifactId>element</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+
+</project>

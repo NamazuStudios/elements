@@ -28,11 +28,6 @@ public enum ElementsWebServiceComponent {
     cdn,
 
     /**
-     * The Code Service.
-     */
-    code,
-
-    /**
      * The Application node.
      */
     app_node,
@@ -43,12 +38,7 @@ public enum ElementsWebServiceComponent {
     app_serve,
 
     /**
-     * The old Web UI Admin Panel for Elements.
-     */
-    web_ui_old,
-
-    /**
      * The Web UI Admin Panel for Elements.
      */
-    web_ui,
+    web_ui
 }

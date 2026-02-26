@@ -57,13 +57,13 @@ const iosConfigSchema = z.object({
 const matchmakingConfigSchema = z.object({
   ...commonConfigFields,
   '@class': z.literal('dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration'),
-  success: z.any().optional(),
   matchmaker: z.any().optional(),
   maxProfiles: z.number({
     required_error: 'Max Profiles is required',
     invalid_type_error: 'Max Profiles must be a number',
   }).min(2, 'Max Profiles must be 2 or greater'),
   metadata: z.any().optional(),
+  metadataSpec: z.any().optional(),
 });
 
 const oculusConfigSchema = z.object({

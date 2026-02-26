@@ -1,10 +1,15 @@
 package dev.getelements.elements.sdk.spi.shrinkwrap;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
+import dev.getelements.elements.sdk.exception.SdkArtifactNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
-import dev.getelements.elements.sdk.record.ArtifactCoordinates;
+import dev.getelements.elements.sdk.record.Artifact;
+import dev.getelements.elements.sdk.record.ArtifactRepository;
+import org.jboss.shrinkwrap.resolver.api.ResolvedArtifact;
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
+import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,27 +32,38 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         "org.eclipse.aether.transfer.MetadataNotFoundException"
     );
 
+    private static final Set<ScopeType> PERMITTED_SCOPES = Set.of(ScopeType.COMPILE, ScopeType.RUNTIME);
+
     @Override
-    public Optional<ClassLoader> tryGetClassLoader(final ClassLoader parent, final Set<ArtifactCoordinates> coordinates) {
+    public Optional<ClassLoader> findClassLoader(final ClassLoader parent,
+                                                 final Set<ArtifactRepository> repositories,
+                                                 final Set<String> coordinates) {
 
         final File[] files;
 
         try {
 
-            final var toResolve = coordinates
-                    .stream()
-                    .map(ArtifactCoordinates::coordinates)
-                    .toList();
+            final var artifacts = configurableSystem(repositories)
+                    .resolve(coordinates)
+                    .withTransitivity()
+                    .asResolvedArtifact();
 
-            files = configurableSystem(coordinates)
-                    .resolve(toResolve)
-                    .withoutTransitivity()
-                    .asFile();
+            files = Stream.of(artifacts)
+                    .filter(a -> !a.isOptional())
+                    .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
+                    .map(ResolvedArtifact::asFile)
+                    .toArray(File[]::new);
 
         } catch (RuntimeException ex) {
             if (isNotFound(ex)) {
-                logger.info("Unable to resolve artifact coordinates: {}", coordinates, ex);
+
+                logger.info("Unable to resolve artifact coordinates: [{}]",
+                        String.join(",", coordinates),
+                        ex
+                );
+
                 return Optional.empty();
+
             } else {
                 throw new SdkException(ex);
             }
@@ -64,29 +80,87 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
     }
 
-    private ConfigurableMavenResolverSystem configurableSystem(final Iterable<ArtifactCoordinates> coordinates) {
+    @Override
+    public Stream<Artifact> findClasspathForArtifact(final Set<ArtifactRepository> repositories,
+                                                     final String coordinates) {
 
-        var config = Maven.configureResolver();
+        final MavenResolvedArtifact[] resolvedArtifacts;
 
-        for (var coordinate : coordinates) {
+        try {
+            resolvedArtifacts = configurableSystem(repositories)
+                    .resolve(coordinates)
+                    .withTransitivity()
+                    .asResolvedArtifact();
+        } catch (RuntimeException ex) {
+            if (isNotFound(ex)) {
 
-            for (var repository : coordinate.repositories()) {
+                logger.info("Unable to resolve artifact coordinates: [{}]",
+                        String.join(",", coordinates),
+                        ex
+                );
 
-                if (repository.isDefault()) {
-                    config = config.withMavenCentralRepo(true);
-                } else {
-                    config = config.withRemoteRepo(repository.id(), repository.url(), DEFAULT_LAYOUT);
-                }
+                throw new SdkArtifactNotFoundException(ex);
 
+            } else {
+                throw new SdkException(ex);
             }
+        }
 
+        return Stream
+                .of(resolvedArtifacts)
+                .filter(a -> !a.isOptional())
+                .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
+                .map(CachingShrinkwrapElementArtifactLoader::toArtifact);
+
+    }
+
+    @Override
+    public Optional<Artifact> findArtifact(final Set<ArtifactRepository> repositories, final String coordinates) {
+
+        final MavenResolvedArtifact resolvedArtifact;
+
+        try {
+            resolvedArtifact = configurableSystem(repositories)
+                    .resolve(coordinates)
+                    .withoutTransitivity()
+                    .asSingleResolvedArtifact();
+        } catch (RuntimeException ex) {
+            if (isNotFound(ex)) {
+
+                logger.info("Unable to resolve artifact coordinates: [{}]",
+                        String.join(",", coordinates),
+                        ex
+                );
+
+                return Optional.empty();
+
+            } else {
+                throw new SdkException(ex);
+            }
+        }
+
+        final var artifact = toArtifact(resolvedArtifact);
+        return Optional.of(artifact);
+
+    }
+
+    private ConfigurableMavenResolverSystem configurableSystem(final Set<ArtifactRepository> repositories) {
+
+        var config = Maven.configureResolver().withClassPathResolution(false);
+
+        for (var repository : repositories) {
+            if (repository.isDefault()) {
+                config = config.withMavenCentralRepo(true);
+            } else {
+                config = config.withRemoteRepo(repository.id(), repository.url(), DEFAULT_LAYOUT);
+            }
         }
 
         return config;
 
     }
 
-    public static boolean isNotFound(Throwable t) {
+    private static boolean isNotFound(Throwable t) {
 
         for (Throwable c = t; c != null; c = c.getCause()) {
 
@@ -100,6 +174,19 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
         return false;
 
+    }
+
+    private static Artifact toArtifact(final MavenResolvedArtifact mavenResolvedArtifact) {
+        final var coordinate = mavenResolvedArtifact.getCoordinate();
+        return new Artifact(
+                mavenResolvedArtifact.asFile().toPath(),
+                coordinate.getGroupId(),
+                coordinate.getArtifactId(),
+                coordinate.getVersion(),
+                coordinate.getClassifier(),
+                coordinate.getPackaging().toString(),
+                mavenResolvedArtifact.getExtension()
+        );
     }
 
 }

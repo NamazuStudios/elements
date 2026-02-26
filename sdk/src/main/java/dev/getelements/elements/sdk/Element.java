@@ -3,7 +3,6 @@ package dev.getelements.elements.sdk;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -87,6 +86,16 @@ public interface Element extends AutoCloseable {
      * @param event
      */
     void publish(Event event);
+
+    /**
+     * Registers a callback to be executed when this {@link Element} is closed. The callback will be invoked
+     * before the element's resources are released. Multiple callbacks can be registered and will be executed
+     * in registration order.
+     *
+     * @param onClose the callback to execute on close
+     * @return
+     */
+    Subscription onClose(Consumer<Element> onClose);
 
     /**
      * Closes the element and releases any resources associated with the element. Future calls to this instance will be

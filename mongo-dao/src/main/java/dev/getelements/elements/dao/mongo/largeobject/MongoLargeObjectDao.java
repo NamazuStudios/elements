@@ -13,6 +13,7 @@ import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
+import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -64,13 +65,20 @@ public class MongoLargeObjectDao implements LargeObjectDao {
         final String trimmedQueryString = nullToEmpty(search).trim();
 
         if (!trimmedQueryString.isEmpty()) {
-            query.filter(
-                    or(
-                            Filters.regex("originalFilename", Pattern.compile(search)),
-                            Filters.regex("path", Pattern.compile(search)),
-                            Filters.regex("mimeType", Pattern.compile(search))
-                    )
-            );
+            final int colonIdx = trimmedQueryString.indexOf(':');
+            if (colonIdx > 0) {
+                final String field = trimmedQueryString.substring(0, colonIdx).trim();
+                final String value = trimmedQueryString.substring(colonIdx + 1).trim();
+                applyFieldFilter(query, field, value);
+            } else {
+                query.filter(
+                        or(
+                                Filters.regex("originalFilename", Pattern.compile(trimmedQueryString)),
+                                Filters.regex("path", Pattern.compile(trimmedQueryString)),
+                                Filters.regex("mimeType", Pattern.compile(trimmedQueryString))
+                        )
+                );
+            }
         }
 
         return getMongoDBUtils().paginationFromQuery(query,
@@ -149,6 +157,54 @@ public class MongoLargeObjectDao implements LargeObjectDao {
         ));
 
         return query.first();
+    }
+
+    private void applyFieldFilter(final Query<MongoLargeObject> query, final String field, final String value) {
+        switch (field) {
+            case "state" -> {
+                if (value.isEmpty()) {
+                    query.filter(eq("state", null));
+                } else {
+                    try {
+                        query.filter(eq("state", LargeObjectState.valueOf(value.toUpperCase())));
+                    } catch (final IllegalArgumentException e) {
+                        query.filter(eq("state", value));
+                    }
+                }
+            }
+            case "mimeType" -> {
+                if (value.isEmpty()) {
+                    query.filter(or(eq("mimeType", null), eq("mimeType", "")));
+                } else {
+                    query.filter(Filters.regex("mimeType", Pattern.compile(value)));
+                }
+            }
+            case "path" -> {
+                if (value.isEmpty()) {
+                    query.filter(or(eq("path", null), eq("path", "")));
+                } else {
+                    query.filter(Filters.regex("path", Pattern.compile(value)));
+                }
+            }
+            case "originalFilename" -> {
+                if (value.isEmpty()) {
+                    query.filter(or(eq("originalFilename", null), eq("originalFilename", "")));
+                } else {
+                    query.filter(Filters.regex("originalFilename", Pattern.compile(value)));
+                }
+            }
+            default -> {
+                // Unrecognised field — treat the whole input as a full-text search
+                final String raw = field + ":" + value;
+                query.filter(
+                        or(
+                                Filters.regex("originalFilename", Pattern.compile(raw)),
+                                Filters.regex("path", Pattern.compile(raw)),
+                                Filters.regex("mimeType", Pattern.compile(raw))
+                        )
+                );
+            }
+        }
     }
 
     private LargeObject transform(final MongoLargeObject mongoLargeObject) {

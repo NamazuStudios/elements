@@ -10,9 +10,14 @@ public class ModelPermittedTypes implements PermittedTypes {
 
     private static final Set<String> PERMITTED_TYPES = Set.of(
             // More information as to why this is here:
-            // https://www.eclipse.org/forums/index.php/t/594323/
+            // https://bugs.eclipse.org/bugs/show_bug.cgi?id=398723
             "org.eclipse.persistence.internal.jaxb.WrappedValue"
     );
+
+    public String getDescription() {
+        return "Permits org.eclipse.persistence.internal.jaxb.WrappedValue due to known issue with Eclipse's " +
+               "implementation of JAXb / MOXy - https://bugs.eclipse.org/bugs/show_bug.cgi?id=398723";
+    }
 
     @Override
     public boolean test(final Class<?> aClass) {

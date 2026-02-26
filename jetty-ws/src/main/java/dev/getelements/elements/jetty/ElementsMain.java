@@ -1,16 +1,13 @@
 package dev.getelements.elements.jetty;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import dev.getelements.elements.rt.git.FileSystemElementStorageGitLoaderModule;
+import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
+import dev.getelements.elements.sdk.SystemVersion;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-
-import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_node;
-import static dev.getelements.elements.jetty.ElementsWebServiceComponent.app_serve;
 
 public class ElementsMain {
 
@@ -47,23 +44,15 @@ public class ElementsMain {
 
     private static void run(final OptionSet options) {
 
-        BuildPropertiesVersionService.logVersion();
+        SystemVersion.CURRENT.logVersion();
 
         final var services = servicesOptionSpec.values(options);
 
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
                 new ElementsCoreModule(),
-                new FileSystemElementStorageGitLoaderModule(),
-                new ElementsWebServiceComponentModule(services),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        if (services.contains(app_node) || services.contains(app_serve)) {
-                            install(new ApplicationElementServiceModule());
-                        }
-                    }
-                }
+                new JettySdkElementModule(),
+                new ElementsWebServiceComponentModule(services)
         );
 
         final var elements = injector.getInstance(ElementsWebServices.class);

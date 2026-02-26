@@ -82,4 +82,9 @@ public class LoggingPermittedPackages implements PermittedPackages {
                 .anyMatch(p -> p.test(aPackage));
     }
 
+    @Override
+    public String getDescription() {
+        return "Permits sl4fj APIs as well as allows an Element to request additional logging from the system.";
+    }
+
 }

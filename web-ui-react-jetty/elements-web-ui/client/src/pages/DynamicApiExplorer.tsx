@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Database, Lock, User as UserIcon } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 import { getApiPath, apiClient } from '@/lib/api-client';
@@ -389,6 +391,21 @@ export default function DynamicApiExplorer() {
   }
 
   return (
+    <Tabs defaultValue="explorer" className="h-full flex flex-col">
+      <div className="border-b px-4 pt-2">
+        <TabsList>
+          <TabsTrigger value="explorer" data-testid="tab-explorer">Explorer</TabsTrigger>
+          <TabsTrigger value="raw-json" data-testid="tab-raw-json">Raw JSON</TabsTrigger>
+        </TabsList>
+      </div>
+      <TabsContent value="raw-json" className="flex-1 overflow-hidden m-0">
+        <ScrollArea className="h-full p-4">
+          <pre className="text-xs font-mono bg-muted p-4 rounded-md">
+            <code>{spec ? JSON.stringify(spec, null, 2) : 'No data'}</code>
+          </pre>
+        </ScrollArea>
+      </TabsContent>
+      <TabsContent value="explorer" className="flex-1 overflow-hidden m-0">
     <div className="h-full flex">
       {/* Resource List Sidebar */}
       <div className="w-64 border-r bg-muted/30 p-4 overflow-y-auto">
@@ -712,5 +729,7 @@ export default function DynamicApiExplorer() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+      </TabsContent>
+    </Tabs>
   );
 }

@@ -77,6 +77,25 @@ public class TemporaryFiles {
 
     }
 
+    /**
+     * Returns the temporary path root directory.
+     *
+     * @return the temporary path root
+     */
+    public static Path getTemporaryRoot() {
+        return TEMPORARY_ROOT;
+    }
+
+    /**
+     * Tests if a supplied {@link Path} is a temporary path under the structure of this type.
+     * @param path the path
+     *
+     * @return true if it is under the temporary root, false otherwise
+     */
+    public static boolean isTemporaryPath(final Path path) {
+        return path.startsWith(getTemporaryRoot());
+    }
+
     private final String prefix;
 
     private final ThreadSafeLazyValue<Path> root;
@@ -152,8 +171,7 @@ public class TemporaryFiles {
         final Path path;
 
         try {
-            final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
-            path = Files.createTempDirectory(root.get(), fullPrefix);
+            path = Files.createTempDirectory(root.get(), prefix);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -198,8 +216,7 @@ public class TemporaryFiles {
         final Path path;
 
         try {
-            final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
-            path = Files.createTempFile(root.get(), fullPrefix, suffix);
+            path = Files.createTempFile(root.get(), prefix, suffix);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }

@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, ChevronDown, ExternalLink, Box, Radio, Code, RefreshCw } from 'lucide-react';
 import { queryClient } from '@/lib/queryClient';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -177,6 +179,19 @@ export default function CoreElements() {
         </Button>
       </div>
 
+      <Tabs defaultValue="elements">
+        <TabsList>
+          <TabsTrigger value="elements" data-testid="tab-core-elements">Elements</TabsTrigger>
+          <TabsTrigger value="json" data-testid="tab-core-json">Raw JSON</TabsTrigger>
+        </TabsList>
+        <TabsContent value="json" className="mt-4">
+          <ScrollArea className="h-[70vh] w-full rounded-md border">
+            <pre className="p-4 text-xs font-mono whitespace-pre-wrap" data-testid="text-core-raw-json">
+              {JSON.stringify(systemData, null, 2)}
+            </pre>
+          </ScrollArea>
+        </TabsContent>
+        <TabsContent value="elements" className="mt-4">
       {elementEntries.length === 0 ? (
         <Card>
           <CardContent className="py-8">
@@ -398,6 +413,8 @@ export default function CoreElements() {
           })}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

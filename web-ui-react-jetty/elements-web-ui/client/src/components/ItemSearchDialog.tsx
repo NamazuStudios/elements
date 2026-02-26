@@ -109,7 +109,7 @@ export function ItemSearchDialog({
                   <Button
                     key={item.id}
                     variant="ghost"
-                    className="w-full justify-start hover-elevate p-3"
+                    className="w-full justify-start"
                     onClick={() => handleSelect(item.id, item)}
                     data-testid={`button-select-item-${item.id}`}
                   >

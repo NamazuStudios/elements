@@ -14,7 +14,6 @@ import java.util.Optional;
 /**
  * Created by patricktwohig on 6/28/17.
  */
-
 @ElementServiceExport
 public interface ProfileDao {
 

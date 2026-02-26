@@ -10,11 +10,6 @@ import java.nio.file.Path;
 public interface ApplicationAssetLoader {
 
     /**
-     * The name of the configuration variable for the script storage directory.
-     */
-    String ELEMENT_STORAGE = "dev.getelements.elements.element.storage";
-
-    /**
      * Defers to {@link ApplicationId#forUniqueName(String)} to find the {@link ApplicationId}.
      *
      * @param applicationIdString the application id string

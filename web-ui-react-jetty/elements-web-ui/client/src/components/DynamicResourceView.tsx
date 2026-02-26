@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Pencil, Trash2, ExternalLink, Info, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -651,6 +652,21 @@ export function DynamicResourceView({
 
       {resource.list && (
         <Card id="list-results-section">
+          <Tabs defaultValue="table">
+          <CardHeader className="pb-0">
+            <TabsList>
+              <TabsTrigger value="table" data-testid="tab-results-table">Table</TabsTrigger>
+              <TabsTrigger value="raw-json" data-testid="tab-results-raw-json">Raw JSON</TabsTrigger>
+            </TabsList>
+          </CardHeader>
+          <TabsContent value="raw-json" className="m-0">
+            <CardContent>
+              <pre className="text-xs font-mono bg-muted p-4 rounded-md overflow-auto max-h-[600px]">
+                <code>{data !== undefined ? JSON.stringify(data, null, 2) : 'No data — send a request first'}</code>
+              </pre>
+            </CardContent>
+          </TabsContent>
+          <TabsContent value="table" className="m-0">
           <CardContent className="p-0">
             {isTextResponse ? (
               <div className="p-6">
@@ -773,6 +789,8 @@ export function DynamicResourceView({
               </>
             )}
           </CardContent>
+          </TabsContent>
+          </Tabs>
         </Card>
       )}
     </div>

@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE;
 import static com.google.inject.Scopes.SINGLETON;
 import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.*;
 import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
