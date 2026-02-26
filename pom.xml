@@ -20,7 +20,7 @@
     <licenses>
         <license>
             <name>Modified GNU AGPL v3.0</name>
-            <url>https://raw.githubusercontent.com/Elemental-Computing/OSS-Licenses/8e60b05/LICENSE.txt</url>
+            <url>https://raw.githubusercontent.com/NamazuStudios/OSS-Licenses/8e60b05/LICENSE.txt</url>
         </license>
     </licenses>
     <url>https://namazustudios.com</url>
@@ -1225,14 +1225,14 @@
             <distributionManagement>
                 <repository>
                     <id>github-release</id>
-                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
+                    <url>https://maven.pkg.github.com/NamazuStudios/elements</url>
                     <snapshots>
                         <enabled>false</enabled>
                     </snapshots>
                 </repository>
                 <snapshotRepository>
                     <id>github-snapshot</id>
-                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
+                    <url>https://maven.pkg.github.com/NamazuStudios/elements</url>
                     <snapshots>
                         <enabled>true</enabled>
                     </snapshots>
