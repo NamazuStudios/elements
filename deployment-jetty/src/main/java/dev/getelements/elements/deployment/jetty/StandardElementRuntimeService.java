@@ -481,7 +481,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         try {
 
-            if (context.repositories().isEmpty()) {
+            if (context.repositories().isEmpty() && !context.deployment().useDefaultRepositories()) {
                 context.warn("No artifact repositories configured");
             } else {
                 context.repositories().forEach(r -> {
