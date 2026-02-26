@@ -65,6 +65,7 @@ interface FormData {
   repositories: ElementArtifactRepository[];
   pathAttributes: Record<string, Record<string, any>>;
   pathSpiBuiltins: Record<string, string[]>;
+  pathSpiClassPaths: Record<string, string[]>;
 }
 
 const DEPLOYMENT_STATES_EDIT = ['ENABLED', 'DISABLED'] as const;
@@ -109,6 +110,7 @@ const emptyFormData: FormData = {
   repositories: [],
   pathAttributes: {},
   pathSpiBuiltins: {},
+  pathSpiClassPaths: {},
 };
 
 function deploymentToFormData(d: ElementDeployment): FormData {
@@ -136,6 +138,7 @@ function deploymentToFormData(d: ElementDeployment): FormData {
     })),
     pathAttributes: d.pathAttributes || {},
     pathSpiBuiltins: d.pathSpiBuiltins || {},
+    pathSpiClassPaths: d.pathSpiClassPaths || {},
   };
 }
 
@@ -258,6 +261,7 @@ export default function ElementDeployments() {
   const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any } | null>(null);
   const [wizardCreatedDeployment, setWizardCreatedDeployment] = useState<{ deploymentId: string; elmId?: string } | null>(null);
   const [wizardElmFile, setWizardElmFile] = useState<File | null>(null);
+  const [wizardEnableNow, setWizardEnableNow] = useState(true);
   const [featuresDialogOpen, setFeaturesDialogOpen] = useState(false);
 
   const { data, isLoading, error } = useQuery<PaginatedResponse>({
@@ -370,6 +374,22 @@ export default function ElementDeployments() {
     },
   });
 
+  const enableDeploymentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ state: 'ENABLED' }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Deployment Enabled', description: 'The deployment state has been set to ENABLED.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/deployment'] });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to enable deployment', variant: 'destructive' });
+    },
+  });
+
   const handleElmFileUpload = (file: File, largeObjectId: string) => {
     elmUploadMutation.mutate({ largeObjectId, file });
   };
@@ -379,6 +399,7 @@ export default function ElementDeployments() {
     setWizardStep(0);
     setWizardCreatedDeployment(null);
     setWizardElmFile(null);
+    setWizardEnableNow(true);
     setCreateDialogOpen(true);
   };
 
@@ -426,12 +447,15 @@ export default function ElementDeployments() {
     if (formData.pathSpiBuiltins && Object.keys(formData.pathSpiBuiltins).length > 0) {
       body.pathSpiBuiltins = formData.pathSpiBuiltins;
     }
+    if (formData.pathSpiClassPaths && Object.keys(formData.pathSpiClassPaths).length > 0) {
+      body.pathSpiClassPaths = formData.pathSpiClassPaths;
+    }
     return body;
   };
 
   const handleCreate = () => {
     const body = buildBody();
-    body.state = 'ENABLED';
+    delete body.state;
     if (formData.appNameOrId.trim()) {
       body.applicationNameOrId = formData.appNameOrId.trim();
     }
@@ -710,7 +734,7 @@ export default function ElementDeployments() {
               </div>
               <ScrollArea className="h-[50vh] w-full rounded-md border">
                 <pre className="p-4 text-xs font-mono whitespace-pre-wrap" data-testid="text-create-json-preview">
-                  {JSON.stringify((() => { const b = buildBody(); b.state = 'ENABLED'; if (formData.appNameOrId.trim()) b.applicationNameOrId = formData.appNameOrId; return b; })(), null, 2)}
+                  {JSON.stringify((() => { const b = buildBody(); delete b.state; if (formData.appNameOrId.trim()) b.applicationNameOrId = formData.appNameOrId; return b; })(), null, 2)}
                 </pre>
               </ScrollArea>
             </div>
@@ -750,6 +774,17 @@ export default function ElementDeployments() {
                   No ELM file is associated with this deployment. You can upload one later from the edit dialog if needed.
                 </p>
               )}
+              <div className="border-t pt-3 flex items-center gap-2">
+                <Checkbox
+                  id="wizardEnableNow"
+                  checked={wizardEnableNow}
+                  onCheckedChange={(checked) => setWizardEnableNow(!!checked)}
+                  data-testid="checkbox-enable-now"
+                />
+                <Label htmlFor="wizardEnableNow" className="cursor-pointer">
+                  Enable deployment now
+                </Label>
+              </div>
             </div>
           )}
 
@@ -792,12 +827,15 @@ export default function ElementDeployments() {
               <Button
                 variant="outline"
                 onClick={() => {
+                  if (wizardEnableNow && wizardCreatedDeployment?.deploymentId) {
+                    enableDeploymentMutation.mutate(wizardCreatedDeployment.deploymentId);
+                  }
                   setCreateDialogOpen(false);
                   setWizardCreatedDeployment(null);
                 }}
                 data-testid="button-wizard-done"
               >
-                {elmUploadMutation.isSuccess ? 'Done' : wizardCreatedDeployment?.elmId ? 'Skip for Now' : 'Done'}
+                {elmUploadMutation.isSuccess || !wizardCreatedDeployment?.elmId ? 'Done' : 'Skip for Now'}
               </Button>
             )}
           </DialogFooter>
@@ -2070,6 +2108,15 @@ function WizardConfigStep({
             <p className="text-xs text-muted-foreground">
               Per-path builtin SPI configurations at the deployment level. The key is the element path, and the value is the list of builtin SPI names.
             </p>
+            <PathClassPathsEditor
+              value={formData.pathSpiClassPaths}
+              onChange={(val) => update({ pathSpiClassPaths: val })}
+              label="Deployment Path SPI Class Paths"
+              testIdPrefix="wizard-path-spi-classpaths"
+            />
+            <p className="text-xs text-muted-foreground">
+              Per-path custom SPI class paths at the deployment level. The key is the element path, and the value is the list of SPI class path entries.
+            </p>
             <PathKeyValueMapEditor
               value={formData.pathAttributes}
               onChange={(val) => update({ pathAttributes: val })}
@@ -2345,6 +2392,8 @@ interface DeploymentFormProps {
 
 function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, elmUploading }: DeploymentFormProps) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [additionalOpen, setAdditionalOpen] = useState(false);
 
   const { data: applications = [], isLoading: appsLoading } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ['/api/rest/application', 'picker'],
@@ -2376,33 +2425,8 @@ function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, 
 
   return (
     <div className="space-y-5">
-      {mode === 'create' && (
-        <div className="space-y-2">
-          <Label>Application</Label>
-          <Select
-            value={formData.appNameOrId || '__none__'}
-            onValueChange={(v) => update({ appNameOrId: v === '__none__' ? '' : v })}
-          >
-            <SelectTrigger data-testid="select-application">
-              <SelectValue placeholder={appsLoading ? 'Loading applications...' : 'Select application'} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__" data-testid="option-app-none">
-                None (Global Deployment)
-              </SelectItem>
-              {applications.map((app) => (
-                <SelectItem key={app.id} value={app.id} data-testid={`option-app-${app.id}`}>
-                  {app.name || app.id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Select an application to scope the deployment, or "None" for a global deployment.
-          </p>
-        </div>
-      )}
 
+      {/* ── Deployment State (edit only) ── */}
       {mode === 'edit' && (
         <div className="space-y-2">
           <Label htmlFor="state">Deployment State</Label>
@@ -2446,48 +2470,9 @@ function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, 
         </div>
       )}
 
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="useDefaultRepos"
-            checked={formData.useDefaultRepositories}
-            onCheckedChange={(checked) => update({ useDefaultRepositories: !!checked })}
-            data-testid="checkbox-use-default-repos"
-          />
-          <Label htmlFor="useDefaultRepos" className="cursor-pointer">
-            Use default artifact repositories (includes Maven Central)
-          </Label>
-        </div>
-        <p className="text-xs text-muted-foreground ml-6">
-          Recommended: this should generally always be checked unless you have a specific reason to disable it.
-        </p>
-      </div>
-
-      <div className="border-t pt-4">
-        <ElementDefinitionEditor
-          elements={formData.elements}
-          onChange={(elements) => update({ elements })}
-          availableSpis={availableSpis}
-          spisLoading={spisLoading}
-        />
-      </div>
-
-      <div className="border-t pt-4">
-        <PackageDefinitionEditor
-          packages={formData.packages}
-          onChange={(packages) => update({ packages })}
-        />
-      </div>
-
-      <div className="border-t pt-4">
-        <RepositoryEditor
-          repositories={formData.repositories}
-          onChange={(repositories) => update({ repositories })}
-        />
-      </div>
-
+      {/* ── ELM File (edit only) ── */}
       {mode === 'edit' && deployment?.elm && (
-        <div className="border-t pt-4 space-y-3">
+        <div className="space-y-3">
           <Label>ELM File</Label>
           <div className="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
             <HardDrive className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
@@ -2521,27 +2506,136 @@ function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, 
         </div>
       )}
 
-      <div className="border-t pt-4 space-y-4">
-        <PathClassPathsEditor
-          value={formData.pathSpiBuiltins}
-          onChange={(val) => update({ pathSpiBuiltins: val })}
-          label="Deployment Path SPI Builtins"
-          testIdPrefix="deploy-path-spi-builtins"
-        />
-        <p className="text-xs text-muted-foreground">
-          Per-path builtin SPI configurations for Elements in the uploaded ELM file. The key is the element path inside the ELM, and the value is the list of builtin SPI names.
-        </p>
+      {/* ── Application (create only) ── */}
+      {mode === 'create' && (
+        <div className="space-y-2">
+          <Label>Application</Label>
+          <Select
+            value={formData.appNameOrId || '__none__'}
+            onValueChange={(v) => update({ appNameOrId: v === '__none__' ? '' : v })}
+          >
+            <SelectTrigger data-testid="select-application">
+              <SelectValue placeholder={appsLoading ? 'Loading applications...' : 'Select application'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__" data-testid="option-app-none">
+                None (Global Deployment)
+              </SelectItem>
+              {applications.map((app) => (
+                <SelectItem key={app.id} value={app.id} data-testid={`option-app-${app.id}`}>
+                  {app.name || app.id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Select an application to scope the deployment, or "None" for a global deployment.
+          </p>
+        </div>
+      )}
 
-        <PathKeyValueMapEditor
-          value={formData.pathAttributes}
-          onChange={(val) => update({ pathAttributes: val })}
-          label="Deployment Path Attributes"
-          testIdPrefix="deploy-path-attrs"
-        />
-        <p className="text-xs text-muted-foreground">
-          Per-path custom attributes for Elements in the ELM file. The key is the element path inside the ELM, and the value is a map of attributes passed at load time via the AttributesLoader mechanism.
-        </p>
+      {/* ── Advanced Settings (collapsible) ── */}
+      <div className="border-t pt-1">
+        <button
+          type="button"
+          className="flex items-center gap-2 w-full py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
+          onClick={() => setAdvancedOpen(v => !v)}
+          data-testid="button-toggle-advanced-settings"
+        >
+          {advancedOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+          Advanced Settings
+        </button>
+        {advancedOpen && (
+          <div className="space-y-5 pt-2">
+            <PathClassPathsEditor
+              value={formData.pathSpiBuiltins}
+              onChange={(val) => update({ pathSpiBuiltins: val })}
+              label="Deployment Path SPI Builtins"
+              testIdPrefix="deploy-path-spi-builtins"
+            />
+            <p className="text-xs text-muted-foreground">
+              Per-path builtin SPI configurations for Elements in the uploaded ELM file. The key is the element path inside the ELM, and the value is the list of builtin SPI names.
+            </p>
+            <PathClassPathsEditor
+              value={formData.pathSpiClassPaths}
+              onChange={(val) => update({ pathSpiClassPaths: val })}
+              label="Deployment Path SPI Class Paths"
+              testIdPrefix="deploy-path-spi-classpaths"
+            />
+            <p className="text-xs text-muted-foreground">
+              Per-path custom SPI class paths for Elements in the ELM file. The key is the element path inside the ELM, and the value is the list of SPI class path entries.
+            </p>
+            <PathKeyValueMapEditor
+              value={formData.pathAttributes}
+              onChange={(val) => update({ pathAttributes: val })}
+              label="Deployment Path Attributes"
+              testIdPrefix="deploy-path-attrs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Per-path custom attributes for Elements in the ELM file. The key is the element path inside the ELM, and the value is a map of attributes passed at load time via the AttributesLoader mechanism.
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* ── Additional Elements (collapsible) ── */}
+      <div className="border-t pt-1">
+        <button
+          type="button"
+          className="flex items-center gap-2 w-full py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
+          onClick={() => setAdditionalOpen(v => !v)}
+          data-testid="button-toggle-additional-elements"
+        >
+          {additionalOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+          Additional Elements
+          {(formData.elements.length > 0 || formData.packages.length > 0) && (
+            <Badge variant="secondary" className="ml-1 text-[10px]">
+              {formData.elements.length + formData.packages.length}
+            </Badge>
+          )}
+        </button>
+        {additionalOpen && (
+          <div className="space-y-4 pt-2">
+            <ElementDefinitionEditor
+              elements={formData.elements}
+              onChange={(elements) => update({ elements })}
+              availableSpis={availableSpis}
+              spisLoading={spisLoading}
+            />
+            <div className="border-t pt-4">
+              <PackageDefinitionEditor
+                packages={formData.packages}
+                onChange={(packages) => update({ packages })}
+              />
+            </div>
+            <div className="border-t pt-4 space-y-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="useDefaultRepos"
+                    checked={formData.useDefaultRepositories}
+                    onCheckedChange={(checked) => update({ useDefaultRepositories: !!checked })}
+                    data-testid="checkbox-use-default-repos"
+                  />
+                  <Label htmlFor="useDefaultRepos" className="cursor-pointer">
+                    Use default artifact repositories (includes Maven Central)
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground ml-6">
+                  Recommended: this should generally always be checked unless you have a specific reason to disable it.
+                </p>
+              </div>
+              <div className="border-t pt-4">
+                <RepositoryEditor
+                  repositories={formData.repositories}
+                  onChange={(repositories) => update({ repositories })}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
