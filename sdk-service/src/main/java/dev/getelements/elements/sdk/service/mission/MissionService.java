@@ -68,7 +68,7 @@ public interface MissionService {
     /**
      * Creates a new {@link Mission}.
      *
-     * @param mission the properties for the new {@link Mission} to create
+     * @param request the properties for the new {@link Mission} to create
      * @return the {@link Mission} as it was created by the service.
      */
     Mission createMission(CreateMissionRequest request);

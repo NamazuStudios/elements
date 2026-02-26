@@ -80,21 +80,21 @@ import static java.util.Objects.requireNonNull;
  *
  * <h2>Special Features</h2>
  *
- * <h3>@ElementLocal Support</h3>
+ * <h2>@ElementLocal Support</h2>
  * <p>
  * Classes annotated with {@link ElementLocal} are bytecode-copied into this classloader, creating Element-specific
  * instances. This allows each Element to have its own version of utility classes with separate static state,
  * preventing interference between Elements.
  * </p>
  *
- * <h3>Built-in Resource Overrides</h3>
+ * <h2>Built-in Resource Overrides</h2>
  * <p>
  * Provides Element-specific implementations of certain service provider interfaces by overriding resource loading
  * for {@code META-INF/services} files. This allows each Element to have its own scoped services like
  * {@code ElementSupplier} and {@code ElementRegistrySupplier}.
  * </p>
  *
- * <h3>Service Export Visibility</h3>
+ * <h2>Service Export Visibility</h2>
  * <p>
  * Classes registered as exposed services in the Element's {@link ElementRecord} are automatically made public,
  * allowing them to be accessed by other Elements or the host application without requiring visibility annotations.

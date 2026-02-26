@@ -19,7 +19,7 @@ clean:
 	mvn --no-transfer-progress -B -q clean
 
 install_no_tests:
-	mvn -DskipTests --no-transfer-progress -q install
+	mvn -Darchetype.test.skip=true -DskipTests --no-transfer-progress -q install
 
 build:
 	mvn --no-transfer-progress -B -q install

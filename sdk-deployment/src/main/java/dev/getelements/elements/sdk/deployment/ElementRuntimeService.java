@@ -19,7 +19,7 @@ import java.util.Map;
  * {@link dev.getelements.elements.sdk.MutableElementRegistry}. The service reconciles database state with
  * in-memory state on a configurable interval: loading ENABLED deployments, unloading DISABLED/deleted ones.
  *
- * <h3>Runtime Lifecycle Events</h3>
+ * <h2>Runtime Lifecycle Events</h2>
  * The service publishes the following events:
  * <ul>
  *     <li>{@link #RUNTIME_SERVICE_STARTED} - when the service starts</li>

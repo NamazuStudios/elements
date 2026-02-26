@@ -23,14 +23,14 @@ import static java.lang.Thread.currentThread;
  *
  * <h2>Element Types</h2>
  *
- * <h3>Shared Elements ({@link ElementType#SHARED_CLASSPATH})</h3>
+ * <h2>Shared Elements ({@link ElementType#SHARED_CLASSPATH})</h2>
  * <p>
  * A shared element is a wrapper around types from a single classloader, which is usually the system classloader.
  * Shared elements do not provide classloader isolation and share the same classpath as the host application.
  * Use {@link #getSharedLoader(ElementRecord, ServiceLocator)} to create shared element loaders.
  * </p>
  *
- * <h3>Isolated Elements ({@link ElementType#ISOLATED_CLASSPATH})</h3>
+ * <h2>Isolated Elements ({@link ElementType#ISOLATED_CLASSPATH})</h2>
  * <p>
  * An isolated classloader allows the Element to have its own isolated implementation classpath, preventing conflicts
  * between Elements and the rest of the system. This is the recommended approach for production deployments.
@@ -63,7 +63,7 @@ import static java.lang.Thread.currentThread;
  * permitted types from the base classloader.
  * </p>
  *
- * <h3>Practical Note on PermittedTypesClassLoader Placement</h3>
+ * <h2>Practical Note on PermittedTypesClassLoader Placement</h2>
  * <p>
  * In virtually all scenarios, if {@link dev.getelements.elements.sdk.PermittedTypesClassLoader} is used for
  * selective type borrowing, it must be placed in the parent classloader hierarchy (not as the base classloader).

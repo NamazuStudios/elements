@@ -16,7 +16,7 @@ import java.lang.annotation.RetentionPolicy;
  *         the same type exist. If empty (the default), an unnamed service is assumed.</li>
  * </ul>
  *
- * <h3>Usage with Event Consumers</h3>
+ * <h2>Usage with Event Consumers</h2>
  * The most common use case is routing events through a service interface:
  * <pre>{@code
  * @ElementServiceExport
@@ -31,7 +31,7 @@ import java.lang.annotation.RetentionPolicy;
  * }
  * }</pre>
  *
- * <h3>Named Services</h3>
+ * <h2>Named Services</h2>
  * When multiple services of the same type exist with different names:
  * <pre>{@code
  * @ElementServiceExport
@@ -65,7 +65,7 @@ public @interface ElementServiceReference {
     /**
      * The optional service name qualifier. When specified, the service lookup will match both the
      * service type and this name. This is necessary when multiple services of the same type exist
-     * and are distinguished by name (typically using {@link jakarta.inject.Named}).
+     * and are distinguished by name (typically using jakarta.inject.Named).
      *
      * <p>If empty (the default), the service lookup will find an unnamed service, or will fail if
      * only named services of the specified type exist.</p>
@@ -82,7 +82,7 @@ public @interface ElementServiceReference {
      * }</pre>
      *
      * @return the service name, or empty string for unnamed services
-     * @see jakarta.inject.Named
+     *
      */
     String name() default  "";
 

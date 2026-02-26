@@ -15,7 +15,7 @@ import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
  *         as specified in {@link ElementEventConsumer#value()}.</li>
  * </ul>
  *
- * <h3>Usage</h3>
+ * <h2>Usage</h2>
  * Event keys are typically created from {@link ElementEventConsumer} annotations during the
  * scanning and registration phase. The key determines how events are routed through the system:
  *
