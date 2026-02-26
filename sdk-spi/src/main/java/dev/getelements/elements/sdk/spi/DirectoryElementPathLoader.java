@@ -535,7 +535,13 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         // load the Element
 
                         if (record.isValidElement()) {
-                            elements.add(record.loadElement());
+                            try {
+                                final var element = record.loadElement();
+                                elements.add(element);
+                            } catch (final SdkException ex) {
+                                logger.warn("Caught exception loading eleemnt. Deferring to handler.", ex);
+                                config.sdkExceptionHandler().accept(ex);
+                            }
                         }
 
                     }
@@ -689,17 +695,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         }
 
         public Element loadElement() {
-
             logger.debug("Loading element from: {}", elementPath());
-
-            try {
-                final var elementLoader = getLoader();
-                return registry().register(elementLoader);
-            } catch (SdkElementNotFoundException ex) {
-                logger.warn("Element directory {} has valid configuration but no elements were found.", elementPath(), ex);
-                throw ex;
-            }
-
+            final var elementLoader = getLoader();
+            return registry().register(elementLoader);
         }
 
         private ElementLoader getLoader() {

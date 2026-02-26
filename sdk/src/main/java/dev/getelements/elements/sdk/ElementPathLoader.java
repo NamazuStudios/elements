@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.lang.System.getenv;
@@ -142,7 +143,8 @@ public interface ElementPathLoader {
             ClassLoader parent,
             ClassLoader baseClassLoader,
             SpiLoader spiLoader,
-            AttributesLoader attributesProvider) {
+            AttributesLoader attributesProvider,
+            Consumer<SdkException> sdkExceptionHandler) {
 
         /**
          * Creates a new builder for LoadConfiguration.
@@ -169,6 +171,8 @@ public interface ElementPathLoader {
             private SpiLoader spiLoader = (parent, path) -> parent;
 
             private AttributesLoader attributesLoader = (attributes, path) -> attributes;
+
+            private Consumer<SdkException> loadErrorHandler = ex -> { throw ex; };
 
             private Builder() {}
 
@@ -260,6 +264,22 @@ public interface ElementPathLoader {
             }
 
             /**
+             * Handles {@link SdkException}s thrown in the process of loading multiple {@link Element}s. This includes
+             * exceptions which may only be partial failures. The default behavior is to simply throw the exception.
+             * However, calling code may override this functionality by consuming, and ignoring/logging the exception
+             * such that more {@link Element}s may be loaded
+             *
+             * @param loadErrorHandler the handler
+             * @return this
+             */
+            public Builder sdkExceptionHandler(final Consumer<SdkException> loadErrorHandler) {
+                this.loadErrorHandler = loadErrorHandler == null
+                        ? ex -> { throw ex; }
+                        : loadErrorHandler;
+                return this;
+            }
+
+            /**
              * Builds the LoadConfiguration with defaults applied for unspecified optional parameters.
              *
              * @return the configured LoadConfiguration
@@ -280,7 +300,8 @@ public interface ElementPathLoader {
                         parent,
                         finalBaseClassLoader,
                         spiLoader,
-                        attributesLoader
+                        attributesLoader,
+                        loadErrorHandler
                 );
 
             }

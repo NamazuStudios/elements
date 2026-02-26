@@ -591,6 +591,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .paths(context.elementPaths())
                         .spiProvider(context::loadSpiForPath)
                         .attributesLoader(context::loadAttributesForPath)
+                        .sdkExceptionHandler(context::error)
                         .build();
 
                 allElements = pathLoader.load(config).toList();

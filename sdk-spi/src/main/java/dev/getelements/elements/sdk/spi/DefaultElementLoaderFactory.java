@@ -34,27 +34,34 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ClassLoaderConstructor classLoaderCtor,
             final ClassLoader parent,
             final Predicate<ElementDefinitionRecord> selector) {
+        try {
 
-        final var isolated = new ElementImplementationClassLoader(baseClassLoader, parent);
-        final var classLoader = classLoaderCtor.apply(isolated);
-        final var elementDefinitionRecord = scanForModuleDefinition(classLoader, selector);
+            final var isolated = new ElementImplementationClassLoader(baseClassLoader, parent);
+            final var classLoader = classLoaderCtor.apply(isolated);
+            final var elementDefinitionRecord = scanForModuleDefinition(classLoader, selector);
 
-        // Partially initializes the classloaders with the ElementDefinitionRecord
-        reflectionUtils.injectBeanProperties(isolated, elementDefinitionRecord);
-        reflectionUtils.injectBeanProperties(classLoader, elementDefinitionRecord);
+            // Partially initializes the classloaders with the ElementDefinitionRecord
+            reflectionUtils.injectBeanProperties(isolated, elementDefinitionRecord);
+            reflectionUtils.injectBeanProperties(classLoader, elementDefinitionRecord);
 
-        final var elementRecord = loadElementRecord(
-                attributes,
-                classLoader,
-                elementDefinitionRecord);
+            final var elementRecord = loadElementRecord(
+                    attributes,
+                    classLoader,
+                    elementDefinitionRecord
+            );
 
-        // Fully initializes the classloaders with the ElementDefinitionRecord
-        reflectionUtils.injectBeanProperties(isolated, elementRecord);
-        reflectionUtils.injectBeanProperties(classLoader, elementRecord);
+            // Fully initializes the classloaders with the ElementDefinitionRecord
+            reflectionUtils.injectBeanProperties(isolated, elementRecord);
+            reflectionUtils.injectBeanProperties(classLoader, elementRecord);
 
-        final var elementLoader = newIsolatedLoader(classLoader, elementRecord);
-        return reflectionUtils.injectBeanProperties(elementLoader, elementRecord);
+            final var elementLoader = newIsolatedLoader(classLoader, elementRecord);
+            return reflectionUtils.injectBeanProperties(elementLoader, elementRecord);
 
+        } catch(SdkException ex) {
+            throw ex;
+        } catch (LinkageError | RuntimeException ex) {
+            throw new SdkException(ex);
+        }
     }
 
     private ElementRecord loadElementRecord(

@@ -124,6 +124,15 @@ record DeploymentContext(
     }
 
     /**
+     * Appends an error to the errors list and the deployment log.
+     * @param th the error
+     */
+    public void error(final Throwable th) {
+        logs.add("WARN: %s".formatted(th.getMessage()));
+        errors.add(th);
+    }
+
+    /**
      * Creates a custom SPI classloader for the given element path if custom SPI dependencies are configured.
      * If no custom SPI is configured, returns the parent classloader.
      *
