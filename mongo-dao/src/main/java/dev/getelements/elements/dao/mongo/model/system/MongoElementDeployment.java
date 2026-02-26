@@ -20,7 +20,7 @@ public class MongoElementDeployment {
     @Reference
     private MongoApplication application;
 
-    @Reference
+    @Reference(ignoreMissing = true)
     private MongoLargeObject elm;
 
     @Property
