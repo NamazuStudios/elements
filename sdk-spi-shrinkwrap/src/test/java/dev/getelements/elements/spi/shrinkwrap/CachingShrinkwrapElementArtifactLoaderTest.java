@@ -1,22 +1,21 @@
 package dev.getelements.elements.spi.shrinkwrap;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
-import dev.getelements.elements.sdk.record.ArtifactCoordinates;
+import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.spi.shrinkwrap.CachingShrinkwrapElementArtifactLoader;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toUnmodifiableSet;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public class CachingShrinkwrapElementArtifactLoaderTest {
 
     /**
-     * Common test artifacts
+     * Common test artifacts.
      */
     private final Set<String> TEST_ARTIFACTS = Set.of(
             "junit:junit:4.13.2",
@@ -26,9 +25,11 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
             "org.assertj:assertj-core:3.25.3",
             "org.mockito:mockito-core:5.10.0",
             "com.google.guava:guava:33.0.0-jre"
-
     );
 
+    /**
+     * Deliberately missing artifacts.
+     */
     private final Set<String> DELIBERATELY_MISSING_ARTIFACTS = Set.of(
             "com.example:does-not-exist:0.0.1"
     );
@@ -39,7 +40,6 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
     public Object[][] getTestArtifacts() {
         return TEST_ARTIFACTS
                 .stream()
-                .map(ArtifactCoordinates::fromCoordinatesAndDefaultRepository)
                 .map(a -> new Object[] {a})
                 .toArray(Object[][]::new);
     }
@@ -48,20 +48,19 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
     public Object[][] getMissingTestArtifacts() {
         return DELIBERATELY_MISSING_ARTIFACTS
                 .stream()
-                .map(ArtifactCoordinates::fromCoordinatesAndDefaultRepository)
                 .map(a -> new Object[] {a})
                 .toArray(Object[][]::new);
     }
 
     @Test(dataProvider = "getTestArtifacts")
-    public void testGetArtifacts(final ArtifactCoordinates coordinates) {
-        final var result = loader.tryGetClassLoader(null, Set.of(coordinates));
+    public void testGetArtifacts(final String coordinates) {
+        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
         assertTrue(result.isPresent());
     }
 
     @Test(dataProvider = "getMissingTestArtifacts")
-    public void testMissingArtifacts(final ArtifactCoordinates coordinates) {
-        final var result = loader.tryGetClassLoader(null, Set.of(coordinates));
+    public void testMissingArtifacts(final String coordinates) {
+        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
         assertFalse(result.isPresent());
     }
 
@@ -70,11 +69,11 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
 
         final var all = TEST_ARTIFACTS
                 .stream()
-                .map(ArtifactCoordinates::fromCoordinatesAndDefaultRepository)
-                .collect(Collectors.toUnmodifiableSet());
+                .collect(toUnmodifiableSet());
 
-        final var result = loader.tryGetClassLoader(null, all);
+        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, all);
         assertTrue(result.isPresent());
 
     }
+
 }

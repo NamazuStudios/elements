@@ -10,12 +10,17 @@ public class ModelPermittedPackages implements PermittedPackages {
 
     private static final List<String> PERMITTED_PACKAGES = List.of(
             "jakarta.inject",
-            "jakarta.validation"
+            "jakarta.validation",
+            "io.swagger.v3.oas.annotations"
     );
 
     @Override
     public boolean test(final Package aPackage) {
         return PERMITTED_PACKAGES.contains(aPackage.getName());
+    }
+
+    public String getDescription() {
+        return "Permits javax.inject and javax.validation (both used in the model package).";
     }
 
 }

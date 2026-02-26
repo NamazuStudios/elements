@@ -38,7 +38,11 @@ export function ApplicationConfigurationEditor({
   disableTypeSelector = false,
 }: ApplicationConfigurationEditorProps) {
   const handleFieldChange = (fieldName: string, fieldValue: any) => {
-    onChange({ ...value, [fieldName]: fieldValue });
+    if (fieldName === '__batch' && typeof fieldValue === 'object') {
+      onChange({ ...value, ...fieldValue });
+    } else {
+      onChange({ ...value, [fieldName]: fieldValue });
+    }
   };
 
   return (
@@ -379,17 +383,12 @@ function IOSConfigFields({ value, onChange }: { value: any; onChange: (field: st
 
 function MatchmakingConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
   const [useDefaultMatchmaker, setUseDefaultMatchmaker] = useState(!value.matchmaker);
-  const [defineSuccessCallback, setDefineSuccessCallback] = useState(!!value.success);
-  const [specSearchOpen, setSpecSearchOpen] = useState(false);
-  const [selectedSpecName, setSelectedSpecName] = useState<string>('');
   const maxProfilesValue = value.maxProfiles;
   const showMaxProfilesWarning = maxProfilesValue !== undefined && maxProfilesValue !== null && maxProfilesValue !== '' && maxProfilesValue < 2;
 
-  // Update checkbox state when value prop changes (e.g., when editing existing configuration)
   useEffect(() => {
     setUseDefaultMatchmaker(!value.matchmaker);
-    setDefineSuccessCallback(!!value.success);
-  }, [value.matchmaker, value.success]);
+  }, [value.matchmaker]);
 
   return (
     <>
@@ -460,72 +459,6 @@ function MatchmakingConfigFields({ value, onChange }: { value: any; onChange: (f
         <p className="text-sm text-muted-foreground">Absolute match timeout (default: 86400 = 24 hours)</p>
       </div>
 
-      <div className="space-y-2">
-        <Label>Metadata Spec (Optional)</Label>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full justify-between"
-          onClick={() => setSpecSearchOpen(true)}
-          data-testid="button-search-metadata-spec"
-        >
-          <span className="truncate">
-            {selectedSpecName || value.metadataSpec?.id || value.metadataSpec || 'Select a metadata spec'}
-          </span>
-          <Search className="w-4 h-4 ml-2 flex-shrink-0" />
-        </Button>
-        {value.metadataSpec && (
-          <p className="text-xs text-muted-foreground font-mono">
-            {typeof value.metadataSpec === 'string' ? value.metadataSpec : value.metadataSpec.id}
-          </p>
-        )}
-        <p className="text-sm text-muted-foreground">Defines the structure of metadata for this matchmaking configuration</p>
-      </div>
-
-      <ResourceSearchDialog
-        open={specSearchOpen}
-        onOpenChange={setSpecSearchOpen}
-        onSelect={(specId, spec) => {
-          onChange('metadataSpec', specId);
-          setSelectedSpecName(spec.name || specId);
-        }}
-        resourceType="metadata_spec"
-        endpoint="/api/rest/metadata_spec"
-        title="Search Metadata Specs"
-        description="Search for a metadata specification"
-        displayFields={[
-          { label: 'Name', key: 'name' },
-          { label: 'ID', key: 'id' },
-        ]}
-        searchPlaceholder="Search by name or ID..."
-        currentResourceId={typeof value.metadataSpec === 'string' ? value.metadataSpec : value.metadataSpec?.id}
-      />
-
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="defineSuccessCallback"
-          checked={defineSuccessCallback}
-          onCheckedChange={(checked) => {
-            setDefineSuccessCallback(checked as boolean);
-            if (!checked) {
-              onChange('success', undefined);
-            }
-          }}
-          data-testid="checkbox-defineSuccessCallback"
-        />
-        <Label htmlFor="defineSuccessCallback" className="text-sm font-normal cursor-pointer">
-          Define Success Callback
-        </Label>
-      </div>
-
-      {defineSuccessCallback && (
-        <CallbackDefinitionField
-          label="Success Callback"
-          value={value.success}
-          onChange={(callback) => onChange('success', callback)}
-        />
-      )}
-
       <div className="flex items-center space-x-2">
         <Checkbox
           id="useDefaultMatchmaker"
@@ -555,8 +488,15 @@ function MatchmakingConfigFields({ value, onChange }: { value: any; onChange: (f
         <Label>Metadata</Label>
         <MetadataEditor
           value={value.metadata || {}}
-          onChange={(metadata) => onChange('metadata', metadata)}
-          specId={undefined}
+          onChange={(metadata, specId, spec) => {
+            const updates: Record<string, any> = { metadata };
+            if (specId !== undefined) {
+              updates.metadataSpec = spec || (specId ? { id: specId } : undefined);
+            }
+            onChange('__batch', updates);
+          }}
+          specId={typeof value.metadataSpec === 'string' ? value.metadataSpec : value.metadataSpec?.id || undefined}
+          initialSpec={typeof value.metadataSpec === 'object' ? value.metadataSpec : undefined}
           mode="create"
         />
       </div>
@@ -894,29 +834,6 @@ function ProductBundlesField({ value, onChange }: { value: any[]; onChange: (bun
         onSelect={(resourceId, resource) => handleItemSelect(resource)}
       />
     </div>
-  );
-}
-
-function CallbackDefinitionField({ label, value, onChange }: { label: string; value: any; onChange: (val: any) => void }) {
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm">{label}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Input
-          placeholder="Method name"
-          value={value?.method || ''}
-          onChange={(e) => onChange({ ...value, method: e.target.value })}
-          data-testid="input-callback-method"
-        />
-        <ElementServiceReferenceField
-          label="Service"
-          value={value?.service}
-          onChange={(service) => onChange({ ...value, service })}
-        />
-      </CardContent>
-    </Card>
   );
 }
 

@@ -6,7 +6,7 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
-import dev.getelements.elements.sdk.util.reflection.ElementReflectionUtils;
+import dev.getelements.elements.sdk.ElementReflectionUtils;
 
 import static com.google.inject.name.Names.named;
 

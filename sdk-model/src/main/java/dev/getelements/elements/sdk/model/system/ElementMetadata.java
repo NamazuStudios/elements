@@ -2,7 +2,8 @@ package dev.getelements.elements.sdk.model.system;
 
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementType;
-import dev.getelements.elements.sdk.record.*;
+import dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord;
+import dev.getelements.elements.sdk.record.ElementRecord;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,7 +30,7 @@ public record ElementMetadata(
         List<ElementServiceMetadata> services,
         List<ElementEventProducerMetadata> producedEvents,
         List<ElementEventConsumerMetadata> consumedEvents,
-        List<ElementDependencyRecord> dependencies,
+        List<ElementDependencyMetadata> dependencies,
         Map<String, Object> attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes) {
 
@@ -79,7 +80,10 @@ public record ElementMetadata(
                         .stream()
                         .map(ElementEventConsumerMetadata::from)
                         .toList(),
-                element.dependencies(),
+                element.dependencies()
+                        .stream()
+                        .map(ElementDependencyMetadata::from)
+                        .toList(),
                 attributesMap,
                 element.defaultAttributes()
                         .stream()

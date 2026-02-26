@@ -1,7 +1,9 @@
 package dev.getelements.elements.sdk.test;
 
+import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.PermittedTypesClassLoader;
 import dev.getelements.elements.sdk.test.element.TestService;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.slf4j.Logger;
@@ -12,13 +14,11 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
 
 import static dev.getelements.elements.sdk.ElementPathLoader.*;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.*;
 import static dev.getelements.elements.sdk.test.TestElementSpi.GUICE_7_0_X;
 import static dev.getelements.elements.sdk.test.TestUtils.layoutSkeletonElement;
-import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.nio.file.Files.createDirectories;
 import static java.util.stream.Collectors.toSet;
 import static org.testng.Assert.assertEquals;
@@ -30,7 +30,7 @@ public class ApiElementLoaderTest {
 
     private static final TestArtifactRegistry testArtifactRegistry = new TestArtifactRegistry();
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(NestedElementPathLoaderTest.class);
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(ApiElementLoaderTest.class);
 
     private final Path baseDirectory = temporaryFiles.createTempDirectory();
 
@@ -61,8 +61,8 @@ public class ApiElementLoaderTest {
         layoutSkeletonElement(variantADirectory, VARIANT_A.getAttributes());
         layoutSkeletonElement(variantBDirectory, VARIANT_B.getAttributes());
 
-        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(LIB_DIR));
-        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(LIB_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantADirectory.resolve(SPI_DIR));
+        testArtifactRegistry.copySpiTo(elementSpi, variantBDirectory.resolve(SPI_DIR));
 
         testArtifactRegistry.unpackArtifact(VARIANT_A, variantADirectory.resolve(CLASSPATH_DIR));
         testArtifactRegistry.unpackArtifact(VARIANT_B, variantBDirectory.resolve(CLASSPATH_DIR));
@@ -75,10 +75,12 @@ public class ApiElementLoaderTest {
         final var elementRegistry = MutableElementRegistry.newDefaultInstance();
         final var elementPathLoader = ElementPathLoader.newDefaultInstance();
 
+        final var parent = new PermittedTypesClassLoader();
+
         final var loadedElements = elementPathLoader.load(
                 elementRegistry,
                 baseDirectory,
-                getSystemClassLoader()
+                parent
         ).toList();
 
         logger.info("Loaded Elements.");

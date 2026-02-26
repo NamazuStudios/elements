@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -50,8 +50,20 @@ export default function ResourceFormDialog({
   onSubmit,
   isLoading = false,
 }: ResourceFormDialogProps) {
-  const [formData, setFormData] = useState<Record<string, any>>(initialData);
+  const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reset form data when dialog opens to discard unsaved changes on cancel
+  useEffect(() => {
+    if (open) {
+      try {
+        setFormData(JSON.parse(JSON.stringify(initialData)));
+      } catch {
+        setFormData({ ...initialData });
+      }
+      setErrors({});
+    }
+  }, [open, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

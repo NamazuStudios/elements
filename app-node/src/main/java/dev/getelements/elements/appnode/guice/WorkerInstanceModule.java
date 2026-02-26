@@ -51,12 +51,10 @@ public class WorkerInstanceModule extends PrivateModule {
         final var instanceIdProvider = getProvider(InstanceId.class);
         final var applicationDaoProvider = getProvider(ApplicationDao.class);
         final var injectorProvider = getProvider(Injector.class);
-        final var gitLoaderProvider = getProvider(GitApplicationAssetLoader.class);
 
         return () -> {
 
             final var injector = injectorProvider.get();
-            final var gitLoader = gitLoaderProvider.get();
             final var applicationDao = applicationDaoProvider.get();
 
             final var applications = applicationDao.getActiveApplications().getObjects();

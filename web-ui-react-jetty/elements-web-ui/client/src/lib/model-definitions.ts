@@ -119,7 +119,6 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     name: 'MatchmakingApplicationConfiguration',
     fields: [
       { name: 'id', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
-      { name: 'success', type: 'object', required: false, isArray: false, isMap: false, description: 'The callback definition for when a successful match is made' },
       { name: 'matchmaker', type: 'object', required: false, isArray: false, isMap: false, description: 'The matchmaker service reference to use' },
       { name: 'maxProfiles', type: 'number', required: false, isArray: false, isMap: false, description: 'The maximum number of profiles that can be matched in a single match' },
       { name: 'metadata', type: 'object', required: false, isArray: false, isMap: false, description: 'Metadata for this matchmaking configuration, copied to the match when created' },

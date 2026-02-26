@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -12,9 +13,83 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static java.lang.Thread.currentThread;
+
 /**
- * The {@link ElementLoader} factory. This loads an instance of a {@link Element} on-demand. When loading an
- * {@link ElementType#ISOLATED_CLASSPATH} {@link Element}, must supply a {@link ClassLoader} which is parented to
+ * <p>
+ * The {@link ElementLoader} factory. This factory creates loaders for Elements, which can be configured with either
+ * shared or isolated classloading strategies.
+ * </p>
+ *
+ * <h2>Element Types</h2>
+ *
+ * <h3>Shared Elements ({@link ElementType#SHARED_CLASSPATH})</h3>
+ * <p>
+ * A shared element is a wrapper around types from a single classloader, which is usually the system classloader.
+ * Shared elements do not provide classloader isolation and share the same classpath as the host application.
+ * Use {@link #getSharedLoader(ElementRecord, ServiceLocator)} to create shared element loaders.
+ * </p>
+ *
+ * <h3>Isolated Elements ({@link ElementType#ISOLATED_CLASSPATH})</h3>
+ * <p>
+ * An isolated classloader allows the Element to have its own isolated implementation classpath, preventing conflicts
+ * between Elements and the rest of the system. This is the recommended approach for production deployments.
+ * Use the {@code getIsolatedLoader} methods to create isolated element loaders.
+ * </p>
+ *
+ * <h2>Classloader Structure for Isolated Elements</h2>
+ * <p>
+ * The classloader structure for an isolated Element consists of three components:
+ * </p>
+ * <ul>
+ * <li><b>Base Classloader:</b> The classloader from which the Element can selectively "borrow" types. This is
+ * typically the system classloader or a custom classloader containing shared libraries. Types such as
+ * {@code PermittedPackages} and {@code PermittedTypes} defined in the base classloader control which classes
+ * can flow between the base classloader and the Element's implementation.</li>
+ *
+ * <li><b>Parent Classloader:</b> An optional classloader that may contain common APIs, SPIs, and utilities
+ * useful for loading the Element. This sits between the base classloader and the implementation classloader
+ * in the delegation hierarchy.</li>
+ *
+ * <li><b>Implementation Classloader:</b> The classloader that loads the actual Element implementation and its
+ * dependencies. This is an isolating classloader that keeps the implementation clean from other Elements and
+ * the rest of the system while selectively borrowing from the base classloader. The isolating classloader
+ * also provides static instances (such as the Element itself) that are visible only to that specific Element.</li>
+ * </ul>
+ *
+ * <p>
+ * The result is a hierarchy starting at the parent classloader (if provided), with an isolating classloader
+ * keeping the Element's implementation isolated from other Elements and the system, while selectively borrowing
+ * permitted types from the base classloader.
+ * </p>
+ *
+ * <h3>Practical Note on PermittedTypesClassLoader Placement</h3>
+ * <p>
+ * In virtually all scenarios, if {@link dev.getelements.elements.sdk.PermittedTypesClassLoader} is used for
+ * selective type borrowing, it must be placed in the parent classloader hierarchy (not as the base classloader).
+ * {@link dev.getelements.elements.sdk.PermittedTypesClassLoader} acts as a filtering layer that can wrap any
+ * classloader to provide selective type access. While it typically wraps the same classloader used as the base
+ * classloader, it doesn't have to. Placing it in the parent ensures proper delegation and type visibility control
+ * during Element loading.
+ * </p>
+ *
+ * <h2>VM Restrictions and Warnings</h2>
+ * <p>
+ * Some VM restrictions apply when using isolated classloaders. If an Element accesses the system classloader
+ * directly (for example, via {@code ClassLoader.getSystemClassLoader()} instead of
+ * {@code Thread.getContextClassLoader()}), it may result in strange or unpredictable behavior, including:
+ * </p>
+ * <ul>
+ * <li>Loading classes from the wrong classloader, bypassing isolation</li>
+ * <li>ClassCastExceptions when the same class is loaded by different classloaders</li>
+ * <li>Unexpected visibility of types that should be isolated</li>
+ * <li>Loss of static instance isolation</li>
+ * <li>Strange VM errors related to missing types</li>
+ * </ul>
+ * <p>
+ * Elements should use {@code Thread.getContextClassLoader()} to access their classloader context and avoid
+ * direct system classloader access.
+ * </p>
  **/
 public interface ElementLoaderFactory {
 
@@ -30,11 +105,13 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
-     * base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the calling class's classloader as the base classloader for
+     * selective type borrowing, with no explicit parent classloader (defaults to bootstrap).
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
      * @return the {@link ElementLoader}
      */
     default ElementLoader getIsolatedLoader(
@@ -42,7 +119,7 @@ public interface ElementLoaderFactory {
             ClassLoaderConstructor classLoaderCtor) {
         return getIsolatedLoader(
                 attributes,
-                getClass().getClassLoader(),
+                currentThread().getContextClassLoader(),
                 classLoaderCtor,
                 r -> true);
     }
@@ -59,12 +136,14 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
-     * base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the supplied base classloader for selective type borrowing,
+     * with no explicit parent classloader (defaults to bootstrap).
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param baseClassLoader the base {@link ClassLoader}
-     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
      * @return the {@link ElementLoader}
      */
     default ElementLoader getIsolatedLoader(
@@ -90,11 +169,13 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
-     * base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the calling class's classloader as the base classloader for
+     * selective type borrowing, with no explicit parent classloader (defaults to bootstrap).
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementLoader}
      */
@@ -104,9 +185,10 @@ public interface ElementLoaderFactory {
             Predicate<ElementDefinitionRecord> selector) {
         return getIsolatedLoader(
                 attributes,
-                getClass().getClassLoader(),
+                currentThread().getContextClassLoader(),
                 classLoaderCtor,
-                selector);
+                selector
+        );
     }
 
     /**
@@ -121,13 +203,14 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the bootstrap classpath with a filtered version of the supplied
-     * base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the supplied base classloader for selective type borrowing,
+     * with no explicit parent classloader (defaults to bootstrap).
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
-     *                        {@link ClassLoader} instance.
-     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementLoader}
      */
@@ -157,20 +240,30 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the {@link Element}'s classpath with a filtered version of the
-     * supplied base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the supplied base classloader for selective type borrowing.
+     * The parent classloader is derived from the provided {@link Element}.
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
-     *                        {@link ClassLoader} instance.
-     * @param classLoaderCtor the {@link ClassLoader} classloader
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @param element the parent {@link Element} to use for deriving the parent classloader, may be null indicating
+     *        that no explicit parent classloader should be used (defaults to bootstrap)
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
      * @return the {@link ElementLoader}
+     * @deprecated In 3.7 onward an Element shouldn't have a parent
      */
     default ElementLoader getIsolatedLoaderWithParent(
             Attributes attributes,
             ClassLoader baseClassLoader,
             ClassLoaderConstructor classLoaderCtor,
             Element element) {
+
+        if (element != null) {
+            var logger = LoggerFactory.getLogger(getClass());
+            logger.warn("Attempting to load an Element with a parent. This is deprecated functionality.");
+        }
+
         return getIsolatedLoaderWithParent(
                 attributes,
                 baseClassLoader,
@@ -178,6 +271,7 @@ public interface ElementLoaderFactory {
                 element,
                 r -> true
         );
+
     }
 
     /**
@@ -192,17 +286,19 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the {@link Element}'s classpath with a filtered version of the
-     * supplied base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the supplied base classloader for selective type borrowing.
+     * The parent classloader is derived from the provided {@link Element}, or null if not specified (defaults to bootstrap).
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
-     *                        {@link ClassLoader} instance.
-     * @param classLoaderCtor the {@link ClassLoader} classloader
-     * @param element the parent {@link Element} to use for the classloader isolation, may be null indicating that 
-     *                isolation should exist for the bootstrap classpath only.
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
+     * @param element the parent {@link Element} to use for deriving the parent classloader, may be null indicating
+     *                that no explicit parent classloader should be used (defaults to bootstrap)
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementLoader}
+     * @deprecated In 3.7 onward an Element shouldn't have a parent
      */
     default ElementLoader getIsolatedLoaderWithParent(
             Attributes attributes,
@@ -211,16 +307,18 @@ public interface ElementLoaderFactory {
             Element element,
             Predicate<ElementDefinitionRecord> selector) {
 
-        final var parent = Optional.ofNullable(element)
-                .map(Element::getElementRecord)
-                .map(ElementRecord::classLoader)
-                .orElse(null);
+        if (element != null) {
+            var logger = LoggerFactory.getLogger(getClass());
+            logger.warn("Attempting to load an Element with a parent. This is deprecated functionality.");
+        }
 
         return getIsolatedLoaderWithParent(
                 attributes,
                 baseClassLoader,
                 classLoaderCtor,
-                parent,
+                element == null
+                        ? null
+                        : element.getElementRecord().classLoader(),
                 selector
         );
 
@@ -238,15 +336,20 @@ public interface ElementLoaderFactory {
      * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
      * </p>
      *
-     * The returned {@link ElementLoader} will use the {@link Element}'s classpath with a filtered version of the
-     * supplied base {@link ClassLoader} as the parent classloader.
+     * <p>
+     * The returned {@link ElementLoader} will use the supplied base classloader for selective type borrowing,
+     * with an explicit parent classloader forming the delegation parent of the implementation classloader.
+     * </p>
+     *
+     * <p>
+     * Note: The {@link Element} must have an {@link ElementLoader} SPI implementation defined on its classpath.
+     * </p>
      *
      * @param attributes the attributes to use
-     * @param baseClassLoader the base {@link ClassLoader}, this will be ultimately be the parent for {@link Element}'s
-     *                        {@link ClassLoader} instance.
-     * @param classLoaderCtor the {@link ClassLoader} classloader
-     * @param parent the parent {@link ClassLoader} to use for the classloader isolation, may be null indicating that
-     *                isolation should exist for the bootstrap classpath only.
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
+     * @param parent the parent {@link ClassLoader} that forms the delegation parent of the implementation
+     *               classloader, may be null indicating no explicit parent (defaults to bootstrap)
      * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
      * @return the {@link ElementLoader}
      * @since 3.6
@@ -290,7 +393,7 @@ public interface ElementLoaderFactory {
             Attributes attributes,
             Predicate<ElementDefinitionRecord> selector) {
         return findElementDefinitionRecord(
-                getClass().getClassLoader(),
+                currentThread().getContextClassLoader(),
                 attributes,
                 selector
         );
@@ -350,6 +453,6 @@ public interface ElementLoaderFactory {
      * </p>
      */
     @FunctionalInterface
-    interface ClassLoaderConstructor extends Function<ClassLoader, ClassLoader> {};
+    interface ClassLoaderConstructor extends Function<ClassLoader, ClassLoader> {}
 
 }

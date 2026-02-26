@@ -38,7 +38,6 @@
         </developer>
     </developers>
     <modules>
-        <module>common-app</module>
         <module>common-util</module>
         <module>common-servlet</module>
         <module>rest-api</module>
@@ -53,7 +52,6 @@
         <module>rt-jeromq-guice</module>
         <module>rt-server</module>
         <module>rt-server-git</module>
-        <module>rt-server-git-guice</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
         <module>rt-server-cluster</module>
@@ -81,7 +79,7 @@
         <module>common-git</module>
         <module>common-jetty</module>
         <module>cdn-serve</module>
-        <module>app-serve-jetty</module>
+        <module>deployment-jetty</module>
         <module>app-node</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
@@ -96,6 +94,7 @@
         <module>jetty-ws-test</module>
         <module>web-ui-react-jetty</module>
         <module>sdk</module>
+        <module>sdk-bom</module>
         <module>sdk-spi</module>
         <module>sdk-spi-guice</module>
         <module>sdk-spi-shrinkwrap</module>
@@ -115,6 +114,8 @@
         <module>sdk-local-test</module>
         <module>sdk-local-maven</module>
         <module>sdk-dao</module>
+        <module>sdk-deployment</module>
+        <module>sdk-element-standard</module>
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>
@@ -145,11 +146,11 @@
         <testng.version>7.10.2</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>3.5.4</surefire.version>
-        <jackson.version>2.18.2</jackson.version>
+        <jackson.version>2.20.1</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.12</reflections.version>
         <classgraph.version>4.8.175</classgraph.version>
-        <swagger.version>2.2.22</swagger.version>
+        <swagger.version>2.2.43</swagger.version>
         <rocoto.version>6.2</rocoto.version>
         <orgjson.version>20230227</orgjson.version>
         <libphonenumber.version>8.13.27</libphonenumber.version>
@@ -177,7 +178,7 @@
         <morphia.version>2.4.14</morphia.version>
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
-        <kotlin.version>1.5.10</kotlin.version>
+        <kotlin.version>1.9.25</kotlin.version>
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
         <google-api-client.version>2.0.0</google-api-client.version>
         <near-java-api.version>0.2.0</near-java-api.version>
@@ -199,12 +200,13 @@
         <central.publish.plugin.version>0.7.0</central.publish.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <shrinkwrap.version>3.3.4</shrinkwrap.version>
+        <api.classifier>${project.groupId}.api</api.classifier>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -219,11 +221,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>common-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -414,7 +411,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>app-serve-jetty</artifactId>
+                <artifactId>deployment-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -485,11 +482,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-git</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-git-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -569,6 +561,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-deployment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -591,6 +588,12 @@
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test-api</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-api</artifactId>
+                <version>${project.version}</version>
+                <classifier>${api.classifier}</classifier>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
@@ -639,71 +642,9 @@
             </dependency>
             <!-- Third-party Dependencies -->
             <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-moxy</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.containers</groupId>
-                <artifactId>jersey-container-servlet</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>${jsr.305.groupId}</groupId>
                 <artifactId>${jsr.305.artifactId}</artifactId>
                 <version>${jsr.305.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-http</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-deploy</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-proxy</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.ee8</groupId>
-                <artifactId>jetty-ee8-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>jetty-websocket-jetty-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.ee10</groupId>
-                <artifactId>jetty-ee10-servlet</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.ee10.websocket</groupId>
-                <artifactId>jetty-ee10-websocket-jakarta-server</artifactId>
-                <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.websocket</groupId>
-                <artifactId>jetty-websocket-jetty-client</artifactId>
-                <version>${jetty.version}</version>
-                <!-- Adjust version as needed -->
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-client</artifactId>
-                <version>${jetty.version}</version>
-                <!-- Adjust version as needed -->
             </dependency>
             <dependency>
                 <groupId>net.sf.jopt-simple</groupId>
@@ -726,36 +667,6 @@
                 <version>${rocoto.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-cbor</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-jaxb-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>jakarta.inject</groupId>
                 <artifactId>jakarta.inject-api</artifactId>
                 <version>${jakarta.inject.version}</version>
@@ -764,6 +675,7 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -784,26 +696,6 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-client</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-server</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-container-servlet</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-container-servlet-core</artifactId>
-                <version>${jersey.version}</version>
             </dependency>
             <dependency>
                 <groupId>jakarta.servlet</groupId>
@@ -846,14 +738,14 @@
                 <version>${jakarta.ws.rs.api.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.glassfish.jersey.inject</groupId>
-                <artifactId>jersey-hk2</artifactId>
-                <version>${jersey.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>ru.vyarus</groupId>
                 <artifactId>guice-validator</artifactId>
                 <version>${hibernate.validator.guice.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-core</artifactId>
+                <version>${swagger.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
@@ -874,11 +766,6 @@
                 <groupId>com.google.apis</groupId>
                 <artifactId>google-api-services-androidpublisher</artifactId>
                 <version>${google.android.publisher.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-multipart</artifactId>
-                <version>${jersey.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.hk2</groupId>
@@ -946,21 +833,6 @@
                 <version>${mailjet.client.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-stdlib</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-stdlib-common</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-reflect</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.github.classgraph</groupId>
                 <artifactId>classgraph</artifactId>
                 <version>${classgraph.version}</version>
@@ -1012,7 +884,53 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Jetty BOMs — core, ee10, ee8 each have separate BOMs -->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-bom</artifactId>
+                <version>${jetty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-bom</artifactId>
+                <version>${jetty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee8</groupId>
+                <artifactId>jetty-ee8-bom</artifactId>
+                <version>${jetty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Jersey BOM -->
+            <dependency>
+                <groupId>org.glassfish.jersey</groupId>
+                <artifactId>jersey-bom</artifactId>
+                <version>${jersey.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Kotlin BOM -->
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- Third Party Dependencies (With Specific Exclusions) -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-jaxrs2-jakarta</artifactId>
@@ -1258,6 +1176,9 @@
                     <additionalClasspathElements>
                         <additionalClasspathElement>${maven.multiModuleProjectDirectory}/logback-test</additionalClasspathElement>
                     </additionalClasspathElements>
+                    <systemPropertyVariables>
+                        <maven.version>${project.version}</maven.version>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <!-- Enforcer Plugin -->
@@ -1278,6 +1199,21 @@
                                 </requireMavenVersion>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Source Jars - generated in all builds so IDEs and dependents have sources available -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -1307,22 +1243,6 @@
             <id>central-publish</id>
             <build>
                 <plugins>
-                    <!-- Source Jars -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>${maven.source.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <phase>prepare-package</phase>
-                                <!-- Correct phase -->
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <!-- Javadocs -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>

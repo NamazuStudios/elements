@@ -31,6 +31,10 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-deployment</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-util</artifactId>
         </dependency>
         <dependency>
@@ -41,7 +45,6 @@
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-simple-guice</artifactId>
         </dependency>
-
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
