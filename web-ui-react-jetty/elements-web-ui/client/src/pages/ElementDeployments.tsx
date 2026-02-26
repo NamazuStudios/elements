@@ -13,6 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
 import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ElementArtifactRepository {
   id: string;
@@ -647,27 +648,32 @@ export default function ElementDeployments() {
           <DialogHeader>
             <DialogTitle>Create Element Deployment</DialogTitle>
             <DialogDescription>
-              {wizardStep === 0 && 'Add element definitions and/or package configurations for your deployment.'}
-              {wizardStep === 1 && 'Set common deployment options.'}
+              {wizardStep === 0 && 'Upload your ELM file and configure the deployment settings.'}
+              {wizardStep === 1 && 'Optionally add element definitions and packages from external sources (e.g. Maven).'}
               {wizardStep === 2 && 'Review your deployment configuration before creating.'}
               {wizardStep === 3 && 'Your deployment has been created.'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-1 mb-2" data-testid="wizard-stepper">
-            {['Configure', 'Settings', 'Review', 'Upload'].map((label, i, arr) => (
-              <div key={label} className="flex items-center gap-1 flex-1">
-                <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0 ${
-                  i < wizardStep ? 'bg-primary text-primary-foreground' :
-                  i === wizardStep ? 'bg-primary text-primary-foreground' :
-                  'bg-muted text-muted-foreground'
-                }`}>
-                  {i < wizardStep ? <Check className="w-3 h-3" /> : i + 1}
+          <div className="flex items-start mb-4" data-testid="wizard-stepper">
+            {['Configure', 'Additional Elements', 'Review', 'Upload'].flatMap((label, i, arr) => {
+              const isComplete = i < wizardStep;
+              const isActive = i === wizardStep;
+              const node = (
+                <div key={`step-${i}`} className="flex flex-col items-center gap-1 shrink-0">
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                    isComplete || isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {isComplete ? <Check className="w-3 h-3" /> : i + 1}
+                  </div>
+                  <span className={`text-[10px] text-center leading-tight w-14 ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{label}</span>
                 </div>
-                <span className={`text-xs truncate ${i === wizardStep ? 'font-medium' : 'text-muted-foreground'}`}>{label}</span>
-                {i < arr.length - 1 && <div className={`flex-1 h-px ${i < wizardStep ? 'bg-primary' : 'bg-border'}`} />}
-              </div>
-            ))}
+              );
+              if (i < arr.length - 1) {
+                return [node, <div key={`line-${i}`} className={`flex-1 h-px mt-3 ${isComplete ? 'bg-primary' : 'bg-border'}`} />];
+              }
+              return [node];
+            })}
           </div>
 
           {wizardStep === 0 && (
@@ -681,8 +687,8 @@ export default function ElementDeployments() {
           )}
 
           {wizardStep === 1 && (
-            <div className="space-y-4" data-testid="wizard-step-settings">
-              <WizardSettingsStep
+            <div className="space-y-4" data-testid="wizard-step-additional-elements">
+              <WizardAdditionalElementsStep
                 formData={formData}
                 setFormData={setFormData}
               />
@@ -764,10 +770,7 @@ export default function ElementDeployments() {
               <Button
                 onClick={() => setWizardStep(s => s + 1)}
                 disabled={
-                  wizardStep === 0 && (
-                    (formData.elements.length === 0 && formData.packages.length === 0) ||
-                    formData.packages.some(p => !p.elmArtifact.trim())
-                  )
+                  wizardStep === 1 && formData.packages.some(p => !p.elmArtifact.trim())
                 }
                 data-testid="button-wizard-next"
               >
@@ -1914,12 +1917,20 @@ function WizardConfigStep({
   onFileSelected?: (file: File) => void;
 }) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
-
   const { toast } = useToast();
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [inspectorRecords, setInspectorRecords] = useState<ElmInspectorRecord[] | null>(null);
 
-  // Keep a ref to the latest formData so async callbacks always see current state.
-  const formDataRef = useRef(formData);
-  formDataRef.current = formData;
+  const { data: applications = [], isLoading: appsLoading } = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ['/api/rest/application', 'picker'],
+    queryFn: async () => {
+      const data = await apiClient.request<any>('/api/rest/application?count=100');
+      const list = Array.isArray(data) ? data : (data.objects || data.content || []);
+      return list.map((a: any) => ({ id: a.id, name: a.name }));
+    },
+    staleTime: 30000,
+  });
 
   const elmInspectMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -1939,25 +1950,150 @@ function WizardConfigStep({
       return response.json() as Promise<ElmInspectorRecord[]>;
     },
     onSuccess: (records) => {
-      const newElements: ElementPathDefinition[] = records.map(r => ({
-        path: r.path.replace(/^\/+/, ''),
-        spiBuiltins: r.manifest?.builtinSpis ?? [],
-        attributes: r.attributes as Record<string, any>,
-        apiArtifacts: [],
-        spiArtifacts: [],
-        elementArtifacts: [],
-      }));
-      const current = formDataRef.current;
-      setFormData({ ...current, elements: [...current.elements, ...newElements] });
+      setInspectorRecords(records);
+      setInspectorOpen(true);
       toast({
-        title: 'ELM Imported',
-        description: `Added ${newElements.length} element definition${newElements.length !== 1 ? 's' : ''} from the ELM file.`,
+        title: 'ELM Inspected',
+        description: `Found ${records.length} element${records.length !== 1 ? 's' : ''} in the ELM file.`,
       });
     },
     onError: (err: Error) => {
-      toast({ title: 'Import Failed', description: err.message, variant: 'destructive' });
+      toast({ title: 'Inspection Failed', description: err.message, variant: 'destructive' });
     },
   });
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <div>
+          <p className="text-sm font-medium">ELM File</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Upload an .elm file for this deployment.
+          </p>
+        </div>
+        <ElmDropZone
+          onFile={(file) => {
+            onFileSelected?.(file);
+            elmInspectMutation.mutate(file);
+          }}
+          uploading={elmInspectMutation.isPending}
+          buttonLabel="Browse ELM file"
+          testIdPrefix="wizard-import-elm"
+        />
+      </div>
+
+      {inspectorRecords !== null && (
+        <Collapsible open={inspectorOpen} onOpenChange={setInspectorOpen}>
+          <CollapsibleTrigger
+            className="flex items-center gap-2 w-full border-t pt-3 pb-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="button-toggle-inspector-results"
+          >
+            {inspectorOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+            ELM Inspector Results ({inspectorRecords.length} element{inspectorRecords.length !== 1 ? 's' : ''})
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="space-y-2 pt-2">
+              {inspectorRecords.map((r, i) => (
+                <div key={i} className="rounded-md border p-3 space-y-1.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs font-medium">{r.path || `Element ${i + 1}`}</span>
+                    {r.manifest?.builtinSpis && r.manifest.builtinSpis.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {r.manifest.builtinSpis.map(spi => (
+                          <Badge key={spi} variant="secondary" className="text-[10px]">{spi}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {r.attributes && Object.keys(r.attributes).length > 0 && (
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground">
+                        Attributes ({Object.keys(r.attributes).length}) <ChevronDown className="w-3 h-3" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <pre className="bg-muted p-2 rounded text-[10px] overflow-auto mt-1">
+                          {JSON.stringify(r.attributes, null, 2)}
+                        </pre>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      <div className="space-y-2 border-t pt-4">
+        <Label>Application</Label>
+        <Select
+          value={formData.appNameOrId || '__none__'}
+          onValueChange={(v) => update({ appNameOrId: v === '__none__' ? '' : v })}
+        >
+          <SelectTrigger data-testid="select-application">
+            <SelectValue placeholder={appsLoading ? 'Loading applications...' : 'Select application'} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__none__" data-testid="option-app-none">
+              None (Global Deployment)
+            </SelectItem>
+            {applications.map((app) => (
+              <SelectItem key={app.id} value={app.id} data-testid={`option-app-${app.id}`}>
+                {app.name || app.id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Select an application to scope the deployment, or "None" for a global deployment.
+        </p>
+      </div>
+
+      <div className="border-t pt-1">
+        <button
+          type="button"
+          className="flex items-center gap-2 w-full py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
+          onClick={() => setAdvancedOpen(v => !v)}
+          data-testid="button-toggle-advanced-settings"
+        >
+          {advancedOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+          Advanced Settings
+        </button>
+        {advancedOpen && (
+          <div className="space-y-5 pt-2">
+            <PathClassPathsEditor
+              value={formData.pathSpiBuiltins}
+              onChange={(val) => update({ pathSpiBuiltins: val })}
+              label="Deployment Path SPI Builtins"
+              testIdPrefix="wizard-path-spi-builtins"
+            />
+            <p className="text-xs text-muted-foreground">
+              Per-path builtin SPI configurations at the deployment level. The key is the element path, and the value is the list of builtin SPI names.
+            </p>
+            <PathKeyValueMapEditor
+              value={formData.pathAttributes}
+              onChange={(val) => update({ pathAttributes: val })}
+              label="Deployment Path Attributes"
+              testIdPrefix="wizard-path-attrs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Per-path custom attributes passed at load time via the AttributesLoader mechanism.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WizardAdditionalElementsStep({
+  formData,
+  setFormData,
+}: {
+  formData: FormData;
+  setFormData: (fd: FormData) => void;
+}) {
+  const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
 
   const { data: availableSpis = [], isLoading: spisLoading } = useQuery<ElementSpi[]>({
     queryKey: ['/api/rest/elements/builtin_spi'],
@@ -2069,28 +2205,10 @@ function WizardConfigStep({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <div>
-          <p className="text-sm font-medium">Import from ELM file</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Upload an .elm file to auto-populate element paths and SPI settings from its manifest.
-          </p>
-        </div>
-        <ElmDropZone
-          onFile={(file) => {
-            onFileSelected?.(file);
-            elmInspectMutation.mutate(file);
-          }}
-          uploading={elmInspectMutation.isPending}
-          buttonLabel="Browse ELM file"
-          testIdPrefix="wizard-import-elm"
-        />
-      </div>
-
+    <div className="space-y-5">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm text-muted-foreground">
-          Add element definitions and/or package configurations. A single deployment can contain both types.
+          Optionally add element definitions or package configurations from external sources such as Maven.
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -2116,8 +2234,8 @@ function WizardConfigStep({
 
       {!hasItems && (
         <div className="py-8 text-center border-2 border-dashed rounded-md">
-          <p className="text-sm text-muted-foreground">No configurations added yet.</p>
-          <p className="text-xs text-muted-foreground mt-1">Use the buttons above to add element definitions or packages.</p>
+          <p className="text-sm text-muted-foreground">No additional configurations added.</p>
+          <p className="text-xs text-muted-foreground mt-1">Use the buttons above to add element definitions or packages from external sources.</p>
         </div>
       )}
 
@@ -2137,26 +2255,15 @@ function WizardConfigStep({
                 <Badge variant="secondary" className="shrink-0">Element</Badge>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => openEditElement(i)}
-                  data-testid={`button-edit-element-${i}`}
-                >
+                <Button size="icon" variant="ghost" onClick={() => openEditElement(i)} data-testid={`button-edit-element-${i}`}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeElement(i)}
-                  data-testid={`button-remove-element-${i}`}
-                >
+                <Button size="icon" variant="ghost" onClick={() => removeElement(i)} data-testid={`button-remove-element-${i}`}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
           ))}
-
           {formData.packages.map((pkg, i) => (
             <div
               key={`pkg-${i}`}
@@ -2171,20 +2278,10 @@ function WizardConfigStep({
                 <Badge variant="secondary" className="shrink-0">Package</Badge>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => openEditPackage(i)}
-                  data-testid={`button-edit-package-${i}`}
-                >
+                <Button size="icon" variant="ghost" onClick={() => openEditPackage(i)} data-testid={`button-edit-package-${i}`}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removePackage(i)}
-                  data-testid={`button-remove-package-${i}`}
-                >
+                <Button size="icon" variant="ghost" onClick={() => removePackage(i)} data-testid={`button-remove-package-${i}`}>
                   <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -2192,6 +2289,31 @@ function WizardConfigStep({
           ))}
         </div>
       )}
+
+      <div className="border-t pt-4 space-y-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="wizardUseDefaultRepos"
+              checked={formData.useDefaultRepositories}
+              onCheckedChange={(checked) => update({ useDefaultRepositories: !!checked })}
+              data-testid="checkbox-use-default-repos"
+            />
+            <Label htmlFor="wizardUseDefaultRepos" className="cursor-pointer">
+              Use default artifact repositories (includes Maven Central)
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-6">
+            Recommended: this should generally always be checked unless you have a specific reason to disable it.
+          </p>
+        </div>
+        <div className="border-t pt-4">
+          <RepositoryEditor
+            repositories={formData.repositories}
+            onChange={(repositories) => update({ repositories })}
+          />
+        </div>
+      </div>
 
       <ElementDefinitionSubDialog
         open={elementDialogOpen}
@@ -2201,7 +2323,6 @@ function WizardConfigStep({
         availableSpis={availableSpis}
         spisLoading={spisLoading}
       />
-
       <PackageDefinitionSubDialog
         open={packageDialogOpen}
         onOpenChange={setPackageDialogOpen}
@@ -2212,116 +2333,6 @@ function WizardConfigStep({
   );
 }
 
-function WizardSettingsStep({
-  formData,
-  setFormData,
-}: {
-  formData: FormData;
-  setFormData: (fd: FormData) => void;
-}) {
-  const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-
-  const { data: applications = [], isLoading: appsLoading } = useQuery<Array<{ id: string; name: string }>>({
-    queryKey: ['/api/rest/application', 'picker'],
-    queryFn: async () => {
-      const data = await apiClient.request<any>('/api/rest/application?count=100');
-      const list = Array.isArray(data) ? data : (data.objects || data.content || []);
-      return list.map((a: any) => ({ id: a.id, name: a.name }));
-    },
-    staleTime: 30000,
-  });
-
-  return (
-    <div className="space-y-5">
-      <div className="space-y-2">
-        <Label>Application</Label>
-        <Select
-          value={formData.appNameOrId || '__none__'}
-          onValueChange={(v) => update({ appNameOrId: v === '__none__' ? '' : v })}
-        >
-          <SelectTrigger data-testid="select-application">
-            <SelectValue placeholder={appsLoading ? 'Loading applications...' : 'Select application'} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__" data-testid="option-app-none">
-              None (Global Deployment)
-            </SelectItem>
-            {applications.map((app) => (
-              <SelectItem key={app.id} value={app.id} data-testid={`option-app-${app.id}`}>
-                {app.name || app.id}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          Select an application to scope the deployment, or "None" for a global deployment.
-        </p>
-      </div>
-
-      <div className="border-t pt-1">
-        <button
-          type="button"
-          className="flex items-center gap-2 w-full py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
-          onClick={() => setAdvancedOpen(v => !v)}
-          data-testid="button-toggle-advanced-settings"
-        >
-          {advancedOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
-          Advanced Settings
-        </button>
-
-        {advancedOpen && (
-          <div className="space-y-5 pt-2">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="wizardUseDefaultRepos"
-                  checked={formData.useDefaultRepositories}
-                  onCheckedChange={(checked) => update({ useDefaultRepositories: !!checked })}
-                  data-testid="checkbox-use-default-repos"
-                />
-                <Label htmlFor="wizardUseDefaultRepos" className="cursor-pointer">
-                  Use default artifact repositories (includes Maven Central)
-                </Label>
-              </div>
-              <p className="text-xs text-muted-foreground ml-6">
-                Recommended: this should generally always be checked unless you have a specific reason to disable it.
-              </p>
-            </div>
-
-            <div className="border-t pt-4">
-              <RepositoryEditor
-                repositories={formData.repositories}
-                onChange={(repositories) => update({ repositories })}
-              />
-            </div>
-
-            <div className="border-t pt-4 space-y-4">
-              <PathClassPathsEditor
-                value={formData.pathSpiBuiltins}
-                onChange={(val) => update({ pathSpiBuiltins: val })}
-                label="Deployment Path SPI Builtins"
-                testIdPrefix="wizard-path-spi-builtins"
-              />
-              <p className="text-xs text-muted-foreground">
-                Per-path builtin SPI configurations at the deployment level. The key is the element path, and the value is the list of builtin SPI names.
-              </p>
-              <PathKeyValueMapEditor
-                value={formData.pathAttributes}
-                onChange={(val) => update({ pathAttributes: val })}
-                label="Deployment Path Attributes"
-                testIdPrefix="wizard-path-attrs"
-              />
-              <p className="text-xs text-muted-foreground">
-                Per-path custom attributes passed at load time via the AttributesLoader mechanism.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 interface DeploymentFormProps {
   mode: 'create' | 'edit';
