@@ -65,7 +65,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.packages(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    request.effectiveState(),
+                    request.effectiveState(largeObjectReference),
                     0L
             );
 
@@ -118,7 +118,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
                     request.packages(),
                     request.useDefaultRepositories(),
                     request.repositories(),
-                    request.effectiveState(),
+                    request.effectiveState(largeObjectReference),
                     existing.version()
             );
 

@@ -127,15 +127,4 @@ public record ElementDeployment(
                 repositories = repositories == null ? null : List.copyOf(repositories);
         }
 
-        /**
-         * A deployment is ready if it has Element definitions or an uploaded ELM file.
-         *
-         * @return true if ready
-         */
-        @Override
-            public boolean ready() {
-                return ElementDeploymentRequest.super.ready() ||
-                       (elm() != null && LargeObjectState.UPLOADED.equals(elm().getState()));
-            }
-
 }
