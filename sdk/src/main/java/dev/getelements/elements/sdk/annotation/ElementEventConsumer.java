@@ -10,7 +10,7 @@ import java.lang.annotation.*;
  * the runtime will invoke this method with the event data. If the method's parameters match the types
  * of {@link Event#getEventArguments()}, the method will receive the unpacked arguments directly.
  *
- * <h3>Direct Event Consumption</h3>
+ * <h2>Direct Event Consumption</h2>
  * For classes annotated with {@link ElementServiceExport}, event consumer methods are automatically discovered
  * and invoked when matching events are published. The service locator will find the service instance and
  * dispatch the event to it.
@@ -25,7 +25,7 @@ import java.lang.annotation.*;
  * }
  * }</pre>
  *
- * <h3>Routed Event Consumption</h3>
+ * <h2>Routed Event Consumption</h2>
  * For implementation classes that are not directly exposed as services, use the {@link #via()} field to
  * route events through an exported service interface. This allows internal implementation classes to receive
  * events without needing to be part of the public API.

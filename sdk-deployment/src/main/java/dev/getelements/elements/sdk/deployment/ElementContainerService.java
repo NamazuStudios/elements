@@ -18,7 +18,7 @@ import java.util.Set;
  * The Element Container Service is responsible for managing Element containers.
  * It mounts and unmounts containers in response to runtime deployments.
  *
- * <h3>Container Lifecycle Events</h3>
+ * <h2>Container Lifecycle Events</h2>
  * The service publishes the following events:
  * <ul>
  *     <li>{@link #CONTAINER_MOUNTED} - when a container is mounted</li>
