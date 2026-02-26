@@ -67,6 +67,20 @@ mvn install
 
 ---
 
+## Developing against a bleeding-edge build
+
+If you need to develop a plugin or Element against unreleased changes — for example, to use a feature not yet published to Maven Central — you can install the full Elements stack into your local Maven repository directly from source:
+
+```bash
+mvn -DskipTests clean install
+```
+
+This builds and installs all modules into `~/.m2`, making them available to any local Maven project as if they were a published release. You can then declare the SDK dependencies in your Element's `pom.xml` with `<scope>provided</scope>` as normal, and Maven will resolve them from your local repository.
+
+This is also the recommended approach when using `sdk-local` or `sdk-local-maven` to run an Element locally — the local runner will pick up the version of Elements you built from scratch rather than a published artifact.
+
+---
+
 ## Module synopsis
 
 The following modules comprise the Elements system, handling enhanced features such as multi-tenancy support, admin tools, and deployment utilities.
