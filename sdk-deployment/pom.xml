@@ -11,9 +11,9 @@
         <version>3.7.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>rt-server-git-guice</artifactId>
-    <name>${project.artifactId}</name>
+    <artifactId>sdk-deployment</artifactId>
     <version>3.7.2-SNAPSHOT</version>
+    <name>sdk-deployment</name>
     <url>https://namazustudios.com</url>
 
     <dependencies>
