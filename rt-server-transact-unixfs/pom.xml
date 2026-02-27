@@ -6,12 +6,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.7.9-SNAPSHOT</version>
+        <version>3.7.10-SNAPSHOT</version>
     </parent>
 
     <artifactId>rt-server-transact-unixfs</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.7.9-SNAPSHOT</version>
+    <version>3.7.10-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
