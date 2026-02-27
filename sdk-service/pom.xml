@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.7.10-SNAPSHOT</version>
+        <version>3.7.10</version>
     </parent>
 
     <artifactId>sdk-service</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.7.10-SNAPSHOT</version>
+    <version>3.7.10</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
