@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.7.9-SNAPSHOT</version>
+        <version>3.7.9</version>
     </parent>
 
     <artifactId>doc-serve-jetty</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.7.9-SNAPSHOT</version>
+    <version>3.7.9</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
