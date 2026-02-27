@@ -34,8 +34,6 @@ pipelines:
           script:
             - make setup_release
             - make install_no_tests
-            - make clean
-            - make build_central
             - make deploy
             - make docker
             - make javadoc
@@ -103,7 +101,6 @@ pipelines:
           script:
             - make setup
             - make install_no_tests
-            - make clean
             - make build_github
             - make docker
             - make publish_github
@@ -124,7 +121,6 @@ pipelines:
         script:
           - make setup
           - make install_no_tests
-          - make clean
           - make build_github
           - make docker
           - make publish_github

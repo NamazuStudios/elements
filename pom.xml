@@ -4,7 +4,7 @@
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <name>Namazu Elements</name>
-    <version>3.7.5-SNAPSHOT</version>
+    <version>3.7.9-SNAPSHOT</version>
     <packaging>pom</packaging>
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
@@ -20,7 +20,7 @@
     <licenses>
         <license>
             <name>Modified GNU AGPL v3.0</name>
-            <url>https://raw.githubusercontent.com/Elemental-Computing/OSS-Licenses/8e60b05/LICENSE.txt</url>
+            <url>https://raw.githubusercontent.com/NamazuStudios/OSS-Licenses/8e60b05/LICENSE.txt</url>
         </license>
     </licenses>
     <url>https://namazustudios.com</url>
@@ -1217,6 +1217,21 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Javadoc Jars - generated in all builds so IDEs and dependents have documentation available -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${javadoc.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <profiles>
@@ -1225,14 +1240,14 @@
             <distributionManagement>
                 <repository>
                     <id>github-release</id>
-                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
+                    <url>https://maven.pkg.github.com/NamazuStudios/elements</url>
                     <snapshots>
                         <enabled>false</enabled>
                     </snapshots>
                 </repository>
                 <snapshotRepository>
                     <id>github-snapshot</id>
-                    <url>https://maven.pkg.github.com/Elemental-Computing/elements</url>
+                    <url>https://maven.pkg.github.com/NamazuStudios/elements</url>
                     <snapshots>
                         <enabled>true</enabled>
                     </snapshots>
@@ -1243,21 +1258,6 @@
             <id>central-publish</id>
             <build>
                 <plugins>
-                    <!-- Javadocs -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${javadoc.plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>

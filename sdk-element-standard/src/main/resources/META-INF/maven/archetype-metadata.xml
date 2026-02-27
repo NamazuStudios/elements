@@ -94,7 +94,9 @@
   </modules>
 
   <requiredProperties>
-    <requiredProperty key="elementsVersion"/>
+    <requiredProperty key="elementsVersion">
+      <defaultValue>${project.version}</defaultValue>
+    </requiredProperty>
   </requiredProperties>
 
 </archetype-descriptor>
