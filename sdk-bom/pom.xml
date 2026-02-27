@@ -161,6 +161,7 @@
             <dependency>
                 <groupId>jakarta.websocket</groupId>
                 <artifactId>jakarta.websocket-all</artifactId>
+                <version>${jakarta.websocket.version}</version>
                 <scope>provided</scope>
             </dependency>
 
