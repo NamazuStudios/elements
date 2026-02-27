@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.7.11-SNAPSHOT</version>
+        <version>3.7.11</version>
     </parent>
 
     <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.7.11-SNAPSHOT</version>
+    <version>3.7.11</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>

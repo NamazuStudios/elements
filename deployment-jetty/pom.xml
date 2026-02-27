@@ -8,10 +8,10 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.7.11-SNAPSHOT</version>
+        <version>3.7.11</version>
     </parent>
 
-    <version>3.7.11-SNAPSHOT</version>
+    <version>3.7.11</version>
     <artifactId>deployment-jetty</artifactId>
     <name>${project.artifactId}</name>
     <url>https://namazustudios.com</url>
