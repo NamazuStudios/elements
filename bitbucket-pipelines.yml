@@ -100,9 +100,9 @@ pipelines:
             - maven
           script:
             - make setup
-            - make install_no_tests
-            - make build_github
-            - make docker
+#            - make install_no_tests
+#            - make build_github
+#            - make docker
             - make publish_github
           after-script:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
@@ -120,9 +120,9 @@ pipelines:
           - maven
         script:
           - make setup
-#          - make install_no_tests
-#          - make build_github
-#          - make docker
+          - make install_no_tests
+          - make build_github
+          - make docker
           - make publish_github
         after-script:
           # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
