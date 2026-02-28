@@ -124,6 +124,12 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
             builder.with(unset("elements"));
         }
 
+        if (mongoElementDeployment.getPackages() != null) {
+            builder.with(set("packages", mongoElementDeployment.getPackages()));
+        } else {
+            builder.with(unset("packages"));
+        }
+
         builder.with(set("useDefaultRepositories", mongoElementDeployment.isUseDefaultRepositories()));
 
         if (mongoElementDeployment.getRepositories() != null) {
@@ -136,6 +142,12 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
             builder.with(set("pathSpiBuiltins", mongoElementDeployment.getPathSpiBuiltins()));
         } else {
             builder.with(unset("pathSpiBuiltins"));
+        }
+
+        if (mongoElementDeployment.getPathSpiClassPaths() != null) {
+            builder.with(set("pathSpiClassPaths", mongoElementDeployment.getPathSpiClassPaths()));
+        } else {
+            builder.with(unset("pathSpiClassPaths"));
         }
 
         if (mongoElementDeployment.getPathAttributes() != null) {
