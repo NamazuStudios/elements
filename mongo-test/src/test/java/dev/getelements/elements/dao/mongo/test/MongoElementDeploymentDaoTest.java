@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.model.exception.system.ElementDeploymentNotFoundException;
 import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
+import dev.getelements.elements.sdk.model.system.ElementPackageDefinition;
 import dev.getelements.elements.sdk.model.system.ElementPathDefinition;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
@@ -86,16 +87,23 @@ public class MongoElementDeploymentDaoTest {
         );
 
         final var pathSpiBuiltins = Map.of("element", List.of("DEFAULT"));
+        final var pathSpiClassPaths = Map.of("element", List.of("com.example:classpath:1.0"));
+        final var packages = List.of(new ElementPackageDefinition(
+                "com.example:package:1.0",
+                Map.of("element", List.of("DEFAULT")),
+                null,
+                null
+        ));
 
         final var deployment = new ElementDeployment(
                 null,
                 application,
                 null,
                 pathSpiBuiltins,
-                null,
+                pathSpiClassPaths,
                 null,
                 List.of(elementDefinition),
-                null,
+                packages,
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 ElementDeploymentState.ENABLED,
@@ -117,6 +125,11 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(created.state(), ElementDeploymentState.ENABLED);
         assertEquals(created.pathSpiBuiltins(), pathSpiBuiltins,
                 "pathSpiBuiltins should round-trip correctly after create");
+        assertEquals(created.pathSpiClassPaths(), pathSpiClassPaths,
+                "pathSpiClassPaths should round-trip correctly after create");
+        assertNotNull(created.packages());
+        assertEquals(created.packages(), packages,
+                "packages should round-trip correctly after create");
 
         // Verify event was fired
         assertTrue(createdDeployments.stream().anyMatch(d -> d.id().equals(created.id())),
@@ -272,16 +285,23 @@ public class MongoElementDeploymentDaoTest {
         );
 
         final var updatedPathSpiBuiltins = Map.of("element", List.of("GUICE_7_0_0"));
+        final var updatedPathSpiClassPaths = Map.of("element", List.of("com.example:classpath-updated:2.0"));
+        final var updatedPackages = List.of(new ElementPackageDefinition(
+                "com.example:package-updated:2.0",
+                Map.of("element", List.of("GUICE_7_0_0")),
+                null,
+                null
+        ));
 
         final var updated = new ElementDeployment(
                 deployment.id(),
                 deployment.application(),
                 deployment.elm(),
                 updatedPathSpiBuiltins,
-                deployment.pathSpiClassPaths(),
+                updatedPathSpiClassPaths,
                 deployment.pathAttributes(),
                 List.of(updatedDefinition),
-                deployment.packages(),
+                updatedPackages,
                 deployment.useDefaultRepositories(),
                 deployment.repositories(),
                 ElementDeploymentState.DISABLED,
@@ -298,6 +318,10 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(result.version(), deployment.version() + 1, "Version should be incremented on update");
         assertEquals(result.pathSpiBuiltins(), updatedPathSpiBuiltins,
                 "pathSpiBuiltins should be updated correctly");
+        assertEquals(result.pathSpiClassPaths(), updatedPathSpiClassPaths,
+                "pathSpiClassPaths should be updated correctly");
+        assertEquals(result.packages(), updatedPackages,
+                "packages should be updated correctly");
 
         // Verify event was fired
         assertTrue(updatedDeployments.stream().anyMatch(d -> d.id().equals(result.id())),
