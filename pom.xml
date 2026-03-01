@@ -116,6 +116,7 @@
         <module>sdk-dao</module>
         <module>sdk-deployment</module>
         <module>sdk-element-standard</module>
+        <module>sdk-element-standard-kt</module>
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>
