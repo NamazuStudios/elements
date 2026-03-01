@@ -8,11 +8,11 @@
   <parent>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
-    <version>3.7.12-SNAPSHOT</version>
+    <version>3.7.12</version>
   </parent>
 
   <artifactId>sdk-element-standard</artifactId>
-  <version>3.7.12-SNAPSHOT</version>
+  <version>3.7.12</version>
   <packaging>maven-archetype</packaging>
 
   <name>Standard Element Archetype</name>
