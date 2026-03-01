@@ -7,14 +7,14 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.7.11-SNAPSHOT</version>
+        <version>3.7.12-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <artifactId>docker-config</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.7.11-SNAPSHOT</version>
+    <version>3.7.12-SNAPSHOT</version>
 
     <modules>
         <module>elements-base</module>
