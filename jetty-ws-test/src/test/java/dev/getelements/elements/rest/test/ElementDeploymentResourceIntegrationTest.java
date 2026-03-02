@@ -70,16 +70,23 @@ public class ElementDeploymentResourceIntegrationTest {
         );
 
         final var pathSpiBuiltins = Map.of("example", List.of("DEFAULT"));
+        final var pathSpiClassPaths = Map.of("example", List.of("com.example:classpath:1.0"));
+        final var packages = List.of(new ElementPackageDefinition(
+                "com.example:package:1.0",
+                Map.of("example", List.of("DEFAULT")),
+                null,
+                null
+        ));
 
         final var request = new CreateElementDeploymentRequest(
                 null, // global deployment
                 List.of(elementDefinition),
-                null, // packages
+                packages,
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 pathSpiBuiltins,
-                null,
+                pathSpiClassPaths,
                 ElementDeploymentState.DISABLED
         );
 
@@ -104,6 +111,10 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(created.version(), 0L);
         assertEquals(created.pathSpiBuiltins(), pathSpiBuiltins,
                 "pathSpiBuiltins should round-trip correctly in create response");
+        assertEquals(created.pathSpiClassPaths(), pathSpiClassPaths,
+                "pathSpiClassPaths should round-trip correctly in create response");
+        assertEquals(created.packages(), packages,
+                "packages should round-trip correctly in create response");
 
         createdDeploymentId = created.id();
     }
@@ -257,15 +268,22 @@ public class ElementDeploymentResourceIntegrationTest {
         );
 
         final var updatedPathSpiBuiltins = Map.of("example", List.of("GUICE_7_0_0"));
+        final var updatedPathSpiClassPaths = Map.of("example", List.of("com.example:classpath-updated:2.0"));
+        final var updatedPackages = List.of(new ElementPackageDefinition(
+                "com.example:package-updated:2.0",
+                Map.of("example", List.of("GUICE_7_0_0")),
+                null,
+                null
+        ));
 
         final var request = new UpdateElementDeploymentRequest(
                 List.of(elementDefinition),
-                null, // packages
+                updatedPackages,
                 true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 updatedPathSpiBuiltins,
-                null,
+                updatedPathSpiClassPaths,
                 ElementDeploymentState.ENABLED
         );
 
@@ -289,6 +307,10 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(updated.version(), 1L, "Version should be incremented after update");
         assertEquals(updated.pathSpiBuiltins(), updatedPathSpiBuiltins,
                 "pathSpiBuiltins should be updated correctly");
+        assertEquals(updated.pathSpiClassPaths(), updatedPathSpiClassPaths,
+                "pathSpiClassPaths should be updated correctly");
+        assertEquals(updated.packages(), updatedPackages,
+                "packages should be updated correctly");
     }
 
     @Test(
