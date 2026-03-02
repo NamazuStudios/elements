@@ -1,30 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
+
     <name>Namazu Elements</name>
     <version>3.8.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
         <connection>scm:git:ssh://git@bitbucket.org:eci-elements/web-services.git</connection>
         <developerConnection>scm:git:git@bitbucket.org:eci-elements/web-services.git</developerConnection>
     </scm>
+
     <repositories>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
+
     <licenses>
         <license>
             <name>Modified GNU AGPL v3.0</name>
             <url>https://raw.githubusercontent.com/NamazuStudios/OSS-Licenses/8e60b05/LICENSE.txt</url>
         </license>
     </licenses>
+
     <url>https://namazustudios.com</url>
-    <description>Elements is an Open Source Backend for Games</description>
+
+    <description>Namazu Elements is an Open Source Backend for Games</description>
+
     <developers>
         <developer>
             <name>Keith Hudnall</name>
@@ -37,6 +47,7 @@
             <organization>Elemental Computing Inc.</organization>
         </developer>
     </developers>
+
     <modules>
         <module>common-util</module>
         <module>common-servlet</module>
@@ -116,6 +127,7 @@
         <module>sdk-dao</module>
         <module>sdk-deployment</module>
         <module>sdk-element-standard</module>
+        <module>sdk-element-standard-kt</module>
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>
@@ -124,6 +136,7 @@
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
     </modules>
+
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>7.0.0</guice.version>
@@ -202,6 +215,7 @@
         <shrinkwrap.version>3.3.4</shrinkwrap.version>
         <api.classifier>${project.groupId}.api</api.classifier>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -215,6 +229,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <!-- First-party Dependencies -->
@@ -1127,6 +1142,7 @@
             <!-- End Dependencies -->
         </dependencies>
     </dependencyManagement>
+
     <build>
         <plugins>
             <!-- Sets Java 21 -->
@@ -1234,6 +1250,7 @@
             </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>github-publish</id>
@@ -1295,4 +1312,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
