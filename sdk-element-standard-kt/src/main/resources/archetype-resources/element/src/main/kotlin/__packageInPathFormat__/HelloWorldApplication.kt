@@ -1,8 +1,8 @@
-package com.mystudio.mygame
+package ${package}
 
-import com.mystudio.mygame.rest.ExampleContent
-import com.mystudio.mygame.rest.HelloWithAuthentication
-import com.mystudio.mygame.rest.HelloWorld
+import ${package}.rest.ExampleContent
+import ${package}.rest.HelloWithAuthentication
+import ${package}.rest.HelloWorld
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute
 import dev.getelements.elements.sdk.annotation.ElementServiceExport
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation

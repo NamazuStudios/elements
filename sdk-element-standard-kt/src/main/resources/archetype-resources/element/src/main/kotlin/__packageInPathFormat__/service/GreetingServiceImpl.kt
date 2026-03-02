@@ -1,4 +1,4 @@
-package com.mystudio.mygame.service
+package ${package}.service
 
 import dev.getelements.elements.sdk.model.user.User
 import dev.getelements.elements.sdk.service.user.UserService

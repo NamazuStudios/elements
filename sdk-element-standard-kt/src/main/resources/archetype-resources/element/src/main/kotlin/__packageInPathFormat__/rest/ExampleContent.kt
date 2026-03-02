@@ -1,10 +1,10 @@
-package com.mystudio.mygame.rest
+package ${package}.rest
 
-import com.mystudio.mygame.HelloWorldApplication
-import com.mystudio.mygame.model.ExamplePostRequest
-import com.mystudio.mygame.model.ExamplePostResponse
-import com.mystudio.mygame.model.ExamplePutRequest
-import com.mystudio.mygame.model.ExamplePutResponse
+import ${package}.HelloWorldApplication
+import ${package}.model.ExamplePostRequest
+import ${package}.model.ExamplePostResponse
+import ${package}.model.ExamplePutRequest
+import ${package}.model.ExamplePutResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.*

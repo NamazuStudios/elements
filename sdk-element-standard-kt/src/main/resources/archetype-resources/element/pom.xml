@@ -21,9 +21,14 @@
         deploying your Element.
     -->
     <dependencies>
+        <!-- The Element's API artifact, required on the compile classpath for access to its interfaces. -->
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>api</artifactId>
+        </dependency>
         <!-- The Element's API classifier artifact, copied into the api/ directory of the .elm archive. -->
         <dependency>
-            <groupId>com.example.element</groupId>
+            <groupId>${groupId}</groupId>
             <artifactId>api</artifactId>
             <classifier>${api.classifier}</classifier>
         </dependency>

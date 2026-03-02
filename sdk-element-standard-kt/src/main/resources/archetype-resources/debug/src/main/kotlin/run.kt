@@ -19,8 +19,8 @@ fun main() {
                 .useDefaultRepositories(true)
                 .elementPath()
                     .addSpiBuiltin("DEFAULT")
-                    .addApiArtifact("${groupId}:api:${version}")
-                    .addElementArtifact("${groupId}:element:${version}")
+                    .addApiArtifact("${package}:api:${version}")
+                    .addElementArtifact("${package}:element:${version}")
                 .endElementPath()
                 .build()
         }

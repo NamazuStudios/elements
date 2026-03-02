@@ -1,6 +1,6 @@
-package com.mystudio.mygame.rest
+package ${package}.rest
 
-import com.mystudio.mygame.HelloWorldApplication
+import ${package}.HelloWorldApplication
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.ws.rs.GET

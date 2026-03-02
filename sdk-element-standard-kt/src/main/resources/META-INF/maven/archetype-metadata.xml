@@ -51,6 +51,12 @@
   <modules>
     <module id="api" dir="api" name="api">
       <fileSets>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>src/main/kotlin</directory>
+          <includes>
+            <include>**/*.kt</include>
+          </includes>
+        </fileSet>
         <fileSet filtered="true" packaged="true" encoding="UTF-8">
           <directory>src/main/java</directory>
           <includes>
@@ -67,6 +73,12 @@
     </module>
     <module id="element" dir="element" name="element">
       <fileSets>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>src/main/kotlin</directory>
+          <includes>
+            <include>**/*.kt</include>
+          </includes>
+        </fileSet>
         <fileSet filtered="true" packaged="true" encoding="UTF-8">
           <directory>src/main/java</directory>
           <includes>
@@ -83,6 +95,12 @@
     </module>
     <module id="debug" dir="debug" name="debug">
       <fileSets>
+        <fileSet filtered="true" encoding="UTF-8">
+          <directory>src/main/kotlin</directory>
+          <includes>
+            <include>**/*.kt</include>
+          </includes>
+        </fileSet>
         <fileSet filtered="true" encoding="UTF-8">
           <directory>src/main/java</directory>
           <includes>

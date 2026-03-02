@@ -1,8 +1,8 @@
-package com.mystudio.mygame.guice
+package ${package}.guice
 
 import com.google.inject.PrivateModule
-import com.mystudio.mygame.service.GreetingService
-import com.mystudio.mygame.service.GreetingServiceImpl
+import ${package}.service.GreetingService
+import ${package}.service.GreetingServiceImpl
 
 class MyGameModule : PrivateModule() {
 

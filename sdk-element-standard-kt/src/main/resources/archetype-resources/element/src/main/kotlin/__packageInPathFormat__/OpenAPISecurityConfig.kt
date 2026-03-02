@@ -1,4 +1,4 @@
-package com.mystudio.mygame
+package ${package}
 
 import dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET
 import io.swagger.v3.oas.annotations.ExternalDocumentation

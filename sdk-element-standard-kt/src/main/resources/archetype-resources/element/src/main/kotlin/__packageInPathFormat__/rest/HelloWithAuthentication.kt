@@ -1,7 +1,7 @@
-package com.mystudio.mygame.rest
+package ${package}.rest
 
-import com.mystudio.mygame.HelloWorldApplication
-import com.mystudio.mygame.service.GreetingService
+import ${package}.HelloWorldApplication
+import ${package}.service.GreetingService
 import dev.getelements.elements.sdk.Element
 import dev.getelements.elements.sdk.ElementSupplier
 import dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET

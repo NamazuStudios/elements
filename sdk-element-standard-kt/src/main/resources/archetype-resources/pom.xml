@@ -88,7 +88,7 @@
             </dependency>
 
             <dependency>
-                <groupId>com.example.element</groupId>
+                <groupId>${groupId}</groupId>
                 <artifactId>element</artifactId>
                 <version>${project.version}</version>
             </dependency>
