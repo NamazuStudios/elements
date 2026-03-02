@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -18,6 +21,11 @@
         deploying your Element.
     -->
     <dependencies>
+        <!-- The Element's API artifact, required on the compile classpath for access to its interfaces. -->
+        <dependency>
+            <groupId>${groupId}</groupId>
+            <artifactId>api</artifactId>
+        </dependency>
         <!-- The Element's API classifier artifact, copied into the api/ directory of the .elm archive. -->
         <dependency>
             <groupId>${groupId}</groupId>
@@ -74,6 +82,10 @@
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-jaxrs2-jakarta</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
     </dependencies>
 
     <properties>
@@ -84,6 +96,50 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals><goal>compile</goal></goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Compiles Java sources (e.g. package-info.java) after Kotlin compilation.
+                package-info.java is required for package-level annotations such as @ElementDefinition,
+                which use ElementType.PACKAGE — a target that Kotlin does not natively support.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>java-compile</id>
+                        <phase>compile</phase>
+                        <goals><goal>compile</goal></goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
             <!--
                 This run of the maven-dependency-plugin builds the ELM file containing the Element formatted in
@@ -175,7 +231,7 @@
                                     <arg value="rev-parse" />
                                     <arg value="HEAD" />
                                 </exec>
-                                <property name="git.revision" value="UNKNOWN" />
+                                <property name="git.revision" value="unknown" />
                                 <echo file="${elm.element.dir}/dev.getelements.element.manifest.properties" append="false">
 Element-Version=${project.version}
 Element-Build-Time=${maven.build.timestamp}

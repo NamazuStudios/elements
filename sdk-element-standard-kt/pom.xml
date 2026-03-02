@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -11,11 +10,11 @@
     <version>3.7.12-SNAPSHOT</version>
   </parent>
 
-  <artifactId>sdk-element-standard</artifactId>
+  <artifactId>sdk-element-standard-kt</artifactId>
   <version>3.7.12-SNAPSHOT</version>
   <packaging>maven-archetype</packaging>
 
-  <name>Standard Element Archetype</name>
+  <name>Standard Element Archetype (Kotlin Version)</name>
   <url>https://namazustudios.com</url>
 
   <build>
