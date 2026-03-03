@@ -9,6 +9,17 @@ import { Loader2, Cpu, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, AlertTri
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { queryClient } from '@/lib/queryClient';
 
+interface ElementServiceMetadata {
+  implementation?: {
+    type?: string;
+    expose?: boolean;
+  };
+  export?: {
+    exposed?: string[];
+    name?: string;
+  };
+}
+
 interface ElementMetadata {
   type: string;
   definition: {
@@ -17,7 +28,7 @@ interface ElementMetadata {
     additionalPackages: Array<any>;
     loader: string;
   };
-  services: Array<any>;
+  services: ElementServiceMetadata[];
   producedEvents: Array<any>;
   consumedEvents: Array<any>;
   dependencies: Array<any>;
@@ -349,9 +360,31 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
                         </div>
                       )}
                       {element.services && element.services.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {element.services.map((svc: any, i: number) => (
-                            <Badge key={i} variant="secondary" className="text-[10px]">{svc.name || `Service ${i + 1}`}</Badge>
+                        <div className="space-y-1.5">
+                          <span className="text-xs text-muted-foreground">Services ({element.services.length})</span>
+                          {element.services.map((svc, i) => (
+                            <div key={i} className="rounded border bg-muted/30 p-2 space-y-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-medium font-mono">
+                                  {svc.export?.name || `Service ${i + 1}`}
+                                </span>
+                                {svc.implementation?.expose && (
+                                  <Badge variant="outline" className="text-[10px]">exposed</Badge>
+                                )}
+                              </div>
+                              {svc.implementation?.type && (
+                                <p className="font-mono text-[10px] text-muted-foreground break-all">{svc.implementation.type}</p>
+                              )}
+                              {svc.export?.exposed && svc.export.exposed.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {svc.export.exposed.map((exp, j) => (
+                                    <Badge key={j} variant="secondary" className="text-[10px] font-mono" title={exp}>
+                                      {exp.split('.').pop()}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       )}
