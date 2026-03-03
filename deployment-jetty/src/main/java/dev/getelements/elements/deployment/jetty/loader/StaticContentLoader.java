@@ -3,8 +3,8 @@ package dev.getelements.elements.deployment.jetty.loader;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
 
-import java.nio.file.Path;
 import java.util.function.Function;
 
 /**
@@ -12,9 +12,9 @@ import java.util.function.Function;
  */
 public abstract class StaticContentLoader implements Loader {
 
-    private final Function<ElementPathRecord, Path> resolve;
+    private final Function<ElementPathRecord, ElementStaticContentRecord> resolve;
 
-    public StaticContentLoader(final Function<ElementPathRecord, Path> resolve) {
+    public StaticContentLoader(final Function<ElementPathRecord, ElementStaticContentRecord> resolve) {
         this.resolve = resolve;
     }
 
@@ -50,7 +50,7 @@ public abstract class StaticContentLoader implements Loader {
     public static class UI extends StaticContentLoader {
 
         public UI() {
-            super(ElementPathRecord::uiContentRoot);
+            super(ElementPathRecord::uiStaticContent);
         }
 
     }
@@ -61,7 +61,7 @@ public abstract class StaticContentLoader implements Loader {
     public static class Standard extends StaticContentLoader {
 
         public Standard() {
-            super(ElementPathRecord::staticContentRoot);
+            super(ElementPathRecord::standardStaticContent);
         }
 
     }

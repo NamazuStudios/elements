@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,8 +156,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         return new ElementPathRecord(
                 path,
-                isDirectory(uiContentRoot) ? uiContentRoot : null,
-                isDirectory(staticContentRoot) ? staticContentRoot : null,
                 api,
                 spi,
                 lib,
@@ -164,7 +163,13 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 uiContent,
                 staticContent,
                 attributes,
-                manifest
+                manifest,
+                isDirectory(uiContentRoot)
+                        ? new ElementStaticContentRecord(uiContentRoot, uiContent)
+                        : null,
+                isDirectory(staticContentRoot)
+                        ? new ElementStaticContentRecord(staticContentRoot, staticContent)
+                        : null
         );
 
     }
