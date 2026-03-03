@@ -20,10 +20,14 @@ import java.util.List;
  */
 public record ElementPathRecord(
         Path path,
+        Path uiContentRoot,
+        Path staticContentRoot,
         List<Path> api,
         List<Path> spi,
         List<Path> lib,
         List<Path> classpath,
+        List<Path> uiContent,
+        List<Path> staticContent,
         Attributes attributes,
         ElementManifestRecord manifest
 ) {
@@ -38,10 +42,14 @@ public record ElementPathRecord(
     public ElementPathRecord relativize() {
         return new ElementPathRecord(
             path.getFileName(),
+            uiContentRoot == null ? null : relativize(uiContentRoot),
+            staticContentRoot == null ? null : relativize(staticContentRoot),
             api.stream().map(this::relativize).toList(),
             spi.stream().map(this::relativize).toList(),
             lib.stream().map(this::relativize).toList(),
             classpath.stream().map(this::relativize).toList(),
+            uiContent.stream().map(this::relativize).toList(),
+            staticContent.stream().map(this::relativize).toList(),
             attributes,
             manifest
         );
