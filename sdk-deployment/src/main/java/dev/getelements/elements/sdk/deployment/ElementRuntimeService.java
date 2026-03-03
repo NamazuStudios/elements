@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementSpi;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
+import dev.getelements.elements.sdk.record.ElementPathRecord;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -146,6 +147,7 @@ public interface ElementRuntimeService {
             List<Path> elementPaths,
             List<Path> deploymentFiles,
             Map<Path, ElementManifestRecord> elementManifests,
+            Map<Element, ElementPathRecord> elementPathsByElement,
             List<String> logs,
             List<String> warnings,
             List<Throwable> errors

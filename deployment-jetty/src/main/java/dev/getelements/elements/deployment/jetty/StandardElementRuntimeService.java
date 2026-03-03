@@ -1144,6 +1144,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     elementPaths,
                     deploymentFiles,
                     manifests,
+                    Map.of(), // TODO Properly construct mapping of elements to their manifests
                     logs,
                     warnings,
                     errors
