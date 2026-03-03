@@ -6,6 +6,7 @@ import com.google.inject.Key;
 import com.google.inject.servlet.GuiceFilter;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
+import dev.getelements.elements.deployment.jetty.loader.StaticContentLoader;
 import dev.getelements.elements.servlet.HttpContextRoot;
 import jakarta.servlet.DispatcherType;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
@@ -41,10 +42,16 @@ public class ElementsServletContextModule extends AbstractModule {
                 named(JakartaWebsocketLoader.HANDLER_SEQUENCE)
         ));
 
+        final var staticContentContextHandlerProvider = getProvider(Key.get(
+                Handler.Sequence.class,
+                named(StaticContentLoader.HANDLER_SEQUENCE)
+        ));
+
         bind(Handler.class)
                 .toProvider(() -> new Handler.Sequence(
                     jakartaRsContextHandlerProvider.get(),
                     jakartaWebsocketContextHandlerProvider.get(),
+                    staticContentContextHandlerProvider.get(),
                     guiceHandlerProvider.get()
                 ))
                 .asEagerSingleton();
@@ -69,6 +76,11 @@ public class ElementsServletContextModule extends AbstractModule {
 
         bind(Handler.Sequence.class)
                 .annotatedWith(named(JakartaWebsocketLoader.HANDLER_SEQUENCE))
+                .toProvider(Handler.Sequence::new)
+                .asEagerSingleton();
+
+        bind(Handler.Sequence.class)
+                .annotatedWith(named(StaticContentLoader.HANDLER_SEQUENCE))
                 .toProvider(Handler.Sequence::new)
                 .asEagerSingleton();
 

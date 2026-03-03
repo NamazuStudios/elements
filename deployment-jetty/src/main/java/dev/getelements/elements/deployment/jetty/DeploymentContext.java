@@ -1,11 +1,13 @@
 package dev.getelements.elements.deployment.jetty;
 
 import dev.getelements.elements.sdk.Attributes;
+import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.SystemVersion;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
+import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -42,6 +44,7 @@ record DeploymentContext(
         Map<Path, Set<String>> spiPaths,
         Map<Path, Attributes> attributePaths,
         Map<Path, ElementManifestRecord> manifests,
+        Map<Element, ElementPathRecord> elementPathsByElement,
         ElementArtifactLoader artifactLoader,
         ElementPathLoader pathLoader,
         Set<ArtifactRepository> repositories,
@@ -76,6 +79,7 @@ record DeploymentContext(
                 new HashMap<>(),
                 new HashMap<>(),
                 new HashMap<>(),
+                new LinkedHashMap<>(),
                 artifactLoader,
                 pathLoader,
                 new HashSet<>(),
@@ -335,6 +339,17 @@ record DeploymentContext(
             warn("Unknown builtin SPI name: " + name);
             return List.of();
         }
+    }
+
+    /**
+     * Records the association between a loaded {@link Element} and its on-disk {@link ElementPathRecord}.
+     * Intended for use as an {@link ElementPathLoader.LoadConfiguration} {@code elementLoadedHandler}.
+     *
+     * @param path    the path from which the element was loaded
+     * @param element the loaded element
+     */
+    public void recordElement(final Path path, final Element element) {
+        elementPathsByElement.put(element, pathLoader.readElement(path));
     }
 
     /**

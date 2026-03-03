@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
+import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -592,6 +593,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .spiProvider(context::loadSpiForPath)
                         .attributesLoader(context::loadAttributesForPath)
                         .sdkExceptionHandler(context::error)
+                        .elementLoadedHandler(context::recordElement)
                         .build();
 
                 allElements = pathLoader.load(config).toList();
@@ -1112,6 +1114,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             List<Path> elementPaths,
             List<Path> deploymentFiles,
             Map<Path, ElementManifestRecord> manifests,
+            Map<Element, ElementPathRecord> elementPathsByElement,
             List<FileSystem> filesystems,
             List<String> logs,
             List<String> warnings,
@@ -1122,6 +1125,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             elements = List.copyOf(elements);
             deploymentFiles = List.copyOf(deploymentFiles);
             manifests = Map.copyOf(manifests);
+            elementPathsByElement = Map.copyOf(elementPathsByElement);
             filesystems = List.copyOf(filesystems);
             logs = List.copyOf(logs);
             warnings = List.copyOf(warnings);
@@ -1144,7 +1148,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     elementPaths,
                     deploymentFiles,
                     manifests,
-                    Map.of(), // TODO Properly construct mapping of elements to their manifests
+                    elementPathsByElement,
                     logs,
                     warnings,
                     errors
@@ -1183,6 +1187,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
                     deploymentContext.manifests(),
+                    deploymentContext.elementPathsByElement(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.warnings(),
@@ -1209,6 +1214,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
                     deploymentContext.manifests(),
+                    deploymentContext.elementPathsByElement(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.warnings(),
