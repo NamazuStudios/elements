@@ -1,0 +1,19 @@
+package ${package}.model
+
+import dev.getelements.elements.sdk.model.Constants
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
+
+@Schema
+class ExamplePostRequest {
+
+    @NotNull
+    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @Schema(description = "A unique name for the object that we're creating. No spaces allowed.")
+    var name: String? = null
+
+    @Schema(description = "The type of request being made. For example/debugging purposes.")
+    var requestType: String = "ExamplePostRequest"
+
+}

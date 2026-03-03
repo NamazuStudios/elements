@@ -4,7 +4,7 @@
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
     <name>Namazu Elements</name>
-    <version>3.7.12-SNAPSHOT</version>
+    <version>3.7.14-SNAPSHOT</version>
     <packaging>pom</packaging>
     <scm>
         <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
@@ -116,6 +116,7 @@
         <module>sdk-dao</module>
         <module>sdk-deployment</module>
         <module>sdk-element-standard</module>
+        <module>sdk-element-standard-kt</module>
         <module>sdk-cluster</module>
         <module>sdk-service</module>
         <module>sdk-jakarta-rs</module>

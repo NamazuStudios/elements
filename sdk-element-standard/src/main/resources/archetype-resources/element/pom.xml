@@ -176,10 +176,12 @@
                                     <arg value="HEAD" />
                                 </exec>
                                 <property name="git.revision" value="UNKNOWN" />
-                                <echo file="${elm.element.dir}/dev.getelements.element.manifest.properties" append="false">Element-Version=${project.version}
-                                    Element-Build-Time=${maven.build.timestamp}
-                                    Element-Revision=${git.revision}
-                                    Element-Builtin-Spis=${elm.builtin.spis}</echo>
+                                <echo file="${elm.element.dir}/dev.getelements.element.manifest.properties" append="false">
+Element-Version=${project.version}
+Element-Build-Time=${maven.build.timestamp}
+Element-Revision=${git.revision}
+Element-Builtin-Spis=${elm.builtin.spis}
+                                </echo>
                             </target>
                         </configuration>
                     </execution>
