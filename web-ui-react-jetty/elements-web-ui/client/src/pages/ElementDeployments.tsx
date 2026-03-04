@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
-import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ElementArtifactRepository {
@@ -258,7 +258,7 @@ export default function ElementDeployments() {
   const [formData, setFormData] = useState<FormData>({ ...emptyFormData });
   const [wizardStep, setWizardStep] = useState(0);
   const [elmUploadDialogOpen, setElmUploadDialogOpen] = useState(false);
-  const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any } | null>(null);
+  const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any; deploymentState?: string } | null>(null);
   const [wizardCreatedDeployment, setWizardCreatedDeployment] = useState<{ deploymentId: string; elmId?: string } | null>(null);
   const [wizardElmFile, setWizardElmFile] = useState<File | null>(null);
   const [wizardEnableNow, setWizardEnableNow] = useState(true);
@@ -301,6 +301,22 @@ export default function ElementDeployments() {
     },
     onError: (error: any) => {
       toast({ title: 'Error', description: error.message || 'Failed to create deployment', variant: 'destructive' });
+    },
+  });
+
+  const restartMutation = useMutation({
+    mutationFn: async ({ id, state }: { id: string; state: string }) => {
+      return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ state }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Changes Applied', description: 'Deployment restarted with updated configuration.' });
+      queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/deployment'] });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Error', description: error.message || 'Failed to apply changes', variant: 'destructive' });
     },
   });
 
@@ -365,8 +381,6 @@ export default function ElementDeployments() {
     },
     onSuccess: () => {
       toast({ title: 'ELM Uploaded', description: 'The .elm file has been uploaded successfully.' });
-      setElmUploadDialogOpen(false);
-      setElmUploadTarget(null);
       queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/deployment'] });
     },
     onError: (error: any) => {
@@ -607,6 +621,32 @@ export default function ElementDeployments() {
                     </div>
 
                     <div className="flex items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Restart"
+                        onClick={() => restartMutation.mutate({ id: deployment.id, state: deployment.state })}
+                        disabled={restartMutation.isPending && restartMutation.variables?.id === deployment.id}
+                        data-testid={`button-restart-${deployment.id}`}
+                      >
+                        {restartMutation.isPending && restartMutation.variables?.id === deployment.id
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <RotateCcw className="w-4 h-4" />}
+                      </Button>
+                      {deployment.elm && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          title="Upload ELM File"
+                          onClick={() => {
+                            setElmUploadTarget({ deploymentId: deployment.id, elm: deployment.elm, deploymentState: deployment.state });
+                            setElmUploadDialogOpen(true);
+                          }}
+                          data-testid={`button-upload-elm-${deployment.id}`}
+                        >
+                          <Upload className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Button
                         size="icon"
                         variant="ghost"
@@ -861,8 +901,6 @@ export default function ElementDeployments() {
                 formData={formData}
                 setFormData={setFormData}
                 deployment={selectedDeployment}
-                onElmUpload={handleElmFileUpload}
-                elmUploading={elmUploadMutation.isPending}
               />
             </TabsContent>
             <TabsContent value="json">
@@ -942,7 +980,7 @@ export default function ElementDeployments() {
           <DialogHeader>
             <DialogTitle>Upload ELM File</DialogTitle>
             <DialogDescription>
-              Your deployment has been created and a Large Object has been registered for the ELM file. You can upload your .elm file now, or skip and do it later from the edit dialog.
+              Upload a new .elm file for this deployment. You can optionally restart the deployment immediately after uploading.
             </DialogDescription>
           </DialogHeader>
           {elmUploadTarget && (
@@ -961,7 +999,7 @@ export default function ElementDeployments() {
               <ElmDropZone
                 onFile={(file) => handleElmFileUpload(file, elmUploadTarget.elm.id)}
                 uploading={elmUploadMutation.isPending}
-                testIdPrefix="post-create-elm"
+                testIdPrefix="upload-elm"
               />
             </div>
           )}
@@ -972,10 +1010,24 @@ export default function ElementDeployments() {
                 setElmUploadDialogOpen(false);
                 setElmUploadTarget(null);
               }}
-              data-testid="button-skip-elm-upload"
+              data-testid="button-close-elm-upload"
             >
-              Skip for Now
+              Close
             </Button>
+            {elmUploadTarget?.deploymentState && (
+              <Button
+                onClick={() => {
+                  restartMutation.mutate({ id: elmUploadTarget.deploymentId, state: elmUploadTarget.deploymentState! });
+                  setElmUploadDialogOpen(false);
+                  setElmUploadTarget(null);
+                }}
+                disabled={!elmUploadMutation.isSuccess || restartMutation.isPending}
+                data-testid="button-apply-changes-elm-upload"
+              >
+                {restartMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Apply Changes
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -2386,11 +2438,9 @@ interface DeploymentFormProps {
   formData: FormData;
   setFormData: (fd: FormData) => void;
   deployment?: ElementDeployment | null;
-  onElmUpload?: (file: File, largeObjectId: string) => void;
-  elmUploading?: boolean;
 }
 
-function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, elmUploading }: DeploymentFormProps) {
+function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentFormProps) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [additionalOpen, setAdditionalOpen] = useState(false);
@@ -2470,9 +2520,9 @@ function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, 
         </div>
       )}
 
-      {/* ── ELM File (edit only) ── */}
+      {/* ── ELM File (edit only, read-only info) ── */}
       {mode === 'edit' && deployment?.elm && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           <Label>ELM File</Label>
           <div className="flex items-start gap-3 p-3 border rounded-md bg-muted/30">
             <HardDrive className="w-5 h-5 mt-0.5 text-muted-foreground shrink-0" />
@@ -2493,16 +2543,9 @@ function DeploymentForm({ mode, formData, setFormData, deployment, onElmUpload, 
               </div>
             </div>
           </div>
-          <ElmDropZone
-            onFile={(file) => {
-              if (deployment.elm?.id && onElmUpload) {
-                onElmUpload(file, deployment.elm.id);
-              }
-            }}
-            uploading={!!elmUploading}
-            buttonLabel="Upload New .elm File"
-            testIdPrefix="edit-elm"
-          />
+          <p className="text-xs text-muted-foreground">
+            To replace the ELM file, use the Upload button on the deployment list.
+          </p>
         </div>
       )}
 
