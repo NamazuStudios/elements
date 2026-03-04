@@ -49,8 +49,8 @@ public record ElementPathRecord(
             staticContent.stream().map(this::relativize).toList(),
             attributes,
             manifest,
-            uiStaticContent.relativize(),
-            standardStaticContent.relativize()
+            uiStaticContent == null ? null : uiStaticContent.relativize(),
+            standardStaticContent == null ? null : standardStaticContent.relativize()
         );
     }
 

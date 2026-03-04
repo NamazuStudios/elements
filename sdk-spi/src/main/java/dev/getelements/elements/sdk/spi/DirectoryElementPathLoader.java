@@ -159,7 +159,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 api,
                 spi,
                 lib,
-                isDirectory(classpathRoot) ? classpath : null,
+                classpath,
                 uiContent,
                 staticContent,
                 attributes,

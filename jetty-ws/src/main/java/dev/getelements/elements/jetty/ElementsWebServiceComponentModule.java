@@ -1,12 +1,9 @@
 package dev.getelements.elements.jetty;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.deployment.jetty.loader.StaticContentLoader;
-import dev.getelements.elements.sdk.deployment.ElementContainerService;
-import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import org.eclipse.jetty.server.Handler;
 
 import java.util.Collection;
