@@ -129,8 +129,8 @@ class StaticRuleEngine {
 
                 headersFromPreviousRules.addAll(thisRuleHeaders);
 
-                if (rule.headerTemplates().containsKey("Content-Type")) {
-                    mimeFromRule = resolvedHeaders.get("Content-Type");
+                if (rule.headerTemplates().containsKey("content-type")) {
+                    mimeFromRule = resolvedHeaders.get("content-type");
                 }
             }
 
@@ -247,7 +247,7 @@ class StaticRuleEngine {
             kv.forEach((k, v) -> {
                 if (k.startsWith("header.") && k.endsWith(".value")) {
                     // strip "header." prefix and ".value" suffix
-                    final var headerName = k.substring("header.".length(), k.length() - ".value".length());
+                    final var headerName = k.substring("header.".length(), k.length() - ".value".length()).toLowerCase();
                     if (!headerName.isBlank()) {
                         headerTemplates.put(headerName, v);
                     }

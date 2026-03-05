@@ -5,15 +5,13 @@ import jakarta.websocket.Session;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -29,10 +27,27 @@ public abstract class AbstractTestLocalSDK {
      */
     protected abstract String appPath();
 
+    /**
+     * Expects a static response. This should be 200 for tests that support it, 404 for others.
+     *
+     * @return the expected response
+     */
+    protected int expectedStaticResponseStatus() {
+        return 200;
+    }
+
     private Message message;
 
     private String messageUrl() {
         return "http://localhost:8181/app/rest/" + appPath() + "/message";
+    }
+
+    private String staticContentUrl() {
+        return "http://localhost:8181/app/static/" + appPath() + "/index.html";
+    }
+
+    private String uiContentUrl() {
+        return "http://localhost:8181/app/ui/" + appPath() + "/index.html";
     }
 
     @Test
@@ -57,6 +72,40 @@ public abstract class AbstractTestLocalSDK {
                     .get();
 
             Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+
+        }
+    }
+
+    @Test
+    public void testGetStaticContent() {
+        try (final var client = ClientBuilder.newClient()) {
+
+            final var response = client.target(staticContentUrl())
+                    .request()
+                    .get();
+
+            Assert.assertEquals(response.getStatus(), expectedStaticResponseStatus());
+
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
+            }
+
+        }
+    }
+
+    @Test
+    public void testGetUiContent() {
+        try (final var client = ClientBuilder.newClient()) {
+
+            final var response = client.target(uiContentUrl())
+                    .request()
+                    .get();
+
+            Assert.assertEquals(response.getStatus(), expectedStaticResponseStatus());
+
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
+            }
 
         }
     }
