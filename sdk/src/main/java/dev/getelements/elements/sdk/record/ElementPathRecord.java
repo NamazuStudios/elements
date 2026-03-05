@@ -24,9 +24,12 @@ public record ElementPathRecord(
         List<Path> spi,
         List<Path> lib,
         List<Path> classpath,
+        List<Path> uiContent,
+        List<Path> staticContent,
         Attributes attributes,
-        ElementManifestRecord manifest
-) {
+        ElementManifestRecord manifest,
+        ElementStaticContentRecord uiStaticContent,
+        ElementStaticContentRecord standardStaticContent) {
 
     /**
      * Returns a copy of this {@link ElementPathRecord} relative to the value of {@link #path()}. Throwing an
@@ -42,8 +45,12 @@ public record ElementPathRecord(
             spi.stream().map(this::relativize).toList(),
             lib.stream().map(this::relativize).toList(),
             classpath.stream().map(this::relativize).toList(),
+            uiContent.stream().map(this::relativize).toList(),
+            staticContent.stream().map(this::relativize).toList(),
             attributes,
-            manifest
+            manifest,
+            uiStaticContent == null ? null : uiStaticContent.relativize(),
+            standardStaticContent == null ? null : standardStaticContent.relativize()
         );
     }
 

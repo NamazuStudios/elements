@@ -122,6 +122,28 @@
                         </configuration>
                     </execution>
                     <!--
+                        Copies static content files into the "static" directory of the staging area and
+                        UI content files into the "ui" directory. These are served by Jetty at
+                        /app/static/{prefix} and /app/ui/{prefix} respectively.
+                    -->
+                    <execution>
+                        <id>elm-stage-static-content</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy todir="${elm.element.dir}/static" failonerror="false">
+                                    <fileset dir="${basedir}/src/main/static" erroronmissingdir="false" includes="**/*"/>
+                                </copy>
+                                <copy todir="${elm.element.dir}/ui" failonerror="false">
+                                    <fileset dir="${basedir}/src/main/ui" erroronmissingdir="false" includes="**/*"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!--
                         Writes the element manifest properties file into the root of the element directory.
                         The loader reads this file to obtain version metadata and required builtin SPIs.
                     -->
@@ -163,6 +185,8 @@ Element-Builtin-Spis=${elm.builtin.spis}
                                 <mkdir dir="${elm.element.dir}/api"/>
                                 <mkdir dir="${elm.element.dir}/lib"/>
                                 <mkdir dir="${elm.element.dir}/classpath"/>
+                                <mkdir dir="${elm.element.dir}/static"/>
+                                <mkdir dir="${elm.element.dir}/ui"/>
                                 <zip destfile="${elm.staging.dir}.elm" basedir="${elm.staging.dir}"/>
                             </target>
                         </configuration>

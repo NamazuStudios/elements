@@ -7,6 +7,7 @@ import dev.getelements.elements.deployment.jetty.loader.AuthFilterFeature;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.deployment.jetty.loader.Loader;
+import dev.getelements.elements.deployment.jetty.loader.StaticContentLoader;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
@@ -43,8 +44,10 @@ public class JettySdkElementModule extends SharedElementModule {
         final var loaders = newSetBinder(binder(), Loader.class);
         loaders.addBinding().to(JakartaRsLoader.class);
         loaders.addBinding().to(JakartaWebsocketLoader.class);
+        loaders.addBinding().to(StaticContentLoader.UI.class);
+        loaders.addBinding().to(StaticContentLoader.Standard.class);
 
-        final var  authFilters = Multibinder.newSetBinder(
+        final var authFilters = Multibinder.newSetBinder(
                 binder(),
                 Filter.class,
                 named(AuthFilterFeature.FILTER_SET)

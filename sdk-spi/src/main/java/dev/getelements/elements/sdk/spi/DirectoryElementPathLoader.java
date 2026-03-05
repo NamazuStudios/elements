@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,12 +140,37 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         final var attributes = readAttributes(path);
         final var manifest = ElementManifestRecord.from(readManifest(path));
 
-        final var api = collectDirEntries(path.resolve(API_DIR));
-        final var spi = collectDirEntries(path.resolve(SPI_DIR));
-        final var lib = collectDirEntries(path.resolve(LIB_DIR));
-        final var classpath = collectDirEntriesRecursive(path.resolve(CLASSPATH_DIR));
+        final var apiRoot = path.resolve(API_DIR);
+        final var spiRoot = path.resolve(SPI_DIR);
+        final var libRoot = path.resolve(LIB_DIR);
+        final var classpathRoot = path.resolve(CLASSPATH_DIR);
+        final var uiContentRoot = path.resolve(path.resolve(UI_DIR));
+        final var staticContentRoot = path.resolve(path.resolve(STATIC_DIR));
 
-        return new ElementPathRecord(path, api, spi, lib, classpath, attributes, manifest);
+        final var api = collectDirEntries(apiRoot);
+        final var spi = collectDirEntries(spiRoot);
+        final var lib = collectDirEntries(libRoot);
+        final var classpath = collectDirEntriesRecursive(classpathRoot);
+        final var uiContent = collectDirEntriesRecursive(uiContentRoot);
+        final var staticContent = collectDirEntriesRecursive(staticContentRoot);
+
+        return new ElementPathRecord(
+                path,
+                api,
+                spi,
+                lib,
+                classpath,
+                uiContent,
+                staticContent,
+                attributes,
+                manifest,
+                isDirectory(uiContentRoot)
+                        ? new ElementStaticContentRecord(uiContentRoot, uiContent)
+                        : null,
+                isDirectory(staticContentRoot)
+                        ? new ElementStaticContentRecord(staticContentRoot, staticContent)
+                        : null
+        );
 
     }
 
@@ -538,6 +564,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             try {
                                 final var element = record.loadElement();
                                 elements.add(element);
+                                config.elementLoadedHandler().accept(subpath, element);
                             } catch (final SdkException ex) {
                                 logger.warn("Caught exception loading eleemnt. Deferring to handler.", ex);
                                 config.sdkExceptionHandler().accept(ex);

@@ -71,6 +71,20 @@ public interface ElementContainerService {
     String ENABLE_ELEMENTS_AUTH = "dev.getelements.elements.auth.enabled";
 
     /**
+     * Overrides the URI path at which standard static content is served. If absent, defaults to
+     * {@code /app/static/{prefix}} where {@code {prefix}} is derived from {@link #APPLICATION_PREFIX}.
+     */
+    @ElementDefaultAttribute(description = "Override the URI for static content. Defaults to /app/static/{prefix}.")
+    String STATIC_CONTENT_URI = "dev.getelements.element.static.uri";
+
+    /**
+     * Overrides the URI path at which UI static content is served. If absent, defaults to
+     * {@code /app/ui/{prefix}} where {@code {prefix}} is derived from {@link #APPLICATION_PREFIX}.
+     */
+    @ElementDefaultAttribute(description = "Override the URI for UI content. Defaults to /app/ui/{prefix}.")
+    String UI_CONTENT_URI = "dev.getelements.element.ui.uri";
+
+    /**
      * Starts the container service.
      */
     void start();

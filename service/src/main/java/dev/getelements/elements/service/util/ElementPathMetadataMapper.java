@@ -16,11 +16,11 @@ public interface ElementPathMetadataMapper extends MapperRegistry.Mapper<Element
     ElementPathRecordMetadata forward(final ElementPathRecord source);
 
     default String map(final Path path) {
-        return path.toString();
+        return path == null ? null : path.toString();
     }
 
     default Map<String, Object> map(final Attributes attributes) {
-        return attributes.asMap();
+        return attributes == null ? null : attributes.asMap();
     }
 
 }

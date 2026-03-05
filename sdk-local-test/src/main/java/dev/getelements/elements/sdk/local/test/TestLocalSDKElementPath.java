@@ -16,6 +16,12 @@ public class TestLocalSDKElementPath extends AbstractTestLocalSDK {
         return "myapp";
     }
 
+
+    @Override
+    protected int expectedStaticResponseStatus() {
+        return 404;
+    }
+
     @BeforeClass
     public void setUpLocalRunner() {
 

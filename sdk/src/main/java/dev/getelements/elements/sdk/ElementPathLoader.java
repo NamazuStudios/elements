@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -110,6 +111,18 @@ public interface ElementPathLoader {
     String CLASSPATH_DIR = "classpath";
 
     /**
+     * The ui directory in the element path hierarchy.
+     * @since 3.8
+     */
+    String UI_DIR = "ui";
+
+    /**
+     * The static directory in the element path hierarchy.
+     * @since 3.8
+     */
+    String STATIC_DIR = "static";
+
+    /**
      * The name of the file which represents a particular {@link Element}'s {@link Attributes}. Uses the
      * {@link java.util.Properties} format when defining the {@link Attributes}. This allows for the separation of
      * code and configuration at deployment time.
@@ -144,7 +157,8 @@ public interface ElementPathLoader {
             ClassLoader baseClassLoader,
             SpiLoader spiLoader,
             AttributesLoader attributesProvider,
-            Consumer<SdkException> sdkExceptionHandler) {
+            Consumer<SdkException> sdkExceptionHandler,
+            BiConsumer<Path, Element> elementLoadedHandler) {
 
         /**
          * Creates a new builder for LoadConfiguration.
@@ -173,6 +187,8 @@ public interface ElementPathLoader {
             private AttributesLoader attributesLoader = (attributes, path) -> attributes;
 
             private Consumer<SdkException> loadErrorHandler = ex -> { throw ex; };
+
+            private BiConsumer<Path, Element> elementLoadedHandler = (p, e) -> {};
 
             private Builder() {}
 
@@ -280,6 +296,19 @@ public interface ElementPathLoader {
             }
 
             /**
+             * Handles the happy-path of loading an {@link Element}. This specifies the {@link Path} and the
+             *
+             * @param elementLoadedHandler the handler
+             * @return this
+             */
+            public Builder elementLoadedHandler(final BiConsumer<Path, Element> elementLoadedHandler) {
+                this.elementLoadedHandler = elementLoadedHandler == null
+                        ? (p, e) -> {}
+                        : elementLoadedHandler;
+                return this;
+            }
+
+            /**
              * Builds the LoadConfiguration with defaults applied for unspecified optional parameters.
              *
              * @return the configured LoadConfiguration
@@ -301,7 +330,8 @@ public interface ElementPathLoader {
                         finalBaseClassLoader,
                         spiLoader,
                         attributesLoader,
-                        loadErrorHandler
+                        loadErrorHandler,
+                        elementLoadedHandler
                 );
 
             }
@@ -523,6 +553,7 @@ public interface ElementPathLoader {
      * Reads the {@link ElementManifestRecord} from the {@link Path}.
      *
      * @param path the {@link Path}
+     * @since 3.7
      */
     default ElementManifestRecord readAndParseManifest(final Path path) {
         return readElement(path).manifest();
@@ -532,6 +563,7 @@ public interface ElementPathLoader {
      * Reads the {@link ElementPathRecord} from the supplied path.
      * @param path the path
      * @return the path
+     * @since 3.7
      */
     ElementPathRecord readElement(Path path);
 
@@ -541,6 +573,7 @@ public interface ElementPathLoader {
      *
      * @param path the path
      * @return the {@link ElementPathRecord}
+     * @since 3.7
      */
     Stream<ElementPathRecord> readElementPaths(Path path);
 
