@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.*;
-import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
