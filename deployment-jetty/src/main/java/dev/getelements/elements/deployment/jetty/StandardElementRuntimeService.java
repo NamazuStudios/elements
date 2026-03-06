@@ -57,7 +57,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardElementRuntimeService.class);
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(StandardElementRuntimeService.class);
+    // Uses a short prefix to avoid Windows MAX_PATH (260-char) issues with deeply nested temp dirs.
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles("elements-svc");
 
     /**
      * Loads the ElementArtifactLoader SPI.
