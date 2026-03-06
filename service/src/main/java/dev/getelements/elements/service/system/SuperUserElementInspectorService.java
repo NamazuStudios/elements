@@ -29,7 +29,8 @@ import static dev.getelements.elements.sdk.record.ArtifactRepository.DEFAULTS;
 
 public class SuperUserElementInspectorService implements ElementInspectorService {
 
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(SuperUserElementInspectorService.class);
+    // Uses a short prefix to avoid Windows MAX_PATH (260-char) issues with deeply nested temp dirs.
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles("elements-inspect");
 
     private static final ElementPathLoader elementPathLoader = ElementPathLoader.newDefaultInstance();
 

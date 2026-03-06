@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.*;
-import dev.getelements.elements.sdk.exception.SdkElementNotFoundException;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
@@ -446,7 +445,19 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final var fs = FileSystems.newFileSystem(path);
             final var root = fs.getPath("/");
 
-            final var elements = doLoadElementsFromPath(root, apiClassLoader, config).toList();
+            final List<Element> elements;
+            try {
+                elements = doLoadElementsFromPath(root, apiClassLoader, config).toList();
+            } catch (RuntimeException | Error t) {
+                // Ensure the FileSystem is closed on any failure (critical on Windows where open
+                // FileSystems hold OS-level file locks that prevent temp directory cleanup).
+                try {
+                    fs.close();
+                } catch (IOException closeEx) {
+                    t.addSuppressed(closeEx);
+                }
+                throw t;
+            }
 
             if (elements.isEmpty()) {
                 // No elements loaded, close the FileSystem immediately
@@ -538,9 +549,18 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             try {
                                 final var element = record.loadElement();
                                 elements.add(element);
-                            } catch (final SdkException ex) {
-                                logger.warn("Caught exception loading eleemnt. Deferring to handler.", ex);
-                                config.sdkExceptionHandler().accept(ex);
+                            } catch (final Throwable t) {
+                                // Close classloaders on failure to release OS file handles. On Windows,
+                                // URLClassLoaders hold exclusive locks on their JAR files until closed,
+                                // preventing temp directory cleanup after a failed element load.
+                                closeClassLoader(spiClassLoader);
+                                closeClassLoader(elementClassLoader);
+                                if (t instanceof SdkException ex) {
+                                    logger.warn("Caught exception loading element. Deferring to handler.", ex);
+                                    config.sdkExceptionHandler().accept(ex);
+                                } else {
+                                    throw t;
+                                }
                             }
                         }
 
@@ -573,8 +593,30 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             });
 
             throw ex;
+
+        } catch (Error ex) {
+
+            elements.forEach(el -> {
+                try {
+                    el.close();
+                } catch (Exception suppressed) {
+                    ex.addSuppressed(suppressed);
+                }
+            });
+
+            throw ex;
         }
 
+    }
+
+    private static void closeClassLoader(final ClassLoader classLoader) {
+        if (classLoader instanceof URLClassLoader ucl) {
+            try {
+                ucl.close();
+            } catch (IOException ex) {
+                logger.warn("Failed to close classloader {}", ucl.getName(), ex);
+            }
+        }
     }
 
     /**
