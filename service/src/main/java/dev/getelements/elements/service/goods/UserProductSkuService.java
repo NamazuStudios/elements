@@ -99,8 +99,8 @@ public class UserProductSkuService implements ProductSkuService {
                 ri.setItemQuantity(qty);
                 ri.setType(PERSISTENT);
                 ri.setState(ISSUED);
-                ri.setSource("PRODUCT_SKU");
-                ri.setContext("product-sku:" + originalTransactionId + ":" + reward.itemId() + ":" + i);
+                ri.setSource("PRODUCT_SKU." + schema + "." + productId);
+                ri.setContext("product-sku." + originalTransactionId + "." + reward.itemId() + "." + i);
 
                 riDao.getOrCreateRewardIssuance(ri);
 
