@@ -24,7 +24,7 @@ import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService;
-import dev.getelements.elements.sdk.service.iap.IapSkuService;
+import dev.getelements.elements.sdk.service.goods.ProductSkuService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
 
     private ElementRegistry elementRegistry;
 
-    private IapSkuService iapSkuService;
+    private ProductSkuService productSkuService;
 
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
@@ -162,7 +162,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         final GooglePlayIapReceipt resultGooglePlayIapReceipt =
                 getOrCreateGooglePlayIapReceipt(googlePlayIapReceipt);
 
-        getIapSkuService().processVerifiedPurchase(
+        getProductSkuService().processVerifiedPurchase(
                 GOOGLE_IAP_SCHEME,
                 productId,
                 googlePlayIapReceipt.getOrderId());
@@ -316,12 +316,12 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         this.elementRegistry = elementRegistry;
     }
 
-    public IapSkuService getIapSkuService() {
-        return iapSkuService;
+    public ProductSkuService getProductSkuService() {
+        return productSkuService;
     }
 
     @Inject
-    public void setIapSkuService(IapSkuService iapSkuService) {
-        this.iapSkuService = iapSkuService;
+    public void setProductSkuService(ProductSkuService productSkuService) {
+        this.productSkuService = productSkuService;
     }
 }

@@ -1,10 +1,10 @@
-package dev.getelements.elements.sdk.model.iap;
+package dev.getelements.elements.sdk.model.goods;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "A single reward issued as part of an IAP SKU purchase.")
-public record IapSkuReward(
+@Schema(description = "A single reward issued as part of a Product SKU purchase.")
+public record ProductSkuReward(
 
         @NotNull
         @Schema(description = "The id or name of the item to issue.")

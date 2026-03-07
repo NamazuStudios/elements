@@ -15,7 +15,7 @@ import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.service.iap.IapSkuService;
+import dev.getelements.elements.sdk.service.goods.ProductSkuService;
 import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
 import dev.getelements.elements.sdk.service.meta.facebookiap.client.invoker.FacebookIapReceiptRequestInvoker;
 import jakarta.inject.Inject;
@@ -47,7 +47,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
 
     private ElementRegistry elementRegistry;
 
-    private IapSkuService iapSkuService;
+    private ProductSkuService productSkuService;
 
     @Override
     public Pagination<FacebookIapReceipt> getFacebookIapReceipts(final int offset, final int count) {
@@ -121,7 +121,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         // If verification was successful, we try to write the receipt to the db
         if(response != null && response.getItems() != null) {
             getOrCreateFacebookIapReceipt(receiptData);
-            getIapSkuService().processVerifiedPurchase(
+            getProductSkuService().processVerifiedPurchase(
                     FACEBOOK_IAP_SCHEME,
                     receiptData.getSku(),
                     receiptData.getPurchaseId());
@@ -245,12 +245,12 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         this.elementRegistry = elementRegistry;
     }
 
-    public IapSkuService getIapSkuService() {
-        return iapSkuService;
+    public ProductSkuService getProductSkuService() {
+        return productSkuService;
     }
 
     @Inject
-    public void setIapSkuService(IapSkuService iapSkuService) {
-        this.iapSkuService = iapSkuService;
+    public void setProductSkuService(ProductSkuService productSkuService) {
+        this.productSkuService = productSkuService;
     }
 }

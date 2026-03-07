@@ -7,7 +7,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.dao.mongo.*;
-import dev.getelements.elements.dao.mongo.MongoIapSkuDao;
+import dev.getelements.elements.dao.mongo.goods.MongoProductSkuDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoAuthSchemeDao;
@@ -41,7 +41,7 @@ import dev.getelements.elements.dao.mongo.ucode.UniqueCodeGeneratorProvider;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
-import dev.getelements.elements.sdk.dao.IapSkuDao;
+import dev.getelements.elements.sdk.dao.ProductSkuDao;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.index.IndexableType;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
@@ -118,7 +118,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(Matchmaker.class).to(MongoFIFOMatchmaker.class);
         bind(ElementDeploymentDao.class).to(MongoElementDeploymentDao.class);
         bind(UniqueCodeDao.class).to(MongoUniqueCodeDao.class);
-        bind(IapSkuDao.class).to(MongoIapSkuDao.class);
+        bind(ProductSkuDao.class).to(MongoProductSkuDao.class);
 
 
         bind(SecureRandom.class)
@@ -200,7 +200,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ScheduleProgressDao.class);
         expose(ElementDeploymentDao.class);
         expose(UniqueCodeDao.class);
-        expose(IapSkuDao.class);
+        expose(ProductSkuDao.class);
 
     }
 

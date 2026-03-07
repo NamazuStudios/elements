@@ -1,11 +1,11 @@
-package dev.getelements.elements.service.iap;
+package dev.getelements.elements.service.goods;
 
 import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
-import dev.getelements.elements.sdk.dao.IapSkuDao;
+import dev.getelements.elements.sdk.dao.ProductSkuDao;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 
@@ -15,8 +15,8 @@ import dev.getelements.elements.sdk.model.application.IosApplicationConfiguratio
 import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
-import dev.getelements.elements.sdk.model.iap.IapSku;
-import dev.getelements.elements.sdk.model.iap.IapSkuReward;
+import dev.getelements.elements.sdk.model.goods.ProductSku;
+import dev.getelements.elements.sdk.model.goods.ProductSkuReward;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
@@ -30,10 +30,10 @@ import static dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapRe
 import static dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService.FACEBOOK_IAP_SCHEME;
 import static dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService.OCULUS_IAP_SCHEME;
 
-@ElementServiceExport(ProductBundleIapSkuMigration.class)
-public class ProductBundleIapSkuMigration {
+@ElementServiceExport(ProductBundleMigration.class)
+public class ProductBundleMigration {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProductBundleIapSkuMigration.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProductBundleMigration.class);
 
     private ApplicationDao applicationDao;
 
@@ -88,19 +88,19 @@ public class ProductBundleIapSkuMigration {
 
     private void migrateBundle(final String schema, final ProductBundle bundle) {
 
-        final var sku = new IapSku(
+        final var sku = new ProductSku(
                 null,
                 schema,
                 bundle.getProductId(),
                 bundle.getProductBundleRewards().stream()
-                        .map(r -> new IapSkuReward(r.getItemId(), r.getQuantity()))
+                        .map(r -> new ProductSkuReward(r.getItemId(), r.getQuantity()))
                         .toList());
 
         try {
-            getTransactionProvider().get().performAndCloseV(tx -> tx.getDao(IapSkuDao.class).createIapSku(sku));
-            logger.info("Migrated ProductBundle -> IapSku: schema={} productId={}", schema, bundle.getProductId());
+            getTransactionProvider().get().performAndCloseV(tx -> tx.getDao(ProductSkuDao.class).createProductSku(sku));
+            logger.info("Migrated ProductBundle -> ProductSku: schema={} productId={}", schema, bundle.getProductId());
         } catch (DuplicateException e) {
-            logger.debug("IapSku already exists for schema={} productId={}, skipping", schema, bundle.getProductId());
+            logger.debug("ProductSku already exists for schema={} productId={}, skipping", schema, bundle.getProductId());
         }
     }
 

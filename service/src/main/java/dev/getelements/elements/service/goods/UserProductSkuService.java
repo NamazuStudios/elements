@@ -1,17 +1,17 @@
-package dev.getelements.elements.service.iap;
+package dev.getelements.elements.service.goods;
 
-import dev.getelements.elements.sdk.dao.IapSkuDao;
+import dev.getelements.elements.sdk.dao.ProductSkuDao;
 import dev.getelements.elements.sdk.dao.ItemDao;
 import dev.getelements.elements.sdk.dao.RewardIssuanceDao;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.iap.IapSku;
-import dev.getelements.elements.sdk.model.iap.IapSkuReward;
+import dev.getelements.elements.sdk.model.goods.ProductSku;
+import dev.getelements.elements.sdk.model.goods.ProductSkuReward;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.iap.IapSkuService;
+import dev.getelements.elements.sdk.service.goods.ProductSkuService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
@@ -21,49 +21,49 @@ import static dev.getelements.elements.sdk.model.goods.ItemCategory.DISTINCT;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State.ISSUED;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
 
-public class UserIapSkuService implements IapSkuService {
+public class UserProductSkuService implements ProductSkuService {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserIapSkuService.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserProductSkuService.class);
 
     private User user;
 
-    private IapSkuDao iapSkuDao;
+    private ProductSkuDao productSkuDao;
 
     private Provider<Transaction> transactionProvider;
 
     @Override
-    public IapSku getIapSku(final String id) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public ProductSku getProductSku(final String id) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
-    public IapSku getIapSku(final String schema, final String productId) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public ProductSku getProductSku(final String schema, final String productId) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
-    public Pagination<IapSku> getIapSkus(final int offset, final int count) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public Pagination<ProductSku> getProductSkus(final int offset, final int count) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
-    public Pagination<IapSku> getIapSkus(final String schema, final int offset, final int count) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public Pagination<ProductSku> getProductSkus(final String schema, final int offset, final int count) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
-    public IapSku createIapSku(final IapSku iapSku) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public ProductSku createProductSku(final ProductSku productSku) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
-    public IapSku updateIapSku(final IapSku iapSku) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public ProductSku updateProductSku(final ProductSku productSku) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
-    public void deleteIapSku(final String id) {
-        throw new ForbiddenException("Unprivileged requests cannot access IAP SKU records.");
+    public void deleteProductSku(final String id) {
+        throw new ForbiddenException("Unprivileged requests cannot access Product SKU records.");
     }
 
     @Override
@@ -72,12 +72,12 @@ public class UserIapSkuService implements IapSkuService {
             final String productId,
             final String originalTransactionId) {
 
-        final IapSku sku;
+        final ProductSku sku;
 
         try {
-            sku = getIapSkuDao().getIapSku(schema, productId);
+            sku = getProductSkuDao().getProductSku(schema, productId);
         } catch (NotFoundException e) {
-            logger.debug("No IAP SKU configured for schema={} productId={}", schema, productId);
+            logger.debug("No Product SKU configured for schema={} productId={}", schema, productId);
             return;
         }
 
@@ -89,7 +89,7 @@ public class UserIapSkuService implements IapSkuService {
 
             for (int i = 0; i < rewards.size(); i++) {
 
-                final IapSkuReward reward = rewards.get(i);
+                final ProductSkuReward reward = rewards.get(i);
                 final var item = itemDao.getItemByIdOrName(reward.itemId());
                 final int qty = DISTINCT.equals(item.getCategory()) ? 1 : reward.quantity();
 
@@ -99,8 +99,8 @@ public class UserIapSkuService implements IapSkuService {
                 ri.setItemQuantity(qty);
                 ri.setType(PERSISTENT);
                 ri.setState(ISSUED);
-                ri.setSource("IAP_SKU");
-                ri.setContext("iap-sku:" + originalTransactionId + ":" + reward.itemId() + ":" + i);
+                ri.setSource("PRODUCT_SKU");
+                ri.setContext("product-sku:" + originalTransactionId + ":" + reward.itemId() + ":" + i);
 
                 riDao.getOrCreateRewardIssuance(ri);
 
@@ -119,13 +119,13 @@ public class UserIapSkuService implements IapSkuService {
         this.user = user;
     }
 
-    public IapSkuDao getIapSkuDao() {
-        return iapSkuDao;
+    public ProductSkuDao getProductSkuDao() {
+        return productSkuDao;
     }
 
     @Inject
-    public void setIapSkuDao(IapSkuDao iapSkuDao) {
-        this.iapSkuDao = iapSkuDao;
+    public void setProductSkuDao(ProductSkuDao productSkuDao) {
+        this.productSkuDao = productSkuDao;
     }
 
     public Provider<Transaction> getTransactionProvider() {

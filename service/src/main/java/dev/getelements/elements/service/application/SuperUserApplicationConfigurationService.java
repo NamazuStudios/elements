@@ -1,7 +1,7 @@
 package dev.getelements.elements.service.application;
 
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
-import dev.getelements.elements.sdk.dao.IapSkuDao;
+import dev.getelements.elements.sdk.dao.ProductSkuDao;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
@@ -11,8 +11,8 @@ import dev.getelements.elements.sdk.model.application.IosApplicationConfiguratio
 import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
-import dev.getelements.elements.sdk.model.iap.IapSku;
-import dev.getelements.elements.sdk.model.iap.IapSkuReward;
+import dev.getelements.elements.sdk.model.goods.ProductSku;
+import dev.getelements.elements.sdk.model.goods.ProductSkuReward;
 import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -73,33 +73,33 @@ public class SuperUserApplicationConfigurationService implements ApplicationConf
 
         if (schema != null && productBundles != null) {
             for (final var bundle : productBundles) {
-                syncIapSku(schema, bundle);
+                syncProductSku(schema, bundle);
             }
         }
 
         return result;
     }
 
-    private void syncIapSku(final String schema, final ProductBundle bundle) {
-        final var sku = buildIapSku(schema, bundle);
+    private void syncProductSku(final String schema, final ProductBundle bundle) {
+        final var sku = buildProductSku(schema, bundle);
         try {
-            getTransactionProvider().get().performAndCloseV(tx -> tx.getDao(IapSkuDao.class).createIapSku(sku));
+            getTransactionProvider().get().performAndCloseV(tx -> tx.getDao(ProductSkuDao.class).createProductSku(sku));
         } catch (DuplicateException e) {
             getTransactionProvider().get().performAndCloseV(tx -> {
-                final var dao = tx.getDao(IapSkuDao.class);
-                final var existing = dao.getIapSku(schema, bundle.getProductId());
-                dao.updateIapSku(sku.withId(existing.id()));
+                final var dao = tx.getDao(ProductSkuDao.class);
+                final var existing = dao.getProductSku(schema, bundle.getProductId());
+                dao.updateProductSku(sku.withId(existing.id()));
             });
         }
     }
 
-    private IapSku buildIapSku(final String schema, final ProductBundle bundle) {
-        return new IapSku(
+    private ProductSku buildProductSku(final String schema, final ProductBundle bundle) {
+        return new ProductSku(
                 null,
                 schema,
                 bundle.getProductId(),
                 bundle.getProductBundleRewards().stream()
-                        .map(r -> new IapSkuReward(r.getItemId(), r.getQuantity()))
+                        .map(r -> new ProductSkuReward(r.getItemId(), r.getQuantity()))
                         .toList());
     }
 

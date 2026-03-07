@@ -1,15 +1,15 @@
-package dev.getelements.elements.dao.mongo.model.iap;
+package dev.getelements.elements.dao.mongo.model.goods;
 
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.List;
 
-@Entity(value = "iap_sku", useDiscriminator = false)
+@Entity(value = "product_sku", useDiscriminator = false)
 @Indexes({
         @Index(fields = {@Field("schema"), @Field("productId")}, options = @IndexOptions(unique = true))
 })
-public class MongoIapSku {
+public class MongoProductSku {
 
     @Id
     private ObjectId objectId;
@@ -23,7 +23,7 @@ public class MongoIapSku {
     private String productId;
 
     @Property
-    private List<MongoIapSkuReward> rewards;
+    private List<MongoProductSkuReward> rewards;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -49,11 +49,11 @@ public class MongoIapSku {
         this.productId = productId;
     }
 
-    public List<MongoIapSkuReward> getRewards() {
+    public List<MongoProductSkuReward> getRewards() {
         return rewards;
     }
 
-    public void setRewards(List<MongoIapSkuReward> rewards) {
+    public void setRewards(List<MongoProductSkuReward> rewards) {
         this.rewards = rewards;
     }
 

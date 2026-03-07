@@ -1,10 +1,10 @@
 package dev.getelements.elements.dao.mongo.test;
 
-import dev.getelements.elements.sdk.dao.IapSkuDao;
+import dev.getelements.elements.sdk.dao.ProductSkuDao;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.iap.IapSku;
-import dev.getelements.elements.sdk.model.iap.IapSkuReward;
+import dev.getelements.elements.sdk.model.goods.ProductSku;
+import dev.getelements.elements.sdk.model.goods.ProductSkuReward;
 import jakarta.inject.Inject;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -19,13 +19,13 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoIapSkuDaoTest {
+public class MongoProductSkuDaoTest {
 
     private static final String TEST_SCHEMA = "com.getelements.test.iap";
 
-    private IapSkuDao iapSkuDao;
+    private ProductSkuDao productSkuDao;
 
-    private IapSku created;
+    private ProductSku created;
 
     private String deletedId;
 
@@ -33,8 +33,8 @@ public class MongoIapSkuDaoTest {
     public void setUp() {
         // Clean up any leftover state from a previous interrupted run
         try {
-            final var existing = getIapSkuDao().getIapSku(TEST_SCHEMA, "test.product.a");
-            getIapSkuDao().deleteIapSku(existing.id());
+            final var existing = getProductSkuDao().getProductSku(TEST_SCHEMA, "test.product.a");
+            getProductSkuDao().deleteProductSku(existing.id());
         } catch (NotFoundException ignored) {}
     }
 
@@ -42,7 +42,7 @@ public class MongoIapSkuDaoTest {
     public void tearDown() {
         if (created != null) {
             try {
-                getIapSkuDao().deleteIapSku(created.id());
+                getProductSkuDao().deleteProductSku(created.id());
             } catch (NotFoundException ignored) {}
         }
     }
@@ -51,18 +51,18 @@ public class MongoIapSkuDaoTest {
     // CREATE
     // -----------------------------------------------------------------------
 
-    @Test(groups = "create")
-    public void testCreateIapSku() {
-        final var sku = new IapSku(
+    @Test(groups = "create_product_sku")
+    public void testCreateProductSku() {
+        final var sku = new ProductSku(
                 null,
                 TEST_SCHEMA,
                 "test.product.a",
                 List.of(
-                        new IapSkuReward("item-fungible-1", 5),
-                        new IapSkuReward("item-distinct-2", null)
+                        new ProductSkuReward("item-fungible-1", 5),
+                        new ProductSkuReward("item-distinct-2", null)
                 ));
 
-        created = getIapSkuDao().createIapSku(sku);
+        created = getProductSkuDao().createProductSku(sku);
 
         assertNotNull(created);
         assertNotNull(created.id());
@@ -75,65 +75,65 @@ public class MongoIapSkuDaoTest {
         assertNull(created.rewards().get(1).quantity());
     }
 
-    @Test(groups = "create", dependsOnMethods = "testCreateIapSku", expectedExceptions = DuplicateException.class)
+    @Test(groups = "create_product_sku", dependsOnMethods = "testCreateProductSku", expectedExceptions = DuplicateException.class)
     public void testCreateDuplicateThrows() {
-        final var duplicate = new IapSku(null, TEST_SCHEMA, "test.product.a",
-                List.of(new IapSkuReward("some-item", 1)));
-        getIapSkuDao().createIapSku(duplicate);
+        final var duplicate = new ProductSku(null, TEST_SCHEMA, "test.product.a",
+                List.of(new ProductSkuReward("some-item", 1)));
+        getProductSkuDao().createProductSku(duplicate);
     }
 
     // -----------------------------------------------------------------------
     // READ
     // -----------------------------------------------------------------------
 
-    @Test(groups = "read", dependsOnGroups = "create")
-    public void testGetIapSkuById() {
-        final var result = getIapSkuDao().getIapSku(created.id());
+    @Test(groups = "read_product_sku", dependsOnGroups = "create_product_sku")
+    public void testGetProductSkuById() {
+        final var result = getProductSkuDao().getProductSku(created.id());
         assertNotNull(result);
         assertEquals(result, created);
     }
 
-    @Test(groups = "read", dependsOnGroups = "create")
-    public void testGetIapSkuBySchemaAndProductId() {
-        final var result = getIapSkuDao().getIapSku(TEST_SCHEMA, "test.product.a");
+    @Test(groups = "read_product_sku", dependsOnGroups = "create_product_sku")
+    public void testGetProductSkuBySchemaAndProductId() {
+        final var result = getProductSkuDao().getProductSku(TEST_SCHEMA, "test.product.a");
         assertNotNull(result);
         assertEquals(result, created);
     }
 
-    @Test(groups = "read", dependsOnGroups = "create")
-    public void testGetIapSkusBySchema() {
-        final var page = getIapSkuDao().getIapSkus(TEST_SCHEMA, 0, 20);
+    @Test(groups = "read_product_sku", dependsOnGroups = "create_product_sku")
+    public void testGetProductSkusBySchema() {
+        final var page = getProductSkuDao().getProductSkus(TEST_SCHEMA, 0, 20);
         assertNotNull(page);
         assertTrue(page.getObjects().stream().anyMatch(s -> s.id().equals(created.id())));
     }
 
-    @Test(groups = "read", dependsOnGroups = "create")
-    public void testGetIapSkus() {
-        final var page = getIapSkuDao().getIapSkus(0, 100);
+    @Test(groups = "read_product_sku", dependsOnGroups = "create_product_sku")
+    public void testGetProductSkus() {
+        final var page = getProductSkuDao().getProductSkus(0, 100);
         assertNotNull(page);
         assertTrue(page.getObjects().stream().anyMatch(s -> s.id().equals(created.id())));
     }
 
-    @Test(groups = "read", expectedExceptions = NotFoundException.class)
+    @Test(groups = "read_product_sku", expectedExceptions = NotFoundException.class)
     public void testGetByInvalidIdThrows() {
-        getIapSkuDao().getIapSku("not-a-valid-object-id");
+        getProductSkuDao().getProductSku("not-a-valid-object-id");
     }
 
-    @Test(groups = "read", expectedExceptions = NotFoundException.class)
+    @Test(groups = "read_product_sku", expectedExceptions = NotFoundException.class)
     public void testGetByUnknownSchemaThrows() {
-        getIapSkuDao().getIapSku("com.nonexistent.schema", "nonexistent.product");
+        getProductSkuDao().getProductSku("com.nonexistent.schema", "nonexistent.product");
     }
 
     // -----------------------------------------------------------------------
     // UPDATE
     // -----------------------------------------------------------------------
 
-    @Test(groups = "update", dependsOnGroups = "read")
-    public void testUpdateIapSku() {
-        final var newRewards = List.of(new IapSkuReward("item-fungible-1", 10));
-        final var toUpdate = new IapSku(created.id(), created.schema(), created.productId(), newRewards);
+    @Test(groups = "update_product_sku", dependsOnGroups = "read_product_sku")
+    public void testUpdateProductSku() {
+        final var newRewards = List.of(new ProductSkuReward("item-fungible-1", 10));
+        final var toUpdate = new ProductSku(created.id(), created.schema(), created.productId(), newRewards);
 
-        final var result = getIapSkuDao().updateIapSku(toUpdate);
+        final var result = getProductSkuDao().updateProductSku(toUpdate);
 
         assertNotNull(result);
         assertEquals(result.id(), created.id());
@@ -148,32 +148,32 @@ public class MongoIapSkuDaoTest {
     // DELETE
     // -----------------------------------------------------------------------
 
-    @Test(groups = "delete", dependsOnGroups = "update")
-    public void testDeleteIapSku() {
+    @Test(groups = "delete_product_sku", dependsOnGroups = "update_product_sku")
+    public void testDeleteProductSku() {
         deletedId = created.id();
-        getIapSkuDao().deleteIapSku(deletedId);
+        getProductSkuDao().deleteProductSku(deletedId);
         // Mark as already cleaned up so tearDown doesn't try again
         created = null;
     }
 
-    @Test(groups = "delete", dependsOnMethods = "testDeleteIapSku", expectedExceptions = NotFoundException.class)
-    public void testGetDeletedIapSkuThrows() {
-        getIapSkuDao().getIapSku(deletedId);
+    @Test(groups = "delete_product_sku", dependsOnMethods = "testDeleteProductSku", expectedExceptions = NotFoundException.class)
+    public void testGetDeletedProductSkuThrows() {
+        getProductSkuDao().getProductSku(deletedId);
     }
 
-    @Test(groups = "delete", dependsOnGroups = "update", expectedExceptions = NotFoundException.class)
+    @Test(groups = "delete_product_sku", dependsOnGroups = "update_product_sku", expectedExceptions = NotFoundException.class)
     public void testDeleteNonExistentThrows() {
         // Use a syntactically valid but non-existent ObjectId
-        getIapSkuDao().deleteIapSku("aaaaaaaaaaaaaaaaaaaaaaaa");
+        getProductSkuDao().deleteProductSku("aaaaaaaaaaaaaaaaaaaaaaaa");
     }
 
-    public IapSkuDao getIapSkuDao() {
-        return iapSkuDao;
+    public ProductSkuDao getProductSkuDao() {
+        return productSkuDao;
     }
 
     @Inject
-    public void setIapSkuDao(IapSkuDao iapSkuDao) {
-        this.iapSkuDao = iapSkuDao;
+    public void setProductSkuDao(ProductSkuDao productSkuDao) {
+        this.productSkuDao = productSkuDao;
     }
 
 }

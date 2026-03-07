@@ -1,14 +1,15 @@
-package dev.getelements.elements.dao.mongo;
+package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.result.DeleteResult;
-import dev.getelements.elements.dao.mongo.model.iap.MongoIapSku;
-import dev.getelements.elements.sdk.dao.IapSkuDao;
+import dev.getelements.elements.dao.mongo.MongoDBUtils;
+import dev.getelements.elements.dao.mongo.model.goods.MongoProductSku;
+import dev.getelements.elements.sdk.dao.ProductSkuDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.sdk.model.iap.IapSku;
+import dev.getelements.elements.sdk.model.goods.ProductSku;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -21,7 +22,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static dev.morphia.query.filters.Filters.and;
 import static dev.morphia.query.filters.Filters.eq;
 
-public class MongoIapSkuDao implements IapSkuDao {
+public class MongoProductSkuDao implements ProductSkuDao {
 
     private Datastore datastore;
 
@@ -32,101 +33,101 @@ public class MongoIapSkuDao implements IapSkuDao {
     private MongoDBUtils mongoDBUtils;
 
     @Override
-    public IapSku getIapSku(final String id) {
+    public ProductSku getProductSku(final String id) {
 
         if (nullToEmpty(id).isBlank() || !ObjectId.isValid(id)) {
-            throw new NotFoundException("Unable to find IAP SKU with id: " + id);
+            throw new NotFoundException("Unable to find Product SKU with id: " + id);
         }
 
-        final var mongoIapSku = getDatastore().find(MongoIapSku.class)
+        final var mongoProductSku = getDatastore().find(MongoProductSku.class)
                 .filter(eq("_id", new ObjectId(id)))
                 .first();
 
-        if (mongoIapSku == null) {
-            throw new NotFoundException("Unable to find IAP SKU with id: " + id);
+        if (mongoProductSku == null) {
+            throw new NotFoundException("Unable to find Product SKU with id: " + id);
         }
 
-        return getDozerMapperRegistry().map(mongoIapSku, IapSku.class);
+        return getDozerMapperRegistry().map(mongoProductSku, ProductSku.class);
     }
 
     @Override
-    public IapSku getIapSku(final String schema, final String productId) {
+    public ProductSku getProductSku(final String schema, final String productId) {
 
-        final var mongoIapSku = getDatastore().find(MongoIapSku.class)
+        final var mongoProductSku = getDatastore().find(MongoProductSku.class)
                 .filter(and(eq("schema", schema), eq("productId", productId)))
                 .first();
 
-        if (mongoIapSku == null) {
-            throw new NotFoundException("Unable to find IAP SKU for schema=" + schema + " productId=" + productId);
+        if (mongoProductSku == null) {
+            throw new NotFoundException("Unable to find Product SKU for schema=" + schema + " productId=" + productId);
         }
 
-        return getDozerMapperRegistry().map(mongoIapSku, IapSku.class);
+        return getDozerMapperRegistry().map(mongoProductSku, ProductSku.class);
     }
 
     @Override
-    public Pagination<IapSku> getIapSkus(final int offset, final int count) {
+    public Pagination<ProductSku> getProductSkus(final int offset, final int count) {
 
-        final var query = getDatastore().find(MongoIapSku.class);
+        final var query = getDatastore().find(MongoProductSku.class);
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
-                mongoIapSku -> getDozerMapperRegistry().map(mongoIapSku, IapSku.class),
+                mongoProductSku -> getDozerMapperRegistry().map(mongoProductSku, ProductSku.class),
                 new FindOptions());
     }
 
     @Override
-    public Pagination<IapSku> getIapSkus(final String schema, final int offset, final int count) {
+    public Pagination<ProductSku> getProductSkus(final String schema, final int offset, final int count) {
 
-        final var query = getDatastore().find(MongoIapSku.class);
+        final var query = getDatastore().find(MongoProductSku.class);
         query.filter(eq("schema", schema));
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
-                mongoIapSku -> getDozerMapperRegistry().map(mongoIapSku, IapSku.class),
+                mongoProductSku -> getDozerMapperRegistry().map(mongoProductSku, ProductSku.class),
                 new FindOptions());
     }
 
     @Override
-    public IapSku createIapSku(final IapSku iapSku) {
+    public ProductSku createProductSku(final ProductSku productSku) {
 
-        getValidationHelper().validateModel(iapSku, ValidationGroups.Insert.class);
+        getValidationHelper().validateModel(productSku, ValidationGroups.Insert.class);
 
-        final var mongoIapSku = getDozerMapperRegistry().map(iapSku, MongoIapSku.class);
+        final var mongoProductSku = getDozerMapperRegistry().map(productSku, MongoProductSku.class);
 
         try {
-            getDatastore().insert(mongoIapSku);
+            getDatastore().insert(mongoProductSku);
         } catch (MongoWriteException e) {
             if (e.getError().getCode() == 11000) throw new DuplicateException(e);
             throw e;
         }
 
-        return getDozerMapperRegistry().map(mongoIapSku, IapSku.class);
+        return getDozerMapperRegistry().map(mongoProductSku, ProductSku.class);
     }
 
     @Override
-    public IapSku updateIapSku(final IapSku iapSku) {
+    public ProductSku updateProductSku(final ProductSku productSku) {
 
-        getValidationHelper().validateModel(iapSku, ValidationGroups.Update.class);
+        getValidationHelper().validateModel(productSku, ValidationGroups.Update.class);
 
-        final var mongoIapSku = getDozerMapperRegistry().map(iapSku, MongoIapSku.class);
-        final var saved = getDatastore().save(mongoIapSku);
+        final var mongoProductSku = getDozerMapperRegistry().map(productSku, MongoProductSku.class);
+        final var saved = getDatastore().save(mongoProductSku);
 
-        return getDozerMapperRegistry().map(saved, IapSku.class);
+        return getDozerMapperRegistry().map(saved, ProductSku.class);
     }
 
     @Override
-    public void deleteIapSku(final String id) {
+    public void deleteProductSku(final String id) {
 
         if (nullToEmpty(id).isBlank() || !ObjectId.isValid(id)) {
-            throw new NotFoundException("Unable to find IAP SKU with id: " + id);
+            throw new NotFoundException("Unable to find Product SKU with id: " + id);
         }
 
-        final DeleteResult deleteResult = getDatastore().find(MongoIapSku.class)
+        final DeleteResult deleteResult = getDatastore().find(MongoProductSku.class)
                 .filter(eq("_id", new ObjectId(id)))
                 .delete();
 
         if (deleteResult.getDeletedCount() == 0) {
-            throw new NotFoundException("IAP SKU not found: " + id);
+            throw new NotFoundException("Product SKU not found: " + id);
         }
     }
 

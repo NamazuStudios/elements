@@ -14,7 +14,7 @@ import dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
-import dev.getelements.elements.sdk.service.iap.IapSkuService;
+import dev.getelements.elements.sdk.service.goods.ProductSkuService;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
@@ -50,7 +50,7 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
 
     private ElementRegistry elementRegistry;
 
-    private IapSkuService iapSkuService;
+    private ProductSkuService productSkuService;
 
     @Override
     public Pagination<OculusIapReceipt> getOculusIapReceipts(final int offset, final int count) {
@@ -152,7 +152,7 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         // If consumption was successful, we try to write the receipt to the db and process rewards
         if(response.getSuccess()) {
             getOrCreateOculusIapReceipt(receiptData);
-            getIapSkuService().processVerifiedPurchase(
+            getProductSkuService().processVerifiedPurchase(
                     OCULUS_IAP_SCHEME,
                     receiptData.getSku(),
                     receiptData.getPurchaseId());
@@ -281,12 +281,12 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         this.elementRegistry = elementRegistry;
     }
 
-    public IapSkuService getIapSkuService() {
-        return iapSkuService;
+    public ProductSkuService getProductSkuService() {
+        return productSkuService;
     }
 
     @Inject
-    public void setIapSkuService(IapSkuService iapSkuService) {
-        this.iapSkuService = iapSkuService;
+    public void setProductSkuService(ProductSkuService productSkuService) {
+        this.productSkuService = productSkuService;
     }
 }

@@ -1,10 +1,10 @@
-package dev.getelements.elements.dao.mongo.model.iap;
+package dev.getelements.elements.dao.mongo.model.goods;
 
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
 @Embedded
-public class MongoIapSkuReward {
+public class MongoProductSkuReward {
 
     @Property
     private String itemId;
