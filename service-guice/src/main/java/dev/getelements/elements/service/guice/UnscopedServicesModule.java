@@ -55,6 +55,7 @@ import dev.getelements.elements.service.codegen.SuperUserOpenApiCodegenService;
 import dev.getelements.elements.service.defaults.DefaultOAuth2SchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultOidcSchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultUserConfiguration;
+import dev.getelements.elements.service.iap.ProductBundleIapSkuMigration;
 import dev.getelements.elements.service.follower.SuperUserFollowerService;
 import dev.getelements.elements.service.goods.SuperuserItemService;
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
@@ -327,6 +328,8 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(DefaultUserConfiguration.class).asEagerSingleton();
 
         bind(DefaultOAuth2SchemeConfiguration.class).asEagerSingleton();
+
+        bind(ProductBundleIapSkuMigration.class).asEagerSingleton();
 
     }
 

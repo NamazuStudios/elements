@@ -24,6 +24,7 @@ import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService;
+import dev.getelements.elements.sdk.service.iap.IapSkuService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
@@ -34,10 +35,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_CANCELED;
-import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.buildRewardIssuanceTags;
-import static dev.getelements.elements.sdk.model.reward.RewardIssuance.*;
-import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptService {
@@ -57,15 +54,13 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         objectMapper = new ObjectMapper();
     }
 
-    private RewardIssuanceDao rewardIssuanceDao;
-
-    private ItemDao itemDao;
-
     private ApplicationConfigurationDao applicationConfigurationDao;
 
     private Provider<Transaction> transactionProvider;
 
     private ElementRegistry elementRegistry;
+
+    private IapSkuService iapSkuService;
 
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
@@ -167,63 +162,17 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         final GooglePlayIapReceipt resultGooglePlayIapReceipt =
                 getOrCreateGooglePlayIapReceipt(googlePlayIapReceipt);
 
+        getIapSkuService().processVerifiedPurchase(
+                GOOGLE_IAP_SCHEME,
+                productId,
+                googlePlayIapReceipt.getOrderId());
+
         return resultGooglePlayIapReceipt;
     }
 
     @Override
     public List<RewardIssuance> getOrCreateRewardIssuances(final GooglePlayIapReceipt googlePlayIapReceipt) {
-
-        if (PURCHASE_STATE_CANCELED == googlePlayIapReceipt.getPurchaseState()) {
-            throw new InvalidDataException("Google Play purchase marked as canceled in purchaseState.");
-        }
-
-        final var googlePlayApplicationConfiguration = getGooglePlayApplicationConfiguration();
-        final var productId = googlePlayIapReceipt.getProductId();
-        final var productBundle = googlePlayApplicationConfiguration.getProductBundle(productId);
-
-        return transactionProvider.get().performAndClose(tx -> {
-
-            final var rewardIssuances = new ArrayList<RewardIssuance>();
-
-            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
-                final var resultRewardIssuance = getOrCreateRewardIssuance(
-                        tx,
-                        googlePlayIapReceipt.getOrderId(),
-                        productBundleReward.getItemId(),
-                        productBundleReward.getQuantity());
-                rewardIssuances.add(resultRewardIssuance);
-            }
-
-            return rewardIssuances;
-        });
-    }
-
-    private RewardIssuance getOrCreateRewardIssuance(final Transaction tx, final String orderId, final String itemId, final Integer quantity) {
-
-        final var itemDao = tx.getDao(ItemDao.class);
-        final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
-        final var context = buildGooglePlayIapContextString(orderId, itemId);
-        final var metadata = generateGooglePlayIapReceiptMetadata();
-        final var tags = buildRewardIssuanceTags(orderId);
-        final var item = itemDao.getItemByIdOrName(itemId);
-        final var rewardIssuance = new RewardIssuance();
-
-        rewardIssuance.setItem(item);
-        rewardIssuance.setItemQuantity(quantity);
-        rewardIssuance.setUser(user);
-        // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
-        rewardIssuance.setType(PERSISTENT);
-        rewardIssuance.setContext(context);
-        rewardIssuance.setTags(tags);
-        rewardIssuance.setMetadata(metadata);
-        rewardIssuance.setSource(GOOGLE_PLAY_IAP_SOURCE);
-
-        return rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
-    }
-
-    public Map<String, Object> generateGooglePlayIapReceiptMetadata() {
-        final HashMap<String, Object> map = new HashMap<>();
-        return map;
+        return List.of();
     }
 
     private GooglePlayApplicationConfiguration getGooglePlayApplicationConfiguration() {
@@ -331,24 +280,6 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         return objectMapper;
     }
 
-    public RewardIssuanceDao getRewardIssuanceDao() {
-        return rewardIssuanceDao;
-    }
-
-    @Inject
-    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
-        this.rewardIssuanceDao = rewardIssuanceDao;
-    }
-
-    public ItemDao getItemDao() {
-        return itemDao;
-    }
-
-    @Inject
-    public void setItemDao(ItemDao itemDao) {
-        this.itemDao = itemDao;
-    }
-
     public ApplicationConfigurationDao getApplicationConfigurationDao() {
         return applicationConfigurationDao;
     }
@@ -383,5 +314,14 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public IapSkuService getIapSkuService() {
+        return iapSkuService;
+    }
+
+    @Inject
+    public void setIapSkuService(IapSkuService iapSkuService) {
+        this.iapSkuService = iapSkuService;
     }
 }
