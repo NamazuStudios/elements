@@ -47,6 +47,13 @@ public class MongoIosApplicationConfigurationDaoTest extends MongoApplicationCon
     }
 
     @Override
+    protected IosApplicationConfiguration createTestObjectWithoutProductBundles() {
+        final var config = new IosApplicationConfiguration();
+        config.setApplicationId("com.example.mycompany.myapp");
+        return config;
+    }
+
+    @Override
     protected IosApplicationConfiguration updateTestObject(final IosApplicationConfiguration config) {
 
         final var reward1 = new ProductBundleReward();
