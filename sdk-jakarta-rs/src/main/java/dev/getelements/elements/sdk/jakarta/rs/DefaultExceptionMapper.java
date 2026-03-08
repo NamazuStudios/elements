@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -45,6 +46,11 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         return status == null ? Response.Status.INTERNAL_SERVER_ERROR : status;
     }
 
+    private static String fieldName(final String propertyPath) {
+        final int dot = propertyPath.lastIndexOf('.');
+        return dot >= 0 ? propertyPath.substring(dot + 1) : propertyPath;
+    }
+
     @Override
     public Response toResponse(Exception exception) {
 
@@ -57,14 +63,35 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             LOG.info("Caught validation failure exception while processing request.", ex);
 
-            errorResponse.setMessage(ex.getMessage());
-            errorResponse.setCode(ex.getCode().toString());
-            errorResponse.setValidationFailureMessages(violationList
+            final List<String> messages = violationList
                 .stream()
-                .map(v -> v.getPropertyPath() + " - " + v.getMessage())
-                .collect(toList()));
+                .map(v -> fieldName(v.getPropertyPath().toString()) + ": " + v.getMessage())
+                .collect(toList());
+
+            errorResponse.setMessage("Validation failed: " + String.join("; ", messages));
+            errorResponse.setCode(ex.getCode().toString());
+            errorResponse.setValidationFailureMessages(messages);
 
             return Response.status(getStatusForCode(ex.getCode()))
+                .entity(errorResponse)
+                .build();
+
+        } catch (ConstraintViolationException ex) {
+
+            final ValidationErrorResponse errorResponse = new ValidationErrorResponse();
+
+            LOG.info("Caught constraint violation exception while processing request.", ex);
+
+            final List<String> messages = ex.getConstraintViolations()
+                .stream()
+                .map(v -> fieldName(v.getPropertyPath().toString()) + ": " + v.getMessage())
+                .collect(toList());
+
+            errorResponse.setMessage("Validation failed: " + String.join("; ", messages));
+            errorResponse.setCode(ErrorCode.INVALID_DATA.toString());
+            errorResponse.setValidationFailureMessages(messages);
+
+            return Response.status(Response.Status.BAD_REQUEST)
                 .entity(errorResponse)
                 .build();
 

@@ -20,6 +20,7 @@ public class GooglePlayApplicationConfiguration extends ApplicationConfiguration
     private Map<String, Object> jsonKey;
 
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
+    @Deprecated
     private List<ProductBundle> productBundles;
 
     /**
@@ -48,10 +49,12 @@ public class GooglePlayApplicationConfiguration extends ApplicationConfiguration
         this.jsonKey = jsonKey;
     }
 
+    @Deprecated
     public List<ProductBundle> getProductBundles() {
         return productBundles;
     }
 
+    @Deprecated
     public void setProductBundles(List<ProductBundle> productBundles) {
         this.productBundles = productBundles;
     }

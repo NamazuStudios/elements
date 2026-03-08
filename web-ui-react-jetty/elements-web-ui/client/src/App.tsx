@@ -13,6 +13,7 @@ import ResourceManager from "@/pages/ResourceManager";
 import LargeObjects from "@/pages/LargeObjects";
 import MultiMatch from "@/pages/MultiMatch";
 import Vaults from "@/pages/Vaults";
+import ProductBundles from "@/pages/ProductBundles";
 import Settings from "@/pages/Settings";
 import InstalledElements from "@/pages/InstalledElements";
 import DynamicApiExplorer from "@/pages/DynamicApiExplorer";
@@ -128,6 +129,9 @@ function Routes() {
         </Route>
         <Route path="/resource/vaults">
           <Vaults />
+        </Route>
+        <Route path="/resource/product-bundles">
+          <ProductBundles />
         </Route>
         <Route path="/resource/:resourceId">
           <ResourceRoute />

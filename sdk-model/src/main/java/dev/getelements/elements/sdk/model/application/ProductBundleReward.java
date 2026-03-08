@@ -19,9 +19,8 @@ public class ProductBundleReward implements Serializable {
     @Schema(description = "The id of the item to be rewarded.")
     private String itemId;
 
-    @NotNull
-    @Schema(description = "The quantity of the item to be rewarded.")
-    private int quantity;
+    @Schema(description = "The quantity of the item to be rewarded. Null for DISTINCT items; positive integer for FUNGIBLE items.")
+    private Integer quantity;
 
     public String getItemId() {
         return itemId;
@@ -31,11 +30,11 @@ public class ProductBundleReward implements Serializable {
         this.itemId = itemId;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -43,7 +42,7 @@ public class ProductBundleReward implements Serializable {
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         ProductBundleReward reward = (ProductBundleReward) object;
-        return getQuantity() == reward.getQuantity() && Objects.equals(getItemId(), reward.getItemId());
+        return Objects.equals(getQuantity(), reward.getQuantity()) && Objects.equals(getItemId(), reward.getItemId());
     }
 
     @Override

@@ -97,9 +97,9 @@ export function ApplicationConfigurationEditor({
   );
 }
 
-// Validation: name must match pattern [^_]\w+ (no leading underscore, word characters only)
+// Validation: name must be non-empty and match pattern [^_]\w+ (no leading underscore, word characters only)
 function validateConfigName(name: string): boolean {
-  if (!name) return true; // Empty is valid (optional field)
+  if (!name) return false; // Empty is invalid (required field)
   const pattern = /^[^_]\w*$/; // First char not underscore, then word chars (letters, digits, underscores)
   return pattern.test(name);
 }
@@ -107,12 +107,14 @@ function validateConfigName(name: string): boolean {
 function CommonConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
   const nameValue = value.name || '';
   const isNameValid = validateConfigName(nameValue);
-  const showNameError = nameValue && !isNameValid;
+  const showNameError = nameValue !== '' && !isNameValid;
 
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor="config-name">Name</Label>
+        <Label htmlFor="config-name">
+          Name {!nameValue && <span className="text-destructive">*</span>}
+        </Label>
         <Input
           id="config-name"
           value={nameValue}
@@ -126,7 +128,7 @@ function CommonConfigFields({ value, onChange }: { value: any; onChange: (field:
             Name must start with a letter or digit, and contain only letters, digits, or underscores (no spaces or special characters)
           </p>
         ) : (
-          <p className="text-sm text-muted-foreground">Optional. Must start with a letter/digit, use only letters, digits, underscores</p>
+          <p className="text-sm text-muted-foreground">Required. Must start with a letter/digit, use only letters, digits, underscores</p>
         )}
       </div>
 

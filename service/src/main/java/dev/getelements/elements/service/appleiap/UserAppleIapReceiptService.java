@@ -14,7 +14,7 @@ import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
-import dev.getelements.elements.sdk.service.goods.ProductSkuService;
+import dev.getelements.elements.sdk.service.goods.ProductBundleService;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -39,7 +39,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
     private ElementRegistry elementRegistry;
 
-    private ProductSkuService productSkuService;
+    private ProductBundleService productBundleService;
 
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
@@ -115,8 +115,8 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                 // perform insertion/retrieval
                 final var resultAppleIapReceipt = getOrCreateAppleIapReceipt(appleIapReceipt);
 
-                // issue ProductSku rewards if configured for this product
-                getProductSkuService().processVerifiedPurchase(
+                // issue ProductBundle rewards if configured for this product
+                getProductBundleService().processVerifiedPurchase(
                         APPLE_IAP_SCHEME,
                         appleIapReceipt.getProductId(),
                         appleIapReceipt.getOriginalTransactionId());
@@ -213,12 +213,12 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         this.elementRegistry = elementRegistry;
     }
 
-    public ProductSkuService getProductSkuService() {
-        return productSkuService;
+    public ProductBundleService getProductBundleService() {
+        return productBundleService;
     }
 
     @Inject
-    public void setProductSkuService(ProductSkuService productSkuService) {
-        this.productSkuService = productSkuService;
+    public void setProductBundleService(ProductBundleService productBundleService) {
+        this.productBundleService = productBundleService;
     }
 }

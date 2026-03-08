@@ -4,7 +4,7 @@ import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
 @Embedded
-public class MongoProductSkuReward {
+public class MongoProductBundleReward {
 
     @Property
     private String itemId;

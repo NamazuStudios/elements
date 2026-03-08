@@ -22,6 +22,7 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
 
     @Valid
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
+    @Deprecated
     private List<ProductBundle> productBundles;
 
     /**
@@ -40,10 +41,12 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
         this.applicationId = applicationId;
     }
 
+    @Deprecated
     public List<ProductBundle> getProductBundles() {
         return productBundles;
     }
 
+    @Deprecated
     public void setProductBundles(List<ProductBundle> productBundles) {
         this.productBundles = productBundles;
     }

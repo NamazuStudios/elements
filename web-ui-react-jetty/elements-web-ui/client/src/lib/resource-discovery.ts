@@ -19,6 +19,7 @@ const POTENTIAL_RESOURCES = [
   { name: 'Schedules', endpoint: '/api/rest/schedule', icon: 'Calendar', category: 'Game' },
   { name: 'Leaderboards', endpoint: '/api/rest/leaderboard', icon: 'Trophy', category: 'Game' },
   { name: 'Matchmaking', endpoint: '/api/rest/multi_match', icon: 'Users', category: 'Game' },
+  { name: 'Product Bundles', endpoint: '/api/rest/product/bundle', icon: 'ShoppingCart', category: 'Game' },
   
   // Auth
   { name: 'OIDC', endpoint: '/api/rest/auth_scheme/oidc', icon: 'Shield', category: 'Auth' },

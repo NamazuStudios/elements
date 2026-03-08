@@ -1,7 +1,8 @@
 package dev.getelements.elements.service.application;
 
+import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
-import dev.getelements.elements.sdk.dao.ProductSkuDao;
+import dev.getelements.elements.sdk.dao.ProductBundleDao;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
@@ -11,8 +12,6 @@ import dev.getelements.elements.sdk.model.application.IosApplicationConfiguratio
 import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
-import dev.getelements.elements.sdk.model.goods.ProductSku;
-import dev.getelements.elements.sdk.model.goods.ProductSkuReward;
 import dev.getelements.elements.sdk.service.application.ApplicationConfigurationService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -39,6 +38,9 @@ public class SuperUserApplicationConfigurationService implements ApplicationConf
 
     @Inject
     private ApplicationConfigurationDao applicationConfigurationDao;
+
+    @Inject
+    private ApplicationDao applicationDao;
 
     @Inject
     private Provider<Transaction> transactionProvider;
@@ -72,35 +74,41 @@ public class SuperUserApplicationConfigurationService implements ApplicationConf
         final var schema = IAP_SCHEMA_BY_CONFIG_TYPE.get(configurationClass);
 
         if (schema != null && productBundles != null) {
+            final var application = applicationDao.getApplication(applicationNameOrId);
             for (final var bundle : productBundles) {
-                syncProductSku(schema, bundle);
+                syncProductBundle(application, schema, bundle);
             }
         }
 
         return result;
     }
 
-    private void syncProductSku(final String schema, final ProductBundle bundle) {
-        final var sku = buildProductSku(schema, bundle);
+    private void syncProductBundle(
+            final dev.getelements.elements.sdk.model.application.Application application,
+            final String schema,
+            final ProductBundle bundle) {
+
+        final var standalone = new dev.getelements.elements.sdk.model.goods.ProductBundle();
+        standalone.setSchema(schema);
+        standalone.setApplication(application);
+        standalone.setProductId(bundle.getProductId());
+        standalone.setDisplayName(bundle.getDisplayName());
+        standalone.setDescription(bundle.getDescription());
+        standalone.setProductBundleRewards(bundle.getProductBundleRewards());
+        standalone.setMetadata(bundle.getMetadata());
+        standalone.setDisplay(bundle.getDisplay());
+
         try {
-            getTransactionProvider().get().performAndCloseV(tx -> tx.getDao(ProductSkuDao.class).createProductSku(sku));
+            getTransactionProvider().get().performAndCloseV(
+                    tx -> tx.getDao(ProductBundleDao.class).createProductBundle(standalone));
         } catch (DuplicateException e) {
             getTransactionProvider().get().performAndCloseV(tx -> {
-                final var dao = tx.getDao(ProductSkuDao.class);
-                final var existing = dao.getProductSku(schema, bundle.getProductId());
-                dao.updateProductSku(sku.withId(existing.id()));
+                final var dao = tx.getDao(ProductBundleDao.class);
+                final var existing = dao.getProductBundle(application.getId(), schema, bundle.getProductId());
+                standalone.setId(existing.getId());
+                dao.updateProductBundle(standalone);
             });
         }
-    }
-
-    private ProductSku buildProductSku(final String schema, final ProductBundle bundle) {
-        return new ProductSku(
-                null,
-                schema,
-                bundle.getProductId(),
-                bundle.getProductBundleRewards().stream()
-                        .map(r -> new ProductSkuReward(r.getItemId(), r.getQuantity()))
-                        .toList());
     }
 
     public Provider<Transaction> getTransactionProvider() {

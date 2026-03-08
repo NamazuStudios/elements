@@ -5,18 +5,14 @@ import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
-import dev.getelements.elements.sdk.dao.ProductSkuDao;
+import dev.getelements.elements.sdk.dao.ProductBundleDao;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
-
 import dev.getelements.elements.sdk.model.application.FacebookApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
-import dev.getelements.elements.sdk.model.application.ProductBundle;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
-import dev.getelements.elements.sdk.model.goods.ProductSku;
-import dev.getelements.elements.sdk.model.goods.ProductSkuReward;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
@@ -52,7 +48,7 @@ public class ProductBundleMigration {
     private <T extends ApplicationConfiguration> void migrate(
             final Class<T> type,
             final String schema,
-            final Function<T, List<ProductBundle>> getter) {
+            final Function<T, List<dev.getelements.elements.sdk.model.application.ProductBundle>> getter) {
 
         int offset = 0;
         final int pageSize = 100;
@@ -72,7 +68,7 @@ public class ProductBundleMigration {
                     }
 
                     for (final var bundle : bundles) {
-                        migrateBundle(schema, bundle);
+                        migrateBundle(app, schema, bundle);
                     }
                 }
             }
@@ -86,21 +82,29 @@ public class ProductBundleMigration {
         } while (page.getObjects().size() == pageSize);
     }
 
-    private void migrateBundle(final String schema, final ProductBundle bundle) {
+    private void migrateBundle(
+            final dev.getelements.elements.sdk.model.application.Application app,
+            final String schema,
+            final dev.getelements.elements.sdk.model.application.ProductBundle bundle) {
 
-        final var sku = new ProductSku(
-                null,
-                schema,
-                bundle.getProductId(),
-                bundle.getProductBundleRewards().stream()
-                        .map(r -> new ProductSkuReward(r.getItemId(), r.getQuantity()))
-                        .toList());
+        final var standalone = new dev.getelements.elements.sdk.model.goods.ProductBundle();
+        standalone.setSchema(schema);
+        standalone.setApplication(app);
+        standalone.setProductId(bundle.getProductId());
+        standalone.setDisplayName(bundle.getDisplayName());
+        standalone.setDescription(bundle.getDescription());
+        standalone.setProductBundleRewards(bundle.getProductBundleRewards());
+        standalone.setMetadata(bundle.getMetadata());
+        standalone.setDisplay(bundle.getDisplay());
 
         try {
-            getTransactionProvider().get().performAndCloseV(tx -> tx.getDao(ProductSkuDao.class).createProductSku(sku));
-            logger.info("Migrated ProductBundle -> ProductSku: schema={} productId={}", schema, bundle.getProductId());
+            getTransactionProvider().get().performAndCloseV(
+                    tx -> tx.getDao(ProductBundleDao.class).createProductBundle(standalone));
+            logger.info("Migrated application/ProductBundle -> goods/ProductBundle: app={} schema={} productId={}",
+                    app.getId(), schema, bundle.getProductId());
         } catch (DuplicateException e) {
-            logger.debug("ProductSku already exists for schema={} productId={}, skipping", schema, bundle.getProductId());
+            logger.debug("ProductBundle already exists for app={} schema={} productId={}, skipping",
+                    app.getId(), schema, bundle.getProductId());
         }
     }
 

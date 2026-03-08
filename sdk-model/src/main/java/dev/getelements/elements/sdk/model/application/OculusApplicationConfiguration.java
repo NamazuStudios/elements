@@ -26,6 +26,7 @@ public class OculusApplicationConfiguration extends ApplicationConfiguration imp
 
     @Valid
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
+    @Deprecated
     private List<ProductBundle> productBundles;
 
     public String getApplicationId() {
@@ -52,10 +53,12 @@ public class OculusApplicationConfiguration extends ApplicationConfiguration imp
         this.builtinApplicationPermissions = builtinApplicationPermissions;
     }
 
+    @Deprecated
     public List<ProductBundle> getProductBundles() {
         return productBundles;
     }
 
+    @Deprecated
     public void setProductBundles(List<ProductBundle> productBundles) {
         this.productBundles = productBundles;
     }

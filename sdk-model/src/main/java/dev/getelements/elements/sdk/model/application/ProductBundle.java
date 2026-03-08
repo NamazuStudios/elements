@@ -13,7 +13,12 @@ import java.util.*;
  * {@link ApplicationConfiguration} level. This allows multiple items with varying quantities to be issued upon
  * purchase.
  *
+ * @deprecated Use {@link dev.getelements.elements.sdk.model.goods.ProductBundle} and the
+ *     {@link dev.getelements.elements.sdk.dao.ProductBundleDao} /
+ *     {@link dev.getelements.elements.sdk.service.goods.ProductBundleService} APIs instead.
+ *     This embedded model is retained for backward compatibility and migration purposes only.
  */
+@Deprecated
 @Schema
 public class ProductBundle implements Serializable {
 

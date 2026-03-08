@@ -123,6 +123,36 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         application = applicationDao.createOrUpdateInactiveApplication(application);
     }
 
+    /**
+     * Creates a test object that does not have productBundles set (null).
+     * Subclasses whose configuration type supports productBundles should override this
+     * to return an object with that field left null.
+     */
+    protected UnderTestT createTestObjectWithoutProductBundles() {
+        return createTestObject();
+    }
+
+    @Test(groups = "createApplicationConfiguration")
+    public void testCreateWithoutProductBundles() {
+
+        final var config = createTestObjectWithoutProductBundles();
+        final var sequence = counter.incrementAndGet();
+        final var simpleName = config.getClass().getSimpleName();
+
+        config.setParent(application);
+        config.setName(format("%s_no_bundles_%d", simpleName, sequence));
+        config.setDescription(format("Test configuration (no product bundles) for %s", config.getClass().getName()));
+        config.setType(config.getClass().getName());
+
+        final var created = applicationConfigurationDao.createApplicationConfiguration(application.getId(), config);
+        assertNotNull(created.getId(), "Created configuration id should not be null");
+        assertEquals(created.getName(), config.getName(), "Name should match");
+
+        // Clean up so this standalone test doesn't pollute the intermediates
+        applicationConfigurationDao.deleteApplicationConfiguration(config.getClass(), application.getId(), created.getId());
+
+    }
+
     @Test(
         invocationCount = 50,
         threadPoolSize = 10,
