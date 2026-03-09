@@ -1,3 +1,6 @@
+/**
+ * Exceptions for CDN serving operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.cdnserve;
 

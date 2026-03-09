@@ -1,3 +1,6 @@
+/**
+ * Models for cryptographic operations and key management.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.crypto;
 

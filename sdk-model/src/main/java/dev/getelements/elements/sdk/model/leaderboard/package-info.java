@@ -1,3 +1,6 @@
+/**
+ * Models for leaderboards and score rankings.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.leaderboard;
 

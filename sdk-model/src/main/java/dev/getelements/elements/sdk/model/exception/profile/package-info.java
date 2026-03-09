@@ -1,3 +1,6 @@
+/**
+ * Exceptions for profile operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.profile;
 

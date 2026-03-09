@@ -1,3 +1,6 @@
+/**
+ * Exceptions for application operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.application;
 

@@ -1,3 +1,6 @@
+/**
+ * Exceptions for blockchain operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.blockchain;
 

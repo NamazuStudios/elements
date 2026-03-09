@@ -1,3 +1,6 @@
+/**
+ * Models for application configuration and management.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.application;
 

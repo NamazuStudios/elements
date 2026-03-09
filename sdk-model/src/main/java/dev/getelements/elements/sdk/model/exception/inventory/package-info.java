@@ -1,3 +1,6 @@
+/**
+ * Exceptions for inventory operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.inventory;
 

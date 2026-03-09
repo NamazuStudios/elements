@@ -1,3 +1,6 @@
+/**
+ * Exceptions for cryptographic operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.crypto;
 

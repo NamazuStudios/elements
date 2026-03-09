@@ -1,3 +1,6 @@
+/**
+ * Models for search index configuration and indexing operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.index;
 

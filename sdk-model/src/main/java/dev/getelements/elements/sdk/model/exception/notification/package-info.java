@@ -1,3 +1,6 @@
+/**
+ * Exceptions for notification operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.notification;
 

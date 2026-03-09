@@ -1,3 +1,6 @@
+/**
+ * Models for player inventory and inventory item management.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.inventory;
 

@@ -1,3 +1,6 @@
+/**
+ * Models for player profiles and profile management.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.profile;
 

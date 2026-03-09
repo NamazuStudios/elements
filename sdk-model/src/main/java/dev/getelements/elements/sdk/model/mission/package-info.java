@@ -1,3 +1,6 @@
+/**
+ * Models for missions and mission progress.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.mission;
 

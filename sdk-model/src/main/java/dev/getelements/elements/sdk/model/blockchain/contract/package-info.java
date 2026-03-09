@@ -1,3 +1,6 @@
+/**
+ * Models for blockchain smart contracts.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.blockchain.contract;
 

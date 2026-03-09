@@ -1,3 +1,6 @@
+/**
+ * Models for user accounts and user management.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.user;
 

@@ -1,3 +1,6 @@
+/**
+ * Models for player friend relationships.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.friend;
 

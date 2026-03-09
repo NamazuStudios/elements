@@ -7,6 +7,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/**
+ * Represents an advanced adjustment to the quantity of an inventory item for a specific user,
+ * including an optional priority slot to control item placement within the inventory.
+ */
 @Schema
 public class AdvancedInventoryItemQuantityAdjustment {
 
@@ -22,26 +26,56 @@ public class AdvancedInventoryItemQuantityAdjustment {
     @Min(value = 0, message = "Priority must be greater than 0.")
     private int priority;
 
+    /**
+     * Returns the ID of the user whose inventory will be modified.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Sets the ID of the user whose inventory will be modified.
+     *
+     * @param userId the user ID
+     */
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    /**
+     * Returns the delta to be applied to the inventory item quantity (positive or negative).
+     *
+     * @return the quantity delta
+     */
     public int getQuantityDelta() {
         return quantityDelta;
     }
 
+    /**
+     * Sets the delta to be applied to the inventory item quantity (positive or negative).
+     *
+     * @param quantityDelta the quantity delta
+     */
     public void setQuantityDelta(int quantityDelta) {
         this.quantityDelta = quantityDelta;
     }
 
+    /**
+     * Returns the priority slot for the item within the inventory.
+     *
+     * @return the priority
+     */
     public int getPriority() {
         return priority;
     }
 
+    /**
+     * Sets the priority slot for the item within the inventory.
+     *
+     * @param priority the priority
+     */
     public void setPriority(int priority) {
         this.priority = priority;
     }
