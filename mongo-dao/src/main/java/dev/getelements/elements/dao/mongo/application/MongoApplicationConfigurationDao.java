@@ -232,6 +232,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
             for (final var pd : descriptors) {
                 final var getter = (List<ProductBundle>) pd.getReadMethod().invoke(applicationConfiguration);
+                if (getter == null) continue;
                 final var checked = Collections.checkedList(getter, ProductBundle.class);
                 final var normalized = getNormalizedProductBundles(checked);
                 pd.getWriteMethod().invoke(applicationConfiguration, normalized);
