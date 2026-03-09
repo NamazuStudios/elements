@@ -6,6 +6,7 @@ import com.google.inject.TypeLiteral;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.service.goods.ProductBundleService;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
@@ -115,6 +116,7 @@ public abstract class AbstractReceiptServiceTest {
         @Override
         protected void configure() {
 
+            bind(ProductBundleService.class).toInstance(mock(ProductBundleService.class));
             bind(ApplicationConfigurationDao.class).toInstance(mock(ApplicationConfigurationDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
             bind(ItemDao.class).toInstance(mock(ItemDao.class));
