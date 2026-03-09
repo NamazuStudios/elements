@@ -50,6 +50,14 @@ public class MongoFacebookApplicationConfigurationDaoTest extends MongoApplicati
     }
 
     @Override
+    protected FacebookApplicationConfiguration createTestObjectWithoutProductBundles() {
+        final var config = new FacebookApplicationConfiguration();
+        config.setApplicationId("com.example.myapplication");
+        config.setApplicationSecret("example-secret");
+        return config;
+    }
+
+    @Override
     protected FacebookApplicationConfiguration updateTestObject(final FacebookApplicationConfiguration config) {
         final var reward1 = new ProductBundleReward();
         reward1.setItemId(testItem.getId());

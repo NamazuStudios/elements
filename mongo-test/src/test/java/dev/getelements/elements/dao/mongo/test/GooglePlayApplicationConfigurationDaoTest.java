@@ -47,6 +47,13 @@ public class GooglePlayApplicationConfigurationDaoTest extends MongoApplicationC
     }
 
     @Override
+    protected GooglePlayApplicationConfiguration createTestObjectWithoutProductBundles() {
+        final var config = new GooglePlayApplicationConfiguration();
+        config.setApplicationId("com.example.mycompany.myapp");
+        return config;
+    }
+
+    @Override
     protected GooglePlayApplicationConfiguration updateTestObject(final GooglePlayApplicationConfiguration config) {
 
         final var reward1 = new ProductBundleReward();
