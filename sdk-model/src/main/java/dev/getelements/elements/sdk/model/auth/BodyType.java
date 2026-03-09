@@ -1,8 +1,12 @@
 package dev.getelements.elements.sdk.model.auth;
 
+/** Represents the body type of an HTTP request. */
 public enum BodyType {
-    NONE,              // default for GET
-    FORM_URL_ENCODED,  // application/x-www-form-urlencoded
-    JSON               // application/json
+    /** No body (default for GET). */
+    NONE,
+    /** Form URL-encoded body (application/x-www-form-urlencoded). */
+    FORM_URL_ENCODED,
+    /** JSON body (application/json). */
+    JSON
 }
 

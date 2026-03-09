@@ -14,6 +14,9 @@ import java.util.Objects;
 @Schema
 public class AccessPermissions {
 
+    /** Creates a new instance. */
+    public AccessPermissions() {}
+
     @Valid
     @NotNull
     @Schema(description = "Subjects allowed to read")

@@ -5,19 +5,31 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Objects;
 
+/** Represents an error response that includes health status information. */
 @Schema
-
 public class HealthErrorResponse extends ErrorResponse {
 
-    @Schema
+    /** Creates a new instance. */
+    public HealthErrorResponse() {}
 
+    @Schema
     private HealthStatus healthStatus;
 
+    /**
+     * Returns the health status associated with the error.
+     *
+     * @return the health status
+     */
     @Schema
     public HealthStatus getHealthStatus() {
         return healthStatus;
     }
 
+    /**
+     * Sets the health status associated with the error.
+     *
+     * @param healthStatus the health status
+     */
     public void setHealthStatus(HealthStatus healthStatus) {
         this.healthStatus = healthStatus;
     }

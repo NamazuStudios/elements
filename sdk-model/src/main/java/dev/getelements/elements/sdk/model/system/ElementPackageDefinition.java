@@ -7,6 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Defines a package of Elements from a single ELM artifact with per-path attribute configuration.
+ *
+ * @param elmArtifact the ELM artifact coordinate to resolve and deploy
+ * @param pathSpiBuiltins map of element paths to builtin SPI configurations
+ * @param pathSpiClassPaths map of element paths to custom SPI class paths
+ * @param pathAttributes map of element paths to their custom attributes
+ */
 @Schema(description =
         "Defines a package of Elements from a single ELM artifact with per-path attribute configuration. " +
         "This allows multiple element paths within an ELM to have different attribute configurations."

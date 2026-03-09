@@ -14,6 +14,9 @@ import java.util.Objects;
 @Schema
 public class AdvancedInventoryItemQuantityAdjustment {
 
+    /** Creates a new instance. */
+    public AdvancedInventoryItemQuantityAdjustment() {}
+
     @NotNull
     @Schema(description = "The User whose inventory to modify.ß")
     private String userId;

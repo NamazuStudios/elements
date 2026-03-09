@@ -23,6 +23,9 @@ import static dev.getelements.elements.sdk.model.Constants.Regexp.WHOLE_WORD_ONL
 @Schema
 public class ApplicationConfiguration implements Serializable {
 
+    /** Creates a new instance. */
+    public ApplicationConfiguration() {}
+
     @Schema(description = "The database assigned ID for the application configuration.")
     @Null(groups = Insert.class)
     @NotNull(groups = Update.class)
@@ -64,7 +67,7 @@ public class ApplicationConfiguration implements Serializable {
     /**
      * Gets the unique identifier for the category.
      *
-     * @return
+     * @return the unique name
      */
     public String getName() {
         return name;
@@ -73,24 +76,40 @@ public class ApplicationConfiguration implements Serializable {
     /**
      * Sets the unique identifier for the category.
      *
-     * @param name
+     * @param name the unique name
      */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the fully-qualified Java type of this configuration.
+     * @return the type
+     */
     public String getType() {
         return type;
     }
 
+    /**
+     * Sets the fully-qualified Java type of this configuration.
+     * @param type the type
+     */
     public void setType(String type) {
         this.type = type;
     }
 
+    /**
+     * Returns the description.
+     * @return the description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the description.
+     * @param description the description
+     */
     public void setDescription(String description) {
         this.description = description;
     }

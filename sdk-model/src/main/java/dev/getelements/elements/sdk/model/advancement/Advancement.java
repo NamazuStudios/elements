@@ -13,6 +13,9 @@ import java.util.Objects;
  */
 public class Advancement {
 
+    /** Creates a new instance. */
+    public Advancement() {}
+
     private Step currentStep;
 
     private List<Step> completedSteps;

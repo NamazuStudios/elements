@@ -7,6 +7,19 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Reports the status of an element runtime, which is a deployed in-memory Element.
+ *
+ * @param deployment the deployment associated with this runtime status
+ * @param status the status of the runtime
+ * @param elementPaths a readout of element paths loaded with this runtime
+ * @param deploymentFiles a readout of temporary files associated with the deployment
+ * @param logs a list of logs related to the deployment of the runtime
+ * @param warnings a list of warnings related to the deployment of the runtime
+ * @param errors a list of errors related to the deployment of the runtime
+ * @param elements a list of Elements included in the runtime
+ * @param elementManifests a mapping of paths to manifests of loaded elements
+ */
 @Schema(description =
         "Reports the status of an element runtime, which is a deployed in-memory Element. An in-memory " +
         "Element may or may not expose endpoints but can still be loaded in memory."

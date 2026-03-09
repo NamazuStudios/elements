@@ -6,11 +6,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
+/**
+ * Represents a player's friend.
+ */
 @Schema(description =
         "Represents a player's friend.  This includes the basic information of the friend as well as " +
         "the friendship type, profiles he or she has across games, and "
 )
 public class Friend {
+
+    /** Creates a new instance. */
+    public Friend() {}
 
     @Schema(description = "The unique ID of the friendship.")
     private String id;
@@ -24,34 +30,74 @@ public class Friend {
     @Schema(description = "The profiles which are associated with the friend user.")
     private List<Profile> profiles;
 
+    /**
+     * Returns the unique ID of the friendship.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the friendship.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the user associated with this friend.
+     *
+     * @return the user
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Sets the user associated with this friend.
+     *
+     * @param user the user
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Returns the friendship type.
+     *
+     * @return the friendship
+     */
     public Friendship getFriendship() {
         return friendship;
     }
 
+    /**
+     * Sets the friendship type.
+     *
+     * @param friendship the friendship
+     */
     public void setFriendship(Friendship friendship) {
         this.friendship = friendship;
     }
 
+    /**
+     * Returns the profiles associated with the friend user.
+     *
+     * @return the profiles
+     */
     public List<Profile> getProfiles() {
         return profiles;
     }
 
+    /**
+     * Sets the profiles associated with the friend user.
+     *
+     * @param profiles the profiles
+     */
     public void setProfiles(List<Profile> profiles) {
         this.profiles = profiles;
     }

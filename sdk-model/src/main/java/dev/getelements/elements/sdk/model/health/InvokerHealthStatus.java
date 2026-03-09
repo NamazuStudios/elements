@@ -3,24 +3,48 @@ package dev.getelements.elements.sdk.model.health;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents the health status of the invoker subsystem. */
 public class InvokerHealthStatus {
+
+    /** Creates a new instance. */
+    public InvokerHealthStatus() {}
 
     private List<String> priorities;
 
     private List<String> connectedPeers;
 
+    /**
+     * Returns the list of priorities.
+     *
+     * @return the priorities
+     */
     public List<String> getPriorities() {
         return priorities;
     }
 
+    /**
+     * Sets the list of priorities.
+     *
+     * @param priorities the priorities
+     */
     public void setPriorities(List<String> priorities) {
         this.priorities = priorities;
     }
 
+    /**
+     * Returns the list of connected peers.
+     *
+     * @return the connected peers
+     */
     public List<String> getConnectedPeers() {
         return connectedPeers;
     }
 
+    /**
+     * Sets the list of connected peers.
+     *
+     * @param connectedPeers the connected peers
+     */
     public void setConnectedPeers(List<String> connectedPeers) {
         this.connectedPeers = connectedPeers;
     }

@@ -8,7 +8,7 @@ import java.util.Objects;
  * Instances implementing this interface must honor {@link Object#hashCode()} and {@link Object#equals(Object)} if
  * they refer to the same index.
  *
- * @param <IdentifierT>
+ * @param <IdentifierT> the identifier type
  */
 public interface IndexMetadata<IdentifierT> {
 

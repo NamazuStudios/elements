@@ -14,13 +14,15 @@ import java.util.*;
  * purchase.
  *
  * @deprecated Use {@link dev.getelements.elements.sdk.model.goods.ProductBundle} and the
- *     {@link dev.getelements.elements.sdk.dao.ProductBundleDao} /
- *     {@link dev.getelements.elements.sdk.service.goods.ProductBundleService} APIs instead.
+ *     {@code ProductBundleDao} / {@code ProductBundleService} APIs instead.
  *     This embedded model is retained for backward compatibility and migration purposes only.
  */
 @Deprecated
 @Schema
 public class ProductBundle implements Serializable {
+
+    /** Creates a new instance. */
+    public ProductBundle() {}
 
     @NotNull
     @Schema(description = "The platform-specific unique SKU/product identifier that, when purchased, will result in the " +
@@ -45,54 +47,120 @@ public class ProductBundle implements Serializable {
     @Schema(description = "Whether or not the frontend should display this product bundle to end users.")
     private boolean display;
 
+    /**
+     * Returns the platform-specific product identifier.
+     *
+     * @return the product ID
+     */
     public String getProductId() {
         return productId;
     }
 
+    /**
+     * Sets the platform-specific product identifier.
+     *
+     * @param productId the product ID
+     */
     public void setProductId(String productId) {
         this.productId = productId;
     }
 
+    /**
+     * Returns the display name of the product bundle.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the product bundle.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the description of the product bundle.
+     *
+     * @return the description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the description of the product bundle.
+     *
+     * @param description the description
+     */
     public void setDescription(String description) {
         this.description = description;
     }
 
+    /**
+     * Returns the list of rewards in this product bundle.
+     *
+     * @return the product bundle rewards
+     */
     public List<ProductBundleReward> getProductBundleRewards() {
         return productBundleRewards;
     }
 
+    /**
+     * Sets the list of rewards in this product bundle.
+     *
+     * @param productBundleRewards the product bundle rewards
+     */
     public void setProductBundleRewards(List<ProductBundleReward> productBundleRewards) {
         this.productBundleRewards = productBundleRewards;
     }
 
+    /**
+     * Returns the application-specific metadata.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the application-specific metadata.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
+    /**
+     * Returns whether the frontend should display this product bundle to end users.
+     *
+     * @return true if the bundle should be displayed
+     */
     public boolean getDisplay() {
         return display;
     }
 
+    /**
+     * Sets whether the frontend should display this product bundle to end users.
+     *
+     * @param display true if the bundle should be displayed
+     */
     public void setDisplay(boolean display) {
         this.display = display;
     }
 
+    /**
+     * Returns the reward for the given item ID, or null if not found.
+     *
+     * @param itemId the item ID to look up
+     * @return the reward, or null
+     */
     public ProductBundleReward getProductBundleReward(final String itemId) {
         if (getProductBundleRewards() == null) {
             return null;

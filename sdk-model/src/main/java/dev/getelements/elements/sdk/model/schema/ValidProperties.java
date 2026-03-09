@@ -18,18 +18,41 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.Collections.frequency;
 import static java.util.stream.Collectors.toSet;
 
+/**
+ * Validates that the {@code properties} field of a {@link MetadataSpecPropertiesContainer} is consistent
+ * with the declared type (e.g., ARRAY requires exactly one property, OBJECT requires a non-null list).
+ */
 @Target(TYPE)
 @Retention(RUNTIME)
 @Constraint(validatedBy = ValidProperties.Validator.class)
 public @interface ValidProperties {
 
+    /**
+     * Returns the constraint violation message.
+     *
+     * @return the message
+     */
     String message() default "Invalid properties field.";
 
+    /**
+     * Returns the validation groups this constraint belongs to.
+     *
+     * @return the groups
+     */
     Class<?>[] groups() default {};
 
+    /**
+     * Returns the payload associated with this constraint.
+     *
+     * @return the payload
+     */
     Class<? extends Payload>[] payload() default {};
 
+    /** The constraint validator implementation for {@link ValidProperties}. */
     class Validator implements ConstraintValidator<ValidProperties, MetadataSpecPropertiesContainer> {
+
+        /** Creates a new instance. */
+        public Validator() {}
 
         private static final Logger logger = LoggerFactory.getLogger(ValidProperties.class);
 

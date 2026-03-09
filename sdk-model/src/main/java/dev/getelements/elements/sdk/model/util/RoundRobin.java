@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toList;
 /**
  * Allows for round-robin iteration of a list of objects in a thread safe.
  *
- * @param <T>
+ * @param <T> the element type
  */
 public class RoundRobin<T> implements Iterable<T> {
 

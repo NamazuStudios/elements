@@ -6,8 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Represents a single account (address/key pair) within a blockchain {@link Wallet}. */
 @Schema
 public class WalletAccount {
+
+    /** Creates a new instance. */
+    public WalletAccount() {}
 
     @NotNull
     @Schema(description = "The Wallet Address - id public identity. Required.")
@@ -19,26 +23,56 @@ public class WalletAccount {
     @Schema(description = "Indicates if this identity is encrypted.")
     private boolean encrypted;
 
+    /**
+     * Returns the public wallet address for this account.
+     *
+     * @return the address
+     */
     public String getAddress() {
         return address;
     }
 
+    /**
+     * Sets the public wallet address for this account.
+     *
+     * @param address the address
+     */
     public void setAddress(String address) {
         this.address = address;
     }
 
+    /**
+     * Returns the private key for this account, or null if this is a receive-only wallet.
+     *
+     * @return the private key
+     */
     public String getPrivateKey() {
         return privateKey;
     }
 
+    /**
+     * Sets the private key for this account.
+     *
+     * @param privateKey the private key
+     */
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
     }
 
+    /**
+     * Returns whether the private key for this account is encrypted.
+     *
+     * @return true if the private key is encrypted
+     */
     public boolean isEncrypted() {
         return encrypted;
     }
 
+    /**
+     * Sets whether the private key for this account is encrypted.
+     *
+     * @param encrypted true if the private key is encrypted
+     */
     public void setEncrypted(boolean encrypted) {
         this.encrypted = encrypted;
     }

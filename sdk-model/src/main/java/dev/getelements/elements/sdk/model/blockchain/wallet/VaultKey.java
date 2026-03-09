@@ -8,8 +8,12 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Map;
 import java.util.Objects;
 
+/** Represents the cryptographic key pair used to secure a {@link Vault}. */
 @Schema
 public class VaultKey {
+
+    /** Creates a new instance. */
+    public VaultKey() {}
 
     @NotNull
     @Schema(description = "Specifies the private key encryption algorithm used to secure the vault.")
@@ -29,42 +33,92 @@ public class VaultKey {
     @Schema(description = "The Vault's encryption metadata. This is specific to the encryption type used.")
     private Map<String, Object> encryption;
 
+    /**
+     * Returns the private key encryption algorithm used to secure this vault key.
+     *
+     * @return the algorithm
+     */
     public PrivateKeyCrytpoAlgorithm getAlgorithm() {
         return algorithm;
     }
 
+    /**
+     * Sets the private key encryption algorithm used to secure this vault key.
+     *
+     * @param algorithm the algorithm
+     */
     public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
         this.algorithm = algorithm;
     }
 
+    /**
+     * Returns whether the private key is encrypted.
+     *
+     * @return true if the key is encrypted
+     */
     public boolean isEncrypted() {
         return encrypted;
     }
 
+    /**
+     * Sets whether the private key is encrypted.
+     *
+     * @param encrypted true if the key is encrypted
+     */
     public void setEncrypted(boolean encrypted) {
         this.encrypted = encrypted;
     }
 
+    /**
+     * Returns the encryption metadata specific to the encryption type used.
+     *
+     * @return the encryption metadata map
+     */
     public Map<String, Object> getEncryption() {
         return encryption;
     }
 
+    /**
+     * Sets the encryption metadata specific to the encryption type used.
+     *
+     * @param encryption the encryption metadata map
+     */
     public void setEncryption(Map<String, Object> encryption) {
         this.encryption = encryption;
     }
 
+    /**
+     * Returns the public key portion of this vault key.
+     *
+     * @return the public key
+     */
     public String getPublicKey() {
         return publicKey;
     }
 
+    /**
+     * Sets the public key portion of this vault key.
+     *
+     * @param publicKey the public key
+     */
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
     }
 
+    /**
+     * Returns the private key portion of this vault key.
+     *
+     * @return the private key
+     */
     public String getPrivateKey() {
         return privateKey;
     }
 
+    /**
+     * Sets the private key portion of this vault key.
+     *
+     * @param privateKey the private key
+     */
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
     }

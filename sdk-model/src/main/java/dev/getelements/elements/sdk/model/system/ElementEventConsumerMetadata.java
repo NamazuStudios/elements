@@ -7,6 +7,11 @@ import java.util.stream.Stream;
 
 /**
  * A DTO record for Element Event Consumer Metadata.
+ *
+ * @param serviceType the fully-qualified type name of the service
+ * @param serviceName the name of the service
+ * @param eventName the name of the event
+ * @param methodName the fully-qualified method signature handling the event
  */
 public record ElementEventConsumerMetadata(
         String serviceType,
@@ -15,6 +20,12 @@ public record ElementEventConsumerMetadata(
         String methodName
 ) {
 
+    /**
+     * Creates an instance from an {@link ElementEventConsumerRecord}.
+     *
+     * @param elementEventConsumerRecord the record to convert
+     * @return the metadata
+     */
     public static ElementEventConsumerMetadata from(final ElementEventConsumerRecord<?> elementEventConsumerRecord) {
         return new ElementEventConsumerMetadata(
                 elementEventConsumerRecord.eventKey().serviceKey().type().getName(),

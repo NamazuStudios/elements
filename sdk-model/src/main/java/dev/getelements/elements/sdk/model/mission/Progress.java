@@ -20,6 +20,9 @@ import java.util.Objects;
  */
 public class Progress implements Serializable {
 
+    /** Creates a new instance. */
+    public Progress() {}
+
     @NotNull(groups={Update.class})
     @Null(groups={Create.class, Insert.class})
     @Schema(description = "The unique ID of the progress instance")
@@ -61,78 +64,178 @@ public class Progress implements Serializable {
             "is not managed as part of a Schedule.")
     private List<ScheduleEvent> scheduleEvents;
 
+    /**
+     * Returns the unique ID of this progress instance.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of this progress instance.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the profile of the owner of this progress.
+     *
+     * @return the profile
+     */
     public Profile getProfile() {
         return profile;
     }
 
+    /**
+     * Sets the profile of the owner of this progress.
+     *
+     * @param profile the profile
+     */
     public void setProfile(Profile profile) { this.profile = profile; }
 
+    /**
+     * Returns the current mission step.
+     *
+     * @return the current step
+     */
     public Step getCurrentStep() {
         return currentStep;
     }
 
+    /**
+     * Sets the current mission step.
+     *
+     * @param currentStep the current step
+     */
     public void setCurrentStep(Step currentStep) {
         this.currentStep = currentStep;
     }
 
+    /**
+     * Returns the number of remaining actions to complete the current step.
+     *
+     * @return the remaining count
+     */
     public Integer getRemaining() {
         return remaining;
     }
 
+    /**
+     * Sets the number of remaining actions to complete the current step.
+     *
+     * @param remaining the remaining count
+     */
     public void setRemaining(Integer remaining) { this.remaining = remaining; }
 
+    /**
+     * Returns the mission information for this progress.
+     *
+     * @return the mission info
+     */
     public ProgressMissionInfo getMission() {
         return mission;
     }
 
+    /**
+     * Sets the mission information for this progress.
+     *
+     * @param mission the mission info
+     */
     public void setMission(ProgressMissionInfo mission) {
         this.mission = mission;
     }
 
+    /**
+     * Returns the list of reward issuances associated with this progress.
+     *
+     * @return the reward issuances
+     */
     public List<RewardIssuance> getRewardIssuances() {
         return rewardIssuances;
     }
 
+    /**
+     * Sets the list of reward issuances associated with this progress.
+     *
+     * @param rewardIssuances the reward issuances
+     */
     public void setRewardIssuances(List<RewardIssuance> rewardIssuances) {
         this.rewardIssuances = rewardIssuances;
     }
 
+    /**
+     * Returns the current number of completed steps.
+     *
+     * @return the sequence
+     */
     public Integer getSequence() {
         return sequence;
     }
 
+    /**
+     * Sets the current number of completed steps.
+     *
+     * @param sequence the sequence
+     */
     public void setSequence(Integer sequence) {
         this.sequence = sequence;
     }
 
+    /**
+     * Returns whether this progress is managed by a Schedule.
+     *
+     * @return true if managed by a schedule
+     */
     public boolean isManagedBySchedule() {
         return managedBySchedule;
     }
 
+    /**
+     * Sets whether this progress is managed by a Schedule.
+     *
+     * @param managedBySchedule true if managed by a schedule
+     */
     public void setManagedBySchedule(boolean managedBySchedule) {
         this.managedBySchedule = managedBySchedule;
     }
 
+    /**
+     * Returns the list of Schedules managing this Progress.
+     *
+     * @return the schedules
+     */
     public List<Schedule> getSchedules() {
         return schedules;
     }
 
+    /**
+     * Sets the list of Schedules managing this Progress.
+     *
+     * @param schedules the schedules
+     */
     public void setSchedules(List<Schedule> schedules) {
         this.schedules = schedules;
     }
 
+    /**
+     * Returns the list of ScheduleEvents managing this Progress.
+     *
+     * @return the schedule events
+     */
     public List<ScheduleEvent> getScheduleEvents() {
         return scheduleEvents;
     }
 
+    /**
+     * Sets the list of ScheduleEvents managing this Progress.
+     *
+     * @param scheduleEvents the schedule events
+     */
     public void setScheduleEvents(List<ScheduleEvent> scheduleEvents) {
         this.scheduleEvents = scheduleEvents;
     }

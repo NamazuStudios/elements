@@ -25,6 +25,9 @@ import java.util.Set;
 @Schema
 public class Mission implements Serializable, Taggable {
 
+    /** Creates a new instance. */
+    public Mission() {}
+
     @Schema(description = "The unique ID of the mission")
     @Null(groups={Create.class, Insert.class})
     @NotNull(groups={Read.class})
@@ -54,70 +57,156 @@ public class Mission implements Serializable, Taggable {
     @Schema(description = "The metadata for this mission")
     private Map<String, Object> metadata;
 
+    /**
+     * Returns the unique ID of the mission.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the mission.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the name of the mission.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the name of the mission.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the display name of the mission.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
-    return displayName;
-}
+        return displayName;
+    }
 
+    /**
+     * Sets the display name of the mission.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the description of the mission.
+     *
+     * @return the description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the description of the mission.
+     *
+     * @param description the description
+     */
     public void setDescription(String description) {
         this.description = description;
     }
 
+    /**
+     * Returns the tags for this mission.
+     *
+     * @return the tags
+     */
     public List<String> getTags() {
         return tags;
     }
 
+    /**
+     * Sets the tags for this mission.
+     *
+     * @param tags the tags
+     */
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
+    /**
+     * Returns the steps that constitute the mission.
+     *
+     * @return the steps
+     */
     public List<Step> getSteps() {
         return steps;
     }
 
+    /**
+     * Sets the steps that constitute the mission.
+     *
+     * @param steps the steps
+     */
     public void setSteps(List<Step> steps) {
         this.steps = steps;
     }
 
+    /**
+     * Returns the final repeating step.
+     *
+     * @return the final repeat step
+     */
     public Step getFinalRepeatStep() {
         return finalRepeatStep;
     }
 
+    /**
+     * Sets the final repeating step.
+     *
+     * @param finalRepeatStep the final repeat step
+     */
     public void setFinalRepeatStep(Step finalRepeatStep) {
         this.finalRepeatStep = finalRepeatStep;
     }
 
+    /**
+     * Returns the metadata for this mission.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata for this mission.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
+    /**
+     * Adds a metadata entry to this mission.
+     *
+     * @param name the metadata key
+     * @param value the metadata value
+     */
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {
@@ -131,8 +220,8 @@ public class Mission implements Serializable, Taggable {
     /**
      * Returns the index for the given step, or -1 if not found.
      *
-     * @param step
-     * @return index if found, or -1 if not found.
+     * @param step the step to search for
+     * @return index if found, or -1 if not found
      */
     public int getStepIndex(Step step) {
         for (int i=0; i<getSteps().size(); i++) {

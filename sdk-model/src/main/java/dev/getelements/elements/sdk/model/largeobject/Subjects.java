@@ -12,8 +12,12 @@ import java.util.Objects;
 
 import static java.util.Collections.emptyList;
 
+/** Represents the set of subjects (users, profiles, or wildcard) permitted to perform operations on a large object. */
 @Schema
 public class Subjects {
+
+    /** Creates a new instance. */
+    public Subjects() {}
 
     @Schema(description = "Flag to check who may perform the operations. True if all users may access the object.")
     private boolean wildcard;
@@ -68,34 +72,74 @@ public class Subjects {
         return anonymousSubject;
     }
 
+    /**
+     * Returns whether this subjects instance is a wildcard that allows all users.
+     *
+     * @return true if wildcard
+     */
     public boolean isWildcard() {
         return wildcard;
     }
 
+    /**
+     * Sets whether this subjects instance is a wildcard that allows all users.
+     *
+     * @param wildcard true if wildcard
+     */
     public void setWildcard(boolean wildcard) {
         this.wildcard = wildcard;
     }
 
+    /**
+     * Returns the users permitted to perform operations.
+     *
+     * @return the users
+     */
     public List<User> getUsers() {
         return users;
     }
 
+    /**
+     * Sets the users permitted to perform operations.
+     *
+     * @param users the users
+     */
     public void setUsers(List<User> users) {
         this.users = users;
     }
 
+    /**
+     * Returns the profiles whose owners are permitted to perform operations.
+     *
+     * @return the profiles
+     */
     public List<Profile> getProfiles() {
         return profiles;
     }
 
+    /**
+     * Sets the profiles whose owners are permitted to perform operations.
+     *
+     * @param profiles the profiles
+     */
     public void setProfiles(List<Profile> profiles) {
         this.profiles = profiles;
     }
 
+    /**
+     * Returns the minimum access level required to perform operations.
+     *
+     * @return the minimum level
+     */
     public User.Level getMinimumLevel() {
         return minimumLevel;
     }
 
+    /**
+     * Sets the minimum access level required to perform operations.
+     *
+     * @param minimumLevel the minimum level
+     */
     public void setMinimumLevel(User.Level minimumLevel) {
         this.minimumLevel = minimumLevel;
     }

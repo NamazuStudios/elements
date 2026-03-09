@@ -26,6 +26,12 @@ public enum ItemCategory {
         return FUNGIBLE;
     }
 
+    /**
+     * Returns the given category, or the default if it is null.
+     *
+     * @param category the category, which may be null
+     * @return the category, or the default if null
+     */
     public static ItemCategory getOrDefault(final ItemCategory category) {
         return category == null ? getDefault() : category;
     }

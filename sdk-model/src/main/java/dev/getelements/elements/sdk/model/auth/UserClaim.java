@@ -16,6 +16,9 @@ import static dev.getelements.elements.sdk.model.Constants.Regexp.EMAIL_ADDRESS;
  */
 public class UserClaim implements Serializable {
 
+    /** Creates a new instance. */
+    public UserClaim() {}
+
     @NotNull(groups = {Insert.class, Update.class})
     private String name;
 
@@ -42,7 +45,7 @@ public class UserClaim implements Serializable {
     /**
      * Sets the user's login name.
      *
-     * @param name
+     * @param name the user's login name
      */
     public void setName(String name) {
         this.name = name;
@@ -50,14 +53,17 @@ public class UserClaim implements Serializable {
 
     /**
      * Gets the user's email address.
+     *
+     * @return the user's email address
      */
     public String getEmail() {
         return email;
     }
 
     /**
-     * Sets the user's email
-     * @param email
+     * Sets the user's email address.
+     *
+     * @param email the user's email address
      */
     public void setEmail(String email) {
         this.email = email;
@@ -65,7 +71,8 @@ public class UserClaim implements Serializable {
 
     /**
      * Gets the user's access level.
-     * @return
+     *
+     * @return the user's access level
      */
     public User.Level getLevel() {
         return level;
@@ -74,16 +81,26 @@ public class UserClaim implements Serializable {
     /**
      * Sets the user's access level.
      *
-     * @param level
+     * @param level the user's access level
      */
     public void setLevel(User.Level level) {
         this.level = level;
     }
 
+    /**
+     * Returns the external user ID for this claim.
+     *
+     * @return the external user ID
+     */
     public String getExternalUserId() {
         return externalUserId;
     }
 
+    /**
+     * Sets the external user ID for this claim.
+     *
+     * @param externalUserId the external user ID
+     */
     public void setExternalUserId(String externalUserId) {
         this.externalUserId = externalUserId;
     }

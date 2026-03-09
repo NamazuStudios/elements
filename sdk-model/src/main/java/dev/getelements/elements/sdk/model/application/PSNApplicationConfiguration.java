@@ -13,6 +13,9 @@ import java.io.Serializable;
  */
 public class PSNApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
+    /** Creates a new instance. */
+    public PSNApplicationConfiguration() {}
+
     @NotNull
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String npIdentifier;
@@ -31,9 +34,9 @@ public class PSNApplicationConfiguration extends ApplicationConfiguration implem
     }
 
     /**
-     * Sets the Sony NP Identififer.
+     * Sets the Sony NP Identifier.
      *
-     * @param npIdentifier
+     * @param npIdentifier the NP identifier
      */
     public void setNpIdentifier(String npIdentifier) {
         this.npIdentifier = npIdentifier;
@@ -50,6 +53,7 @@ public class PSNApplicationConfiguration extends ApplicationConfiguration implem
 
     /**
      * Sets the ClientSecret, which is used to interact with the Sony WebAPI.
+     * @param clientSecret the client secret
      */
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;

@@ -17,31 +17,56 @@ import java.security.spec.KeySpec;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/** Validates that a string value is a well-formed PEM file. */
 @Documented
 @Retention(RUNTIME)
 @Target({ FIELD, METHOD, PARAMETER, ANNOTATION_TYPE })
 @Constraint(validatedBy = PemFile.Validator.class)
 public @interface PemFile {
 
+    /**
+     * Returns the validation error message template.
+     *
+     * @return the message template
+     */
     String message() default "{dev.getelements.elements.sdk.model.annotation.PemFile.message}";
 
+    /**
+     * Returns the validation groups.
+     *
+     * @return the groups
+     */
     Class<?>[] groups() default { };
 
+    /**
+     * Returns the payload types.
+     *
+     * @return the payload
+     */
     Class<? extends Payload>[] payload() default { };
 
+    /** Container annotation for repeating {@link PemFile} constraints. */
     @Documented
     @Retention(RUNTIME)
     @Target({ FIELD, METHOD, PARAMETER, ANNOTATION_TYPE })
     @interface List {
+        /**
+         * Returns the repeated {@link PemFile} annotations.
+         *
+         * @return the annotations
+         */
         PemFile[] value();
     }
 
     /**
-     * Validates a PEM file when passed
+     * Validates a PEM file when passed.
      */
     class Validator implements ConstraintValidator<PemFile, String> {
 
         private static final Logger logger = LoggerFactory.getLogger(Validator.class);
+
+        /** Creates a new instance. */
+        public Validator() {}
 
         @Override
         public void initialize(final PemFile constraintAnnotation) {}

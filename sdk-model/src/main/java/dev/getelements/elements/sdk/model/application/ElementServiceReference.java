@@ -16,6 +16,9 @@ import static dev.getelements.elements.sdk.model.Constants.Regexp.NO_WHITE_SPACE
 @Schema
 public class ElementServiceReference {
 
+    /** Creates a new instance. */
+    public ElementServiceReference() {}
+
     @NotNull
     @Schema(description = "The name of the Element to reference.")
     private String elementName;
@@ -28,26 +31,50 @@ public class ElementServiceReference {
     @Schema(description = "Specifies the name of the service within the Element. May be null.")
     private String serviceName;
 
+    /**
+     * Returns the name of the Element.
+     * @return the element name
+     */
     public String getElementName() {
         return elementName;
     }
 
+    /**
+     * Sets the name of the Element.
+     * @param elementName the element name
+     */
     public void setElementName(String elementName) {
         this.elementName = elementName;
     }
 
+    /**
+     * Returns the type of the service within the Element.
+     * @return the service type
+     */
     public String getServiceType() {
         return serviceType;
     }
 
+    /**
+     * Sets the type of the service within the Element.
+     * @param serviceType the service type
+     */
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
     }
 
+    /**
+     * Returns the name of the service within the Element.
+     * @return the service name
+     */
     public String getServiceName() {
         return serviceName;
     }
 
+    /**
+     * Sets the name of the service within the Element.
+     * @param serviceName the service name
+     */
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
     }

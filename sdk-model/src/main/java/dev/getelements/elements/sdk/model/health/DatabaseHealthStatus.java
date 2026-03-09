@@ -2,24 +2,48 @@ package dev.getelements.elements.sdk.model.health;
 
 import java.util.Objects;
 
+/** Represents the health status of a database connection. */
 public class DatabaseHealthStatus {
+
+    /** Creates a new instance. */
+    public DatabaseHealthStatus() {}
 
     private String name;
 
     private String metadata;
 
+    /**
+     * Returns the name of the database.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the name of the database.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns additional metadata about the database health.
+     *
+     * @return the metadata
+     */
     public String getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets additional metadata about the database health.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(String metadata) {
         this.metadata = metadata;
     }

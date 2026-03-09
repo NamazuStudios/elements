@@ -6,16 +6,27 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/** Indicates that an entity supports tagging. */
 public interface Taggable {
 
+    /**
+     * Returns the tags for this entity.
+     *
+     * @return the tags
+     */
     List<String> getTags();
 
+    /**
+     * Sets the tags for this entity.
+     *
+     * @param tags the tags
+     */
     void setTags(List<String> tags);
 
     /**
      * Adds a tag without performing validation of the tag string or the list of strings.
      *
-     * @param tag
+     * @param tag the tag to add
      */
     default void addTag(final String tag) {
         if (tag == null) {
@@ -46,7 +57,7 @@ public interface Taggable {
     /**
      * Validates the given list of tags and then sets them.
      *
-     * @param tags
+     * @param tags the tags to validate and set
      */
     default void validateAndSetTags(List<String> tags) {
         List<String> validatedTags = buildValidatedTags(tags);
@@ -57,7 +68,7 @@ public interface Taggable {
      * Validates the given tag and adds it to the existing list of tags. If the tags is null, then a new ArrayList is
      * created as well.
      *
-     * @param tag
+     * @param tag the tag to validate and add
      */
     default void validateAndAddTag(String tag) {
         final String validatedTag = buildValidatedTag(tag);
@@ -80,7 +91,7 @@ public interface Taggable {
      * If the resultant String would be the empty string, then we return null instead to signify that the given String
      * could not be validated.
      *
-     * @param tag
+     * @param tag the tag string to validate
      * @return the validated tag if valid input, or null if invalid input.
      */
     static String buildValidatedTag(final String tag) {

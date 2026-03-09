@@ -15,6 +15,9 @@ import java.util.*;
 @Schema
 public class ProductBundleReward implements Serializable {
 
+    /** Creates a new instance. */
+    public ProductBundleReward() {}
+
     @NotNull
     @Schema(description = "The id of the item to be rewarded.")
     private String itemId;
@@ -22,18 +25,38 @@ public class ProductBundleReward implements Serializable {
     @Schema(description = "The quantity of the item to be rewarded. Null for DISTINCT items; positive integer for FUNGIBLE items.")
     private Integer quantity;
 
+    /**
+     * Returns the ID of the item to be rewarded.
+     *
+     * @return the item ID
+     */
     public String getItemId() {
         return itemId;
     }
 
+    /**
+     * Sets the ID of the item to be rewarded.
+     *
+     * @param itemId the item ID
+     */
     public void setItemId(String itemId) {
         this.itemId = itemId;
     }
 
+    /**
+     * Returns the quantity of the item to be rewarded.
+     *
+     * @return the quantity
+     */
     public Integer getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets the quantity of the item to be rewarded.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }

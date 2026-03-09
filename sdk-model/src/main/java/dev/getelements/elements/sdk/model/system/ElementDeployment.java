@@ -12,6 +12,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Represents the deployment configuration for an Element within the system.
+ *
+ * @param id the database unique identifier of the Element deployment
+ * @param application the application context under which the Element is deployed
+ * @param elm the large object housing the actual ELM file
+ * @param pathSpiBuiltins map of element paths to builtin SPI configurations
+ * @param pathSpiClassPaths map of element paths to custom SPI class paths
+ * @param pathAttributes map of element paths to their custom attributes
+ * @param elements list of Element definitions specifying the classpaths and artifacts
+ * @param packages list of Element package definitions specifying ELM artifacts to deploy
+ * @param useDefaultRepositories flag indicating whether to use the default artifact repositories
+ * @param repositories list of artifact repositories for resolving artifacts
+ * @param state the state of the deployment
+ * @param version monotonically increasing version number
+ */
 @Schema(description =
         "Represents the deployment configuration for an Element within the system. This includes details about " +
         "the application context, artifacts to be included, and repositories for artifact resolution."

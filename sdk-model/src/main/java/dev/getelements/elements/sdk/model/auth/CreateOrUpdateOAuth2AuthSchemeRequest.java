@@ -8,8 +8,12 @@ import jakarta.validation.constraints.Null;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a request to create or update an OAuth2 Auth Scheme for an Application. */
 @Schema(description = "Represents a request to update an Auth Scheme for an Application.")
 public class CreateOrUpdateOAuth2AuthSchemeRequest {
+
+    /** Creates a new instance. */
+    public CreateOrUpdateOAuth2AuthSchemeRequest() {}
 
     @NotNull
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
@@ -72,90 +76,200 @@ public class CreateOrUpdateOAuth2AuthSchemeRequest {
             FORM_URL_ENCODED corresponds to application/x-www-form-urlencoded.""")
     private BodyType bodyType = BodyType.NONE;
 
+    /**
+     * Returns the unique name for the scheme.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique name for the scheme.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the URL to send the user token validation request to.
+     *
+     * @return the validation URL
+     */
     public String getValidationUrl() {
         return validationUrl;
     }
 
+    /**
+     * Sets the URL to send the user token validation request to.
+     *
+     * @param validationUrl the validation URL
+     */
     public void setValidationUrl(String validationUrl) {
         this.validationUrl = validationUrl;
     }
 
+    /**
+     * Returns the headers required for the validation request.
+     *
+     * @return the headers
+     */
     public List<OAuth2RequestKeyValue> getHeaders() {
         return headers;
     }
 
+    /**
+     * Sets the headers required for the validation request.
+     *
+     * @param headers the headers
+     */
     public void setHeaders(List<OAuth2RequestKeyValue> headers) {
         this.headers = headers;
     }
 
+    /**
+     * Returns the query parameters required for the validation request.
+     *
+     * @return the query parameters
+     */
     public List<OAuth2RequestKeyValue> getParams() {
         return params;
     }
 
+    /**
+     * Sets the query parameters required for the validation request.
+     *
+     * @param params the query parameters
+     */
     public void setParams(List<OAuth2RequestKeyValue> params) {
         this.params = params;
     }
 
+    /**
+     * Returns the body parameters for the validation request.
+     *
+     * @return the body parameters
+     */
     public List<OAuth2RequestKeyValue> getBody() {
         return body;
     }
 
+    /**
+     * Sets the body parameters for the validation request.
+     *
+     * @param body the body parameters
+     */
     public void setBody(List<OAuth2RequestKeyValue> body) {
         this.body = body;
     }
 
+    /**
+     * Returns the response field key used to extract the user ID.
+     *
+     * @return the response ID mapping key
+     */
     public String getResponseIdMapping() {
         return responseIdMapping;
     }
 
+    /**
+     * Sets the response field key used to extract the user ID.
+     *
+     * @param responseIdMapping the response ID mapping key
+     */
     public void setResponseIdMapping(String responseIdMapping) {
         this.responseIdMapping = responseIdMapping;
     }
 
+    /**
+     * Returns the response field key used to determine validity.
+     *
+     * @return the response valid mapping key
+     */
     public String getResponseValidMapping() {
         return responseValidMapping;
     }
 
+    /**
+     * Sets the response field key used to determine validity.
+     *
+     * @param responseValidMapping the response valid mapping key
+     */
     public void setResponseValidMapping(String responseValidMapping) {
         this.responseValidMapping = responseValidMapping;
     }
 
+    /**
+     * Returns the expected value of the validation field.
+     *
+     * @return the expected valid value
+     */
     public String getResponseValidExpectedValue() {
         return responseValidExpectedValue;
     }
 
+    /**
+     * Sets the expected value of the validation field.
+     *
+     * @param responseValidExpectedValue the expected valid value
+     */
     public void setResponseValidExpectedValue(String responseValidExpectedValue) {
         this.responseValidExpectedValue = responseValidExpectedValue;
     }
 
+    /**
+     * Returns the HTTP status codes considered processable for validation.
+     *
+     * @return the valid status codes
+     */
     public List<Integer> getValidStatusCodes() {
         return validStatusCodes;
     }
 
+    /**
+     * Sets the HTTP status codes considered processable for validation.
+     *
+     * @param validStatusCodes the valid status codes
+     */
     public void setValidStatusCodes(List<Integer> validStatusCodes) {
         this.validStatusCodes = validStatusCodes;
     }
 
+    /**
+     * Returns the HTTP method for the validation request.
+     *
+     * @return the HTTP method
+     */
     public HttpMethod getMethod() {
         return method;
     }
 
+    /**
+     * Sets the HTTP method for the validation request.
+     *
+     * @param method the HTTP method
+     */
     public void setMethod(HttpMethod method) {
         this.method = method;
     }
 
+    /**
+     * Returns the body encoding type for POST requests.
+     *
+     * @return the body type
+     */
     public BodyType getBodyType() {
         return bodyType;
     }
 
+    /**
+     * Sets the body encoding type for POST requests.
+     *
+     * @param bodyType the body type
+     */
     public void setBodyType(BodyType bodyType) {
         this.bodyType = bodyType;
     }

@@ -13,6 +13,9 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Represents a Firebase Cloud Messaging Registration Token")
 public class FCMRegistration {
 
+    /** Creates a new instance. */
+    public FCMRegistration() {}
+
     @Schema(description = "The the unique id of the token stored in the database.")
     private String id;
 
@@ -23,26 +26,56 @@ public class FCMRegistration {
     @Schema(description = "The Profile associated with this registration.")
     private Profile profile;
 
+    /**
+     * Returns the unique ID of the token stored in the database.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the token stored in the database.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the Firebase registration token.
+     *
+     * @return the registration token
+     */
     public String getRegistrationToken() {
         return registrationToken;
     }
 
+    /**
+     * Sets the Firebase registration token.
+     *
+     * @param registrationToken the registration token
+     */
     public void setRegistrationToken(String registrationToken) {
         this.registrationToken = registrationToken;
     }
 
+    /**
+     * Returns the profile associated with this registration.
+     *
+     * @return the profile
+     */
     public Profile getProfile() {
         return profile;
     }
 
+    /**
+     * Sets the profile associated with this registration.
+     *
+     * @param profile the profile
+     */
     public void setProfile(Profile profile) {
         this.profile = profile;
     }

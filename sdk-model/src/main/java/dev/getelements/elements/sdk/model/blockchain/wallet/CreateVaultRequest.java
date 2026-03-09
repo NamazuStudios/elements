@@ -6,7 +6,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Represents a request to create a new blockchain vault. */
 public class CreateVaultRequest {
+
+    /** Creates a new instance. */
+    public CreateVaultRequest() {}
 
     @NotNull
     @Schema(description = "The elements-defined user ID to own the vault.")
@@ -30,34 +34,74 @@ public class CreateVaultRequest {
     )
     private PrivateKeyCrytpoAlgorithm algorithm;
 
+    /**
+     * Returns the display name for the vault.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name for the vault.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the user ID that will own the vault.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Sets the user ID that will own the vault.
+     *
+     * @param userId the user ID
+     */
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    /**
+     * Returns the passphrase used to encrypt the vault.
+     *
+     * @return the passphrase
+     */
     public String getPassphrase() {
         return passphrase;
     }
 
+    /**
+     * Sets the passphrase used to encrypt the vault.
+     *
+     * @param passphrase the passphrase
+     */
     public void setPassphrase(String passphrase) {
         this.passphrase = passphrase;
     }
 
+    /**
+     * Returns the encryption algorithm for the vault.
+     *
+     * @return the algorithm
+     */
     public PrivateKeyCrytpoAlgorithm getAlgorithm() {
         return algorithm;
     }
 
+    /**
+     * Sets the encryption algorithm for the vault.
+     *
+     * @param algorithm the algorithm
+     */
     public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
         this.algorithm = algorithm;
     }

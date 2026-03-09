@@ -7,6 +7,16 @@ import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Defines the classpath configuration for Elements within a deployment.
+ *
+ * @param path the single directory name where this element will be deployed
+ * @param apiArtifacts list of API artifact coordinates
+ * @param spiBuiltins list of SPI builtin configurations
+ * @param spiArtifacts list of SPI artifact coordinates
+ * @param elementArtifacts list of Element implementation artifact coordinates
+ * @param attributes custom attributes specific to this element path
+ */
 @Schema(description =
         "Defines the classpath configuration for Elements within a deployment. Can specify either Maven " +
         "artifact coordinates (api, spi, element lists) or a single ELM artifact coordinate."

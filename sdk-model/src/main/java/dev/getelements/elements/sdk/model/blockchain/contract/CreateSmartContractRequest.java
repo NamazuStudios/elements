@@ -10,8 +10,12 @@ import java.util.Map;
 import java.util.Objects;
 
 
+/** Request model to create a smart contract. */
 @Schema(description = "Creates a smart contract.")
 public class CreateSmartContractRequest {
+
+    /** Creates a new instance. */
+    public CreateSmartContractRequest() {}
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
@@ -37,42 +41,92 @@ public class CreateSmartContractRequest {
     @Schema(description = "Any metadata for this contract.")
     private Map<String, Object> metadata;
 
+    /**
+     * Returns the unique symbolic name of the contract.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique symbolic name of the contract.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the display name of the contract.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the contract.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the contract addresses by network.
+     *
+     * @return the addresses
+     */
     public Map<BlockchainNetwork, SmartContractAddress> getAddresses() {
         return addresses;
     }
 
+    /**
+     * Sets the contract addresses by network.
+     *
+     * @param addresses the addresses
+     */
     public void setAddresses(Map<BlockchainNetwork, SmartContractAddress> addresses) {
         this.addresses = addresses;
     }
 
+    /**
+     * Returns the vault ID for contract-related requests.
+     *
+     * @return the vault ID
+     */
     public String getVaultId() {
         return vaultId;
     }
 
+    /**
+     * Sets the vault ID for contract-related requests.
+     *
+     * @param vaultId the vault ID
+     */
     public void setVaultId(String vaultId) {
         this.vaultId = vaultId;
     }
 
+    /**
+     * Returns the metadata for this contract.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata for this contract.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }

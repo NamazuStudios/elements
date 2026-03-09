@@ -13,6 +13,7 @@ import java.util.Objects;
 
 import static dev.getelements.elements.sdk.model.Constants.Regexp.WORD_ONLY;
 
+/** Represents a single property definition within a {@link MetadataSpec}. */
 @ValidProperties
 public class MetadataSpecProperty implements Serializable, MetadataSpecPropertiesContainer {
 
@@ -41,52 +42,113 @@ public class MetadataSpecProperty implements Serializable, MetadataSpecPropertie
     @Valid
     private List<MetadataSpecProperty> properties;
 
+    /** Creates a new instance. */
     public MetadataSpecProperty() {}
 
+    /**
+     * Returns the unique name of the field.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique name of the field.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the field type.
+     *
+     * @return the type
+     */
     public MetadataSpecPropertyType getType() {
         return type;
     }
 
+    /**
+     * Sets the field type.
+     *
+     * @param type the type
+     */
     public void setType(MetadataSpecPropertyType type) {
         this.type = type;
     }
 
+    /**
+     * Returns the display name of the field.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the field.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns whether this field is required.
+     *
+     * @return true if required
+     */
     public boolean isRequired() {
         return required;
     }
 
+    /**
+     * Sets whether this field is required.
+     *
+     * @param required true if required
+     */
     public void setRequired(boolean required) {
         this.required = required;
     }
 
+    /**
+     * Returns the placeholder description for the editor.
+     *
+     * @return the placeholder
+     */
     public String getPlaceholder() {
         return placeholder;
     }
 
+    /**
+     * Sets the placeholder description for the editor.
+     *
+     * @param placeholder the placeholder
+     */
     public void setPlaceholder(String placeholder) {
         this.placeholder = placeholder;
     }
 
+    /**
+     * Returns the default value, or null if unspecified.
+     *
+     * @return the default value
+     */
     public Object getDefaultValue() {
         return defaultValue;
     }
 
+    /**
+     * Sets the default value.
+     *
+     * @param defaultValue the default value
+     */
     public void setDefaultValue(Object defaultValue) {
         this.defaultValue = defaultValue;
     }
@@ -96,6 +158,11 @@ public class MetadataSpecProperty implements Serializable, MetadataSpecPropertie
         return properties;
     }
 
+    /**
+     * Sets the nested properties.
+     *
+     * @param properties the properties
+     */
     public void setProperties(List<MetadataSpecProperty> properties) {
         this.properties = properties;
     }

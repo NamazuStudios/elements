@@ -12,8 +12,12 @@ import java.util.Objects;
 
 import static dev.getelements.elements.sdk.model.Constants.Regexp.BASE_64;
 
+/** Represents a request to create an Auth Scheme for an Application. */
 @Schema(description = "Represents a request to create an Auth Scheme for an Application.")
 public class CreateAuthSchemeRequest {
+
+    /** Creates a new instance. */
+    public CreateAuthSchemeRequest() {}
 
     @NotNull
     @Schema(description = "The JWT audience for the scheme. Must be unique.")
@@ -42,50 +46,110 @@ public class CreateAuthSchemeRequest {
     @Schema(description = "The list of issuers allowed to use this scheme.")
     private List<String> allowedIssuers;
 
+    /**
+     * Returns the JWT audience for the scheme.
+     *
+     * @return the audience
+     */
     public String getAudience() {
         return audience;
     }
 
+    /**
+     * Sets the JWT audience for the scheme.
+     *
+     * @param audience the audience
+     */
     public void setAudience(String audience) {
         this.audience = audience;
     }
 
+    /**
+     * Returns the base-64 encoded public key.
+     *
+     * @return the public key
+     */
     public String getPublicKey() {
         return publicKey;
     }
 
+    /**
+     * Sets the base-64 encoded public key.
+     *
+     * @param publicKey the public key
+     */
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
     }
 
+    /**
+     * Returns the cryptographic algorithm.
+     *
+     * @return the algorithm
+     */
     public PrivateKeyCrytpoAlgorithm getAlgorithm() {
         return algorithm;
     }
 
+    /**
+     * Sets the cryptographic algorithm.
+     *
+     * @param algorithm the algorithm
+     */
     public void setAlgorithm(PrivateKeyCrytpoAlgorithm algorithm) {
         this.algorithm = algorithm;
     }
 
+    /**
+     * Returns the highest permitted user level.
+     *
+     * @return the user level
+     */
     public User.Level getUserLevel() {
         return userLevel;
     }
 
+    /**
+     * Sets the highest permitted user level.
+     *
+     * @param userLevel the user level
+     */
     public void setUserLevel(User.Level userLevel) {
         this.userLevel = userLevel;
     }
 
+    /**
+     * Returns the tags for this auth scheme request.
+     *
+     * @return the tags
+     */
     public List<String> getTags() {
         return tags;
     }
 
+    /**
+     * Sets the tags for this auth scheme request.
+     *
+     * @param tags the tags
+     */
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
+    /**
+     * Returns the list of allowed issuers.
+     *
+     * @return the allowed issuers
+     */
     public List<String> getAllowedIssuers() {
         return allowedIssuers;
     }
 
+    /**
+     * Sets the list of allowed issuers.
+     *
+     * @param allowedIssuers the allowed issuers
+     */
     public void setAllowedIssuers(List<String> allowedIssuers) {
         this.allowedIssuers = allowedIssuers;
     }

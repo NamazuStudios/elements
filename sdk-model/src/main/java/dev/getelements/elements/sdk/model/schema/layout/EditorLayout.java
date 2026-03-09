@@ -4,8 +4,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Objects;
 
+/** Defines an editor layout element. */
 @Schema(description = "Defines an editor layout element.")
 public class EditorLayout {
+
+    /** Creates a new instance. */
+    public EditorLayout() {}
 
     private String key;
 
@@ -13,26 +17,56 @@ public class EditorLayout {
 
     private String placeholder;
 
+    /**
+     * Returns the key for this layout element.
+     *
+     * @return the key
+     */
     public String getKey() {
         return key;
     }
 
+    /**
+     * Sets the key for this layout element.
+     *
+     * @param key the key
+     */
     public void setKey(String key) {
         this.key = key;
     }
 
+    /**
+     * Returns the title for this layout element.
+     *
+     * @return the title
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * Sets the title for this layout element.
+     *
+     * @param title the title
+     */
     public void setTitle(String title) {
         this.title = title;
     }
 
+    /**
+     * Returns the placeholder text for this layout element.
+     *
+     * @return the placeholder
+     */
     public String getPlaceholder() {
         return placeholder;
     }
 
+    /**
+     * Sets the placeholder text for this layout element.
+     *
+     * @param placeholder the placeholder
+     */
     public void setPlaceholder(String placeholder) {
         this.placeholder = placeholder;
     }

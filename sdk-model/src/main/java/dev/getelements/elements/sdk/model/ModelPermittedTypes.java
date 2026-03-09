@@ -5,8 +5,12 @@ import dev.getelements.elements.sdk.annotation.ElementPrivate;
 
 import java.util.Set;
 
+/** Defines the permitted types for the sdk-model module. */
 @ElementPrivate
 public class ModelPermittedTypes implements PermittedTypes {
+
+    /** Creates a new instance. */
+    public ModelPermittedTypes() {}
 
     private static final Set<String> PERMITTED_TYPES = Set.of(
             // More information as to why this is here:

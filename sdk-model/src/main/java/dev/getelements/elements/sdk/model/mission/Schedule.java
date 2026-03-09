@@ -11,8 +11,12 @@ import java.util.Objects;
 
 import static dev.getelements.elements.sdk.model.Constants.Regexp.WHOLE_WORD_ONLY;
 
+/** Represents a named schedule that can be attached to missions. */
 @Schema
 public class Schedule {
+
+    /** Creates a new instance. */
+    public Schedule() {}
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = ValidationGroups.Update.class)
@@ -32,34 +36,74 @@ public class Schedule {
     @Schema(description = "The description for this schedule.")
     private String description;
 
+    /**
+     * Returns the unique ID of the schedule.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the schedule.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the unique name of the schedule.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique name of the schedule.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the display name of the schedule.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the schedule.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the description for this schedule.
+     *
+     * @return the description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the description for this schedule.
+     *
+     * @param description the description
+     */
     public void setDescription(String description) {
         this.description = description;
     }

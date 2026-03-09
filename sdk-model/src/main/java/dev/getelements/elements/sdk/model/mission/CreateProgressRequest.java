@@ -8,7 +8,11 @@ import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
+/** Represents a request to create a mission progress entry. */
 public class CreateProgressRequest implements Serializable {
+
+    /** Creates a new instance. */
+    public CreateProgressRequest() {}
 
     @NotNull(groups={ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @Schema(description = "The profile of the owner of this progress")
@@ -18,18 +22,38 @@ public class CreateProgressRequest implements Serializable {
     @Schema(description = "The mission")
     private ProgressMissionInfo mission;
 
+    /**
+     * Returns the profile of the progress owner.
+     *
+     * @return the profile
+     */
     public Profile getProfile() {
         return profile;
     }
 
+    /**
+     * Sets the profile of the progress owner.
+     *
+     * @param profile the profile
+     */
     public void setProfile(Profile profile) {
         this.profile = profile;
     }
 
+    /**
+     * Returns the mission associated with this progress.
+     *
+     * @return the mission info
+     */
     public ProgressMissionInfo getMission() {
         return mission;
     }
 
+    /**
+     * Sets the mission associated with this progress.
+     *
+     * @param mission the mission info
+     */
     public void setMission(ProgressMissionInfo mission) {
         this.mission = mission;
     }

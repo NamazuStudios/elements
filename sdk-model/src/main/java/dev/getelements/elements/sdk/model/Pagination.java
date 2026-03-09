@@ -11,11 +11,21 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Created by patricktwohig on 3/25/15.
+ * Represents a paginated result set with offset and total count.
+ *
+ * @param <T> the element type
  */
 @Schema
 public class Pagination<T> implements Iterable<T>, Serializable {
 
+    /** Creates a new instance. */
+    public Pagination() {}
+
+    /**
+     * Returns an empty pagination with no results.
+     * @param <T> the result type
+     * @return an empty pagination
+     */
     public static <T> Pagination<T> empty() {
         return new Pagination<>();
     }
@@ -28,38 +38,76 @@ public class Pagination<T> implements Iterable<T>, Serializable {
 
     private List<T> objects = new ArrayList<T>();
 
+    /**
+     * Returns the current page offset.
+     * @return the offset
+     */
     public int getOffset() {
         return offset;
     }
 
+    /**
+     * Sets the current page offset.
+     * @param offset the offset
+     */
     public void setOffset(int offset) {
         this.offset = offset;
     }
 
+    /**
+     * Returns the total number of results.
+     * @return the total count
+     */
     public int getTotal() {
         return total;
     }
 
+    /**
+     * Sets the total number of results.
+     * @param total the total count
+     */
     public void setTotal(int total) {
         this.total = total;
     }
 
+    /**
+     * Returns the objects in this page.
+     * @return the objects
+     */
     public List<T> getObjects() {
         return objects;
     }
 
+    /**
+     * Sets the objects in this page.
+     * @param objects the objects
+     */
     public void setObjects(List<T> objects) {
         this.objects = objects;
     }
 
+    /**
+     * Returns whether the total is an approximation.
+     * @return true if the total is an approximation
+     */
     public boolean isApproximation() {
         return approximation;
     }
 
+    /**
+     * Sets whether the total is an approximation.
+     * @param approximation true if the total is an approximation
+     */
     public void setApproximation(boolean approximation) {
         this.approximation = approximation;
     }
 
+    /**
+     * Creates a Pagination from a stream, collecting all elements.
+     * @param <U> the element type
+     * @param uStream the stream of elements
+     * @return a Pagination containing all stream elements
+     */
     public static <U> Pagination<U> from(final Stream<U> uStream) {
         final Pagination<U> uPagination = new Pagination<>();
         final List<U> objects = uStream.collect(Collectors.toList());
@@ -68,6 +116,12 @@ public class Pagination<T> implements Iterable<T>, Serializable {
         return uPagination;
     }
 
+    /**
+     * Transforms this pagination by applying a function to each element.
+     * @param <U> the target element type
+     * @param function the transformation function
+     * @return a new Pagination with transformed elements
+     */
     public <U> Pagination<U> transform(final Function<T, U> function) {
 
         final Pagination<U> tPagination = new Pagination<>();
@@ -86,6 +140,10 @@ public class Pagination<T> implements Iterable<T>, Serializable {
 
     }
 
+    /**
+     * Returns a sequential stream of the objects in this page.
+     * @return a stream of objects
+     */
     public Stream<T> stream() {
         return getObjects() == null
                 ? Stream.empty()

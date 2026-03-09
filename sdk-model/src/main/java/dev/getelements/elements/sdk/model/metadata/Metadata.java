@@ -13,8 +13,12 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+/** Represents a custom metadata object. */
 @Schema(description = "Represents a custom metadata object.")
 public class Metadata implements Serializable {
+
+    /** Creates a new instance. */
+    public Metadata() {}
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = {ValidationGroups.Update.class, ValidationGroups.Read.class})
@@ -37,42 +41,92 @@ public class Metadata implements Serializable {
     @Schema(description = "The minimum level of access required to view this metadata.")
     private User.Level accessLevel;
 
+    /**
+     * Returns the unique ID of the metadata object.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the metadata object.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the unique name of the metadata object.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique name of the metadata object.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the metadata payload as key-value pairs.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata payload as key-value pairs.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
+    /**
+     * Returns the metadata spec.
+     *
+     * @return the metadata spec
+     */
     public MetadataSpec getMetadataSpec() {
         return metadataSpec;
     }
 
+    /**
+     * Sets the metadata spec.
+     *
+     * @param metadataSpec the metadata spec
+     */
     public void setMetadataSpec(MetadataSpec metadataSpec) {
         this.metadataSpec = metadataSpec;
     }
 
+    /**
+     * Returns the access level required to view this metadata.
+     *
+     * @return the access level
+     */
     public User.Level getAccessLevel() {
         return accessLevel;
     }
 
+    /**
+     * Sets the access level required to view this metadata.
+     *
+     * @param accessLevel the access level
+     */
     public void setAccessLevel(User.Level accessLevel) {
         this.accessLevel = accessLevel;
     }

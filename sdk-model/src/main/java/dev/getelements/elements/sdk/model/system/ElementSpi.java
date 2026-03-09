@@ -12,6 +12,7 @@ import java.util.List;
  *
  * @param id the well known ID
  * @param version the version compatible with this set of artifacts
+ * @param description briefly describes this SPI and its intended use case
  * @param coordinates the artifacts themselves
  */
 @Schema(description = "An Element Loader SPI Implementation.")

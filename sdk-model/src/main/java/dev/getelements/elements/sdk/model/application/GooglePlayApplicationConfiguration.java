@@ -15,6 +15,9 @@ import java.util.Objects;
  */
 public class GooglePlayApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
+    /** Creates a new instance. */
+    public GooglePlayApplicationConfiguration() {}
+
     private String applicationId;
 
     private Map<String, Object> jsonKey;
@@ -24,41 +27,71 @@ public class GooglePlayApplicationConfiguration extends ApplicationConfiguration
     private List<ProductBundle> productBundles;
 
     /**
-     * Gets the Application ID, as defined in Google Play (com.mycompany.app)
+     * Gets the Application ID, as defined in Google Play (com.mycompany.app).
      *
-     * @return
+     * @return the application ID
      */
     public String getApplicationId() {
         return applicationId;
     }
 
     /**
-     * Sets the Application ID
+     * Sets the Application ID.
      *
-     * @param applicationId
+     * @param applicationId the application ID
      */
     public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
 
+    /**
+     * Returns the JSON key for authenticating with the Google Play Developer API.
+     *
+     * @return the JSON key
+     */
     public Map<String, Object> getJsonKey() {
         return jsonKey;
     }
 
+    /**
+     * Sets the JSON key for authenticating with the Google Play Developer API.
+     *
+     * @param jsonKey the JSON key
+     */
     public void setJsonKey(Map<String, Object> jsonKey) {
         this.jsonKey = jsonKey;
     }
 
+    /**
+     * Returns the product bundles.
+     *
+     * @return the product bundles
+     * @deprecated use IAP SKU directly
+     */
     @Deprecated
     public List<ProductBundle> getProductBundles() {
         return productBundles;
     }
 
+    /**
+     * Sets the product bundles.
+     *
+     * @param productBundles the product bundles
+     * @deprecated use IAP SKU directly
+     */
     @Deprecated
     public void setProductBundles(List<ProductBundle> productBundles) {
         this.productBundles = productBundles;
     }
 
+    /**
+     * Returns the product bundle for the given product ID.
+     *
+     * @param productId the product ID to look up
+     * @return the matching product bundle, or null if not found
+     * @deprecated use IAP SKU directly
+     */
+    @Deprecated
     public ProductBundle getProductBundle(final String productId) {
         if (getProductBundles() == null) {
             return null;

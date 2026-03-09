@@ -6,6 +6,19 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Request to create a new Element with specified artifacts and their repositories.
+ *
+ * @param applicationNameOrId the application name or ID, or null for global scope
+ * @param elements the Element path definitions
+ * @param packages the Element package definitions
+ * @param useDefaultRepositories true to include default artifact repositories
+ * @param repositories the artifact repositories for dependency resolution
+ * @param pathAttributes per-path custom attribute maps
+ * @param pathSpiBuiltins per-path builtin SPI configurations
+ * @param pathSpiClassPaths per-path custom SPI class paths
+ * @param state the requested deployment state
+ */
 @Schema(description =
         "Request to create a new Element with specified artifacts and their repositories. All artifacts specified " +
         "must exist in the repositories provided. Additionally, the repositories must include any dependencies " +

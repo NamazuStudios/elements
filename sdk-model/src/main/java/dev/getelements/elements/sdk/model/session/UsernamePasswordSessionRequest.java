@@ -8,8 +8,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.Objects;
 
+/** Represents a request to create a session using a username and password. */
 @Schema
 public class UsernamePasswordSessionRequest {
+
+    /** Creates a new instance. */
+    public UsernamePasswordSessionRequest() {}
 
     @NotBlank
     @Schema(description = "The user ID.")
@@ -25,34 +29,74 @@ public class UsernamePasswordSessionRequest {
     @Schema(description = "A query string to select the profile to use.")
     private String profileSelector;
 
+    /**
+     * Returns the user ID (login name or email) for this session request.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Sets the user ID (login name or email) for this session request.
+     *
+     * @param userId the user ID
+     */
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    /**
+     * Returns the plaintext password for this session request.
+     *
+     * @return the password
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Sets the plaintext password for this session request.
+     *
+     * @param password the password
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * Returns the profile ID to assign to the session.
+     *
+     * @return the profile ID
+     */
     public String getProfileId() {
         return profileId;
     }
 
+    /**
+     * Sets the profile ID to assign to the session.
+     *
+     * @param profileId the profile ID
+     */
     public void setProfileId(String profileId) {
         this.profileId = profileId;
     }
 
+    /**
+     * Returns a query string used to select the profile for this session.
+     *
+     * @return the profile selector query string
+     */
     public String getProfileSelector() {
         return profileSelector;
     }
 
+    /**
+     * Sets a query string used to select the profile for this session.
+     *
+     * @param profileSelector the profile selector query string
+     */
     public void setProfileSelector(String profileSelector) {
         this.profileSelector = profileSelector;
     }

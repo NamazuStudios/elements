@@ -7,6 +7,18 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Request to update a new Element with specified artifacts and their repositories.
+ *
+ * @param elements list of element path definitions
+ * @param packages list of element package definitions
+ * @param useDefaultRepositories whether to use default artifact repositories
+ * @param repositories list of artifact repositories
+ * @param pathAttributes map of element paths to custom attributes
+ * @param pathSpiBuiltins map of element paths to builtin SPI configurations
+ * @param pathSpiClassPaths map of element paths to custom SPI class paths
+ * @param state the deployment state
+ */
 @Schema(description =
         "Request to update a new Element with specified artifacts and their repositories. All artifacts specified " +
         "must exist in the repositories provided. Additionally, the repositories must include any dependencies " +

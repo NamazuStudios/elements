@@ -12,6 +12,9 @@ import java.util.function.Consumer;
  */
 public class PaginationWalker {
 
+    /** Creates a new instance. */
+    public PaginationWalker() {}
+
     private int count = 20;
 
     private int offset = 0;
@@ -96,10 +99,11 @@ public class PaginationWalker {
     }
 
     /**
-     * Walks a dataset passing each object from each page into the
-     * @param walkFunction
-     * @param tConsumer
-     * @param <PaginatedT>
+     * Walks a dataset passing each object from each page into the consumer.
+     *
+     * @param walkFunction the walk function to retrieve each page
+     * @param tConsumer the consumer to accept each paginated element
+     * @param <PaginatedT> the paginated type
      */
     public <PaginatedT> void forEach(final WalkFunction<PaginatedT> walkFunction,
                                      final Consumer<PaginatedT> tConsumer) {
@@ -112,7 +116,7 @@ public class PaginationWalker {
     /**
      * Used to fetch the next page of a collection.
      *
-     * @param <T>
+     * @param <T> the element type
      */
     @FunctionalInterface
     public interface WalkFunction<T> {

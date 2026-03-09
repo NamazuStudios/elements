@@ -9,6 +9,12 @@ import dev.getelements.elements.sdk.record.ElementServiceImplementationRecord;
  */
 public record ElementServiceImplementationMetadata(String type, boolean expose) {
 
+    /**
+     * Creates a new instance from the given {@link ElementServiceImplementationRecord}.
+     *
+     * @param implementation the record to convert from
+     * @return a new instance
+     */
     public static ElementServiceImplementationMetadata from(final ElementServiceImplementationRecord implementation) {
         return new ElementServiceImplementationMetadata(
                 implementation.type().getName(),

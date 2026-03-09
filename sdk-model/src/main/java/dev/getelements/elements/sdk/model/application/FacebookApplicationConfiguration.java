@@ -17,6 +17,9 @@ import java.util.List;
                   "the Facebook API.")
 public class FacebookApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
+    /** Creates a new instance. */
+    public FacebookApplicationConfiguration() {}
+
     @NotNull
     @Schema(description = "The AppID as it appears in the Facebook Developer Console")
     private String applicationId;
@@ -33,36 +36,78 @@ public class FacebookApplicationConfiguration extends ApplicationConfiguration i
     @Deprecated
     private List<ProductBundle> productBundles;
 
+    /**
+     * Returns the Facebook application ID.
+     *
+     * @return the application ID
+     */
     public String getApplicationId() {
         return applicationId;
     }
 
+    /**
+     * Sets the Facebook application ID.
+     *
+     * @param applicationId the application ID
+     */
     public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
 
+    /**
+     * Returns the Facebook application secret.
+     *
+     * @return the application secret
+     */
     public String getApplicationSecret() {
         return applicationSecret;
     }
 
+    /**
+     * Sets the Facebook application secret.
+     *
+     * @param applicationSecret the application secret
+     */
     public void setApplicationSecret(String applicationSecret) {
         this.applicationSecret = applicationSecret;
     }
 
+    /**
+     * Returns the built-in application permissions.
+     *
+     * @return the builtin application permissions
+     */
     public List<String> getBuiltinApplicationPermissions() {
         return builtinApplicationPermissions;
     }
 
+    /**
+     * Returns the product bundles.
+     *
+     * @return the product bundles
+     * @deprecated use IAP SKU directly
+     */
     @Deprecated
     public List<ProductBundle> getProductBundles() {
         return productBundles;
     }
 
+    /**
+     * Sets the product bundles.
+     *
+     * @param productBundles the product bundles
+     * @deprecated use IAP SKU directly
+     */
     @Deprecated
     public void setProductBundles(List<ProductBundle> productBundles) {
         this.productBundles = productBundles;
     }
 
+    /**
+     * Sets the built-in application permissions.
+     *
+     * @param builtinApplicationPermissions the builtin application permissions
+     */
     public void setBuiltinApplicationPermissions(List<String> builtinApplicationPermissions) {
         this.builtinApplicationPermissions = builtinApplicationPermissions;
     }

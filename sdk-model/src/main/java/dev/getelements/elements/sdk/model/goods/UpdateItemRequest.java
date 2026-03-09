@@ -8,8 +8,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.*;
 
+/** Represents a request to update an existing item's properties. */
 @Schema
 public class UpdateItemRequest {
+
+    /** Creates a new instance. */
+    public UpdateItemRequest() {}
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
@@ -147,6 +151,12 @@ public class UpdateItemRequest {
         this.metadata = metadata != null ? metadata : Collections.emptyMap();
     }
 
+    /**
+     * Adds a single metadata entry to this item, initializing the metadata map if necessary.
+     *
+     * @param name the metadata key
+     * @param value the metadata value
+     */
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {
@@ -157,6 +167,11 @@ public class UpdateItemRequest {
 
     }
 
+    /**
+     * Returns whether this item is publicly visible.
+     *
+     * @return true if publicly visible
+     */
     public Boolean isPublicVisible() {
         return publicVisible;
     }

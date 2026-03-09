@@ -5,8 +5,12 @@ import dev.getelements.elements.sdk.annotation.ElementPrivate;
 
 import java.util.List;
 
+/** Defines the permitted packages for the sdk-model module. */
 @ElementPrivate
 public class ModelPermittedPackages implements PermittedPackages {
+
+    /** Creates a new instance. */
+    public ModelPermittedPackages() {}
 
     private static final List<String> PERMITTED_PACKAGES = List.of(
             "jakarta.inject",

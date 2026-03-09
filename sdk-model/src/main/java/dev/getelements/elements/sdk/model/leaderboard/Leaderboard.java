@@ -10,8 +10,12 @@ import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 import java.util.Objects;
 
+/** Represents a leaderboard for tracking and ranking player scores. */
 @Schema
 public class Leaderboard {
+
+    /** Creates a new instance. */
+    public Leaderboard() {}
 
     @Null
     private String id;
@@ -51,60 +55,140 @@ public class Leaderboard {
             "firstEpochTimestamp must also be provided.")
     private Long epochInterval;
 
+    /**
+     * Returns the unique ID of the leaderboard.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the leaderboard.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the unique name of the leaderboard.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique name of the leaderboard.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the time strategy type.
+     *
+     * @return the time strategy type
+     */
     public TimeStrategyType getTimeStrategyType() {
         return timeStrategyType;
     }
 
+    /**
+     * Sets the time strategy type.
+     *
+     * @param timeStrategyType the time strategy type
+     */
     public void setTimeStrategyType(TimeStrategyType timeStrategyType) {
         this.timeStrategyType = timeStrategyType;
     }
 
+    /**
+     * Returns the score strategy type.
+     *
+     * @return the score strategy type
+     */
     public ScoreStrategyType getScoreStrategyType() {
         return scoreStrategyType;
     }
 
+    /**
+     * Sets the score strategy type.
+     *
+     * @param scoreStrategyType the score strategy type
+     */
     public void setScoreStrategyType(ScoreStrategyType scoreStrategyType) {
         this.scoreStrategyType = scoreStrategyType;
     }
 
+    /**
+     * Returns the display title of the leaderboard.
+     *
+     * @return the title
+     */
     public String getTitle() {
         return title;
     }
 
+    /**
+     * Sets the display title of the leaderboard.
+     *
+     * @param title the title
+     */
     public void setTitle(String title) {
         this.title = title;
     }
 
+    /**
+     * Returns the score units of measure.
+     *
+     * @return the score units
+     */
     public String getScoreUnits() {
         return scoreUnits;
     }
 
+    /**
+     * Sets the score units of measure.
+     *
+     * @param scoreUnits the score units
+     */
     public void setScoreUnits(String scoreUnits) {
         this.scoreUnits = scoreUnits;
     }
 
+    /**
+     * Returns the first epoch timestamp in milliseconds.
+     *
+     * @return the first epoch timestamp
+     */
     public Long getFirstEpochTimestamp() { return firstEpochTimestamp; }
 
+    /**
+     * Sets the first epoch timestamp in milliseconds.
+     *
+     * @param firstEpochTimestamp the first epoch timestamp
+     */
     public void setFirstEpochTimestamp(Long firstEpochTimestamp) { this.firstEpochTimestamp = firstEpochTimestamp; }
 
+    /**
+     * Returns the epoch interval duration in milliseconds.
+     *
+     * @return the epoch interval
+     */
     public Long getEpochInterval() { return epochInterval; }
 
+    /**
+     * Sets the epoch interval duration in milliseconds.
+     *
+     * @param epochInterval the epoch interval
+     */
     public void setEpochInterval(Long epochInterval) { this.epochInterval = epochInterval; }
 
 
@@ -143,6 +227,7 @@ public class Leaderboard {
                 '}';
     }
 
+    /** Defines the time strategy for the leaderboard. */
     public enum TimeStrategyType {
 
         /**
@@ -157,6 +242,7 @@ public class Leaderboard {
 
     }
 
+    /** Defines the score strategy for the leaderboard. */
     public enum ScoreStrategyType {
 
         /**

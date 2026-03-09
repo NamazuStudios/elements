@@ -22,6 +22,9 @@ import static dev.getelements.elements.sdk.model.ValidationGroups.*;
 @Schema
 public class User implements Serializable {
 
+    /** Creates a new instance. */
+    public User() {}
+
     @Null(groups = Insert.class)
     @NotNull(groups = {Update.class, Read.class})
     @Schema(description = "The user's database assigned unique ID.")
@@ -109,7 +112,7 @@ public class User implements Serializable {
     /**
      * Gets the user's login name.
      *
-     * @return
+     * @return the user's login name
      */
     public String getName() {
         return name;
@@ -118,7 +121,7 @@ public class User implements Serializable {
     /**
      * Sets the user's login name.
      *
-     * @param name
+     * @param name the user's login name
      */
     public void setName(String name) {
         this.name = name;
@@ -126,14 +129,17 @@ public class User implements Serializable {
 
     /**
      * Gets the user's email address.
+     *
+     * @return the user's email address
      */
     public String getEmail() {
         return email;
     }
 
     /**
-     * Sets the user's email
-     * @param email
+     * Sets the user's email address.
+     *
+     * @param email the user's email address
      */
     public void setEmail(String email) {
         this.email = email;
@@ -141,7 +147,8 @@ public class User implements Serializable {
 
     /**
      * Gets the user's access level.
-     * @return
+     *
+     * @return the user's access level
      */
     public Level getLevel() {
         return level;
@@ -150,7 +157,7 @@ public class User implements Serializable {
     /**
      * Sets the user's access level.
      *
-     * @param level
+     * @param level the user's access level
      */
     public void setLevel(Level level) {
         this.level = level;
@@ -174,14 +181,25 @@ public class User implements Serializable {
      */
     public static final String USER_ATTRIBUTE = User.class.getName();
 
+    /**
+     * Returns the user's primary phone number.
+     *
+     * @return the primary phone number
+     */
     public String getPrimaryPhoneNb() {
         return primaryPhoneNb;
     }
 
+    /**
+     * Sets the user's primary phone number.
+     *
+     * @param primaryPhoneNb the primary phone number
+     */
     public void setPrimaryPhoneNb(String primaryPhoneNb) {
         this.primaryPhoneNb = primaryPhoneNb;
     }
 
+    /** Defines the access levels for a {@link User}. */
     public enum Level {
 
         /**
@@ -202,26 +220,56 @@ public class User implements Serializable {
 
     }
 
+    /**
+     * Returns the user's first name.
+     *
+     * @return the first name
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * Returns the user's last name.
+     *
+     * @return the last name
+     */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * Sets the user's first name.
+     *
+     * @param firstName the first name
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * Sets the user's last name.
+     *
+     * @param lastName the last name
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    /**
+     * Returns the set of linked account or auth scheme names.
+     *
+     * @return the linked accounts
+     */
     public Set<String> getLinkedAccounts() {
         return linkedAccounts;
     }
 
+    /**
+     * Sets the set of linked account or auth scheme names.
+     *
+     * @param linkedAccounts the linked accounts
+     */
     public void setLinkedAccounts(Set<String> linkedAccounts) {
         this.linkedAccounts = linkedAccounts;
     }

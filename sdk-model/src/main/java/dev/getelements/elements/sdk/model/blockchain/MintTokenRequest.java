@@ -8,8 +8,16 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import java.util.List;
 
+/**
+ * Represents a request to mint a blockchain token.
+ *
+ * @deprecated use the new smart contract API instead
+ */
 @Deprecated
 public class MintTokenRequest {
+
+    /** Creates a new instance. */
+    public MintTokenRequest() {}
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @Schema(description = "The Elements Id of the token to mint.")
@@ -27,34 +35,74 @@ public class MintTokenRequest {
     @Schema(description = "The password of the wallet with funds to mint.")
     private String password;
 
+    /**
+     * Returns the Elements ID of the token to mint.
+     *
+     * @return the token ID
+     */
     public String getTokenId() {
         return tokenId;
     }
 
+    /**
+     * Sets the Elements ID of the token to mint.
+     *
+     * @param tokenId the token ID
+     */
     public void setTokenId(String tokenId) {
         this.tokenId = tokenId;
     }
 
+    /**
+     * Returns the owner address to assign the tokens to.
+     *
+     * @return the owner address
+     */
     public String getOwnerAddress() {
         return ownerAddress;
     }
 
+    /**
+     * Sets the owner address to assign the tokens to.
+     *
+     * @param ownerAddress the owner address
+     */
     public void setOwnerAddress(String ownerAddress) {
         this.ownerAddress = ownerAddress;
     }
 
+    /**
+     * Returns the elements wallet ID.
+     *
+     * @return the wallet ID
+     */
     public String getWalletId() {
         return walletId;
     }
 
+    /**
+     * Sets the elements wallet ID.
+     *
+     * @param walletId the wallet ID
+     */
     public void setWalletId(String walletId) {
         this.walletId = walletId;
     }
 
+    /**
+     * Returns the wallet password.
+     *
+     * @return the password
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Sets the wallet password.
+     *
+     * @param password the password
+     */
     public void setPassword(String password) {
         this.password = password;
     }

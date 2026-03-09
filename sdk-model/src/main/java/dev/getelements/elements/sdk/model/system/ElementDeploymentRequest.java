@@ -41,6 +41,7 @@ public interface ElementDeploymentRequest {
      * Indicate if the deployment is ready. Ready means that there is at least one Element definition specified.
      * Depending on implementation, additional conditions may apply.
      *
+     * @param largeObjectReference the large object reference, may be null
      * @return true if ready
      */
     default boolean ready(final LargeObjectReference largeObjectReference) {
@@ -51,8 +52,9 @@ public interface ElementDeploymentRequest {
 
     /**
      * Returns the effective state of the deployment based on the state of the request. If the deployment is ready,
-     * which is to say that there exists either an ELM artifact or a list of artifacts, then the state will be
+     * which is to say that there exists either an ELM artifact or a list of artifacts, then the state will be ENABLED.
      *
+     * @param largeObjectReference the large object reference, may be null
      * @return the effective state, never null
      */
     default ElementDeploymentState effectiveState(final LargeObjectReference largeObjectReference) {

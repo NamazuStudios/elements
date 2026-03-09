@@ -11,10 +11,11 @@ import java.util.Set;
 
 import static java.lang.System.arraycopy;
 
-/**
- * Created by patricktwohig on 5/7/15.
- */
+/** Helper class for validating model objects using Jakarta Bean Validation. */
 public class ValidationHelper {
+
+    /** Creates a new instance. */
+    public ValidationHelper() {}
 
     @Inject
     private Validator validator;
@@ -23,7 +24,9 @@ public class ValidationHelper {
      * Validates the given model object.  If the model fails validation, then an instance
      * of ValidationFailureException is thrown.
      *
+     * @param <T> the type of the model object
      * @param model the model
+     * @return the validated model object
      * @throws ValidationFailureException if validation fails.
      */
     public <T> T validateModel(final T model) throws ValidationFailureException {
@@ -47,9 +50,11 @@ public class ValidationHelper {
      * is thrown.  In addition to the groups specified, this will assume the user is requesting validation from the
      * {@link Default} group as well.
      *
+     * @param <T> the type of the model object
      * @param model the model
      * @param first the first group
      * @param remaining the remaining n groups
+     * @return the validated model object
      * @throws ValidationFailureException if validation fails.
      */
     public <T> T validateModel(final T model,
