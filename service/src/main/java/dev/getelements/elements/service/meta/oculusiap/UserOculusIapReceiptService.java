@@ -163,7 +163,10 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
 
     @Override
     public List<RewardIssuance> getOrCreateRewardIssuances(final OculusIapReceipt oculusIapReceipt) {
-        return List.of();
+        return getProductBundleService().processVerifiedPurchase(
+                OCULUS_IAP_SCHEME,
+                oculusIapReceipt.getSku(),
+                oculusIapReceipt.getPurchaseId());
     }
 
     private OculusIapReceipt convertReceipt(final Receipt receipt) {

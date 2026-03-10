@@ -121,7 +121,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         // If verification was successful, we try to write the receipt to the db
         if(response != null && response.getItems() != null) {
             getOrCreateFacebookIapReceipt(receiptData);
-            getProductBundleService().processVerifiedPurchase(
+            return getProductBundleService().processVerifiedPurchase(
                     FACEBOOK_IAP_SCHEME,
                     receiptData.getSku(),
                     receiptData.getPurchaseId());

@@ -162,17 +162,15 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         final GooglePlayIapReceipt resultGooglePlayIapReceipt =
                 getOrCreateGooglePlayIapReceipt(googlePlayIapReceipt);
 
-        getProductBundleService().processVerifiedPurchase(
-                GOOGLE_IAP_SCHEME,
-                productId,
-                googlePlayIapReceipt.getOrderId());
-
         return resultGooglePlayIapReceipt;
     }
 
     @Override
     public List<RewardIssuance> getOrCreateRewardIssuances(final GooglePlayIapReceipt googlePlayIapReceipt) {
-        return List.of();
+        return getProductBundleService().processVerifiedPurchase(
+                GOOGLE_IAP_SCHEME,
+                googlePlayIapReceipt.getProductId(),
+                googlePlayIapReceipt.getOrderId());
     }
 
     private GooglePlayApplicationConfiguration getGooglePlayApplicationConfiguration() {

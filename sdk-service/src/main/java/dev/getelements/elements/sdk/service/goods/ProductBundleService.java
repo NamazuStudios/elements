@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.goods.ProductBundle;
+import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 
 import java.util.List;
 
@@ -120,12 +121,13 @@ public interface ProductBundleService {
      * for the current user's application, and issues a reward issuance for each configured reward.
      * Uses idempotency so repeated calls with the same arguments produce no duplicate rewards.
      *
-     * <p>If no matching {@link ProductBundle} is found the call silently returns.
+     * <p>If no matching {@link ProductBundle} is found the call silently returns an empty list.
      *
      * @param schema                the purchase provider schema (e.g. {@code com.apple.appstore})
      * @param productId             the product/SKU identifier as used by the provider
      * @param originalTransactionId the unique transaction id used to build idempotency keys
+     * @return the list of {@link RewardIssuance} records that were created or already existed
      */
-    void processVerifiedPurchase(String schema, String productId, String originalTransactionId);
+    List<RewardIssuance> processVerifiedPurchase(String schema, String productId, String originalTransactionId);
 
 }

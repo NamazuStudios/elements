@@ -44,7 +44,9 @@ public class MongoProductBundleDao implements ProductBundleDao {
 
     @Override
     public Pagination<ProductBundle> getProductBundles(final int offset, final int count) {
+
         final var query = getDatastore().find(MongoProductBundle.class);
+
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
                 mongo -> getDozerMapperRegistry().map(mongo, ProductBundle.class),
@@ -53,9 +55,12 @@ public class MongoProductBundleDao implements ProductBundleDao {
 
     @Override
     public Pagination<ProductBundle> getProductBundles(final String applicationNameOrId, final int offset, final int count) {
+
         final var app = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
         final var query = getDatastore().find(MongoProductBundle.class);
+
         query.filter(eq("application._id", app.getObjectId()));
+
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
                 mongo -> getDozerMapperRegistry().map(mongo, ProductBundle.class),
@@ -65,11 +70,14 @@ public class MongoProductBundleDao implements ProductBundleDao {
     @Override
     public Pagination<ProductBundle> getProductBundles(final String applicationNameOrId, final String schema,
                                                        final int offset, final int count) {
+
         final var app = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
         final var query = getDatastore().find(MongoProductBundle.class);
+
         query.filter(and(
                 eq("application._id", app.getObjectId()),
                 eq("schema", schema)));
+
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
                 mongo -> getDozerMapperRegistry().map(mongo, ProductBundle.class),
@@ -81,8 +89,10 @@ public class MongoProductBundleDao implements ProductBundleDao {
             final String applicationNameOrId, final String schema,
             final String productId, final List<String> tags,
             final int offset, final int count) {
+
         final var query = getDatastore().find(MongoProductBundle.class);
         final var filters = new ArrayList<Filter>();
+
         if (applicationNameOrId != null && !applicationNameOrId.isBlank()) {
             try {
                 final var app = getMongoApplicationDao().getMongoApplication(applicationNameOrId);
@@ -91,23 +101,30 @@ public class MongoProductBundleDao implements ProductBundleDao {
                 return Pagination.empty();
             }
         }
+
         if (schema != null && !schema.isBlank()) {
             filters.add(eq("schema", schema));
         }
+
         if (productId != null && !productId.isBlank()) {
             filters.add(regex("productId", Pattern.compile(Pattern.quote(productId), Pattern.CASE_INSENSITIVE)));
         }
+
         if (tags != null) {
+
             final var nonBlankTags = tags.stream()
                     .filter(t -> t != null && !t.isBlank())
                     .toList();
+
             if (!nonBlankTags.isEmpty()) {
                 filters.add(in("tags", nonBlankTags));
             }
         }
+
         if (!filters.isEmpty()) {
             query.filter(and(filters.toArray(new Filter[0])));
         }
+
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
                 mongo -> getDozerMapperRegistry().map(mongo, ProductBundle.class),
@@ -116,8 +133,11 @@ public class MongoProductBundleDao implements ProductBundleDao {
 
     @Override
     public Pagination<ProductBundle> getProductBundlesByTag(final String tag, final int offset, final int count) {
+
         final var query = getDatastore().find(MongoProductBundle.class);
+
         query.filter(eq("tags", tag));
+
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
                 mongo -> getDozerMapperRegistry().map(mongo, ProductBundle.class),

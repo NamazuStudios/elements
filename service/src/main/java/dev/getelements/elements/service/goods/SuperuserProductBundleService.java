@@ -3,6 +3,7 @@ package dev.getelements.elements.service.goods;
 import dev.getelements.elements.sdk.dao.ProductBundleDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.goods.ProductBundle;
+import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.service.goods.ProductBundleService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -69,8 +70,8 @@ public class SuperuserProductBundleService implements ProductBundleService {
     }
 
     @Override
-    public void processVerifiedPurchase(final String schema, final String productId, final String originalTransactionId) {
-        getUserProductBundleServiceProvider().get().processVerifiedPurchase(schema, productId, originalTransactionId);
+    public List<RewardIssuance> processVerifiedPurchase(final String schema, final String productId, final String originalTransactionId) {
+        return getUserProductBundleServiceProvider().get().processVerifiedPurchase(schema, productId, originalTransactionId);
     }
 
     public ProductBundleDao getProductBundleDao() {

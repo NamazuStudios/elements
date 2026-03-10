@@ -53,7 +53,7 @@ public class OculusIapResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Attempts to consume the Oculus IAP Receipt data. " +
-            "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
+            "Returns the result of the consume action.")
     public OculusIapConsumeResponse consumeOculusIapPurchase(final OculusIapReceipt oculusIapReceipt) {
         validateReceipt(oculusIapReceipt);
         return getOculusIapReceiptService().consumeAndRecordOculusIapReceipt(oculusIapReceipt);
@@ -64,7 +64,7 @@ public class OculusIapResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Operation( summary = "Attempts to verify the Oculus IAP Receipt data." +
-            "Returns a list of RewardIssuances, some or all of which may be already redeemed.")
+            "Returns the result of the verification.")
     public OculusIapVerifyReceiptResponse verifyOculusIapPurchase(final OculusIapReceipt oculusIapReceipt) {
         validateReceipt(oculusIapReceipt);
         return getOculusIapReceiptService().verifyAndCreateOculusIapReceiptIfNeeded(oculusIapReceipt);

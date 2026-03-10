@@ -17,6 +17,7 @@ import jakarta.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -90,7 +91,7 @@ public class UserProductBundleService implements ProductBundleService {
     }
 
     @Override
-    public void processVerifiedPurchase(
+    public List<RewardIssuance> processVerifiedPurchase(
             final String schema,
             final String productId,
             final String originalTransactionId) {
@@ -105,16 +106,18 @@ public class UserProductBundleService implements ProductBundleService {
         } catch (NotFoundException e) {
             logger.debug("No Product Bundle configured for application={} schema={} productId={}",
                     applicationId, schema, productId);
-            return;
+            return List.of();
         }
 
-        getTransactionProvider().get().performAndCloseV(tx -> {
+        return getTransactionProvider().get().performAndClose(tx -> {
 
-            final var riDao = tx.getDao(RewardIssuanceDao.class);
+            final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
             final var itemDao = tx.getDao(ItemDao.class);
             final var rewards = bundle.getProductBundleRewards();
 
-            if (rewards == null) return;
+            if (rewards == null) return List.of();
+
+            final var issuances = new ArrayList<RewardIssuance>();
 
             for (int i = 0; i < rewards.size(); i++) {
 
@@ -124,17 +127,19 @@ public class UserProductBundleService implements ProductBundleService {
                         ? 1
                         : (reward.getQuantity() != null ? reward.getQuantity() : 1);
 
-                final var ri = new RewardIssuance();
-                ri.setUser(getUser());
-                ri.setItem(item);
-                ri.setItemQuantity(qty);
-                ri.setType(PERSISTENT);
-                ri.setState(ISSUED);
-                ri.setSource("PRODUCT_BUNDLE." + schema + "." + productId);
-                ri.setContext("product-bundle." + originalTransactionId + "." + reward.getItemId() + "." + i);
+                final var rewardIssuance = new RewardIssuance();
+                rewardIssuance.setUser(getUser());
+                rewardIssuance.setItem(item);
+                rewardIssuance.setItemQuantity(qty);
+                rewardIssuance.setType(PERSISTENT);
+                rewardIssuance.setState(ISSUED);
+                rewardIssuance.setSource("PRODUCT_BUNDLE." + schema + "." + productId);
+                rewardIssuance.setContext("product-bundle." + originalTransactionId + "." + reward.getItemId() + "." + i);
 
-                riDao.getOrCreateRewardIssuance(ri);
+                issuances.add(rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance));
             }
+
+            return issuances;
         });
     }
 

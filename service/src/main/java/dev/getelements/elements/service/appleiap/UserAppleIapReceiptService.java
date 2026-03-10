@@ -115,12 +115,6 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
                 // perform insertion/retrieval
                 final var resultAppleIapReceipt = getOrCreateAppleIapReceipt(appleIapReceipt);
 
-                // issue ProductBundle rewards if configured for this product
-                getProductBundleService().processVerifiedPurchase(
-                        APPLE_IAP_SCHEME,
-                        appleIapReceipt.getProductId(),
-                        appleIapReceipt.getOriginalTransactionId());
-
                 // add to results
                 resultAppleIapReceipts.add(resultAppleIapReceipt);
             }
@@ -129,8 +123,15 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
     }
 
     @Override
-    public List<RewardIssuance> getOrCreateRewardIssuances(List<AppleIapReceipt> appleIapReceipts) {
-        return List.of();
+    public List<RewardIssuance> getOrCreateRewardIssuances(final List<AppleIapReceipt> appleIapReceipts) {
+        final var issuances = new ArrayList<RewardIssuance>();
+        for (final var receipt : appleIapReceipts) {
+            issuances.addAll(getProductBundleService().processVerifiedPurchase(
+                    APPLE_IAP_SCHEME,
+                    receipt.getProductId(),
+                    receipt.getOriginalTransactionId()));
+        }
+        return issuances;
     }
 
     private AppleIapReceipt convertReceipt(Receipt receipt) {

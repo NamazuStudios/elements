@@ -46,10 +46,13 @@ public class SuperuserProductSkuSchemaService implements ProductSkuSchemaService
 
     @Override
     public void deleteProductSkuSchema(final String id) {
+
         final var schema = getProductSkuSchemaDao().getProductSkuSchema(id);
+
         if (BUILT_IN_SCHEMAS.contains(schema.schema())) {
             throw new ForbiddenException("Cannot delete built-in schema: " + schema.schema());
         }
+
         getProductSkuSchemaDao().deleteProductSkuSchema(id);
     }
 

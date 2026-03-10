@@ -84,7 +84,7 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
             throw new NotFoundException("Unable to find Product SKU Schema with id: " + id);
         }
 
-        final DeleteResult deleteResult = getDatastore().find(MongoProductSkuSchema.class)
+        final var deleteResult = getDatastore().find(MongoProductSkuSchema.class)
                 .filter(eq("_id", new ObjectId(id)))
                 .delete();
 
