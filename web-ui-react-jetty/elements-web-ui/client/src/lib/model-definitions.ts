@@ -513,6 +513,15 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     ],
   },
 
+  // Product SKU Schema models
+  'goods/ProductSkuSchema': {
+    name: 'ProductSkuSchema',
+    fields: [
+      { name: 'id', type: 'string', required: false, isArray: false, isMap: false, readOnly: true },
+      { name: 'schema', type: 'string', required: true, isArray: false, isMap: false, description: 'The purchase provider schema in reverse-dns notation, e.g. com.apple.appstore.' },
+    ],
+  },
+
   // Receipt models
   'receipt/CreateReceiptRequest': {
     name: 'CreateReceiptRequest',

@@ -11,15 +11,18 @@ const POTENTIAL_RESOURCES = [
   { name: 'Users', endpoint: '/api/rest/user', icon: 'Users', category: 'Accounts' },
   { name: 'Applications', endpoint: '/api/rest/application', icon: 'AppWindow', category: 'Accounts' },
   { name: 'Profiles', endpoint: '/api/rest/profile', icon: 'User', category: 'Accounts' },
-  { name: 'Receipts', endpoint: '/api/rest/receipt', icon: 'ScrollText', category: 'Accounts' },
-  
+
+  // Commerce Resources
+  { name: 'Product Bundles', endpoint: '/api/rest/product/bundle', icon: 'ShoppingCart', category: 'Commerce' },
+  { name: 'Product SKU Schemas', endpoint: '/api/rest/product/sku/schema', icon: 'Boxes', category: 'Commerce' },
+  { name: 'Receipts', endpoint: '/api/rest/receipt', icon: 'ScrollText', category: 'Commerce' },
+
   // Game Resources
   { name: 'Items', endpoint: '/api/rest/item', icon: 'Package', category: 'Game' },
   { name: 'Missions', endpoint: '/api/rest/mission', icon: 'Target', category: 'Game' },
   { name: 'Schedules', endpoint: '/api/rest/schedule', icon: 'Calendar', category: 'Game' },
   { name: 'Leaderboards', endpoint: '/api/rest/leaderboard', icon: 'Trophy', category: 'Game' },
   { name: 'Matchmaking', endpoint: '/api/rest/multi_match', icon: 'Users', category: 'Game' },
-  { name: 'Product Bundles', endpoint: '/api/rest/product/bundle', icon: 'ShoppingCart', category: 'Game' },
   
   // Auth
   { name: 'OIDC', endpoint: '/api/rest/auth_scheme/oidc', icon: 'Shield', category: 'Auth' },

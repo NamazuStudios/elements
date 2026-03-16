@@ -80,7 +80,7 @@ export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
     return acc;
   }, {} as Record<string, Array<{ title: string; icon: string; path: string }>>);
 
-  const categoryOrder = ['Accounts', 'Game', 'Auth', 'Metadata', 'Web3', 'Other'];
+  const categoryOrder = ['Accounts', 'Commerce', 'Game', 'Auth', 'Metadata', 'Web3', 'Other'];
 
   return (
     <Sidebar>

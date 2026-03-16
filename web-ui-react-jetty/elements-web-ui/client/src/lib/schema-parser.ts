@@ -269,8 +269,9 @@ export async function getResourceSchema(
     'Notifications': 'notification',
     'Settings': 'setting',
     'Receipts': 'receipt',
+    'Product SKU Schemas': 'goods',
   };
-  
+
   // Map resource names to Java model names
   const modelNameMap: Record<string, string> = {
     'Users': 'User',
@@ -297,6 +298,7 @@ export async function getResourceSchema(
     'Notifications': 'Notification',
     'Settings': 'Setting',
     'Receipts': 'Receipt',
+    'Product SKU Schemas': 'ProductSkuSchema',
   };
   
   const resourcePath = resourcePathMap[resourceName];
