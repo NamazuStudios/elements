@@ -3,12 +3,12 @@ package dev.getelements.elements.service;
 import com.google.inject.Module;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
-import dev.getelements.elements.sdk.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
+import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
@@ -37,7 +37,7 @@ public class UnixFSIntegrationTestModule extends AbstractIntegrationTestModule {
                 .withNodeModuleFactory(nodeId -> {
                     final var modules = new ArrayList<Module>();
                     modules.add(new ValidationModule());
-                    modules.add(new MongoCoreModule());
+                    modules.add(new MongoSdkModule());
                     modules.add(new MongoGridFSLargeObjectBucketModule());
                     modules.add(new MongoDaoModule());
                     modules.add(new FirebaseAppFactoryModule());

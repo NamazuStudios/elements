@@ -2,9 +2,9 @@ package dev.getelements.elements.dao.mongo.test;
 
 import com.google.inject.Guice;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
-import dev.getelements.elements.sdk.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.guice.ConfigurationModule;
+import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -20,7 +20,7 @@ public class StandaloneMongoTest {
             new ConfigurationModule(supplier),
             new ValidationModule(),
             new MongoDaoModule(),
-            new MongoCoreModule(),
+            new MongoSdkModule(),
             new MongoTestInstanceModule(27017, true)
         );
 
