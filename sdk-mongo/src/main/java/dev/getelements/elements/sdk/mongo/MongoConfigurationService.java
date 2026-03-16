@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.mongo;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoDatabase;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
@@ -8,8 +10,16 @@ import javax.net.ssl.TrustManagerFactory;
 import java.util.function.Function;
 
 /**
- * Interface which reads the Namazu Elements system configuration and provides configuration required to connect to
- * MongoDB. This enables clients to connect directly to MongoDB.
+ * <p></p>Provides direct database access to the MongoDB instance backing Elements. Reads the Namazu Elements system
+ * configuration to supply the raw server configuration, including SSL/TLS configuration, depending on the
+ * deployment-time configuration. Using this service guarantees that any new {@link MongoClient}
+ * instances created from the resulting configuration will connect properly to the database.</p>
+ *
+ * <p>The {@link MongoConfiguration} returned here represents the lowest and most direct level of database access.
+ * In contrast, the services {@link MongoClient} and {@link MongoDatabase} services returned from this Element share
+ * with the core DAO layer, which carry their own opinions on how to interact with the database (e.g. codec registries,
+ * session handling). Use this service when you need a raw, unconfigured connection to MongoDB without those
+ * constraints.</p>
  */
 @ElementServiceExport
 public interface MongoConfigurationService {
