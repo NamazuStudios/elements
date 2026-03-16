@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry.PathConflict;
+
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 
 /**
@@ -41,36 +43,6 @@ public abstract class StaticContentLoader implements Loader {
     private static final Logger logger = LoggerFactory.getLogger(StaticContentLoader.class);
 
     public static final String HANDLER_SEQUENCE = "dev.getelements.elements.app.serve.handler.static";
-
-    /**
-     * System API path prefixes that static content must never shadow.  Each entry is the raw path without
-     * the {@code HTTP_PATH_PREFIX}; {@link HttpContextRoot#normalize(String)} is applied at check time.
-     */
-    private static final List<String> RESERVED_PATH_PREFIXES = List.of(
-            "/admin",           // Admin panel
-            "/api/rest",        // Main Elements REST API
-            "/app/rest",        // Element Jakarta RS deployments
-            "/app/ws",          // Element Jakarta WebSocket deployments
-            "/cdn/git",         // CDN Git service
-            "/cdn/object",      // CDN Large Object service
-            "/cdn/static/app"   // CDN Static content
-    );
-
-    private enum PathConflict {
-        /** No conflict — deploy the handler as-is. */
-        NONE,
-        /**
-         * The context path is inside a reserved namespace (e.g. {@code /app/rest/foo}).
-         * Static content must not be deployed here.
-         */
-        INNER,
-        /**
-         * The context path is a parent of one or more reserved paths (e.g. {@code /}).
-         * Static content may be deployed as a catch-all, but the handler must skip reserved
-         * paths at request time so they fall through to subsequent handlers in the sequence.
-         */
-        OUTER
-    }
 
     private final Function<ElementPathRecord, ElementStaticContentRecord> resolve;
 
@@ -89,6 +61,8 @@ public abstract class StaticContentLoader implements Loader {
     private HttpContextRoot httpContextRoot;
 
     private String appOutsideUrl;
+
+    private HttpPathRegistry httpPathRegistry;
 
     protected StaticContentLoader(
             final Function<ElementPathRecord, ElementStaticContentRecord> resolve,
@@ -210,11 +184,21 @@ public abstract class StaticContentLoader implements Loader {
                     ? new ReservedPathSkipHandler(servletContextHandler)
                     : servletContextHandler;
 
+            // Register specific paths so other catch-all handlers know to skip them.
+            // Catch-all paths (OUTER conflict) are intentionally not registered — registering "/"
+            // would make isRegisteredPath() return true for every request.
+            if (conflict == PathConflict.NONE) {
+                httpPathRegistry.register(contextPath);
+            }
+
             getSequence().addHandler(handlerToAdd);
 
             try {
                 handlerToAdd.start();
             } catch (final Exception ex) {
+                if (conflict == PathConflict.NONE) {
+                    httpPathRegistry.deregister(contextPath);
+                }
                 getSequence().removeHandler(handlerToAdd);
                 throw new InternalException(ex);
             }
@@ -243,6 +227,12 @@ public abstract class StaticContentLoader implements Loader {
 
             if (deployment != null) {
                 activeDeployments.remove(deployment);
+
+                // Deregister specific paths (catch-all handlers using ReservedPathSkipHandler were never registered)
+                if (deployment.handler() instanceof final ServletContextHandler sch) {
+                    httpPathRegistry.deregister(sch.getContextPath());
+                }
+
                 try {
                     deployment.handler().stop();
                     getSequence().removeHandler(deployment.handler());
@@ -283,20 +273,17 @@ public abstract class StaticContentLoader implements Loader {
         this.appOutsideUrl = appOutsideUrl;
     }
 
+    public HttpPathRegistry getHttpPathRegistry() {
+        return httpPathRegistry;
+    }
+
+    @Inject
+    public void setHttpPathRegistry(final HttpPathRegistry httpPathRegistry) {
+        this.httpPathRegistry = httpPathRegistry;
+    }
+
     private PathConflict checkPathConflict(final String contextPath) {
-        final var ctxWithSlash = contextPath.endsWith("/") ? contextPath : contextPath + "/";
-        var hasOuterConflict = false;
-        for (final var prefix : RESERVED_PATH_PREFIXES) {
-            final var normalizedPrefix = getHttpContextRoot().normalize(prefix);
-            final var prefixWithSlash = normalizedPrefix.endsWith("/") ? normalizedPrefix : normalizedPrefix + "/";
-            if (ctxWithSlash.startsWith(prefixWithSlash)) {
-                return PathConflict.INNER;
-            }
-            if (prefixWithSlash.startsWith(ctxWithSlash)) {
-                hasOuterConflict = true;
-            }
-        }
-        return hasOuterConflict ? PathConflict.OUTER : PathConflict.NONE;
+        return httpPathRegistry.checkConflict(contextPath);
     }
 
     /**
@@ -315,13 +302,8 @@ public abstract class StaticContentLoader implements Loader {
         public boolean handle(final Request request, final Response response, final Callback callback)
                 throws Exception {
             final var path = request.getHttpURI().getPath();
-            final var pathWithSlash = path.endsWith("/") ? path : path + "/";
-            for (final var prefix : RESERVED_PATH_PREFIXES) {
-                final var normalizedPrefix = getHttpContextRoot().normalize(prefix);
-                final var prefixWithSlash = normalizedPrefix.endsWith("/") ? normalizedPrefix : normalizedPrefix + "/";
-                if (pathWithSlash.startsWith(prefixWithSlash)) {
-                    return false;
-                }
+            if (httpPathRegistry.isRegisteredPath(path)) {
+                return false;
             }
             return super.handle(request, response, callback);
         }

@@ -4,6 +4,7 @@ import com.google.inject.multibindings.Multibinder;
 import dev.getelements.elements.deployment.jetty.JettyElementContainerService;
 import dev.getelements.elements.deployment.jetty.StandardElementRuntimeService;
 import dev.getelements.elements.deployment.jetty.loader.AuthFilterFeature;
+import dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.deployment.jetty.loader.Loader;
@@ -32,6 +33,9 @@ public class JettySdkElementModule extends SharedElementModule {
 
     @Override
     protected void configureElement() {
+
+        bind(HttpPathRegistry.class).asEagerSingleton();
+        expose(HttpPathRegistry.class);
 
         bind(ElementRuntimeService.class)
                 .to(StandardElementRuntimeService.class)

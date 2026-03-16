@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.servlet.GuiceFilter;
+import dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.deployment.jetty.loader.StaticContentLoader;
@@ -12,13 +13,28 @@ import jakarta.servlet.DispatcherType;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Handler;
 
+import java.util.List;
+
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.guice.GuiceConstants.GUICE_INJECTOR_ATTRIBUTE_NAME;
 import static java.util.EnumSet.allOf;
 
 public class ElementsServletContextModule extends AbstractModule {
 
-    public static final String  APP_WEBSOCKET_PREFIX = "/app/ws";
+    public static final String APP_WEBSOCKET_PREFIX = "/app/ws";
+
+    /**
+     * System API paths served by the Guice filter. These are pre-seeded into the {@link HttpPathRegistry} at
+     * startup so that catch-all static content handlers (e.g. deployed at {@code /}) skip them.
+     */
+    private static final List<String> SYSTEM_API_PATHS = List.of(
+            "/api/rest",
+            "/cdn/git",
+            "/cdn/object",
+            "/cdn/static/app",
+            "/admin",
+            "/doc/swagger"
+    );
 
     @Override
     protected void configure() {
@@ -26,6 +42,7 @@ public class ElementsServletContextModule extends AbstractModule {
         final var injectorProvider = getProvider(Injector.class);
         final var guiceFilterProvider = getProvider(GuiceFilter.class);
         final var httpContextRootProvider = getProvider(HttpContextRoot.class);
+        final var httpPathRegistryProvider = getProvider(HttpPathRegistry.class);
 
         final var guiceHandlerProvider = getProvider(Key.get(
                 ServletContextHandler.class,
@@ -48,12 +65,19 @@ public class ElementsServletContextModule extends AbstractModule {
         ));
 
         bind(Handler.class)
-                .toProvider(() -> new Handler.Sequence(
-                    jakartaRsContextHandlerProvider.get(),
-                    jakartaWebsocketContextHandlerProvider.get(),
-                    staticContentContextHandlerProvider.get(),
-                    guiceHandlerProvider.get()
-                ))
+                .toProvider(() -> {
+                    final var httpContextRoot = httpContextRootProvider.get();
+                    final var registry = httpPathRegistryProvider.get();
+                    for (final var rawPath : SYSTEM_API_PATHS) {
+                        registry.register(httpContextRoot.normalize(rawPath));
+                    }
+                    return new Handler.Sequence(
+                        jakartaRsContextHandlerProvider.get(),
+                        jakartaWebsocketContextHandlerProvider.get(),
+                        staticContentContextHandlerProvider.get(),
+                        guiceHandlerProvider.get()
+                    );
+                })
                 .asEagerSingleton();
 
         requireBinding(GuiceFilter.class);
