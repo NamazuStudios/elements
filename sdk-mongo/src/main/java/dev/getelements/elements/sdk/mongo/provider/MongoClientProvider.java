@@ -1,11 +1,10 @@
-package dev.getelements.elements.dao.mongo.provider;
+package dev.getelements.elements.sdk.mongo.provider;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.connection.SslSettings;
-import dev.getelements.elements.dao.mongo.codec.TimestampCodec;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;

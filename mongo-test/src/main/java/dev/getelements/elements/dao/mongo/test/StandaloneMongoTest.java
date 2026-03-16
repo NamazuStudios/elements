@@ -2,7 +2,7 @@ package dev.getelements.elements.dao.mongo.test;
 
 import com.google.inject.Guice;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
-import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
+import dev.getelements.elements.sdk.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;

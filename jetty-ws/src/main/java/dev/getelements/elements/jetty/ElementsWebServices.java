@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 public class ElementsWebServices implements Runnable {
 
     public static final String MAIN_HANDLER = "dev.getelements.elements.jetty.handler.main";
+
     private static final Logger logger = LoggerFactory.getLogger(ElementsWebServices.class);
 
     private Server server;

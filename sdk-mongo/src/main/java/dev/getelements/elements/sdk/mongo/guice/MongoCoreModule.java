@@ -1,12 +1,12 @@
-package dev.getelements.elements.dao.mongo.guice;
+package dev.getelements.elements.sdk.mongo.guice;
 
 import com.google.inject.AbstractModule;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.connection.SslSettings;
-import dev.getelements.elements.dao.mongo.provider.MongoClientProvider;
-import dev.getelements.elements.dao.mongo.provider.MongoDatabaseProvider;
-import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
+import dev.getelements.elements.sdk.mongo.provider.MongoClientProvider;
+import dev.getelements.elements.sdk.mongo.provider.MongoDatabaseProvider;
+import dev.getelements.elements.sdk.mongo.provider.MongoSslSettingsProvider;
 
 /**
  * Created by patricktwohig on 6/29/17.

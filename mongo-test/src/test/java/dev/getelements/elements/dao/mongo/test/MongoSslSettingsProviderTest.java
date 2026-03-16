@@ -3,7 +3,7 @@ package dev.getelements.elements.dao.mongo.test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.mongodb.connection.SslSettings;
-import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
+import dev.getelements.elements.sdk.mongo.provider.MongoSslSettingsProvider;
 import dev.getelements.elements.sdk.mongo.test.SslDisabledModule;
 import dev.getelements.elements.sdk.mongo.test.SslEnabledModule;
 import org.testng.annotations.Test;

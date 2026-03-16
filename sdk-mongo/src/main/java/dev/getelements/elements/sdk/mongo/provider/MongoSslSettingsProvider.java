@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo.provider;
+package dev.getelements.elements.sdk.mongo.provider;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.connection.SslSettings;

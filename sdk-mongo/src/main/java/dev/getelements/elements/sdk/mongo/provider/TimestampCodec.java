@@ -1,4 +1,4 @@
-package dev.getelements.elements.dao.mongo.codec;
+package dev.getelements.elements.sdk.mongo.provider;
 
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
