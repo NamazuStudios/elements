@@ -1,9 +1,6 @@
-package dev.getelements.elements.sdk.mongo.standard;
+package dev.getelements.elements.sdk.mongo;
 
 import com.mongodb.ConnectionString;
-import dev.getelements.elements.sdk.mongo.MongoConfiguration;
-import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
-import dev.getelements.elements.sdk.mongo.MongoSslConfiguration;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.slf4j.Logger;

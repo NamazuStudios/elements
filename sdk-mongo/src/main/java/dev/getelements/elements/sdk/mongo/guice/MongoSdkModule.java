@@ -8,7 +8,7 @@ import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
 import dev.getelements.elements.sdk.mongo.provider.MongoClientProvider;
 import dev.getelements.elements.sdk.mongo.provider.MongoDatabaseProvider;
 import dev.getelements.elements.sdk.mongo.provider.MongoSslSettingsProvider;
-import dev.getelements.elements.sdk.mongo.standard.StandardMongoConfigurationService;
+import dev.getelements.elements.sdk.mongo.StandardMongoConfigurationService;
 
 public class MongoSdkModule extends AbstractModule {
 
