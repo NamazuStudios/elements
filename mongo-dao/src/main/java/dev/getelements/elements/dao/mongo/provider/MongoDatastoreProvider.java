@@ -1,7 +1,7 @@
 package dev.getelements.elements.dao.mongo.provider;
 
 import com.mongodb.client.MongoClient;
-import dev.getelements.elements.sdk.mongo.provider.MongoDatabaseProvider;
+import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
 import dev.morphia.Datastore;
 import dev.morphia.config.MorphiaConfig;
 import dev.morphia.mapping.DiscriminatorFunction;
@@ -21,7 +21,7 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
     public static final String MAIN = "dev.getelements.elements.mongo.datastore.main";
 
     @Inject
-    @Named(MongoDatabaseProvider.DATABASE_NAME)
+    @Named(MongoConfigurationService.DATABASE_NAME)
     private Provider<String> databaseNameProvider;
 
     @Inject

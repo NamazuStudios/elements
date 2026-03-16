@@ -55,6 +55,11 @@ public interface MongoConfigurationService {
 
     @ElementDefaultAttribute(value = "TLS", description = "The TLS/SSL protocol to use.")
     String SSL_PROTOCOL = "dev.getelements.elements.mongo.tls.protocol";
+    @ElementDefaultAttribute(
+            value = "elements",
+            description = "The name of the MongoDB database to use for Elements data storage."
+    )
+    String DATABASE_NAME = "dev.getelements.elements.mongo.database.name";
 
     /**
      * Retrieves the MongoDB configuration for the Namazu Elements system.

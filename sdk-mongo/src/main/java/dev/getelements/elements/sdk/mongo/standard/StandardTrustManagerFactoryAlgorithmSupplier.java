@@ -9,6 +9,5 @@ public class StandardTrustManagerFactoryAlgorithmSupplier implements Function<El
     @Override
     public String apply(ElementDefaultAttribute attribute) {
         return TrustManagerFactory.getDefaultAlgorithm();
-
     }
 }
