@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.mongo.standard;
 
 import com.mongodb.ConnectionString;
-import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.mongo.MongoConfiguration;
 import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
 import dev.getelements.elements.sdk.mongo.MongoSslConfiguration;

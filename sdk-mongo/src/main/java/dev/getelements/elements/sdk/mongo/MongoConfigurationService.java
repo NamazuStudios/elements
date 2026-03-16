@@ -2,8 +2,10 @@ package dev.getelements.elements.sdk.mongo;
 
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
-import dev.getelements.elements.sdk.mongo.standard.StandardKeyManagerFactoryAlgorithmSupplier;
-import dev.getelements.elements.sdk.mongo.standard.StandardTrustManagerFactoryAlgorithmSupplier;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
+import java.util.function.Function;
 
 /**
  * Interface which reads the Namazu Elements system configuration and provides configuration required to connect to
@@ -19,13 +21,13 @@ public interface MongoConfigurationService {
     String FORMAT = "dev.getelements.elements.mongo.tls.format";
 
     @ElementDefaultAttribute(
-            supplier = StandardTrustManagerFactoryAlgorithmSupplier.class,
+            supplier = DefaultTrustManagerAlgorithm.class,
             description = "Specifies the TrustManagerFactory algorithm to use. (Defaults to System Default)"
     )
     String TRUST_ALGORITHM =  "dev.getelements.elements.mongo.tls.trust.algorithm";
 
     @ElementDefaultAttribute(
-            supplier = StandardKeyManagerFactoryAlgorithmSupplier.class,
+            supplier = DefaultKeyManagerAlgorithm.class,
             description = "Specifies the KeyManagerFactory algorithm to use. (Defaults to System Default)"
     )
     String KEY_ALGORITHM =  "dev.getelements.elements.mongo.tls.key.algorithm";
@@ -55,6 +57,7 @@ public interface MongoConfigurationService {
 
     @ElementDefaultAttribute(value = "TLS", description = "The TLS/SSL protocol to use.")
     String SSL_PROTOCOL = "dev.getelements.elements.mongo.tls.protocol";
+
     @ElementDefaultAttribute(
             value = "elements",
             description = "The name of the MongoDB database to use for Elements data storage."
@@ -67,5 +70,27 @@ public interface MongoConfigurationService {
      * @return the {@link MongoConfiguration} containing connection details
      */
     MongoConfiguration getMongoConfiguration();
+
+    /**
+     * Returns the default {@link KeyManagerFactory} algorithm. This defers to the
+     * {@link KeyManagerFactory#getDefaultAlgorithm()} result.
+     */
+    class DefaultKeyManagerAlgorithm implements Function<ElementDefaultAttribute, String> {
+        @Override
+        public String apply(final ElementDefaultAttribute attribute) {
+            return KeyManagerFactory.getDefaultAlgorithm();
+        }
+    }
+
+    /**
+     * Returns the default {@link TrustManagerFactory} algorithm. This defers to the
+     * {@link TrustManagerFactory#getDefaultAlgorithm()} result.
+     */
+    class DefaultTrustManagerAlgorithm implements Function<ElementDefaultAttribute, String> {
+        @Override
+        public String apply(ElementDefaultAttribute attribute) {
+            return TrustManagerFactory.getDefaultAlgorithm();
+        }
+    }
 
 }
