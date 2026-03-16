@@ -48,6 +48,8 @@ public abstract class AbstractReceiptServiceTest {
 
     protected void setup() {
 
+        createdReceipts.clear();
+
         when(receiptDao.createReceipt(any())).then(mockInvocation -> {
             final Receipt receipt = mockInvocation.getArgument(0);
 
