@@ -53,7 +53,7 @@ public class SuperuserProductBundleApiTest {
         superUserClientContext.createSuperuser("productBundleAdmin").createSession();
     }
 
-    @Test(groups = "create")
+    @Test(groups = "productBundle.create")
     public void testCreateProductBundle() {
 
         final var bundle = new ProductBundle();
@@ -84,7 +84,7 @@ public class SuperuserProductBundleApiTest {
         working = created;
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(groups = "productBundle.fetch", dependsOnGroups = "productBundle.create")
     public void testGetProductBundleById() {
 
         final var response = client
@@ -99,7 +99,7 @@ public class SuperuserProductBundleApiTest {
         assertEquals(working, fetched);
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(groups = "productBundle.fetch", dependsOnGroups = "productBundle.create")
     public void testGetProductBundleByKey() {
 
         final var appName = contextApplication.getName();
@@ -117,7 +117,7 @@ public class SuperuserProductBundleApiTest {
         assertEquals(working.getProductId(), fetched.getProductId());
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(groups = "productBundle.fetch", dependsOnGroups = "productBundle.create")
     public void testGetBogusProductBundle() {
 
         final var response = client
@@ -129,7 +129,7 @@ public class SuperuserProductBundleApiTest {
         assertEquals(404, response.getStatus());
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(groups = "productBundle.fetch", dependsOnGroups = "productBundle.create")
     public void testListProductBundles() {
 
         final PaginationWalker.WalkFunction<ProductBundle> walkFunction = (offset, count) -> {
@@ -146,7 +146,7 @@ public class SuperuserProductBundleApiTest {
         assertTrue(bundles.stream().anyMatch(b -> b.getId().equals(working.getId())));
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "create")
+    @Test(groups = "productBundle.fetch", dependsOnGroups = "productBundle.create")
     public void testListProductBundlesByApplication() {
 
         final var response = client
@@ -163,7 +163,7 @@ public class SuperuserProductBundleApiTest {
         assertTrue(page.getObjects().stream().anyMatch(b -> b.getId().equals(working.getId())));
     }
 
-    @Test(groups = "update", dependsOnGroups = "fetch")
+    @Test(groups = "productBundle.update", dependsOnGroups = "productBundle.fetch")
     public void testUpdateProductBundle() {
 
         final var updated = new ProductBundle();
@@ -192,7 +192,7 @@ public class SuperuserProductBundleApiTest {
         working = result;
     }
 
-    @Test(groups = "delete", dependsOnGroups = "update")
+    @Test(groups = "productBundle.delete", dependsOnGroups = "productBundle.update")
     public void testDeleteProductBundle() {
 
         final var response = client
@@ -204,7 +204,7 @@ public class SuperuserProductBundleApiTest {
         assertEquals(204, response.getStatus());
     }
 
-    @Test(groups = "postDelete", dependsOnGroups = "delete")
+    @Test(groups = "productBundle.postDelete", dependsOnGroups = "productBundle.delete")
     public void testGetDeletedProductBundle() {
 
         final var response = client
