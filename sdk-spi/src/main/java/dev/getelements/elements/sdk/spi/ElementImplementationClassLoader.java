@@ -180,16 +180,13 @@ public class ElementImplementationClassLoader extends ClassLoader {
     protected Enumeration<URL> findResources(final String name) throws IOException {
 
         final var url = BUILTIN_RESOURCES.getOrDefault(name, null);
-        final var delegateUrls = delegate.getResources(name);
-
         final var all = new ArrayList<URL>();
 
         if (url != null) {
             all.add(toUrl(url));
-        }
-
-        if (delegateUrls != null) {
-            delegateUrls.asIterator().forEachRemaining(all::add);
+        } else if (!name.startsWith("META-INF/services/")) {
+            final var delegateUrls = delegate.getResources(name);
+            if (delegateUrls != null) delegateUrls.asIterator().forEachRemaining(all::add);
         }
 
         return Collections.enumeration(all);
