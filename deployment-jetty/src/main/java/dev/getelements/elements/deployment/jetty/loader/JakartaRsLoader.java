@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
@@ -38,19 +37,21 @@ public class JakartaRsLoader implements Loader {
 
     private static final Logger logger = LoggerFactory.getLogger(JakartaRsLoader.class);
 
-    public static final String APP_PREFIX_FORMAT = "/app/rest/%s";
-
     public static final String HANDLER_SEQUENCE = "dev.getelements.elements.app.serve.handler.rs";
 
     private final Lock lock = new ReentrantLock();
 
     private final List<JettyDeploymentRecord> activeDeployments = new ArrayList<>();
 
+    private final ElementPathResolver pathResolver = new ElementPathResolver();
+
     private String appOutsideUrl;
 
     private Sequence sequence;
 
     private HttpContextRoot httpContextRoot;
+
+    private HttpPathRegistry httpPathRegistry;
 
     private AuthFilterFeature authFilterFeature;
 
@@ -63,25 +64,6 @@ public class JakartaRsLoader implements Loader {
                 element.getElementRecord().definition().name()
         );
 
-        // *bruh*
-        final var prefix = element
-                .getElementRecord()
-                .attributes()
-                .getAttributeOptional(ElementContainerService.APPLICATION_PREFIX)
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .filter(Predicate.not(String::isBlank))
-                .orElseGet(() -> {
-
-                    pending.logf(
-                            "Unable to determine application prefix for %s. Using default.",
-                            element.getElementRecord().definition().name()
-                    );
-
-                    return element.getElementRecord().definition().name();
-
-                });
-
         final var enableAuth = element
                 .getElementRecord()
                 .attributes()
@@ -93,7 +75,16 @@ public class JakartaRsLoader implements Loader {
 
         pending.logf("Built-in Auth Enabled: %s", enableAuth);
 
-        final var contextPath = getHttpContextRoot().formatNormalized(APP_PREFIX_FORMAT, prefix);
+        final var contextPath = pathResolver.resolveRsContextPath(element, getHttpContextRoot(), pending);
+
+        if (!httpPathRegistry.register(contextPath)) {
+            pending.logWarningf(
+                    "WARNING: REST path '%s' is already registered by another element or the system. " +
+                    "Element %s will still be deployed but may conflict.",
+                    contextPath,
+                    element.getElementRecord().definition().name()
+            );
+        }
 
         try {
             final var contextPathURI = new URI(getAppOutsideUrl()).resolve(contextPath);
@@ -156,6 +147,10 @@ public class JakartaRsLoader implements Loader {
 
             if (deployment != null) {
                 activeDeployments.remove(deployment);
+
+                if (deployment.handler() instanceof final ServletContextHandler sch) {
+                    httpPathRegistry.deregister(sch.getContextPath());
+                }
 
                 try {
                     deployment.handler().stop();
@@ -225,6 +220,15 @@ public class JakartaRsLoader implements Loader {
     @Inject
     public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
         this.httpContextRoot = httpContextRoot;
+    }
+
+    public HttpPathRegistry getHttpPathRegistry() {
+        return httpPathRegistry;
+    }
+
+    @Inject
+    public void setHttpPathRegistry(HttpPathRegistry httpPathRegistry) {
+        this.httpPathRegistry = httpPathRegistry;
     }
 
     public AuthFilterFeature getAuthFilterFeature() {

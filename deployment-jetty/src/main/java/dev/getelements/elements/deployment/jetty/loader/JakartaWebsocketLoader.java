@@ -19,9 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
 
-import static dev.getelements.elements.sdk.deployment.ElementContainerService.APPLICATION_PREFIX;
 import static dev.getelements.elements.sdk.deployment.ElementContainerService.ENABLE_ELEMENTS_AUTH;
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer.configure;
@@ -30,13 +28,13 @@ public class JakartaWebsocketLoader implements Loader {
 
     private static final Logger logger = LoggerFactory.getLogger(JakartaWebsocketLoader.class);
 
-    public static final String APP_PREFIX_FORMAT = "/app/ws/%s";
-
     public static final String HANDLER_SEQUENCE = "dev.getelements.elements.app.serve.handler.ws";
 
     private final Lock lock = new ReentrantLock();
 
     private final List<JettyDeploymentRecord> activeDeployments = new ArrayList<>();
+
+    private final ElementPathResolver pathResolver = new ElementPathResolver();
 
     private String appOutsideUrl;
 
@@ -45,6 +43,8 @@ public class JakartaWebsocketLoader implements Loader {
     private HttpContextRoot httpContextRoot;
 
     private AuthFilterFeature authFilterFeature;
+
+    private HttpPathRegistry httpPathRegistry;
 
     private ClassGraph newClassGraph(final PendingDeployment pending, final Element element) {
 
@@ -85,24 +85,6 @@ public class JakartaWebsocketLoader implements Loader {
 
         pending.logf("Starting JAX-WS deployment for %s.", element.getElementRecord().definition().name());
 
-        final var prefix = element
-                .getElementRecord()
-                .attributes()
-                .getAttributeOptional(APPLICATION_PREFIX)
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .filter(Predicate.not(String::isBlank))
-                .orElseGet(() -> {
-
-                    pending.logf(
-                            "Unable to determine application prefix for %s. Using default.",
-                            element.getElementRecord().definition().name()
-                    );
-
-                    return element.getElementRecord().definition().name();
-
-                });
-
         final var enableAuth = element
                 .getElementRecord()
                 .attributes()
@@ -114,7 +96,16 @@ public class JakartaWebsocketLoader implements Loader {
 
         pending.logf("Built-in Auth Enabled: %s", enableAuth);
 
-        final var contextPath = getHttpContextRoot().formatNormalized(APP_PREFIX_FORMAT, prefix);
+        final var contextPath = pathResolver.resolveWsContextPath(element, getHttpContextRoot(), pending);
+
+        if (!httpPathRegistry.register(contextPath)) {
+            pending.logWarningf(
+                    "WARNING: WebSocket path '%s' is already registered by another element or the system. " +
+                    "Element %s will still be deployed but may conflict.",
+                    contextPath,
+                    element.getElementRecord().definition().name()
+            );
+        }
 
         try {
 
@@ -181,6 +172,10 @@ public class JakartaWebsocketLoader implements Loader {
 
             if (deployment != null) {
                 activeDeployments.remove(deployment);
+
+                if (deployment.handler() instanceof final ServletContextHandler sch) {
+                    httpPathRegistry.deregister(sch.getContextPath());
+                }
 
                 try {
                     deployment.handler().stop();
@@ -292,6 +287,15 @@ public class JakartaWebsocketLoader implements Loader {
     @Inject
     public void setHttpContextRoot(HttpContextRoot httpContextRoot) {
         this.httpContextRoot = httpContextRoot;
+    }
+
+    public HttpPathRegistry getHttpPathRegistry() {
+        return httpPathRegistry;
+    }
+
+    @Inject
+    public void setHttpPathRegistry(HttpPathRegistry httpPathRegistry) {
+        this.httpPathRegistry = httpPathRegistry;
     }
 
     public AuthFilterFeature getAuthFilterFeature() {

@@ -85,6 +85,26 @@ public interface ElementContainerService {
     String UI_CONTENT_URI = "dev.getelements.element.ui.uri";
 
     /**
+     * Sets the absolute REST endpoint root path (relative to the Elements HTTP root).
+     * Used only when {@link #APPLICATION_PREFIX} is absent; if both are present,
+     * {@link #APPLICATION_PREFIX} takes priority and this attribute is ignored.
+     *
+     * <p>Example: {@code /my/api} mounts the REST API at {@code <elements-root>/my/api}.</p>
+     */
+    @ElementDefaultAttribute(description = "Absolute REST root path. Ignored when app.serve.prefix is present.")
+    String RS_ROOT = "dev.getelements.elements.element.rs.root";
+
+    /**
+     * Sets the absolute WebSocket endpoint root path (relative to the Elements HTTP root).
+     * Used only when {@link #APPLICATION_PREFIX} is absent; if both are present,
+     * {@link #APPLICATION_PREFIX} takes priority and this attribute is ignored.
+     *
+     * <p>Example: {@code /my/ws} mounts the WebSocket endpoint at {@code <elements-root>/my/ws}.</p>
+     */
+    @ElementDefaultAttribute(description = "Absolute WebSocket root path. Ignored when app.serve.prefix is present.")
+    String WS_ROOT = "dev.getelements.elements.element.ws.root";
+
+    /**
      * Starts the container service.
      */
     void start();
