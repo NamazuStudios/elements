@@ -1,9 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.mongodb.connection.SslSettings;
-import dev.getelements.elements.dao.mongo.provider.MongoSslSettingsProvider;
 import dev.getelements.elements.sdk.mongo.test.SslDisabledModule;
 import dev.getelements.elements.sdk.mongo.test.SslEnabledModule;
 import org.testng.annotations.Test;
@@ -19,7 +17,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledSecure() {
 
         final var sslSettings = Guice
-                .createInjector(new SslEnabledModule(false), new SslSettingsModule())
+                .createInjector(new SslEnabledModule(false))
                 .getInstance(SslSettings.class);
 
         assertTrue(sslSettings.isEnabled());
@@ -32,7 +30,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledInsecure() {
 
         final var sslSettings = Guice
-                .createInjector(new SslEnabledModule(true), new SslSettingsModule())
+                .createInjector(new SslEnabledModule(true))
                 .getInstance(SslSettings.class);
 
         assertTrue(sslSettings.isEnabled());
@@ -45,7 +43,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslEnabledDefault() {
 
         final var sslSettings = Guice
-                .createInjector(new SslEnabledModule(), new SslSettingsModule())
+                .createInjector(new SslEnabledModule())
                 .getInstance(SslSettings.class);
 
         assertTrue(sslSettings.isEnabled());
@@ -58,7 +56,7 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslDisabledExplicit() {
 
         final var sslSettings = Guice
-                .createInjector(new SslDisabledModule(true), new SslSettingsModule())
+                .createInjector(new SslDisabledModule(true))
                 .getInstance(SslSettings.class);
 
         assertFalse(sslSettings.isEnabled());
@@ -70,20 +68,11 @@ public class MongoSslSettingsProviderTest {
     public void testWithSslDisabledImplicit() {
 
         final var sslSettings = Guice
-                .createInjector(new SslDisabledModule(false), new SslSettingsModule())
+                .createInjector(new SslDisabledModule(false))
                 .getInstance(SslSettings.class);
 
         assertFalse(sslSettings.isEnabled());
         assertNull(sslSettings.getContext());
-
-    }
-
-    private static class SslSettingsModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-                bind(SslSettings.class).toProvider(MongoSslSettingsProvider.class);
-        }
 
     }
 

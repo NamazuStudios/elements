@@ -3,14 +3,13 @@ package dev.getelements.elements.setup.guice;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
-import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
+import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
-import dev.getelements.elements.setup.Setup;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import static com.google.inject.name.Names.named;
@@ -29,7 +28,7 @@ public class  SetupCommonModule extends AbstractModule {
 
         install(new ConfigurationModule(defaultConfigurationSupplier));
         install(new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier));
-        install(new MongoCoreModule());
+        install(new MongoSdkModule());
         install(new MongoDaoModule());
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());

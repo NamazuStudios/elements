@@ -1,8 +1,9 @@
-package dev.getelements.elements.dao.mongo.provider;
+package dev.getelements.elements.sdk.mongo.provider;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
+import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
@@ -16,7 +17,7 @@ public class MongoDatabaseProvider implements Provider<MongoDatabase> {
     private Provider<MongoClient> mongoClientProvider;
 
     @Inject
-    @Named(MongoDatastoreProvider.DATABASE_NAME)
+    @Named(MongoConfigurationService.DATABASE_NAME)
     private String databaseName;
 
     @Override
