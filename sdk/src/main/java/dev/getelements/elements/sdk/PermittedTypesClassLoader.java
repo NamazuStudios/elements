@@ -3,14 +3,12 @@ package dev.getelements.elements.sdk;
 import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
-import dev.getelements.elements.sdk.exception.SdkDuplicateClassError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -69,30 +67,8 @@ public class PermittedTypesClassLoader extends ClassLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(PermittedTypesClassLoader.class);
 
-    /**
-     * Indicates the {@link DuplicateTypeStrategy} to use when loading types.
-     */
-    public static final DuplicateTypeStrategy DUPLICATE_TYPE_STRATEGY;
-
-    /**
-     *
-     */
-    public static final String DUPLICATE_TYPE_STRATEGY_KEY = "dev.getelements.elements.sdk.duplicate.type.strategy";
-
     static {
-
         registerAsParallelCapable();
-
-        final var duplicateTypeStrategy = System.getProperty(
-                DUPLICATE_TYPE_STRATEGY_KEY,
-                DuplicateTypeStrategy.LINKAGE_ERROR.name()
-        );
-
-        DUPLICATE_TYPE_STRATEGY = Stream.of(DuplicateTypeStrategy.values())
-                .filter(s -> duplicateTypeStrategy.equals(s.name()))
-                .findFirst()
-                .orElse(DuplicateTypeStrategy.LINKAGE_ERROR);
-
     }
 
     private final ClassLoader delegate;
@@ -181,12 +157,12 @@ public class PermittedTypesClassLoader extends ClassLoader {
 
             try {
 
-                final var fromParent = super.loadClass(name, resolve);
+                final var fromSuper = super.loadClass(name, resolve);
 
-                if (fromDelegate != null && isVisible(fromDelegate) && fromParent != fromDelegate) {
-                    return DUPLICATE_TYPE_STRATEGY.handle(fromParent, fromDelegate);
+                if (fromDelegate != null && isVisible(fromDelegate) && fromSuper != fromDelegate) {
+                    return DuplicateTypeStrategy.DEFAULT.handle(logger, fromSuper, fromDelegate);
                 } else {
-                    return fromParent;
+                    return fromSuper;
                 }
 
             } catch (final ClassNotFoundException e) {
@@ -247,88 +223,6 @@ public class PermittedTypesClassLoader extends ClassLoader {
         );
 
         throw new ClassNotFoundException(aClass.getName());
-
-    }
-
-    /**
-     * Indicates how to handle a duplicate type situation. This occurs when the delegate and the Element both expose
-     * the same type. This is usually an error, but situations may arise where we want to force this to happen one way
-     * or another. Therefore, we provide the following strategies to handle the situation. The behavior of the
-     * {@link PermittedTypesClassLoader} is governed by the system define {@link #DUPLICATE_TYPE_STRATEGY_KEY}.
-     */
-    public enum DuplicateTypeStrategy {
-
-        /**
-         * Logs a warning and uses the parent class.
-         */
-        PARENT((fromParent, fromDelegate) -> {
-
-            logger.warn("Duplicate class definition for `{}`: found in `{}` and `{}`. Using type from parent.",
-                    fromParent.getName(),
-                    fromParent.getClassLoader() == null
-                            ? "bootstrap"
-                            : fromParent.getClassLoader().getName(),
-                    fromDelegate.getClassLoader() == null
-                            ? "bootstrap"
-                            : fromDelegate.getClassLoader().getName()
-            );
-
-            return fromParent;
-
-        }),
-
-        /**
-         * Logs a warning and uses the delegate class.
-         */
-        DELEGATE((fromParent, fromDelegate) -> {
-
-            logger.warn("Duplicate class definition for `{}`: found in `{}` and `{}`. Using type from delegate.",
-                    fromParent.getName(),
-                    fromParent.getClassLoader() == null
-                            ? "bootstrap"
-                            : fromParent.getClassLoader().getName(),
-                    fromDelegate.getClassLoader() == null
-                            ? "bootstrap"
-                            : fromDelegate.getClassLoader().getName()
-            );
-
-            return fromDelegate;
-
-        }),
-
-        /**
-         * Throws a linkage error.
-         */
-        LINKAGE_ERROR((fromParent, fromDelegate) -> {
-            throw new SdkDuplicateClassError(
-                    "Duplicate class definition for `%s`: found in `%s` and `%s`.".formatted(
-                            fromParent.getName(),
-                            fromParent.getClassLoader() == null
-                                    ? "bootstrap"
-                                    : fromParent.getClassLoader().getName(),
-                            fromDelegate.getClassLoader() == null
-                                    ? "bootstrap"
-                                    : fromDelegate.getClassLoader().getName()
-                    )
-            );
-        });
-
-        private final BiFunction<Class<?>, Class<?>, Class<?>> handler;
-
-        DuplicateTypeStrategy(final BiFunction<Class<?>, Class<?>, Class<?>> handler) {
-            this.handler = handler;
-        }
-
-        /**
-         * Handles the discrepancy according to the strategy.
-         *
-         * @param fromParent the class from the parent
-         * @param fromDelegate the class from the delegate
-         * @return the class selected
-         */
-        private Class<?> handle(final Class<?> fromParent, final Class<?> fromDelegate) {
-            return handler.apply(fromParent, fromDelegate);
-        }
 
     }
 
