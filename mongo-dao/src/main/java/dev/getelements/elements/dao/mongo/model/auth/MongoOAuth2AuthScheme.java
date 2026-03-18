@@ -4,8 +4,6 @@ import dev.getelements.elements.sdk.model.auth.BodyType;
 import dev.getelements.elements.sdk.model.auth.HttpMethod;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
 import dev.morphia.annotations.*;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import org.bson.types.ObjectId;
 
 import java.util.List;

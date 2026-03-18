@@ -2,14 +2,11 @@ package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.PermittedPackages;
 import dev.getelements.elements.sdk.PermittedTypes;
-import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.annotation.ElementLocal;
 import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.exception.SdkException;
-import dev.getelements.elements.sdk.record.ElementPackageRequestRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
-import dev.getelements.elements.sdk.record.ElementTypeRequestRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,92 +192,66 @@ public class ElementImplementationClassLoader extends ClassLoader {
 
     @Override
     protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
+
         synchronized (getClassLoadingLock(name)) {
+
+
+            Class<?> fromSuper;
+            Class<?> fromDelegate;
+
             try {
+                fromDelegate = delegate.loadClass(name);
+            } catch (ClassNotFoundException ex) {
+                fromDelegate = null;
+            }
 
-                final var aClass = super.loadClass(name, resolve);
+            try {
+                fromSuper = super.loadClass(name, resolve);
+            } catch (ClassNotFoundException e) {
+                fromSuper = null;
+            }
 
-                if (aClass.getAnnotation(ElementLocal.class) != null) {
-                    final var aLocalClass = findLoadedClass(name);
-                    return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
+            if (fromDelegate == null) {
+                // The delegate does not provide this type at all. Therefore, it's a no-brainer. We jsut return what we
+                // laoded. There is no conflict because the delegate does not define the class. If this call fails, then
+                // it's because we truly can't find the class.
+                return super.loadClass(name, resolve);
+            }
+
+            if (isLocal(fromDelegate)) {
+
+                final var alreadyLoaded = findLoadedClass(name);
+
+                if (alreadyLoaded != null) {
+                    // If the class was already loaded, we try to find it. If it's found then the checks below have
+                    // already been processed. This ensures there is no double-loading problem which almost guarantees
+                    // a crash on subsequent loads.
+                    return alreadyLoaded;
+                } else {
+                    // We use the delegate provided instance of the class. The class
+                    return copyFromDelegate(fromDelegate);
                 }
 
-                return aClass;
-
-            } catch (final ClassNotFoundException e) {
-                final var delegateClass = delegate.loadClass(name);
-                return processVisibilityAnnotations(delegateClass);
-            } catch (NoClassDefFoundError e) {
-                logger.trace("{} cannot load class {}", getName(), name, e);
-                throw e;
+            } else if (fromSuper != null) {
+                // If there is a class loaded from the superclass, then we just load it. This should be considered a
+                // normal superclass
+                return fromSuper;
+            } else {
+                // We shouldn't pull from the delegate. We have already tried to load the class. We should give up
+                // because it's not in this classloader either.
+                throw new ClassNotFoundException(name);
             }
+
         }
     }
 
-    private Class<?> processVisibilityAnnotations(final Class<?> aClass) throws ClassNotFoundException {
-
-        // SPI Types annotated as ElementLocal will be copied from the bytecode of the parent and then loaded into this
-        // classloader. This ensures that the Element Local types are unique per Element.
-
-        if (aClass.getAnnotation(ElementLocal.class) != null) {
-            final var name = aClass.getName();
-            final var aLocalClass = findLoadedClass(name);
-            return aLocalClass == null ? copyFromDelegate(aClass) : aLocalClass;
-        } else if (getElementRecord() == null) {
-            // This ensures that if the ElementRecord is not set, we aren't done initializing the Element. Anything
-            // past this point should exist in the Element's ClassLoader. If it doesn't, then the Element isn't
-            // properly configured (eg it's missing an SPI).
-            throw new ClassNotFoundException();
-        }
-
-        final var aClassPackage = aClass.getPackage();
-
-        final var isRegisteredService = getElementRecord()
-                .services()
-                .stream()
-                .flatMap(svc -> svc.export().exposed().stream())
-                .anyMatch(exposed -> exposed.equals(aClass));
-
-        if (isRegisteredService) {
-            // This implicitly makes a registered service public.
-            return aClass;
-        }
-
-        final var isTypeRequested = getElementRecord()
-                .typeRequests()
-                .stream()
-                .anyMatch(r -> r.test(aClass.getName()));
-
-        if (isTypeRequested) {
-            return aClass;
-        }
-
-        final var isPackageRequested = getElementRecord()
-                .packageRequests()
-                .stream()
-                .anyMatch(r -> r.test(aClass.getPackageName()));
-
-        if (isPackageRequested) {
-            return aClass;
-        }
-
-        logger.trace("{} or {}'s package ({}) must have @{} annotation, be exposed via @{}, or declared via @{} or @{}",
-                aClass.getSimpleName(),
-                aClass.getSimpleName(),
-                aClassPackage,
-                ElementPublic.class.getSimpleName(),
-                ElementDefinition.class.getSimpleName(),
-                ElementTypeRequestRecord.class.getSimpleName(),
-                ElementPackageRequestRecord.class.getSimpleName()
-        );
-
-        throw new ClassNotFoundException(aClass.getName());
-
+    private boolean isLocal(final Class<?> aClass) {
+        return aClass.getAnnotation(ElementLocal.class) != null;
     }
 
-    private Class<?> copyFromDelegate(final Class<?> parentClass) {
+    private Class<?> copyFromDelegate(final Class<?> aClass) {
 
-        final var clsName = parentClass.getName();
+        final var clsName = aClass.getName();
         final var registryResourceURL = clsName.replace(".", "/") + ".class";
 
         try (var is = delegate.getResourceAsStream(registryResourceURL);

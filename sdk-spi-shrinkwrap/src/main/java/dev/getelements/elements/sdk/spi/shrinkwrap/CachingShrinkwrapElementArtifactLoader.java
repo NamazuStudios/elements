@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -52,7 +53,7 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
                     .filter(a -> !a.isOptional())
                     .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
                     .map(ResolvedArtifact::asFile)
-                    .toArray(File[]::new);
+                        .toArray(File[]::new);
 
         } catch (RuntimeException ex) {
             if (isNotFound(ex)) {
