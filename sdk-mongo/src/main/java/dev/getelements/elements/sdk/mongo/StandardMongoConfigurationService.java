@@ -1,26 +1,26 @@
-package dev.getelements.elements.dao.mongo.provider;
+package dev.getelements.elements.sdk.mongo;
 
 import com.mongodb.ConnectionString;
-import com.mongodb.connection.SslSettings;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.*;
+public class StandardMongoConfigurationService implements MongoConfigurationService {
 
-public class MongoSslSettingsProvider implements Provider<SslSettings> {
+    private static final Logger logger = LoggerFactory.getLogger(StandardMongoConfigurationService.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoSslSettingsProvider.class);
+    private String mongoDbUri;
 
     private String sslProtocol;
 
@@ -38,20 +38,29 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
 
     private String clientCertificatePassphrase;
 
-    private String clientUri;
-
     @Override
-    public SslSettings get() {
+    public MongoConfiguration getMongoConfiguration() {
+        return new MongoConfiguration(
+                getMongoDbUri(),
+                getMongoSslConfiguration()
+        );
+    }
 
-        final var connectString = new ConnectionString(getClientUri());
+    private MongoSslConfiguration getMongoSslConfiguration() {
+
+        final var connectString = new ConnectionString(getMongoDbUri());
         final var sslEnabled = connectString.getSslEnabled();
 
-        if (sslEnabled == null || !sslEnabled) {
-            logger.info("TLS/SSL Is not Enabled. Please explicitly enable it in the connect string.");
-            return SslSettings.builder().enabled(false).build();
+        if (sslEnabled != null && sslEnabled) {
+            logger.info("MongoDB SSL is enabled for URI: {}", getMongoDbUri());
+        } else {
+            logger.info("MongoDB SSL is disabled for URI: {}", getMongoDbUri());
+            return null;
         }
 
         try {
+
+            logger.info("Enabling TLS/SSL.");
 
             final var ca = KeyStore.getInstance(getKeyFormat());
             final var certificate = KeyStore.getInstance(getKeyFormat());
@@ -72,27 +81,34 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
             final var kmf = KeyManagerFactory.getInstance(getKeyAlgorithm());
             kmf.init(certificate, getClientCertificatePassphrase().toCharArray());
 
-            final var sslContext = SSLContext.getInstance(getSslProtocol());
-            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
-
-            var settings = SslSettings.builder()
-                    .enabled(true)
-                    .context(sslContext)
-                    .applyConnectionString(connectString);
+            final var sslInvalidHostnameAllowed = connectString.getSslInvalidHostnameAllowed();
 
             logger.info("Enabled TLS/SSL.");
-            return settings.build();
+            return new MongoSslConfiguration(
+                    kmf.getKeyManagers(),
+                    tmf.getTrustManagers(),
+                    getSslProtocol(),
+                    sslInvalidHostnameAllowed != null && sslInvalidHostnameAllowed
+            );
 
         } catch (IOException |
                  NoSuchAlgorithmException |
                  CertificateException |
                  KeyStoreException |
-                 UnrecoverableKeyException |
-                 KeyManagementException ex) {
+                 UnrecoverableKeyException ex) {
             logger.warn("Caught exception loading TLS/SSL Keys.", ex);
-            return SslSettings.builder().enabled(false).build();
+            return null;
         }
 
+    }
+
+    public String getMongoDbUri() {
+        return mongoDbUri;
+    }
+
+    @Inject
+    public void setMongoDbUri(@Named(MONGO_CLIENT_URI) String mongoDbUri) {
+        this.mongoDbUri = mongoDbUri;
     }
 
     public String getSslProtocol() {
@@ -165,15 +181,6 @@ public class MongoSslSettingsProvider implements Provider<SslSettings> {
     @Inject
     public void setTrustAlgorithm(@Named(TRUST_ALGORITHM) String trustAlgorithm) {
         this.trustAlgorithm = trustAlgorithm;
-    }
-
-    public String getClientUri() {
-        return clientUri;
-    }
-
-    @Inject
-    public void setClientUri(@Named(MONGO_CLIENT_URI) String clientUri) {
-        this.clientUri = clientUri;
     }
 
 }

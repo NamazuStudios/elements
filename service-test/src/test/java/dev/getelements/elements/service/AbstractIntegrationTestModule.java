@@ -3,13 +3,11 @@ package dev.getelements.elements.service;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
-import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstanceModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
-import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
@@ -17,7 +15,9 @@ import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModul
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
 import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
+import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
+import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.test.EmbeddedTestService;
@@ -26,10 +26,10 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static dev.getelements.elements.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
+import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
 import static dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork.FLOW;
 import static dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork.FLOW_TEST;
-import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
-import static dev.getelements.elements.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.MONGO_CLIENT_URI;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
@@ -94,7 +94,7 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
 
         install(new JerseyHttpClientModule());
         install(new MongoTestInstanceModule(mongoPort));
-        install(new MongoCoreModule());
+        install(new MongoSdkModule());
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());

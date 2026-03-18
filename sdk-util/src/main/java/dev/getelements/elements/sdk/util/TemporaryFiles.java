@@ -107,7 +107,7 @@ public class TemporaryFiles {
      * @param enclosingClass the enclosing class
      */
     public TemporaryFiles(final Class<?> enclosingClass) {
-        this(enclosingClass.getName());
+        this(enclosingClass.getSimpleName());
     }
 
     /**

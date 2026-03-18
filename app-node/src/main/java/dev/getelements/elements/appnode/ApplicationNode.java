@@ -3,17 +3,19 @@ package dev.getelements.elements.appnode;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import dev.getelements.elements.appnode.guice.*;
+import dev.getelements.elements.appnode.guice.AppNodeServicesModule;
+import dev.getelements.elements.appnode.guice.MasterNodeModule;
+import dev.getelements.elements.appnode.guice.UnixFSStorageDriverModule;
+import dev.getelements.elements.appnode.guice.WorkerInstanceModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
-import dev.getelements.elements.dao.mongo.guice.MongoCoreModule;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
-import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.guice.SimpleExecutorsModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
+import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.SimpleWatchdogServiceModule;
 import dev.getelements.elements.rt.remote.Worker;
@@ -23,7 +25,8 @@ import dev.getelements.elements.rt.remote.guice.PersistentInstanceIdModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.rt.remote.watchdog.WatchdogService;
-import dev.getelements.elements.service.guice.*;
+import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
+import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -73,7 +76,7 @@ public class ApplicationNode {
             new JeroMQAsyncConnectionServiceModule(),
             new JeroMQInstanceConnectionServiceModule(),
             new JeroMQControlClientModule(),
-            new MongoCoreModule(),
+            new MongoSdkModule(),
             new MongoDaoModule(),
             new MongoGridFSLargeObjectBucketModule(),
             new SimpleRemoteInvokerRegistryModule(),

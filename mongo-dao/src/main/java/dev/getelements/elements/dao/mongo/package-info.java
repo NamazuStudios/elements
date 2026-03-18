@@ -1,5 +1,5 @@
 
-@ElementDefinition(recursive = true)
+//@ElementDefinition(recursive = true)
 package dev.getelements.elements.dao.mongo;
 
-import dev.getelements.elements.sdk.annotation.ElementDefinition;
+//import dev.getelements.elements.sdk.annotation.ElementDefinition;

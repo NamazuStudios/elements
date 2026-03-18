@@ -13,6 +13,9 @@ import jakarta.inject.Named;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +27,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import static dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry.PathConflict;
 
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 
@@ -56,6 +61,8 @@ public abstract class StaticContentLoader implements Loader {
     private HttpContextRoot httpContextRoot;
 
     private String appOutsideUrl;
+
+    private HttpPathRegistry httpPathRegistry;
 
     protected StaticContentLoader(
             final Function<ElementPathRecord, ElementStaticContentRecord> resolve,
@@ -134,6 +141,18 @@ public abstract class StaticContentLoader implements Loader {
                     .filter(Predicate.not(String::isBlank))
                     .orElseGet(() -> getHttpContextRoot().formatNormalized(defaultContextPathFormat, prefix));
 
+            final var conflict = checkPathConflict(contextPath);
+
+            if (conflict == PathConflict.INNER) {
+                pending.logWarningf(
+                        "WARNING: Static content path '%s' is inside a reserved system API path. " +
+                        "Refusing to load static content for element %s.",
+                        contextPath,
+                        element.getElementRecord().definition().name()
+                );
+                return;
+            }
+
             try {
                 final var contextPathURI = new URI(getAppOutsideUrl()).resolve(contextPath);
                 pending.uri(contextPathURI);
@@ -161,22 +180,37 @@ public abstract class StaticContentLoader implements Loader {
             servletContextHandler.setClassLoader(element.getClass().getClassLoader());
             servletContextHandler.addServlet(holder, "/*");
 
-            getSequence().addHandler(servletContextHandler);
+            final var handlerToAdd = conflict == PathConflict.OUTER
+                    ? new ReservedPathSkipHandler(servletContextHandler)
+                    : servletContextHandler;
+
+            // Register specific paths so other catch-all handlers know to skip them.
+            // Catch-all paths (OUTER conflict) are intentionally not registered — registering "/"
+            // would make isRegisteredPath() return true for every request.
+            if (conflict == PathConflict.NONE) {
+                httpPathRegistry.register(contextPath);
+            }
+
+            getSequence().addHandler(handlerToAdd);
 
             try {
-                servletContextHandler.start();
+                handlerToAdd.start();
             } catch (final Exception ex) {
-                getSequence().removeHandler(servletContextHandler);
+                if (conflict == PathConflict.NONE) {
+                    httpPathRegistry.deregister(contextPath);
+                }
+                getSequence().removeHandler(handlerToAdd);
                 throw new InternalException(ex);
             }
 
-            activeDeployments.add(new JettyDeploymentRecord(element, servletContextHandler));
+            activeDeployments.add(new JettyDeploymentRecord(element, handlerToAdd));
             pending.element(element);
 
-            pending.logf("Serving %d static file(s) for %s at %s.",
+            pending.logf("Serving %d static file(s) for %s at %s%s.",
                     config.files().size(),
                     element.getElementRecord().definition().name(),
-                    contextPath
+                    contextPath,
+                    conflict == PathConflict.OUTER ? " (catch-all; system API paths excluded)" : ""
             );
 
         }
@@ -193,6 +227,12 @@ public abstract class StaticContentLoader implements Loader {
 
             if (deployment != null) {
                 activeDeployments.remove(deployment);
+
+                // Deregister specific paths (catch-all handlers using ReservedPathSkipHandler were never registered)
+                if (deployment.handler() instanceof final ServletContextHandler sch) {
+                    httpPathRegistry.deregister(sch.getContextPath());
+                }
+
                 try {
                     deployment.handler().stop();
                     getSequence().removeHandler(deployment.handler());
@@ -231,6 +271,43 @@ public abstract class StaticContentLoader implements Loader {
     @Inject
     public void setAppOutsideUrl(@Named(APP_OUTSIDE_URL) final String appOutsideUrl) {
         this.appOutsideUrl = appOutsideUrl;
+    }
+
+    public HttpPathRegistry getHttpPathRegistry() {
+        return httpPathRegistry;
+    }
+
+    @Inject
+    public void setHttpPathRegistry(final HttpPathRegistry httpPathRegistry) {
+        this.httpPathRegistry = httpPathRegistry;
+    }
+
+    private PathConflict checkPathConflict(final String contextPath) {
+        return httpPathRegistry.checkConflict(contextPath);
+    }
+
+    /**
+     * Wraps a handler and skips it (returning {@code false}) for any request whose path falls under a
+     * reserved system API prefix.  This allows a catch-all static content deployment (e.g. context path
+     * {@code /}) to coexist with system APIs: reserved paths fall through to subsequent handlers in the
+     * {@link Handler.Sequence} while everything else is served as static content.
+     */
+    private class ReservedPathSkipHandler extends Handler.Wrapper {
+
+        ReservedPathSkipHandler(final Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public boolean handle(final Request request, final Response response, final Callback callback)
+                throws Exception {
+            final var path = request.getHttpURI().getPath();
+            if (httpPathRegistry.isRegisteredPath(path)) {
+                return false;
+            }
+            return super.handle(request, response, callback);
+        }
+
     }
 
     /**

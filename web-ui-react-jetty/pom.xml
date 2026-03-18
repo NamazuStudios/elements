@@ -87,21 +87,29 @@
                         </goals>
                     </execution>
 
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
                     <execution>
                         <id>copy-react-build</id>
                         <phase>process-resources</phase>
-                        <goals><goal>exec</goal></goals>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
                         <configuration>
-                            <executable>cp</executable>
-                            <arguments>
-                                <argument>-r</argument>
-                                <argument>${project.basedir}/elements-web-ui/dist/.</argument>
-                                <argument>${project.build.outputDirectory}/static</argument>
-                            </arguments>
+                            <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/elements-web-ui/dist</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
-
-
                 </executions>
             </plugin>
 
