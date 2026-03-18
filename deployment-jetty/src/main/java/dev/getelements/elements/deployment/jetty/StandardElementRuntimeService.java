@@ -353,9 +353,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     // New deployment - load it
                     try {
                         final var record = doLoadDeployment(deployment, false);  // Not transient
-                        if (record != null) {
-                            loadedRecords.add(record);
-                        }
+                        loadedRecords.add(record);
                         logger.info("Loaded deployment: {}", deploymentId);
                     } catch (Exception ex) {
                         logger.error("Failed to load deployment: {}", deploymentId, ex);

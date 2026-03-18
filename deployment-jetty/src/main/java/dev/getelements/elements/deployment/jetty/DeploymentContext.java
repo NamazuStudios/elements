@@ -15,11 +15,7 @@ import dev.getelements.elements.sdk.util.SimpleAttributes;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.FileSystem;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -143,7 +139,6 @@ record DeploymentContext(
      * @param parent           the parent classloader
      * @param elementPath      the element path to create SPI classloader for
      * @return a classloader with the SPI dependencies, or the parent if no custom SPI
-     * @throws IOException if artifact resolution or file operations fail
      */
     public ClassLoader createSpiClassLoaderFor(final ClassLoader parent, final Path elementPath) {
 
@@ -154,46 +149,14 @@ record DeploymentContext(
             return parent;
         }
 
-        final var spiTarget = temporaryFiles.createTempDirectory("spi");
-        deploymentFiles.add(spiTarget);
+        log("Resolving SPI for %s with %d coordinate(s): %s".formatted(elementPath, spiClassPath.size(), spiClassPath));
 
-        for (final var coordinates : spiClassPath) {
-            try {
-                copyArtifactWithDependencies(coordinates, spiTarget);
-            } catch (IOException e) {
-                warn(
-                        "Caught IO Exception assembling classpath %s"
-                                .formatted(e.getMessage())
-                );
-                errors.add(e);
-            }
-        }
-
-        // Collect all JAR files in the spiTarget directory for the classloader
-        URL[] jarUrls;
-
-        try (final var pathStream = Files.walk(spiTarget, 1)) {
-            jarUrls = pathStream
-                    .filter(p -> p.toString().endsWith(".jar"))
-                    .map(p -> {
-                        try {
-                            return p.toUri().toURL();
-                        } catch (MalformedURLException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .toArray(URL[]::new);
-        } catch (IOException e) {
-            jarUrls = new URL[0];
-            warn("Caught IO Exception assembling classpath %s".formatted(e.getMessage()));
-            errors.add(e);
-        }
-
-        if (jarUrls.length == 0) {
-            warn("No JAR files found in SPI directory for path: " + elementPath);
-        }
-
-        return new URLClassLoader(jarUrls, parent);
+        return artifactLoader
+                .findClassLoader(parent, repositories, spiClassPath)
+                .orElseGet(() -> {
+                    warn("No artifacts found for SPI coordinates: " + spiClassPath);
+                    return parent;
+                });
 
     }
 

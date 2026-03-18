@@ -577,17 +577,28 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                                 elements.add(element);
                                 config.elementLoadedHandler().accept(subpath, element);
                             } catch (final Throwable t) {
-                                // Close classloaders on failure to release OS file handles. On Windows,
-                                // URLClassLoaders hold exclusive locks on their JAR files until closed,
-                                // preventing temp directory cleanup after a failed element load.
-                                closeClassLoader(spiClassLoader);
-                                closeClassLoader(elementClassLoader);
+
                                 if (t instanceof SdkException ex) {
                                     logger.warn("Caught exception loading element. Deferring to handler.", ex);
                                     config.sdkExceptionHandler().accept(ex);
                                 } else {
-                                    throw t;
+                                    config.sdkExceptionHandler().accept(new SdkException(t));
+                                    logger.error("Caught exception loading element. Skipping.", t);
                                 }
+
+                                // Close classloaders on failure to release OS file handles. On Windows,
+                                // URLClassLoaders hold exclusive locks on their JAR files until closed,
+                                // preventing temp directory cleanup after a failed element load.
+
+                                // Only close spiClassLoader if it's distinct from apiClassLoader —
+                                // when findSpiClassLoader returns empty, spiClassLoader IS apiClassLoader
+                                // and closing it would break all subsequent element loads.
+
+                                if (spiClassLoader != apiClassLoader)
+                                    closeClassLoader(spiClassLoader);
+
+                                closeClassLoader(elementClassLoader);
+
                             }
                         }
 
@@ -609,7 +620,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             throw new SdkException(ex);
 
-        } catch (Exception ex) {
+        } catch (Exception | Error ex) {
 
             elements.forEach(el -> {
                 try {
@@ -621,17 +632,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             throw ex;
 
-        } catch (Error ex) {
-
-            elements.forEach(el -> {
-                try {
-                    el.close();
-                } catch (Exception suppressed) {
-                    ex.addSuppressed(suppressed);
-                }
-            });
-
-            throw ex;
         }
 
     }
@@ -794,7 +794,12 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     .getIsolatedLoaderWithParent(
                             attributes,
                             baseClassLoader(),
-                            cl -> new URLClassLoader(classLoaderName, implUrls, cl),
+                            cl -> new URLClassLoader(classLoaderName, implUrls, cl){
+                                @Override
+                                protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+                                    return super.loadClass(name, resolve);
+                                }
+                            },
                             elementParent(),
                             el -> true
                     );
