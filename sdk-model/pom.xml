@@ -24,10 +24,12 @@
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
