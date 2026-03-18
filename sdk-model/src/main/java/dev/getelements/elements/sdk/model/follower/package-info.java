@@ -1,3 +1,6 @@
+/**
+ * Models for player follower relationships.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.follower;
 

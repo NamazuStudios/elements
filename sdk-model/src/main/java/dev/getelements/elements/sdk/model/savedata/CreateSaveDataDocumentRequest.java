@@ -6,8 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Used to create a save data document on the remote. */
 @Schema(description = "Used to create a save data document on the remote.")
 public class CreateSaveDataDocumentRequest {
+
+    /** Creates a new instance. */
+    public CreateSaveDataDocumentRequest() {}
 
     @NotNull
     @Schema(description = "The slot of the property. Must be unique for user or profile.")
@@ -27,34 +31,74 @@ public class CreateSaveDataDocumentRequest {
     @Schema(description = "The contents of the save data.")
     private String contents;
 
+    /**
+     * Returns the slot for this save data document.
+     *
+     * @return the slot
+     */
     public int getSlot() {
         return slot;
     }
 
+    /**
+     * Sets the slot for this save data document.
+     *
+     * @param slot the slot
+     */
     public void setSlot(int slot) {
         this.slot = slot;
     }
 
+    /**
+     * Returns the user ID owning this save data.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Sets the user ID owning this save data.
+     *
+     * @param userId the user ID
+     */
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    /**
+     * Returns the profile ID owning this save data.
+     *
+     * @return the profile ID
+     */
     public String getProfileId() {
         return profileId;
     }
 
+    /**
+     * Sets the profile ID owning this save data.
+     *
+     * @param profileId the profile ID
+     */
     public void setProfileId(String profileId) {
         this.profileId = profileId;
     }
 
+    /**
+     * Returns the save data contents.
+     *
+     * @return the contents
+     */
     public String getContents() {
         return contents;
     }
 
+    /**
+     * Sets the save data contents.
+     *
+     * @param contents the contents
+     */
     public void setContents(String contents) {
         this.contents = contents;
     }

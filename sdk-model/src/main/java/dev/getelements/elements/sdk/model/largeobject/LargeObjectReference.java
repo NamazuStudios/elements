@@ -7,8 +7,12 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
+/** Represents a reference to a large object, containing its key metadata. */
 @Schema
 public class LargeObjectReference implements Serializable {
+
+    /** Creates a new instance. */
+    public LargeObjectReference() {}
 
     @Schema(description = "The unique ID of the LargeObject.")
     private String id;
@@ -41,42 +45,92 @@ public class LargeObjectReference implements Serializable {
         return largeObjectReference;
     }
 
+    /**
+     * Returns the unique ID of the large object.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the large object.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the URL where the binary contents may be read.
+     *
+     * @return the url
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * Sets the URL where the binary contents may be read.
+     *
+     * @param url the url
+     */
     public void setUrl(String url) {
         this.url = url;
     }
 
+    /**
+     * Returns the MIME type of the large object.
+     *
+     * @return the MIME type
+     */
     public String getMimeType() {
         return mimeType;
     }
 
+    /**
+     * Sets the MIME type of the large object.
+     *
+     * @param mimeType the MIME type
+     */
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
     }
 
+    /**
+     * Returns the date of last modification.
+     *
+     * @return the last modified date
+     */
     public Date getLastModified() {
         return lastModified;
     }
 
+    /**
+     * Sets the date of last modification.
+     *
+     * @param lastModified the last modified date
+     */
     public void setLastModified(Date lastModified) {
         this.lastModified = lastModified;
     }
 
+    /**
+     * Returns the current state of the large object.
+     *
+     * @return the state
+     */
     public LargeObjectState getState() {
         return state;
     }
 
+    /**
+     * Sets the current state of the large object.
+     *
+     * @param state the state
+     */
     public void setState(LargeObjectState state) {
         this.state = state;
     }

@@ -1,3 +1,6 @@
+/**
+ * Models for Apple in-app purchase receipts.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.appleiapreceipt;
 

@@ -6,17 +6,28 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Created by patricktwohig on 5/7/15.
+ * Represents an error response that includes validation failure details.
  */
 @Schema
 public class ValidationErrorResponse extends ErrorResponse implements Serializable {
 
+    /** Creates a new instance. */
+    public ValidationErrorResponse() {}
+
     private List<String> validationFailureMessages;
 
+    /**
+     * Returns the list of validation failure messages.
+     * @return the validation failure messages
+     */
     public List<String> getValidationFailureMessages() {
         return validationFailureMessages;
     }
 
+    /**
+     * Sets the list of validation failure messages.
+     * @param validationFailureMessages the validation failure messages
+     */
     public void setValidationFailureMessages(List<String> validationFailureMessages) {
         this.validationFailureMessages = validationFailureMessages;
     }

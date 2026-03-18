@@ -10,8 +10,12 @@ import java.util.Objects;
 
 import static dev.getelements.elements.sdk.model.Constants.Regexp.NO_WHITE_SPACE;
 
+/** Defines a script method and a module to invoke. */
 @Schema(description = "Defines a script method and a module to invoke.")
 public class CallbackDefinition implements Serializable {
+
+    /** Creates a new instance. */
+    public CallbackDefinition() {}
 
     @NotNull
     @Pattern(regexp = NO_WHITE_SPACE)
@@ -23,18 +27,34 @@ public class CallbackDefinition implements Serializable {
     @Schema(description = "Specifies the module to invoke.")
     private ElementServiceReference service;
 
+    /**
+     * Returns the element service reference to invoke.
+     * @return the service reference
+     */
     public ElementServiceReference getService() {
         return service;
     }
 
+    /**
+     * Sets the element service reference to invoke.
+     * @param service the service reference
+     */
     public void setService(ElementServiceReference service) {
         this.service = service;
     }
 
+    /**
+     * Returns the method name to invoke.
+     * @return the method name
+     */
     public String getMethod() {
         return method;
     }
 
+    /**
+     * Sets the method name to invoke.
+     * @param method the method name
+     */
     public void setMethod(String method) {
         this.method = method;
     }

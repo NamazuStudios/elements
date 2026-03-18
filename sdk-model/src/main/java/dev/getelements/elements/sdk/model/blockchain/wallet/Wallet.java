@@ -14,8 +14,12 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a blockchain wallet associated with a user and a vault. */
 @Schema
 public class Wallet {
+
+    /** Creates a new instance. */
+    public Wallet() {}
 
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
@@ -53,66 +57,146 @@ public class Wallet {
     @Schema(description = "The list of account pairs included in this wallet.")
     private List<WalletAccount> accounts;
 
+    /**
+     * Returns the system-assigned unique ID of this wallet.
+     *
+     * @return the wallet ID
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the system-assigned unique ID of this wallet.
+     *
+     * @param id the wallet ID
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the user associated with this wallet.
+     *
+     * @return the user
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Sets the user associated with this wallet.
+     *
+     * @param user the user
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Returns the vault that secures this wallet's keys.
+     *
+     * @return the vault
+     */
     public Vault getVault() {
         return vault;
     }
 
+    /**
+     * Sets the vault that secures this wallet's keys.
+     *
+     * @param vault the vault
+     */
     public void setVault(Vault vault) {
         this.vault = vault;
     }
 
+    /**
+     * Returns the display name of this wallet.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of this wallet.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the blockchain API protocol used by this wallet.
+     *
+     * @return the blockchain API
+     */
     public BlockchainApi getApi() {
         return api;
     }
 
+    /**
+     * Sets the blockchain API protocol used by this wallet.
+     *
+     * @param api the blockchain API
+     */
     public void setApi(BlockchainApi api) {
         this.api = api;
     }
 
+    /**
+     * Returns the list of blockchain networks associated with this wallet.
+     *
+     * @return the networks
+     */
     public List<BlockchainNetwork> getNetworks() {
         return networks;
     }
 
+    /**
+     * Sets the list of blockchain networks associated with this wallet.
+     *
+     * @param networks the networks
+     */
     public void setNetworks(List<BlockchainNetwork> networks) {
         this.networks = networks;
     }
 
+    /**
+     * Returns the index of the preferred account in this wallet.
+     *
+     * @return the preferred account index
+     */
     public int getPreferredAccount() {
         return preferredAccount;
     }
 
+    /**
+     * Sets the index of the preferred account in this wallet.
+     *
+     * @param preferredAccount the preferred account index
+     */
     public void setPreferredAccount(int preferredAccount) {
         this.preferredAccount = preferredAccount;
     }
 
+    /**
+     * Returns the list of accounts in this wallet.
+     *
+     * @return the accounts
+     */
     public List<WalletAccount> getAccounts() {
         return accounts;
     }
 
+    /**
+     * Sets the list of accounts in this wallet.
+     *
+     * @param accounts the accounts
+     */
     public void setAccounts(List<WalletAccount> accounts) {
         this.accounts = accounts;
     }

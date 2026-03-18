@@ -6,15 +6,29 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a JSON Web Key Set (JWKS) as defined by RFC 7517. */
 public class JWKSet implements Serializable {
+
+    /** Creates a new instance. */
+    public JWKSet() {}
 
     @Schema(description = "The JWKs")
     private List<JWK> keys;
 
+    /**
+     * Returns the list of JSON Web Keys.
+     *
+     * @return the keys
+     */
     public List<JWK> getKeys() {
         return keys;
     }
 
+    /**
+     * Sets the list of JSON Web Keys.
+     *
+     * @param keys the keys
+     */
     public void setKeys(List<JWK> keys) {
         this.keys = keys;
     }

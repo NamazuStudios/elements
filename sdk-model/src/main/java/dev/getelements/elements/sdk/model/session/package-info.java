@@ -1,3 +1,6 @@
+/**
+ * Models for user sessions and session lifecycle management.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.session;
 

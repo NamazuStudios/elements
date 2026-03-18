@@ -6,8 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Represents a response from creating an Auth Scheme for an Application. */
 @Schema(description = "Represents a response from creating an Auth Scheme for an Application.")
 public class CreateAuthSchemeResponse {
+
+    /** Creates a new instance. */
+    public CreateAuthSchemeResponse() {}
 
     @NotNull
     @Schema(description = "The full JSON response as described in AuthScheme")
@@ -26,24 +30,54 @@ public class CreateAuthSchemeResponse {
         "for details on the specifics of the format.")
     private String privateKey;
 
+    /**
+     * Returns the base-64 encoded public key.
+     *
+     * @return the public key
+     */
     public String getPublicKey() {
         return publicKey;
     }
 
+    /**
+     * Sets the base-64 encoded public key.
+     *
+     * @param publicKey the public key
+     */
     public void setPublicKey(String publicKey) {
         this.publicKey = publicKey;
     }
 
+    /**
+     * Returns the base-64 encoded private key, if generated.
+     *
+     * @return the private key
+     */
     public String getPrivateKey() {
         return privateKey;
     }
 
+    /**
+     * Sets the base-64 encoded private key.
+     *
+     * @param privateKey the private key
+     */
     public void setPrivateKey(String privateKey) { this.privateKey = privateKey; }
 
+    /**
+     * Returns the created auth scheme.
+     *
+     * @return the scheme
+     */
     public AuthScheme getScheme() {
         return scheme;
     }
 
+    /**
+     * Sets the created auth scheme.
+     *
+     * @param scheme the scheme
+     */
     public void setScheme(AuthScheme scheme) {
         this.scheme = scheme;
     }

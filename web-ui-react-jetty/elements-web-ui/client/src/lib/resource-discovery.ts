@@ -11,8 +11,12 @@ const POTENTIAL_RESOURCES = [
   { name: 'Users', endpoint: '/api/rest/user', icon: 'Users', category: 'Accounts' },
   { name: 'Applications', endpoint: '/api/rest/application', icon: 'AppWindow', category: 'Accounts' },
   { name: 'Profiles', endpoint: '/api/rest/profile', icon: 'User', category: 'Accounts' },
-  { name: 'Receipts', endpoint: '/api/rest/receipt', icon: 'ScrollText', category: 'Accounts' },
-  
+
+  // Commerce Resources
+  { name: 'Product Bundles', endpoint: '/api/rest/product/bundle', icon: 'ShoppingCart', category: 'Commerce' },
+  { name: 'Product SKU Schemas', endpoint: '/api/rest/product/sku/schema', icon: 'Boxes', category: 'Commerce' },
+  { name: 'Receipts', endpoint: '/api/rest/receipt', icon: 'ScrollText', category: 'Commerce' },
+
   // Game Resources
   { name: 'Items', endpoint: '/api/rest/item', icon: 'Package', category: 'Game' },
   { name: 'Missions', endpoint: '/api/rest/mission', icon: 'Target', category: 'Game' },

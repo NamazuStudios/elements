@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.model.index;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+/** Represents the state of an index plan. */
 @Schema
 public enum IndexPlanState {
 

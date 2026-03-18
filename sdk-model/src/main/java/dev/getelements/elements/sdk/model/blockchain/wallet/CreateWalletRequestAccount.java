@@ -8,11 +8,17 @@ import jakarta.validation.constraints.Null;
 
 import java.util.Objects;
 
+/** Specifies a Custodial Wallet Account when creating a Wallet. */
 @Schema(description = "Specifies a Custodial Wallet Account Creating a Wallet")
 public class CreateWalletRequestAccount {
 
+    /** Creates a new instance. */
+    public CreateWalletRequestAccount() {}
+
+    /** Validation group indicating the account should be imported. */
     public interface Import {}
 
+    /** Validation group indicating the account should be generated. */
     public interface Generate {}
 
     @AssertTrue(groups = Generate.class)
@@ -29,26 +35,56 @@ public class CreateWalletRequestAccount {
     @Schema(description = "The Wallet Account - id private identity. May be null if the wallet is for receive only.")
     private String privateKey;
 
+    /**
+     * Returns whether this account should be generated.
+     *
+     * @return true if the account should be generated
+     */
     public boolean isGenerate() {
         return generate;
     }
 
+    /**
+     * Sets whether this account should be generated.
+     *
+     * @param generate true if the account should be generated
+     */
     public void setGenerate(boolean generate) {
         this.generate = generate;
     }
 
+    /**
+     * Returns the wallet address.
+     *
+     * @return the address
+     */
     public String getAddress() {
         return address;
     }
 
+    /**
+     * Sets the wallet address.
+     *
+     * @param address the address
+     */
     public void setAddress(String address) {
         this.address = address;
     }
 
+    /**
+     * Returns the private key for the account.
+     *
+     * @return the private key
+     */
     public String getPrivateKey() {
         return privateKey;
     }
 
+    /**
+     * Sets the private key for the account.
+     *
+     * @param privateKey the private key
+     */
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
     }

@@ -17,11 +17,15 @@ import java.util.Objects;
 @Schema(description = "Configuration for the iOS Application Configuration")
 public class IosApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
+    /** Creates a new instance. */
+    public IosApplicationConfiguration() {}
+
     @NotNull
     private String applicationId;
 
     @Valid
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
+    @Deprecated
     private List<ProductBundle> productBundles;
 
     /**
@@ -33,21 +37,44 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
     }
 
     /**
-     * Sets the application ID, as deinfed in the AppStore (com.mycompany.app)
-     * @param applicationId
+     * Sets the application ID, as defined in the AppStore (com.mycompany.app).
+     *
+     * @param applicationId the application ID
      */
     public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
 
+    /**
+     * Returns the product bundles.
+     *
+     * @return the product bundles
+     * @deprecated use IAP SKU directly
+     */
+    @Deprecated
     public List<ProductBundle> getProductBundles() {
         return productBundles;
     }
 
+    /**
+     * Sets the product bundles.
+     *
+     * @param productBundles the product bundles
+     * @deprecated use IAP SKU directly
+     */
+    @Deprecated
     public void setProductBundles(List<ProductBundle> productBundles) {
         this.productBundles = productBundles;
     }
 
+    /**
+     * Returns the product bundle for the given product ID.
+     *
+     * @param productId the product ID to look up
+     * @return the matching product bundle, or null if not found
+     * @deprecated use IAP SKU directly
+     */
+    @Deprecated
     public ProductBundle getProductBundle(final String productId) {
         if (getProductBundles() == null) {
             return null;

@@ -5,10 +5,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 
 /**
- * Created by patricktwohig on 4/10/15.
+ * Represents an error response returned by the API.
  */
 @Schema
 public class ErrorResponse implements Serializable {
+
+    /** Creates a new instance. */
+    public ErrorResponse() {}
 
     @Schema(description = "A machine readable code of the error.")
     private String code;
@@ -19,18 +22,34 @@ public class ErrorResponse implements Serializable {
     )
     private String message;
 
+    /**
+     * Returns the machine-readable error code.
+     * @return the error code
+     */
     public String getCode() {
         return code;
     }
 
+    /**
+     * Sets the machine-readable error code.
+     * @param code the error code
+     */
     public void setCode(String code) {
         this.code = code;
     }
 
+    /**
+     * Returns the error message.
+     * @return the error message
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Sets the error message.
+     * @param message the error message
+     */
     public void setMessage(String message) {
         this.message = message;
     }

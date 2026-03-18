@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Created by patricktwohig on 7/18/17.
+ * Represents a single one-on-one match between the current player and an opponent.
  */
 @Schema(description =
         "Represents a single one-on-one match between the current player and an opponent.  Once " +
@@ -22,6 +22,10 @@ import java.util.Objects;
         "server may modify or delete matches based on a variety of circumstances.")
 public class Match implements Serializable {
 
+    /** Creates a new instance. */
+    public Match() {}
+
+    /** The root topic for match events. */
     public static final String ROOT_TOPIC = "match";
 
     @Null(groups = Create.class)
@@ -67,7 +71,7 @@ public class Match implements Serializable {
     /**
      * Sets the unique server-assigned ID of this match.
      *
-     * @param id
+     * @param id the id
      */
     public void setId(String id) {
         this.id = id;
@@ -84,7 +88,8 @@ public class Match implements Serializable {
 
     /**
      * Sets the desired matchmaking scheme.
-     * @param scheme
+     *
+     * @param scheme the scheme
      */
     public void setScheme(String scheme) {
         this.scheme = scheme;
@@ -173,7 +178,8 @@ public class Match implements Serializable {
 
     /**
      * Sets the system assigned game ID for the match.
-     * @param gameId
+     *
+     * @param gameId the game id
      */
     public void setGameId(String gameId) {
         this.gameId = gameId;
@@ -190,7 +196,8 @@ public class Match implements Serializable {
 
     /**
      * Sets the metadata associated with the match.
-     * @param metadata
+     *
+     * @param metadata the metadata
      */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;

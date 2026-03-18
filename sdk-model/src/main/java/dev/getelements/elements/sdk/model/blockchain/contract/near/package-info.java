@@ -1,3 +1,6 @@
+/**
+ * Models for NEAR Protocol smart contracts.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.blockchain.contract.near;
 

@@ -20,7 +20,7 @@ public class PemChain {
      * Constructs a {@link PemChain} from a {@link String}.
      *
      * @param pemString the string containing the PEM Chain File
-     * @throws InvalidPemException
+     * @throws InvalidPemException if the PEM data is malformed
      */
     public PemChain(final String pemString) throws InvalidPemException {
         this(new StringReader(pemString));
@@ -30,7 +30,7 @@ public class PemChain {
      * Constructs a {@link PemChain} from an {@link InputStream}.
      *
      * @param inputStream an {@link InputStream} with the contents of a PEM Chain file.
-     * @throws InvalidPemException
+     * @throws InvalidPemException if the PEM data is malformed
      */
     public PemChain(final InputStream inputStream) throws InvalidPemException {
         this(new InputStreamReader(inputStream, US_ASCII));
@@ -40,7 +40,7 @@ public class PemChain {
      * Constructs a {@link PemChain} from a {@link Reader}.
      *
      * @param reader an {@link Reader} with the contents of a PEM Chain file.
-     * @throws InvalidPemException
+     * @throws InvalidPemException if the PEM data is malformed
      */
     public PemChain(final Reader reader) throws InvalidPemException {
         this(new BufferedReader(reader));
@@ -50,7 +50,7 @@ public class PemChain {
      * Constructs a {@link PemChain} from a {@link BufferedReader}.
      *
      * @param reader an {@link BufferedReader} with the contents of a PEM Chain file.
-     * @throws InvalidPemException
+     * @throws InvalidPemException if the PEM data is malformed
      */
     public PemChain(final BufferedReader reader) throws InvalidPemException {
         try {

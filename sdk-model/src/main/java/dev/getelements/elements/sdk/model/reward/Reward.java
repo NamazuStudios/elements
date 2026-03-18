@@ -19,6 +19,9 @@ import java.util.Objects;
 @Schema
 public class Reward implements Serializable {
 
+    /** Creates a new instance. */
+    public Reward() {}
+
     @NotNull
     @Schema(description = "The Item that constitutes the reward")
     private Item item;
@@ -30,28 +33,64 @@ public class Reward implements Serializable {
 
     private Map<String, Object> metadata;
 
+    /**
+     * Returns the item that constitutes the reward.
+     *
+     * @return the item
+     */
     public Item getItem() {
         return item;
     }
 
+    /**
+     * Sets the item that constitutes the reward.
+     *
+     * @param item the item
+     */
     public void setItem(Item item) {
         this.item = item;
     }
 
+    /**
+     * Returns the quantity of the item that is rewarded.
+     *
+     * @return the quantity
+     */
     public Integer getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets the quantity of the item that is rewarded.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
+    /**
+     * Returns the metadata for this reward.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata for this reward.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
+    /**
+     * Adds a single metadata entry to this reward, initializing the metadata map if necessary.
+     *
+     * @param name the metadata key
+     * @param value the metadata value
+     */
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {

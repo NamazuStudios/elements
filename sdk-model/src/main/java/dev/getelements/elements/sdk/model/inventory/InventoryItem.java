@@ -22,6 +22,9 @@ import java.util.Objects;
 @Schema
 public class InventoryItem implements Serializable {
 
+    /** Creates a new instance. */
+    public InventoryItem() {}
+
     @Null(groups = {Create.class, Insert.class})
     @NotNull(groups = Update.class)
     @Schema(description = "The unique ID of the inventory item itself.")
@@ -46,42 +49,92 @@ public class InventoryItem implements Serializable {
     @Schema(description = "The priority of this Item grouping in inventory (for stacked/packaged inventory support)")
     private int priority;
 
+    /**
+     * Returns the unique ID of the inventory item.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the inventory item.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the user associated with this inventory item.
+     *
+     * @return the user
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Sets the user associated with this inventory item.
+     *
+     * @param user the user
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Returns the item in inventory.
+     *
+     * @return the item
+     */
     public Item getItem() {
         return item;
     }
 
+    /**
+     * Sets the item in inventory.
+     *
+     * @param item the item
+     */
     public void setItem(Item item) {
         this.item = item;
     }
 
+    /**
+     * Returns the quantity of the item in inventory.
+     *
+     * @return the quantity
+     */
     public int getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets the quantity of the item in inventory.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * Returns the priority of this item grouping in inventory.
+     *
+     * @return the priority
+     */
     public int getPriority() {
         return priority;
     }
 
+    /**
+     * Sets the priority of this item grouping in inventory.
+     *
+     * @param priority the priority
+     */
     public void setPriority(int priority) {
         this.priority = priority;
     }

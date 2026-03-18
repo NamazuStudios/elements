@@ -12,7 +12,10 @@ import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
 import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuanceId;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
-import dev.getelements.elements.sdk.model.exception.*;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.exception.TooBusyException;
 import dev.getelements.elements.sdk.model.inventory.InventoryItem;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.user.User;
@@ -35,7 +38,6 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuanceId.parseOrThrowNotFoundException;
 import static dev.getelements.elements.sdk.dao.InventoryItemDao.SIMPLE_PRIORITY;
-import static dev.getelements.elements.sdk.model.goods.ItemCategory.FUNGIBLE;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State.ISSUED;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State.REDEEMED;
@@ -146,11 +148,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
         final var mongoUser = getMongoUserDao().getMongoUser(rewardIssuance.getUser().getId());
         final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(rewardIssuance.getItem().getId());
-        final var mongoItemCategory = mongoItem.getCategory();
-
-        if (!FUNGIBLE.equals(mongoItemCategory)) {
-            throw new InternalException("Rewards only support fungible items.");
-        }
 
         final var context = rewardIssuance.getContext();
 

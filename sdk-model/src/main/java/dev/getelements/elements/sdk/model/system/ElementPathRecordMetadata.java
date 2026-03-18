@@ -10,13 +10,13 @@ import java.util.Map;
 /**
  * DTO for {@link dev.getelements.elements.sdk.record.ElementPathRecord}.
  *
- * @param path
- * @param api
- * @param spi
- * @param lib
- * @param classpath
- * @param attributes
- * @param manifest
+ * @param path the path inside the ELM file
+ * @param api the API paths inside the ELM file
+ * @param spi the SPI paths inside the ELM file
+ * @param lib the library paths inside the ELM file
+ * @param classpath the classpath paths inside the ELM file
+ * @param attributes the attributes specified in the ELM file
+ * @param manifest the manifest metadata
  */
 @Schema(description = "Describes the path of an ELM distribution.")
 public record ElementPathRecordMetadata(

@@ -65,14 +65,19 @@ public interface Headers {
      */
     String BEARER = "Bearer";
 
+    /** The User-Agent HTTP header name. */
     String USER_AGENT = "User-Agent";
 
+    /** The Origin HTTP header name. */
     String ORIGIN = "Origin";
 
+    /** The Access-Control-Allow-Origin header name. */
     String AC_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
 
+    /** The Access-Control-Allow-Headers header name. */
     String AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
 
+    /** The value for the Access-Control-Allow-Headers header. */
     String AC_ALLOW_HEADERS_VALUE =
         "X-HTTP-Method-Override, " +
         "Content-Type, " +
@@ -80,12 +85,16 @@ public interface Headers {
         "Elements-SessionSecret, " +
         "Authorization";
 
+    /** The Access-Control-Allow-Credentials header name. */
     String AC_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 
+    /** The value for the Access-Control-Allow-Credentials header. */
     String AC_ALLOW_CREDENTIALS_VALUE = "true";
 
+    /** The Access-Control-Allow-Methods header name. */
     String AC_ALLOW_ALLOW_METHODS = "Access-Control-Allow-Methods";
 
+    /** The value for the Access-Control-Allow-Methods header. */
     String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, PATCH, DELETE";
 
     /**

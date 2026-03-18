@@ -1,3 +1,6 @@
+/**
+ * Models for purchase receipts and transaction records.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.receipt;
 

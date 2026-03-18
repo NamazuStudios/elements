@@ -10,10 +10,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * Represents a section of PEM (Privacy Enhanced Mail) data which may include a section of a key.
  *
- * @param <KeySpecT>
+ * @param <KeySpecT> the key specification type
  */
 public class PemData<KeySpecT> {
 
+    /** The maximum allowed line length in a PEM-encoded file. */
     public static final int MAX_LINE_LENGTH = 64;
 
     private static final String SUFFIX = "-----";
@@ -26,21 +27,49 @@ public class PemData<KeySpecT> {
 
     private final KeySpecT spec;
 
+    /**
+     * Parses PEM data from the given PEM-encoded string.
+     *
+     * @param pemString the PEM-encoded string
+     * @param keySpecFunction a function to convert the decoded bytes to a key spec
+     * @throws InvalidPemException if the PEM data is malformed
+     */
     public PemData(final String pemString,
                    final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new StringReader(pemString), keySpecFunction);
     }
 
+    /**
+     * Parses PEM data from the given input stream.
+     *
+     * @param inputStream the input stream containing PEM-encoded data
+     * @param keySpecFunction a function to convert the decoded bytes to a key spec
+     * @throws InvalidPemException if the PEM data is malformed
+     */
     public PemData(final InputStream inputStream,
                    final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new InputStreamReader(inputStream, UTF_8), keySpecFunction);
     }
 
+    /**
+     * Parses PEM data from the given reader.
+     *
+     * @param reader the reader containing PEM-encoded data
+     * @param keySpecFunction a function to convert the decoded bytes to a key spec
+     * @throws InvalidPemException if the PEM data is malformed
+     */
     public PemData(final Reader reader,
                    final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
         this(new BufferedReader(reader), keySpecFunction);
     }
 
+    /**
+     * Parses PEM data from the given buffered reader.
+     *
+     * @param reader the buffered reader containing PEM-encoded data
+     * @param keySpecFunction a function to convert the decoded bytes to a key spec
+     * @throws InvalidPemException if the PEM data is malformed
+     */
     public PemData(final BufferedReader reader,
                    final Function<byte[], KeySpecT> keySpecFunction) throws InvalidPemException {
 
@@ -102,7 +131,8 @@ public class PemData<KeySpecT> {
     }
 
     /**
-     * Gets the label from the PEM. Thsi should be
+     * Gets the label from the PEM.
+     *
      * @return the label
      */
     public String getLabel() {

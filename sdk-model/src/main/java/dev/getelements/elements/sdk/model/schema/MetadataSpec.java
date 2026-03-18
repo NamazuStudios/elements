@@ -12,9 +12,13 @@ import java.util.List;
 import java.util.Objects;
 
 //TODO: whole model should be SU visible
+/** Represents a spec that defines the structure and types of a metadata payload. */
 @ValidProperties
 @Schema(description = "Represents a spec for metadata.")
 public class MetadataSpec implements Serializable, MetadataSpecPropertiesContainer {
+
+    /** Creates a new instance. */
+    public MetadataSpec() {}
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = ValidationGroups.Update.class)
@@ -34,26 +38,56 @@ public class MetadataSpec implements Serializable, MetadataSpecPropertiesContain
     @Schema(description = "The tabs of the metadata spec.")
     private List<MetadataSpecProperty> properties;
 
+    /**
+     * Returns the unique ID of the schema.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the schema.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the name of the schema.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the name of the schema.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the type of the schema.
+     *
+     * @return the type
+     */
     public MetadataSpecPropertyType getType() {
         return type;
     }
 
+    /**
+     * Sets the type of the schema.
+     *
+     * @param type the type
+     */
     public void setType(MetadataSpecPropertyType type) {
         this.type = type;
     }
@@ -63,6 +97,11 @@ public class MetadataSpec implements Serializable, MetadataSpecPropertiesContain
         return properties;
     }
 
+    /**
+     * Sets the properties of the schema.
+     *
+     * @param properties the properties
+     */
     public void setProperties(List<MetadataSpecProperty> properties) {
         this.properties = properties;
     }

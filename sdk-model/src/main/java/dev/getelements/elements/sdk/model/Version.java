@@ -14,32 +14,59 @@ import static java.lang.String.format;
 @Schema
 public class Version implements Serializable {
 
+    /** Creates a new instance. */
+    public Version() {}
+
     private String version;
 
     private String revision;
 
     private String timestamp;
 
+    /**
+     * Returns the version string.
+     * @return the version
+     */
     public String getVersion() {
         return version;
     }
 
+    /**
+     * Sets the version string.
+     * @param version the version
+     */
     public void setVersion(String version) {
         this.version = version;
     }
 
+    /**
+     * Returns the revision identifier.
+     * @return the revision
+     */
     public String getRevision() {
         return revision;
     }
 
+    /**
+     * Sets the revision identifier.
+     * @param revision the revision
+     */
     public void setRevision(String revision) {
         this.revision = revision;
     }
 
+    /**
+     * Returns the build timestamp.
+     * @return the timestamp
+     */
     public String getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * Sets the build timestamp.
+     * @param timestamp the timestamp
+     */
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }

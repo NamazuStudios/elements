@@ -1,3 +1,6 @@
+/**
+ * Models for authentication and authorization.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.auth;
 

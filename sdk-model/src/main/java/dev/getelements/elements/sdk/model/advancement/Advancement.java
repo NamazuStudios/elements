@@ -7,7 +7,14 @@ import dev.getelements.elements.sdk.model.mission.Step;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Represents the result of a player advancing through a {@link Mission}, including the current
+ * step reached, any steps completed, and any rewards earned during the advancement.
+ */
 public class Advancement {
+
+    /** Creates a new instance. */
+    public Advancement() {}
 
     private Step currentStep;
 
@@ -24,6 +31,11 @@ public class Advancement {
         return currentStep;
     }
 
+    /**
+     * Sets the current {@link Step} after the advancement through the {@link Mission}.
+     *
+     * @param currentStep the step
+     */
     public void setCurrentStep(Step currentStep) {
         this.currentStep = currentStep;
     }
@@ -37,6 +49,11 @@ public class Advancement {
         return completedSteps;
     }
 
+    /**
+     * Sets the steps that were completed as part of this {@link Advancement}.
+     *
+     * @param completedSteps the list of steps
+     */
     public void setCompletedSteps(List<Step> completedSteps) {
         this.completedSteps = completedSteps;
     }
@@ -50,6 +67,11 @@ public class Advancement {
         return rewardsEarned;
     }
 
+    /**
+     * Sets all {@link Reward} instances earned as part of this {@link Advancement}.
+     *
+     * @param rewardsEarned the list of rewards
+     */
     public void setRewardsEarned(List<Reward> rewardsEarned) {
         this.rewardsEarned = rewardsEarned;
     }

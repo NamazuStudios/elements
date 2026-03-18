@@ -9,9 +9,13 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a request to create a MetadataSpec definition. */
 @ValidProperties
 @Schema(description = "Represents a request to create a MetadataSpec definition.")
 public class CreateMetadataSpecRequest implements Serializable, MetadataSpecPropertiesContainer {
+
+    /** Creates a new instance. */
+    public CreateMetadataSpecRequest() {}
 
     @Schema(description = "The name of the metadata spec.")
     private String name;
@@ -24,28 +28,58 @@ public class CreateMetadataSpecRequest implements Serializable, MetadataSpecProp
     @Schema(description = "The token template tabs to create.")
     private List<MetadataSpecProperty> properties;
 
+    /**
+     * Returns the name of the metadata spec.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the name of the metadata spec.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
     @Override
+    /**
+     * Returns the type of the metadata spec.
+     *
+     * @return the type
+     */
     public MetadataSpecPropertyType getType() {
         return type;
     }
 
+    /**
+     * Sets the type of the metadata spec.
+     *
+     * @param type the type
+     */
     public void setType(MetadataSpecPropertyType type) {
         this.type = type;
     }
 
     @Override
+    /**
+     * Returns the properties of the metadata spec.
+     *
+     * @return the properties
+     */
     public List<MetadataSpecProperty> getProperties() {
         return properties;
     }
 
+    /**
+     * Sets the properties of the metadata spec.
+     *
+     * @param properties the properties
+     */
     public void setProperties(List<MetadataSpecProperty> properties) {
         this.properties = properties;
     }

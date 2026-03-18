@@ -10,8 +10,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a request to create a new user. */
 @Schema
 public class UserCreateRequest implements Serializable {
+
+    /** Creates a new instance. */
+    public UserCreateRequest() {}
 
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String name;
@@ -42,66 +46,146 @@ public class UserCreateRequest implements Serializable {
             "a profile for each item in this list.")
     private List<CreateProfileSignupRequest> profiles;
 
+    /**
+     * Returns the unique login name for the user.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique login name for the user.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the email address for the user.
+     *
+     * @return the email
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Sets the email address for the user.
+     *
+     * @param email the email
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
+    /**
+     * Returns the plaintext password for the user.
+     *
+     * @return the password
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Sets the plaintext password for the user.
+     *
+     * @param password the password
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * Returns the access level to assign to the user.
+     *
+     * @return the level
+     */
     public User.Level getLevel() {
         return level;
     }
 
+    /**
+     * Sets the access level to assign to the user.
+     *
+     * @param level the level
+     */
     public void setLevel(User.Level level) {
         this.level = level;
     }
 
+    /**
+     * Returns the list of profile signup requests to create for this user.
+     *
+     * @return the profiles
+     */
     public List<CreateProfileSignupRequest> getProfiles() {
         return profiles;
     }
 
+    /**
+     * Sets the list of profile signup requests to create for this user.
+     *
+     * @param profiles the profiles
+     */
     public void setProfiles(List<CreateProfileSignupRequest> profiles) {
         this.profiles = profiles;
     }
 
+    /**
+     * Returns the primary phone number for the user.
+     *
+     * @return the primary phone number
+     */
     public String getPrimaryPhoneNb() {
         return primaryPhoneNb;
     }
 
+    /**
+     * Sets the primary phone number for the user.
+     *
+     * @param primaryPhoneNb the primary phone number
+     */
     public void setPrimaryPhoneNb(String primaryPhoneNb) {
         this.primaryPhoneNb = primaryPhoneNb;
     }
 
+    /**
+     * Returns the first name of the user.
+     *
+     * @return the first name
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * Sets the first name of the user.
+     *
+     * @param firstName the first name
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * Returns the last name of the user.
+     *
+     * @return the last name
+     */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * Sets the last name of the user.
+     *
+     * @param lastName the last name
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }

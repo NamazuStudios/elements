@@ -7,17 +7,31 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Represents a request to update the quantity of an inventory item. */
 @Schema
 public class UpdateInventoryItemRequest {
+
+    /** Creates a new instance. */
+    public UpdateInventoryItemRequest() {}
 
     @Schema(description = "The quantity of the Item in inventory")
     @Min(value = 1, message = "Quantity may not be less than 0")
     private int quantity;
 
+    /**
+     * Returns the quantity of the item in inventory.
+     *
+     * @return the quantity
+     */
     public int getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets the quantity of the item in inventory.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }

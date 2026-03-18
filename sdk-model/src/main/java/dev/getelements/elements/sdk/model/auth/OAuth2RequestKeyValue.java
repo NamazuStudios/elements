@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.util.Objects;
 
+/** Represents a key-value pair used in an OAuth2 validation request (header, query param, or body field). */
 public class OAuth2RequestKeyValue implements Serializable {
 
     @Schema(description = "The key.")
@@ -23,8 +24,16 @@ public class OAuth2RequestKeyValue implements Serializable {
             """)
     private boolean userId;
 
+    /** Creates a new instance. */
     public OAuth2RequestKeyValue() {}
 
+    /**
+     * Creates a new instance with the given key, value, and fromClient flag.
+     *
+     * @param key the key
+     * @param value the value
+     * @param fromClient true if the value should come from the client
+     */
     public OAuth2RequestKeyValue(String key, String value, boolean fromClient) {
         this.key = key;
         this.value = value;
@@ -32,6 +41,14 @@ public class OAuth2RequestKeyValue implements Serializable {
         this.userId = false;
     }
 
+    /**
+     * Creates a new instance with all fields.
+     *
+     * @param key the key
+     * @param value the value
+     * @param fromClient true if the value should come from the client
+     * @param userId true if this parameter's resolved value is the external user identifier
+     */
     public OAuth2RequestKeyValue(String key, String value, boolean fromClient, boolean userId) {
         this.key = key;
         this.value = value;
@@ -39,34 +56,74 @@ public class OAuth2RequestKeyValue implements Serializable {
         this.userId = userId;
     }
 
+    /**
+     * Returns the key.
+     *
+     * @return the key
+     */
     public String getKey() {
         return key;
     }
 
+    /**
+     * Sets the key.
+     *
+     * @param key the key
+     */
     public void setKey(String key) {
         this.key = key;
     }
 
+    /**
+     * Returns the value.
+     *
+     * @return the value
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Sets the value.
+     *
+     * @param value the value
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * Returns whether the value should be received from the client.
+     *
+     * @return true if the value comes from the client
+     */
     public boolean isFromClient() {
         return fromClient;
     }
 
+    /**
+     * Sets whether the value should be received from the client.
+     *
+     * @param fromClient true if the value comes from the client
+     */
     public void setFromClient(boolean fromClient) {
         this.fromClient = fromClient;
     }
 
+    /**
+     * Returns whether this parameter's resolved value is the external user identifier.
+     *
+     * @return true if this is the user ID parameter
+     */
     public boolean isUserId() {
         return userId;
     }
 
+    /**
+     * Sets whether this parameter's resolved value is the external user identifier.
+     *
+     * @param userId true if this is the user ID parameter
+     */
     public void setUserId(boolean userId) {
         this.userId = userId;
     }

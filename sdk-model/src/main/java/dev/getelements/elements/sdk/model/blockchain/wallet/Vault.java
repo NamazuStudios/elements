@@ -12,7 +12,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import java.util.Objects;
 
+/** Represents a vault that secures a set of blockchain wallet keys for a user. */
 public class Vault {
+
+    /** Creates a new instance. */
+    public Vault() {}
 
     @Null(groups = {Insert.class})
     @NotNull(groups = {Update.class, Read.class})
@@ -32,34 +36,74 @@ public class Vault {
     @Schema(description = "The Vault's key. The vault secures each vault with this key.")
     private VaultKey key;
 
+    /**
+     * Returns the system-assigned unique ID of this vault.
+     *
+     * @return the vault ID
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the system-assigned unique ID of this vault.
+     *
+     * @param id the vault ID
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the user associated with this vault.
+     *
+     * @return the user
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Sets the user associated with this vault.
+     *
+     * @param user the user
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Returns the display name of this vault.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of this vault.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the cryptographic key used to secure this vault.
+     *
+     * @return the vault key
+     */
     public VaultKey getKey() {
         return key;
     }
 
+    /**
+     * Sets the cryptographic key used to secure this vault.
+     *
+     * @param key the vault key
+     */
     public void setKey(VaultKey key) {
         this.key = key;
     }

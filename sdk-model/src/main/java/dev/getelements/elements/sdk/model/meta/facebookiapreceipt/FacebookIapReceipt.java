@@ -10,9 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a validated Facebook in-app purchase receipt. */
 @Schema
 public class FacebookIapReceipt implements Serializable {
+
+    /** Creates a new instance. */
+    public FacebookIapReceipt() {}
+
+    /** Prefix used when building reward issuance tags by purchase ID. */
     public static final String ID_TAG_PREFIX = "ID";
+
+    /** Separator character used in reward issuance tags. */
     public static final String TAG_SEPARATOR = ".";
 
     @Schema(description = "The id of the Facebook User that purchased the IAP.")
@@ -44,62 +52,138 @@ public class FacebookIapReceipt implements Serializable {
     @Schema(description = "The original purchase date.")
     private String developerPayload;
 
+    /**
+     * Returns the Facebook user ID.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Sets the Facebook user ID.
+     *
+     * @param fbUserId the user ID
+     */
     public void setUserId(String fbUserId) {
         this.userId = fbUserId;
     }
 
+    /**
+     * Returns the purchase ID.
+     *
+     * @return the purchase ID
+     */
     public String getPurchaseId() {
         return purchaseId;
     }
 
+    /**
+     * Sets the purchase ID.
+     *
+     * @param purchaseId the purchase ID
+     */
     public void setPurchaseId(String purchaseId) {
         this.purchaseId = purchaseId;
     }
 
+    /**
+     * Returns the reporting ID.
+     *
+     * @return the reporting ID
+     */
     public String getReportingId() {
         return reportingId;
     }
 
+    /**
+     * Sets the reporting ID.
+     *
+     * @param reportingId the reporting ID
+     */
     public void setReportingId(String reportingId) {
         this.reportingId = reportingId;
     }
 
+    /**
+     * Returns the SKU of the purchased item.
+     *
+     * @return the SKU
+     */
     public String getSku() {
         return sku;
     }
 
+    /**
+     * Sets the SKU of the purchased item.
+     *
+     * @param sku the SKU
+     */
     public void setSku(String sku) {
         this.sku = sku;
     }
 
+    /**
+     * Returns the time the user gained entitlement.
+     *
+     * @return the grant time as a Unix timestamp
+     */
     public long getGrantTime() {
         return grantTime;
     }
 
+    /**
+     * Sets the time the user gained entitlement.
+     *
+     * @param grantTime the grant time as a Unix timestamp
+     */
     public void setGrantTime(long grantTime) {
         this.grantTime = grantTime;
     }
 
+    /**
+     * Returns the time when the user will lose entitlement.
+     *
+     * @return the expiration time as a Unix timestamp
+     */
     public long getExpirationTime() {
         return expirationTime;
     }
 
+    /**
+     * Sets the time when the user will lose entitlement.
+     *
+     * @param expirationTime the expiration time as a Unix timestamp
+     */
     public void setExpirationTime(long expirationTime) {
         this.expirationTime = expirationTime;
     }
 
+    /**
+     * Returns the developer payload.
+     *
+     * @return the developer payload
+     */
     public String getDeveloperPayload() {
         return developerPayload;
     }
 
+    /**
+     * Sets the developer payload.
+     *
+     * @param developerPayload the developer payload
+     */
     public void setDeveloperPayload(String developerPayload) {
         this.developerPayload = developerPayload;
     }
 
+    /**
+     * Builds the list of reward issuance tags for the given transaction ID.
+     *
+     * @param originalTransactionId the original transaction ID
+     * @return list of reward issuance tags
+     */
     public static List<String> buildRewardIssuanceTags(final String originalTransactionId) {
         final List <String> tags = new ArrayList<>();
         tags.add(buildIdentifyingRewardIssuanceTag(originalTransactionId));
@@ -107,6 +191,12 @@ public class FacebookIapReceipt implements Serializable {
         return tags;
     }
 
+    /**
+     * Builds the identifying reward issuance tag for the given transaction ID.
+     *
+     * @param originalTransactionId the original transaction ID
+     * @return the identifying reward issuance tag
+     */
     public static String buildIdentifyingRewardIssuanceTag(final String originalTransactionId) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(ID_TAG_PREFIX);

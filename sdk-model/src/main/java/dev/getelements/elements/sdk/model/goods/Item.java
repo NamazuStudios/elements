@@ -19,6 +19,9 @@ import java.util.*;
 @Schema
 public class Item implements Serializable, Taggable {
 
+    /** Creates a new instance. */
+    public Item() {}
+
     @Null(groups = {Create.class, Insert.class})
     private String id;
 
@@ -142,10 +145,20 @@ public class Item implements Serializable, Taggable {
         this.description = description;
     }
 
+    /**
+     * Returns the metadata spec for this item.
+     *
+     * @return the metadata spec
+     */
     public MetadataSpec getMetadataSpec() {
         return metadataSpec;
     }
 
+    /**
+     * Sets the metadata spec for this item.
+     *
+     * @param metadataSpec the metadata spec
+     */
     public void setMetadataSpec(MetadataSpec metadataSpec) {
         this.metadataSpec = metadataSpec;
     }
@@ -199,11 +212,19 @@ public class Item implements Serializable, Taggable {
 
     /**
      * Sets the visibility of this item.
+     *
+     * @param publicVisible true if the item is publicly visible
      */
     public void setPublicVisible(boolean publicVisible) {
         this.publicVisible = publicVisible;
     }
 
+    /**
+     * Adds a metadata entry to this item.
+     *
+     * @param name the metadata key
+     * @param value the metadata value
+     */
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {

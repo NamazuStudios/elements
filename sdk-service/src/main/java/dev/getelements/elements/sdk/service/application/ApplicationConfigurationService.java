@@ -48,14 +48,22 @@ public interface ApplicationConfigurationService {
                                                                 final String search);
 
     /**
-     * Udpates the product bundles for the given {@link ApplicationConfiguration} instance.
+     * Updates the product bundles for the given {@link ApplicationConfiguration} instance.
+     *
+     * <p>This method writes both to the embedded list on the {@link ApplicationConfiguration} document
+     * (for backward compatibility) and to the standalone {@code product_bundle} collection via
+     * {@link dev.getelements.elements.sdk.dao.ProductBundleDao}.
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param applicationConfigurationNameOrId the {@link ApplicationConfiguration} name or id
      * @param configurationClass the {@link Class} to update
      * @param productBundles the product bundles to update
      * @return the updated {@link ApplicationConfiguration} instance
+     * @deprecated Manage product bundles directly via {@link dev.getelements.elements.sdk.service.goods.ProductBundleService}
+     *     instead. This method is retained to keep existing application-configuration editors functional
+     *     and will sync changes to the standalone collection automatically.
      */
+    @Deprecated
     <T extends ApplicationConfiguration>
     T updateProductBundles(
             final String applicationNameOrId,

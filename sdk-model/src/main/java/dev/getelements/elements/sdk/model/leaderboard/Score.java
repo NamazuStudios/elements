@@ -8,8 +8,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 
+/** Represents a leaderboard score entry associated with a user profile. */
 @Schema
 public class Score {
+
+    /** Creates a new instance. */
+    public Score() {}
 
     @Null(groups = ValidationGroups.Create.class)
     @NotNull(groups = ValidationGroups.Update.class)
@@ -38,46 +42,106 @@ public class Score {
             "leaderboard is all-time, this value will be set to zero.")
     private Long leaderboardEpoch;
 
+    /**
+     * Returns the ID of the score.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the ID of the score.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the profile associated with this score.
+     *
+     * @return the profile
+     */
     public Profile getProfile() {
         return profile;
     }
 
+    /**
+     * Sets the profile associated with this score.
+     *
+     * @param profile the profile
+     */
     public void setProfile(Profile profile) {
         this.profile = profile;
     }
 
+    /**
+     * Returns the point value of the score.
+     *
+     * @return the point value
+     */
     public double getPointValue() {
         return pointValue;
     }
 
+    /**
+     * Sets the point value of the score.
+     *
+     * @param pointValue the point value
+     */
     public void setPointValue(double pointValue) {
         this.pointValue = pointValue;
     }
 
+    /**
+     * Returns the units of measure for the points.
+     *
+     * @return the score units
+     */
     public String getScoreUnits() {
         return scoreUnits;
     }
 
+    /**
+     * Sets the units of measure for the points.
+     *
+     * @param scoreUnits the score units
+     */
     public void setScoreUnits(String scoreUnits) {
         this.scoreUnits = scoreUnits;
     }
 
+    /**
+     * Returns the time at which the score was created on the server, in milliseconds since Unix epoch.
+     *
+     * @return the creation timestamp
+     */
     public Long getCreationTimestamp() { return creationTimestamp; }
 
+    /**
+     * Sets the time at which the score was created on the server, in milliseconds since Unix epoch.
+     *
+     * @param creationTimestamp the creation timestamp
+     */
     public void setCreationTimestamp(Long creationTimestamp) { this.creationTimestamp = creationTimestamp; }
 
+    /**
+     * Returns the epoch to which the score belongs for the associated leaderboard.
+     *
+     * @return the leaderboard epoch
+     */
     public Long getLeaderboardEpoch() {
         return leaderboardEpoch;
     }
 
+    /**
+     * Sets the epoch to which the score belongs for the associated leaderboard.
+     *
+     * @param leaderboardEpoch the leaderboard epoch
+     */
     public void setLeaderboardEpoch(Long leaderboardEpoch) {
         this.leaderboardEpoch = leaderboardEpoch;
     }

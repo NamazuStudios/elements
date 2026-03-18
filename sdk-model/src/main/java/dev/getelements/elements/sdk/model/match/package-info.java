@@ -1,3 +1,6 @@
+/**
+ * Models for multiplayer matchmaking and match sessions.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.match;
 

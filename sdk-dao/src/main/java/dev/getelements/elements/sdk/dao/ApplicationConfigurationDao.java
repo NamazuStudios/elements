@@ -91,7 +91,11 @@ public interface ApplicationConfigurationDao {
      * @param configurationClass               the configuration class
      * @param productBundle                    the product bundle
      * @return the updated {@link ApplicationConfiguration}
+     * @deprecated Use {@link ProductBundleDao} to manage product bundles as standalone resources.
+     *     The embedded product bundle list on {@link dev.getelements.elements.sdk.model.application.ApplicationConfiguration}
+     *     subtypes is retained for backward compatibility and migration only.
      */
+    @Deprecated
     <T extends ApplicationConfiguration>
     T updateProductBundles(
             String applicationNameOrId,

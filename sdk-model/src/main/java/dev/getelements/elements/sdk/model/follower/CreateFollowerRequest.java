@@ -4,17 +4,31 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.validation.constraints.NotNull;
 
+/** Represents a request to follow a player. */
 @Schema(description = "Represents a request to follow a player Follower.")
 public class CreateFollowerRequest {
+
+    /** Creates a new instance. */
+    public CreateFollowerRequest() {}
 
     @Schema(description = "The profile id which to follow.")
     @NotNull
     private String followedId;
 
+    /**
+     * Returns the profile ID of the player to follow.
+     *
+     * @return the followed profile ID
+     */
     public String getFollowedId() {
         return followedId;
     }
 
+    /**
+     * Sets the profile ID of the player to follow.
+     *
+     * @param followedId the followed profile ID
+     */
     public void setFollowedId(String followedId) {
         this.followedId = followedId;
     }

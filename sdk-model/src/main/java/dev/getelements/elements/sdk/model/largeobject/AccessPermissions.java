@@ -7,8 +7,15 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/**
+ * Defines read, write, and delete access permissions for a large object, each specifying
+ * the set of subjects permitted to perform that operation.
+ */
 @Schema
 public class AccessPermissions {
+
+    /** Creates a new instance. */
+    public AccessPermissions() {}
 
     @Valid
     @NotNull
@@ -25,26 +32,56 @@ public class AccessPermissions {
     @Schema(description = "Subjects allowed to delete")
     private Subjects delete;
 
+    /**
+     * Returns the subjects permitted to read this object.
+     *
+     * @return the read subjects
+     */
     public Subjects getRead() {
         return read;
     }
 
+    /**
+     * Sets the subjects permitted to read this object.
+     *
+     * @param read the read subjects
+     */
     public void setRead(Subjects read) {
         this.read = read;
     }
 
+    /**
+     * Returns the subjects permitted to write to this object.
+     *
+     * @return the write subjects
+     */
     public Subjects getWrite() {
         return write;
     }
 
+    /**
+     * Sets the subjects permitted to write to this object.
+     *
+     * @param write the write subjects
+     */
     public void setWrite(Subjects write) {
         this.write = write;
     }
 
+    /**
+     * Returns the subjects permitted to delete this object.
+     *
+     * @return the delete subjects
+     */
     public Subjects getDelete() {
         return delete;
     }
 
+    /**
+     * Sets the subjects permitted to delete this object.
+     *
+     * @param delete the delete subjects
+     */
     public void setDelete(Subjects delete) {
         this.delete = delete;
     }

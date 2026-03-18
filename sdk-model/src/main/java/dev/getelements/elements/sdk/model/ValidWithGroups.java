@@ -53,7 +53,11 @@ public @interface ValidWithGroups {
      */
     Class<? extends Payload>[] payload() default { };
 
+    /** The constraint validator implementation for {@link ValidWithGroups}. */
     class Validator implements ConstraintValidator<ValidWithGroups, Object> {
+
+        /** Creates a new instance. */
+        public Validator() {}
 
         private ValidWithGroups constraintAnnotation;
 
@@ -114,10 +118,20 @@ public @interface ValidWithGroups {
 
         }
 
+        /**
+         * Returns the Jakarta validator used to perform nested validation.
+         *
+         * @return the validator
+         */
         public jakarta.validation.Validator getValidator() {
             return validator;
         }
 
+        /**
+         * Sets the Jakarta validator used to perform nested validation.
+         *
+         * @param validator the validator
+         */
         @Inject
         public void setValidator(jakarta.validation.Validator validator) {
             this.validator = validator;

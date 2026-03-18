@@ -9,6 +9,8 @@ import dev.getelements.elements.sdk.service.firebase.FCMRegistrationService;
 import dev.getelements.elements.sdk.service.follower.FollowerService;
 import dev.getelements.elements.sdk.service.goods.ItemService;
 import dev.getelements.elements.sdk.service.health.HealthStatusService;
+import dev.getelements.elements.sdk.service.goods.ProductBundleService;
+import dev.getelements.elements.sdk.service.goods.ProductSkuSchemaService;
 import dev.getelements.elements.sdk.service.index.IndexService;
 import dev.getelements.elements.sdk.service.inventory.AdvancedInventoryItemService;
 import dev.getelements.elements.sdk.service.inventory.DistinctInventoryItemService;
@@ -55,9 +57,13 @@ import dev.getelements.elements.service.codegen.SuperUserOpenApiCodegenService;
 import dev.getelements.elements.service.defaults.DefaultOAuth2SchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultOidcSchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultUserConfiguration;
+import dev.getelements.elements.service.goods.ProductBundleMigration;
 import dev.getelements.elements.service.follower.SuperUserFollowerService;
 import dev.getelements.elements.service.goods.SuperuserItemService;
 import dev.getelements.elements.service.health.DefaultHealthStatusService;
+import dev.getelements.elements.service.goods.SuperuserProductBundleService;
+import dev.getelements.elements.service.goods.SuperuserProductSkuSchemaService;
+import dev.getelements.elements.service.goods.ProductSkuSchemaSeeder;
 import dev.getelements.elements.service.index.SuperUserIndexService;
 import dev.getelements.elements.service.inventory.*;
 import dev.getelements.elements.service.invite.SuperUserInviteService;
@@ -323,11 +329,20 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserElementInspectorService.class);
 
-        bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
+        bind(ProductBundleService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperuserProductBundleService.class);
+
+        bind(ProductSkuSchemaService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperuserProductSkuSchemaService.class);
+
+        bind(ProductSkuSchemaSeeder.class).asEagerSingleton();
+
         bind(DefaultUserConfiguration.class).asEagerSingleton();
-
+        bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultOAuth2SchemeConfiguration.class).asEagerSingleton();
-
+        bind(ProductBundleMigration.class).asEagerSingleton();
     }
 
 }

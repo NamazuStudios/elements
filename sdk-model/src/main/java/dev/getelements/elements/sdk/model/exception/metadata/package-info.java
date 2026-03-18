@@ -1,3 +1,6 @@
+/**
+ * Exceptions for metadata operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.metadata;
 

@@ -9,8 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/** Represents a request to create a mission. */
 @Schema
 public class CreateMissionRequest implements Serializable, Taggable {
+
+    /** Creates a new instance. */
+    public CreateMissionRequest() {}
 
     @Schema(description = "The name of the mission")
     @NotNull
@@ -36,26 +40,56 @@ public class CreateMissionRequest implements Serializable, Taggable {
     @Schema(description = "The metadata for this mission")
     private Map<String, Object> metadata;
 
+    /**
+     * Returns the unique name of the mission.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique name of the mission.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the display name of the mission.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the mission.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the description of the mission.
+     *
+     * @return the description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the description of the mission.
+     *
+     * @param description the description
+     */
     public void setDescription(String description) {
         this.description = description;
     }
@@ -70,26 +104,56 @@ public class CreateMissionRequest implements Serializable, Taggable {
         this.tags = tags;
     }
 
+    /**
+     * Returns the mission steps.
+     *
+     * @return the steps
+     */
     public List<Step> getSteps() {
         return steps;
     }
 
+    /**
+     * Sets the mission steps.
+     *
+     * @param steps the steps
+     */
     public void setSteps(List<Step> steps) {
         this.steps = steps;
     }
 
+    /**
+     * Returns the final repeating step.
+     *
+     * @return the final repeat step
+     */
     public Step getFinalRepeatStep() {
         return finalRepeatStep;
     }
 
+    /**
+     * Sets the final repeating step.
+     *
+     * @param finalRepeatStep the final repeat step
+     */
     public void setFinalRepeatStep(Step finalRepeatStep) {
         this.finalRepeatStep = finalRepeatStep;
     }
 
+    /**
+     * Returns the metadata for this mission.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata for this mission.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }

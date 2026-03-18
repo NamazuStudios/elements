@@ -8,10 +8,13 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 /**
- *
+ * Request model for creating a simple inventory item for a specific user.
  */
 @Schema
 public class CreateSimpleInventoryItemRequest {
+
+    /** Creates a new instance. */
+    public CreateSimpleInventoryItemRequest() {}
 
     @NotNull
     @Schema(description = "The User ID")
@@ -25,30 +28,65 @@ public class CreateSimpleInventoryItemRequest {
     @Min(value = 1, message = "Quantity may not be less than 0")
     private int quantity;
 
+    /**
+     * Returns the user ID whose inventory will be modified.
+     *
+     * @return the user ID
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * Sets the user ID whose inventory will be modified.
+     *
+     * @param userId the user ID
+     */
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    /**
+     * Returns the item ID to add to inventory.
+     *
+     * @return the item ID
+     */
     public String getItemId() {
         return itemId;
     }
 
+    /**
+     * Sets the item ID to add to inventory.
+     *
+     * @param itemId the item ID
+     */
     public void setItemId(String itemId) {
         this.itemId = itemId;
     }
 
+    /**
+     * Sets the quantity of the item.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
+    /**
+     * Returns the quantity of the item.
+     *
+     * @return the quantity
+     */
     public Integer getQuantity() {
         return quantity;
     }
 
+    /**
+     * Sets the quantity of the item.
+     *
+     * @param quantity the quantity
+     */
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
 
     @Override

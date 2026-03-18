@@ -13,8 +13,12 @@ import jakarta.validation.constraints.Null;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a time-bounded event within a schedule, associating missions with a time range. */
 @Schema
 public class ScheduleEvent {
+
+    /** Creates a new instance. */
+    public ScheduleEvent() {}
 
     @Null(groups = Insert.class)
     @NotNull(groups = {Update.class, Read.class})
@@ -33,42 +37,92 @@ public class ScheduleEvent {
     @NotNull
     private List<@ValidWithGroups(Read.class) Mission> missions;
 
+    /**
+     * Returns the unique ID of this schedule event.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of this schedule event.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the begin time of this event in milliseconds since Unix epoch.
+     *
+     * @return the begin time
+     */
     public Long getBegin() {
         return begin;
     }
 
+    /**
+     * Sets the begin time of this event in milliseconds since Unix epoch.
+     *
+     * @param begin the begin time
+     */
     public void setBegin(Long begin) {
         this.begin = begin;
     }
 
+    /**
+     * Returns the end time of this event in milliseconds since Unix epoch.
+     *
+     * @return the end time
+     */
     public Long getEnd() {
         return end;
     }
 
+    /**
+     * Sets the end time of this event in milliseconds since Unix epoch.
+     *
+     * @param end the end time
+     */
     public void setEnd(Long end) {
         this.end = end;
     }
 
+    /**
+     * Returns the schedule this event belongs to.
+     *
+     * @return the schedule
+     */
     public Schedule getSchedule() {
         return schedule;
     }
 
+    /**
+     * Sets the schedule this event belongs to.
+     *
+     * @param schedule the schedule
+     */
     public void setSchedule(Schedule schedule) {
         this.schedule = schedule;
     }
 
+    /**
+     * Returns the missions associated with this schedule event.
+     *
+     * @return the missions
+     */
     public List<Mission> getMissions() {
         return missions;
     }
 
+    /**
+     * Sets the missions associated with this schedule event.
+     *
+     * @param missions the missions
+     */
     public void setMissions(List<Mission> missions) {
         this.missions = missions;
     }

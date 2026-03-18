@@ -1,3 +1,6 @@
+/**
+ * Models for blockchain wallets and wallet addresses.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.blockchain.wallet;
 

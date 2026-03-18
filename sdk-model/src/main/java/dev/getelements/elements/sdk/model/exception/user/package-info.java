@@ -1,3 +1,6 @@
+/**
+ * Exceptions for user account operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.user;
 

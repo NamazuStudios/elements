@@ -9,7 +9,8 @@ import java.util.Set;
 /**
  * Indicates the status of an application deployment.
  *
- * @param status the status
+ * @param runtime the runtime associated with the container
+ * @param status the status of the container
  * @param uris the uris serving
  * @param logs the logs of the deployment
  * @param elements the elements associated with the deployment

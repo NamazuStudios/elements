@@ -15,27 +15,49 @@ import java.util.*;
 @Schema
 public class ProductBundleReward implements Serializable {
 
+    /** Creates a new instance. */
+    public ProductBundleReward() {}
+
     @NotNull
     @Schema(description = "The id of the item to be rewarded.")
     private String itemId;
 
-    @NotNull
-    @Schema(description = "The quantity of the item to be rewarded.")
-    private int quantity;
+    @Schema(description = "The quantity of the item to be rewarded. Null for DISTINCT items; positive integer for FUNGIBLE items.")
+    private Integer quantity;
 
+    /**
+     * Returns the ID of the item to be rewarded.
+     *
+     * @return the item ID
+     */
     public String getItemId() {
         return itemId;
     }
 
+    /**
+     * Sets the ID of the item to be rewarded.
+     *
+     * @param itemId the item ID
+     */
     public void setItemId(String itemId) {
         this.itemId = itemId;
     }
 
-    public int getQuantity() {
+    /**
+     * Returns the quantity of the item to be rewarded.
+     *
+     * @return the quantity
+     */
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    /**
+     * Sets the quantity of the item to be rewarded.
+     *
+     * @param quantity the quantity
+     */
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -43,7 +65,7 @@ public class ProductBundleReward implements Serializable {
     public boolean equals(Object object) {
         if (object == null || getClass() != object.getClass()) return false;
         ProductBundleReward reward = (ProductBundleReward) object;
-        return getQuantity() == reward.getQuantity() && Objects.equals(getItemId(), reward.getItemId());
+        return Objects.equals(getQuantity(), reward.getQuantity()) && Objects.equals(getItemId(), reward.getItemId());
     }
 
     @Override

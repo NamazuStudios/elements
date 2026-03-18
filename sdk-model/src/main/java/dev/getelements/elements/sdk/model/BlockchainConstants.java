@@ -4,15 +4,20 @@ import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;
 
 import java.math.BigInteger;
 
+/** Defines constants related to blockchain operations. */
 public interface BlockchainConstants {
 
     /**
      * The status of the mint request
      */
     enum MintStatus {
+        /** The token has not been minted. */
         NOT_MINTED,
+        /** The token has been successfully minted. */
         MINTED,
+        /** The minting operation failed. */
         MINT_FAILED,
+        /** The minting operation is pending. */
         MINT_PENDING
     }
 

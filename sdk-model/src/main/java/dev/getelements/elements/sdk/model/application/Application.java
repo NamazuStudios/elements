@@ -29,6 +29,9 @@ public class Application implements Serializable {
      */
     public static final String APPLICATION_ATTRIBUTE = Application.class.getName();
 
+    /** Creates a new instance. */
+    public Application() {}
+
     @Null(groups = Insert.class)
     private String id;
 
@@ -75,7 +78,7 @@ public class Application implements Serializable {
      * Gets the unique name of the application.  Must be alpha-numeric
      * as it is used to form REST URLs.
      *
-     * @return
+     * @return the unique name
      */
     public String getName() {
         return name;
@@ -83,7 +86,7 @@ public class Application implements Serializable {
 
     /**
      * Sets the unique name of the application.
-     * @param name
+     * @param name the unique name
      */
     public void setName(String name) {
         this.name = name;
@@ -110,7 +113,7 @@ public class Application implements Serializable {
      * Gets the description.  This is just an optional description for
      * the application used for reference.
      *
-     * @return
+     * @return the description
      */
     public String getDescription() {
         return description;
@@ -119,7 +122,7 @@ public class Application implements Serializable {
     /**
      * Sets the description.
      *
-     * @param description
+     * @param description the description
      */
     public void setDescription(String description) {
         this.description = description;
@@ -228,10 +231,18 @@ public class Application implements Serializable {
         return Objects.hash(getId(), getName(), getDescription(), getGitBranch(), getScriptRepoUrl(), getHttpDocumentationUrl(), getHttpDocumentationUiUrl(), getHttpTunnelEndpointUrl(), getAttributes(), getApplicationConfiguration());
     }
 
+    /**
+     * Returns the application attributes.
+     * @return the attributes
+     */
     public Map<String, Object> getAttributes() {
         return attributes;
     }
 
+    /**
+     * Sets the application attributes.
+     * @param attributes the attributes
+     */
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
     }

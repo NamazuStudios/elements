@@ -11,13 +11,26 @@ import java.util.Objects;
 @Schema
 public class SmartContractAddress {
 
+    /** Creates a new instance. */
+    public SmartContractAddress() {}
+
     @Schema
     private String address;
 
+    /**
+     * Returns the blockchain address of the smart contract.
+     *
+     * @return the address
+     */
     public String getAddress() {
         return address;
     }
 
+    /**
+     * Sets the blockchain address of the smart contract.
+     *
+     * @param address the address
+     */
     public void setAddress(String address) {
         this.address = address;
     }

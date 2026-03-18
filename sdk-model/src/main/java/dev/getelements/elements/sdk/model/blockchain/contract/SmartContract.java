@@ -12,8 +12,12 @@ import jakarta.validation.constraints.Pattern;
 import java.util.Map;
 import java.util.Objects;
 
+/** Represents a smart contract registered in the Elements system. */
 @Schema(description = "Represents a smart contract.")
 public class SmartContract {
+
+    /** Creates a new instance. */
+    public SmartContract() {}
 
     @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = ValidationGroups.Update.class)
@@ -43,50 +47,110 @@ public class SmartContract {
     @Schema(description = "Any metadata for this contract.")
     private Map<String, Object> metadata;
 
+    /**
+     * Returns the Elements database ID of the contract.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the Elements database ID of the contract.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the unique symbolic name of the smart contract.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the unique symbolic name of the smart contract.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Returns the display name of the smart contract.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the smart contract.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the blockchain addresses of the contract, keyed by network.
+     *
+     * @return the addresses
+     */
     public Map<BlockchainNetwork, SmartContractAddress> getAddresses() {
         return addresses;
     }
 
+    /**
+     * Sets the blockchain addresses of the contract, keyed by network.
+     *
+     * @param addresses the addresses
+     */
     public void setAddresses(Map<BlockchainNetwork, SmartContractAddress> addresses) {
         this.addresses = addresses;
     }
 
+    /**
+     * Returns the Elements vault used to manage the wallets.
+     *
+     * @return the vault
+     */
     public Vault getVault() {
         return vault;
     }
 
+    /**
+     * Sets the Elements vault used to manage the wallets.
+     *
+     * @param vault the vault
+     */
     public void setVault(Vault vault) {
         this.vault = vault;
     }
 
+    /**
+     * Returns any metadata for this contract.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets any metadata for this contract.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }

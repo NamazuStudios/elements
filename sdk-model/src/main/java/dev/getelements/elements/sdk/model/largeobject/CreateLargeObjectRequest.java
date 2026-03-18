@@ -7,8 +7,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Represents a request to create a large object with access permissions. */
 @Schema
 public class CreateLargeObjectRequest {
+
+    /** Creates a new instance. */
+    public CreateLargeObjectRequest() {}
 
     @NotNull
     @Schema(description = "The MIME type associated with the object.")
@@ -29,34 +33,74 @@ public class CreateLargeObjectRequest {
     @Schema(description = "Specifies the Subjects which can delete the LargeObject.")
     private SubjectRequest delete;
 
+    /**
+     * Returns the MIME type of the object.
+     *
+     * @return the MIME type
+     */
     public String getMimeType() {
         return mimeType;
     }
 
+    /**
+     * Sets the MIME type of the object.
+     *
+     * @param mimeType the MIME type
+     */
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
     }
 
+    /**
+     * Returns the read access subjects.
+     *
+     * @return the read subjects
+     */
     public SubjectRequest getRead() {
         return read;
     }
 
+    /**
+     * Sets the read access subjects.
+     *
+     * @param read the read subjects
+     */
     public void setRead(SubjectRequest read) {
         this.read = read;
     }
 
+    /**
+     * Returns the write access subjects.
+     *
+     * @return the write subjects
+     */
     public SubjectRequest getWrite() {
         return write;
     }
 
+    /**
+     * Sets the write access subjects.
+     *
+     * @param write the write subjects
+     */
     public void setWrite(SubjectRequest write) {
         this.write = write;
     }
 
+    /**
+     * Returns the delete access subjects.
+     *
+     * @return the delete subjects
+     */
     public SubjectRequest getDelete() {
         return delete;
     }
 
+    /**
+     * Sets the delete access subjects.
+     *
+     * @param delete the delete subjects
+     */
     public void setDelete(SubjectRequest delete) {
         this.delete = delete;
     }

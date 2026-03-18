@@ -34,6 +34,8 @@ public interface MapperRegistry {
      *
      * @param source the source object
      * @param destination the destination object
+     * @param <SourceT> the source type
+     * @param <DestinationT> the destination type
      */
     default
     <SourceT, DestinationT> void map(final SourceT source, final DestinationT destination) {
@@ -49,6 +51,8 @@ public interface MapperRegistry {
      * @param source the source type
      * @param destinationClass the destination type
      * @return the destination object
+     * @param <SourceT> the source type
+     * @param <DestinationT> the destination type
      */
     default
     <SourceT, DestinationT> DestinationT map(
@@ -127,6 +131,12 @@ public interface MapperRegistry {
     <SourceT, DestinationT>
     Optional<Updater<SourceT, DestinationT>> findUpdater(Class<SourceT> source, Class<DestinationT> destination);
 
+    /**
+     * Maps instances of a source type to a destination type.
+     *
+     * @param <SourceT> the source type
+     * @param <DestinationT> the destination type
+     */
     @FunctionalInterface
     interface Mapper<SourceT, DestinationT> {
 
@@ -191,8 +201,8 @@ public interface MapperRegistry {
     /**
      * Represents a mapping between two types.
      *
-     * @param <SourceT>
-     * @param <DestinationT>
+     * @param <SourceT> the source type
+     * @param <DestinationT> the destination type
      */
     interface ReversibleMapper<SourceT, DestinationT> extends Mapper<SourceT, DestinationT> {
 
@@ -237,6 +247,12 @@ public interface MapperRegistry {
 
     }
 
+    /**
+     * Updates an existing destination object from a source object.
+     *
+     * @param <SourceT> the source type
+     * @param <DestinationT> the destination type
+     */
     @FunctionalInterface
     interface Updater<SourceT, DestinationT> {
 
@@ -301,8 +317,8 @@ public interface MapperRegistry {
     /**
      * Represents a mapping between two types.
      *
-     * @param <SourceT>
-     * @param <DestinationT>
+     * @param <SourceT> the source type
+     * @param <DestinationT> the destination type
      */
     interface ReversibleUpdater<SourceT, DestinationT> extends Mapper<SourceT, DestinationT> {
 
@@ -310,6 +326,7 @@ public interface MapperRegistry {
          * Maps the destination to the source.
          *
          * @param source the source object
+         * @param destination the destination object
          */
         void reverse(DestinationT source, SourceT destination);
 

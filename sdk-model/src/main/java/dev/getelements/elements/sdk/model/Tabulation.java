@@ -7,9 +7,12 @@ import java.util.List;
 /**
  * Similar to a {@link Pagination}, a Tabulation is a way to walk a dataset.
  *
- * @param <ModelT>
+ * @param <ModelT> the row element type
  */
 public class Tabulation<ModelT> implements Iterable<ModelT> {
+
+    /** Creates a new instance. */
+    public Tabulation() {}
 
     @NotNull
     private List<ModelT> rows;
@@ -21,7 +24,7 @@ public class Tabulation<ModelT> implements Iterable<ModelT> {
 
     /**
      * Gets the rows of this tabulation.
-     * @return
+     * @return the rows
      */
     public List<ModelT> getRows() {
         return rows;
@@ -29,7 +32,7 @@ public class Tabulation<ModelT> implements Iterable<ModelT> {
 
     /**
      * Sets the rows of this tabulation.
-     * @param rows
+     * @param rows the rows
      */
     public void setRows(List<ModelT> rows) {
         this.rows = rows;

@@ -1,3 +1,6 @@
+/**
+ * Exceptions for mission operations.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.exception.mission;
 

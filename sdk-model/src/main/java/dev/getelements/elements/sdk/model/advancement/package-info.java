@@ -1,3 +1,6 @@
+/**
+ * Models for mission advancements and step progression.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.advancement;
 

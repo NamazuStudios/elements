@@ -50,6 +50,14 @@ public class MongoOculusApplicationConfigurationDaoTest extends MongoApplication
     }
 
     @Override
+    protected OculusApplicationConfiguration createTestObjectWithoutProductBundles() {
+        final var config = new OculusApplicationConfiguration();
+        config.setApplicationId("com.example.myapplication");
+        config.setApplicationSecret("example-secret");
+        return config;
+    }
+
+    @Override
     protected OculusApplicationConfiguration updateTestObject(final OculusApplicationConfiguration config) {
         final var reward1 = new ProductBundleReward();
         reward1.setItemId(testItem.getId());

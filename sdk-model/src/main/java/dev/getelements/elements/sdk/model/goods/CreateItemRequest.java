@@ -8,8 +8,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.*;
 
+/** Request model for creating a new goods item. */
 @Schema
 public class CreateItemRequest {
+
+    /** Creates a new instance. */
+    public CreateItemRequest() {}
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
@@ -124,7 +128,7 @@ public class CreateItemRequest {
     /**
      * Sets the item category.
      *
-     * @param category
+     * @param category the item category
      */
     public void setCategory(ItemCategory category) {
         this.category = category;
@@ -168,6 +172,12 @@ public class CreateItemRequest {
         this.metadata = metadata != null ? metadata : Collections.emptyMap();
     }
 
+    /**
+     * Adds a single metadata entry.
+     *
+     * @param name the metadata key
+     * @param value the metadata value
+     */
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {
@@ -179,7 +189,9 @@ public class CreateItemRequest {
     }
 
     /**
-     * Returns the visibility of this Item
+     * Returns the visibility of this Item.
+     *
+     * @return true if publicly visible
      */
     public boolean isPublicVisible() {
         return publicVisible;

@@ -5,12 +5,18 @@ import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 
 import static java.util.Arrays.*;
 
+/** Thrown when a multi-match is in an unexpected phase or status. */
 public class InvalidMultiMatchPhaseException extends InvalidDataException {
 
   private final MultiMatchStatus actual;
 
   private final MultiMatchStatus[] expected;
 
+  /**
+   * Creates a new instance with the given actual and expected statuses.
+   * @param actual the actual status
+   * @param expected the expected statuses
+   */
   public InvalidMultiMatchPhaseException(final MultiMatchStatus actual,
                                          final MultiMatchStatus ... expected) {
 

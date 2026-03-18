@@ -11,10 +11,10 @@ import dev.getelements.elements.sdk.model.application.OculusApplicationConfigura
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt;
-import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
+import dev.getelements.elements.sdk.service.goods.ProductBundleService;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
@@ -25,16 +25,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.ws.rs.client.Client;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import static dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt.buildRewardIssuanceTags;
-import static dev.getelements.elements.sdk.model.reward.RewardIssuance.*;
-import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.PERSISTENT;
 
 public class UserOculusIapReceiptService implements OculusIapReceiptService {
 
@@ -45,10 +37,6 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
     private ReceiptDao receiptDao;
 
     private MapperRegistry dozerMapperRegistry;
-
-    private RewardIssuanceDao rewardIssuanceDao;
-
-    private ItemDao itemDao;
 
     private ApplicationConfigurationDao applicationConfigurationDao;
 
@@ -61,6 +49,8 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
     private Provider<Transaction> transactionProvider;
 
     private ElementRegistry elementRegistry;
+
+    private ProductBundleService productBundleService;
 
     @Override
     public Pagination<OculusIapReceipt> getOculusIapReceipts(final int offset, final int count) {
@@ -162,7 +152,10 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         // If consumption was successful, we try to write the receipt to the db and process rewards
         if(response.getSuccess()) {
             getOrCreateOculusIapReceipt(receiptData);
-            getOrCreateRewardIssuances(receiptData);
+            getProductBundleService().processVerifiedPurchase(
+                    OCULUS_IAP_SCHEME,
+                    receiptData.getSku(),
+                    receiptData.getPurchaseId());
         }
 
         return response;
@@ -170,99 +163,10 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
 
     @Override
     public List<RewardIssuance> getOrCreateRewardIssuances(final OculusIapReceipt oculusIapReceipt) {
-
-        final var resultRewardIssuances = new ArrayList<RewardIssuance>();
-        final var profile = getCurrentProfileSupplier().get();
-
-        if (profile == null) {
-            throw new NotFoundException("User has no profile.");
-        }
-
-        final var application = profile.getApplication();
-
-        if (application == null) {
-            throw new InvalidDataException("Profile is not associated with a valid application.");
-        }
-
-        final var applicationId = application.getId();
-
-        if (applicationId == null || applicationId.isEmpty()) {
-            throw new InvalidDataException("Application id associated with the profile is invalid.");
-        }
-
-        return getTransactionProvider().get().performAndClose( tx -> {
-
-            // next, we look up the associated application configuration
-            final var applicationConfigurationDao = tx.getDao(ApplicationConfigurationDao.class);
-            final var oculusApplicationConfiguration = applicationConfigurationDao
-                    .getDefaultApplicationConfigurationForApplication(
-                            applicationId,
-                            OculusApplicationConfiguration.class);
-
-            final var productBundles = oculusApplicationConfiguration.getProductBundles();
-            final var productId = oculusIapReceipt.getSku();
-            final var productBundle = productBundles.stream()
-                    .filter(p -> p.getProductId().equals(productId))
-                    .findFirst()
-                    .orElse(null);
-
-            if (productBundle == null) {
-                throw new InvalidDataException("ApplicationConfiguration " + oculusApplicationConfiguration.getId() +
-                        "has no ProductBundle for productId " + productId);
-            }
-
-            final var itemDao = tx.getDao(ItemDao.class);
-            final var rewardIssuanceDao = tx.getDao(RewardIssuanceDao.class);
-
-            // for each reward in the product bundle...
-            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
-
-                final var item = itemDao.getItemByIdOrName(productBundleReward.getItemId());
-
-                final var rewardIssuance = createRewardIssuance(
-                        oculusIapReceipt.getPurchaseId(),
-                        item,
-                        productBundleReward.getQuantity()
-                );
-
-                final var resultRewardIssuance = rewardIssuanceDao.getOrCreateRewardIssuance(rewardIssuance);
-                resultRewardIssuances.add(resultRewardIssuance);
-            }
-
-            return resultRewardIssuances;
-        });
-
-    }
-
-    private RewardIssuance createRewardIssuance(
-            final String originalTransactionId,
-            final Item item,
-            final Integer quantity
-    ) {
-
-        final var context = buildOculusIapContextString(originalTransactionId, item.getId());
-        final var metadata = generateOculusIapReceiptMetadata();
-        final var rewardIssuance = new RewardIssuance();
-
-        rewardIssuance.setItem(item);
-        rewardIssuance.setItemQuantity(quantity);
-        rewardIssuance.setUser(user);
-        // we hold onto the reward issuance forever so as not to duplicate an already-redeemed issuance
-        rewardIssuance.setType(PERSISTENT);
-        rewardIssuance.setContext(context);
-        rewardIssuance.setMetadata(metadata);
-        rewardIssuance.setSource(OCULUS_IAP_SOURCE);
-
-        final var tags = buildRewardIssuanceTags(originalTransactionId);
-        rewardIssuance.setTags(tags);
-
-        return rewardIssuance;
-    }
-
-    private Map<String, Object> generateOculusIapReceiptMetadata() {
-        final HashMap<String, Object> map = new HashMap<>();
-
-        return map;
+        return getProductBundleService().processVerifiedPurchase(
+                OCULUS_IAP_SCHEME,
+                oculusIapReceipt.getSku(),
+                oculusIapReceipt.getPurchaseId());
     }
 
     private OculusIapReceipt convertReceipt(final Receipt receipt) {
@@ -315,24 +219,6 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
     @Inject
     public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
         this.dozerMapperRegistry = dozerMapperRegistry;
-    }
-
-    public RewardIssuanceDao getRewardIssuanceDao() {
-        return rewardIssuanceDao;
-    }
-
-    @Inject
-    public void setRewardIssuanceDao(RewardIssuanceDao rewardIssuanceDao) {
-        this.rewardIssuanceDao = rewardIssuanceDao;
-    }
-
-    public ItemDao getItemDao() {
-        return itemDao;
-    }
-
-    @Inject
-    public void setItemDao(ItemDao itemDao) {
-        this.itemDao = itemDao;
     }
 
     public ApplicationConfigurationDao getApplicationConfigurationDao() {
@@ -396,5 +282,14 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public ProductBundleService getProductBundleService() {
+        return productBundleService;
+    }
+
+    @Inject
+    public void setProductBundleService(ProductBundleService productBundleService) {
+        this.productBundleService = productBundleService;
     }
 }

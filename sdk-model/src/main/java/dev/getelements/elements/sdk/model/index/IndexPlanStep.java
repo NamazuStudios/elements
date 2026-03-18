@@ -1,6 +1,14 @@
 package dev.getelements.elements.sdk.model.index;
 
+/**
+ * Represents a single step in an index plan.
+ *
+ * @param <IdentifierT> the identifier type
+ */
 public class IndexPlanStep<IdentifierT> {
+
+    /** Creates a new instance. */
+    public IndexPlanStep() {}
 
     private String description;
 
@@ -53,6 +61,11 @@ public class IndexPlanStep<IdentifierT> {
         return indexMetadata;
     }
 
+    /**
+     * Sets the {@link IndexMetadata} for the index.
+     *
+     * @param indexMetadata the index metadata
+     */
     public void setIndexMetadata(IndexMetadata indexMetadata) {
         this.indexMetadata = indexMetadata;
     }

@@ -6,9 +6,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-/**
- * Created by patricktwohig on 8/23/17.
- */
+/** Utility interface providing static methods for constructing and manipulating {@link URI} instances. */
 public interface URIs {
 
     /**
@@ -34,9 +32,11 @@ public interface URIs {
     }
 
     /**
-     * Ensures that the provided {@link URI}'s {@link URI#getPath()} ends with a '/' thus indicating
-     * @param base
-     * @return
+     * Ensures that the provided {@link URI}'s path ends with a '/', then resolves the given path against it.
+     *
+     * @param base the base URI to append to
+     * @param path the path segment to append
+     * @return the resulting URI with the path appended
      */
     static URI appendPath(final URI base, final String path) {
         if (base.getPath().endsWith("/")) {
@@ -56,6 +56,15 @@ public interface URIs {
         }
     }
 
+    /**
+     * Appends multiple path segments to the given base URI by joining them with '/'.
+     *
+     * @param base the base URI to append to
+     * @param first the first path segment to append
+     * @param second the second path segment to append
+     * @param additional any additional path segments to append
+     * @return the resulting URI with all path segments appended
+     */
     static URI appendPath(final URI base, final String first, final String second, final String ... additional) {
 
         final String joined = Stream.concat(
@@ -67,6 +76,13 @@ public interface URIs {
 
     }
 
+    /**
+     * Replaces or appends the query string on the given base URI.
+     *
+     * @param base the base URI whose query string is to be replaced
+     * @param query the new query string to set on the URI
+     * @return the resulting URI with the query string replaced
+     */
     static URI appendOrReplaceQuery(final URI base, final String query) {
         try {
             return new URI(base.getScheme(),

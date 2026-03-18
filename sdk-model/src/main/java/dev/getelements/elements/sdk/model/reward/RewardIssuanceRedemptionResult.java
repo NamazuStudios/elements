@@ -7,9 +7,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serializable;
 import java.util.Objects;
 
+/**
+ * Represents the result of a reward issuance redemption, housing either the resultant
+ * {@link RewardIssuance} or the error details.
+ */
 @Schema(description = "Represents the result of a reward issuance redemption, housing either the resultant " +
         "RewardIssuance or the error details.")
 public class RewardIssuanceRedemptionResult implements Serializable {
+
+    /** Creates a new instance. */
+    public RewardIssuanceRedemptionResult() {}
+
     @Schema(description = "The id as originally provided in the request.")
     private String rewardIssuanceId;
 
@@ -22,34 +30,74 @@ public class RewardIssuanceRedemptionResult implements Serializable {
     @Schema(description = "Should the redemption fail, the error details. Otherwise, null.")
     private String errorDetails;
 
+    /**
+     * Returns the reward issuance ID as originally provided in the request.
+     *
+     * @return the reward issuance ID
+     */
     public String getRewardIssuanceId() {
         return rewardIssuanceId;
     }
 
+    /**
+     * Sets the reward issuance ID as originally provided in the request.
+     *
+     * @param rewardIssuanceId the reward issuance ID
+     */
     public void setRewardIssuanceId(String rewardIssuanceId) {
         this.rewardIssuanceId = rewardIssuanceId;
     }
 
+    /**
+     * Returns the updated reward issuance if the redemption was successful, or null otherwise.
+     *
+     * @return the reward issuance
+     */
     public RewardIssuance getRewardIssuance() {
         return rewardIssuance;
     }
 
+    /**
+     * Sets the updated reward issuance if the redemption was successful.
+     *
+     * @param rewardIssuance the reward issuance
+     */
     public void setRewardIssuance(RewardIssuance rewardIssuance) {
         this.rewardIssuance = rewardIssuance;
     }
 
+    /**
+     * Returns the inventory item that was updated if the redemption was successful, or null otherwise.
+     *
+     * @return the inventory item
+     */
     public InventoryItem getInventoryItem() {
         return inventoryItem;
     }
 
+    /**
+     * Sets the inventory item that was updated if the redemption was successful.
+     *
+     * @param inventoryItem the inventory item
+     */
     public void setInventoryItem(InventoryItem inventoryItem) {
         this.inventoryItem = inventoryItem;
     }
 
+    /**
+     * Returns the error details if the redemption failed, or null otherwise.
+     *
+     * @return the error details
+     */
     public String getErrorDetails() {
         return errorDetails;
     }
 
+    /**
+     * Sets the error details if the redemption failed.
+     *
+     * @param errorDetails the error details
+     */
     public void setErrorDetails(String errorDetails) {
         this.errorDetails = errorDetails;
     }

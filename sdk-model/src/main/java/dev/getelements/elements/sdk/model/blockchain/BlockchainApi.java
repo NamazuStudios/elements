@@ -46,11 +46,12 @@ public enum BlockchainApi {
     }
 
     /**
-     * Validates that one or more network matches the
+     * Validates that one or more networks match this API, throwing an exception supplied by the caller if not.
      *
-     * @param networks the {@link Collection<BlockchainNetwork>}
-     * @param exSupplier this {@link Supplier<ExceptionT>}
-     * @param <ExceptionT> the exception to throw if the validation fails
+     * @param networks the {@link Collection} of networks to validate
+     * @param exSupplier supplies the exception to throw if validation fails
+     * @param <ExceptionT> the exception type to throw if the validation fails
+     * @throws ExceptionT if any network does not match this API
      */
     public <ExceptionT extends Throwable>
     void validate(

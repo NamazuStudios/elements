@@ -1,3 +1,6 @@
+/**
+ * Models for authentication tokens.
+ */
 @ElementPublic
 package dev.getelements.elements.sdk.model.token;
 

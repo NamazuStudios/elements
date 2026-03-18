@@ -7,8 +7,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
+/** Represents a request to update a large object's MIME type and access control subjects. */
 @Schema
 public class UpdateLargeObjectRequest {
+
+    /** Creates a new instance. */
+    public UpdateLargeObjectRequest() {}
 
     @NotNull
     @Schema(description = "The MIME type associated with the object.")
@@ -29,34 +33,74 @@ public class UpdateLargeObjectRequest {
     @Schema(description = "Specifies the Subjects which can delete the LargeObject.")
     private SubjectRequest delete;
 
+    /**
+     * Returns the MIME type associated with the object.
+     *
+     * @return the MIME type
+     */
     public String getMimeType() {
         return mimeType;
     }
 
+    /**
+     * Sets the MIME type associated with the object.
+     *
+     * @param mimeType the MIME type
+     */
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
     }
 
+    /**
+     * Returns the subjects which can read the large object.
+     *
+     * @return the read subjects
+     */
     public SubjectRequest getRead() {
         return read;
     }
 
+    /**
+     * Sets the subjects which can read the large object.
+     *
+     * @param read the read subjects
+     */
     public void setRead(SubjectRequest read) {
         this.read = read;
     }
 
+    /**
+     * Returns the subjects which can write the large object.
+     *
+     * @return the write subjects
+     */
     public SubjectRequest getWrite() {
         return write;
     }
 
+    /**
+     * Sets the subjects which can write the large object.
+     *
+     * @param write the write subjects
+     */
     public void setWrite(SubjectRequest write) {
         this.write = write;
     }
 
+    /**
+     * Returns the subjects which can delete the large object.
+     *
+     * @return the delete subjects
+     */
     public SubjectRequest getDelete() {
         return delete;
     }
 
+    /**
+     * Sets the subjects which can delete the large object.
+     *
+     * @param delete the delete subjects
+     */
     public void setDelete(SubjectRequest delete) {
         this.delete = delete;
     }

@@ -6,7 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.Map;
 import java.util.Objects;
 
+/** Request to create a session using an OAuth2 authentication scheme. */
 public class OAuth2SessionRequest {
+
+    /** Creates a new instance. */
+    public OAuth2SessionRequest() {}
 
     @NotBlank
     @Schema(description = "The OAuth2 scheme ID to use.")
@@ -30,42 +34,96 @@ public class OAuth2SessionRequest {
             "NOTE: This will not be run if a profileId is specified.")
     private String profileSelector;
 
+    /**
+     * Returns the request parameters for the token validation request.
+     *
+     * @return the request parameters
+     */
     public Map<String, String> getRequestParameters() {
         return requestParameters;
     }
 
+    /**
+     * Sets the request parameters for the token validation request.
+     *
+     * @param requestParameters the request parameters
+     */
     public void setRequestParameters(Map<String, String> requestParameters) {
         this.requestParameters = requestParameters;
     }
 
+    /**
+     * Returns the request headers for the token validation request.
+     *
+     * @return the request headers
+     * @deprecated use {@link #getRequestParameters()} instead
+     */
+    @Deprecated
     public Map<String, String> getRequestHeaders() {
         return requestHeaders;
     }
 
+    /**
+     * Sets the request headers for the token validation request.
+     *
+     * @param requestHeaders the request headers
+     * @deprecated use {@link #setRequestParameters(Map)} instead
+     */
+    @Deprecated
     public void setRequestHeaders(Map<String, String> requestHeaders) {
         this.requestHeaders = requestHeaders;
     }
 
+    /**
+     * Returns the OAuth2 scheme ID to use.
+     *
+     * @return the scheme ID
+     */
     public String getSchemeId() {
         return schemeId;
     }
 
+    /**
+     * Sets the OAuth2 scheme ID to use.
+     *
+     * @param schemeId the scheme ID
+     */
     public void setSchemeId(String schemeId) {
         this.schemeId = schemeId;
     }
 
+    /**
+     * Returns the profile ID to assign to the session.
+     *
+     * @return the profile ID
+     */
     public String getProfileId() {
         return profileId;
     }
 
+    /**
+     * Sets the profile ID to assign to the session.
+     *
+     * @param profileId the profile ID
+     */
     public void setProfileId(String profileId) {
         this.profileId = profileId;
     }
 
+    /**
+     * Returns the profile selector query string.
+     *
+     * @return the profile selector
+     */
     public String getProfileSelector() {
         return profileSelector;
     }
 
+    /**
+     * Sets the profile selector query string.
+     *
+     * @param profileSelector the profile selector
+     */
     public void setProfileSelector(String profileSelector) {
         this.profileSelector = profileSelector;
     }

@@ -19,6 +19,9 @@ import java.io.Serializable;
 @Schema
 public class Session implements Serializable {
 
+    /** Creates a new instance. */
+    public Session() {}
+
     @NotNull
     private User user;
 
@@ -28,34 +31,74 @@ public class Session implements Serializable {
 
     private long expiry;
 
+    /**
+     * Returns the user associated with this session.
+     *
+     * @return the user
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Sets the user associated with this session.
+     *
+     * @param user the user
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Returns the profile associated with this session.
+     *
+     * @return the profile
+     */
     public Profile getProfile() {
         return profile;
     }
 
+    /**
+     * Sets the profile associated with this session.
+     *
+     * @param profile the profile
+     */
     public void setProfile(Profile profile) {
         this.profile = profile;
     }
 
+    /**
+     * Returns the application associated with this session.
+     *
+     * @return the application
+     */
     public Application getApplication() {
         return application;
     }
 
+    /**
+     * Sets the application associated with this session.
+     *
+     * @param application the application
+     */
     public void setApplication(Application application) {
         this.application = application;
     }
 
+    /**
+     * Returns the expiry time of this session in milliseconds since Unix epoch.
+     *
+     * @return the expiry time
+     */
     public long getExpiry() {
         return expiry;
     }
 
+    /**
+     * Sets the expiry time of this session in milliseconds since Unix epoch.
+     *
+     * @param expiry the expiry time
+     */
     public void setExpiry(long expiry) {
         this.expiry = expiry;
     }

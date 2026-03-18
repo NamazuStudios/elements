@@ -96,7 +96,7 @@ public class MetadataApiTest {
 
     }
 
-    @Test(groups = "create", dependsOnMethods = "createMetadataSpec")
+    @Test(groups = "metadata.create", dependsOnMethods = "createMetadataSpec")
     public void testCreateMetadata() {
 
         final var metadata = Map.of(
@@ -133,7 +133,7 @@ public class MetadataApiTest {
 
     }
 
-    @Test(groups = "update", dependsOnGroups = "create")
+    @Test(groups = "metadata.update", dependsOnGroups = "metadata.create")
     public void testUpdateMetadata() {
 
         final var metadata = Map.of(
@@ -171,7 +171,7 @@ public class MetadataApiTest {
 
     }
 
-    @Test(groups = "fetch")
+    @Test(groups = "metadata.fetch")
     public void testGetBogusSpec() {
 
         final var response = client
@@ -184,7 +184,7 @@ public class MetadataApiTest {
 
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "update")
+    @Test(groups = "metadata.fetch", dependsOnGroups = "metadata.update")
     public void testGetMetadata() {
 
         final var response = client
@@ -200,7 +200,7 @@ public class MetadataApiTest {
 
     }
 
-    @Test(groups = "fetch", dependsOnGroups = "update")
+    @Test(groups = "metadata.fetch", dependsOnGroups = "metadata.update")
     public void testGetMetadatas() {
 
         final PaginationWalker.WalkFunction<Metadata> walkFunction = (offset, count) -> {
@@ -250,7 +250,7 @@ public class MetadataApiTest {
 //
 //    }
 
-    @Test(groups = "delete", dependsOnGroups = "fetch")
+    @Test(groups = "metadata.delete", dependsOnGroups = "metadata.fetch")
     public void testDeleteMetadata() {
 
         final var response = client
@@ -263,7 +263,7 @@ public class MetadataApiTest {
 
     }
 
-    @Test(groups = "postDelete", dependsOnGroups = "delete")
+    @Test(groups = "metadata.postDelete", dependsOnGroups = "metadata.delete")
     public void testDoubleDelete() {
 
         final var response = client

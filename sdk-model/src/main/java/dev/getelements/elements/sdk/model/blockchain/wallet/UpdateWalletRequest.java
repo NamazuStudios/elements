@@ -9,8 +9,12 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a request to update a wallet's display name, networks, and preferred account. */
 @Schema(description = "Updates a Wallet.")
 public class UpdateWalletRequest {
+
+    /** Creates a new instance. */
+    public UpdateWalletRequest() {}
 
     @Schema(description = "The new display name of the wallet.")
     private String displayName;
@@ -24,26 +28,56 @@ public class UpdateWalletRequest {
     @Schema(description = "The networks associated with this wallet. All must support the Wallet's protocol.")
     private List<BlockchainNetwork> networks;
 
+    /**
+     * Returns the display name of the wallet.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the wallet.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the networks associated with this wallet.
+     *
+     * @return the networks
+     */
     public List<BlockchainNetwork> getNetworks() {
         return networks;
     }
 
+    /**
+     * Sets the networks associated with this wallet.
+     *
+     * @param networks the networks
+     */
     public void setNetworks(List<BlockchainNetwork> networks) {
         this.networks = networks;
     }
 
+    /**
+     * Returns the preferred account index for this wallet.
+     *
+     * @return the preferred account index
+     */
     public int getPreferredAccount() {
         return preferredAccount;
     }
 
+    /**
+     * Sets the preferred account index for this wallet.
+     *
+     * @param preferredAccount the preferred account index
+     */
     public void setPreferredAccount(int preferredAccount) {
         this.preferredAccount = preferredAccount;
     }

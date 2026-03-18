@@ -15,26 +15,42 @@ import jakarta.validation.constraints.Null;
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * Represents a Reward that has been issued but has not yet been claimed by the user.
+ * The reward is assigned a unique ID to ensure that it may not have been applied more than once.
+ */
 @Schema(description = "Represents a Reward that has been issued but has not yet been claimed by the user.  The " +
                       "reward is assigned a unique ID to ensure that it may not have been applied more than once.")
 public class RewardIssuance implements Serializable, Taggable {
 
+    /** Creates a new instance. */
+    public RewardIssuance() {}
+
+    /** The prefix used for server-generated context strings. */
     public static final String SERVER_CONTEXT_PREFIX = "SERVER";
 
+    /** The separator character used between components in a context string. */
     public static final String CONTEXT_SEPARATOR = ".";
 
+    /** The source identifier for mission progress-sourced reward issuances. */
     public static final String MISSION_PROGRESS_SOURCE = "MISSION_PROGRESS";
 
+    /** The source identifier for Apple IAP-sourced reward issuances. */
     public static final String APPLE_IAP_SOURCE = "APPLE_IAP";
 
+    /** The source identifier for Google Play IAP-sourced reward issuances. */
     public static final String GOOGLE_PLAY_IAP_SOURCE = "GOOGLE_PLAY_IAP";
 
+    /** The source identifier for Facebook IAP-sourced reward issuances. */
     public static final String FACEBOOK_IAP_SOURCE = "FACEBOOK_IAP";
 
+    /** The source identifier for Oculus IAP-sourced reward issuances. */
     public static final String OCULUS_IAP_SOURCE = "OCULUS_IAP";
 
+    /** The metadata key for the mission progress ID in mission progress context strings. */
     public static final String MISSION_PROGRESS_PROGRESS_KEY = "progress";
 
+    /** The metadata key for the mission step in mission progress context strings. */
     public static final String MISSION_PROGRESS_STEP_KEY = "step";
 
     @Null(groups = {Create.class})
@@ -107,78 +123,174 @@ public class RewardIssuance implements Serializable, Taggable {
     @Schema(description = "Internal unique identifier generated and assigned on creation.")
     private String uuid;
 
+    /**
+     * Returns the unique ID of the issuance.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the unique ID of the issuance.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the user to receive the reward.
+     *
+     * @return the user
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Sets the user to receive the reward.
+     *
+     * @param user the user
+     */
     public void setUser(User user) {
         this.user = user;
     }
 
+    /**
+     * Returns the item to be issued upon redemption.
+     *
+     * @return the item
+     */
     public Item getItem() {
         return item;
     }
 
+    /**
+     * Sets the item to be issued upon redemption.
+     *
+     * @param item the item
+     */
     public void setItem(Item item) {
         this.item = item;
     }
 
+    /**
+     * Returns the amount of items to be set or added to the inventory item upon redemption.
+     *
+     * @return the item quantity
+     */
     public Integer getItemQuantity() {
         return itemQuantity;
     }
 
+    /**
+     * Sets the amount of items to be set or added to the inventory item upon redemption.
+     *
+     * @param itemQuantity the item quantity
+     */
     public void setItemQuantity(Integer itemQuantity) {
         this.itemQuantity = itemQuantity;
     }
 
+    /**
+     * Returns the state of the reward issuance.
+     *
+     * @return the state
+     */
     public State getState() {
         return state;
     }
 
+    /**
+     * Sets the state of the reward issuance.
+     *
+     * @param state the state
+     */
     public void setState(State state) {
         this.state = state;
     }
 
+    /**
+     * Returns the context string used to uniquely identify this issuance.
+     *
+     * @return the context
+     */
     public String getContext() {
         return context;
     }
 
+    /**
+     * Sets the context string used to uniquely identify this issuance.
+     *
+     * @param context the context
+     */
     public void setContext(String context) {
         this.context = context;
     }
 
+    /**
+     * Returns the source that identifies the origin of the issuance.
+     *
+     * @return the source
+     */
     public String getSource() {
         return source;
     }
 
+    /**
+     * Sets the source that identifies the origin of the issuance.
+     *
+     * @param source the source
+     */
     public void setSource(String source) {
         this.source = source;
     }
 
+    /**
+     * Returns the type of this reward issuance, controlling duplicate-issuance behavior.
+     *
+     * @return the type
+     */
     public Type getType() {
         return type;
     }
 
+    /**
+     * Sets the type of this reward issuance, controlling duplicate-issuance behavior.
+     *
+     * @param type the type
+     */
     public void setType(Type type) {
         this.type = type;
     }
 
+    /**
+     * Returns the metadata for this issuance.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata for this issuance.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }
 
+    /**
+     * Adds a single metadata entry to this issuance, initializing the metadata map if necessary.
+     *
+     * @param name the metadata key
+     * @param value the metadata value
+     */
     public void addMetadata(final String name, final Object value) {
 
         if (getMetadata() == null) {
@@ -189,30 +301,65 @@ public class RewardIssuance implements Serializable, Taggable {
 
     }
 
+    /**
+     * Returns the expiration timestamp of this issuance in milliseconds since Unix epoch.
+     *
+     * @return the expiration timestamp
+     */
     public Long getExpirationTimestamp() {
         return expirationTimestamp;
     }
 
+    /**
+     * Sets the expiration timestamp of this issuance in milliseconds since Unix epoch.
+     *
+     * @param expirationTimestamp the expiration timestamp
+     */
     public void setExpirationTimestamp(Long expirationTimestamp) {
         this.expirationTimestamp = expirationTimestamp;
     }
 
+    /**
+     * Returns the internal unique identifier generated and assigned on creation.
+     *
+     * @return the uuid
+     */
     public String getUuid() {
         return uuid;
     }
 
+    /**
+     * Sets the internal unique identifier generated and assigned on creation.
+     *
+     * @param uuid the uuid
+     */
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
 
+    /**
+     * Returns the tags used to categorize this reward issuance.
+     *
+     * @return the tags
+     */
     public List<String> getTags() {
         return tags;
     }
 
+    /**
+     * Sets the tags used to categorize this reward issuance.
+     *
+     * @param tags the tags
+     */
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
+    /**
+     * Adds a single tag to this reward issuance, initializing the tag list if necessary.
+     *
+     * @param tag the tag to add
+     */
     public void addTag(final String tag) {
         if (getTags() == null) {
             setTags(new ArrayList<>());
@@ -265,6 +412,7 @@ public class RewardIssuance implements Serializable, Taggable {
                 '}';
     }
 
+    /** Represents the state of a {@link RewardIssuance}. */
     public enum State {
         /**
          * Indicates that the RewardIssuance has been successfully issued but not yet redeemed by the client. This is
@@ -286,6 +434,7 @@ public class RewardIssuance implements Serializable, Taggable {
         REDEEMED
     }
 
+    /** Represents the persistence type of a {@link RewardIssuance}, controlling duplicate-issuance behavior. */
     public enum Type {
         /**
          * Indicates that the RewardIssuance may only be issued once per user per context, even after the
@@ -305,6 +454,12 @@ public class RewardIssuance implements Serializable, Taggable {
         NON_PERSISTENT
     }
 
+    /**
+     * Builds a context string by joining the given components with {@link #CONTEXT_SEPARATOR}.
+     *
+     * @param contextComponents the components to join
+     * @return the resultant context string
+     */
     public static String buildContextString(Object ... contextComponents) {
         final StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < contextComponents.length; i++) {
@@ -320,12 +475,12 @@ public class RewardIssuance implements Serializable, Taggable {
 
     /**
      * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
-     * string are, respectively, the {@param progressId}, the {@param sequence} that caused the issuance, and the
-     * {@param rewardIndex} of the current reward in the {@link Step}'s list of {@link Reward}s.
+     * string are, respectively, the progress ID, the sequence that caused the issuance, and the reward index
+     * of the current reward in the {@link Step}'s list of {@link Reward}s.
      *
-     * @param progressId
-     * @param sequence
-     * @param rewardIndex
+     * @param progressId the ID of the mission progress record
+     * @param sequence the sequence number that caused the issuance
+     * @param rewardIndex the index of the reward in the step's reward list
      * @return the resultant context string
      */
     public static String buildMissionProgressContextString(String progressId, int sequence, int rewardIndex) {
@@ -339,12 +494,12 @@ public class RewardIssuance implements Serializable, Taggable {
 
     /**
      * Builds the context string for a Mission Progression-sourced reward issuance. The last elements in the context
-     * string are, respectively, the {@param progressId}, the {@param sequence} that caused the issuance, and the
-     * {@param rewardIndex} of the current reward in the {@link Step}'s list of {@link Reward}s.
+     * string are, respectively, the progress ID, the sequence that caused the issuance, and the reward index
+     * of the current reward in the {@link Step}'s list of {@link Reward}s.
      *
-     * @param progressId
-     * @param sequence
-     * @param rewardIndex
+     * @param progressId the ID of the mission progress record
+     * @param sequence the sequence number that caused the issuance
+     * @param rewardIndex the index of the reward in the step's reward list
      * @return the resultant context string
      */
     public static String buildMissionProgressContextString(String progressId, String sequence, String rewardIndex) {
@@ -353,13 +508,12 @@ public class RewardIssuance implements Serializable, Taggable {
 
     /**
      * Builds the context string for an Apple IAP-sourced reward issuance. The last element in the context string is
-     * a hash of the {@param originalTransactionId}, the {@param itemId}, as well as the {@param skuOrdinal},
-     * i.e. the index of the product as enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the
-     * "second" to be redeemed, etc.).
+     * a hash of the original transaction ID, the item ID, and the SKU ordinal, i.e. the index of the product
+     * as enumerated in SKPayment.quantity (i.e. the "first" SKU to be redeemed, the "second" to be redeemed, etc.).
      *
-     * @param originalTransactionId
-     * @param itemId
-     * @param skuOrdinal
+     * @param originalTransactionId the original transaction ID from Apple
+     * @param itemId the ID of the item being rewarded
+     * @param skuOrdinal the ordinal index of the SKU in the transaction
      * @return the resultant context string
      */
     public static String buildAppleIapContextString(
@@ -382,8 +536,8 @@ public class RewardIssuance implements Serializable, Taggable {
      * the hash of the orderId issued by the Google Play services, presumed to be universally unique, as well as the
      * itemId.
      *
-     * @param orderId
-     * @param itemId
+     * @param orderId the order ID from Google Play
+     * @param itemId the ID of the item being rewarded
      * @return the resultant context string
      */
     public static String buildGooglePlayIapContextString(String orderId, String itemId) {
@@ -397,8 +551,8 @@ public class RewardIssuance implements Serializable, Taggable {
      * the hash of the orderId issued by the Facebook services, presumed to be universally unique, as well as the
      * itemId.
      *
-     * @param orderId
-     * @param itemId
+     * @param orderId the order ID from Facebook
+     * @param itemId the ID of the item being rewarded
      * @return the resultant context string
      */
     public static String buildFacebookIapContextString(String orderId, String itemId) {
@@ -408,12 +562,12 @@ public class RewardIssuance implements Serializable, Taggable {
     }
 
     /**
-     * Builds the context string for a Oculus-sourced reward issuance. The last element in the context string is
-     * the hash of the orderId issued by the Facebook services, presumed to be universally unique, as well as the
+     * Builds the context string for an Oculus-sourced reward issuance. The last element in the context string is
+     * the hash of the orderId issued by the Oculus services, presumed to be universally unique, as well as the
      * itemId.
      *
-     * @param orderId
-     * @param itemId
+     * @param orderId the order ID from Oculus
+     * @param itemId the ID of the item being rewarded
      * @return the resultant context string
      */
     public static String buildOculusIapContextString(String orderId, String itemId) {

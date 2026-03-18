@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.service.goods.ProductBundleService;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
 import dev.getelements.elements.sdk.model.user.User;
@@ -18,6 +19,7 @@ import org.bson.types.ObjectId;
 import org.mockito.Mock;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -45,6 +47,8 @@ public abstract class AbstractReceiptServiceTest {
     protected static final ArrayList<Receipt> createdReceipts = new ArrayList<>();
 
     protected void setup() {
+
+        createdReceipts.clear();
 
         when(receiptDao.createReceipt(any())).then(mockInvocation -> {
             final Receipt receipt = mockInvocation.getArgument(0);
@@ -115,6 +119,9 @@ public abstract class AbstractReceiptServiceTest {
         @Override
         protected void configure() {
 
+            final var productBundleServiceMock = mock(ProductBundleService.class);
+            when(productBundleServiceMock.processVerifiedPurchase(anyString(), anyString(), anyString())).thenReturn(List.of());
+            bind(ProductBundleService.class).toInstance(productBundleServiceMock);
             bind(ApplicationConfigurationDao.class).toInstance(mock(ApplicationConfigurationDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
             bind(ItemDao.class).toInstance(mock(ItemDao.class));

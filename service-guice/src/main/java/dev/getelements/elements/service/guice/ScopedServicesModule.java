@@ -36,6 +36,8 @@ import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
+import dev.getelements.elements.sdk.service.goods.ProductBundleService;
+import dev.getelements.elements.sdk.service.goods.ProductSkuSchemaService;
 import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import dev.getelements.elements.sdk.service.rewardissuance.RewardIssuanceService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
@@ -101,6 +103,12 @@ import dev.getelements.elements.service.profile.*;
 import dev.getelements.elements.service.progress.ProgressServiceProvider;
 import dev.getelements.elements.service.progress.SuperUserProgressService;
 import dev.getelements.elements.service.progress.UserProgressService;
+import dev.getelements.elements.service.goods.ProductBundleServiceProvider;
+import dev.getelements.elements.service.goods.SuperuserProductBundleService;
+import dev.getelements.elements.service.goods.UserProductBundleService;
+import dev.getelements.elements.service.goods.ProductSkuSchemaServiceProvider;
+import dev.getelements.elements.service.goods.SuperuserProductSkuSchemaService;
+import dev.getelements.elements.service.goods.UserProductSkuSchemaService;
 import dev.getelements.elements.service.receipt.ReceiptServiceProvider;
 import dev.getelements.elements.service.receipt.SuperuserReceiptService;
 import dev.getelements.elements.service.receipt.UserReceiptService;
@@ -393,6 +401,14 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(ElementInspectorServiceProvider.class)
                 .in(scope);
 
+        bind(ProductBundleService.class)
+                .toProvider(ProductBundleServiceProvider.class)
+                .in(scope);
+
+        bind(ProductSkuSchemaService.class)
+                .toProvider(ProductSkuSchemaServiceProvider.class)
+                .in(scope);
+
         bind(NotificationService.class)
                 .to(StandardNotificationService.class);
 
@@ -512,6 +528,14 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(USER))
                 .to(UserGooglePlayIapReceiptService.class);
 
+        bind(ProductBundleService.class)
+                .annotatedWith(named(USER))
+                .to(UserProductBundleService.class);
+
+        bind(ProductSkuSchemaService.class)
+                .annotatedWith(named(USER))
+                .to(UserProductSkuSchemaService.class);
+
         bind(InviteService.class)
                 .annotatedWith(named(USER))
                 .to(UserInviteService.class);
@@ -628,17 +652,17 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserDistinctInventoryItemService.class);
 
-        bind(FacebookApplicationConfigurationService.class)
-                .annotatedWith(named(SUPERUSER))
-                .to(SuperUserFacebookApplicationConfigurationService.class);
-
-        bind(OculusApplicationConfigurationService.class)
-                .annotatedWith(named(SUPERUSER))
-                .to(SuperUserOculusApplicationConfigurationService.class);
-
         bind(FlowSmartContractInvocationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserFlowSmartContractInvocationService.class);
+
+        bind(ElementDeploymentService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserElementDeploymentService.class);
+
+        bind(ElementInspectorService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserElementInspectorService.class);
 
         bind(EvmSmartContractInvocationService.class)
                 .annotatedWith(named(SUPERUSER))
@@ -667,6 +691,14 @@ public class ScopedServicesModule extends AbstractModule {
         bind(OculusApplicationConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserOculusApplicationConfigurationService.class);
+
+        bind(ProductBundleService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperuserProductBundleService.class);
+
+        bind(ProductSkuSchemaService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperuserProductSkuSchemaService.class);
 
         bind(IndexService.class)
                 .annotatedWith(named(SUPERUSER))
@@ -787,14 +819,6 @@ public class ScopedServicesModule extends AbstractModule {
         bind(WalletService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserWalletService.class);
-
-        bind(ElementDeploymentService.class)
-                .annotatedWith(named(SUPERUSER))
-                .to(SuperUserElementDeploymentService.class);
-
-        bind(ElementInspectorService.class)
-                .annotatedWith(named(SUPERUSER))
-                .to(SuperUserElementInspectorService.class);
 
     }
 

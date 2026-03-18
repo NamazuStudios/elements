@@ -8,8 +8,12 @@ import jakarta.validation.constraints.Null;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents a request to create or update an OIDC Auth Scheme for an Application. */
 @Schema(description = "Represents a request to update an Auth Scheme for an Application.")
 public class CreateOrUpdateOidcAuthSchemeRequest {
+
+    /** Creates a new instance. */
+    public CreateOrUpdateOidcAuthSchemeRequest() {}
 
     @NotNull
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
@@ -26,34 +30,74 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
     @Schema(description = "The JWK format. Defaults to application/json")
     private String mediaType = "application/json";
 
+    /**
+     * Returns the issuer identifier.
+     *
+     * @return the issuer
+     */
     public String getIssuer() {
         return issuer;
     }
 
+    /**
+     * Sets the issuer identifier.
+     *
+     * @param issuer the issuer
+     */
     public void setIssuer(String issuer) {
         this.issuer = issuer;
     }
 
+    /**
+     * Returns the set of JWKs for JWT signature validation.
+     *
+     * @return the keys
+     */
     public List<JWK> getKeys() {
         return keys;
     }
 
+    /**
+     * Sets the set of JWKs for JWT signature validation.
+     *
+     * @param keys the keys
+     */
     public void setKeys(List<JWK> keys) {
         this.keys = keys;
     }
 
+    /**
+     * Returns the URL for the JWK data.
+     *
+     * @return the keys URL
+     */
     public String getKeysUrl() {
         return keysUrl;
     }
 
+    /**
+     * Sets the URL for the JWK data.
+     *
+     * @param keysUrl the keys URL
+     */
     public void setKeysUrl(String keysUrl) {
         this.keysUrl = keysUrl;
     }
 
+    /**
+     * Returns the media type for the JWK format.
+     *
+     * @return the media type
+     */
     public String getMediaType() {
         return mediaType;
     }
 
+    /**
+     * Sets the media type for the JWK format.
+     *
+     * @param mediaType the media type
+     */
     public void setMediaType(String mediaType) {
         this.mediaType = mediaType;
     }

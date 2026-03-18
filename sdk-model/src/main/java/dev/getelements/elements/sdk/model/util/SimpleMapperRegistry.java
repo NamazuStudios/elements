@@ -4,12 +4,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/** A simple {@link MapperRegistry} backed by pre-built maps of {@link Mapper} and {@link Updater} instances. */
 public class SimpleMapperRegistry implements MapperRegistry {
 
     private final Map<MappingKey, Mapper<?,?>> mapperMap;
 
     private final Map<MappingKey, Updater<?,?>> updatermap;
 
+    /**
+     * Creates a new instance with the given mapper and updater maps.
+     *
+     * @param mapperMap the map of mapping keys to mappers
+     * @param updatermap the map of mapping keys to updaters
+     */
     public SimpleMapperRegistry(final Map<MappingKey, Mapper<?, ?>> mapperMap,
                                 final Map<MappingKey, Updater<?, ?>> updatermap) {
         this.mapperMap = mapperMap;
@@ -46,8 +53,9 @@ public class SimpleMapperRegistry implements MapperRegistry {
 
     /**
      * Represents a key for a {@link Mapper} or an {@link Updater}
-     * @param source
-     * @param destination
+     *
+     * @param source the source type
+     * @param destination the destination type
      */
     public record MappingKey(Class<?> source, Class<?> destination) {
 

@@ -7,8 +7,16 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import java.util.Map;
 
+/**
+ * Represents an Elements-managed smart contract.
+ *
+ * @deprecated use the new smart contract API instead
+ */
 @Deprecated
 public class ElementsSmartContract {
+
+    /** Creates a new instance. */
+    public ElementsSmartContract() {}
 
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
@@ -45,58 +53,128 @@ public class ElementsSmartContract {
     @Schema(description = "Any metadata for this contract.")
     private Map<String, Object> metadata;
 
+    /**
+     * Returns the Elements database id of the contract.
+     *
+     * @return the id
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the Elements database id of the contract.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Returns the display name of the contract.
+     *
+     * @return the display name
+     */
     public String getDisplayName() {
         return displayName;
     }
 
+    /**
+     * Sets the display name of the contract.
+     *
+     * @param displayName the display name
+     */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
+    /**
+     * Returns the script hash of the contract.
+     *
+     * @return the script hash
+     */
     public String getScriptHash() {
         return scriptHash;
     }
 
+    /**
+     * Sets the script hash of the contract.
+     *
+     * @param scriptHash the script hash
+     */
     public void setScriptHash(String scriptHash) {
         this.scriptHash = scriptHash;
     }
 
+    /**
+     * Returns the blockchain where this contract lives.
+     *
+     * @return the blockchain
+     */
     public String getBlockchain() {
         return blockchain;
     }
 
+    /**
+     * Sets the blockchain where this contract lives.
+     *
+     * @param blockchain the blockchain
+     */
     public void setBlockchain(String blockchain) {
         this.blockchain = blockchain;
     }
 
+    /**
+     * Returns the wallet id for this contract.
+     *
+     * @return the wallet id
+     */
     public String getWalletId() {
         return walletId;
     }
 
+    /**
+     * Sets the wallet id for this contract.
+     *
+     * @param walletId the wallet id
+     */
     public void setWalletId(String walletId) {
         this.walletId = walletId;
     }
 
+    /**
+     * Returns the account address for this contract.
+     *
+     * @return the account address
+     */
     public String getAccountAddress() {
         return accountAddress;
     }
 
+    /**
+     * Sets the account address for this contract.
+     *
+     * @param accountAddress the account address
+     */
     public void setAccountAddress(String accountAddress) {
         this.accountAddress = accountAddress;
     }
 
+    /**
+     * Returns the metadata for this contract.
+     *
+     * @return the metadata
+     */
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
+    /**
+     * Sets the metadata for this contract.
+     *
+     * @param metadata the metadata
+     */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }

@@ -5,7 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.util.Objects;
 
+/** Request to create a session using an OIDC (OpenID Connect) JWT token. */
 public class OidcSessionRequest {
+
+    /** Creates a new instance. */
+    public OidcSessionRequest() {}
 
     @NotBlank
     @Schema(description = "The JWT to parse")
@@ -18,26 +22,56 @@ public class OidcSessionRequest {
             "NOTE: This will not be run if a profileId is specified.")
     private String profileSelector;
 
+    /**
+     * Returns the JWT to parse.
+     *
+     * @return the JWT
+     */
     public String getJwt() {
         return jwt;
     }
 
+    /**
+     * Sets the JWT to parse.
+     *
+     * @param jwt the JWT
+     */
     public void setJwt(String jwt) {
         this.jwt = jwt;
     }
 
+    /**
+     * Returns the profile ID to assign to the session.
+     *
+     * @return the profile ID
+     */
     public String getProfileId() {
         return profileId;
     }
 
+    /**
+     * Sets the profile ID to assign to the session.
+     *
+     * @param profileId the profile ID
+     */
     public void setProfileId(String profileId) {
         this.profileId = profileId;
     }
 
+    /**
+     * Returns the profile selector query string.
+     *
+     * @return the profile selector
+     */
     public String getProfileSelector() {
         return profileSelector;
     }
 
+    /**
+     * Sets the profile selector query string.
+     *
+     * @param profileSelector the profile selector
+     */
     public void setProfileSelector(String profileSelector) {
         this.profileSelector = profileSelector;
     }

@@ -6,8 +6,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Objects;
 
+/** Represents the response from invoking a method on an EVM smart contract. */
 @Schema
 public class EVMInvokeContractResponse {
+
+    /** Creates a new instance. */
+    public EVMInvokeContractResponse() {}
 
     @Schema(description = "The transaction hash.")
     private String transactionHash;
@@ -65,146 +69,326 @@ public class EVMInvokeContractResponse {
             "as transactions that affect state or storage on a contract cannot directly return values.")
     private List<Object> decodedLog;
 
+    /**
+     * Returns the transaction hash.
+     *
+     * @return the transaction hash
+     */
     public String getTransactionHash() {
         return transactionHash;
     }
 
+    /**
+     * Sets the transaction hash.
+     *
+     * @param transactionHash the transaction hash
+     */
     public void setTransactionHash(String transactionHash) {
         this.transactionHash = transactionHash;
     }
 
+    /**
+     * Returns the transaction index.
+     *
+     * @return the transaction index
+     */
     public long getTransactionIndex() {
         return transactionIndex;
     }
 
+    /**
+     * Returns the raw transaction index.
+     *
+     * @return the raw transaction index
+     */
     public long getTransactionIndexRaw() {
         return transactionIndex;
     }
 
+    /**
+     * Sets the transaction index.
+     *
+     * @param transactionIndex the transaction index
+     */
     public void setTransactionIndex(long transactionIndex) {
         this.transactionIndex = transactionIndex;
     }
 
+    /**
+     * Returns the block hash.
+     *
+     * @return the block hash
+     */
     public String getBlockHash() {
         return blockHash;
     }
 
+    /**
+     * Sets the block hash.
+     *
+     * @param blockHash the block hash
+     */
     public void setBlockHash(String blockHash) {
         this.blockHash = blockHash;
     }
 
+    /**
+     * Returns the block number.
+     *
+     * @return the block number
+     */
     public long getBlockNumber() {
         return blockNumber;
     }
 
+    /**
+     * Sets the block number.
+     *
+     * @param blockNumber the block number
+     */
     public void setBlockNumber(long blockNumber) {
         this.blockNumber = blockNumber;
     }
 
+    /**
+     * Returns the cumulative gas used.
+     *
+     * @return the cumulative gas used
+     */
     public long getCumulativeGasUsed() {
         return cumulativeGasUsed;
     }
 
+    /**
+     * Sets the cumulative gas used.
+     *
+     * @param cumulativeGasUsed the cumulative gas used
+     */
     public void setCumulativeGasUsed(long cumulativeGasUsed) {
         this.cumulativeGasUsed = cumulativeGasUsed;
     }
 
+    /**
+     * Returns the gas used.
+     *
+     * @return the gas used
+     */
     public long getGasUsed() {
         return gasUsed;
     }
 
+    /**
+     * Sets the gas used.
+     *
+     * @param gasUsed the gas used
+     */
     public void setGasUsed(long gasUsed) {
         this.gasUsed = gasUsed;
     }
 
+    /**
+     * Returns the contract address.
+     *
+     * @return the contract address
+     */
     public String getContractAddress() {
         return contractAddress;
     }
 
+    /**
+     * Sets the contract address.
+     *
+     * @param contractAddress the contract address
+     */
     public void setContractAddress(String contractAddress) {
         this.contractAddress = contractAddress;
     }
 
+    /**
+     * Returns the root.
+     *
+     * @return the root
+     */
     public String getRoot() {
         return root;
     }
 
+    /**
+     * Sets the root.
+     *
+     * @param root the root
+     */
     public void setRoot(String root) {
         this.root = root;
     }
 
+    /**
+     * Returns the status.
+     *
+     * @return the status
+     */
     public long getStatus() {
         return status;
     }
 
+    /**
+     * Sets the status.
+     *
+     * @param status the status
+     */
     public void setStatus(long status) {
         this.status = status;
     }
 
+    /**
+     * Returns true if the status indicates success (status == 1).
+     *
+     * @return true if status is OK
+     */
     public boolean isStatusOK() {
         return getStatus() == 1;
     }
 
+    /**
+     * Returns the address of the sender.
+     *
+     * @return the from address
+     */
     public String getFrom() {
         return from;
     }
 
+    /**
+     * Sets the address of the sender.
+     *
+     * @param from the from address
+     */
     public void setFrom(String from) {
         this.from = from;
     }
 
+    /**
+     * Returns the address of the recipient.
+     *
+     * @return the to address
+     */
     public String getTo() {
         return to;
     }
 
+    /**
+     * Sets the address of the recipient.
+     *
+     * @param to the to address
+     */
     public void setTo(String to) {
         this.to = to;
     }
 
+    /**
+     * Returns the logs of any emitted events.
+     *
+     * @return the logs
+     */
     public List<EVMTransactionLog> getLogs() {
         return logs;
     }
 
+    /**
+     * Sets the logs of any emitted events.
+     *
+     * @param logs the logs
+     */
     public void setLogs(List<EVMTransactionLog> logs) {
         this.logs = logs;
     }
 
+    /**
+     * Returns the logs bloom.
+     *
+     * @return the logs bloom
+     */
     public String getLogsBloom() {
         return logsBloom;
     }
 
+    /**
+     * Sets the logs bloom.
+     *
+     * @param logsBloom the logs bloom
+     */
     public void setLogsBloom(String logsBloom) {
         this.logsBloom = logsBloom;
     }
 
+    /**
+     * Returns the revert reason, if any.
+     *
+     * @return the revert reason
+     */
     public String getRevertReason() {
         return revertReason;
     }
 
+    /**
+     * Sets the revert reason.
+     *
+     * @param revertReason the revert reason
+     */
     public void setRevertReason(String revertReason) {
         this.revertReason = revertReason;
     }
 
+    /**
+     * Returns the type.
+     *
+     * @return the type
+     */
     public String getType() {
         return type;
     }
 
+    /**
+     * Sets the type.
+     *
+     * @param type the type
+     */
     public void setType(String type) {
         this.type = type;
     }
 
+    /**
+     * Returns the effective gas price.
+     *
+     * @return the effective gas price
+     */
     public String getEffectiveGasPrice() {
         return effectiveGasPrice;
     }
 
+    /**
+     * Sets the effective gas price.
+     *
+     * @param effectiveGasPrice the effective gas price
+     */
     public void setEffectiveGasPrice(String effectiveGasPrice) {
         this.effectiveGasPrice = effectiveGasPrice;
     }
 
+    /**
+     * Returns the decoded log.
+     *
+     * @return the decoded log
+     */
     public List<Object> getDecodedLog() {
         return decodedLog;
     }
 
+    /**
+     * Sets the decoded log.
+     *
+     * @param decodedLog the decoded log
+     */
     public void setDecodedLog(List<Object> decodedLog) {
         this.decodedLog = decodedLog;
     }

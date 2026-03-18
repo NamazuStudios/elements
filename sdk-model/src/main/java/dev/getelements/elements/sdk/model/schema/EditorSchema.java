@@ -8,10 +8,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Objects;
 
+/** Defines an editor schema which contains a JSON Schema, layout, and initial data for the editor. */
 @Schema(description =
         "Defines an editor schema which contains a JSON Schema, layout, and initial data for the editor."
 )
 public class EditorSchema {
+
+    /** Creates a new instance. */
+    public EditorSchema() {}
 
     @Schema(description = "The data itself.")
     private Object data;
@@ -22,26 +26,56 @@ public class EditorSchema {
     @Schema(description = "The editor layout.")
     private List<EditorLayout> layout;
 
+    /**
+     * Returns the JSON Schema for the data.
+     *
+     * @return the schema
+     */
     public JsonSchema getSchema() {
         return schema;
     }
 
+    /**
+     * Sets the JSON Schema for the data.
+     *
+     * @param schema the schema
+     */
     public void setSchema(JsonSchema schema) {
         this.schema = schema;
     }
 
+    /**
+     * Returns the editor layout.
+     *
+     * @return the layout
+     */
     public List<EditorLayout> getLayout() {
         return layout;
     }
 
+    /**
+     * Sets the editor layout.
+     *
+     * @param layout the layout
+     */
     public void setLayout(List<EditorLayout> layout) {
         this.layout = layout;
     }
 
+    /**
+     * Returns the data.
+     *
+     * @return the data
+     */
     public Object getData() {
         return data;
     }
 
+    /**
+     * Sets the data.
+     *
+     * @param data the data
+     */
     public void setData(Object data) {
         this.data = data;
     }
