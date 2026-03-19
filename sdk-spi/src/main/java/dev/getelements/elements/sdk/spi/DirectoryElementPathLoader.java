@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -534,6 +535,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         // Construct the record with everything needed to make the new Element
 
                         final var record = ElementPathLoaderRecord.from(
+                                config.baseAttributes(),
                                 config.registry(),
                                 elementClassLoader,
                                 config.baseClassLoader(),
@@ -549,7 +551,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             try {
                                 final var element = record.loadElement();
                                 elements.add(element);
-                                config.elementLoadedHandler().accept(subpath, element);
                             } catch (final Throwable t) {
 
                                 if (t instanceof SdkException ex) {
