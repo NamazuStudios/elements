@@ -55,7 +55,7 @@ public class PropertiesAttributes implements Attributes, MutableAttributes {
 
     @Override
     public Optional<Object> getAttributeOptional(final String name) {
-        return Optional.ofNullable(properties.get(name));
+        return Optional.ofNullable(properties.getProperty(name));
     }
 
     @Override
