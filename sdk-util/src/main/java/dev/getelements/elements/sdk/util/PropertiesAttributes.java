@@ -8,6 +8,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toUnmodifiableSet;
+
 /**
  * An instance of {@link Attributes} backed by a {@link Properties} instance.
  */
@@ -42,20 +44,23 @@ public class PropertiesAttributes implements Attributes, MutableAttributes {
 
     @Override
     public Set<String> getAttributeNames() {
-        return properties.stringPropertyNames();
+        return properties.keySet()
+                .stream()
+                .map(Object::toString)
+                .collect(toUnmodifiableSet());
     }
 
     @Override
     public Stream<Attribute<Object>> stream() {
         return properties
-                .stringPropertyNames()
+                .entrySet()
                 .stream()
-                .map(key -> new Attribute<>(key, properties.getProperty(key)));
+                .map(e -> new Attribute<>(e.getKey().toString(), e.getValue()));
     }
 
     @Override
     public Optional<Object> getAttributeOptional(final String name) {
-        return Optional.ofNullable(properties.getProperty(name));
+        return Optional.ofNullable(properties.get(name));
     }
 
     @Override

@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;
 import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.inject.Inject;
