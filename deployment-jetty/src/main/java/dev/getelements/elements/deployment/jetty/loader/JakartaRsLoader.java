@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Application;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Handler.Sequence;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +99,9 @@ public class JakartaRsLoader implements Loader {
             );
         }
 
-        final var config = forApplication(application).register(OpenApiResource.class);
+        final var config = forApplication(application)
+                .register(OpenApiResource.class)
+                .register(new ElementBinder(element));
 
         if (!config.hasProperty(MOXY_JSON_FEATURE_DISABLE)) {
             // We know this interferes with the user-supplied OAS specification so we eliminate it if the application

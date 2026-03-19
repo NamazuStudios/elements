@@ -5,9 +5,12 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
+import dev.getelements.elements.sdk.util.InheritedAttributes;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Attr;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -560,6 +563,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         // Construct the record with everything needed to make the new Element
 
                         final var record = ElementPathLoaderRecord.from(
+                                config.baseAttributes(),
                                 config.registry(),
                                 elementClassLoader,
                                 config.baseClassLoader(),
@@ -651,6 +655,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
      */
 
     private record ElementPathLoaderRecord(
+            Attributes baseAttributes,
             Path elementPath,
             Path libs,
             Path classpath,
@@ -667,12 +672,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             attributesFile = attributesFile == null ? null : attributesFile.toAbsolutePath();
         }
 
-        public static ElementPathLoaderRecord from(final MutableElementRegistry registry,
-                                                   final ClassLoader elementParent,
-                                                   final ClassLoader baseClassLoader,
-                                                   final Path elementPath,
-                                                   final DirectoryStream<Path> directory,
-                                                   final AttributesLoader attributesProvider) {
+        public static ElementPathLoaderRecord from(
+                final Attributes baseAttributes,
+                final MutableElementRegistry registry,
+                final ClassLoader elementParent,
+                final ClassLoader baseClassLoader,
+                final Path elementPath,
+                final DirectoryStream<Path> directory,
+                final AttributesLoader attributesProvider) {
 
             Path libs, classpath, attributesFile;
             libs = classpath = attributesFile = null;
@@ -698,6 +705,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
 
             return new ElementPathLoaderRecord(
+                    baseAttributes,
                     elementPath,
                     libs,
                     classpath,
@@ -741,25 +749,31 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         public Attributes loadAttributes() {
 
-            // First, load base attributes from properties file (if it exists)
-            final Attributes baseAttributes;
-            if (attributesFile() == null) {
-                baseAttributes = Attributes.emptyAttributes();
-            } else {
+            var builder = new SimpleAttributes.Builder().from(baseAttributes);
+
+            if (attributesFile() != null) {
+
                 try (
                         var fis = new FileInputStream(attributesFile().toFile());
                         var bis = new BufferedInputStream(fis)
                 ) {
+
                     final var properties = new Properties();
                     properties.load(bis);
-                    baseAttributes = PropertiesAttributes.wrap(properties);
+
+                    final var propertiesAttributes = PropertiesAttributes.wrap(properties);
+                    builder.from(propertiesAttributes);
+
                 } catch (IOException ex) {
                     throw new SdkException(ex);
                 }
+
             }
 
             // Apply the attributes provider to allow customization
-            return attributesProvider().apply(baseAttributes, elementPath());
+
+            final var attributes = builder.build();
+            return attributesProvider().apply(attributes, elementPath());
 
         }
 

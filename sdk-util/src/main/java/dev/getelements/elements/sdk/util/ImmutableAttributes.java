@@ -25,6 +25,18 @@ public class ImmutableAttributes implements Attributes {
     }
 
     /**
+     * Takes a copy of the supplied {@link Properties} and returns the result.
+     *
+     * @param properties the {@link Properties} from which to copy this.
+     *
+     * @return a copy of the {@link Properties}
+     */
+    public static ImmutableAttributes copyOf(final Properties properties) {
+        final var wrapped = PropertiesAttributes.wrap(properties);
+        return copyOf(wrapped);
+    }
+
+    /**
      * Takes a copy of the supplied {@link Attributes} and returns the result.
      *
      * @param attributes the {@link Attributes} from which to copy this.
