@@ -32,10 +32,10 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
             @Override
             public Properties get() {
                 final var properties = super.get();
-                properties.put(HTTP_PORT, "8181");
-                properties.put(TEST_API_ROOT, "http://localhost:8181/api/rest");
-                properties.put(TEST_APP_SERVE_WS_ROOT, "ws://localhost:8181/app/ws");
-                properties.put(TEST_APP_SERVE_RS_ROOT, "http://localhost:8181/app/rest");
+                properties.put(HTTP_PORT, "8080");
+                properties.put(TEST_API_ROOT, "http://localhost:8080/api/rest");
+                properties.put(TEST_APP_SERVE_WS_ROOT, "ws://localhost:8080/app/ws");
+                properties.put(TEST_APP_SERVE_RS_ROOT, "http://localhost:8080/app/rest");
                 properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
                 return properties;
             }

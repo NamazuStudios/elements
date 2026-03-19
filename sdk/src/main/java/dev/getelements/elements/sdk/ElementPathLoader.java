@@ -142,6 +142,7 @@ public interface ElementPathLoader {
      * Configuration for loading Elements from paths. Provides sensible defaults for all optional parameters.
      * Use {@link #builder()} to construct instances with a fluent API.
      *
+     * @param baseAttributes  the base attributes which will be used for all subequent loads
      * @param registry the registry to load Elements into (required)
      * @param paths the paths to scan for Elements (required)
      * @param parent the parent classloader for delegation (nullable, defaults to bootstrap)
@@ -151,6 +152,7 @@ public interface ElementPathLoader {
      * @since 3.7
      */
     record LoadConfiguration(
+            Attributes baseAttributes,
             MutableElementRegistry registry,
             Collection<Path> paths,
             ClassLoader parent,
@@ -174,6 +176,8 @@ public interface ElementPathLoader {
          */
         public static final class Builder {
 
+            private Attributes baseAttributes = Attributes.EMPTY;
+
             private MutableElementRegistry registry;
 
             private Collection<Path> paths;
@@ -191,6 +195,21 @@ public interface ElementPathLoader {
             private BiConsumer<Path, Element> elementLoadedHandler = (p, e) -> {};
 
             private Builder() {}
+
+            /**
+             * Specifies base attributes for all {@link Element} to be loaded.
+             * @param baseAttributes the base attributes
+             * @return this instance
+             */
+            public Builder baseAttributes(final Attributes baseAttributes) {
+
+                this.baseAttributes = baseAttributes == null
+                    ? Attributes.EMPTY
+                    : baseAttributes;
+
+                return this;
+
+            }
 
             /**
              * Sets the registry to load Elements into.
@@ -324,6 +343,7 @@ public interface ElementPathLoader {
                         : currentThread().getContextClassLoader();
 
                 return new LoadConfiguration(
+                        baseAttributes,
                         registry,
                         paths,
                         parent,
