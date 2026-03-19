@@ -549,6 +549,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             try {
                                 final var element = record.loadElement();
                                 elements.add(element);
+                                config.elementLoadedHandler().accept(subpath, element);
                             } catch (final Throwable t) {
 
                                 if (t instanceof SdkException ex) {
@@ -624,6 +625,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
      */
 
     private record ElementPathLoaderRecord(
+            Attributes baseAttributes,
             Path elementPath,
             Path libs,
             Path classpath,
@@ -640,12 +642,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             attributesFile = attributesFile == null ? null : attributesFile.toAbsolutePath();
         }
 
-        public static ElementPathLoaderRecord from(final MutableElementRegistry registry,
-                                                   final ClassLoader elementParent,
-                                                   final ClassLoader baseClassLoader,
-                                                   final Path elementPath,
-                                                   final DirectoryStream<Path> directory,
-                                                   final AttributesLoader attributesProvider) {
+        public static ElementPathLoaderRecord from(
+                final Attributes baseAttributes,
+                final MutableElementRegistry registry,
+                final ClassLoader elementParent,
+                final ClassLoader baseClassLoader,
+                final Path elementPath,
+                final DirectoryStream<Path> directory,
+                final AttributesLoader attributesProvider) {
 
             Path libs, classpath, attributesFile;
             libs = classpath = attributesFile = null;
@@ -671,6 +675,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
 
             return new ElementPathLoaderRecord(
+                    baseAttributes,
                     elementPath,
                     libs,
                     classpath,
@@ -714,25 +719,31 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         public Attributes loadAttributes() {
 
-            // First, load base attributes from properties file (if it exists)
-            final Attributes baseAttributes;
-            if (attributesFile() == null) {
-                baseAttributes = Attributes.emptyAttributes();
-            } else {
+            var builder = new SimpleAttributes.Builder().from(baseAttributes);
+
+            if (attributesFile() != null) {
+
                 try (
                         var fis = new FileInputStream(attributesFile().toFile());
                         var bis = new BufferedInputStream(fis)
                 ) {
+
                     final var properties = new Properties();
                     properties.load(bis);
-                    baseAttributes = PropertiesAttributes.wrap(properties);
+
+                    final var propertiesAttributes = PropertiesAttributes.wrap(properties);
+                    builder.from(propertiesAttributes);
+
                 } catch (IOException ex) {
                     throw new SdkException(ex);
                 }
+
             }
 
             // Apply the attributes provider to allow customization
-            return attributesProvider().apply(baseAttributes, elementPath());
+
+            final var attributes = builder.build();
+            return attributesProvider().apply(attributes, elementPath());
 
         }
 

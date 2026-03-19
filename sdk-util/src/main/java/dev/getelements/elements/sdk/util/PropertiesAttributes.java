@@ -3,13 +3,10 @@ package dev.getelements.elements.sdk.util;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.MutableAttributes;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toUnmodifiableSet;
 
 /**
  * An instance of {@link Attributes} backed by a {@link Properties} instance.
@@ -45,18 +42,15 @@ public class PropertiesAttributes implements Attributes, MutableAttributes {
 
     @Override
     public Set<String> getAttributeNames() {
-        return properties.keySet()
-                .stream()
-                .map(Object::toString)
-                .collect(toUnmodifiableSet());
+        return properties.stringPropertyNames();
     }
 
     @Override
     public Stream<Attribute<Object>> stream() {
         return properties
-                .entrySet()
+                .stringPropertyNames()
                 .stream()
-                .map(e -> new Attribute<>(e.getKey().toString(), e.getValue()));
+                .map(key -> new Attribute<>(key, properties.getProperty(key)));
     }
 
     @Override

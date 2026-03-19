@@ -3,7 +3,9 @@ package dev.getelements.elements.guice;
 import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import dev.getelements.elements.sdk.model.util.RoundRobin;
+import dev.getelements.elements.sdk.Attributes;
+import dev.getelements.elements.sdk.util.ImmutableAttributes;
+import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import org.nnsoft.guice.rocoto.converters.FileConverter;
 import org.nnsoft.guice.rocoto.converters.URIConverter;
 import org.slf4j.Logger;
@@ -45,6 +47,12 @@ public class ConfigurationModule extends AbstractModule {
 
         final Properties properties = propertiesSupplier.get();
         if (properties == null) addError("Supplier supplied null properties.");
+
+        final var systemAttributes = ImmutableAttributes.copyOf(properties);
+
+        bind(Attributes.class)
+                .annotatedWith(named(Attributes.SYSTEM_ATTRIBUTES))
+                .toInstance(systemAttributes);
 
         bind(Properties.class).toProvider(() -> new Properties(properties));
 

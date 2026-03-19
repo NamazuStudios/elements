@@ -46,7 +46,7 @@ public record InheritedAttributes(Attributes base, Attributes current) implement
     }
 
     @Override
-    public Optional<Object> getAttributeOptional(String name) {
+    public Optional<Object> getAttributeOptional(final String name) {
         return current().getAttributeOptional(name).or(() -> base().getAttributeOptional(name));
     }
 

@@ -22,6 +22,11 @@ import static java.util.stream.Collectors.toMap;
 public interface Attributes {
 
     /**
+     * Names the system-wide Attributes.
+     */
+    String SYSTEM_ATTRIBUTES = "dev.getelements.elements.system.attributes";
+
+    /**
      * Gets a {@link List<String>} containing all attribute names contained in this instance.
      *
      * @return the {@link List<String>} of attribute names
