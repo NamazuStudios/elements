@@ -30,6 +30,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
     @Override
     public ElementLoader getIsolatedLoaderWithParent(
             final Attributes attributes,
+            final Attributes defaultAttributes,
             final ClassLoader baseClassLoader,
             final ClassLoaderConstructor classLoaderCtor,
             final ClassLoader parent,
@@ -46,6 +47,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
             final var elementRecord = loadElementRecord(
                     attributes,
+                    defaultAttributes,
                     classLoader,
                     elementDefinitionRecord
             );
@@ -66,6 +68,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
     private ElementRecord loadElementRecord(
             final Attributes attributes,
+            final Attributes defaultAttributes,
             final ClassLoader classLoader,
             final ElementDefinitionRecord elementDefinitionRecord) {
 
@@ -79,6 +82,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         // The Module Records and Services
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
+                .from(defaultAttributes)
                 .from(elementDefaultAttributes)
                 .from(attributes)
                 .build()

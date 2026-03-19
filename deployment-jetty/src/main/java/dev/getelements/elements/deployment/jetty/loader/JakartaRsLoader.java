@@ -1,8 +1,8 @@
 package dev.getelements.elements.deployment.jetty.loader;
 
+import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
-import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.servlet.HttpContextRoot;
@@ -107,7 +107,9 @@ public class JakartaRsLoader implements Loader {
             );
         }
 
-        final var config = forApplication(application).register(OpenApiResource.class);
+        final var config = forApplication(application)
+                .register(OpenApiResource.class)
+                .register(new ElementBinder(element));
 
         if (!config.hasProperty(MOXY_JSON_FEATURE_DISABLE)) {
             // We know this interferes with the user-supplied OAS specification so we eliminate it if the application

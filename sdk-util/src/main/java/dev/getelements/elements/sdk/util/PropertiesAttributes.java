@@ -3,7 +3,6 @@ package dev.getelements.elements.sdk.util;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.MutableAttributes;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;

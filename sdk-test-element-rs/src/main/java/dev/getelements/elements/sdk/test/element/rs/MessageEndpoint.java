@@ -1,10 +1,13 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
-import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;
 import dev.getelements.elements.sdk.service.user.UserService;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -12,6 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Path("/message")
 public class MessageEndpoint {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageEndpoint.class);
 
     private static final AtomicInteger counter = new AtomicInteger();
 
@@ -133,6 +138,11 @@ public class MessageEndpoint {
                 ? Response.status(Response.Status.NOT_FOUND).build()
                 : Response.status(Response.Status.NO_CONTENT).entity(removed).build();
 
+    }
+
+    @Inject
+    public void setDatabaseName(@Named("dev.getelements.elements.mongo.database.name") final String databaseName) {
+        logger.info("Using database: {}", databaseName);
     }
 
 }
