@@ -41,6 +41,17 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
 
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  onClick={() => setLocation('/installed-elements')}
+                  isActive={location.startsWith('/installed-elements') || location.startsWith('/element-api-explorer')}
+                  data-testid="link-element-apis"
+                >
+                  <Icons.Package className="w-4 h-4" />
+                  <span>Element APIs</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
                   onClick={() => setLocation('/core-elements')}
                   isActive={location === '/core-elements'}
                   data-testid="link-core-elements"

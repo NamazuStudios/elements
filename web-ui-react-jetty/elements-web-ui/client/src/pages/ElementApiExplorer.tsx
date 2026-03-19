@@ -9,10 +9,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Loader2, Database, RefreshCw, Info, ExternalLink, AppWindow } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { getApiPath } from '@/lib/api-client';
+import { getApiPath, apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import * as yaml from 'js-yaml';
 
@@ -24,10 +27,45 @@ export default function ElementApiExplorer() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [lastResponse, setLastResponse] = useState<{operation: string; status: number; data: any; timestamp: string} | null>(null);
+  const [sessionOverride, setSessionOverride] = useState(() => localStorage.getItem('elements-session-override') || '');
+  const [profileId, setProfileId] = useState(() => localStorage.getItem('elements-profile-id') || '');
+  const [overrideEnabled, setOverrideEnabled] = useState(() => {
+    const saved = localStorage.getItem('elements-override-enabled');
+    return saved !== null ? saved === 'true' : true;
+  });
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (sessionOverride) {
+      localStorage.setItem('elements-session-override', sessionOverride);
+    } else {
+      localStorage.removeItem('elements-session-override');
+    }
+  }, [sessionOverride]);
+
+  useEffect(() => {
+    if (profileId) {
+      localStorage.setItem('elements-profile-id', profileId);
+    } else {
+      localStorage.removeItem('elements-profile-id');
+    }
+  }, [profileId]);
+
+  useEffect(() => {
+    localStorage.setItem('elements-override-enabled', String(overrideEnabled));
+  }, [overrideEnabled]);
+
+  const getCustomHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = {};
+    const useOverride = overrideEnabled && sessionOverride;
+    const token = (useOverride ? sessionOverride : '') || apiClient.getSessionToken() || '';
+    if (token) headers['Elements-SessionSecret'] = token;
+    if (profileId) headers['Elements-ProfileId'] = profileId;
+    return headers;
+  };
+
   // Parse URL params - watch for changes in query string
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [queryString, setQueryString] = useState(window.location.search);
   
   // Watch for query string changes
@@ -51,61 +89,77 @@ export default function ElementApiExplorer() {
   }, [queryString]);
   
   const params = new URLSearchParams(queryString);
-  const appId = params.get('app');
+  const appId = params.get('app'); // legacy param: look up by application id
+  const deploymentId = params.get('deployment'); // preferred: look up by deployment id
   const elementName = params.get('element');
   const elementUri = params.get('uri');
   const showAppInfo = params.get('showAppInfo') === 'true';
 
   // Fetch element containers from Elements backend
-  // Enable when appId is present (for both element view and app info view)
-  const { data: appsData } = useQuery({
+  const { data: containersData } = useQuery({
     queryKey: ['/api/rest/elements/container'],
-    enabled: !!appId,
+    enabled: !!deploymentId || !!appId,
     staleTime: 30000,
   });
 
-  // Find the specific element and app status
+  // Find the specific container and element
   const { currentElement, currentAppStatus } = useMemo(() => {
-    if (!appsData || !appId) return { currentElement: null, currentAppStatus: null };
-    const appStatus = (appsData as any[])?.find((a: any) => a.application?.id === appId);
-    if (!appStatus) return { currentElement: null, currentAppStatus: null };
+    if (!containersData) return { currentElement: null, currentAppStatus: null };
+    let container: any;
+    if (deploymentId) {
+      container = (containersData as any[])?.find((c: any) => c.runtime?.deployment?.id === deploymentId);
+    } else if (appId) {
+      // Legacy: find by application id (try new structure first, then old)
+      container = (containersData as any[])?.find((c: any) =>
+        c.runtime?.deployment?.application?.id === appId ||
+        c.application?.id === appId
+      );
+    }
+    if (!container) return { currentElement: null, currentAppStatus: null };
     // If showing app info only (no element), don't look for element
     if (showAppInfo && !elementName) {
-      return { currentElement: null, currentAppStatus: appStatus };
+      return { currentElement: null, currentAppStatus: container };
     }
-    const element = appStatus.elements?.find((e: any) => 
+    const element = container.elements?.find((e: any) =>
       e.definition?.name === elementName
     );
-    return { currentElement: element, currentAppStatus: appStatus };
-  }, [appsData, appId, elementName, showAppInfo]);
+    return { currentElement: element, currentAppStatus: container };
+  }, [containersData, deploymentId, appId, elementName, showAppInfo]);
 
-  // Extract the path from the URI (remove protocol and domain)
+  // Extract the path from the URI, or derive it from element metadata
   const elementPath = useMemo(() => {
-    if (!elementUri) return '';
-    try {
-      const url = new URL(elementUri);
-      return url.pathname; // e.g., /app/rest/example-element
-    } catch {
-      // If it's already a path, use it as-is
-      return elementUri;
+    if (elementUri) {
+      try {
+        const url = new URL(elementUri);
+        return url.pathname; // e.g., /app/rest/example-element
+      } catch {
+        return elementUri;
+      }
     }
-  }, [elementUri]);
+    // Fallback: derive from element's serve prefix attribute + container uris
+    if (!currentElement || !currentAppStatus) return '';
+    const servePrefix = currentElement.attributes?.['dev.getelements.elements.app.serve.prefix'];
+    if (servePrefix) {
+      const matchingUri = (currentAppStatus.uris as string[])?.find((uri: string) => uri.includes('/' + servePrefix));
+      if (matchingUri) {
+        try { return new URL(matchingUri).pathname; } catch { return matchingUri; }
+      }
+      return `/app/rest/${servePrefix}`;
+    }
+    // Last resort: use the short element name as the path component
+    const name = currentElement.definition?.name?.split('.').pop() || elementName;
+    return name ? `/app/rest/${name}` : '';
+  }, [elementUri, currentElement, currentAppStatus, elementName]);
 
   // Fetch OpenAPI spec from element path
   // Include appId and elementName in the query key to force refetch when switching elements
   const { data: spec, isLoading: specLoading, error: specError, refetch: refetchSpec } = useQuery({
-    queryKey: [`${elementPath}/openapi.yaml`, appId, elementName],
+    queryKey: [`${elementPath}/openapi.yaml`, deploymentId, appId, elementName],
     queryFn: async () => {
       if (!elementPath) throw new Error('No element path provided');
       
-      // Get session token for authentication
-      const { apiClient: client } = await import('@/lib/api-client');
-      const sessionToken = client.getSessionToken();
-      
-      const headers: Record<string, string> = {};
-      if (sessionToken) {
-        headers['Elements-SessionSecret'] = sessionToken;
-      }
+      const sessionToken = apiClient.getSessionToken();
+      const headers: Record<string, string> = sessionToken ? { 'Elements-SessionSecret': sessionToken } : {};
       
       // Try YAML first, using getApiPath to handle production vs development
       const yamlPath = await getApiPath(`${elementPath}/openapi.yaml`);
@@ -181,7 +235,7 @@ export default function ElementApiExplorer() {
         .join('&');
       const fullPath = queryString ? `${path}?${queryString}` : path;
       
-      const response = await apiRequest('POST', await buildFullPath(fullPath), data.body);
+      const response = await apiRequest('POST', await buildFullPath(fullPath), data.body, getCustomHeaders());
       let responseData;
       try {
         responseData = await response.json();
@@ -233,7 +287,7 @@ export default function ElementApiExplorer() {
         .join('&');
       const fullPath = queryString ? `${path}?${queryString}` : path;
       
-      const response = await apiRequest('PUT', await buildFullPath(fullPath), data.body);
+      const response = await apiRequest('PUT', await buildFullPath(fullPath), data.body, getCustomHeaders());
       let responseData;
       try {
         responseData = await response.json();
@@ -291,7 +345,7 @@ export default function ElementApiExplorer() {
         path = path.replace(`{${param}}`, encodeURIComponent(value));
       }
       
-      const response = await apiRequest('DELETE', await buildFullPath(path));
+      const response = await apiRequest('DELETE', await buildFullPath(path), undefined, getCustomHeaders());
       let responseData;
       try {
         responseData = await response.json();
@@ -326,7 +380,9 @@ export default function ElementApiExplorer() {
 
   // Show application info if showAppInfo=true and no element selected
   if (showAppInfo && currentAppStatus && !elementName) {
-    const appName = currentAppStatus.application?.name || appId;
+    const deployment = currentAppStatus.runtime?.deployment;
+    const app = deployment?.application;
+    const appName = app?.name || app?.id || deploymentId || appId || 'Global Deployment';
     const hasLogs = currentAppStatus.logs && currentAppStatus.logs.length > 0;
     
     return (
@@ -360,16 +416,16 @@ export default function ElementApiExplorer() {
             <div className="grid gap-2 text-sm">
               <div className="flex gap-2">
                 <span className="font-medium">ID:</span>
-                <span className="text-muted-foreground font-mono text-xs">{currentAppStatus.application.id}</span>
+                <span className="text-muted-foreground font-mono text-xs">{app?.id || deploymentId || 'N/A'}</span>
               </div>
               <div className="flex gap-2">
                 <span className="font-medium">Name:</span>
-                <span className="text-muted-foreground">{currentAppStatus.application.name || 'N/A'}</span>
+                <span className="text-muted-foreground">{app?.name || (app ? 'N/A' : 'Global Deployment')}</span>
               </div>
-              {currentAppStatus.application.description && (
+              {app?.description && (
                 <div className="flex gap-2">
                   <span className="font-medium">Description:</span>
-                  <span className="text-muted-foreground">{currentAppStatus.application.description}</span>
+                  <span className="text-muted-foreground">{app.description}</span>
                 </div>
               )}
               <div className="flex gap-2">
@@ -430,7 +486,8 @@ export default function ElementApiExplorer() {
 
   // If spec failed to load but we have element metadata, show that instead
   if (specError && currentElement) {
-    const appName = currentAppStatus?.application?.name || appId;
+    const app = currentAppStatus?.runtime?.deployment?.application;
+    const appName = app?.name || app?.id || deploymentId || appId || 'Global Deployment';
     const servePrefix = currentElement.attributes?.['dev.getelements.elements.app.serve.prefix'];
     const allUris = currentAppStatus?.uris || [];
     
@@ -598,13 +655,26 @@ export default function ElementApiExplorer() {
       <div className="border-b p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLocation('/installed-elements')}
+              data-testid="button-back"
+            >
+              <Icons.ArrowLeft className="w-4 h-4" />
+            </Button>
             <Database className="w-6 h-6" />
             <div>
               <h1 className="text-2xl font-bold" data-testid="page-title">
                 {elementName || 'Element'} API Explorer
               </h1>
               <p className="text-sm text-muted-foreground" data-testid="page-subtitle">
-                {appId ? `Application: ${appId}` : 'Explore element endpoints dynamically'}
+                {currentAppStatus
+                  ? (() => {
+                      const app = currentAppStatus.runtime?.deployment?.application;
+                      return app ? `Application: ${app.name || app.id}` : 'Global Deployment';
+                    })()
+                  : 'Explore element endpoints dynamically'}
               </p>
             </div>
           </div>
@@ -816,10 +886,81 @@ export default function ElementApiExplorer() {
             </div>
           ) : selectedResource ? (
             <div className="space-y-6 p-6">
+              <Card>
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-end gap-4 flex-wrap">
+                    <div className="flex-1 min-w-[200px]">
+                      <Label htmlFor="element-session-override" className="text-xs flex items-center gap-1 mb-1">
+                        <Icons.Lock className="w-3 h-3" />
+                        Session Secret Override
+                      </Label>
+                      <Input
+                        id="element-session-override"
+                        type="text"
+                        placeholder="Leave empty to use current session"
+                        value={sessionOverride}
+                        onChange={(e) => setSessionOverride(e.target.value)}
+                        className="font-mono text-xs"
+                        data-testid="input-session-override"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                      <Label htmlFor="element-profile-id" className="text-xs flex items-center gap-1 mb-1">
+                        <Icons.User className="w-3 h-3" />
+                        Profile ID
+                      </Label>
+                      <Input
+                        id="element-profile-id"
+                        type="text"
+                        placeholder="Optional"
+                        value={profileId}
+                        onChange={(e) => setProfileId(e.target.value)}
+                        className="font-mono text-xs"
+                        data-testid="input-profile-id"
+                      />
+                    </div>
+                    {(sessionOverride || profileId) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setSessionOverride(''); setProfileId(''); }}
+                        data-testid="button-clear-headers"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                  {sessionOverride && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <Checkbox
+                        id="element-override-enabled"
+                        checked={overrideEnabled}
+                        onCheckedChange={(checked) => setOverrideEnabled(!!checked)}
+                        data-testid="checkbox-override-enabled"
+                      />
+                      <Label htmlFor="element-override-enabled" className="text-xs text-muted-foreground cursor-pointer">
+                        Enable Override
+                      </Label>
+                      {overrideEnabled && (
+                        <span className="text-[11px] text-muted-foreground">
+                          — Using custom session secret for all requests
+                        </span>
+                      )}
+                      {!overrideEnabled && (
+                        <span className="text-[11px] text-muted-foreground">
+                          — Override disabled, using current session
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
               <DynamicResourceView
                 resource={selectedResource}
                 spec={spec}
                 baseUrl={elementPath}
+                customHeaders={getCustomHeaders()}
                 onCreateClick={() => setCreateDialogOpen(true)}
                 onEditClick={(item) => {
                   setSelectedItem(item);

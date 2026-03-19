@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Package, Info } from 'lucide-react';
-import { ElementApiTester } from '../components/ElementApiTester';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Loader2, Package, Globe, RefreshCw, ChevronDown } from 'lucide-react';
+import { queryClient } from '@/lib/queryClient';
 
-interface ApplicationElement {
+interface ElementMetadata {
   type: string;
   definition: {
     name: string;
@@ -24,234 +23,175 @@ interface ApplicationElement {
   defaultAttributes: Array<any>;
 }
 
-interface ApplicationStatus {
-  application: {
-    id: string;
-    name: string;
-    description?: string;
+interface ElementContainerStatus {
+  runtime: {
+    deployment: {
+      id: string;
+      application?: { id: string; name: string; description?: string; };
+    };
   };
-  status: 'CLEAN' | 'UNSTABLE' | 'FAILED' | string;
+  status: string;
   uris: string[];
   logs: string[];
-  elements: ApplicationElement[];
+  elements: ElementMetadata[];
+}
+
+interface GroupedItem {
+  element: ElementMetadata;
+  container: ElementContainerStatus;
+}
+
+interface AppGroup {
+  label: string;
+  isGlobal: boolean;
+  items: GroupedItem[];
+}
+
+function getStatusDotColor(status: string): string {
+  switch (status?.toUpperCase()) {
+    case 'CLEAN':
+    case 'RUNNING':
+    case 'ACTIVE':
+      return 'bg-green-500';
+    case 'UNSTABLE':
+    case 'DEGRADED':
+      return 'bg-orange-500';
+    case 'FAILED':
+    case 'ERROR':
+      return 'bg-red-500';
+    default:
+      return 'bg-gray-400';
+  }
 }
 
 export default function InstalledElements() {
-  const [location, setLocation] = useLocation();
-  const [selectedApp, setSelectedApp] = useState<string | null>(null);
-  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [_, setLocation] = useLocation();
 
-  // Fetch all element containers (applications with installed elements)
-  const { data: applicationStatuses, isLoading } = useQuery<ApplicationStatus[]>({
+  const { data: containers, isLoading } = useQuery<ElementContainerStatus[]>({
     queryKey: ['/api/rest/elements/container'],
-    enabled: true,
   });
 
-  // Sync state with URL params
-  useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
-    const appId = params.get('app');
-    const elementName = params.get('element');
-    
-    if (appId && elementName) {
-      setSelectedApp(appId);
-      setSelectedElement(elementName);
+  // Group all elements by application (or global), flattening across deployments
+  const groups = useMemo<[string, AppGroup][]>(() => {
+    const byApp = new Map<string, AppGroup>();
+
+    for (const container of containers ?? []) {
+      if (!container.elements?.length) continue;
+      const app = container.runtime?.deployment?.application;
+      const key = app?.id ?? '__global__';
+
+      if (!byApp.has(key)) {
+        byApp.set(key, {
+          label: app?.name || app?.id || 'Global',
+          isGlobal: !app,
+          items: [],
+        });
+      }
+
+      for (const element of container.elements) {
+        byApp.get(key)!.items.push({ element, container });
+      }
     }
-  }, [location]);
 
-  // Get selected application and element data
-  const currentApp = applicationStatuses?.find(app => app.application?.id === selectedApp);
-  const currentElement = currentApp?.elements?.find(
-    el => el.definition?.name === selectedElement
-  );
-
-  // Filter applications that have at least one installed element
-  const appsWithElements = applicationStatuses?.filter(
-    app => app.elements && app.elements.length > 0
-  ) || [];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (appsWithElements.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-        <Package className="w-12 h-12 mb-4 opacity-50" />
-        <p className="text-lg font-medium">No Installed Elements</p>
-        <p className="text-sm mt-2">No applications have installed elements yet.</p>
-      </div>
-    );
-  }
+    // App sections alphabetically, global last
+    return Array.from(byApp.entries()).sort(([, a], [, b]) => {
+      if (a.isGlobal) return 1;
+      if (b.isGlobal) return -1;
+      return a.label.localeCompare(b.label);
+    });
+  }, [containers]);
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold" data-testid="text-page-title">Installed Elements</h1>
-        <p className="text-muted-foreground mt-1">
-          View and test installed Elements across applications
-        </p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">Element APIs</h1>
+          <p className="text-muted-foreground mt-1">
+            Select an element to explore its API endpoints
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/container'] })}
+          data-testid="button-refresh-elements"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </Button>
       </div>
 
-      {!selectedElement ? (
-        <div className="grid gap-4">
-          {appsWithElements.map((app) => (
-            <Card key={app.application?.id} className="hover-elevate">
-              <CardHeader>
-                <CardTitle className="text-lg">{app.application?.name || app.application?.id}</CardTitle>
-                <CardDescription>
-                  {app.elements?.length || 0} installed element{app.elements?.length !== 1 ? 's' : ''}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {app.elements?.map((element, idx) => {
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+          <Package className="w-12 h-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium">No Active Elements</p>
+          <p className="text-sm mt-2">No containers are currently serving element APIs.</p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {groups.map(([key, group]) => (
+            <Collapsible key={key} defaultOpen className="group/collapsible">
+              <CollapsibleTrigger className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-semibold hover-elevate">
+                {group.isGlobal
+                  ? <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                  : <Package className="w-4 h-4 text-muted-foreground shrink-0" />
+                }
+                <span>{group.label}</span>
+                <Badge variant="secondary" className="text-xs font-normal">
+                  {group.items.length}
+                </Badge>
+                <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+              </CollapsibleTrigger>
+
+              <CollapsibleContent>
+                <div className="mt-1 ml-2 space-y-1 border-l pl-4 pb-2">
+                  {group.items.map(({ element, container }, idx) => {
                     const elementName = element.definition?.name;
+                    const displayName = elementName?.split('.').pop() || `Element ${idx + 1}`;
+                    const deploymentId = container.runtime?.deployment?.id;
+                    const isTransient = deploymentId?.match(/^T\d/) != null;
+                    const servePrefix = element.attributes?.['dev.getelements.elements.app.serve.prefix'];
+                    const uri = servePrefix
+                      ? container.uris?.find(u => u.includes('/' + servePrefix))
+                      : container.uris?.[0];
+
+                    const params = new URLSearchParams();
+                    if (deploymentId) params.set('deployment', deploymentId);
+                    if (elementName) params.set('element', elementName);
+                    if (uri) params.set('uri', uri);
+
                     return (
-                      <Badge
+                      <button
                         key={`${elementName}-${idx}`}
-                        variant="outline"
-                        className="cursor-pointer hover-elevate"
-                        onClick={() => {
-                          setSelectedApp(app.application?.id);
-                          setSelectedElement(elementName);
-                          setLocation(`/installed-elements?app=${encodeURIComponent(app.application?.id || '')}&element=${encodeURIComponent(elementName || '')}`);
-                        }}
-                        data-testid={`badge-element-${elementName}`}
+                        onClick={() => setLocation(`/element-api-explorer?${params.toString()}`)}
+                        className="w-full text-left flex items-center gap-3 rounded-md px-3 py-2 hover-elevate border bg-card"
+                        data-testid={`button-element-${displayName}`}
                       >
-                        <Package className="w-3 h-3 mr-1" />
-                        {elementName || `Element ${idx + 1}`}
-                      </Badge>
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(container.status)}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">{displayName}</span>
+                            <Badge
+                              variant={isTransient ? 'secondary' : 'outline'}
+                              className="text-[10px] font-normal"
+                            >
+                              {isTransient ? 'Transient' : 'Deployment'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground font-mono truncate mt-0.5">
+                            {elementName}
+                          </p>
+                        </div>
+                      </button>
                     );
                   })}
                 </div>
-              </CardContent>
-            </Card>
+              </CollapsibleContent>
+            </Collapsible>
           ))}
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-4">
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="cursor-pointer hover-elevate"
-              onClick={() => {
-                setSelectedApp(null);
-                setSelectedElement(null);
-                setLocation('/installed-elements');
-              }}
-              data-testid="badge-back"
-            >
-              ← Back to all applications
-            </Badge>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                {selectedElement}
-              </CardTitle>
-              <CardDescription>
-                Application: {currentApp?.application?.name || currentApp?.application?.id}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="api" className="w-full">
-                <TabsList>
-                  <TabsTrigger value="api" data-testid="tab-api">API Testing</TabsTrigger>
-                  <TabsTrigger value="metadata" data-testid="tab-metadata">Metadata</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="api" className="mt-4">
-                  {selectedElement && (
-                    <ElementApiTester 
-                      elementName={selectedElement} 
-                    />
-                  )}
-                </TabsContent>
-
-                <TabsContent value="metadata" className="mt-4">
-                  {currentElement && (
-                    <ScrollArea className="h-[600px] w-full rounded-md border p-4">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="font-semibold mb-2">Element Type</h3>
-                          <Badge variant="outline">{currentElement.type}</Badge>
-                        </div>
-
-                        <div>
-                          <h3 className="font-semibold mb-2">Definition</h3>
-                          <div className="space-y-2 text-sm">
-                            <p><span className="font-medium">Name:</span> {currentElement.definition.name}</p>
-                            <p><span className="font-medium">Loader:</span> {currentElement.definition.loader}</p>
-                            <p><span className="font-medium">Recursive:</span> {currentElement.definition.recursive ? 'Yes' : 'No'}</p>
-                          </div>
-                        </div>
-
-                        {currentElement.services && currentElement.services.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold mb-2">Services ({currentElement.services.length})</h3>
-                            <div className="space-y-1">
-                              {currentElement.services.map((service: any, idx: number) => (
-                                <Badge key={idx} variant="secondary">{service.name || `Service ${idx + 1}`}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {currentElement.dependencies && currentElement.dependencies.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold mb-2">Dependencies ({currentElement.dependencies.length})</h3>
-                            <div className="space-y-1">
-                              {currentElement.dependencies.map((dep: any, idx: number) => (
-                                <Badge key={idx} variant="outline">{dep.name || `Dependency ${idx + 1}`}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {currentElement.attributes && Object.keys(currentElement.attributes).length > 0 && (
-                          <div>
-                            <h3 className="font-semibold mb-2">Attributes</h3>
-                            <pre className="bg-muted p-3 rounded-md text-xs overflow-auto">
-                              {JSON.stringify(currentElement.attributes, null, 2)}
-                            </pre>
-                          </div>
-                        )}
-
-                        {currentElement.producedEvents && currentElement.producedEvents.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold mb-2">Produced Events ({currentElement.producedEvents.length})</h3>
-                            <div className="space-y-1">
-                              {currentElement.producedEvents.map((event: any, idx: number) => (
-                                <Badge key={idx} variant="secondary">{event.name || `Event ${idx + 1}`}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {currentElement.consumedEvents && currentElement.consumedEvents.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold mb-2">Consumed Events ({currentElement.consumedEvents.length})</h3>
-                            <div className="space-y-1">
-                              {currentElement.consumedEvents.map((event: any, idx: number) => (
-                                <Badge key={idx} variant="outline">{event.name || `Event ${idx + 1}`}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
         </div>
       )}
     </div>

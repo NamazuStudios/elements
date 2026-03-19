@@ -75,9 +75,10 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  extraHeaders?: Record<string, string>,
 ): Promise<Response> {
   const headers: Record<string, string> = {};
-  
+
   if (data) {
     headers["Content-Type"] = "application/json";
   }
@@ -87,6 +88,11 @@ export async function apiRequest(
   const sessionToken = apiClient.getSessionToken();
   if (sessionToken) {
     headers['Elements-SessionSecret'] = sessionToken;
+  }
+
+  // Extra headers override defaults (e.g. session token override from API explorer)
+  if (extraHeaders) {
+    Object.assign(headers, extraHeaders);
   }
 
   // Get the correct API path based on production vs development
