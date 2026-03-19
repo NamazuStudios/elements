@@ -345,7 +345,55 @@ public interface ElementLoaderFactory {
      * Note: The {@link Element} must have an {@link ElementLoader} SPI implementation defined on its classpath.
      * </p>
      *
-     * @param attributes the attributes to use
+     * @param attributes the attributes override the Element's default attributes
+     * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
+     * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
+     * @param parent the parent {@link ClassLoader} that forms the delegation parent of the implementation
+     *               classloader, may be null indicating no explicit parent (defaults to bootstrap)
+     * @param selector a {@link Predicate} to select a single {@link ElementDefinitionRecord} to load
+     * @return the {@link ElementLoader}
+     * @since 3.6
+     */
+    default ElementLoader getIsolatedLoaderWithParent(
+            final Attributes attributes,
+            final ClassLoader baseClassLoader,
+            final ClassLoaderConstructor classLoaderCtor,
+            final ClassLoader parent,
+            final Predicate<ElementDefinitionRecord> selector) {
+        return getIsolatedLoaderWithParent(
+                attributes,
+                Attributes.emptyAttributes(),
+                baseClassLoader,
+                classLoaderCtor,
+                parent,
+                selector
+        );
+    }
+
+
+    /**
+     * <p>
+     * Scans the classpath, using the supplied {@link ClassLoader}, for {@link Element} instances. If the element is
+     * found, then this returns an instance of {@link ElementLoader} which can be used to instantiate the
+     * {@link Element}. With the supplied {@link ClassLoader} (from the supplied {@link Function} there must exist
+     * exactly one {@link ElementDefinition} with the supplied {@link Predicate}.
+     * </p>
+     *
+     * <p>
+     * Results in a {@link ElementType#ISOLATED_CLASSPATH} {@link Element}
+     * </p>
+     *
+     * <p>
+     * The returned {@link ElementLoader} will use the supplied base classloader for selective type borrowing,
+     * with an explicit parent classloader forming the delegation parent of the implementation classloader.
+     * </p>
+     *
+     * <p>
+     * Note: The {@link Element} must have an {@link ElementLoader} SPI implementation defined on its classpath.
+     * </p>
+     *
+     * @param attributes the attributes override the Element's default attributes
+     * @param defaultAttributes the system-wide default attributes
      * @param baseClassLoader the base {@link ClassLoader} used for selective type borrowing
      * @param classLoaderCtor the {@link ClassLoader} constructor that creates the implementation classloader
      * @param parent the parent {@link ClassLoader} that forms the delegation parent of the implementation
@@ -356,6 +404,7 @@ public interface ElementLoaderFactory {
      */
     ElementLoader getIsolatedLoaderWithParent(
             Attributes attributes,
+            Attributes defaultAttributes,
             ClassLoader baseClassLoader,
             ClassLoaderConstructor classLoaderCtor,
             ClassLoader parent,

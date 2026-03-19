@@ -4,8 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import dev.getelements.elements.sdk.Attributes;
-import dev.getelements.elements.sdk.util.ImmutableAttributes;
-import dev.getelements.elements.sdk.util.PropertiesAttributes;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
 import org.nnsoft.guice.rocoto.converters.FileConverter;
 import org.nnsoft.guice.rocoto.converters.URIConverter;
 import org.slf4j.Logger;
@@ -15,6 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.function.Supplier;
 
@@ -46,9 +46,21 @@ public class ConfigurationModule extends AbstractModule {
         convertToTypes(only(get(Path.class)), (s, to) -> Paths.get(s));
 
         final Properties properties = propertiesSupplier.get();
-        if (properties == null) addError("Supplier supplied null properties.");
+        final SimpleAttributes.Builder systemAttributesBuilder = new SimpleAttributes.Builder();
 
-        final var systemAttributes = ImmutableAttributes.copyOf(properties);
+        if (properties == null) {
+            addError("Supplier supplied null properties.");
+        } else {
+            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements();) {
+                final var name = e.nextElement().toString();
+                final var value = properties.getProperty(name);
+                systemAttributesBuilder.setAttribute(name, value);
+            }
+        }
+
+        final var systemAttributes = systemAttributesBuilder
+                .build()
+                .immutableCopy();
 
         bind(Attributes.class)
                 .annotatedWith(named(Attributes.SYSTEM_ATTRIBUTES))

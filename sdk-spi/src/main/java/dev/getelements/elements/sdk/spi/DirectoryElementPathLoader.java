@@ -720,10 +720,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         public Attributes loadAttributes() {
 
-            var builder = new SimpleAttributes.Builder().from(baseAttributes);
+            var builder = new SimpleAttributes.Builder();
 
             if (attributesFile() != null) {
-
                 try (
                         var fis = new FileInputStream(attributesFile().toFile());
                         var bis = new BufferedInputStream(fis)
@@ -738,7 +737,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 } catch (IOException ex) {
                     throw new SdkException(ex);
                 }
-
             }
 
             // Apply the attributes provider to allow customization
@@ -778,13 +776,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     .get()
                     .getIsolatedLoaderWithParent(
                             attributes,
+                            baseAttributes,
                             baseClassLoader(),
-                            cl -> new URLClassLoader(classLoaderName, implUrls, cl){
-                                @Override
-                                protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-                                    return super.loadClass(name, resolve);
-                                }
-                            },
+                            cl -> new URLClassLoader(classLoaderName, implUrls, cl),
                             elementParent(),
                             el -> true
                     );
