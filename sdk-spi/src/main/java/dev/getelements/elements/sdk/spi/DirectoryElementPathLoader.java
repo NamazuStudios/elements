@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
+import dev.getelements.elements.sdk.util.SimpleAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -534,6 +535,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                         // Construct the record with everything needed to make the new Element
 
                         final var record = ElementPathLoaderRecord.from(
+                                config.baseAttributes(),
                                 config.registry(),
                                 elementClassLoader,
                                 config.baseClassLoader(),
@@ -550,17 +552,28 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                                 final var element = record.loadElement();
                                 elements.add(element);
                             } catch (final Throwable t) {
-                                // Close classloaders on failure to release OS file handles. On Windows,
-                                // URLClassLoaders hold exclusive locks on their JAR files until closed,
-                                // preventing temp directory cleanup after a failed element load.
-                                closeClassLoader(spiClassLoader);
-                                closeClassLoader(elementClassLoader);
+
                                 if (t instanceof SdkException ex) {
                                     logger.warn("Caught exception loading element. Deferring to handler.", ex);
                                     config.sdkExceptionHandler().accept(ex);
                                 } else {
-                                    throw t;
+                                    config.sdkExceptionHandler().accept(new SdkException(t));
+                                    logger.error("Caught exception loading element. Skipping.", t);
                                 }
+
+                                // Close classloaders on failure to release OS file handles. On Windows,
+                                // URLClassLoaders hold exclusive locks on their JAR files until closed,
+                                // preventing temp directory cleanup after a failed element load.
+
+                                // Only close spiClassLoader if it's distinct from apiClassLoader —
+                                // when findSpiClassLoader returns empty, spiClassLoader IS apiClassLoader
+                                // and closing it would break all subsequent element loads.
+
+                                if (spiClassLoader != apiClassLoader)
+                                    closeClassLoader(spiClassLoader);
+
+                                closeClassLoader(elementClassLoader);
+
                             }
                         }
 
@@ -582,7 +595,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             throw new SdkException(ex);
 
-        } catch (Exception ex) {
+        } catch (Exception | Error ex) {
 
             elements.forEach(el -> {
                 try {
@@ -594,17 +607,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             throw ex;
 
-        } catch (Error ex) {
-
-            elements.forEach(el -> {
-                try {
-                    el.close();
-                } catch (Exception suppressed) {
-                    ex.addSuppressed(suppressed);
-                }
-            });
-
-            throw ex;
         }
 
     }
@@ -624,6 +626,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
      */
 
     private record ElementPathLoaderRecord(
+            Attributes baseAttributes,
             Path elementPath,
             Path libs,
             Path classpath,
@@ -640,12 +643,14 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             attributesFile = attributesFile == null ? null : attributesFile.toAbsolutePath();
         }
 
-        public static ElementPathLoaderRecord from(final MutableElementRegistry registry,
-                                                   final ClassLoader elementParent,
-                                                   final ClassLoader baseClassLoader,
-                                                   final Path elementPath,
-                                                   final DirectoryStream<Path> directory,
-                                                   final AttributesLoader attributesProvider) {
+        public static ElementPathLoaderRecord from(
+                final Attributes baseAttributes,
+                final MutableElementRegistry registry,
+                final ClassLoader elementParent,
+                final ClassLoader baseClassLoader,
+                final Path elementPath,
+                final DirectoryStream<Path> directory,
+                final AttributesLoader attributesProvider) {
 
             Path libs, classpath, attributesFile;
             libs = classpath = attributesFile = null;
@@ -671,6 +676,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
 
             return new ElementPathLoaderRecord(
+                    baseAttributes,
                     elementPath,
                     libs,
                     classpath,
@@ -714,25 +720,29 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         public Attributes loadAttributes() {
 
-            // First, load base attributes from properties file (if it exists)
-            final Attributes baseAttributes;
-            if (attributesFile() == null) {
-                baseAttributes = Attributes.emptyAttributes();
-            } else {
+            var builder = new SimpleAttributes.Builder();
+
+            if (attributesFile() != null) {
                 try (
                         var fis = new FileInputStream(attributesFile().toFile());
                         var bis = new BufferedInputStream(fis)
                 ) {
+
                     final var properties = new Properties();
                     properties.load(bis);
-                    baseAttributes = PropertiesAttributes.wrap(properties);
+
+                    final var propertiesAttributes = PropertiesAttributes.wrap(properties);
+                    builder.from(propertiesAttributes);
+
                 } catch (IOException ex) {
                     throw new SdkException(ex);
                 }
             }
 
             // Apply the attributes provider to allow customization
-            return attributesProvider().apply(baseAttributes, elementPath());
+
+            final var attributes = builder.build();
+            return attributesProvider().apply(attributes, elementPath());
 
         }
 
@@ -766,6 +776,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                     .get()
                     .getIsolatedLoaderWithParent(
                             attributes,
+                            baseAttributes,
                             baseClassLoader(),
                             cl -> new URLClassLoader(classLoaderName, implUrls, cl),
                             elementParent(),

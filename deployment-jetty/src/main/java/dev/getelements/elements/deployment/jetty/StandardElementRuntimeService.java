@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
+import static dev.getelements.elements.sdk.Attributes.SYSTEM_ATTRIBUTES;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static java.nio.file.Files.createDirectories;
@@ -101,6 +102,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private final ElementArtifactLoader elementArtifactLoader = loadArtifactLoader();
 
     private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
+
+    private Attributes systemAttributes;
 
     private ValidationHelper validationHelper;
 
@@ -352,9 +355,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     // New deployment - load it
                     try {
                         final var record = doLoadDeployment(deployment, false);  // Not transient
-                        if (record != null) {
-                            loadedRecords.add(record);
-                        }
+                        loadedRecords.add(record);
                         logger.info("Loaded deployment: {}", deploymentId);
                     } catch (Exception ex) {
                         logger.error("Failed to load deployment: {}", deploymentId, ex);
@@ -587,6 +588,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 // Load all elements using LoadConfiguration
                 context.log("Loading elements from " + context.elementPaths().size() + " path(s)");
                 final var config = ElementPathLoader.LoadConfiguration.builder()
+                        .baseAttributes(getSystemAttributes())
                         .parent(permittedTypesClassloader)
                         .registry(context.registry())
                         .paths(context.elementPaths())
@@ -1048,6 +1050,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     @Inject
     public void setPollIntervalSeconds(@Named(POLL_INTERVAL_SECONDS) final int pollIntervalSeconds) {
         this.pollIntervalSeconds = pollIntervalSeconds;
+    }
+
+    public Attributes getSystemAttributes() {
+        return systemAttributes;
+    }
+
+    @Inject
+    public void setSystemAttributes(@Named(SYSTEM_ATTRIBUTES) Attributes systemAttributes) {
+        this.systemAttributes = systemAttributes;
     }
 
     public ValidationHelper getValidationHelper() {

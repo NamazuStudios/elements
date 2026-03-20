@@ -20,6 +20,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +119,7 @@ public class CustomApiTest {
     }
 
     @Test
-    public void createNewMessage() {
+    public void createNewMessage() throws Exception {
 
         final var toCreate = new CreateMessageRequest();
         toCreate.setMessage("Hello World!");
