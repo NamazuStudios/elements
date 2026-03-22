@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService;
 import dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService;
 import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
+import dev.getelements.elements.sdk.service.steam.SteamIapReceiptService;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ public class ProductSkuSchemaSeeder {
         ensure(GooglePlayIapReceiptService.GOOGLE_IAP_SCHEME);
         ensure(OculusIapReceiptService.OCULUS_IAP_SCHEME);
         ensure(FacebookIapReceiptService.FACEBOOK_IAP_SCHEME);
+        ensure(SteamIapReceiptService.STEAM_IAP_SCHEME);
     }
 
     private void ensure(final String schema) {

@@ -11,6 +11,7 @@ import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
+import dev.getelements.elements.service.guice.SteamIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.getelements.elements.test.JeroMQEmbeddedTestService;
@@ -44,6 +45,7 @@ public class UnixFSIntegrationTestModule extends AbstractIntegrationTestModule {
                     modules.add(new ConfigurationModule(() -> properties));
                     modules.add(new AppleIapReceiptInvokerModule());
                     modules.add(new MetaIapReceiptInvokerModule());
+                    modules.add(new SteamIapReceiptInvokerModule());
                     modules.add(new ClusterContextFactoryModule());
                     modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
                     return modules;

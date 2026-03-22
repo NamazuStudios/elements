@@ -20,6 +20,7 @@ import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
+import dev.getelements.elements.service.guice.SteamIapReceiptInvokerModule;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.morphia.Datastore;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -99,6 +100,7 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
         install(new MetaIapReceiptInvokerModule());
+        install(new SteamIapReceiptInvokerModule());
         install(new FacebookBuiltinPermissionsModule(new FacebookBuiltinPermissionsSupplier()));
 
         install(new TestServicesModule());
