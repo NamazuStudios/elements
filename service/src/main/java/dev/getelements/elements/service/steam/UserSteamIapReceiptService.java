@@ -74,7 +74,8 @@ public class UserSteamIapReceiptService implements SteamIapReceiptService {
         receipt.setSchema(STEAM_IAP_SCHEME);
         receipt.setOriginalTransactionId(steamIapReceipt.getOrderId());
         receipt.setUser(user);
-        receipt.setPurchaseTime(steamIapReceipt.getPurchaseTime());
+        final var purchaseTime = steamIapReceipt.getPurchaseTime();
+        receipt.setPurchaseTime(purchaseTime != null ? purchaseTime : System.currentTimeMillis());
 
         try {
             receipt.setBody(getObjectMapper().writeValueAsString(steamIapReceipt));
