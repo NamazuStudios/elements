@@ -1223,6 +1223,8 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                                     else if (className.includes('GooglePlayApplicationConfiguration')) configType = 'GooglePlay';
                                     else if (className.includes('IosApplicationConfiguration')) configType = 'iOS';
                                     else if (className.includes('MatchmakingApplicationConfiguration')) configType = 'Matchmaking';
+                                    else if (className.includes('OculusApplicationConfiguration')) configType = 'Oculus';
+                                    else if (className.includes('SteamApplicationConfiguration')) configType = 'Steam';
                                   }
                                   
                                   if (!configType) {
@@ -1661,14 +1663,16 @@ function detectConfigType(config: any): string | null {
     if (className.includes('IosApplicationConfiguration')) return 'iOS';
     if (className.includes('MatchmakingApplicationConfiguration')) return 'Matchmaking';
     if (className.includes('OculusApplicationConfiguration')) return 'Oculus';
+    if (className.includes('SteamApplicationConfiguration')) return 'Steam';
   }
-  
+
   // Fallback: Check for type-specific fields
   if (config.applicationId && config.applicationSecret) return 'Facebook';
   if (config.projectId && config.serviceAccountCredentials) return 'Firebase';
   if (config.jsonKey !== undefined) return 'GooglePlay'; // jsonKey can be empty object
   if (config.applicationId?.includes('.') && config.productBundles !== undefined) return 'iOS';
   if (config.maxProfiles !== undefined || config.matchmaker !== undefined) return 'Matchmaking';
+  if (config.publisherKey !== undefined || config.appId !== undefined) return 'Steam';
   
   return null;
 }
@@ -1681,6 +1685,7 @@ function getConfigTypeEndpoint(type: string): string {
     'iOS': 'ios',
     'Matchmaking': 'matchmaking',
     'Oculus': 'oculus',
+    'Steam': 'steam',
   };
   return typeMap[type] || type.toLowerCase();
 }
@@ -1693,6 +1698,7 @@ function getConfigurationClass(type: string): string {
     'iOS': 'dev.getelements.elements.sdk.model.application.IosApplicationConfiguration',
     'Matchmaking': 'dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration',
     'Oculus': 'dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration',
+    'Steam': 'dev.getelements.elements.sdk.model.application.SteamApplicationConfiguration',
   };
   return classMap[type] || '';
 }

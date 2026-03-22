@@ -13,13 +13,14 @@ import { MetadataEditor } from '@/components/MetadataEditor';
 import { ResourceSearchDialog } from '@/components/ResourceSearchDialog';
 import { useToast } from '@/hooks/use-toast';
 
-type ConfigurationType = 
+type ConfigurationType =
   | 'Facebook'
   | 'Firebase'
   | 'GooglePlay'
   | 'iOS'
   | 'Matchmaking'
   | 'Oculus'
+  | 'Steam'
   | null;
 
 interface ApplicationConfigurationEditorProps {
@@ -65,6 +66,7 @@ export function ApplicationConfigurationEditor({
               <SelectItem value="iOS">iOS</SelectItem>
               <SelectItem value="Matchmaking">Matchmaking</SelectItem>
               <SelectItem value="Oculus">Oculus</SelectItem>
+              <SelectItem value="Steam">Steam</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -91,6 +93,10 @@ export function ApplicationConfigurationEditor({
 
         {configurationType === 'Oculus' && (
           <OculusConfigFields value={value} onChange={handleFieldChange} />
+        )}
+
+        {configurationType === 'Steam' && (
+          <SteamConfigFields value={value} onChange={handleFieldChange} />
         )}
       </CardContent>
     </Card>
@@ -241,6 +247,45 @@ function OculusConfigFields({ value, onChange }: { value: any; onChange: (field:
           data-testid="tags-builtinApplicationPermissions"
         />
         <p className="text-sm text-muted-foreground">Built-in permissions connected clients will need to request</p>
+      </div>
+
+      <ProductBundlesField value={value.productBundles || []} onChange={(bundles) => onChange('productBundles', bundles)} />
+    </>
+  );
+}
+
+function SteamConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
+  return (
+    <>
+      <CommonConfigFields value={value} onChange={onChange} />
+
+      <div className="space-y-2">
+        <Label htmlFor="publisherKey">
+          Publisher Key {!value.publisherKey && <span className="text-destructive">*</span>}
+        </Label>
+        <Input
+          id="publisherKey"
+          type="password"
+          value={value.publisherKey || ''}
+          onChange={(e) => onChange('publisherKey', e.target.value)}
+          placeholder="Steam Publisher Web API Key"
+          data-testid="input-publisherKey"
+        />
+        <p className="text-sm text-muted-foreground">The Steam Publisher Web API Key from the Steamworks partner portal</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="appId">
+          App ID {!value.appId && <span className="text-destructive">*</span>}
+        </Label>
+        <Input
+          id="appId"
+          value={value.appId || ''}
+          onChange={(e) => onChange('appId', e.target.value)}
+          placeholder="480"
+          data-testid="input-appId"
+        />
+        <p className="text-sm text-muted-foreground">The Steam AppID as it appears in the Steamworks partner portal</p>
       </div>
 
       <ProductBundlesField value={value.productBundles || []} onChange={(bundles) => onChange('productBundles', bundles)} />

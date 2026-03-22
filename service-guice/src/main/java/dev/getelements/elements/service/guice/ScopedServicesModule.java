@@ -188,6 +188,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OculusApplicationConfigurationServiceProvider.class)
                 .in(scope);
 
+        bind(SteamApplicationConfigurationService.class)
+                .toProvider(SteamApplicationConfigurationServiceProvider.class)
+                .in(scope);
+
         bind(ProfileService.class)
                 .toProvider(ProfileServiceProvider.class)
                 .in(scope);
@@ -218,6 +222,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(OculusApplicationConfigurationService.class)
                 .toProvider(OculusApplicationConfigurationServiceProvider.class)
+                .in(scope);
+
+        bind(SteamApplicationConfigurationService.class)
+                .toProvider(SteamApplicationConfigurationServiceProvider.class)
                 .in(scope);
 
         bind(MatchmakingApplicationConfigurationService.class)
@@ -442,6 +450,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(OculusApplicationConfigurationService.class)
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonOculusApplicationConfigurationService.class);
+
+        bind(SteamApplicationConfigurationService.class)
+                .annotatedWith(named(ANONYMOUS))
+                .to(AnonSteamApplicationConfigurationService.class);
 
         bind(GooglePlayApplicationConfigurationService.class)
                 .annotatedWith(named(ANONYMOUS))
@@ -702,6 +714,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(OculusApplicationConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserOculusApplicationConfigurationService.class);
+
+        bind(SteamApplicationConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserSteamApplicationConfigurationService.class);
 
         bind(ProductBundleService.class)
                 .annotatedWith(named(SUPERUSER))

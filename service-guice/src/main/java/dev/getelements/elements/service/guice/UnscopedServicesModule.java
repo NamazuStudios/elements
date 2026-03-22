@@ -147,6 +147,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserGooglePlayApplicationConfigurationService.class);
 
+        bind(SteamApplicationConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserSteamApplicationConfigurationService.class);
+
         bind(ProfileService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserProfileService.class);
