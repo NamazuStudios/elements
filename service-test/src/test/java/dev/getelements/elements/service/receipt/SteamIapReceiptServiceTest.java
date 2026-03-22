@@ -14,7 +14,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static com.google.inject.Guice.createInjector;
-import static java.lang.System.currentTimeMillis;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
@@ -55,7 +54,6 @@ public class SteamIapReceiptServiceTest extends AbstractReceiptServiceTest {
         assertEquals(receipt.getItemId(), result.getItemId());
         assertEquals(receipt.getStatus(), result.getStatus());
         assertEquals(receipt.getCurrency(), result.getCurrency());
-        assertEquals(receipt.getPurchaseTime(), result.getPurchaseTime());
     }
 
     private SteamIapReceipt buildReceipt(ITestContext testContext) {
@@ -71,7 +69,6 @@ public class SteamIapReceiptServiceTest extends AbstractReceiptServiceTest {
         receipt.setItemId("item." + invocation);
         receipt.setStatus("Committed");
         receipt.setCurrency("USD");
-        receipt.setPurchaseTime(currentTimeMillis());
         receipt.setUser(user);
         return receipt;
     }
