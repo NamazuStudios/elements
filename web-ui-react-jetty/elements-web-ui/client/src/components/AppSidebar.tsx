@@ -44,6 +44,9 @@ const iconMap: Record<string, any> = {
   Key: Icons.Key,
   HardDrive: Icons.HardDrive,
   ScrollText: Icons.ScrollText,
+  Plug: Icons.Plug,
+  Puzzle: Icons.Puzzle,
+  LayoutGrid: Icons.LayoutGrid,
 };
 
 interface AppSidebarProps {
