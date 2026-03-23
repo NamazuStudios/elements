@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type ConfigurationType = 'Facebook' | 'Firebase' | 'GooglePlay' | 'iOS' | 'Matchmaking' | 'Oculus';
+type ConfigurationType = 'Facebook' | 'Firebase' | 'GooglePlay' | 'iOS' | 'Matchmaking' | 'Oculus' | 'Steam';
 
 interface ApplicationConfigurationDialogProps {
   open: boolean;
@@ -36,6 +36,8 @@ function validateConfiguration(configurationType: ConfigurationType | null, valu
   
   if (configurationType === 'Facebook' || configurationType === 'Oculus') {
     return !!(value.applicationId && value.applicationSecret);
+  } else if (configurationType === 'Steam') {
+    return !!(value.publisherKey && value.appId);
   } else if (configurationType === 'Firebase') {
     return !!(value.projectId && value.serviceAccountCredentials);
   } else if (configurationType === 'iOS') {

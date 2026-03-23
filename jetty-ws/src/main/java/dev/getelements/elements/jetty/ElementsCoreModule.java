@@ -17,6 +17,7 @@ import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
 import dev.getelements.elements.sdk.model.annotation.FacebookPermission;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
+import dev.getelements.elements.service.guice.SteamIapReceiptInvokerModule;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.List;
@@ -57,6 +58,7 @@ public class ElementsCoreModule extends AbstractModule {
         install(new ValidationModule());
         install(new AppleIapReceiptInvokerModule());
         install(new MetaIapReceiptInvokerModule());
+        install(new SteamIapReceiptInvokerModule());
         install(new JerseyHttpClientModule());
         install(new FileSystemCdnGitLoaderModule());
 

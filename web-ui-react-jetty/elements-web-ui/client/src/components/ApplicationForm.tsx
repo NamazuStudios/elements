@@ -75,6 +75,14 @@ const oculusConfigSchema = z.object({
   productBundles: z.array(z.any()).optional(),
 });
 
+const steamConfigSchema = z.object({
+  ...commonConfigFields,
+  '@class': z.literal('dev.getelements.elements.sdk.model.application.SteamApplicationConfiguration'),
+  publisherKey: z.string().min(1, 'Publisher Key is required'),
+  appId: z.string().min(1, 'App ID is required'),
+  productBundles: z.array(z.any()).optional(),
+});
+
 const applicationConfigSchema = z.union([
   facebookConfigSchema,
   firebaseConfigSchema,
@@ -82,6 +90,7 @@ const applicationConfigSchema = z.union([
   iosConfigSchema,
   matchmakingConfigSchema,
   oculusConfigSchema,
+  steamConfigSchema,
 ]);
 
 // Create schema based on mode - don't validate applicationConfiguration in update mode
@@ -487,6 +496,7 @@ function getConfigTypeEndpoint(type: string): string {
     'iOS': 'ios',
     'Matchmaking': 'matchmaking',
     'Oculus': 'oculus',
+    'Steam': 'steam',
   };
   return typeMap[type] || type.toLowerCase();
 }
@@ -499,6 +509,7 @@ function getConfigurationClass(type: string): string {
     'iOS': 'dev.getelements.elements.sdk.model.application.IosApplicationConfiguration',
     'Matchmaking': 'dev.getelements.elements.sdk.model.application.MatchmakingApplicationConfiguration',
     'Oculus': 'dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration',
+    'Steam': 'dev.getelements.elements.sdk.model.application.SteamApplicationConfiguration',
   };
   return classMap[type] || '';
 }
@@ -515,8 +526,9 @@ function detectConfigurationType(config: any): string | null {
     if (className.includes('IosApplicationConfiguration')) return 'iOS';
     if (className.includes('MatchmakingApplicationConfiguration')) return 'Matchmaking';
     if (className.includes('OculusApplicationConfiguration')) return 'Oculus';
+    if (className.includes('SteamApplicationConfiguration')) return 'Steam';
   }
-  
+
   // Check type field from API response
   if (config.type) {
     const typeName = config.type;
@@ -526,14 +538,16 @@ function detectConfigurationType(config: any): string | null {
     if (typeName.includes('IosApplicationConfiguration')) return 'iOS';
     if (typeName.includes('MatchmakingApplicationConfiguration')) return 'Matchmaking';
     if (typeName.includes('OculusApplicationConfiguration')) return 'Oculus';
+    if (typeName.includes('SteamApplicationConfiguration')) return 'Steam';
   }
-  
+
   // Fallback to field-based detection
   if (config.applicationId && config.applicationSecret) return 'Facebook';
   if (config.projectId && config.serviceAccountCredentials) return 'Firebase';
   if (config.jsonKey || (config.productBundles && !config.applicationId?.includes('.'))) return 'GooglePlay';
   if (config.applicationId?.includes('.') && config.productBundles) return 'iOS';
   if (config.maxProfiles || config.matchmaker) return 'Matchmaking';
+  if (config.publisherKey !== undefined || config.appId !== undefined) return 'Steam';
   
   return null;
 }
@@ -554,6 +568,8 @@ function getConfigurationName(config: any, type: string | null): string | null {
     case 'GooglePlay':
     case 'iOS':
       return config.applicationId || null;
+    case 'Steam':
+      return config.appId || null;
     case 'Matchmaking':
       return config.matchmaker?.name || 'Default Matchmaker';
     default:

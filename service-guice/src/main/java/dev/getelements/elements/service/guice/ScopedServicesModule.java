@@ -27,6 +27,7 @@ import dev.getelements.elements.sdk.service.leaderboard.ScoreService;
 import dev.getelements.elements.sdk.service.match.MatchService;
 import dev.getelements.elements.sdk.service.match.MultiMatchService;
 import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
+import dev.getelements.elements.sdk.service.steam.SteamIapReceiptService;
 import dev.getelements.elements.sdk.service.metadata.MetadataService;
 import dev.getelements.elements.sdk.service.mission.MissionService;
 import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
@@ -90,6 +91,8 @@ import dev.getelements.elements.service.leaderboard.*;
 import dev.getelements.elements.service.match.*;
 import dev.getelements.elements.service.meta.oculusiap.OculusIapReceiptServiceProvider;
 import dev.getelements.elements.service.meta.oculusiap.UserOculusIapReceiptService;
+import dev.getelements.elements.service.steam.SteamIapReceiptServiceProvider;
+import dev.getelements.elements.service.steam.UserSteamIapReceiptService;
 import dev.getelements.elements.service.metadata.AnonMetadataService;
 import dev.getelements.elements.service.metadata.MetadataServiceProvider;
 import dev.getelements.elements.service.metadata.SuperUserMetadataService;
@@ -185,6 +188,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OculusApplicationConfigurationServiceProvider.class)
                 .in(scope);
 
+        bind(SteamApplicationConfigurationService.class)
+                .toProvider(SteamApplicationConfigurationServiceProvider.class)
+                .in(scope);
+
         bind(ProfileService.class)
                 .toProvider(ProfileServiceProvider.class)
                 .in(scope);
@@ -215,6 +222,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(OculusApplicationConfigurationService.class)
                 .toProvider(OculusApplicationConfigurationServiceProvider.class)
+                .in(scope);
+
+        bind(SteamApplicationConfigurationService.class)
+                .toProvider(SteamApplicationConfigurationServiceProvider.class)
                 .in(scope);
 
         bind(MatchmakingApplicationConfigurationService.class)
@@ -291,6 +302,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(OculusIapReceiptService.class)
                 .toProvider(OculusIapReceiptServiceProvider.class)
+                .in(scope);
+
+        bind(SteamIapReceiptService.class)
+                .toProvider(SteamIapReceiptServiceProvider.class)
                 .in(scope);
 
         bind(ProfileOverrideService.class)
@@ -436,6 +451,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonOculusApplicationConfigurationService.class);
 
+        bind(SteamApplicationConfigurationService.class)
+                .annotatedWith(named(ANONYMOUS))
+                .to(AnonSteamApplicationConfigurationService.class);
+
         bind(GooglePlayApplicationConfigurationService.class)
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonGooglePlayApplicationConfigurationService.class);
@@ -527,6 +546,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(GooglePlayIapReceiptService.class)
                 .annotatedWith(named(USER))
                 .to(UserGooglePlayIapReceiptService.class);
+
+        bind(SteamIapReceiptService.class)
+                .annotatedWith(named(USER))
+                .to(UserSteamIapReceiptService.class);
 
         bind(ProductBundleService.class)
                 .annotatedWith(named(USER))
@@ -691,6 +714,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(OculusApplicationConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserOculusApplicationConfigurationService.class);
+
+        bind(SteamApplicationConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserSteamApplicationConfigurationService.class);
 
         bind(ProductBundleService.class)
                 .annotatedWith(named(SUPERUSER))
