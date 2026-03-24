@@ -50,6 +50,11 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
         user.setLevel(USER);
         user = getUserDao().createUser(user);
 
+        // If a stale UID exists (user was deleted), relink it to the new user
+        if (oidcUid.isPresent()) {
+            userUidDao.tryDeleteUserUid(oidcUid.get());
+        }
+
         createNewUserUid(uid, scheme, user.getId());
 
         return user;
@@ -61,7 +66,7 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
         userUid.setId(uid);
         userUid.setScheme(scheme);
 
-        userUidDao.createUserUidStrict(userUid);
+        userUidDao.createUserUid(userUid);
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
