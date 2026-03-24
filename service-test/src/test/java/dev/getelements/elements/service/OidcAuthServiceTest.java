@@ -253,16 +253,6 @@ public class OidcAuthServiceTest {
         return user;
     }
 
-    @DataProvider
-    public Object[][] allAuthServices() {
-        return new Object[][] {
-                {
-                    anonOidcAuthServiceProvider.get(),
-                    userOidcAuthServiceProvider.get()
-                }
-        };
-    }
-
     public class TestModule extends AbstractModule {
 
         @Override
