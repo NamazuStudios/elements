@@ -1,9 +1,7 @@
 package dev.getelements.elements.sdk.model.auth;
 
-import dev.getelements.elements.sdk.model.ValidationGroups;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +12,10 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
 
     /** Creates a new instance. */
     public CreateOrUpdateOidcAuthSchemeRequest() {}
+
+    @NotNull
+    @Schema(description = "The name used when linking the scheme to the user.")
+    private String name;
 
     @NotNull
     @Schema(description = "A unique name used to identify the scheme within the instance of Elements. " +
@@ -29,6 +31,24 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
 
     @Schema(description = "The JWK format. Defaults to application/json")
     private String mediaType = "application/json";
+
+    /**
+     * Returns the name of this auth scheme.
+     *
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Sets the name of this scheme.
+     *
+     * @param name the name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * Returns the issuer identifier.
@@ -104,15 +124,23 @@ public class CreateOrUpdateOidcAuthSchemeRequest {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CreateOrUpdateOidcAuthSchemeRequest that = (CreateOrUpdateOidcAuthSchemeRequest) o;
-        return Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        if (!(o instanceof CreateOrUpdateOidcAuthSchemeRequest that)) return false;
+        return Objects.equals(name, that.name) && Objects.equals(issuer, that.issuer) && Objects.equals(keys, that.keys) && Objects.equals(keysUrl, that.keysUrl) && Objects.equals(mediaType, that.mediaType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(name, issuer, keys, keysUrl, mediaType);
     }
 
+    @Override
+    public String toString() {
+        return "CreateOrUpdateOidcAuthSchemeRequest{" +
+                "name='" + name + '\'' +
+                ", issuer='" + issuer + '\'' +
+                ", keys=" + keys +
+                ", keysUrl='" + keysUrl + '\'' +
+                ", mediaType='" + mediaType + '\'' +
+                '}';
+    }
 }
