@@ -11,9 +11,12 @@ interface PluginContextValue {
 const PluginContext = createContext<PluginContextValue>({ plugins: [], isLoading: false });
 
 export function PluginProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userLevel } = useAuth();
   const [plugins, setPlugins] = useState<LoadedPlugin[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Derive segment from userLevel; defaults to 'superuser' until user-level dashboards are introduced.
+  const segment = userLevel?.toLowerCase() ?? 'superuser';
 
   const { data: containers } = useQuery<Array<{ uris?: string[] }>>({
     queryKey: ['/api/rest/elements/container'],
@@ -24,11 +27,11 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated || !containers) return;
 
     setIsLoading(true);
-    discoverAndLoadPlugins(containers)
+    discoverAndLoadPlugins(containers, segment)
       .then(loaded => setPlugins(loaded))
       .catch(() => setPlugins([]))
       .finally(() => setIsLoading(false));
-  }, [isAuthenticated, containers]);
+  }, [isAuthenticated, containers, segment]);
 
   return (
     <PluginContext.Provider value={{ plugins, isLoading }}>

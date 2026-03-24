@@ -57,12 +57,12 @@ export function extractUiBasePaths(containers: Array<{ uris?: string[] }>): stri
 }
 
 /**
- * Fetches superuser/plugin.json from the given UI base path.
+ * Fetches {segment}/plugin.json from the given UI base path.
  * Returns null on 404 or any error (silently skipped).
  */
-export async function fetchPluginManifest(uiBasePath: string): Promise<PluginManifest | null> {
+export async function fetchPluginManifest(uiBasePath: string, segment: string): Promise<PluginManifest | null> {
   try {
-    const manifestPath = `${uiBasePath}superuser/plugin.json`;
+    const manifestPath = `${uiBasePath}${segment}/plugin.json`;
     const fullUrl = await getApiPath(manifestPath);
     const sessionToken = apiClient.getSessionToken();
     const headers: Record<string, string> = {};
@@ -99,21 +99,23 @@ export function loadPluginBundle(bundleUrl: string): Promise<void> {
 
 /**
  * Orchestrates full plugin discovery and loading from a list of containers.
+ * @param segment - UI content segment directory, e.g. 'superuser' or 'user'.
  * Returns successfully loaded plugins; failures are silently skipped.
  */
 export async function discoverAndLoadPlugins(
-  containers: Array<{ uris?: string[] }>
+  containers: Array<{ uris?: string[] }>,
+  segment: string
 ): Promise<LoadedPlugin[]> {
   const uiBasePaths = extractUiBasePaths(containers);
   const loadedPlugins: LoadedPlugin[] = [];
 
   for (const uiBasePath of uiBasePaths) {
-    const manifest = await fetchPluginManifest(uiBasePath);
+    const manifest = await fetchPluginManifest(uiBasePath, segment);
     if (!manifest) continue;
 
     for (const entry of manifest.entries) {
       try {
-        const bundleRelPath = `${uiBasePath}superuser/${entry.bundlePath}`;
+        const bundleRelPath = `${uiBasePath}${segment}/${entry.bundlePath}`;
         const bundleUrl = await getApiPath(bundleRelPath);
         await loadPluginBundle(bundleUrl);
 
