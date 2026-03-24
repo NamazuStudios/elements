@@ -37,7 +37,7 @@ public class UserOidcAuthService implements OidcAuthService {
         userUid.setId(uid);
         userUid.setScheme(scheme);
 
-        userUidDao.createUserUidStrict(userUid);
+        userUidDao.createUserUid(userUid);
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
@@ -55,10 +55,15 @@ public class UserOidcAuthService implements OidcAuthService {
 
         final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
         final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();
+        final var hasEmail = email != null && !email.isBlank();
 
         //Search the existing UIds to see if the user already exists
         var oidcUid = userUidDao.findUserUid(uid, scheme.getName());
-        var emailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
+        var emailUid = Optional.<UserUid>empty();
+
+        if (hasEmail) {
+            emailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
+        }
 
         var userOptional = tryGetUserFromUid(oidcUid);
 
@@ -75,7 +80,7 @@ public class UserOidcAuthService implements OidcAuthService {
                 createNewUserUid(uid, scheme.getName(), user.getId());
             }
 
-            if (emailUid.isEmpty() && !email.isEmpty()) {
+            if (emailUid.isEmpty() && hasEmail) {
                 createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
             }
 
@@ -91,7 +96,11 @@ public class UserOidcAuthService implements OidcAuthService {
 
         createNewUserUid(uid, scheme.getName(), user.getId());
 
-        if (!email.isEmpty()) {
+        if (hasEmail) {
+            // If a stale email UID exists (user was deleted), relink it to the new user
+            if (emailUid.isPresent()) {
+                userUidDao.tryDeleteUserUid(emailUid.get());
+            }
             createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
         }
 
