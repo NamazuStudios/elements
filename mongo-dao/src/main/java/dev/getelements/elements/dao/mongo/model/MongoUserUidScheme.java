@@ -38,6 +38,12 @@ public class MongoUserUidScheme {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MongoUserUidScheme that)) return false;
+        return Objects.equals(scheme, that.scheme) && Objects.equals(id, that.id);
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(scheme, id);
     }
