@@ -310,10 +310,11 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
                 <h3 className="text-sm font-medium">Endpoints</h3>
                 <div className="space-y-1">
                   {container.uris.map((uri, i) => (
-                    <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/20">
+                    <a key={i} href={uri} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/20 hover:bg-muted/50 hover:border-primary/50 transition-colors">
                       <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                       <span className="font-mono text-xs break-all" data-testid={`text-uri-${i}`}>{uri}</span>
-                    </div>
+                    </a>
                   ))}
                 </div>
               </div>
