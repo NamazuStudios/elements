@@ -41,10 +41,13 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
             return found;
         }
 
-        // Not yet linked — associate the external uid with the currently authenticated user
-        if (existingUid.isEmpty()) {
-            createNewUserUid(uid, scheme, user.getId());
+        // Not yet linked — associate the external uid with the currently authenticated user.
+        // Delete any stale UID entry first if one exists (e.g. the previous user was soft-deleted).
+        if (existingUid.isPresent()) {
+            userUidDao.tryDeleteUserUid(existingUid.get());
         }
+
+        createNewUserUid(uid, scheme, user.getId());
 
         return user;
     }

@@ -101,6 +101,41 @@ public class UserOAuth2AuthServiceTest {
     }
 
     /**
+     * Authenticated user, uid/scheme exists in db but points to a soft-deleted user (null userId) →
+     * deletes the stale UID, then links the external uid to the current user.
+     */
+    @Test
+    public void testAuthenticated_staleUid_deletesAndLinksToCurrentUser() {
+        final var scheme = simpleScheme(SCHEME_NAME);
+        when(schemeDao.getAuthScheme("scheme-user-4")).thenReturn(scheme);
+
+        // stale UID: compound ID exists but userId is null (soft-deleted user)
+        final var staleUid = new UserUid();
+        staleUid.setId(EXT_USER_ID);
+        staleUid.setScheme(SCHEME_NAME);
+        staleUid.setUserId(null);
+
+        when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.of(staleUid));
+
+        service.createSession(simpleRequest("scheme-user-4", EXT_USER_ID));
+
+        // stale entry deleted
+        verify(userUidDao).tryDeleteUserUid(staleUid);
+
+        // re-linked to current user
+        verify(userDao, never()).createUser(any());
+        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
+        verify(userUidDao).createUserUidStrict(uidCaptor.capture());
+        assertEquals(uidCaptor.getValue().getId(), EXT_USER_ID);
+        assertEquals(uidCaptor.getValue().getScheme(), SCHEME_NAME);
+        assertEquals(uidCaptor.getValue().getUserId(), CURRENT_USER_ID);
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertEquals(sessionCaptor.getValue().getUser().getId(), CURRENT_USER_ID);
+    }
+
+    /**
      * Authenticated user, uid/scheme not yet in db → links the external uid to the current user,
      * no new user created.
      */
