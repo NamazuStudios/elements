@@ -73,7 +73,7 @@ public class UserOAuth2AuthServiceTest {
 
         service.createSession(simpleRequest("scheme-user-1", EXT_USER_ID));
 
-        verify(userUidDao, never()).createUserUidStrict(any());
+        verify(userUidDao, never()).createUserUid(any());
         verify(userDao, never()).createUser(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
@@ -97,7 +97,7 @@ public class UserOAuth2AuthServiceTest {
                 () -> service.createSession(simpleRequest("scheme-user-2", EXT_USER_ID)));
 
         verify(sessionDao, never()).create(any());
-        verify(userUidDao, never()).createUserUidStrict(any());
+        verify(userUidDao, never()).createUserUid(any());
     }
 
     /**
@@ -115,7 +115,7 @@ public class UserOAuth2AuthServiceTest {
         verify(userDao, never()).createUser(any());
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao).createUserUidStrict(uidCaptor.capture());
+        verify(userUidDao).createUserUid(uidCaptor.capture());
         assertEquals(uidCaptor.getValue().getId(), EXT_USER_ID);
         assertEquals(uidCaptor.getValue().getScheme(), SCHEME_NAME);
         assertEquals(uidCaptor.getValue().getUserId(), CURRENT_USER_ID);

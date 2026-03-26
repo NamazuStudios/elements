@@ -74,7 +74,7 @@ public class AnonOAuth2AuthServiceTest {
         verify(userDao).createUser(any(User.class));
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao).createUserUidStrict(uidCaptor.capture());
+        verify(userUidDao).createUserUid(uidCaptor.capture());
         assertEquals(uidCaptor.getValue().getId(), EXT_USER_ID);
         assertEquals(uidCaptor.getValue().getScheme(), SCHEME_NAME);
         assertEquals(uidCaptor.getValue().getUserId(), "new-user-id");
@@ -96,7 +96,7 @@ public class AnonOAuth2AuthServiceTest {
         service.createSession(simpleRequest("scheme-anon-2", EXT_USER_ID));
 
         verify(userDao, never()).createUser(any(User.class));
-        verify(userUidDao, never()).createUserUidStrict(any(UserUid.class));
+        verify(userUidDao, never()).createUserUid(any(UserUid.class));
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
         verify(sessionDao).create(sessionCaptor.capture());
