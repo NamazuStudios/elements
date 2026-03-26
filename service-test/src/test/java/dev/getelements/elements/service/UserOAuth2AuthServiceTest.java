@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
@@ -54,9 +55,15 @@ public class UserOAuth2AuthServiceTest {
     @BeforeMethod
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
+        setupMocks();
+    }
+
+    private void setupMocks() {
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        final var responseNode = MAPPER.createObjectNode();
+        responseNode.put("is_valid", true);
         when(invoker.execute(any(), any(ResolvedRequest.class)))
-                .thenReturn(new ParsedResponse(200, "{}", MAPPER.createObjectNode()));
+                .thenReturn(new ParsedResponse(200, responseNode.toString(), responseNode));
     }
 
     /**
@@ -64,14 +71,14 @@ public class UserOAuth2AuthServiceTest {
      */
     @Test
     public void testAuthenticated_uidFoundSameUser_returnsUser() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-user-1")).thenReturn(scheme);
 
         when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME))
                 .thenReturn(Optional.of(uidFor(EXT_USER_ID, SCHEME_NAME, CURRENT_USER_ID)));
         when(userDao.getUser(CURRENT_USER_ID)).thenReturn(userWithId(CURRENT_USER_ID));
 
-        service.createSession(simpleRequest("scheme-user-1", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-user-1", EXT_USER_ID));
 
         verify(userUidDao, never()).createUserUid(any());
         verify(userDao, never()).createUser(any());
@@ -86,7 +93,7 @@ public class UserOAuth2AuthServiceTest {
      */
     @Test
     public void testAuthenticated_uidFoundDifferentUser_throwsException() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-user-2")).thenReturn(scheme);
 
         when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME))
@@ -94,7 +101,7 @@ public class UserOAuth2AuthServiceTest {
         when(userDao.getUser("other-user-id")).thenReturn(userWithId("other-user-id"));
 
         assertThrows(AuthValidationException.class,
-                () -> service.createSession(simpleRequest("scheme-user-2", EXT_USER_ID)));
+                () -> service.createSession(metaQuestRequest("scheme-user-2", EXT_USER_ID)));
 
         verify(sessionDao, never()).create(any());
         verify(userUidDao, never()).createUserUid(any());
@@ -106,11 +113,11 @@ public class UserOAuth2AuthServiceTest {
      */
     @Test
     public void testAuthenticated_uidNotFound_linksToCurrentUser() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-user-3")).thenReturn(scheme);
         when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.empty());
 
-        service.createSession(simpleRequest("scheme-user-3", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-user-3", EXT_USER_ID));
 
         verify(userDao, never()).createUser(any());
 
@@ -125,26 +132,57 @@ public class UserOAuth2AuthServiceTest {
         assertEquals(sessionCaptor.getValue().getUser().getId(), CURRENT_USER_ID);
     }
 
+    /**
+     * Authenticated user, uid/scheme not in db but user already has a different uid for this scheme
+     * → throws AuthValidationException; does not create a second uid for the same provider.
+     */
+    @Test
+    public void testAuthenticated_alreadyLinkedSameScheme_throwsException() {
+        // Re-inject with a user that already has SCHEME_NAME in linkedAccounts
+        createInjector(new TestModule(Set.of(SCHEME_NAME))).injectMembers(this);
+        setupMocks();
+
+        final var scheme = metaQuestScheme(SCHEME_NAME);
+        when(schemeDao.getAuthScheme("scheme-user-4")).thenReturn(scheme);
+        when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.empty());
+
+        assertThrows(AuthValidationException.class,
+                () -> service.createSession(metaQuestRequest("scheme-user-4", EXT_USER_ID)));
+
+        verify(sessionDao, never()).create(any());
+        verify(userUidDao, never()).createUserUid(any());
+    }
+
     // ---------- helpers ----------
 
-    private static OAuth2AuthScheme simpleScheme(String name) {
+    /**
+     * Scheme matching the MetaQuest structure used in QA:
+     * POST + JSON body type, user_id and nonce as fromClient query params, static access_token,
+     * responseValidMapping on "is_valid".
+     */
+    private static OAuth2AuthScheme metaQuestScheme(String name) {
         final var s = new OAuth2AuthScheme();
         s.setId("ignored");
         s.setName(name);
-        s.setValidationUrl("https://example.com/validate");
+        s.setValidationUrl("https://graph.oculus.com/user_nonce_validate");
         s.setMethod(HttpMethod.POST);
-        s.setBodyType(BodyType.FORM_URL_ENCODED);
+        s.setBodyType(BodyType.JSON);
         s.setHeaders(List.of());
-        s.setParams(List.of());
-        s.setBody(List.of(new OAuth2RequestKeyValue("user_id", null, true, true)));
+        s.setParams(List.of(
+            new OAuth2RequestKeyValue("user_id", null, true, true),
+            new OAuth2RequestKeyValue("nonce", null, true, false),
+            new OAuth2RequestKeyValue("access_token", "OC|test|secret", false, false)
+        ));
+        s.setBody(List.of());
+        s.setResponseValidMapping("is_valid");
         s.setValidStatusCodes(List.of(200));
         return s;
     }
 
-    private static OAuth2SessionRequest simpleRequest(String schemeId, String userId) {
+    private static OAuth2SessionRequest metaQuestRequest(String schemeId, String userId) {
         final var r = new OAuth2SessionRequest();
         r.setSchemeId(schemeId);
-        r.setRequestParameters(Map.of("user_id", userId));
+        r.setRequestParameters(Map.of("user_id", userId, "nonce", "test-nonce-value"));
         r.setRequestHeaders(Map.of());
         return r;
     }
@@ -164,10 +202,18 @@ public class UserOAuth2AuthServiceTest {
     }
 
     private static class TestModule extends AbstractModule {
+
+        private final Set<String> linkedAccounts;
+
+        TestModule() { this(Set.of()); }
+
+        TestModule(Set<String> linkedAccounts) { this.linkedAccounts = linkedAccounts; }
+
         @Override
         protected void configure() {
             final var currentUser = new User();
             currentUser.setId(CURRENT_USER_ID);
+            currentUser.setLinkedAccounts(linkedAccounts);
             bind(User.class).toInstance(currentUser);
 
             bind(UserUidDao.class).toInstance(mock(UserUidDao.class));

@@ -41,7 +41,14 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
             return found;
         }
 
-        // Not yet linked — associate the external uid with the currently authenticated user.
+        // Not yet linked — but reject if the current user already has a uid for this scheme.
+        // Linking two external accounts from the same provider to one Elements account is not allowed.
+        final var linked = user.getLinkedAccounts();
+        if (linked != null && linked.contains(scheme)) {
+            throw new AuthValidationException("This user already has a " + scheme + " account linked.");
+        }
+
+        // Associate the external uid with the currently authenticated user.
         // Delete any stale UID entry first if one exists (e.g. the previous user was soft-deleted).
         if (existingUid.isPresent()) {
             userUidDao.tryDeleteUserUid(existingUid.get());
