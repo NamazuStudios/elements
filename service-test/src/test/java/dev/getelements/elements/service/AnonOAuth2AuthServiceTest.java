@@ -53,8 +53,10 @@ public class AnonOAuth2AuthServiceTest {
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        final var responseNode = MAPPER.createObjectNode();
+        responseNode.put("is_valid", true);
         when(invoker.execute(any(), any(ResolvedRequest.class)))
-                .thenReturn(new ParsedResponse(200, "{}", MAPPER.createObjectNode()));
+                .thenReturn(new ParsedResponse(200, responseNode.toString(), responseNode));
     }
 
     /**
@@ -105,16 +107,26 @@ public class AnonOAuth2AuthServiceTest {
 
     // ---------- helpers ----------
 
+    /**
+     * Scheme matching the MetaQuest structure used in QA:
+     * POST + JSON body type, user_id and nonce as fromClient query params, static access_token,
+     * responseValidMapping on "is_valid".
+     */
     private static OAuth2AuthScheme simpleScheme(String name) {
         final var s = new OAuth2AuthScheme();
         s.setId("ignored");
         s.setName(name);
-        s.setValidationUrl("https://example.com/validate");
+        s.setValidationUrl("https://graph.oculus.com/user_nonce_validate");
         s.setMethod(HttpMethod.POST);
-        s.setBodyType(BodyType.FORM_URL_ENCODED);
+        s.setBodyType(BodyType.JSON);
         s.setHeaders(List.of());
-        s.setParams(List.of());
-        s.setBody(List.of(new OAuth2RequestKeyValue("user_id", null, true, true)));
+        s.setParams(List.of(
+            new OAuth2RequestKeyValue("user_id", null, true, true),
+            new OAuth2RequestKeyValue("nonce", null, true, false),
+            new OAuth2RequestKeyValue("access_token", "OC|test|secret", false, false)
+        ));
+        s.setBody(List.of());
+        s.setResponseValidMapping("is_valid");
         s.setValidStatusCodes(List.of(200));
         return s;
     }
@@ -122,7 +134,7 @@ public class AnonOAuth2AuthServiceTest {
     private static OAuth2SessionRequest simpleRequest(String schemeId, String userId) {
         final var r = new OAuth2SessionRequest();
         r.setSchemeId(schemeId);
-        r.setRequestParameters(Map.of("user_id", userId));
+        r.setRequestParameters(Map.of("user_id", userId, "nonce", "test-nonce-value"));
         r.setRequestHeaders(Map.of());
         return r;
     }
