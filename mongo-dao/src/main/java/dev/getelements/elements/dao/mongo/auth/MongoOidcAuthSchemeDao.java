@@ -69,7 +69,6 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
                         )
                 );
 
-
         return Optional.ofNullable(query.first()).map(this::transform);
 
     }
