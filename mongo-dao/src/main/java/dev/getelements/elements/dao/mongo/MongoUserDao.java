@@ -569,7 +569,8 @@ public class MongoUserDao implements UserDao {
                         unset("email"),
                         unset("primaryPhoneNb"),
                         unset("firstName"),
-                        unset("lastName")
+                        unset("lastName"),
+                        unset("linkedAccounts")
                 )
                 .with(getMongoPasswordUtils()::scramblePassword);
 

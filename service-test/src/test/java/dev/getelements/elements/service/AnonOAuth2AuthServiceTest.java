@@ -41,6 +41,7 @@ public class AnonOAuth2AuthServiceTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String SCHEME_NAME = "AnonTestScheme";
     private static final String EXT_USER_ID = "ext_alice";
+    private static final String EXT_USER_ID_2 = "ext_bob";
 
     @Inject private AnonOAuth2AuthService service;
     @Inject private UserUidDao userUidDao;
@@ -60,20 +61,21 @@ public class AnonOAuth2AuthServiceTest {
     }
 
     /**
-     * Anonymous user, uid/scheme not in db → creates a new user and a new UserUid pointing to them.
+     * Anonymous user, uid/scheme not in db → creates a new user via createUserStrict and a new UserUid.
      */
     @Test
     public void testAnonymous_newUid_createsUserAndUid() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-anon-1")).thenReturn(scheme);
         when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.empty());
 
         final var newUser = userWithId("new-user-id");
-        when(userDao.createUser(any(User.class))).thenReturn(newUser);
+        when(userDao.createUserStrict(any(User.class))).thenReturn(newUser);
 
-        service.createSession(simpleRequest("scheme-anon-1", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-anon-1", EXT_USER_ID));
 
-        verify(userDao).createUser(any(User.class));
+        verify(userDao).createUserStrict(any(User.class));
+        verify(userDao, never()).createUser(any(User.class));
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
         verify(userUidDao).createUserUid(uidCaptor.capture());
@@ -87,7 +89,7 @@ public class AnonOAuth2AuthServiceTest {
      */
     @Test
     public void testAnonymous_existingUid_returnsExistingUser() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-anon-2")).thenReturn(scheme);
 
         final var existingUser = userWithId("existing-user-id");
@@ -95,14 +97,46 @@ public class AnonOAuth2AuthServiceTest {
                 .thenReturn(Optional.of(uidFor(EXT_USER_ID, SCHEME_NAME, "existing-user-id")));
         when(userDao.getUser("existing-user-id")).thenReturn(existingUser);
 
-        service.createSession(simpleRequest("scheme-anon-2", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-anon-2", EXT_USER_ID));
 
+        verify(userDao, never()).createUserStrict(any(User.class));
         verify(userDao, never()).createUser(any(User.class));
         verify(userUidDao, never()).createUserUid(any(UserUid.class));
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
         verify(sessionDao).create(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getUser().getId(), "existing-user-id");
+    }
+
+    /**
+     * Two anonymous logins with different external UIDs must each create their own distinct user.
+     * Regression test: createUser (upsert-by-name/email) would collapse both onto the same document
+     * when name and email are blank; createUserStrict (plain insert) must be used instead.
+     */
+    @Test
+    public void testAnonymous_twoDistinctUids_createDistinctUsers() {
+        final var scheme = metaQuestScheme(SCHEME_NAME);
+        when(schemeDao.getAuthScheme("scheme-anon-3")).thenReturn(scheme);
+        when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(EXT_USER_ID_2, SCHEME_NAME)).thenReturn(Optional.empty());
+
+        final var userA = userWithId("user-a-id");
+        final var userB = userWithId("user-b-id");
+        when(userDao.createUserStrict(any(User.class))).thenReturn(userA).thenReturn(userB);
+
+        service.createSession(metaQuestRequest("scheme-anon-3", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-anon-3", EXT_USER_ID_2));
+
+        // Each login must insert a fresh user — createUserStrict called twice, createUser never
+        verify(userDao, times(2)).createUserStrict(any(User.class));
+        verify(userDao, never()).createUser(any(User.class));
+
+        // Each login must create its own UserUid pointing to a different user
+        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
+        verify(userUidDao, times(2)).createUserUid(uidCaptor.capture());
+        final var uids = uidCaptor.getAllValues();
+        assertNotEquals(uids.get(0).getUserId(), uids.get(1).getUserId(),
+                "Different external UIDs must produce different Elements users");
     }
 
     // ---------- helpers ----------
@@ -112,7 +146,7 @@ public class AnonOAuth2AuthServiceTest {
      * POST + JSON body type, user_id and nonce as fromClient query params, static access_token,
      * responseValidMapping on "is_valid".
      */
-    private static OAuth2AuthScheme simpleScheme(String name) {
+    private static OAuth2AuthScheme metaQuestScheme(String name) {
         final var s = new OAuth2AuthScheme();
         s.setId("ignored");
         s.setName(name);
@@ -131,7 +165,7 @@ public class AnonOAuth2AuthServiceTest {
         return s;
     }
 
-    private static OAuth2SessionRequest simpleRequest(String schemeId, String userId) {
+    private static OAuth2SessionRequest metaQuestRequest(String schemeId, String userId) {
         final var r = new OAuth2SessionRequest();
         r.setSchemeId(schemeId);
         r.setRequestParameters(Map.of("user_id", userId, "nonce", "test-nonce-value"));
