@@ -41,6 +41,7 @@ public class AnonOAuth2AuthServiceTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String SCHEME_NAME = "AnonTestScheme";
     private static final String EXT_USER_ID = "ext_alice";
+    private static final String EXT_USER_ID_2 = "ext_bob";
 
     @Inject private AnonOAuth2AuthService service;
     @Inject private UserUidDao userUidDao;
@@ -53,25 +54,28 @@ public class AnonOAuth2AuthServiceTest {
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        final var responseNode = MAPPER.createObjectNode();
+        responseNode.put("is_valid", true);
         when(invoker.execute(any(), any(ResolvedRequest.class)))
-                .thenReturn(new ParsedResponse(200, "{}", MAPPER.createObjectNode()));
+                .thenReturn(new ParsedResponse(200, responseNode.toString(), responseNode));
     }
 
     /**
-     * Anonymous user, uid/scheme not in db → creates a new user and a new UserUid pointing to them.
+     * Anonymous user, uid/scheme not in db → creates a new user via createUserStrict and a new UserUid.
      */
     @Test
     public void testAnonymous_newUid_createsUserAndUid() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-anon-1")).thenReturn(scheme);
         when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.empty());
 
         final var newUser = userWithId("new-user-id");
-        when(userDao.createUser(any(User.class))).thenReturn(newUser);
+        when(userDao.createUserStrict(any(User.class))).thenReturn(newUser);
 
-        service.createSession(simpleRequest("scheme-anon-1", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-anon-1", EXT_USER_ID));
 
-        verify(userDao).createUser(any(User.class));
+        verify(userDao).createUserStrict(any(User.class));
+        verify(userDao, never()).createUser(any(User.class));
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
         verify(userUidDao).createUserUid(uidCaptor.capture());
@@ -85,7 +89,7 @@ public class AnonOAuth2AuthServiceTest {
      */
     @Test
     public void testAnonymous_existingUid_returnsExistingUser() {
-        final var scheme = simpleScheme(SCHEME_NAME);
+        final var scheme = metaQuestScheme(SCHEME_NAME);
         when(schemeDao.getAuthScheme("scheme-anon-2")).thenReturn(scheme);
 
         final var existingUser = userWithId("existing-user-id");
@@ -93,8 +97,9 @@ public class AnonOAuth2AuthServiceTest {
                 .thenReturn(Optional.of(uidFor(EXT_USER_ID, SCHEME_NAME, "existing-user-id")));
         when(userDao.getUser("existing-user-id")).thenReturn(existingUser);
 
-        service.createSession(simpleRequest("scheme-anon-2", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-anon-2", EXT_USER_ID));
 
+        verify(userDao, never()).createUserStrict(any(User.class));
         verify(userDao, never()).createUser(any(User.class));
         verify(userUidDao, never()).createUserUid(any(UserUid.class));
 
@@ -103,26 +108,67 @@ public class AnonOAuth2AuthServiceTest {
         assertEquals(sessionCaptor.getValue().getUser().getId(), "existing-user-id");
     }
 
+    /**
+     * Two anonymous logins with different external UIDs must each create their own distinct user.
+     * Regression test: createUser (upsert-by-name/email) would collapse both onto the same document
+     * when name and email are blank; createUserStrict (plain insert) must be used instead.
+     */
+    @Test
+    public void testAnonymous_twoDistinctUids_createDistinctUsers() {
+        final var scheme = metaQuestScheme(SCHEME_NAME);
+        when(schemeDao.getAuthScheme("scheme-anon-3")).thenReturn(scheme);
+        when(userUidDao.findUserUid(EXT_USER_ID, SCHEME_NAME)).thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(EXT_USER_ID_2, SCHEME_NAME)).thenReturn(Optional.empty());
+
+        final var userA = userWithId("user-a-id");
+        final var userB = userWithId("user-b-id");
+        when(userDao.createUserStrict(any(User.class))).thenReturn(userA).thenReturn(userB);
+
+        service.createSession(metaQuestRequest("scheme-anon-3", EXT_USER_ID));
+        service.createSession(metaQuestRequest("scheme-anon-3", EXT_USER_ID_2));
+
+        // Each login must insert a fresh user — createUserStrict called twice, createUser never
+        verify(userDao, times(2)).createUserStrict(any(User.class));
+        verify(userDao, never()).createUser(any(User.class));
+
+        // Each login must create its own UserUid pointing to a different user
+        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
+        verify(userUidDao, times(2)).createUserUid(uidCaptor.capture());
+        final var uids = uidCaptor.getAllValues();
+        assertNotEquals(uids.get(0).getUserId(), uids.get(1).getUserId(),
+                "Different external UIDs must produce different Elements users");
+    }
+
     // ---------- helpers ----------
 
-    private static OAuth2AuthScheme simpleScheme(String name) {
+    /**
+     * Scheme matching the MetaQuest structure used in QA:
+     * POST + JSON body type, user_id and nonce as fromClient query params, static access_token,
+     * responseValidMapping on "is_valid".
+     */
+    private static OAuth2AuthScheme metaQuestScheme(String name) {
         final var s = new OAuth2AuthScheme();
         s.setId("ignored");
         s.setName(name);
-        s.setValidationUrl("https://example.com/validate");
+        s.setValidationUrl("https://graph.oculus.com/user_nonce_validate");
         s.setMethod(HttpMethod.POST);
-        s.setBodyType(BodyType.FORM_URL_ENCODED);
+        s.setBodyType(BodyType.JSON);
         s.setHeaders(List.of());
-        s.setParams(List.of());
-        s.setBody(List.of(new OAuth2RequestKeyValue("user_id", null, true, true)));
+        s.setParams(List.of(
+            new OAuth2RequestKeyValue("user_id", null, true, true),
+            new OAuth2RequestKeyValue("nonce", null, true, false),
+            new OAuth2RequestKeyValue("access_token", "OC|test|secret", false, false)
+        ));
+        s.setBody(List.of());
+        s.setResponseValidMapping("is_valid");
         s.setValidStatusCodes(List.of(200));
         return s;
     }
 
-    private static OAuth2SessionRequest simpleRequest(String schemeId, String userId) {
+    private static OAuth2SessionRequest metaQuestRequest(String schemeId, String userId) {
         final var r = new OAuth2SessionRequest();
         r.setSchemeId(schemeId);
-        r.setRequestParameters(Map.of("user_id", userId));
+        r.setRequestParameters(Map.of("user_id", userId, "nonce", "test-nonce-value"));
         r.setRequestHeaders(Map.of());
         return r;
     }

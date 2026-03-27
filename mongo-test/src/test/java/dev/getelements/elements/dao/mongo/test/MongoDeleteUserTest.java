@@ -121,6 +121,19 @@ public class MongoDeleteUserTest {
         assertNull(u.get().getEmail());
     }
 
+    @Test(dependsOnMethods = "deleteUser")
+    public void verifyDeletedUserAbsentFromListing() {
+
+        // softDeleteUser must unset linkedAccounts so the user no longer passes the
+        // exists("linkedAccounts") filter used by getUsers — otherwise deleted users
+        // appear in user listings.
+        final var listing = userDao.getUsers(0, Integer.MAX_VALUE);
+        final var found = listing.getObjects().stream()
+                .anyMatch(u -> user.getId().equals(u.getId()));
+
+        assertFalse(found, "Soft-deleted user must not appear in getUsers listing");
+    }
+
     @Test(dependsOnMethods = "deleteUser", dataProvider = "userIdProvider")
     public void verifyUserUIDDeletion(final String userId, final String scheme) {
 
