@@ -141,6 +141,7 @@ public class OidcAuthServiceOperations {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElseThrow(() -> new ForbiddenException("No matching JWK for the provided key id"));
+            return;
         }
 
         throw new ForbiddenException("No matching JWK for the provided key id");
