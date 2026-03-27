@@ -2,6 +2,7 @@ package dev.getelements.elements.service.auth.oauth2;
 
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
+import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
@@ -11,9 +12,9 @@ import jakarta.inject.Inject;
 
 import java.util.Optional;
 
-import static dev.getelements.elements.sdk.model.user.User.Level.USER;
-
 public class UserOAuth2AuthService implements OAuth2AuthService {
+
+    private User user;
 
     private UserDao userDao;
 
@@ -28,27 +29,23 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
 
     private User apply(String scheme, String uid) {
 
-        //Search the existing UIds to see if the user already exists
-        final var oidcUid = userUidDao.findUserUid(uid, scheme);
-        final var userOptional = tryGetUserFromUid(oidcUid);
+        // Check if this uid/scheme is already mapped to an existing user
+        final var existingUid = userUidDao.findUserUid(uid, scheme);
+        final var existingUser = tryGetUserFromUid(existingUid);
 
-        //If the user already exists, check to see if we need to associate
-        //any new UIds from the extracted JWT claims
-        if (userOptional.isPresent()) {
-            final var user = userOptional.get();
-
-            if (oidcUid.isEmpty()) {
-                createNewUserUid(uid, scheme, user.getId());
+        if (existingUser.isPresent()) {
+            final var found = existingUser.get();
+            if (!found.getId().equals(user.getId())) {
+                throw new AuthValidationException("External uid is already linked to a different user.");
             }
-
-            return user;
+            return found;
         }
 
-        //No existing user was found, create a new one in the DB and assign the ref to
-        //any UIds made from the JWT claims
-        var user = new User();
-        user.setLevel(USER);
-        user = getUserDao().createUser(user);
+        // Not yet linked — associate the external uid with the currently authenticated user.
+        // Delete any stale UID entry first if one exists (e.g. the previous user was soft-deleted).
+        if (existingUid.isPresent()) {
+            userUidDao.tryDeleteUserUid(existingUid.get());
+        }
 
         // If a stale UID exists (user was deleted), relink it to the new user
         if (oidcUid.isPresent()) {
@@ -83,6 +80,15 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
         return Optional.empty();
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -111,4 +117,3 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
     }
 
 }
-

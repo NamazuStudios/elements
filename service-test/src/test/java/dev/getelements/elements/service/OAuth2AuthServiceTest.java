@@ -85,6 +85,8 @@ public class OAuth2AuthServiceTest {
                 { case_post_form_status_not_allowed_fails() },
                 { case_missing_client_userId_fails_fast() },
                 { case_responseIdMapping_missing_key_fails() },
+                { case_static_userId_from_scheme_falls_through_to_response_id_mapping() },
+                { case_userId_provided_via_legacy_request_headers() },
         };
     }
 
@@ -292,6 +294,70 @@ public class OAuth2AuthServiceTest {
                 false,
                 null,
                 Map.of(),
+                Map.of()
+        );
+    }
+
+    /**
+     * When a KV is marked userId=true but fromClient=false (static value), the code must NOT use that static
+     * value as the external user ID. Instead it should fall through to responseIdMapping so the response
+     * dictates which user is returned. The old code incorrectly returned the static scheme value, causing
+     * every request to that scheme to map to the same user regardless of which token the client sent.
+     */
+    private Case case_static_userId_from_scheme_falls_through_to_response_id_mapping() {
+
+        final var scheme = baseScheme("steam_game1");
+        scheme.setMethod(HttpMethod.GET);
+        scheme.setParams(List.of(
+                new OAuth2RequestKeyValue("user_id", "static_hardcoded", false, true) // fromClient=false, userId=true
+        ));
+        scheme.setResponseIdMapping("uid");
+        scheme.setResponseValidMapping(null);
+        scheme.setValidStatusCodes(List.of(200));
+
+        final var req = baseReq("scheme-7", Map.of(), Map.of());
+
+        final var body = "{\"uid\":\"response_uid_123\"}";
+
+        return new Case(
+                "static userId=true+fromClient=false: falls through to responseIdMapping (not static value)",
+                scheme, req,
+                200, body,
+                true,
+                "response_uid_123",                        // must come from responseIdMapping, not "static_hardcoded"
+                Map.of("user_id", "static_hardcoded"),     // static value is still sent in query to the server
+                Map.of()
+        );
+    }
+
+    /**
+     * When the caller passes requestParameters as an immutable map (e.g. Map.of()) AND also provides
+     * non-empty requestHeaders, the old code attempted to mutate the immutable map directly, throwing
+     * UnsupportedOperationException. The fix always copies requestParameters into a fresh HashMap first.
+     */
+    private Case case_userId_provided_via_legacy_request_headers() {
+
+        final var scheme = baseScheme("meta_nonce");
+        scheme.setMethod(HttpMethod.GET);
+        scheme.setParams(List.of(
+                new OAuth2RequestKeyValue("user_id", null, true, true) // fromClient=true, userId=true
+        ));
+        scheme.setResponseValidMapping(null);
+        scheme.setValidStatusCodes(List.of(200));
+
+        // Immutable Map.of() for params; non-empty headers triggers the merge that previously threw
+        final var req = baseReq("scheme-8",
+                Map.of(),                          // immutable
+                Map.of("user_id", "legacy_alice")  // non-empty: exercises the merge code path
+        );
+
+        return new Case(
+                "userId from legacy requestHeaders merges correctly even when requestParameters is immutable",
+                scheme, req,
+                200, "{}",
+                true,
+                "legacy_alice",
+                Map.of("user_id", "legacy_alice"),
                 Map.of()
         );
     }
