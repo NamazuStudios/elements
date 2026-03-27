@@ -164,6 +164,16 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OAuth2AuthServiceProvider.class)
                 .in(scope);
 
+        bind(OAuth2AuthService.class)
+                .annotatedWith(named(LINK))
+                .toProvider(OAuth2LinkServiceProvider.class)
+                .in(scope);
+
+        bind(OidcAuthService.class)
+                .annotatedWith(named(LINK))
+                .toProvider(OidcLinkServiceProvider.class)
+                .in(scope);
+
         bind(UserService.class)
                 .toProvider(UserServiceProvider.class)
                 .in(scope);

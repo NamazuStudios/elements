@@ -35,6 +35,11 @@ public interface Constants {
     String SUPERUSER = "dev.getelements.elements.service.scope.superuser";
 
     /**
+     * Names a service as scoped to the account-linking context. Only USER and SUPERUSER levels are permitted.
+     */
+    String LINK = "dev.getelements.elements.service.scope.link";
+
+    /**
      * Used to specify the RPC provider for bsc blockchain.
      */
     @ElementDefaultAttribute(
