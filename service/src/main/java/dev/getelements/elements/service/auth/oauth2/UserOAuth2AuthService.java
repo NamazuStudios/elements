@@ -47,11 +47,6 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
             userUidDao.tryDeleteUserUid(existingUid.get());
         }
 
-        // If a stale UID exists (user was deleted), relink it to the new user
-        if (oidcUid.isPresent()) {
-            userUidDao.tryDeleteUserUid(oidcUid.get());
-        }
-
         createNewUserUid(uid, scheme, user.getId());
 
         return user;
