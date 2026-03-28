@@ -58,7 +58,7 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
         userUid.setId(uid);
         userUid.setScheme(scheme);
 
-        userUidDao.createUserUid(userUid);
+        userUidDao.createUserUidStrict(userUid);
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
