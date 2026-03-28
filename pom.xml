@@ -135,6 +135,7 @@
         <module>common-mapstruct</module>
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
+        <module>email-element</module>
     </modules>
 
     <properties>
@@ -201,6 +202,8 @@
         <jsr.305.artifactId>jsr305</jsr.305.artifactId>
         <jsr.305.version>3.0.2</jsr.305.version>
         <mailjet.client.version>5.2.5</mailjet.client.version>
+        <jakarta.mail.version>2.1.3</jakarta.mail.version>
+        <angus.mail.version>2.0.3</angus.mail.version>
         <opencsv.version>5.7.1</opencsv.version>
         <android.publisher.services.version>v3-rev46-1.25.0</android.publisher.services.version>
         <kryo.version>2.21.1</kryo.version>
@@ -846,6 +849,16 @@
                 <groupId>com.mailjet</groupId>
                 <artifactId>mailjet-client</artifactId>
                 <version>${mailjet.client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.mail</groupId>
+                <artifactId>jakarta.mail-api</artifactId>
+                <version>${jakarta.mail.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>angus-mail</artifactId>
+                <version>${angus.mail.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.classgraph</groupId>

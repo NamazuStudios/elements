@@ -29,6 +29,11 @@
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-dao</artifactId>
         </dependency>
+        <dependency>
+            <groupId>jakarta.mail</groupId>
+            <artifactId>jakarta.mail-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>
