@@ -43,14 +43,7 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
 
         // Not yet linked — associate the external uid with the currently authenticated user.
         // Delete any stale UID entry first if one exists (e.g. the previous user was soft-deleted).
-        if (existingUid.isPresent()) {
-            userUidDao.tryDeleteUserUid(existingUid.get());
-        }
-
-        // If a stale UID exists (user was deleted), relink it to the new user
-        if (oidcUid.isPresent()) {
-            userUidDao.tryDeleteUserUid(oidcUid.get());
-        }
+        existingUid.ifPresent(userUidDao::tryDeleteUserUid);
 
         createNewUserUid(uid, scheme, user.getId());
 
@@ -63,7 +56,7 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
         userUid.setId(uid);
         userUid.setScheme(scheme);
 
-        userUidDao.createUserUid(userUid);
+        userUidDao.createUserUidStrict(userUid);
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
