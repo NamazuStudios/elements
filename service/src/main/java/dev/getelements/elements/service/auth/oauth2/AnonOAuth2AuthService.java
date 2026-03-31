@@ -43,10 +43,18 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
             return user;
         }
 
-        //No existing user was found, create a new one in the DB and assign the ref to any UIds made
+        // No existing user was found — insert a fresh document via createUserStrict.
+        // createUser uses an upsert-by-name/email pattern; with a nameless/emailless anonymous
+        // user it would match any existing document where name="" and return it, collapsing all
+        // anonymous logins onto the same user record.
         var user = new User();
         user.setLevel(USER);
-        user = getUserDao().createUser(user);
+        user = getUserDao().createUserStrict(user);
+
+        // If a stale UID exists (user was deleted), relink it to the new user
+        if (oidcUid.isPresent()) {
+            userUidDao.tryDeleteUserUid(oidcUid.get());
+        }
 
         createNewUserUid(uid, scheme, user.getId());
 

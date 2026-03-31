@@ -113,9 +113,9 @@ public class OAuth2AuthServiceOperations {
     private ResolvedRequest resolve(final OAuth2AuthScheme scheme,
                                     final OAuth2SessionRequest sessionRequest) {
 
-        final var clientParams = sessionRequest.getRequestParameters() == null ?
-                new HashMap<String, String>() :
-                sessionRequest.getRequestParameters();
+        final var clientParams = new HashMap<>(sessionRequest.getRequestParameters() == null ?
+                Map.of() :
+                sessionRequest.getRequestParameters());
 
         //Request headers are now deprecated - merging here for backwards compatibility
         if(sessionRequest.getRequestHeaders() != null) {
@@ -144,11 +144,9 @@ public class OAuth2AuthServiceOperations {
                 .findFirst()
                 .orElse(null);
 
-        if (userIdKv != null) {
+        if (userIdKv != null && userIdKv.isFromClient()) {
 
-            final var externalUserIdFromRequest = userIdKv.isFromClient()
-                    ? clientParams.get(userIdKv.getKey())
-                    : userIdKv.getValue();
+            final var externalUserIdFromRequest = clientParams.get(userIdKv.getKey());
 
             if (externalUserIdFromRequest == null || externalUserIdFromRequest.isBlank()) {
                 throw new AuthValidationException("Auth scheme requires a user id, but it was not provided for key: " + userIdKv.getKey());

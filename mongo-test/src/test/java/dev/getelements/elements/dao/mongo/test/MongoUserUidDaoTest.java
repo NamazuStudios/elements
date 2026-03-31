@@ -17,6 +17,7 @@ import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_NAME;
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoUserUidDaoTest {
@@ -166,6 +167,51 @@ public class MongoUserUidDaoTest {
 
     }
 
+    /**
+     * Verifies that {@link UserUidDao#getUserUid(String, String)} correctly distinguishes two different
+     * users that share the same scheme. If the compound-ID Morphia filter is broken (e.g. ignoring the
+     * id field), both lookups would return the same document and this test would fail.
+     */
+    @Test
+    public void testCompoundIdLookupDistinguishesTwoUsers() {
+
+        final String MULTI_USER_SCHEME = "CompoundIdTestScheme";
+
+        final var userB = new User();
+        final var userBName = "MongoUserUidDaoTestUserB_CompoundId";
+        userB.setName(userBName);
+        userB.setEmail(format("%s@example.com", userBName));
+        userB.setLevel(USER);
+        final var createdUserB = getUserDao().createUser(userB);
+
+        final var userC = new User();
+        final var userCName = "MongoUserUidDaoTestUserC_CompoundId";
+        userC.setName(userCName);
+        userC.setEmail(format("%s@example.com", userCName));
+        userC.setLevel(USER);
+        final var createdUserC = getUserDao().createUser(userC);
+
+        final var uidB = new UserUid();
+        uidB.setUserId(createdUserB.getId());
+        uidB.setId("external_bob");
+        uidB.setScheme(MULTI_USER_SCHEME);
+        getUserUidDao().createUserUid(uidB);
+
+        final var uidC = new UserUid();
+        uidC.setUserId(createdUserC.getId());
+        uidC.setId("external_carol");
+        uidC.setScheme(MULTI_USER_SCHEME);
+        getUserUidDao().createUserUid(uidC);
+
+        final var foundB = getUserUidDao().getUserUid("external_bob", MULTI_USER_SCHEME);
+        assertEquals(foundB.getUserId(), createdUserB.getId());
+        assertNotEquals(foundB.getUserId(), createdUserC.getId());
+
+        final var foundC = getUserUidDao().getUserUid("external_carol", MULTI_USER_SCHEME);
+        assertEquals(foundC.getUserId(), createdUserC.getId());
+        assertNotEquals(foundC.getUserId(), createdUserB.getId());
+    }
+
     @Test(dependsOnMethods = "testDeleteScheme")
     public void testSoftDeleteUser() {
 
@@ -205,5 +251,5 @@ public class MongoUserUidDaoTest {
     public void setUserTestFactory(UserTestFactory userTestFactory) {
         this.userTestFactory = userTestFactory;
     }
-    
+
 }
