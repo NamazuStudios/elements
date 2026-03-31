@@ -44,7 +44,7 @@ import dev.getelements.elements.service.blockchain.omni.SuperUserVaultService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserWalletService;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.email.EmailService;
-import dev.getelements.elements.sdk.service.email.MailSessionProvider;
+import dev.getelements.elements.service.email.MailSessionProvider;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;

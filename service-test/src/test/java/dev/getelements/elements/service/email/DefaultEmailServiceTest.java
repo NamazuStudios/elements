@@ -3,7 +3,7 @@ package dev.getelements.elements.service.email;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.sdk.service.email.MailSessionProvider;
+import dev.getelements.elements.service.email.MailSessionProvider;
 import jakarta.mail.internet.MimeMessage;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

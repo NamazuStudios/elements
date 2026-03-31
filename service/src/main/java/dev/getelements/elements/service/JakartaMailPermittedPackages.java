@@ -1,4 +1,6 @@
-package dev.getelements.elements.sdk;
+package dev.getelements.elements.service;
+
+import dev.getelements.elements.sdk.PermittedPackages;
 
 public class JakartaMailPermittedPackages implements PermittedPackages {
 

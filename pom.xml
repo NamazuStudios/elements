@@ -135,7 +135,6 @@
         <module>common-mapstruct</module>
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
-        <module>email-element</module>
     </modules>
 
     <properties>

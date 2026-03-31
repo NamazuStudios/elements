@@ -3,7 +3,6 @@ package dev.getelements.elements.service.email;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.service.email.EmailService;
-import dev.getelements.elements.sdk.service.email.MailSessionProvider;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.mail.Message;

@@ -34,7 +34,7 @@ import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleProgressService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
 import dev.getelements.elements.sdk.service.email.EmailService;
-import dev.getelements.elements.sdk.service.email.MailSessionProvider;
+import dev.getelements.elements.service.email.MailSessionProvider;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
