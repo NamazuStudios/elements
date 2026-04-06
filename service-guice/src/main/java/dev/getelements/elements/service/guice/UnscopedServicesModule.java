@@ -44,7 +44,7 @@ import dev.getelements.elements.service.blockchain.omni.SuperUserVaultService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserWalletService;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.email.EmailService;
-import dev.getelements.elements.service.email.MailSessionProvider;
+import jakarta.mail.Session;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
@@ -317,8 +317,8 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardNotificationService.class);
 
-        bind(MailSessionProvider.class)
-                .to(SmtpMailSessionProvider.class);
+        bind(Session.class)
+                .toProvider(SmtpMailSessionProvider.class);
 
         bind(EmailService.class)
                 .annotatedWith(named(UNSCOPED))

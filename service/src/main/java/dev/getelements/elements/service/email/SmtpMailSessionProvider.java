@@ -1,19 +1,17 @@
 package dev.getelements.elements.service.email;
 
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.service.email.EmailService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.mail.Authenticator;
 import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class SmtpMailSessionProvider implements MailSessionProvider {
-
-    private static final Logger logger = LoggerFactory.getLogger(SmtpMailSessionProvider.class);
+public class SmtpMailSessionProvider implements Provider<Session> {
 
     private String smtpHost;
     private String smtpPort;
@@ -23,9 +21,9 @@ public class SmtpMailSessionProvider implements MailSessionProvider {
 
     @Override
     public Session get() {
+
         if (smtpHost == null || smtpHost.isBlank()) {
-            logger.warn("Email disabled: SMTP_HOST is blank.");
-            return null;
+            throw new InvalidDataException("Email service is not configured (SMTP_HOST is blank).");
         }
 
         final var props = new Properties();

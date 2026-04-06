@@ -34,7 +34,7 @@ import dev.getelements.elements.sdk.service.mission.ScheduleEventService;
 import dev.getelements.elements.sdk.service.mission.ScheduleProgressService;
 import dev.getelements.elements.sdk.service.mission.ScheduleService;
 import dev.getelements.elements.sdk.service.email.EmailService;
-import dev.getelements.elements.service.email.MailSessionProvider;
+import jakarta.mail.Session;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
@@ -431,8 +431,8 @@ public class ScopedServicesModule extends AbstractModule {
         bind(NotificationService.class)
                 .to(StandardNotificationService.class);
 
-        bind(MailSessionProvider.class)
-                .to(SmtpMailSessionProvider.class);
+        bind(Session.class)
+                .toProvider(SmtpMailSessionProvider.class);
 
         bind(EmailService.class)
                 .to(DefaultEmailService.class);

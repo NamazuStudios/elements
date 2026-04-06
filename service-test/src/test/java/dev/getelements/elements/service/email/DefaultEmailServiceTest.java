@@ -3,7 +3,8 @@ package dev.getelements.elements.service.email;
 import com.icegreen.greenmail.util.GreenMail;
 import com.icegreen.greenmail.util.ServerSetup;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.service.email.MailSessionProvider;
+import jakarta.inject.Provider;
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -44,12 +45,13 @@ public class DefaultEmailServiceTest {
     // ---------- unit tests (no SMTP) ----------
 
     @Test
-    public void testSend_nullSession_throwsInvalidDataException() {
-        final var provider = mock(MailSessionProvider.class);
-        when(provider.get()).thenReturn(null);
+    @SuppressWarnings("unchecked")
+    public void testSend_providerThrows_propagatesException() {
+        final Provider<Session> provider = mock(Provider.class);
+        when(provider.get()).thenThrow(new InvalidDataException("Email service is not configured (SMTP_HOST is blank)."));
 
         final var service = new DefaultEmailService();
-        service.setMailSessionProvider(provider);
+        service.setSessionProvider(provider);
         service.setDefaultFrom(FROM);
 
         assertThrows(InvalidDataException.class,
@@ -111,7 +113,7 @@ public class DefaultEmailServiceTest {
         provider.setSmtpStarttls("false");
 
         final var service = new DefaultEmailService();
-        service.setMailSessionProvider(provider);
+        service.setSessionProvider(provider);
         service.setDefaultFrom(defaultFrom);
         return service;
     }

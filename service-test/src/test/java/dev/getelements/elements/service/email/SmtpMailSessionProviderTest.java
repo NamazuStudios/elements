@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.email;
 
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
@@ -17,13 +18,13 @@ public class SmtpMailSessionProviderTest {
     }
 
     @Test
-    public void testGet_blankHost_returnsNull() {
-        assertNull(provider("").get());
+    public void testGet_blankHost_throwsInvalidDataException() {
+        assertThrows(InvalidDataException.class, () -> provider("").get());
     }
 
     @Test
-    public void testGet_whitespaceHost_returnsNull() {
-        assertNull(provider("   ").get());
+    public void testGet_whitespaceHost_throwsInvalidDataException() {
+        assertThrows(InvalidDataException.class, () -> provider("   ").get());
     }
 
     @Test
