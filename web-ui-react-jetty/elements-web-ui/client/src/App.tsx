@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ResourceProvider, useResources } from "@/contexts/ResourceContext";
+import { PluginProvider } from "@/contexts/PluginContext";
 import LoginPage from "@/components/LoginPage";
 import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
@@ -23,6 +24,7 @@ import ElementDeployments from "@/pages/ElementDeployments";
 import Containers from "@/pages/Containers";
 import Runtimes from "@/pages/Runtimes";
 import ElmInspector from "@/pages/ElmInspector";
+import PluginPage from "@/pages/PluginPage";
 import NotFound from "@/pages/not-found";
 
 function ResourceRoute() {
@@ -133,6 +135,9 @@ function Routes() {
         <Route path="/resource/product-bundles">
           <ProductBundles />
         </Route>
+        <Route path="/plugin/:route">
+          <PluginPage />
+        </Route>
         <Route path="/resource/:resourceId">
           <ResourceRoute />
         </Route>
@@ -146,16 +151,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ResourceProvider>
-          <ThemeProvider defaultTheme="dark" storageKey="elements-admin-theme">
-            <TooltipProvider>
-              <Router base="/admin">
-                <Toaster />
-                <Routes />
-              </Router>
-            </TooltipProvider>
-          </ThemeProvider>
-        </ResourceProvider>
+        <PluginProvider>
+          <ResourceProvider>
+            <ThemeProvider defaultTheme="dark" storageKey="elements-admin-theme">
+              <TooltipProvider>
+                <Router base="/admin">
+                  <Toaster />
+                  <Routes />
+                </Router>
+              </TooltipProvider>
+            </ThemeProvider>
+          </ResourceProvider>
+        </PluginProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
