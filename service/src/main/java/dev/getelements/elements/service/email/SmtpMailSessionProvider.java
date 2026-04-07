@@ -14,9 +14,13 @@ import java.util.Properties;
 public class SmtpMailSessionProvider implements Provider<Session> {
 
     private String smtpHost;
+
     private String smtpPort;
+
     private String smtpUser;
+
     private String smtpPassword;
+
     private String smtpStarttls;
 
     @Override
@@ -32,14 +36,13 @@ public class SmtpMailSessionProvider implements Provider<Session> {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", smtpStarttls);
 
-        final var user = smtpUser;
-        final var password = smtpPassword;
-
         return Session.getInstance(props, new Authenticator() {
+
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(user, password);
+                return new PasswordAuthentication(smtpUser, smtpPassword);
             }
+
         });
     }
 

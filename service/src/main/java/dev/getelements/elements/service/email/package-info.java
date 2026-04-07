@@ -12,4 +12,8 @@
  * Inject {@code Provider<Session>} rather than {@code Session} directly if you need lazy
  * resolution (e.g. in code paths where email may not always be needed).
  */
+@ElementService(value = Session.class)
 package dev.getelements.elements.service.email;
+
+import dev.getelements.elements.sdk.annotation.ElementService;
+import jakarta.mail.Session;
