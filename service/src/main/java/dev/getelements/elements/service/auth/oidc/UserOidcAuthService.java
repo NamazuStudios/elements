@@ -37,7 +37,7 @@ public class UserOidcAuthService implements OidcAuthService {
         userUid.setId(uid);
         userUid.setScheme(scheme);
 
-        userUidDao.createUserUid(userUid);
+        userUidDao.createUserUidStrict(userUid);
     }
 
     private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {

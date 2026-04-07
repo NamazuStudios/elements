@@ -37,7 +37,7 @@ public class AnonOidcAuthService implements OidcAuthService {
         userUid.setId(uid);
         userUid.setScheme(scheme);
 
-        userUidDao.createUserUid(userUid);
+        userUidDao.createUserUidStrict(userUid);
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
@@ -100,9 +100,18 @@ public class AnonOidcAuthService implements OidcAuthService {
 
         user = getUserDao().createUserStrict(user);
 
+        // If a stale OIDC UID exists (user was deleted), delete it before relinking
+        if (oidcUid.isPresent()) {
+            userUidDao.tryDeleteUserUid(oidcUid.get());
+        }
+
         createNewUserUid(uid, scheme.getName(), user.getId());
 
         if (emailVerified && email != null && !email.isEmpty()) {
+            // If a stale email UID exists (user was deleted), delete it before relinking
+            if (emailUid.isPresent()) {
+                userUidDao.tryDeleteUserUid(emailUid.get());
+            }
             createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
         }
 
