@@ -43,9 +43,7 @@ public class UserOAuth2AuthService implements OAuth2AuthService {
 
         // Not yet linked — associate the external uid with the currently authenticated user.
         // Delete any stale UID entry first if one exists (e.g. the previous user was soft-deleted).
-        if (existingUid.isPresent()) {
-            userUidDao.tryDeleteUserUid(existingUid.get());
-        }
+        existingUid.ifPresent(userUidDao::tryDeleteUserUid);
 
         createNewUserUid(uid, scheme, user.getId());
 

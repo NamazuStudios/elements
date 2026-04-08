@@ -43,6 +43,8 @@ import dev.getelements.elements.service.blockchain.omni.SuperUserSmartContractSe
 import dev.getelements.elements.service.blockchain.omni.SuperUserVaultService;
 import dev.getelements.elements.service.blockchain.omni.SuperUserWalletService;
 import dev.getelements.elements.sdk.service.name.NameService;
+import dev.getelements.elements.sdk.service.email.EmailService;
+import jakarta.mail.Session;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.profile.ProfileOverrideService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
@@ -73,6 +75,8 @@ import dev.getelements.elements.service.match.SuperuserMultiMatchService;
 import dev.getelements.elements.service.metadata.SuperUserMetadataService;
 import dev.getelements.elements.service.mission.*;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
+import dev.getelements.elements.service.email.DefaultEmailService;
+import dev.getelements.elements.service.email.SmtpMailSessionProvider;
 import dev.getelements.elements.service.notification.StandardNotificationService;
 import dev.getelements.elements.service.notification.SuperUserFCMRegistrationService;
 import dev.getelements.elements.service.profile.SuperUserProfileOverrideService;
@@ -312,6 +316,13 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(NotificationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardNotificationService.class);
+
+        bind(Session.class)
+                .toProvider(SmtpMailSessionProvider.class);
+
+        bind(EmailService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(DefaultEmailService.class);
 
         bind(ElementStatusService.class)
                 .annotatedWith(named(UNSCOPED))

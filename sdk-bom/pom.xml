@@ -147,6 +147,21 @@
                 <scope>provided</scope>
             </dependency>
 
+            <!-- Jakarta Mail -->
+
+            <dependency>
+                <groupId>jakarta.mail</groupId>
+                <artifactId>jakarta.mail-api</artifactId>
+                <version>${jakarta.mail.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>angus-mail</artifactId>
+                <version>${angus.mail.version}</version>
+            </dependency>
+
             <!-- Builtin Library Support -->
 
             <dependency>
