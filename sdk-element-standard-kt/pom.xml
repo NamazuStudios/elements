@@ -7,11 +7,11 @@
   <parent>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
-    <version>3.7.28-SNAPSHOT</version>
+    <version>3.7.28</version>
   </parent>
 
   <artifactId>sdk-element-standard-kt</artifactId>
-  <version>3.7.28-SNAPSHOT</version>
+  <version>3.7.28</version>
   <packaging>maven-archetype</packaging>
 
   <name>Standard Element Archetype (Kotlin Version)</name>
