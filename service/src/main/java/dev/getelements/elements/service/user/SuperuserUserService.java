@@ -1,5 +1,7 @@
 package dev.getelements.elements.service.user;
 
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -12,6 +14,8 @@ import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
+
+import static dev.getelements.elements.sdk.service.user.UserService.*;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
@@ -76,6 +80,11 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
         final var created = getUserDao().createUserWithPasswordStrict(user, password);
 
+        getElementRegistry().publish(Event.builder()
+                .argument(created)
+                .named(USER_CREATED_EVENT)
+                .build());
+
         final var response = getMapper().map(created, UserCreateResponse.class);
         response.setPassword(password);
 
@@ -107,9 +116,16 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
         final String password = nullToEmpty(userUpdateRequest.getPassword()).trim();
 
-        return isNullOrEmpty(password) ?
+        final var updated = isNullOrEmpty(password) ?
             getUserDao().updateUser(user) :
             getUserDao().updateUser(user, password);
+
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(USER_UPDATED_EVENT)
+                .build());
+
+        return updated;
 
     }
 
@@ -122,7 +138,12 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     @Override
     public void deleteUser(String userId) {
+        final var user = getUserDao().getUser(userId);
         getUserDao().softDeleteUser(userId);
+        getElementRegistry().publish(Event.builder()
+                .argument(user)
+                .named(USER_DELETED_EVENT)
+                .build());
     }
 
     public MapperRegistry getMapper() {

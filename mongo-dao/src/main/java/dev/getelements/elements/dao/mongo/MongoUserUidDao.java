@@ -12,6 +12,7 @@ import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -177,6 +178,15 @@ public class MongoUserUidDao implements UserUidDao {
 
         return count == 1;
 
+    }
+
+    @Override
+    public UserUid updateVerificationStatus(final String id, final String scheme, final VerificationStatus status) {
+        getDatastore().find(MongoUserUid.class)
+                .filter(eq("_id", new MongoUserUidScheme(scheme, id)))
+                .update(set("verificationStatus", status))
+                .execute();
+        return getUserUid(id, scheme);
     }
 
     @Override

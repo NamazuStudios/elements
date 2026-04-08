@@ -87,7 +87,9 @@ import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentServic
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
+import dev.getelements.elements.service.user.SuperUserEmailVerificationService;
 import dev.getelements.elements.service.user.SuperuserUserService;
+import dev.getelements.elements.sdk.service.user.EmailVerificationService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 
@@ -351,6 +353,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(ProductSkuSchemaService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperuserProductSkuSchemaService.class);
+
+        bind(EmailVerificationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserEmailVerificationService.class);
 
         bind(ProductSkuSchemaSeeder.class).asEagerSingleton();
 
