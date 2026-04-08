@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import dev.getelements.elements.sdk.service.version.VersionService;
+import jakarta.inject.Provider;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import dev.getelements.elements.sdk.util.security.AuthorizationHeader;
 import io.swagger.util.Json;
@@ -42,7 +43,7 @@ public class CodegenResource extends BaseOpenApiResource {
 
     private static final TemporaryFiles temporaryFiles = new TemporaryFiles(CodegenResource.class);
 
-    private CodegenService codegenService;
+    private Provider<CodegenService> codegenServiceProvider;
 
     private ValidationHelper validationHelper;
 
@@ -97,9 +98,10 @@ public class CodegenResource extends BaseOpenApiResource {
 
     private File generateElementSpecFile(final File path, final String elementSpecUrl) throws JsonProcessingException {
 
-        //For some reason the JSON has issues when doing this conversion
+        // Fetch as YAML; convert a .json extension to .yaml (case-insensitive, end of URL only)
+        final var yamlUrl = elementSpecUrl.replaceAll("(?i)\\.json$", ".yaml");
         final var yaml = this.getClient()
-                .target(elementSpecUrl.toLowerCase().replace(".json", ".yaml"))
+                .target(yamlUrl)
                 .request(new String[]{"application/yaml"})
                 .get(String.class);
 
@@ -154,7 +156,7 @@ public class CodegenResource extends BaseOpenApiResource {
 
     private File getFileForRequest(final CodegenRequest request, final File specFile) {
 
-        return getCodegenService().generateCore(specFile, request.language, request.packageName, request.options);
+        return getCodegenServiceProvider().get().generateCore(specFile, request.language, request.packageName, request.options);
     }
 
     private void addSecuritySchemes(final OpenAPI openApi) {
@@ -207,13 +209,13 @@ public class CodegenResource extends BaseOpenApiResource {
 
     }
 
-    public CodegenService getCodegenService() {
-        return codegenService;
+    public Provider<CodegenService> getCodegenServiceProvider() {
+        return codegenServiceProvider;
     }
 
     @Inject
-    public void setCodegenService(CodegenService codegenService) {
-        this.codegenService = codegenService;
+    public void setCodegenServiceProvider(Provider<CodegenService> codegenServiceProvider) {
+        this.codegenServiceProvider = codegenServiceProvider;
     }
 
     public ValidationHelper getValidationHelper() {
