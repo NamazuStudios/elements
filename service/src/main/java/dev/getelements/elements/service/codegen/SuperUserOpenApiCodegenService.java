@@ -25,7 +25,6 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
         try {
             final var generator = new DefaultGenerator();
             final var configurator = new CodegenConfigurator();
-            final var additionalOptions = options.split(",");
 
             configurator.setInputSpec(spec.getAbsolutePath());
             configurator.setOutputDir(path.toString());
@@ -33,13 +32,17 @@ public class SuperUserOpenApiCodegenService implements CodegenService {
             configurator.setPackageName(packageName);
             configurator.setValidateSpec(false);
 
-            //Parse out the args, with a check to make sure an empty option value wasn't passed through
-            for (final var option : additionalOptions) {
+            if(options != null) {
+                //Parse out the args, with a check to make sure an empty option value wasn't passed through
+                final var additionalOptions = options.split(",");
 
-                final var kvp = option.split("=");
+                for (final var option : additionalOptions) {
 
-                if(kvp.length == 2) {
-                    configurator.addAdditionalProperty(kvp[0], kvp[1]);
+                    final var kvp = option.split("=");
+
+                    if(kvp.length == 2) {
+                        configurator.addAdditionalProperty(kvp[0], kvp[1]);
+                    }
                 }
             }
 
