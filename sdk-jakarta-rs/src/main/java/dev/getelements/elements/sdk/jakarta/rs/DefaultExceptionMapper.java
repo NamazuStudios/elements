@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -74,6 +75,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             return Response.status(getStatusForCode(ex.getCode()))
                 .entity(errorResponse)
+                .type(MediaType.APPLICATION_JSON)
                 .build();
 
         } catch (ConstraintViolationException ex) {
@@ -93,6 +95,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(errorResponse)
+                .type(MediaType.APPLICATION_JSON)
                 .build();
 
         } catch (UnhealthyException ex) {
@@ -106,6 +109,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             return Response.status(getStatusForCode(ex.getCode()))
                 .entity(errorResponse)
+                .type(MediaType.APPLICATION_JSON)
                 .build();
 
         } catch (UnauthorizedException ex) {
@@ -120,6 +124,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             return Response.status(getStatusForCode(ex.getCode()))
                     .entity(errorResponse)
                     .header(WWW_AUTHENTICATE, BEARER)
+                    .type(MediaType.APPLICATION_JSON)
                     .build();
 
         } catch (BaseException ex) {
@@ -133,6 +138,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             return Response.status(getStatusForCode(ex.getCode()))
                            .entity(errorResponse)
+                           .type(MediaType.APPLICATION_JSON)
                            .build();
 
         } catch (WebApplicationException wex) {
@@ -149,6 +155,14 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
         } catch (Exception ex) {
 
+            // Walk the cause chain: if a known BaseException is wrapped (e.g. by a Guice
+            // ProvisionException), re-dispatch it so the proper status code is returned.
+            for (Throwable cause = ex.getCause(); cause != null; cause = cause.getCause()) {
+                if (cause instanceof BaseException) {
+                    return toResponse((Exception) cause);
+                }
+            }
+
             final ErrorResponse errorResponse = new ErrorResponse();
 
             LOG.warn("Caught unknown exception while processing request.", ex);
@@ -158,6 +172,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                            .entity(errorResponse)
+                           .type(MediaType.APPLICATION_JSON)
                            .build();
 
         }
