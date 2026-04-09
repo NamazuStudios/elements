@@ -1,6 +1,5 @@
 package dev.getelements.elements.service.user;
 
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.user.EmailVerificationService;
 import jakarta.inject.Inject;
@@ -9,6 +8,8 @@ import jakarta.inject.Provider;
 public class EmailVerificationServiceProvider implements Provider<EmailVerificationService> {
 
     private User user;
+
+    private Provider<AnonEmailVerificationService> anonServiceProvider;
 
     private Provider<UserEmailVerificationService> userServiceProvider;
 
@@ -22,7 +23,7 @@ public class EmailVerificationServiceProvider implements Provider<EmailVerificat
             case SUPERUSER:
                 return getSuperUserServiceProvider().get();
             default:
-                throw new ForbiddenException("Anonymous users may not initiate email verification.");
+                return getAnonServiceProvider().get();
         }
     }
 
@@ -33,6 +34,15 @@ public class EmailVerificationServiceProvider implements Provider<EmailVerificat
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Provider<AnonEmailVerificationService> getAnonServiceProvider() {
+        return anonServiceProvider;
+    }
+
+    @Inject
+    public void setAnonServiceProvider(Provider<AnonEmailVerificationService> anonServiceProvider) {
+        this.anonServiceProvider = anonServiceProvider;
     }
 
     public Provider<UserEmailVerificationService> getUserServiceProvider() {

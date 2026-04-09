@@ -131,6 +131,7 @@ import dev.getelements.elements.service.system.ElementDeploymentServiceProvider;
 import dev.getelements.elements.service.system.ElementInspectorServiceProvider;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
+import dev.getelements.elements.service.user.AnonEmailVerificationService;
 import dev.getelements.elements.service.user.AnonUserService;
 import dev.getelements.elements.service.user.EmailVerificationServiceProvider;
 import dev.getelements.elements.service.user.SuperUserEmailVerificationService;
@@ -520,6 +521,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(UserService.class)
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonUserService.class);
+
+        bind(EmailVerificationService.class)
+                .annotatedWith(named(ANONYMOUS))
+                .to(AnonEmailVerificationService.class);
 
         bind(UsernamePasswordAuthService.class)
                 .annotatedWith(named(ANONYMOUS))
