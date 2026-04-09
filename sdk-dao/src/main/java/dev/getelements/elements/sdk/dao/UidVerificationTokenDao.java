@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.user.UidVerificationToken;
 import dev.getelements.elements.sdk.model.user.User;
 
@@ -9,6 +10,7 @@ import java.util.Optional;
 /**
  * DAO for single-use email verification tokens used in the UserUid verification flow.
  */
+@ElementServiceExport
 public interface UidVerificationTokenDao {
 
     /**
