@@ -14,6 +14,7 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_EMAIL;
@@ -137,14 +138,16 @@ public class EmailVerificationApiTest {
     }
 
     /**
-     * Authenticated request with a valid email but no SMTP configured → 400 (InvalidDataException).
-     * This confirms the endpoint is reachable by the authenticated user and that the authorization
-     * check passes; the email-sending failure is the only thing preventing a full success.
+     * Authenticated request with a fresh (never-verified) email but no SMTP configured → 400
+     * (InvalidDataException).  We use a freshly-generated address rather than the user's main email
+     * because other tests in this class may already have set the main email to VERIFIED (which would
+     * trigger an early-return 200 instead of reaching the SMTP path).
      */
     @Test
     public void requestVerification_authenticated_withoutSmtp_returns400() {
+        final var freshEmail = "smtp-test-" + UUID.randomUUID() + "@test.example.com";
         final var request = new EmailVerificationRequest();
-        request.setEmail(clientContext.getUser().getEmail());
+        request.setEmail(freshEmail);
 
         final Response response = client
                 .target(apiRoot + "/user/me/email/verify")

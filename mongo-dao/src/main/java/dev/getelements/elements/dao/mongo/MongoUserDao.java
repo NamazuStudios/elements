@@ -600,7 +600,7 @@ public class MongoUserDao implements UserDao {
 
         getValidationHelper().validateModel(user);
 
-        user.setEmail(nullToEmpty(user.getEmail()).trim());
+        user.setEmail(nullToEmpty(user.getEmail()).trim().toLowerCase());
         user.setName(nullToEmpty(user.getName()).trim());
 
     }
@@ -616,7 +616,7 @@ public class MongoUserDao implements UserDao {
             query.filter(
                 or(
                     eq("name", userNameOrEmail),
-                    eq("email", userNameOrEmail)
+                    eq("email", userNameOrEmail.trim().toLowerCase())
                 )
             );
         }

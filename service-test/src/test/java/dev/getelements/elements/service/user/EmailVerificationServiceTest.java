@@ -53,12 +53,13 @@ public class EmailVerificationServiceTest {
     // ---------- UserEmailVerificationService: requestVerification ----------
 
     /**
-     * Happy path: UID belongs to the current user → email sent, status set to PENDING, event published.
+     * Happy path: UID already exists and belongs to the current user → email sent, status set to
+     * PENDING, event published.
      */
     @Test
     public void requestVerification_ownEmail_movesPendingAndSendsEmail() {
-        when(userUidDao.getUserUid(EMAIL, SCHEME_EMAIL))
-                .thenReturn(uidFor(EMAIL, SCHEME_EMAIL, CURRENT_USER_ID));
+        when(userUidDao.findUserUid(EMAIL, SCHEME_EMAIL))
+                .thenReturn(Optional.of(uidFor(EMAIL, SCHEME_EMAIL, CURRENT_USER_ID)));
         when(tokenDao.createToken(any(), eq(SCHEME_EMAIL), eq(EMAIL), any(Timestamp.class)))
                 .thenReturn(TEST_TOKEN);
         when(userUidDao.updateVerificationStatus(EMAIL, SCHEME_EMAIL, VerificationStatus.PENDING))
@@ -74,12 +75,87 @@ public class EmailVerificationServiceTest {
     }
 
     /**
+     * Email UID is already VERIFIED (e.g. set by OIDC login) → return it unchanged; no email sent,
+     * no status regression to PENDING.
+     */
+    @Test
+    public void requestVerification_alreadyVerified_returnsEarlyNoEmail() {
+        final var verifiedUid = uidForWithStatus(EMAIL, SCHEME_EMAIL, CURRENT_USER_ID, VerificationStatus.VERIFIED);
+        when(userUidDao.findUserUid(EMAIL, SCHEME_EMAIL)).thenReturn(Optional.of(verifiedUid));
+
+        final var result = userService.requestVerification(EMAIL, BASE_URL);
+
+        assertEquals(result.getVerificationStatus(), VerificationStatus.VERIFIED);
+        verify(emailService, never()).send(any(), any(), any(), any(), anyBoolean());
+        verify(userUidDao, never()).updateVerificationStatus(any(), any(), any());
+        verify(elementRegistry, never()).publish(any());
+    }
+
+    /**
+     * Email UID does not exist yet → UID created with UNVERIFIED status, then email sent and
+     * status advanced to PENDING.  Two events are published: USER_UID_CREATED and
+     * EMAIL_VERIFICATION_REQUESTED.
+     */
+    @Test
+    public void requestVerification_newEmail_createsUidThenMovesToPending() {
+        when(userUidDao.findUserUid(EMAIL, SCHEME_EMAIL)).thenReturn(Optional.empty());
+        when(userUidDao.createUserUidStrict(any())).then(i -> i.getArgument(0));
+        when(tokenDao.createToken(any(), eq(SCHEME_EMAIL), eq(EMAIL), any(Timestamp.class)))
+                .thenReturn(TEST_TOKEN);
+        when(userUidDao.updateVerificationStatus(EMAIL, SCHEME_EMAIL, VerificationStatus.PENDING))
+                .thenReturn(uidWithStatus(VerificationStatus.PENDING));
+
+        final var result = userService.requestVerification(EMAIL, BASE_URL);
+
+        assertEquals(result.getVerificationStatus(), VerificationStatus.PENDING);
+
+        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
+        verify(userUidDao).createUserUidStrict(uidCaptor.capture());
+        final var created = uidCaptor.getValue();
+        assertEquals(created.getId(), EMAIL);
+        assertEquals(created.getScheme(), SCHEME_EMAIL);
+        assertEquals(created.getUserId(), CURRENT_USER_ID);
+        assertEquals(created.getVerificationStatus(), VerificationStatus.UNVERIFIED);
+
+        verify(emailService).send(isNull(), eq(EMAIL), eq(SUBJECT), anyString(), eq(true));
+
+        final var eventCaptor = ArgumentCaptor.forClass(Event.class);
+        verify(elementRegistry, times(2)).publish(eventCaptor.capture());
+        final var eventNames = eventCaptor.getAllValues().stream()
+                .map(Event::getEventName)
+                .toList();
+        assertTrue(eventNames.contains(UserUid.USER_UID_CREATED_EVENT));
+        assertTrue(eventNames.contains(EMAIL_VERIFICATION_REQUESTED_EVENT));
+    }
+
+    /**
+     * Email supplied with mixed case and leading/trailing whitespace → normalized to lowercase
+     * before lookup and UID creation, so it matches the canonical stored form.
+     */
+    @Test
+    public void requestVerification_emailNormalized() {
+        // Stored as canonical lowercase
+        when(userUidDao.findUserUid("foo@example.com", SCHEME_EMAIL))
+                .thenReturn(Optional.of(uidFor("foo@example.com", SCHEME_EMAIL, CURRENT_USER_ID)));
+        when(tokenDao.createToken(any(), eq(SCHEME_EMAIL), eq("foo@example.com"), any(Timestamp.class)))
+                .thenReturn(TEST_TOKEN);
+        when(userUidDao.updateVerificationStatus("foo@example.com", SCHEME_EMAIL, VerificationStatus.PENDING))
+                .thenReturn(uidWithStatus(VerificationStatus.PENDING));
+
+        // Caller supplies mixed-case with whitespace
+        userService.requestVerification("  FOO@EXAMPLE.COM  ", BASE_URL);
+
+        verify(userUidDao).findUserUid("foo@example.com", SCHEME_EMAIL);
+        verify(emailService).send(isNull(), eq("foo@example.com"), eq(SUBJECT), anyString(), eq(true));
+    }
+
+    /**
      * UID belongs to a different user → ForbiddenException; no email sent.
      */
     @Test(expectedExceptions = ForbiddenException.class)
     public void requestVerification_otherUsersEmail_throwsForbidden() {
-        when(userUidDao.getUserUid(EMAIL, SCHEME_EMAIL))
-                .thenReturn(uidFor(EMAIL, SCHEME_EMAIL, OTHER_USER_ID));
+        when(userUidDao.findUserUid(EMAIL, SCHEME_EMAIL))
+                .thenReturn(Optional.of(uidFor(EMAIL, SCHEME_EMAIL, OTHER_USER_ID)));
 
         userService.requestVerification(EMAIL, BASE_URL);
 
@@ -91,8 +167,8 @@ public class EmailVerificationServiceTest {
      */
     @Test
     public void requestVerification_templateLinkSubstituted() {
-        when(userUidDao.getUserUid(EMAIL, SCHEME_EMAIL))
-                .thenReturn(uidFor(EMAIL, SCHEME_EMAIL, CURRENT_USER_ID));
+        when(userUidDao.findUserUid(EMAIL, SCHEME_EMAIL))
+                .thenReturn(Optional.of(uidFor(EMAIL, SCHEME_EMAIL, CURRENT_USER_ID)));
         when(tokenDao.createToken(any(), eq(SCHEME_EMAIL), eq(EMAIL), any(Timestamp.class)))
                 .thenReturn(TEST_TOKEN);
         when(userUidDao.updateVerificationStatus(EMAIL, SCHEME_EMAIL, VerificationStatus.PENDING))
@@ -176,10 +252,16 @@ public class EmailVerificationServiceTest {
     // ---------- helpers ----------
 
     private static UserUid uidFor(final String id, final String scheme, final String userId) {
+        return uidForWithStatus(id, scheme, userId, null);
+    }
+
+    private static UserUid uidForWithStatus(final String id, final String scheme,
+                                             final String userId, final VerificationStatus status) {
         final var uid = new UserUid();
         uid.setId(id);
         uid.setScheme(scheme);
         uid.setUserId(userId);
+        uid.setVerificationStatus(status);
         return uid;
     }
 
