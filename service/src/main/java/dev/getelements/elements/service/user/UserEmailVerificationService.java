@@ -24,9 +24,9 @@ public class UserEmailVerificationService extends AbstractEmailVerificationServi
             if (!getCurrentUser().getId().equals(uid.getUserId())) {
                 throw new ForbiddenException("The specified email address is already linked to a different account.");
             }
-            if (VerificationStatus.VERIFIED.equals(uid.getVerificationStatus())) {
-                return uid;
-            }
+            // No early-return for VERIFIED: if the caller explicitly requests verification (e.g. to
+            // set up email+password auth after OIDC sign-up), they must go through our own email
+            // flow even if the UID was already marked VERIFIED by an OIDC provider.
         } else {
             final var newUid = new UserUid();
             newUid.setId(normalizedEmail);

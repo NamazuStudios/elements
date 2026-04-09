@@ -75,20 +75,28 @@ public class EmailVerificationServiceTest {
     }
 
     /**
-     * Email UID is already VERIFIED (e.g. set by OIDC login) → return it unchanged; no email sent,
-     * no status regression to PENDING.
+     * Email UID is already VERIFIED (e.g. set by OIDC login) → verification is still triggered.
+     * This ensures a user who signed up via OIDC must go through our own email flow before they
+     * can complete an email+password link, even though the OIDC provider already verified the
+     * address.  No early-return; status transitions VERIFIED → PENDING.
      */
     @Test
-    public void requestVerification_alreadyVerified_returnsEarlyNoEmail() {
+    public void requestVerification_alreadyVerified_reVerifiesViaEmail() {
         final var verifiedUid = uidForWithStatus(EMAIL, SCHEME_EMAIL, CURRENT_USER_ID, VerificationStatus.VERIFIED);
         when(userUidDao.findUserUid(EMAIL, SCHEME_EMAIL)).thenReturn(Optional.of(verifiedUid));
+        when(tokenDao.createToken(any(), eq(SCHEME_EMAIL), eq(EMAIL), any(Timestamp.class)))
+                .thenReturn(TEST_TOKEN);
+        when(userUidDao.updateVerificationStatus(EMAIL, SCHEME_EMAIL, VerificationStatus.PENDING))
+                .thenReturn(uidWithStatus(VerificationStatus.PENDING));
 
         final var result = userService.requestVerification(EMAIL, BASE_URL);
 
-        assertEquals(result.getVerificationStatus(), VerificationStatus.VERIFIED);
-        verify(emailService, never()).send(any(), any(), any(), any(), anyBoolean());
-        verify(userUidDao, never()).updateVerificationStatus(any(), any(), any());
-        verify(elementRegistry, never()).publish(any());
+        assertEquals(result.getVerificationStatus(), VerificationStatus.PENDING);
+        verify(emailService).send(isNull(), eq(EMAIL), eq(SUBJECT), anyString(), eq(true));
+        verify(userUidDao).updateVerificationStatus(EMAIL, SCHEME_EMAIL, VerificationStatus.PENDING);
+        final var eventCaptor = ArgumentCaptor.forClass(Event.class);
+        verify(elementRegistry).publish(eventCaptor.capture());
+        assertEquals(eventCaptor.getValue().getEventName(), EMAIL_VERIFICATION_REQUESTED_EVENT);
     }
 
     /**
