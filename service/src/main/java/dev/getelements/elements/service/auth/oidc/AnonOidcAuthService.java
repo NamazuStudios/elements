@@ -1,6 +1,8 @@
 package dev.getelements.elements.service.auth.oidc;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
@@ -8,12 +10,14 @@ import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
+import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
 public class AnonOidcAuthService implements OidcAuthService {
 
@@ -22,6 +26,8 @@ public class AnonOidcAuthService implements OidcAuthService {
     private UserUidDao userUidDao;
 
     private OidcAuthServiceOperations oidcAuthServiceOperations;
+
+    private ElementRegistry elementRegistry;
 
     @Override
     public SessionCreation createSession(OidcSessionRequest oidcSessionRequest) {
@@ -36,8 +42,13 @@ public class AnonOidcAuthService implements OidcAuthService {
         userUid.setUserId(userId);
         userUid.setId(uid);
         userUid.setScheme(scheme);
+        userUid.setVerificationStatus(VerificationStatus.VERIFIED);
 
-        userUidDao.createUserUidStrict(userUid);
+        final var created = userUidDao.createUserUidStrict(userUid);
+        getElementRegistry().publish(Event.builder()
+                .argument(created)
+                .named(USER_UID_CREATED_EVENT)
+                .build());
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
@@ -144,6 +155,15 @@ public class AnonOidcAuthService implements OidcAuthService {
     @Inject
     public void setUserUidDao(UserUidDao userUidDao) {
         this.userUidDao = userUidDao;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 
 }

@@ -1,6 +1,8 @@
 package dev.getelements.elements.service.user;
 
 import com.google.common.collect.Lists;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -15,6 +17,7 @@ import jakarta.inject.Named;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
+import static dev.getelements.elements.sdk.service.user.UserService.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -78,7 +81,14 @@ public class UserUserService extends AnonUserService implements UserService {
         user.setFirstName(userUpdateRequest.getFirstName());
         user.setLastName(userUpdateRequest.getLastName());
 
-        return getUserDao().updateUser(user);
+        final var updated = getUserDao().updateUser(user);
+
+        getElementRegistry().publish(Event.builder()
+                .argument(updated)
+                .named(USER_UPDATED_EVENT)
+                .build());
+
+        return updated;
 
     }
 
@@ -103,6 +113,12 @@ public class UserUserService extends AnonUserService implements UserService {
         session.setApplication(profile.map(p -> p.getApplication()).orElse(null));
 
         getUserDao().updateUser(user, newPassword, oldPassword);
+
+        getElementRegistry().publish(Event.builder()
+                .argument(user)
+                .named(USER_UPDATED_EVENT)
+                .build());
+
         return getSessionDao().create(session);
 
     }
@@ -111,7 +127,12 @@ public class UserUserService extends AnonUserService implements UserService {
     public void deleteUser(String userId) {
         // The user can only delete his or her own account.
         checkForCurrentUser(userId);
+        final var user = getUserDao().getUser(userId);
         getUserDao().softDeleteUser(userId);
+        getElementRegistry().publish(Event.builder()
+                .argument(user)
+                .named(USER_DELETED_EVENT)
+                .build());
     }
 
     public SessionDao getSessionDao() {

@@ -13,6 +13,7 @@ import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oauth2.AnonOAuth2AuthService;
 import dev.getelements.elements.service.auth.oauth2.OAuth2AuthServiceRequestInvoker;
@@ -54,6 +55,7 @@ public class AnonOAuth2AuthServiceTest {
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
         final var responseNode = MAPPER.createObjectNode();
         responseNode.put("is_valid", true);
         when(invoker.execute(any(), any(ResolvedRequest.class)))
@@ -199,6 +201,7 @@ public class AnonOAuth2AuthServiceTest {
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));
             bind(Client.class).toInstance(mock(Client.class));
             bind(OAuth2AuthServiceRequestInvoker.class).toInstance(mock(OAuth2AuthServiceRequestInvoker.class));
+            bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(Names.named(SESSION_TIMEOUT_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }

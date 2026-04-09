@@ -3,6 +3,7 @@ package dev.getelements.elements.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.inject.AbstractModule;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.auth.JWK;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
@@ -84,6 +85,7 @@ public class OidcAccountLinkingTest {
     @BeforeMethod
     public void resetMocks() {
         reset(sessionDao, userDao, userUidDao);
+        when(userUidDao.createUserUid(any(UserUid.class))).then(i -> i.getArgument(0));
         when(sessionDao.create(any())).then(i -> {
             final var sc = new SessionCreation();
             sc.setSession(i.getArgument(0));
@@ -265,6 +267,7 @@ public class OidcAccountLinkingTest {
             bind(OidcAuthSchemeDao.class)  .toInstance(mock(OidcAuthSchemeDao.class));
             bind(CryptoKeyPairUtility.class).toInstance(mock(CryptoKeyPairUtility.class));
             bind(OidcAuthSchemeService.class).toInstance(mock(OidcAuthSchemeService.class));
+            bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
 
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
             bind(long.class)  .annotatedWith(named(SESSION_TIMEOUT_SECONDS)).toInstance(300L);
