@@ -14,6 +14,7 @@ import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oauth2.OAuth2AuthServiceRequestInvoker;
 import dev.getelements.elements.service.auth.oauth2.ParsedResponse;
@@ -55,6 +56,7 @@ public class UserOAuth2AuthServiceTest {
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
         when(invoker.execute(any(), any(ResolvedRequest.class)))
                 .thenReturn(new ParsedResponse(200, "{}", MAPPER.createObjectNode()));
     }
@@ -214,6 +216,7 @@ public class UserOAuth2AuthServiceTest {
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));
             bind(Client.class).toInstance(mock(Client.class));
             bind(OAuth2AuthServiceRequestInvoker.class).toInstance(mock(OAuth2AuthServiceRequestInvoker.class));
+            bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(Names.named(SESSION_TIMEOUT_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
