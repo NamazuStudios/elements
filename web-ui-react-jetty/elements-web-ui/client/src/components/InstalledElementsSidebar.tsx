@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import * as Icons from 'lucide-react';
+import { usePlugins } from '@/contexts/PluginContext';
 
 interface InstalledElementsSidebarProps {
   location: string;
@@ -15,6 +16,8 @@ interface InstalledElementsSidebarProps {
 }
 
 export function InstalledElementsSidebar({ location, setLocation }: InstalledElementsSidebarProps) {
+  const { plugins, isLoading: pluginsLoading } = usePlugins();
+
   return (
     <>
     <Collapsible defaultOpen className="group/collapsible">
@@ -125,6 +128,46 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
         </CollapsibleContent>
       </SidebarGroup>
     </Collapsible>
+
+    {pluginsLoading && (
+      <div className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
+        <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        Discovering plugins...
+      </div>
+    )}
+
+    {plugins.length > 0 && (
+      <Collapsible defaultOpen className="group/collapsible-plugins">
+        <SidebarGroup>
+          <SidebarGroupLabel asChild>
+            <CollapsibleTrigger className="text-xs uppercase tracking-wider hover-elevate">
+              Element Plugins
+              <Icons.ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible-plugins:rotate-180" />
+            </CollapsibleTrigger>
+          </SidebarGroupLabel>
+          <CollapsibleContent>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {plugins.map(plugin => {
+                  const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+                  return (
+                    <SidebarMenuItem key={plugin.route}>
+                      <SidebarMenuButton
+                        onClick={() => setLocation(`/plugin/${plugin.route}`)}
+                        isActive={location.startsWith(`/plugin/${plugin.route}`)}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        <span>{plugin.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </SidebarGroup>
+      </Collapsible>
+    )}
     </>
   );
 }

@@ -406,11 +406,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const authEndpoints = ['/api/rest/auth/oauth2', '/api/rest/auth/oidc', '/api/rest/session', '/api/rest/signup'];
       const isAuthEndpoint = req.method === 'POST' && authEndpoints.some(endpoint => elementsPath === endpoint);
 
+      // Static content paths served by Elements (UI plugin bundles, static assets) do not
+      // require authentication — script tags cannot send auth headers anyway.
+      const isStaticContent = elementsPath.startsWith('/app/ui/') || elementsPath.startsWith('/app/static/');
+
       // Check for custom session token in header (from frontend override) or use cookie session
       const customToken = req.headers['elements-sessionsecret'] as string;
       const sessionToken = customToken || (req as any).sessionToken;
       const isDev = process.env.NODE_ENV === 'development' && !process.env.REPLIT_DEPLOYMENT;
-      
+
       if (isDev) {
         console.log(`[PROXY] ${req.method} ${elementsPath}`);
         console.log(`[PROXY] Query params:`, req.query);
@@ -420,8 +424,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[PROXY] Cookie token: ${(req as any).sessionToken ? 'present' : 'none'}`);
         console.log(`[PROXY] Using token: ${sessionToken ? 'present' : 'none'}`);
       }
-      
-      if (!isAuthEndpoint && !sessionToken) {
+
+      if (!isAuthEndpoint && !isStaticContent && !sessionToken) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
