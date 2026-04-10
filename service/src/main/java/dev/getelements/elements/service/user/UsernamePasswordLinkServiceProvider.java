@@ -1,6 +1,5 @@
 package dev.getelements.elements.service.user;
 
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.user.UsernamePasswordLinkService;
 import jakarta.inject.Inject;
@@ -9,6 +8,8 @@ import jakarta.inject.Provider;
 public class UsernamePasswordLinkServiceProvider implements Provider<UsernamePasswordLinkService> {
 
     private User user;
+
+    private Provider<AnonUsernamePasswordLinkService> anonServiceProvider;
 
     private Provider<UserUsernamePasswordLinkService> userServiceProvider;
 
@@ -19,7 +20,7 @@ public class UsernamePasswordLinkServiceProvider implements Provider<UsernamePas
             case SUPERUSER:
                 return getUserServiceProvider().get();
             default:
-                throw new ForbiddenException("Authentication required to link credentials.");
+                return getAnonServiceProvider().get();
         }
     }
 
@@ -30,6 +31,15 @@ public class UsernamePasswordLinkServiceProvider implements Provider<UsernamePas
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Provider<AnonUsernamePasswordLinkService> getAnonServiceProvider() {
+        return anonServiceProvider;
+    }
+
+    @Inject
+    public void setAnonServiceProvider(Provider<AnonUsernamePasswordLinkService> anonServiceProvider) {
+        this.anonServiceProvider = anonServiceProvider;
     }
 
     public Provider<UserUsernamePasswordLinkService> getUserServiceProvider() {
