@@ -85,7 +85,7 @@ public class OidcAccountLinkingTest {
     @BeforeMethod
     public void resetMocks() {
         reset(sessionDao, userDao, userUidDao);
-        when(userUidDao.createUserUid(any(UserUid.class))).then(i -> i.getArgument(0));
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
         when(sessionDao.create(any())).then(i -> {
             final var sc = new SessionCreation();
             sc.setSession(i.getArgument(0));

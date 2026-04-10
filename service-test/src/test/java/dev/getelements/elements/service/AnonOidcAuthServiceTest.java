@@ -3,6 +3,7 @@ package dev.getelements.elements.service;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.AbstractModule;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
@@ -47,6 +48,7 @@ public class AnonOidcAuthServiceTest {
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
     }
 
     /**
@@ -237,6 +239,7 @@ public class AnonOidcAuthServiceTest {
             bind(Client.class).toInstance(mock(Client.class));
             bind(OidcAuthSchemeDao.class).toInstance(mock(OidcAuthSchemeDao.class));
             bind(OidcAuthServiceOperations.class).toInstance(mock(OidcAuthServiceOperations.class));
+            bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(named(SESSION_TIMEOUT_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }

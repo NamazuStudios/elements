@@ -3,8 +3,13 @@ package dev.getelements.elements.rest.user;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
+import dev.getelements.elements.sdk.model.user.LinkEmailPasswordRequest;
+import dev.getelements.elements.sdk.model.user.LinkUsernamePasswordRequest;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
+import dev.getelements.elements.sdk.service.user.EmailPasswordLinkService;
+import dev.getelements.elements.sdk.service.user.UsernamePasswordLinkService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -22,6 +27,10 @@ public class UserLinkResource {
     private OAuth2AuthService oAuth2AuthService;
 
     private OidcAuthService oidcAuthService;
+
+    private EmailPasswordLinkService emailPasswordLinkService;
+
+    private UsernamePasswordLinkService usernamePasswordLinkService;
 
     @POST
     @Path("oauth2")
@@ -45,6 +54,49 @@ public class UserLinkResource {
                     "Requires an active user session. Returns the updated session information.")
     public SessionCreation linkOidc(final OidcSessionRequest request) {
         return getOidcAuthService().createSession(request);
+    }
+
+    @POST
+    @Path("email-password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Link Email+Password Credentials",
+            description = "Links email+password credentials to the currently authenticated user. " +
+                    "The email must first be verified via POST /user/me/email/verify.")
+    public User linkEmailPassword(final LinkEmailPasswordRequest request) {
+        return getEmailPasswordLinkService().linkEmailPassword(request.getEmail(), request.getPassword());
+    }
+
+    public EmailPasswordLinkService getEmailPasswordLinkService() {
+        return emailPasswordLinkService;
+    }
+
+    @Inject
+    public void setEmailPasswordLinkService(EmailPasswordLinkService emailPasswordLinkService) {
+        this.emailPasswordLinkService = emailPasswordLinkService;
+    }
+
+    @POST
+    @Path("username-password")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Link Username+Password Credentials",
+            description = "Links username+password credentials to the currently authenticated user. " +
+                    "If the account has no username yet, the supplied username is claimed. " +
+                    "If a username is already set it must match; name changes must be done explicitly.")
+    public User linkUsernamePassword(final LinkUsernamePasswordRequest request) {
+        return getUsernamePasswordLinkService().linkUsernamePassword(request.getUsername(), request.getPassword());
+    }
+
+    public UsernamePasswordLinkService getUsernamePasswordLinkService() {
+        return usernamePasswordLinkService;
+    }
+
+    @Inject
+    public void setUsernamePasswordLinkService(UsernamePasswordLinkService usernamePasswordLinkService) {
+        this.usernamePasswordLinkService = usernamePasswordLinkService;
     }
 
     public OAuth2AuthService getOAuth2AuthService() {

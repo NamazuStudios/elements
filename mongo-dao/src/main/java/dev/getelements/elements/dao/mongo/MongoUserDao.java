@@ -606,6 +606,18 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
+    public User setPassword(final String userId, final String rawPassword) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
+        final var query = getDatastore().find(MongoUser.class).filter(eq("_id", objectId));
+        final var builder = new UpdateBuilder();
+        getMongoPasswordUtils().addPasswordToBuilder(builder, rawPassword);
+        final var mongoUser = getMongoDBUtils().perform(ds ->
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
+        if (mongoUser == null) throw new NotFoundException("User not found: " + userId);
+        return getDozerMapper().map(mongoUser, User.class);
+    }
+
+    @Override
     public Optional<User> findUserWithLoginAndPassword(final String userNameOrEmail, final String password) {
 
         final var query = getDatastore().find(MongoUser.class);
