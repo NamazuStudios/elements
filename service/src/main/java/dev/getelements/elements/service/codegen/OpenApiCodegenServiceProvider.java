@@ -1,6 +1,5 @@
 package dev.getelements.elements.service.codegen;
 
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
 import jakarta.inject.Inject;
@@ -10,16 +9,17 @@ public class OpenApiCodegenServiceProvider implements Provider<CodegenService> {
 
     private User user;
 
+    private Provider<AnonCodegenService> anonCodegenServiceProvider;
+
     private Provider<SuperUserOpenApiCodegenService> superUserOpenApiCodegenServiceProvider;
 
     @Override
     public CodegenService get() {
-
         switch (user.getLevel()) {
             case SUPERUSER:
                 return superUserOpenApiCodegenServiceProvider.get();
             default:
-                throw new ForbiddenException("You are not authorized to perform this operation");
+                return anonCodegenServiceProvider.get();
         }
     }
 
@@ -30,6 +30,15 @@ public class OpenApiCodegenServiceProvider implements Provider<CodegenService> {
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Provider<AnonCodegenService> getAnonCodegenServiceProvider() {
+        return anonCodegenServiceProvider;
+    }
+
+    @Inject
+    public void setAnonCodegenServiceProvider(Provider<AnonCodegenService> anonCodegenServiceProvider) {
+        this.anonCodegenServiceProvider = anonCodegenServiceProvider;
     }
 
     public Provider<SuperUserOpenApiCodegenService> getSuperUserOpenApiCodegenServiceProvider() {
