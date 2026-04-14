@@ -1,8 +1,10 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
+import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.User.Level;
+import dev.getelements.elements.service.auth.oidc.AnonOidcLinkService;
 import dev.getelements.elements.service.auth.oidc.OidcLinkServiceProvider;
 import dev.getelements.elements.service.auth.oidc.UserOidcAuthService;
 import jakarta.inject.Provider;
@@ -22,9 +24,14 @@ public class OidcLinkServiceProviderTest {
         final Provider<UserOidcAuthService> userProvider = mock(Provider.class);
         when(userProvider.get()).thenReturn(mock(UserOidcAuthService.class));
 
+        @SuppressWarnings("unchecked")
+        final Provider<AnonOidcLinkService> anonProvider = mock(Provider.class);
+        when(anonProvider.get()).thenReturn(new AnonOidcLinkService());
+
         final var p = new OidcLinkServiceProvider();
         p.setUser(user);
         p.setUserOidcAuthServiceProvider(userProvider);
+        p.setAnonServiceProvider(anonProvider);
         return p;
     }
 
@@ -44,6 +51,6 @@ public class OidcLinkServiceProviderTest {
 
     @Test(expectedExceptions = ForbiddenException.class)
     public void testUnprivilegedLevel_throwsForbiddenException() {
-        providerFor(Level.UNPRIVILEGED).get();
+        providerFor(Level.UNPRIVILEGED).get().createSession(new OidcSessionRequest());
     }
 }

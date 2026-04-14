@@ -1,9 +1,10 @@
 package dev.getelements.elements.service;
 
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
+import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.User.Level;
-import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
+import dev.getelements.elements.service.auth.oauth2.AnonOAuth2LinkService;
 import dev.getelements.elements.service.auth.oauth2.OAuth2LinkServiceProvider;
 import dev.getelements.elements.service.auth.oauth2.UserOAuth2AuthService;
 import jakarta.inject.Provider;
@@ -23,9 +24,14 @@ public class OAuth2LinkServiceProviderTest {
         final Provider<UserOAuth2AuthService> userProvider = mock(Provider.class);
         when(userProvider.get()).thenReturn(mock(UserOAuth2AuthService.class));
 
+        @SuppressWarnings("unchecked")
+        final Provider<AnonOAuth2LinkService> anonProvider = mock(Provider.class);
+        when(anonProvider.get()).thenReturn(new AnonOAuth2LinkService());
+
         final var p = new OAuth2LinkServiceProvider();
         p.setUser(user);
         p.setUserOAuth2AuthServiceProvider(userProvider);
+        p.setAnonServiceProvider(anonProvider);
         return p;
     }
 
@@ -45,6 +51,6 @@ public class OAuth2LinkServiceProviderTest {
 
     @Test(expectedExceptions = ForbiddenException.class)
     public void testUnprivilegedLevel_throwsForbiddenException() {
-        providerFor(Level.UNPRIVILEGED).get();
+        providerFor(Level.UNPRIVILEGED).get().createSession(new OAuth2SessionRequest());
     }
 }
