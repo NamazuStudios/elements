@@ -86,10 +86,9 @@ public class LinkEmailPasswordApiTest {
         assertEquals(response.getStatus(), 403);
     }
 
-    @Test
-    public void linkEmailPassword_unverifiedEmail_returns403() {
-        // Use a brand-new email that has no UID → getUserUid throws NotFoundException → 404
-        // (the plan notes NotFoundException maps to 404; any non-200 confirms the guard works)
+    @Test(dependsOnMethods = "linkEmailPassword_unauthenticated_returns403")
+    public void linkEmailPassword_unknownEmail_returns404() {
+        // Unknown email → getUserUid throws UserNotFoundException → 404
         final var request = new LinkEmailPasswordRequest();
         request.setEmail("no-uid-" + UUID.randomUUID() + "@test.example.com");
         request.setPassword(linkedPassword);
@@ -103,7 +102,7 @@ public class LinkEmailPasswordApiTest {
         assertEquals(response.getStatus(), 404);
     }
 
-    @Test
+    @Test(dependsOnMethods = "linkEmailPassword_unknownEmail_returns404")
     public void linkEmailPassword_verifiedEmail_returns200() {
         final var request = new LinkEmailPasswordRequest();
         request.setEmail(clientContext.getUser().getEmail());

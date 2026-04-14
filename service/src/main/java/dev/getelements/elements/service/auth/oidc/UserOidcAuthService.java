@@ -12,15 +12,14 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
+import dev.getelements.elements.sdk.service.auth.OidcLinkService;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
 import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
-public class UserOidcAuthService implements OidcAuthService {
+public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserOidcAuthService.class);
 

@@ -5,6 +5,8 @@ import com.google.inject.Scope;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.application.*;
 import dev.getelements.elements.sdk.service.auth.*;
+import dev.getelements.elements.sdk.service.auth.OAuth2LinkService;
+import dev.getelements.elements.sdk.service.auth.OidcLinkService;
 import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
@@ -177,13 +179,11 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OAuth2AuthServiceProvider.class)
                 .in(scope);
 
-        bind(OAuth2AuthService.class)
-                .annotatedWith(named(LINK))
+        bind(OAuth2LinkService.class)
                 .toProvider(OAuth2LinkServiceProvider.class)
                 .in(scope);
 
-        bind(OidcAuthService.class)
-                .annotatedWith(named(LINK))
+        bind(OidcLinkService.class)
                 .toProvider(OidcLinkServiceProvider.class)
                 .in(scope);
 

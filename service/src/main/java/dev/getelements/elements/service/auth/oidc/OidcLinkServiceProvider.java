@@ -1,25 +1,26 @@
 package dev.getelements.elements.service.auth.oidc;
 
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.auth.OidcAuthService;
+import dev.getelements.elements.sdk.service.auth.OidcLinkService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-public class OidcLinkServiceProvider implements Provider<OidcAuthService> {
+public class OidcLinkServiceProvider implements Provider<OidcLinkService> {
 
     private User user;
+
+    private Provider<AnonOidcLinkService> anonServiceProvider;
 
     private Provider<UserOidcAuthService> userOidcAuthServiceProvider;
 
     @Override
-    public OidcAuthService get() {
+    public OidcLinkService get() {
         switch (getUser().getLevel()) {
             case USER:
             case SUPERUSER:
                 return getUserOidcAuthServiceProvider().get();
             default:
-                throw new ForbiddenException("Authentication required to link accounts.");
+                return getAnonServiceProvider().get();
         }
     }
 
@@ -30,6 +31,15 @@ public class OidcLinkServiceProvider implements Provider<OidcAuthService> {
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Provider<AnonOidcLinkService> getAnonServiceProvider() {
+        return anonServiceProvider;
+    }
+
+    @Inject
+    public void setAnonServiceProvider(Provider<AnonOidcLinkService> anonServiceProvider) {
+        this.anonServiceProvider = anonServiceProvider;
     }
 
     public Provider<UserOidcAuthService> getUserOidcAuthServiceProvider() {

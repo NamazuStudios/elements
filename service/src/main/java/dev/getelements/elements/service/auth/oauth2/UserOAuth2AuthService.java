@@ -11,13 +11,14 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
+import dev.getelements.elements.sdk.service.auth.OAuth2LinkService;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
-public class UserOAuth2AuthService implements OAuth2AuthService {
+public class UserOAuth2AuthService implements OAuth2AuthService, OAuth2LinkService {
 
     private User user;
 
