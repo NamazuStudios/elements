@@ -2,6 +2,7 @@ package dev.getelements.elements.service.inventory;
 
 import dev.getelements.elements.sdk.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.sdk.dao.ItemDao;
+import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
@@ -9,8 +10,10 @@ import dev.getelements.elements.sdk.model.exception.item.ItemNotFoundException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.goods.ItemCategory;
 import dev.getelements.elements.sdk.model.inventory.DistinctInventoryItem;
-import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
+import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.inventory.DistinctInventoryItemService;
 import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
@@ -18,7 +21,6 @@ import dev.getelements.elements.service.util.UserProfileUtility;
 
 import jakarta.inject.Inject;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -37,6 +39,8 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
     private DistinctInventoryItemDao distinctInventoryItemDao;
 
     private LargeObjectCdnUtils largeObjectCdnUtils;
+
+    private ItemLedgerDao itemLedgerDao;
 
     @Override
     public DistinctInventoryItem createDistinctInventoryItem(
@@ -62,11 +66,16 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             throw new InvalidDataException("User or Profile.", ex);
         }
 
-
         distinctInventoryItem.setMetadata(metadata);
 
-        DistinctInventoryItem createdItem = getDistinctInventoryItemDao().createDistinctInventoryItem(distinctInventoryItem);
-        return getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(createdItem);
+        final DistinctInventoryItem created =
+                getDistinctInventoryItemDao().createDistinctInventoryItem(distinctInventoryItem);
+
+        getItemLedgerDao().createLedgerEntry(
+                newDistinctEntry(created.getId(), created.getUser().getId(),
+                        created.getItem().getId(), ItemLedgerEventType.CREATED));
+
+        return getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(created);
     }
 
     @Override
@@ -104,7 +113,8 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             }
         }
 
-        final var items = getDistinctInventoryItemDao().getDistinctInventoryItems(offset, count, userId, profileId, false, query);
+        final var items = getDistinctInventoryItemDao()
+                .getDistinctInventoryItems(offset, count, userId, profileId, false, query);
 
         items.getObjects().forEach(item -> getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(item));
 
@@ -118,7 +128,10 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
             final String profileId,
             final Map<String, Object> metadata) {
 
-        final var distinctInventoryItem = getDistinctInventoryItemDao().getDistinctInventoryItem(distinctInventoryItemId);
+        final var distinctInventoryItem =
+                getDistinctInventoryItemDao().getDistinctInventoryItem(distinctInventoryItemId);
+
+        final Map<String, Object> metadataBefore = distinctInventoryItem.getMetadata();
 
         try {
             final var record = getUserProfileUtility().getAndCheckForMatch(profileId, userId);
@@ -130,13 +143,40 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
 
         distinctInventoryItem.setMetadata(metadata);
 
-        DistinctInventoryItem updatedItem = getDistinctInventoryItemDao().updateDistinctInventoryItem(distinctInventoryItem);
-        return getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(updatedItem);
+        final DistinctInventoryItem updated =
+                getDistinctInventoryItemDao().updateDistinctInventoryItem(distinctInventoryItem);
+
+        final var entry = newDistinctEntry(updated.getId(), updated.getUser().getId(),
+                updated.getItem().getId(), ItemLedgerEventType.METADATA_UPDATED);
+        entry.setMetadataBefore(metadataBefore);
+        entry.setMetadataAfter(metadata);
+        getItemLedgerDao().createLedgerEntry(entry);
+
+        return getLargeObjectCdnUtils().setDistinctItemProfileCdnUrl(updated);
     }
 
     @Override
     public void deleteInventoryItem(final String inventoryItemId) {
+        final DistinctInventoryItem existing =
+                getDistinctInventoryItemDao().getDistinctInventoryItem(inventoryItemId);
         getDistinctInventoryItemDao().deleteDistinctInventoryItem(inventoryItemId);
+        getItemLedgerDao().createLedgerEntry(
+                newDistinctEntry(inventoryItemId, existing.getUser().getId(),
+                        existing.getItem().getId(), ItemLedgerEventType.DELETED));
+    }
+
+    private ItemLedgerEntry newDistinctEntry(final String inventoryItemId,
+                                             final String userId,
+                                             final String itemId,
+                                             final ItemLedgerEventType eventType) {
+        final var entry = new ItemLedgerEntry();
+        entry.setInventoryItemId(inventoryItemId);
+        entry.setItemCategory(ItemCategory.DISTINCT);
+        entry.setItemId(itemId);
+        entry.setUserId(userId);
+        entry.setActorId(getUser() != null ? getUser().getId() : null);
+        entry.setEventType(eventType);
+        return entry;
     }
 
     private boolean isCurrentUser(String userId) {
@@ -178,6 +218,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
     public void setLargeObjectCdnUtils(LargeObjectCdnUtils largeObjectCdnUtils) {
         this.largeObjectCdnUtils = largeObjectCdnUtils;
     }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -203,5 +244,14 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
+    }
+
+    public ItemLedgerDao getItemLedgerDao() {
+        return itemLedgerDao;
+    }
+
+    @Inject
+    public void setItemLedgerDao(final ItemLedgerDao itemLedgerDao) {
+        this.itemLedgerDao = itemLedgerDao;
     }
 }

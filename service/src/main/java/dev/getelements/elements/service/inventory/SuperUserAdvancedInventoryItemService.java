@@ -2,9 +2,13 @@ package dev.getelements.elements.service.inventory;
 
 import dev.getelements.elements.sdk.dao.InventoryItemDao;
 import dev.getelements.elements.sdk.dao.ItemDao;
+import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.goods.ItemCategory;
 import dev.getelements.elements.sdk.model.inventory.InventoryItem;
+import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
+import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
 import dev.getelements.elements.sdk.model.user.User;
 
 import dev.getelements.elements.sdk.service.inventory.AdvancedInventoryItemService;
@@ -21,6 +25,8 @@ public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryI
     private ItemDao itemDao;
 
     private InventoryItemDao inventoryItemDao;
+
+    private ItemLedgerDao itemLedgerDao;
 
     @Override
     public InventoryItem getInventoryItem(final String inventoryItemId) {
@@ -45,14 +51,23 @@ public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryI
     public InventoryItem adjustInventoryItemQuantity(
             final String inventoryItemId,
             final int quantityDelta) {
-        return getInventoryItemDao().adjustQuantityForItem(inventoryItemId, quantityDelta);
+        final InventoryItem result = getInventoryItemDao().adjustQuantityForItem(inventoryItemId, quantityDelta);
+        final var entry = newFungibleEntry(result, ItemLedgerEventType.QUANTITY_ADJUSTED);
+        entry.setQuantityBefore(result.getQuantity() - quantityDelta);
+        entry.setQuantityAfter(result.getQuantity());
+        getItemLedgerDao().createLedgerEntry(entry);
+        return result;
     }
 
     @Override
     public InventoryItem updateInventoryItem(
             final String inventoryItemId,
             final int quantity) {
-        return getInventoryItemDao().updateInventoryItem(inventoryItemId, quantity);
+        final InventoryItem result = getInventoryItemDao().updateInventoryItem(inventoryItemId, quantity);
+        final var entry = newFungibleEntry(result, ItemLedgerEventType.QUANTITY_SET);
+        entry.setQuantityAfter(quantity);
+        getItemLedgerDao().createLedgerEntry(entry);
+        return result;
     }
 
     @Override
@@ -66,19 +81,44 @@ public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryI
         final var item = getItemDao().getItemByIdOrName(itemId);
 
         final var inventoryItem = new InventoryItem();
-
         inventoryItem.setUser(user);
         inventoryItem.setItem(item);
         inventoryItem.setPriority(priority);
         inventoryItem.setQuantity(initialQuantity);
 
-        return getInventoryItemDao().createInventoryItem(inventoryItem);
-
+        final InventoryItem result = getInventoryItemDao().createInventoryItem(inventoryItem);
+        final var entry = newFungibleEntry(result, ItemLedgerEventType.CREATED);
+        entry.setQuantityBefore(0);
+        entry.setQuantityAfter(result.getQuantity());
+        getItemLedgerDao().createLedgerEntry(entry);
+        return result;
     }
 
     @Override
     public void deleteInventoryItem(final String inventoryItemId) {
+        final InventoryItem existing = getInventoryItemDao().getInventoryItem(inventoryItemId);
         getInventoryItemDao().deleteInventoryItem(inventoryItemId);
+        getItemLedgerDao().createLedgerEntry(
+                newFungibleEntry(inventoryItemId, existing.getUser().getId(),
+                        existing.getItem().getId(), ItemLedgerEventType.DELETED));
+    }
+
+    private ItemLedgerEntry newFungibleEntry(final InventoryItem item, final ItemLedgerEventType eventType) {
+        return newFungibleEntry(item.getId(), item.getUser().getId(), item.getItem().getId(), eventType);
+    }
+
+    private ItemLedgerEntry newFungibleEntry(final String inventoryItemId,
+                                             final String userId,
+                                             final String itemId,
+                                             final ItemLedgerEventType eventType) {
+        final var entry = new ItemLedgerEntry();
+        entry.setInventoryItemId(inventoryItemId);
+        entry.setItemCategory(ItemCategory.FUNGIBLE);
+        entry.setItemId(itemId);
+        entry.setUserId(userId);
+        entry.setActorId(getUser() != null ? getUser().getId() : null);
+        entry.setEventType(eventType);
+        return entry;
     }
 
     private boolean isCurrentUser(String userId) {
@@ -121,4 +161,12 @@ public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryI
         this.inventoryItemDao = inventoryItemDao;
     }
 
+    public ItemLedgerDao getItemLedgerDao() {
+        return itemLedgerDao;
+    }
+
+    @Inject
+    public void setItemLedgerDao(final ItemLedgerDao itemLedgerDao) {
+        this.itemLedgerDao = itemLedgerDao;
+    }
 }

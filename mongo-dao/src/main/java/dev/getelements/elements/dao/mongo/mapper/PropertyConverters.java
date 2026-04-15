@@ -8,6 +8,7 @@ import org.mapstruct.TargetType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,6 +48,14 @@ public class PropertyConverters {
 
     public Timestamp toTimestamp(final Long timestamp) {
         return timestamp == null ? null : new Timestamp(timestamp);
+    }
+
+    public long toEpochMillis(final Date date) {
+        return date == null ? 0L : date.getTime();
+    }
+
+    public Date toDate(final long epochMillis) {
+        return new Date(epochMillis);
     }
 
     public <HexableIdT extends HexableId> HexableIdT toHexableId(

@@ -1,11 +1,15 @@
 package dev.getelements.elements.service.goods;
 
 import dev.getelements.elements.sdk.dao.ItemDao;
+import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.dao.MetadataSpecDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.goods.CreateItemRequest;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.goods.UpdateItemRequest;
+import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
+import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.rt.exception.BadRequestException;
 
 import dev.getelements.elements.sdk.service.goods.ItemService;
@@ -21,6 +25,10 @@ public class SuperuserItemService implements ItemService {
     private ItemDao itemDao;
 
     private MetadataSpecDao metadataSpecDao;
+
+    private ItemLedgerDao itemLedgerDao;
+
+    private User user;
 
     @Override
     public Item getItemByIdOrName(String identifier) {
@@ -47,7 +55,9 @@ public class SuperuserItemService implements ItemService {
         item.setDisplayName(itemRequest.getDisplayName());
         item.setPublicVisible(!isNull(itemRequest.isPublicVisible()) && itemRequest.isPublicVisible());
 
-        return getItemDao().updateItem(item);
+        final Item result = getItemDao().updateItem(item);
+        writeCatalogLedgerEntry(result.getId(), ItemLedgerEventType.ITEM_UPDATED);
+        return result;
     }
 
     @Override
@@ -69,13 +79,27 @@ public class SuperuserItemService implements ItemService {
                         .orElseThrow(() -> new BadRequestException("Unknown metadata spec id: " + id)))
                 .ifPresent(item::setMetadataSpec);
 
-        return getItemDao().createItem(item);
+        final Item result = getItemDao().createItem(item);
+        writeCatalogLedgerEntry(result.getId(), ItemLedgerEventType.ITEM_CREATED);
+        return result;
 
     }
 
     @Override
     public void deleteItem(String identifier) {
+        final Item existing = getItemByIdOrName(identifier);
         getItemDao().deleteItem(identifier);
+        writeCatalogLedgerEntry(existing.getId(), ItemLedgerEventType.ITEM_DELETED);
+    }
+
+    private void writeCatalogLedgerEntry(final String itemId, final ItemLedgerEventType eventType) {
+        final var actorId = getUser() != null ? getUser().getId() : null;
+        final var entry = new ItemLedgerEntry();
+        entry.setItemId(itemId);
+        entry.setUserId(actorId);
+        entry.setActorId(actorId);
+        entry.setEventType(eventType);
+        getItemLedgerDao().createLedgerEntry(entry);
     }
 
     @SuppressWarnings("unused")
@@ -96,6 +120,24 @@ public class SuperuserItemService implements ItemService {
     @Inject
     public void setMetadataSpecDao(MetadataSpecDao metadataSpecDao) {
         this.metadataSpecDao = metadataSpecDao;
+    }
+
+    public ItemLedgerDao getItemLedgerDao() {
+        return itemLedgerDao;
+    }
+
+    @Inject
+    public void setItemLedgerDao(final ItemLedgerDao itemLedgerDao) {
+        this.itemLedgerDao = itemLedgerDao;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(final User user) {
+        this.user = user;
     }
 
 }
