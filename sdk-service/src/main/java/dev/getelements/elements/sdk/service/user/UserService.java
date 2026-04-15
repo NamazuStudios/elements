@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.*;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
@@ -19,9 +20,25 @@ import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 @ElementPublic
 @ElementServiceExport
 @ElementServiceExport(name = UNSCOPED)
+@ElementEventProducer(
+        value = UserService.USER_CREATED_EVENT,
+        parameters = User.class,
+        description = "Fired when a user is created via the service layer.")
+@ElementEventProducer(
+        value = UserService.USER_UPDATED_EVENT,
+        parameters = User.class,
+        description = "Fired when a user is updated via the service layer.")
+@ElementEventProducer(
+        value = UserService.USER_DELETED_EVENT,
+        parameters = User.class,
+        description = "Fired when a user is deleted via the service layer.")
 public interface UserService {
 
     String CURRENT_USER_ALIAS = "me";
+
+    String USER_CREATED_EVENT = "dev.getelements.user.created";
+    String USER_UPDATED_EVENT = "dev.getelements.user.updated";
+    String USER_DELETED_EVENT = "dev.getelements.user.deleted";
 
     /**
      * Gets the currently logged in user.

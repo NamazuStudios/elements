@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -174,6 +175,16 @@ public interface UserUidDao {
      * @return true if the user was found and soft deleted, false otherwise
      */
     boolean trySoftDeleteUser(final String userId);
+
+    /**
+     * Updates the verification status of the identified UID.
+     *
+     * @param id the id value of the UID
+     * @param scheme the scheme of the UID
+     * @param status the new verification status
+     * @return the updated {@link UserUid}
+     */
+    UserUid updateVerificationStatus(String id, String scheme, VerificationStatus status);
 
     /**
      * This will scrub all scheme ids for all UserUids referencing the user with the given id.

@@ -155,6 +155,14 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
         } catch (Exception ex) {
 
+            // Unwrap Guice ProvisionException without adding a compile-time Guice dependency.
+            // When providers throw inside an element scope, Guice wraps the real exception in
+            // ProvisionException; unwrapping it lets the normal handler return the right status.
+            if (ex.getCause() instanceof Exception
+                    && ex.getClass().getName().endsWith("ProvisionException")) {
+                return toResponse((Exception) ex.getCause());
+            }
+
             // Walk the cause chain: if a known BaseException is wrapped (e.g. by a Guice
             // ProvisionException), re-dispatch it so the proper status code is returned.
             for (Throwable cause = ex.getCause(); cause != null; cause = cause.getCause()) {

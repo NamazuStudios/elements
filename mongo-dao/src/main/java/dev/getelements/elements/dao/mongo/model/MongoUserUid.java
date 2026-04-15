@@ -1,7 +1,9 @@
 package dev.getelements.elements.dao.mongo.model;
 
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Property;
 import dev.morphia.annotations.Reference;
 
 import java.util.Objects;
@@ -14,6 +16,9 @@ public class MongoUserUid {
 
     @Reference
     private MongoUser user;
+
+    @Property
+    private VerificationStatus verificationStatus;
 
     public MongoUserUidScheme getId() {
         return id;
@@ -29,6 +34,14 @@ public class MongoUserUid {
 
     public void setUser(MongoUser user) {
         this.user = user;
+    }
+
+    public VerificationStatus getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
     }
 
     @Override

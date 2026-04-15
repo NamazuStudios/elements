@@ -1,17 +1,21 @@
 package dev.getelements.elements.service.auth.oauth2;
 
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
+import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
 public class AnonOAuth2AuthService implements OAuth2AuthService {
 
@@ -20,6 +24,8 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
     private UserUidDao userUidDao;
 
     private OAuth2AuthServiceOperations oAuth2AuthServiceOperations;
+
+    private ElementRegistry elementRegistry;
 
     @Override
     public SessionCreation createSession(OAuth2SessionRequest oAuth2SessionRequest) {
@@ -66,8 +72,13 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
         userUid.setUserId(userId);
         userUid.setId(uid);
         userUid.setScheme(scheme);
+        userUid.setVerificationStatus(VerificationStatus.VERIFIED);
 
-        userUidDao.createUserUidStrict(userUid);
+        final var created = userUidDao.createUserUidStrict(userUid);
+        getElementRegistry().publish(Event.builder()
+                .argument(created)
+                .named(USER_UID_CREATED_EVENT)
+                .build());
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
@@ -109,6 +120,15 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
     @Inject
     public void setUserUidDao(UserUidDao userUidDao) {
         this.userUidDao = userUidDao;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 
 }

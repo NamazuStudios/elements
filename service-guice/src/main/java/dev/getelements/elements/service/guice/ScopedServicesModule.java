@@ -48,6 +48,7 @@ import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
 import dev.getelements.elements.sdk.service.system.ElementInspectorService;
 import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
+import dev.getelements.elements.sdk.service.user.EmailVerificationService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
@@ -130,8 +131,12 @@ import dev.getelements.elements.service.system.ElementDeploymentServiceProvider;
 import dev.getelements.elements.service.system.ElementInspectorServiceProvider;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
+import dev.getelements.elements.service.user.AnonEmailVerificationService;
 import dev.getelements.elements.service.user.AnonUserService;
+import dev.getelements.elements.service.user.EmailVerificationServiceProvider;
+import dev.getelements.elements.service.user.SuperUserEmailVerificationService;
 import dev.getelements.elements.service.user.SuperuserUserService;
+import dev.getelements.elements.service.user.UserEmailVerificationService;
 import dev.getelements.elements.service.user.UserServiceProvider;
 import dev.getelements.elements.service.user.UserUserService;
 
@@ -437,6 +442,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(EmailService.class)
                 .to(DefaultEmailService.class);
 
+        bind(EmailVerificationService.class)
+                .toProvider(EmailVerificationServiceProvider.class)
+                .in(scope);
+
     }
 
     private void bindAnonymous() {
@@ -512,6 +521,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(UserService.class)
                 .annotatedWith(named(ANONYMOUS))
                 .to(AnonUserService.class);
+
+        bind(EmailVerificationService.class)
+                .annotatedWith(named(ANONYMOUS))
+                .to(AnonEmailVerificationService.class);
 
         bind(UsernamePasswordAuthService.class)
                 .annotatedWith(named(ANONYMOUS))
@@ -644,6 +657,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(UserService.class)
                 .annotatedWith(named(USER))
                 .to(UserUserService.class);
+
+        bind(EmailVerificationService.class)
+                .annotatedWith(named(USER))
+                .to(UserEmailVerificationService.class);
 
         bind(UsernamePasswordAuthService.class)
                 .annotatedWith(named(USER))
@@ -848,6 +865,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(UserService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperuserUserService.class);
+
+        bind(EmailVerificationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserEmailVerificationService.class);
 
         bind(VaultService.class)
                 .annotatedWith(named(SUPERUSER))

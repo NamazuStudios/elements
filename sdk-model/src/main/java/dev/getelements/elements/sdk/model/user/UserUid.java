@@ -11,6 +11,10 @@ import java.util.Objects;
 @Schema
 public class UserUid implements Serializable {
 
+    public static final String USER_UID_CREATED_EVENT = "dev.getelements.user_uid.created";
+    public static final String USER_UID_UPDATED_EVENT = "dev.getelements.user_uid.updated";
+    public static final String USER_UID_DELETED_EVENT = "dev.getelements.user_uid.deleted";
+
     /** Creates a new instance. */
     public UserUid() {}
 
@@ -25,6 +29,9 @@ public class UserUid implements Serializable {
     @NotNull(groups = ValidationGroups.Insert.class)
     @Schema(description = "The id of the user associated with this User UID.")
     private String userId;
+
+    @Schema(description = "The verification status of this UID.")
+    private VerificationStatus verificationStatus;
 
     /**
      * Returns the user ID associated with this UID.
@@ -78,6 +85,24 @@ public class UserUid implements Serializable {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    /**
+     * Returns the verification status of this UID.
+     *
+     * @return the verification status, or {@link VerificationStatus#UNVERIFIED} if not set
+     */
+    public VerificationStatus getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    /**
+     * Sets the verification status of this UID.
+     *
+     * @param verificationStatus the verification status
+     */
+    public void setVerificationStatus(VerificationStatus verificationStatus) {
+        this.verificationStatus = verificationStatus;
     }
 
     @Override
