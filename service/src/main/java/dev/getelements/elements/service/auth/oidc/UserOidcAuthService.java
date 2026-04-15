@@ -3,25 +3,27 @@ package dev.getelements.elements.service.auth.oidc;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
+import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
 import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
+import dev.getelements.elements.sdk.service.auth.OidcLinkService;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
-import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
-public class UserOidcAuthService implements OidcAuthService {
+public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
 
-    private UserDao userDao;
+    private static final Logger logger = LoggerFactory.getLogger(UserOidcAuthService.class);
+
+    private User user;
 
     private UserUidDao userUidDao;
 
@@ -44,88 +46,59 @@ public class UserOidcAuthService implements OidcAuthService {
         userUid.setScheme(scheme);
         userUid.setVerificationStatus(VerificationStatus.VERIFIED);
 
-        final var created = userUidDao.createUserUid(userUid);
+        final var created = userUidDao.createUserUidStrict(userUid);
         getElementRegistry().publish(Event.builder()
                 .argument(created)
                 .named(USER_UID_CREATED_EVENT)
                 .build());
     }
 
-    private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
-
-        if(uid.isPresent()) {
-            final var userId = uid.get().getUserId();
-            final var user = userDao.getUser(userId);
-            return Optional.of(user);
-        }
-
-        return Optional.empty();
-    }
-
     private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
         final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
         final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();
-        final var hasEmail = email != null && !email.isBlank();
+        final var emailVerified = Boolean.TRUE.equals(jwt.getClaim("email_verified").asBoolean());
 
-        //Search the existing UIds to see if the user already exists
-        var oidcUid = userUidDao.findUserUid(uid, scheme.getName());
-        var emailUid = Optional.<UserUid>empty();
+        // Check if this OIDC sub is already mapped to any user
+        final var existingOidcUid = userUidDao.findUserUid(uid, scheme.getName());
 
-        if (hasEmail) {
-            emailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
-        }
-
-        var userOptional = tryGetUserFromUid(oidcUid);
-
-        if (userOptional.isEmpty()) {
-            userOptional = tryGetUserFromUid(emailUid);
-        }
-
-        //If the user already exists, check to see if we need to associate
-        //any new UIds from the extracted JWT claims
-        if (userOptional.isPresent()) {
-            final var user = userOptional.get();
-
-            if (oidcUid.isEmpty()) {
-                createNewUserUid(uid, scheme.getName(), user.getId());
+        if (existingOidcUid.isPresent()) {
+            final var linkedUserId = existingOidcUid.get().getUserId();
+            if (linkedUserId != null && !linkedUserId.equals(user.getId())) {
+                throw new AuthValidationException("External OIDC identity is already linked to a different user.");
             }
+            // Already linked to current user — idempotent, fall through
+        } else {
+            createNewUserUid(uid, scheme.getName(), user.getId());
+        }
 
-            if (emailUid.isEmpty() && hasEmail) {
+        // Handle verified email UID
+        if (emailVerified && email != null && !email.isEmpty()) {
+            final var existingEmailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
+
+            if (existingEmailUid.isEmpty()) {
                 createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
+            } else {
+                final var linkedUserId = existingEmailUid.get().getUserId();
+                if (linkedUserId != null && !linkedUserId.equals(user.getId())) {
+                    // Stale or foreign mapping — skip rather than block the link operation
+                    logger.warn("Email UID {} is already linked to a different user; skipping email UID creation.", email);
+                }
+                // else: already linked to current user — idempotent, do nothing
             }
-
-            return user;
-        }
-
-        //No existing user was found, create a new one in the DB and assign the ref to
-        //any UIds made from the JWT claims
-        var user = new User();
-        user.setEmail(email);
-        user.setLevel(USER);
-        user = getUserDao().createUser(user);
-
-        createNewUserUid(uid, scheme.getName(), user.getId());
-
-        if (hasEmail) {
-            // If a stale email UID exists (user was deleted), relink it to the new user
-            if (emailUid.isPresent()) {
-                userUidDao.tryDeleteUserUid(emailUid.get());
-            }
-            createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
         }
 
         return user;
 
     }
 
-    public UserDao getUserDao() {
-        return userDao;
+    public User getUser() {
+        return user;
     }
 
     @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public OidcAuthServiceOperations getOidcAuthServiceOperations() {

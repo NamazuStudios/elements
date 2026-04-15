@@ -85,7 +85,7 @@ public class OidcAccountLinkingTest {
     @BeforeMethod
     public void resetMocks() {
         reset(sessionDao, userDao, userUidDao);
-        when(userUidDao.createUserUid(any(UserUid.class))).then(i -> i.getArgument(0));
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
         when(sessionDao.create(any())).then(i -> {
             final var sc = new SessionCreation();
             sc.setSession(i.getArgument(0));
@@ -104,13 +104,13 @@ public class OidcAccountLinkingTest {
 
         when(userUidDao.findUserUid(uid,   SCHEME_NAME))              .thenReturn(Optional.empty());
         when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL))  .thenReturn(Optional.empty());
-        when(userDao.createUser(any())).then(i -> user(i.getArgument(0), newId));
+        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newId));
 
         assertNotNull(session(uid, email));
 
-        verify(userDao).createUser(any());
-        verify(userUidDao).createUserUid(argThat(u -> SCHEME_NAME.equals(u.getScheme())             && uid.equals(u.getId())));
-        verify(userUidDao).createUserUid(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
+        verify(userDao).createUserStrict(any());
+        verify(userUidDao).createUserUidStrict(argThat(u -> SCHEME_NAME.equals(u.getScheme())             && uid.equals(u.getId())));
+        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
     }
 
     // ── scenario 2: returning user with matching OIDC UID ─────────────────────
@@ -129,8 +129,8 @@ public class OidcAccountLinkingTest {
         assertNotNull(result);
         assertEquals(result.getSession().getUser().getId(), userId);
 
-        verify(userDao, never()).createUser(any());
-        verify(userUidDao, never()).createUserUid(any());
+        verify(userDao, never()).createUserStrict(any());
+        verify(userUidDao, never()).createUserUidStrict(any());
     }
 
     // ── scenario 3: account linking via email ─────────────────────────────────
@@ -151,9 +151,9 @@ public class OidcAccountLinkingTest {
         assertNotNull(result);
         assertEquals(result.getSession().getUser().getId(), userId);
 
-        verify(userDao, never()).createUser(any());
-        verify(userUidDao).createUserUid(argThat(u -> SCHEME_NAME.equals(u.getScheme()) && uid.equals(u.getId())));
-        verify(userUidDao, never()).createUserUid(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
+        verify(userDao, never()).createUserStrict(any());
+        verify(userUidDao).createUserUidStrict(argThat(u -> SCHEME_NAME.equals(u.getScheme()) && uid.equals(u.getId())));
+        verify(userUidDao, never()).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
     }
 
     // ── scenario 4: stale email UID (user was deleted) ────────────────────────
@@ -169,14 +169,13 @@ public class OidcAccountLinkingTest {
         final var staleEmailUid = uid(email, UserUidDao.SCHEME_EMAIL, null);
         when(userUidDao.findUserUid(uid,   SCHEME_NAME))             .thenReturn(Optional.empty());
         when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)) .thenReturn(Optional.of(staleEmailUid));
-        when(userDao.createUser(any())).then(i -> user(i.getArgument(0), newUserId));
+        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newUserId));
 
         assertNotNull(session(uid, email));
 
-        verify(userDao).createUser(any());
-        // tryDeleteUserUid(UserUid) is the default overload used by the service
+        verify(userDao).createUserStrict(any());
         verify(userUidDao).tryDeleteUserUid(staleEmailUid);
-        verify(userUidDao).createUserUid(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
+        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
     }
 
     // ── scenario 5: JWT has no email claim ────────────────────────────────────
@@ -187,14 +186,14 @@ public class OidcAccountLinkingTest {
         final var newUserId = randomId();
 
         when(userUidDao.findUserUid(uid, SCHEME_NAME)).thenReturn(Optional.empty());
-        when(userDao.createUser(any())).then(i -> user(i.getArgument(0), newUserId));
+        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newUserId));
 
         assertNotNull(session(uid, null));
 
-        verify(userDao).createUser(any());
-        verify(userUidDao).createUserUid(argThat(u -> SCHEME_NAME.equals(u.getScheme()) && uid.equals(u.getId())));
+        verify(userDao).createUserStrict(any());
+        verify(userUidDao).createUserUidStrict(argThat(u -> SCHEME_NAME.equals(u.getScheme()) && uid.equals(u.getId())));
         verify(userUidDao, never()).findUserUid(anyString(), eq(UserUidDao.SCHEME_EMAIL));
-        verify(userUidDao, never()).createUserUid(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
+        verify(userUidDao, never()).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
@@ -207,7 +206,9 @@ public class OidcAccountLinkingTest {
                 .withExpiresAt(new Date(currentTimeMillis() + 60_000));
 
         if (email != null) {
-            builder = builder.withClaim("email", email);
+            builder = builder
+                    .withClaim("email", email)
+                    .withClaim("email_verified", true);
         }
 
         final var request = new OidcSessionRequest();

@@ -600,9 +600,21 @@ public class MongoUserDao implements UserDao {
 
         getValidationHelper().validateModel(user);
 
-        user.setEmail(nullToEmpty(user.getEmail()).trim());
+        user.setEmail(nullToEmpty(user.getEmail()).trim().toLowerCase());
         user.setName(nullToEmpty(user.getName()).trim());
 
+    }
+
+    @Override
+    public User setPassword(final String userId, final String rawPassword) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
+        final var query = getDatastore().find(MongoUser.class).filter(eq("_id", objectId));
+        final var builder = new UpdateBuilder();
+        getMongoPasswordUtils().addPasswordToBuilder(builder, rawPassword);
+        final var mongoUser = getMongoDBUtils().perform(ds ->
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
+        if (mongoUser == null) throw new NotFoundException("User not found: " + userId);
+        return getDozerMapper().map(mongoUser, User.class);
     }
 
     @Override
@@ -616,7 +628,7 @@ public class MongoUserDao implements UserDao {
             query.filter(
                 or(
                     eq("name", userNameOrEmail),
-                    eq("email", userNameOrEmail)
+                    eq("email", userNameOrEmail.trim().toLowerCase())
                 )
             );
         }

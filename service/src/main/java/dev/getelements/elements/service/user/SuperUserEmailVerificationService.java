@@ -15,12 +15,13 @@ public class SuperUserEmailVerificationService extends AbstractEmailVerification
 
     @Override
     public UserUid requestVerification(final String email, final String verificationBaseUrl) {
-        final var uid = getUserUidDao().getUserUid(email, SCHEME_EMAIL);
+        final var normalizedEmail = email.trim().toLowerCase();
+        final var uid = getUserUidDao().getUserUid(normalizedEmail, SCHEME_EMAIL);
 
         final var ownerUser = new User();
         ownerUser.setId(uid.getUserId());
 
-        return doRequestVerification(ownerUser, email, verificationBaseUrl);
+        return doRequestVerification(ownerUser, normalizedEmail, verificationBaseUrl);
     }
 
     @Override

@@ -5,6 +5,8 @@ import com.google.inject.Scope;
 import dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptService;
 import dev.getelements.elements.sdk.service.application.*;
 import dev.getelements.elements.sdk.service.auth.*;
+import dev.getelements.elements.sdk.service.auth.OAuth2LinkService;
+import dev.getelements.elements.sdk.service.auth.OidcLinkService;
 import dev.getelements.elements.sdk.service.blockchain.*;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
 import dev.getelements.elements.sdk.service.codegen.CodegenService;
@@ -48,8 +50,10 @@ import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
 import dev.getelements.elements.sdk.service.system.ElementInspectorService;
 import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
+import dev.getelements.elements.sdk.service.user.EmailPasswordLinkService;
 import dev.getelements.elements.sdk.service.user.EmailVerificationService;
 import dev.getelements.elements.sdk.service.user.UserService;
+import dev.getelements.elements.sdk.service.user.UsernamePasswordLinkService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
 import dev.getelements.elements.service.application.*;
@@ -133,7 +137,9 @@ import dev.getelements.elements.service.system.SuperUserElementDeploymentService
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
 import dev.getelements.elements.service.user.AnonEmailVerificationService;
 import dev.getelements.elements.service.user.AnonUserService;
+import dev.getelements.elements.service.user.EmailPasswordLinkServiceProvider;
 import dev.getelements.elements.service.user.EmailVerificationServiceProvider;
+import dev.getelements.elements.service.user.UsernamePasswordLinkServiceProvider;
 import dev.getelements.elements.service.user.SuperUserEmailVerificationService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 import dev.getelements.elements.service.user.UserEmailVerificationService;
@@ -171,6 +177,14 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(OAuth2AuthService.class)
                 .toProvider(OAuth2AuthServiceProvider.class)
+                .in(scope);
+
+        bind(OAuth2LinkService.class)
+                .toProvider(OAuth2LinkServiceProvider.class)
+                .in(scope);
+
+        bind(OidcLinkService.class)
+                .toProvider(OidcLinkServiceProvider.class)
                 .in(scope);
 
         bind(UserService.class)
@@ -444,6 +458,14 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(EmailVerificationService.class)
                 .toProvider(EmailVerificationServiceProvider.class)
+                .in(scope);
+
+        bind(EmailPasswordLinkService.class)
+                .toProvider(EmailPasswordLinkServiceProvider.class)
+                .in(scope);
+
+        bind(UsernamePasswordLinkService.class)
+                .toProvider(UsernamePasswordLinkServiceProvider.class)
                 .in(scope);
 
     }

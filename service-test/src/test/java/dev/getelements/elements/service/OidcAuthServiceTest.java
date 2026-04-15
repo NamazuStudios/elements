@@ -269,6 +269,7 @@ public class OidcAuthServiceTest {
             bind(OidcAuthSchemeDao.class).toInstance(mock(OidcAuthSchemeDao.class));
             bind(CryptoKeyPairUtility.class).toInstance(mock(CryptoKeyPairUtility.class));
             bind(OidcAuthSchemeService.class).toInstance(mock(OidcAuthSchemeService.class));
+            bind(User.class).toInstance(new User());
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
 
             // Service Level Dependencies
