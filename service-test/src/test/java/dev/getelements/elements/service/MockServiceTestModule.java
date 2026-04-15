@@ -103,6 +103,7 @@ public class MockServiceTestModule extends AbstractModule {
         bind(OidcAuthSchemeDao.class).toInstance(mock(OidcAuthSchemeDao.class));
         bind(OAuth2AuthSchemeDao.class).toInstance(mock(OAuth2AuthSchemeDao.class));
         bind(DistinctInventoryItemDao.class).toInstance(mock(DistinctInventoryItemDao.class));
+        bind(ItemLedgerDao.class).toInstance(mock(ItemLedgerDao.class));
         bind(WalletDao.class).toInstance(mock(WalletDao.class));
         bind(SmartContractDao.class).toInstance(mock(SmartContractDao.class));
         bind(VaultDao.class).toInstance(mock(VaultDao.class));

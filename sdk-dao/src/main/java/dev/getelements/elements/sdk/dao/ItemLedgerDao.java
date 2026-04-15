@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
 import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
@@ -8,6 +9,7 @@ import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
  * Append-only DAO for item audit ledger entries. No update or delete methods are provided;
  * records are immutable by design.
  */
+@ElementServiceExport
 public interface ItemLedgerDao {
 
     /**
