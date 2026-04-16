@@ -77,7 +77,7 @@ public class MongoItemLedgerDaoTest {
         entry.setQuantityAfter(10);
         getItemLedgerDao().createLedgerEntry(entry);
 
-        final var page = getItemLedgerDao().getLedgerEntries(testInventoryItemId, 0, 20, null);
+        final var page = getItemLedgerDao().getLedgerEntries(testInventoryItemId, 0, 20, null, null, null);
 
         assertEquals(page.getTotal(), 2);
         assertEquals(page.getObjects().size(), 2);
@@ -93,7 +93,7 @@ public class MongoItemLedgerDaoTest {
     @Test(dependsOnMethods = "testGetLedgerEntriesReturnsEntriesForInventoryItem")
     public void testGetLedgerEntriesFiltersByEventType() {
         final var page = getItemLedgerDao()
-                .getLedgerEntries(testInventoryItemId, 0, 20, ItemLedgerEventType.CREATED);
+                .getLedgerEntries(testInventoryItemId, 0, 20, ItemLedgerEventType.CREATED, null, null);
 
         assertEquals(page.getTotal(), 1);
         assertEquals(page.getObjects().get(0).getEventType(), ItemLedgerEventType.CREATED);
@@ -102,7 +102,7 @@ public class MongoItemLedgerDaoTest {
     @Test(dependsOnMethods = "testCreateLedgerEntryReturnsPersistedEntry")
     public void testGetLedgerEntriesForUserReturnsAllUserEntries() {
         final var page = getItemLedgerDao()
-                .getLedgerEntriesForUser(testUser.getId(), 0, 20, null);
+                .getLedgerEntriesForUser(testUser.getId(), 0, 20, null, null, null);
 
         assertTrue(page.getTotal() >= 1);
         page.getObjects().forEach(e -> assertEquals(e.getUserId(), testUser.getId()));
@@ -111,7 +111,7 @@ public class MongoItemLedgerDaoTest {
     @Test(dependsOnMethods = "testGetLedgerEntriesReturnsEntriesForInventoryItem")
     public void testGetLedgerEntriesForUserFiltersByEventType() {
         final var page = getItemLedgerDao()
-                .getLedgerEntriesForUser(testUser.getId(), 0, 20, ItemLedgerEventType.QUANTITY_ADJUSTED);
+                .getLedgerEntriesForUser(testUser.getId(), 0, 20, ItemLedgerEventType.QUANTITY_ADJUSTED, null, null);
 
         assertTrue(page.getTotal() >= 1);
         page.getObjects().forEach(e -> assertEquals(e.getEventType(), ItemLedgerEventType.QUANTITY_ADJUSTED));
@@ -120,10 +120,43 @@ public class MongoItemLedgerDaoTest {
     @Test
     public void testGetLedgerEntriesForUnknownInventoryItemReturnsEmpty() {
         final var page = getItemLedgerDao()
-                .getLedgerEntries(UUID.randomUUID().toString(), 0, 20, null);
+                .getLedgerEntries(UUID.randomUUID().toString(), 0, 20, null, null, null);
 
         assertEquals(page.getTotal(), 0);
         assertTrue(page.getObjects().isEmpty());
+    }
+
+    @Test
+    public void testGetLedgerEntriesFiltersByTimestampRange() {
+        final var rangeInvId = UUID.randomUUID().toString().replace("-", "");
+
+        // Record "before" time, insert entry, record "after" time
+        final long before = System.currentTimeMillis() - 1;
+
+        final var entry = new ItemLedgerEntry();
+        entry.setInventoryItemId(rangeInvId);
+        entry.setItemCategory(ItemCategory.FUNGIBLE);
+        entry.setItemId(testItem.getId());
+        entry.setUserId(testUser.getId());
+        entry.setEventType(ItemLedgerEventType.CREATED);
+        getItemLedgerDao().createLedgerEntry(entry);
+
+        final long after = System.currentTimeMillis() + 1;
+
+        // Query with range that spans the entry — should return 1
+        final var inRange = getItemLedgerDao()
+                .getLedgerEntries(rangeInvId, 0, 20, null, before, after);
+        assertEquals(inRange.getTotal(), 1);
+
+        // Query with upper bound before the entry was created — should return 0
+        final var beforeRange = getItemLedgerDao()
+                .getLedgerEntries(rangeInvId, 0, 20, null, null, before);
+        assertEquals(beforeRange.getTotal(), 0);
+
+        // Query with lower bound after the entry was created — should return 0
+        final var afterRange = getItemLedgerDao()
+                .getLedgerEntries(rangeInvId, 0, 20, null, after, null);
+        assertEquals(afterRange.getTotal(), 0);
     }
 
     @Test
@@ -140,15 +173,15 @@ public class MongoItemLedgerDaoTest {
             getItemLedgerDao().createLedgerEntry(entry);
         }
 
-        final var firstPage = getItemLedgerDao().getLedgerEntries(paginationInvId, 0, 2, null);
+        final var firstPage = getItemLedgerDao().getLedgerEntries(paginationInvId, 0, 2, null, null, null);
         assertEquals(firstPage.getTotal(), 5);
         assertEquals(firstPage.getObjects().size(), 2);
 
-        final var secondPage = getItemLedgerDao().getLedgerEntries(paginationInvId, 2, 2, null);
+        final var secondPage = getItemLedgerDao().getLedgerEntries(paginationInvId, 2, 2, null, null, null);
         assertEquals(secondPage.getTotal(), 5);
         assertEquals(secondPage.getObjects().size(), 2);
 
-        final var lastPage = getItemLedgerDao().getLedgerEntries(paginationInvId, 4, 2, null);
+        final var lastPage = getItemLedgerDao().getLedgerEntries(paginationInvId, 4, 2, null, null, null);
         assertEquals(lastPage.getTotal(), 5);
         assertEquals(lastPage.getObjects().size(), 1);
     }

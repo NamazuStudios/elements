@@ -16,6 +16,8 @@ import java.util.Date;
 
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.eq;
+import static dev.morphia.query.filters.Filters.gte;
+import static dev.morphia.query.filters.Filters.lte;
 
 public class MongoItemLedgerDao implements ItemLedgerDao {
 
@@ -36,10 +38,10 @@ public class MongoItemLedgerDao implements ItemLedgerDao {
     @Override
     public Pagination<ItemLedgerEntry> getLedgerEntries(
             final String inventoryItemId, final int offset, final int count,
-            final ItemLedgerEventType eventType) {
+            final ItemLedgerEventType eventType, final Long from, final Long to) {
         final var query = getDatastore().find(MongoItemLedgerEntry.class)
                 .filter(eq("inventoryItemId", inventoryItemId));
-        applyEventTypeFilter(query, eventType);
+        applyFilters(query, eventType, from, to);
         final var options = new FindOptions().sort(descending("timestamp"));
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
@@ -50,10 +52,10 @@ public class MongoItemLedgerDao implements ItemLedgerDao {
     @Override
     public Pagination<ItemLedgerEntry> getLedgerEntriesForUser(
             final String userId, final int offset, final int count,
-            final ItemLedgerEventType eventType) {
+            final ItemLedgerEventType eventType, final Long from, final Long to) {
         final var query = getDatastore().find(MongoItemLedgerEntry.class)
                 .filter(eq("userId", userId));
-        applyEventTypeFilter(query, eventType);
+        applyFilters(query, eventType, from, to);
         final var options = new FindOptions().sort(descending("timestamp"));
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
@@ -61,10 +63,17 @@ public class MongoItemLedgerDao implements ItemLedgerDao {
                 options);
     }
 
-    private void applyEventTypeFilter(final Query<MongoItemLedgerEntry> query,
-                                      final ItemLedgerEventType eventType) {
+    private void applyFilters(final Query<MongoItemLedgerEntry> query,
+                              final ItemLedgerEventType eventType,
+                              final Long from, final Long to) {
         if (eventType != null) {
             query.filter(eq("eventType", eventType));
+        }
+        if (from != null) {
+            query.filter(gte("timestamp", new Date(from)));
+        }
+        if (to != null) {
+            query.filter(lte("timestamp", new Date(to)));
         }
     }
 

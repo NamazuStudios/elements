@@ -172,6 +172,33 @@ public class ItemLedgerApiTest {
     }
 
     @Test(dependsOnMethods = "createInventoryItem")
+    public void testGetLedgerEntriesFiltersByTimestampRange() {
+        // Use a future range that contains no entries
+        final long far_future = System.currentTimeMillis() + 1_000_000_000L;
+
+        final var emptyPage = client
+            .target(format("%s/inventory/ledger?inventoryItemId=%s&from=%d&to=%d",
+                apiRoot, inventoryItem.getId(), far_future, far_future + 1000))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .get()
+            .readEntity(ItemLedgerEntryPagination.class);
+
+        assertEquals(emptyPage.getTotal(), 0, "Expected no entries in far-future range");
+
+        // Use a wide range (epoch 0 to far future) — should include the CREATED entry
+        final var fullPage = client
+            .target(format("%s/inventory/ledger?inventoryItemId=%s&from=0&to=%d",
+                apiRoot, inventoryItem.getId(), far_future))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .get()
+            .readEntity(ItemLedgerEntryPagination.class);
+
+        assertTrue(fullPage.getTotal() >= 1, "Expected entries in wide timestamp range");
+    }
+
+    @Test(dependsOnMethods = "createInventoryItem")
     public void testPaginationOffsetAndCount() {
         final var firstPage = client
             .target(format("%s/inventory/ledger?inventoryItemId=%s&offset=0&count=1",

@@ -11,14 +11,14 @@ public class AnonItemLedgerService implements ItemLedgerService {
     @Override
     public Pagination<ItemLedgerEntry> getLedgerEntries(
             final String inventoryItemId, final int offset, final int count,
-            final ItemLedgerEventType eventType) {
+            final ItemLedgerEventType eventType, final Long from, final Long to) {
         throw new ForbiddenException("Unprivileged requests cannot read the item ledger.");
     }
 
     @Override
     public Pagination<ItemLedgerEntry> getLedgerEntriesForUser(
             final String userId, final int offset, final int count,
-            final ItemLedgerEventType eventType) {
+            final ItemLedgerEventType eventType, final Long from, final Long to) {
         throw new ForbiddenException("Unprivileged requests cannot read the item ledger.");
     }
 }

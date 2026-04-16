@@ -14,15 +14,15 @@ public class SuperuserItemLedgerService implements ItemLedgerService {
     @Override
     public Pagination<ItemLedgerEntry> getLedgerEntries(
             final String inventoryItemId, final int offset, final int count,
-            final ItemLedgerEventType eventType) {
-        return getItemLedgerDao().getLedgerEntries(inventoryItemId, offset, count, eventType);
+            final ItemLedgerEventType eventType, final Long from, final Long to) {
+        return getItemLedgerDao().getLedgerEntries(inventoryItemId, offset, count, eventType, from, to);
     }
 
     @Override
     public Pagination<ItemLedgerEntry> getLedgerEntriesForUser(
             final String userId, final int offset, final int count,
-            final ItemLedgerEventType eventType) {
-        return getItemLedgerDao().getLedgerEntriesForUser(userId, offset, count, eventType);
+            final ItemLedgerEventType eventType, final Long from, final Long to) {
+        return getItemLedgerDao().getLedgerEntriesForUser(userId, offset, count, eventType, from, to);
     }
 
     public ItemLedgerDao getItemLedgerDao() {

@@ -24,10 +24,13 @@ public interface ItemLedgerService {
      * @param offset pagination offset
      * @param count maximum results
      * @param eventType optional filter; pass null to return all event types
+     * @param from optional inclusive lower bound as epoch milliseconds; null means no lower bound
+     * @param to optional inclusive upper bound as epoch milliseconds; null means no upper bound
      * @return paginated entries
      */
     Pagination<ItemLedgerEntry> getLedgerEntries(
-            String inventoryItemId, int offset, int count, ItemLedgerEventType eventType);
+            String inventoryItemId, int offset, int count,
+            ItemLedgerEventType eventType, Long from, Long to);
 
     /**
      * Returns all ledger entries for a specific user (across all inventory items), most-recent first.
@@ -36,9 +39,12 @@ public interface ItemLedgerService {
      * @param offset pagination offset
      * @param count maximum results
      * @param eventType optional filter; pass null to return all event types
+     * @param from optional inclusive lower bound as epoch milliseconds; null means no lower bound
+     * @param to optional inclusive upper bound as epoch milliseconds; null means no upper bound
      * @return paginated entries
      */
     Pagination<ItemLedgerEntry> getLedgerEntriesForUser(
-            String userId, int offset, int count, ItemLedgerEventType eventType);
+            String userId, int offset, int count,
+            ItemLedgerEventType eventType, Long from, Long to);
 
 }

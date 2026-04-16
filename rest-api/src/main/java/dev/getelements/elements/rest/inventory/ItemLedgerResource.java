@@ -23,8 +23,9 @@ public class ItemLedgerResource {
 
     @GET
     @Operation(summary = "Query the item audit ledger",
-               description = "Returns paginated ledger entries for a specific inventory item or user. " +
-                             "Exactly one of inventoryItemId or userId must be supplied.")
+               description = "Returns paginated ledger entries for a specific inventory item or user, " +
+                             "sorted most-recent first. Exactly one of inventoryItemId or userId must be supplied. " +
+                             "All other parameters are optional filters.")
     public Pagination<ItemLedgerEntry> getLedgerEntries(
             @Parameter(description = "Filter entries for a specific inventory item ID.")
             @QueryParam("inventoryItemId") final String inventoryItemId,
@@ -35,6 +36,12 @@ public class ItemLedgerResource {
             @Parameter(description = "Optional event type filter. When omitted, all event types are returned.")
             @QueryParam("eventType") final ItemLedgerEventType eventType,
 
+            @Parameter(description = "Optional inclusive lower bound as epoch milliseconds. When omitted, no lower bound is applied.")
+            @QueryParam("from") final Long from,
+
+            @Parameter(description = "Optional inclusive upper bound as epoch milliseconds. When omitted, no upper bound is applied.")
+            @QueryParam("to") final Long to,
+
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count") @DefaultValue("20") final int count) {
 
@@ -42,9 +49,9 @@ public class ItemLedgerResource {
         if (count < 0) throw new InvalidParameterException("Count must be non-negative.");
 
         if (inventoryItemId != null && !inventoryItemId.isBlank()) {
-            return getItemLedgerService().getLedgerEntries(inventoryItemId, offset, count, eventType);
+            return getItemLedgerService().getLedgerEntries(inventoryItemId, offset, count, eventType, from, to);
         } else if (userId != null && !userId.isBlank()) {
-            return getItemLedgerService().getLedgerEntriesForUser(userId, offset, count, eventType);
+            return getItemLedgerService().getLedgerEntriesForUser(userId, offset, count, eventType, from, to);
         } else {
             throw new InvalidParameterException("Either inventoryItemId or userId query parameter is required.");
         }
