@@ -261,4 +261,15 @@ public interface UserDao {
      */
     Optional<User> findUserWithLoginAndPassword(String userNameOrEmail, String password);
 
+    /**
+     * Sets (or replaces) the password for the given user without requiring the old password.
+     * The caller is responsible for authorising this operation (e.g. by requiring a verified
+     * email UID).
+     *
+     * @param userId      the user's ID as determined by {@link User#getId()}
+     * @param rawPassword the new plain-text password to hash and store
+     * @return the updated {@link User}
+     */
+    User setPassword(String userId, String rawPassword);
+
 }

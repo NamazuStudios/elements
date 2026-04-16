@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.user;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.model.profile.CreateProfileRequest;
@@ -21,6 +22,8 @@ public abstract class AbstractUserService implements UserService {
 
     private User currentUser;
 
+    private ElementRegistry elementRegistry;
+
     private ProfileDao profileDao;
 
     private NameService nameService;
@@ -37,6 +40,15 @@ public abstract class AbstractUserService implements UserService {
     @Inject
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 
     public ProfileDao getProfileDao() {

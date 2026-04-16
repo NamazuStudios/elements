@@ -1,6 +1,8 @@
 package dev.getelements.elements.service.auth.oidc;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
@@ -8,12 +10,14 @@ import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
+import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
 public class AnonOidcAuthService implements OidcAuthService {
 
@@ -22,6 +26,8 @@ public class AnonOidcAuthService implements OidcAuthService {
     private UserUidDao userUidDao;
 
     private OidcAuthServiceOperations oidcAuthServiceOperations;
+
+    private ElementRegistry elementRegistry;
 
     @Override
     public SessionCreation createSession(OidcSessionRequest oidcSessionRequest) {
@@ -36,16 +42,21 @@ public class AnonOidcAuthService implements OidcAuthService {
         userUid.setUserId(userId);
         userUid.setId(uid);
         userUid.setScheme(scheme);
+        userUid.setVerificationStatus(VerificationStatus.VERIFIED);
 
-        userUidDao.createUserUid(userUid);
+        final var created = userUidDao.createUserUidStrict(userUid);
+        getElementRegistry().publish(Event.builder()
+                .argument(created)
+                .named(USER_UID_CREATED_EVENT)
+                .build());
     }
 
     private Optional<User> tryGetUserFromUid(final Optional<UserUid> uid) {
 
-        if(uid.isPresent()) {
+        if (uid.isPresent()) {
             final var userId = uid.get().getUserId();
 
-            if(userId != null) {
+            if (userId != null) {
                 final var user = userDao.getUser(userId);
                 return Optional.of(user);
             }
@@ -58,15 +69,15 @@ public class AnonOidcAuthService implements OidcAuthService {
 
         final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
         final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();
-        final var hasEmail = email != null && !email.isBlank();
+        final var emailVerified = Boolean.TRUE.equals(jwt.getClaim("email_verified").asBoolean());
 
-        //Search the existing UIds to see if the user already exists
-        var oidcUid = userUidDao.findUserUid(uid, scheme.getName());
-        var emailUid = Optional.<UserUid>empty();
+        // Search the existing UIDs to see if the user already exists
+        final var oidcUid = userUidDao.findUserUid(uid, scheme.getName());
 
-        if (hasEmail) {
-            emailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
-        }
+        // Only use email UID for lookup when email is verified to prevent account takeover
+        final var emailUid = emailVerified && email != null && !email.isEmpty()
+                ? userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)
+                : Optional.<UserUid>empty();
 
         var userOptional = tryGetUserFromUid(oidcUid);
 
@@ -74,8 +85,7 @@ public class AnonOidcAuthService implements OidcAuthService {
             userOptional = tryGetUserFromUid(emailUid);
         }
 
-        //If the user already exists, check to see if we need to associate
-        //any new UIds from the extracted JWT claims
+        // If the user already exists, associate any new UIDs from the JWT claims
         if (userOptional.isPresent()) {
             final var user = userOptional.get();
 
@@ -83,25 +93,33 @@ public class AnonOidcAuthService implements OidcAuthService {
                 createNewUserUid(uid, scheme.getName(), user.getId());
             }
 
-            if (emailUid.isEmpty() && hasEmail) {
+            if (emailVerified && email != null && !email.isEmpty() && emailUid.isEmpty()) {
                 createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
             }
 
             return user;
         }
 
-        //No existing user was found, create a new one in the DB and assign the ref to
-        //any UIds made from the JWT claims
+        // No existing user — insert a fresh document via createUserStrict to avoid collision
+        // when name/email are absent (createUser uses an upsert that would merge blank users).
         var user = new User();
-        user.setName(email);
-        user.setEmail(email);
         user.setLevel(USER);
-        user = getUserDao().createUser(user);
+
+        if (emailVerified && email != null && !email.isEmpty()) {
+            user.setEmail(email);
+        }
+
+        user = getUserDao().createUserStrict(user);
+
+        // If a stale OIDC UID exists (user was deleted), delete it before relinking
+        if (oidcUid.isPresent()) {
+            userUidDao.tryDeleteUserUid(oidcUid.get());
+        }
 
         createNewUserUid(uid, scheme.getName(), user.getId());
 
-        if (hasEmail) {
-            // If a stale email UID exists (user was deleted), relink it to the new user
+        if (emailVerified && email != null && !email.isEmpty()) {
+            // If a stale email UID exists (user was deleted), delete it before relinking
             if (emailUid.isPresent()) {
                 userUidDao.tryDeleteUserUid(emailUid.get());
             }
@@ -137,6 +155,15 @@ public class AnonOidcAuthService implements OidcAuthService {
     @Inject
     public void setUserUidDao(UserUidDao userUidDao) {
         this.userUidDao = userUidDao;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 
 }

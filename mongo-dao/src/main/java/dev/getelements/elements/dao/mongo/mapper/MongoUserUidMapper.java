@@ -13,6 +13,8 @@ public interface MongoUserUidMapper extends MapperRegistry.ReversibleMapper<Mong
     @Mapping(target = "scheme", source = "id.scheme")
     @Mapping(target = "id", source = "id.id")
     @Mapping(target = "userId", source = "user.objectId")
+    @Mapping(target = "verificationStatus",
+             expression = "java(source.getVerificationStatus() != null ? source.getVerificationStatus() : dev.getelements.elements.sdk.model.user.VerificationStatus.UNVERIFIED)")
     UserUid forward(MongoUserUid source);
 
     @Override

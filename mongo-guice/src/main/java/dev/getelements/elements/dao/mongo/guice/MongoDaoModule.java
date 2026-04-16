@@ -7,6 +7,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.dao.mongo.*;
+import dev.getelements.elements.dao.mongo.MongoUidVerificationTokenDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductBundleDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductSkuSchemaDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
@@ -43,6 +44,7 @@ import dev.getelements.elements.dao.mongo.ucode.UniqueCodeGeneratorProvider;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.dao.UidVerificationTokenDao;
 import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.dao.ProductBundleDao;
 import dev.getelements.elements.sdk.dao.ProductSkuSchemaDao;
@@ -125,6 +127,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(UniqueCodeDao.class).to(MongoUniqueCodeDao.class);
         bind(ProductBundleDao.class).to(MongoProductBundleDao.class);
         bind(ProductSkuSchemaDao.class).to(MongoProductSkuSchemaDao.class);
+        bind(UidVerificationTokenDao.class).to(MongoUidVerificationTokenDao.class);
 
 
         bind(SecureRandom.class)
@@ -209,6 +212,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(UniqueCodeDao.class);
         expose(ProductBundleDao.class);
         expose(ProductSkuSchemaDao.class);
+        expose(UidVerificationTokenDao.class);
 
     }
 
