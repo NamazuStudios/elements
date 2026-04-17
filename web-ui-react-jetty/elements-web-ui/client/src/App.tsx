@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ResourceProvider, useResources } from "@/contexts/ResourceContext";
 import { PluginProvider } from "@/contexts/PluginContext";
 import LoginPage from "@/components/LoginPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import ResourceManager from "@/pages/ResourceManager";
@@ -77,6 +79,12 @@ function Routes() {
         <Route path="/login">
           <LoginPage />
         </Route>
+        <Route path="/forgot-password">
+          <ForgotPasswordPage />
+        </Route>
+        <Route path="/reset-password">
+          <ResetPasswordPage />
+        </Route>
         <Route>
           <Redirect to="/login" />
         </Route>
@@ -88,6 +96,12 @@ function Routes() {
     <DashboardLayout>
       <Switch>
         <Route path="/login">
+          <Redirect to="/dashboard" />
+        </Route>
+        <Route path="/forgot-password">
+          <Redirect to="/dashboard" />
+        </Route>
+        <Route path="/reset-password">
           <Redirect to="/dashboard" />
         </Route>
         <Route path="/">

@@ -52,6 +52,7 @@ import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
 import dev.getelements.elements.sdk.service.user.EmailPasswordLinkService;
 import dev.getelements.elements.sdk.service.user.EmailVerificationService;
+import dev.getelements.elements.sdk.service.user.PasswordResetService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.sdk.service.user.UsernamePasswordLinkService;
 import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
@@ -139,6 +140,7 @@ import dev.getelements.elements.service.user.AnonEmailVerificationService;
 import dev.getelements.elements.service.user.AnonUserService;
 import dev.getelements.elements.service.user.EmailPasswordLinkServiceProvider;
 import dev.getelements.elements.service.user.EmailVerificationServiceProvider;
+import dev.getelements.elements.service.user.PasswordResetServiceProvider;
 import dev.getelements.elements.service.user.UsernamePasswordLinkServiceProvider;
 import dev.getelements.elements.service.user.SuperUserEmailVerificationService;
 import dev.getelements.elements.service.user.SuperuserUserService;
@@ -458,6 +460,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(EmailVerificationService.class)
                 .toProvider(EmailVerificationServiceProvider.class)
+                .in(scope);
+
+        bind(PasswordResetService.class)
+                .toProvider(PasswordResetServiceProvider.class)
                 .in(scope);
 
         bind(EmailPasswordLinkService.class)
