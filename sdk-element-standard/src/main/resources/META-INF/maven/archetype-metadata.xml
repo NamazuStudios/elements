@@ -40,10 +40,10 @@
       </includes>
     </fileSet>
     <fileSet encoding="UTF-8">
-      <directory></directory>
+      <directory/>
       <includes>
-        <include>LICENSE</include>
         <include>README.md</include>
+        <include>CLAUDE.md</include>
         <include>.gitignore</include>
       </includes>
     </fileSet>
