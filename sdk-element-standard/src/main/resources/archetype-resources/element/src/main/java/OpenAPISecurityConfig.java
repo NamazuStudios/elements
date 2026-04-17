@@ -3,7 +3,6 @@
 #set( $symbol_escape = '\' )
 package ${package};
 
-import dev.get${artifactId}s.${artifactId}s.sdk.model.Headers;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -12,14 +11,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 
-import static dev.get${artifactId}s.${artifactId}s.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
+import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeIn.HEADER;
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.APIKEY;
 
 @OpenAPIDefinition(
         info = @Info(
                 title = "Example Element",
-                description = "An example ${artifactId}.",
+                description = "An example element.",
                 contact = @Contact(
                         url = "https://namazustudios.com",
                         email = "info@namazustudios.com",

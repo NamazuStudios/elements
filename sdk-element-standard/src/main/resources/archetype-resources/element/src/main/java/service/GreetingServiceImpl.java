@@ -3,10 +3,13 @@
 #set( $symbol_escape = '\' )
 package ${package}.service;
 
-import dev.get${artifactId}s.${artifactId}s.sdk.model.user.User;
-import dev.get${artifactId}s.${artifactId}s.sdk.service.user.UserService;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
+import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.inject.Inject;
 
+
+@ElementServiceExport(GreetingService.class)
 public class GreetingServiceImpl implements GreetingService {
 
     private UserService userService;
@@ -22,7 +25,7 @@ public class GreetingServiceImpl implements GreetingService {
 
     @Override
     public String getGreeting() {
-        // Because we set the dev.get${artifactId}s.${artifactId}s.auth.enabled attribute to "true" in the HelloWorldApplication,
+        // Because we set the dev.getelements.elements.auth.enabled attribute to "true" in the HelloWorldApplication,
         // the UserService will be automatically injected with the current user. This will apply an authentication
         // filter to every request and every service that is used in this application.
         final User currentUser = userService.getCurrentUser();

@@ -4,8 +4,8 @@
 package ${package}.rest;
 
 import ${package}.service.GreetingService;
-import dev.get${artifactId}s.${artifactId}s.sdk.Element;
-import dev.get${artifactId}s.${artifactId}s.sdk.ElementSupplier;
+import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.ElementSupplier;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,18 +16,18 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
 import static ${package}.HelloWorldApplication.OPENAPI_TAG;
-import static dev.get${artifactId}s.${artifactId}s.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
+import static dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET;
 
 
 @Tag(name = OPENAPI_TAG)
 @Path("/hellowithauthentication")
 public class HelloWithAuthentication {
 
-    private final Element ${artifactId} = ElementSupplier
+    private final Element element = ElementSupplier
             .getElementLocal(HelloWithAuthentication.class)
             .get();
 
-    private final GreetingService greetingService = ${artifactId}
+    private final GreetingService greetingService = element
             .getServiceLocator()
             .getInstance(GreetingService.class);
 

@@ -3,7 +3,7 @@
 #set( $symbol_escape = '\' )
 package ${package}.model;
 
-import dev.get${artifactId}s.${artifactId}s.sdk.model.Constants;
+import dev.getelements.elements.sdk.model.Constants;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
