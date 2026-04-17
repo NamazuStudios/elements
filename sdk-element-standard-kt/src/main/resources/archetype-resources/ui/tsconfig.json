@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react",
+    "jsxFactory": "React.createElement",
+    "jsxFragmentFactory": "React.Fragment",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "vite.base.config.ts", "vite.superuser.config.ts", "vite.user.config.ts", "tailwind.config.ts", "postcss.config.ts"]
+}
