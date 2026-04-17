@@ -10,23 +10,29 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
     setIsLoading(true);
+    setError(null);
     try {
-      await fetch('/api/proxy/api/rest/user/password/reset/request', {
+      const response = await fetch('/api/proxy/api/rest/user/password/reset/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
+      if (!response.ok) {
+        setError('Something went wrong. Please try again later.');
+        return;
+      }
+      setSubmitted(true);
     } catch {
-      // Ignore network errors — show neutral confirmation either way
+      setError('Unable to reach the server. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
-      setSubmitted(true);
     }
   };
 
@@ -74,6 +80,10 @@ export default function ForgotPasswordPage() {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Sending...' : 'Send Reset Link'}
               </Button>
+
+              {error && (
+                <p className="text-sm text-destructive text-center">{error}</p>
+              )}
 
               <div className="text-center text-sm text-muted-foreground">
                 <Link to="/login" className="text-primary hover:underline">
