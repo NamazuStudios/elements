@@ -19,15 +19,30 @@ public class ElementBinder extends AbstractBinder {
     @Override
     protected void configure() {
 
+        bindElement(element);
+
+        final var registry = element.getElementRegistry();
+
         element.getElementRecord()
+                .dependencies()
+                .stream()
+                .flatMap(dep -> dep.findDependencies(registry))
+                .distinct()
+                .forEach(this::bindElement);
+
+    }
+
+    private void bindElement(final Element source) {
+
+        source.getElementRecord()
                 .attributes()
                 .stream()
                 .filter(a -> a.value() != null)
                 .forEach(this::bindAttribute);
 
-        element.getElementRecord()
+        source.getElementRecord()
                 .services()
-                .forEach(this::bindService);
+                .forEach(service -> bindService(source, service));
 
     }
 
@@ -39,7 +54,7 @@ public class ElementBinder extends AbstractBinder {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindService(final ElementServiceRecord service) {
+    private <T> void bindService(final Element source, final ElementServiceRecord service) {
 
         final var export = service.export();
         final var exposedTypes = export.exposed();
@@ -49,8 +64,8 @@ public class ElementBinder extends AbstractBinder {
         final Class<T> primaryType = (Class<T>) exposedTypes.getFirst();
 
         final Optional<Supplier<T>> found = export.isNamed()
-                ? element.getServiceLocator().findInstance(primaryType, export.name())
-                : element.getServiceLocator().findInstance(primaryType);
+                ? source.getServiceLocator().findInstance(primaryType, export.name())
+                : source.getServiceLocator().findInstance(primaryType);
 
         found.ifPresent(supplier -> {
             final var binding = bindFactory(supplier);
