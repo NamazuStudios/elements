@@ -2,7 +2,7 @@ package dev.getelements.elements.service.invite;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.invite.InviteService;
-import dev.getelements.elements.service.util.Services;
+import dev.getelements.elements.sdk.service.Services;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;

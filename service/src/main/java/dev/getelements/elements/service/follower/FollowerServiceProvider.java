@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.service.follower.FollowerService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-import static dev.getelements.elements.service.util.Services.forbidden;
+import static dev.getelements.elements.sdk.service.Services.forbidden;
 
 /**
  * Created by GarrettMcSpadden on 12/7/2020.

@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.service.application.MatchmakingApplicationCo
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-import static dev.getelements.elements.service.util.Services.forbidden;
+import static dev.getelements.elements.sdk.service.Services.forbidden;
 
 public class MatchmakingConfigurationServiceProvider implements Provider<MatchmakingApplicationConfigurationService> {
 

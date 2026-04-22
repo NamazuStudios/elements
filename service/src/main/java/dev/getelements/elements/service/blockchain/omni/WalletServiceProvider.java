@@ -2,7 +2,7 @@ package dev.getelements.elements.service.blockchain.omni;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.blockchain.WalletService;
-import dev.getelements.elements.service.util.Services;
+import dev.getelements.elements.sdk.service.Services;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;

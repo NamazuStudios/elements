@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.service.inventory.SimpleInventoryItemService
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-import static dev.getelements.elements.service.util.Services.forbidden;
+import static dev.getelements.elements.sdk.service.Services.forbidden;
 
 /**
  * Created by davidjbrooks on 11/14/2018.

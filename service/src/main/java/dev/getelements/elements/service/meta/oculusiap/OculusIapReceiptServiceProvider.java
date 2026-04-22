@@ -2,7 +2,7 @@ package dev.getelements.elements.service.meta.oculusiap;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService;
-import dev.getelements.elements.service.util.Services;
+import dev.getelements.elements.sdk.service.Services;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
