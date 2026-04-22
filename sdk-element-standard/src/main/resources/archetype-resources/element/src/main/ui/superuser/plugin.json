@@ -1,0 +1,11 @@
+{
+  "schema": "1",
+  "entries": [
+    {
+      "label": "Example Element",
+      "icon": "Package",
+      "bundlePath": "plugin.bundle.js",
+      "route": "example-element"
+    }
+  ]
+}

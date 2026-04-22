@@ -8,12 +8,12 @@
 // Enables DI via Guice
 @GuiceElementModule(MyGameModule.class)
 // Allows injecting DAO layer from Elements Core
-@ElementDependency("dev.get${artifactId}s.${artifactId}s.sdk.dao")
+@ElementDependency("dev.getelements.elements.sdk.dao")
 // Allows injecting Service layer from Elements Core
-@ElementDependency("dev.get${artifactId}s.${artifactId}s.sdk.service")
+@ElementDependency("dev.getelements.elements.sdk.service")
 package ${package};
 
 import ${package}.guice.MyGameModule;
-import dev.get${artifactId}s.${artifactId}s.sdk.annotation.ElementDefinition;
-import dev.get${artifactId}s.${artifactId}s.sdk.annotation.ElementDependency;
-import dev.get${artifactId}s.${artifactId}s.sdk.spi.guice.annotations.GuiceElementModule;
+import dev.getelements.elements.sdk.annotation.ElementDefinition;
+import dev.getelements.elements.sdk.annotation.ElementDependency;
+import dev.getelements.elements.sdk.spi.guice.annotations.GuiceElementModule;

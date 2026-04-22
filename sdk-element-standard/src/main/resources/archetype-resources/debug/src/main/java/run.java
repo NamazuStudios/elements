@@ -3,14 +3,39 @@
 #set( $symbol_escape = '\' )
 import dev.getelements.elements.sdk.local.ElementsLocalBuilder;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  * Runs your local Element in the SDK.
+ *
+ * Working directory must be the project root.
+ * IntelliJ: Run → Edit Configurations → Working directory → set to this project root.
  */
 public class run {
-    public static void main(final String[] args ) throws Exception {
+    public static void main(final String[] args ) throws IOException, InterruptedException {
+
+        // Install npm dependencies on first run, then build both segment bundles.
+        // The bundles are written directly to element/src/main/ui/{superuser,user}/
+        // so that the Maven build triggered by local.start() picks them up.
+        final var uiDir = new File("ui");
+
+        if (!new File(uiDir, "node_modules").exists()) {
+            new ProcessBuilder("npm", "install")
+                    .directory(uiDir)
+                    .inheritIO()
+                    .start()
+                    .waitFor();
+        }
+
+        new ProcessBuilder("npm", "run", "build")
+                .directory(uiDir)
+                .inheritIO()
+                .start()
+                .waitFor();
 
         new ProcessBuilder("docker", "compose", "up", "-d")
-                .directory(new java.io.File("services-dev"))
+                .directory(new File("services-dev"))
                 .inheritIO()
                 .start()
                 .waitFor();
@@ -19,11 +44,9 @@ public class run {
                 .withSourceRoot()
                 .withDeployment(builder -> builder
                         .useDefaultRepositories(true)
-                        .elementPath()
-                            .addSpiBuiltin("DEFAULT")
-                            .addApiArtifact("${groupId}:api:${version}")
-                            .addElementArtifact("${groupId}:element:${version}")
-                        .endElementPath()
+                        .elementPackage()
+                        .elmArtifact("${groupId}:element:elm:${version}")
+                        .endElementPackage()
                         .build()
                 )
                 .build();
@@ -32,4 +55,5 @@ public class run {
         local.run();
 
     }
+
 }
