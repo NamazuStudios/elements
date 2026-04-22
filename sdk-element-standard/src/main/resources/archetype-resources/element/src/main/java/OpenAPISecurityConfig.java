@@ -30,14 +30,14 @@ import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.APIKEY;
                 description = "Please see the Namazu Elements Manual for more information."
         ),
         security = {
-                @SecurityRequirement(name = SESSION_SECRET)
+                @SecurityRequirement(name = dev.getelements.elements.sdk.model.Headers.SESSION_SECRET)
         }
 )
 @SecuritySchemes({
         @SecurityScheme(
                 type = APIKEY,
                 in = HEADER,
-                name = dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET,
+                name = dev.getelements.elements.sdk.model.Headers.SESSION_SECRET,
                 paramName = dev.getelements.elements.sdk.model.Headers.SESSION_SECRET,
                 description = "Session secret required for authenticated endpoints")
 })
