@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as yaml from 'js-yaml';
 import { requireAuth, optionalAuth } from "./middleware/auth";
-import { proxyLimiter } from "./middleware/rate-limit";
+import { proxyLimiter, passwordResetLimiter } from "./middleware/rate-limit";
 import { getBackendUrl } from "./config";
 import multer from 'multer';
 import FormData from 'form-data';
@@ -388,6 +388,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     res.json(mockSpec);
+  });
+
+  // Rate-limited route for password reset requests (IP-level guard)
+  app.post('/api/proxy/api/rest/user/password/reset/request', optionalAuth, passwordResetLimiter, async (req: Request, res: Response) => {
+    try {
+      const ELEMENTS_BACKEND_URL = getBackendUrl();
+      const backendRes = await fetch(`${ELEMENTS_BACKEND_URL}/api/rest/user/password/reset/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body),
+      });
+      res.status(backendRes.status).end();
+    } catch {
+      res.status(200).end(); // Always return 200 to prevent enumeration via errors
+    }
   });
 
   // Proxy all /api/proxy/* requests to the Elements backend

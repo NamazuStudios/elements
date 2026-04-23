@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -152,6 +153,12 @@ export default function LoginPage() {
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
+
+            <div className="text-center text-sm text-muted-foreground">
+              <Link to="/forgot-password" className="hover:underline">
+                Forgot your password?
+              </Link>
+            </div>
           </form>
         </CardContent>
       </Card>

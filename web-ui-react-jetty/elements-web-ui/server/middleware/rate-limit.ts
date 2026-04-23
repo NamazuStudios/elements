@@ -27,3 +27,12 @@ export const proxyLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Stricter rate limit for password reset requests
+export const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 reset requests per windowMs
+  message: { error: 'Too many password reset requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});

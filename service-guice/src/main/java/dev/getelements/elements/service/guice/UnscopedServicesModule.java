@@ -89,12 +89,14 @@ import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentServic
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
+import dev.getelements.elements.service.user.AnonPasswordResetService;
 import dev.getelements.elements.service.user.SuperUserEmailPasswordLinkService;
 import dev.getelements.elements.service.user.SuperUserEmailVerificationService;
 import dev.getelements.elements.service.user.SuperUserUsernamePasswordLinkService;
 import dev.getelements.elements.service.user.SuperuserUserService;
 import dev.getelements.elements.sdk.service.user.EmailPasswordLinkService;
 import dev.getelements.elements.sdk.service.user.EmailVerificationService;
+import dev.getelements.elements.sdk.service.user.PasswordResetService;
 import dev.getelements.elements.sdk.service.user.UsernamePasswordLinkService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
@@ -367,6 +369,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(EmailVerificationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserEmailVerificationService.class);
+
+        bind(PasswordResetService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(AnonPasswordResetService.class);
 
         bind(EmailPasswordLinkService.class)
                 .annotatedWith(named(UNSCOPED))
