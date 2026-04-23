@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>${groupId}</groupId>
+        <artifactId>${rootArtifactId}</artifactId>
+        <version>${version}</version>
+    </parent>
+
+    <artifactId>${artifactId}</artifactId>
+    <packaging>pom</packaging>
+    <name>ui</name>
+    <description>
+        Builds both superuser and user plugin bundles from TypeScript source and writes them
+        directly into element/src/main/ui/{segment}/. Activate with: mvn install -Pbuild-ui.
+        Not active by default — developers run npm scripts directly in ui/ using their system
+        Node.js; this profile is for CI and release builds only.
+    </description>
+
+    <profiles>
+        <profile>
+            <id>build-ui</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <version>1.15.0</version>
+                        <configuration>
+                            <nodeVersion>v22.14.0</nodeVersion>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>install-node-and-npm</id>
+                                <goals><goal>install-node-and-npm</goal></goals>
+                            </execution>
+                            <execution>
+                                <id>npm-install</id>
+                                <goals><goal>npm</goal></goals>
+                            </execution>
+                            <execution>
+                                <id>npm-build</id>
+                                <goals><goal>npm</goal></goals>
+                                <configuration><arguments>run build</arguments></configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

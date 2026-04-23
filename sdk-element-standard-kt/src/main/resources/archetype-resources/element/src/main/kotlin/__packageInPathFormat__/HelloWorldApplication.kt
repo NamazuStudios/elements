@@ -22,6 +22,14 @@ class HelloWorldApplication : Application() {
         @ElementDefaultAttribute("example-element")
         val APPLICATION_PREFIX: String = "dev.getelements.elements.app.serve.prefix"
 
+        @JvmField
+        @ElementDefaultAttribute("/app/static/test/path")
+        val STATIC_CONTENT_URI: String = "dev.getelements.element.static.uri"
+
+        @JvmField
+        @ElementDefaultAttribute("/app/ui/test/path")
+        val UI_CONTENT_URI: String = "dev.getelements.element.ui.uri"
+
         const val OPENAPI_TAG: String = "Example"
     }
 

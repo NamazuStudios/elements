@@ -3,9 +3,6 @@
 #set( $symbol_escape = '\' )
 package ${package}.service;
 
-import dev.getelements.elements.sdk.annotation.ElementServiceExport;
-
-@ElementServiceExport
 public interface GreetingService {
 
     /**

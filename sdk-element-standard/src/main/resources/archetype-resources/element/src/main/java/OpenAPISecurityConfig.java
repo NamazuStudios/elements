@@ -18,7 +18,7 @@ import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.APIKEY;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Example Element",
-                description = "An example ${artifactId}.",
+                description = "An example element.",
                 contact = @Contact(
                         url = "https://namazustudios.com",
                         email = "info@namazustudios.com",
