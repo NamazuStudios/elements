@@ -1,6 +1,5 @@
 package ${package}
 
-import dev.getelements.elements.sdk.jakarta.rs.AuthSchemes.SESSION_SECRET
 import io.swagger.v3.oas.annotations.ExternalDocumentation
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
 import io.swagger.v3.oas.annotations.info.Contact
@@ -26,15 +25,15 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType.APIKEY
         description = "Please see the Namazu Elements Manual for more information."
     ),
     security = [
-        SecurityRequirement(name = SESSION_SECRET)
+        SecurityRequirement(name = dev.getelements.elements.sdk.model.Headers.SESSION_SECRET)
     ]
 )
 @SecuritySchemes(
     value = [SecurityScheme(
         type = APIKEY,
         `in` = HEADER,
-        name = SESSION_SECRET,
-        paramName = SESSION_SECRET,
+        name = dev.getelements.elements.sdk.model.Headers.SESSION_SECRET,
+        paramName = dev.getelements.elements.sdk.model.Headers.SESSION_SECRET,
         description = "Session secret required for authenticated endpoints"
     )]
 )

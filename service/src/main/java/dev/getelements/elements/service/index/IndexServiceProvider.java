@@ -2,7 +2,7 @@ package dev.getelements.elements.service.index;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.index.IndexService;
-import dev.getelements.elements.service.util.Services;
+import dev.getelements.elements.sdk.service.Services;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;

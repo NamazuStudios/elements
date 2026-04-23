@@ -2,7 +2,7 @@ package dev.getelements.elements.service.steam;
 
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.service.steam.SteamIapReceiptService;
-import dev.getelements.elements.service.util.Services;
+import dev.getelements.elements.sdk.service.Services;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;

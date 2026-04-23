@@ -1,4 +1,4 @@
-package dev.getelements.elements.service.util;
+package dev.getelements.elements.sdk.service;
 
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotImplementedException;

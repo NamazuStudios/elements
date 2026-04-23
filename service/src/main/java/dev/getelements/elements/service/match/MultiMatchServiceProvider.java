@@ -1,12 +1,11 @@
 package dev.getelements.elements.service.match;
 
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.match.MatchService;
 import dev.getelements.elements.sdk.service.match.MultiMatchService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-import static dev.getelements.elements.service.util.Services.forbidden;
+import static dev.getelements.elements.sdk.service.Services.forbidden;
 
 public class MultiMatchServiceProvider implements Provider<MultiMatchService> {
 

@@ -5,7 +5,7 @@ import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
-import static dev.getelements.elements.service.util.Services.forbidden;
+import static dev.getelements.elements.sdk.service.Services.forbidden;
 
 public class ApplicationStatusServiceProvider implements Provider<ElementStatusService> {
 
