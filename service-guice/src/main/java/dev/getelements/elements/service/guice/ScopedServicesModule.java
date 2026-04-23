@@ -20,6 +20,7 @@ import dev.getelements.elements.sdk.service.health.HealthStatusService;
 import dev.getelements.elements.sdk.service.index.IndexService;
 import dev.getelements.elements.sdk.service.inventory.AdvancedInventoryItemService;
 import dev.getelements.elements.sdk.service.inventory.DistinctInventoryItemService;
+import dev.getelements.elements.sdk.service.inventory.ItemLedgerService;
 import dev.getelements.elements.sdk.service.inventory.SimpleInventoryItemService;
 import dev.getelements.elements.sdk.service.invite.InviteService;
 import dev.getelements.elements.sdk.service.largeobject.LargeObjectService;
@@ -87,6 +88,7 @@ import dev.getelements.elements.service.health.DefaultHealthStatusService;
 import dev.getelements.elements.service.index.IndexServiceProvider;
 import dev.getelements.elements.service.index.SuperUserIndexService;
 import dev.getelements.elements.service.inventory.*;
+import dev.getelements.elements.service.inventory.ItemLedgerServiceProvider;
 import dev.getelements.elements.service.invite.InviteServiceProvider;
 import dev.getelements.elements.service.invite.SuperUserInviteService;
 import dev.getelements.elements.service.invite.UserInviteService;
@@ -365,6 +367,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(DistinctInventoryItemService.class)
                 .toProvider(DistinctInventoryItemServiceProvider.class)
+                .in(scope);
+
+        bind(ItemLedgerService.class)
+                .toProvider(ItemLedgerServiceProvider.class)
                 .in(scope);
 
         bind(WalletService.class)
