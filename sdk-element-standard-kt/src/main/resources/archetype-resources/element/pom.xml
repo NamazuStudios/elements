@@ -185,6 +185,19 @@
                             <prependGroupId>true</prependGroupId>
                         </configuration>
                     </execution>
+                    <!-- Kotlin Specific. The API must have the Kotlin libraries included -->
+                    <execution>
+                        <id>elm-copy-kotlin-stdlib-api</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${elm.element.dir}/api</outputDirectory>
+                            <includeGroupIds>org.jetbrains.kotlin</includeGroupIds>
+                            <prependGroupId>true</prependGroupId>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
