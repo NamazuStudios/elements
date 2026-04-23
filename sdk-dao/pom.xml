@@ -39,6 +39,11 @@
             <artifactId>contract</artifactId>
             <version>${neow3j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>dev.morphia.morphia</groupId>
+            <artifactId>morphia-core</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>
