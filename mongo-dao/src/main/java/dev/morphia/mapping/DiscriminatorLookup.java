@@ -71,7 +71,7 @@ public final class DiscriminatorLookup {
         // Try the current TCCL first.  During HTTP requests the TCCL is the element's isolated
         // classloader (set by ClassLoaderSwitchHandler).  During element startup (Jersey init)
         // it is set by JakartaRsLoader before calling classLoaderHandler.start().  Either way,
-        // element-owned classes are found here without needing explicit MorphiaEntityRegistry
+        // element-owned classes are found here without needing explicit EntityRegistry
         // registration.
         final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         if (tccl != classLoader) {

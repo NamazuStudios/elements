@@ -1,7 +1,6 @@
 package dev.getelements.elements.deployment.jetty.loader;
 
 import dev.getelements.elements.sdk.Element;
-import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -64,8 +63,6 @@ public class JakartaRsLoader implements Loader {
     private HttpPathRegistry httpPathRegistry;
 
     private AuthFilterFeature authFilterFeature;
-
-    private ElementEntityRegistrar elementEntityRegistrar;
 
     private JettyDeploymentRecord deploy(final PendingDeployment pending,
                                          final Element element,
@@ -154,19 +151,12 @@ public class JakartaRsLoader implements Loader {
         final var classLoaderHandler = new ClassLoaderSwitchHandler(elementClassLoader, servletContextHandler);
         getSequence().addHandler(classLoaderHandler);
 
-        // Pre-register entity classes with Morphia before the servlet context starts accepting
-        // requests.  This eliminates the DiscriminatorLookup fallback to Class.forName() (which
-        // uses Morphia's own classloader and cannot see element-specific classes).
-        if (getElementEntityRegistrar() != null) {
-            getElementEntityRegistrar().registerEntityClasses(element);
-        }
-
         // Set TCCL to the element's classloader for both start() and the OpenAPI pre-warm below.
         //
         // (1) start(): Jersey initialises singletons eagerly (setInitOrder=1); those singletons
         //     may trigger MongoDB queries hitting DiscriminatorLookup.  The patched
         //     DiscriminatorLookup uses TCCL to resolve element-owned @Entity classes that aren't
-        //     registered via MorphiaEntityRegistry.
+        //     registered via EntityRegistry.
         //
         // (2) OpenAPI pre-warm: Swagger's annotation scanner triggers kotlin-reflect and other
         //     per-JVM initialisation the first time it introspects a Kotlin class.  Running the
@@ -293,15 +283,6 @@ public class JakartaRsLoader implements Loader {
             }
 
         }
-    }
-
-    public ElementEntityRegistrar getElementEntityRegistrar() {
-        return elementEntityRegistrar;
-    }
-
-    @com.google.inject.Inject(optional = true)
-    public void setElementEntityRegistrar(final ElementEntityRegistrar elementEntityRegistrar) {
-        this.elementEntityRegistrar = elementEntityRegistrar;
     }
 
     /** Traverses a {@link Handler.Wrapper} chain to find the first {@link ServletContextHandler}. */

@@ -36,9 +36,27 @@ class ClassLoaderSwitchHandler extends Handler.Wrapper {
             throws Exception {
         final var thread = Thread.currentThread();
         final var previous = thread.getContextClassLoader();
+        // Wrap the callback so the element's TCCL is also active when Jetty invokes
+        // succeeded()/failed() — which may happen on a different thread for async requests
+        // (e.g. async dispatch, error handling, or non-blocking I/O completion).
+        final var wrapped = Callback.from(
+                () -> withTccl(callback::succeeded),
+                x  -> withTccl(() -> callback.failed(x))
+        );
         try {
             thread.setContextClassLoader(classLoader);
-            return super.handle(request, response, callback);
+            return super.handle(request, response, wrapped);
+        } finally {
+            thread.setContextClassLoader(previous);
+        }
+    }
+
+    private void withTccl(final Runnable action) {
+        final var thread = Thread.currentThread();
+        final var previous = thread.getContextClassLoader();
+        try {
+            thread.setContextClassLoader(classLoader);
+            action.run();
         } finally {
             thread.setContextClassLoader(previous);
         }

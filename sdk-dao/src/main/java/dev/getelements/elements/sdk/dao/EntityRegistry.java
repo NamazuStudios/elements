@@ -6,28 +6,28 @@ import java.util.List;
  * SPI that element authors implement to declare their MongoDB entity classes to the platform.
  *
  * <p>When an element exposes an implementation of this interface via
- * {@code @ElementServiceImplementation} + {@code @ElementServiceExport(MorphiaEntityRegistry.class)},
+ * {@code @ElementServiceImplementation} + {@code @ElementServiceExport(EntityRegistry.class)},
  * the platform discovers it during element loading and pre-registers the declared classes with
- * Morphia's {@code Mapper} — in the correct classloader context — before the element's REST
+ * {@code Mapper} — in the correct classloader context — before the element's REST
  * endpoint starts serving requests. This eliminates the need for {@code useDiscriminator = false}
  * on element-owned {@code @Entity} classes.
  *
  * <p>Example (Kotlin):
  * <pre>{@code
  * @ElementServiceImplementation
- * @ElementServiceExport(MorphiaEntityRegistry::class)
- * class MyEntityRegistry : MorphiaEntityRegistry {
+ * @ElementServiceExport(EntityRegistry::class)
+ * class MyEntityRegistry : EntityRegistry {
  *     override fun entityClasses() = listOf(
- *         OrgDocument::class.java,
- *         OrgInviteDocument::class.java
+ *         DocumentA::class.java,
+ *         DocumentB::class.java
  *     )
  * }
  * }</pre>
  */
-public interface MorphiaEntityRegistry {
+public interface EntityRegistry {
 
     /**
-     * Returns the Morphia {@code @Entity} classes owned by this element.
+     * Returns the {@code @Entity} classes owned by this element.
      *
      * @return list of entity classes to register; must not be {@code null}
      */
