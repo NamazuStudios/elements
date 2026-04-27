@@ -59,7 +59,7 @@ import java.lang.annotation.Target;
  * @see dev.getelements.elements.sdk.PermittedTypesClassLoader
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PACKAGE)
+@Target({ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Repeatable(ElementPackageRequests.class)
 public @interface ElementPackageRequest {
 

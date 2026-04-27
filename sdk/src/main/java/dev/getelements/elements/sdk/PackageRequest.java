@@ -134,12 +134,23 @@ public interface PackageRequest extends BiPredicate<ElementPackageRequest, Strin
         @Override
         public boolean test(final ElementPackageRequest elementPackageRequest, final String packageName) {
             return Stream.of(elementPackageRequest.value())
-                    .map(w -> Stream.of(w.split("\\*", -1))
-                            .map(Pattern::quote)
-                            .collect(Collectors.joining(".*"))
-                    )
-                    .map(Pattern::compile)
-                    .anyMatch(p -> p.matcher(packageName).matches());
+                    .anyMatch(w -> matchesWildcard(w, packageName));
+        }
+
+        private static boolean matchesWildcard(final String pattern, final String packageName) {
+            // "dev.morphia.*" is the conventional way to mean "dev.morphia and all its sub-packages".
+            // A trailing ".*" is special-cased: strip it and check that the package equals the prefix
+            // OR starts with the prefix followed by a dot. This makes "dev.morphia.*" match both the
+            // root package "dev.morphia" and sub-packages like "dev.morphia.query".
+            if (pattern.endsWith(".*")) {
+                final var prefix = pattern.substring(0, pattern.length() - 2);
+                return packageName.equals(prefix) || packageName.startsWith(prefix + ".");
+            }
+            // General case: convert each '*' to '.*' in a regex (dots are matched literally).
+            final var regex = Stream.of(pattern.split("\\*", -1))
+                    .map(Pattern::quote)
+                    .collect(Collectors.joining(".*"));
+            return Pattern.compile(regex).matcher(packageName).matches();
         }
     }
 

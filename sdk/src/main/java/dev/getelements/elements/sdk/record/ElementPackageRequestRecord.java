@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.record;
 
 import dev.getelements.elements.sdk.PackageRequest;
 import dev.getelements.elements.sdk.annotation.ElementPackageRequest;
+import dev.getelements.elements.sdk.annotation.ElementPackageRequests;
 import dev.getelements.elements.sdk.exception.SdkException;
 
 import java.lang.reflect.InvocationTargetException;
@@ -51,13 +52,22 @@ public record ElementPackageRequestRecord(
 
     /**
      * Gets a {@link Stream} of {@link ElementPackageRequestRecord} instances from all {@link ElementPackageRequest}
-     * annotations on the supplied {@link Package}.
+     * annotations on the supplied {@link Package}, including those declared as meta-annotations on other annotations
+     * present on the package (one level of indirection).
+     *
+     * <p>This allows composed annotations to group multiple {@link ElementPackageRequest} declarations
+     * into a single annotation, reducing boilerplate in element {@code package-info.java} files.
      *
      * @param pkg the {@link Package} to read annotations from
-     * @return all {@link ElementPackageRequestRecord}s declared on the package
+     * @return all {@link ElementPackageRequestRecord}s declared on the package (directly or via meta-annotation)
      */
     public static Stream<ElementPackageRequestRecord> fromPackage(final Package pkg) {
-        return Stream.of(pkg.getAnnotationsByType(ElementPackageRequest.class))
+        final var direct = Stream.of(pkg.getAnnotationsByType(ElementPackageRequest.class));
+        final var viaMetaAnnotation = Stream.of(pkg.getAnnotations())
+                .filter(a -> a.annotationType() != ElementPackageRequest.class
+                        && a.annotationType() != ElementPackageRequests.class)
+                .flatMap(a -> Stream.of(a.annotationType().getAnnotationsByType(ElementPackageRequest.class)));
+        return Stream.concat(direct, viaMetaAnnotation)
                 .map(ElementPackageRequestRecord::from);
     }
 
