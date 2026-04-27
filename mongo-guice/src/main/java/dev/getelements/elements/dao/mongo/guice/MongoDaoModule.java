@@ -131,6 +131,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ProductSkuSchemaDao.class).to(MongoProductSkuSchemaDao.class);
         bind(UidVerificationTokenDao.class).to(MongoUidVerificationTokenDao.class);
         bind(PasswordResetTokenDao.class).to(MongoPasswordResetTokenDao.class);
+        bind(ElementEntityRegistrar.class).to(MongoElementEntityRegistrar.class);
 
 
         bind(SecureRandom.class)
@@ -217,6 +218,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ProductSkuSchemaDao.class);
         expose(UidVerificationTokenDao.class);
         expose(PasswordResetTokenDao.class);
+        expose(ElementEntityRegistrar.class);
 
     }
 
