@@ -154,9 +154,12 @@ export default function InstalledElements() {
                     const deploymentId = container.runtime?.deployment?.id;
                     const isTransient = deploymentId?.match(/^T\d/) != null;
                     const servePrefix = element.attributes?.['dev.getelements.elements.app.serve.prefix'];
+                    const rsRoot = element.attributes?.['dev.getelements.elements.element.rs.root'];
                     const uri = servePrefix
                       ? container.uris?.find(u => u.includes('/' + servePrefix))
-                      : container.uris?.[0];
+                      : rsRoot
+                        ? container.uris?.find(u => { try { return new URL(u).pathname.startsWith(rsRoot as string); } catch { return u.includes(rsRoot as string); } })
+                        : container.uris?.[0];
 
                     const params = new URLSearchParams();
                     if (deploymentId) params.set('deployment', deploymentId);

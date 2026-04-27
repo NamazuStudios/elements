@@ -19,6 +19,35 @@ import { getApiPath, apiClient } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import * as yaml from 'js-yaml';
 
+const COLLAPSE_THRESHOLD = 120;
+
+function AttributeRow({ attrKey, value }: { attrKey: string; value: unknown }) {
+  const str = Array.isArray(value) ? value.join('\n') : String(value);
+  const isLong = str.length > COLLAPSE_THRESHOLD;
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="text-xs">
+      <div className="flex gap-2 items-baseline flex-wrap">
+        <span className="font-medium font-mono shrink-0">{attrKey}:</span>
+        {isLong ? (
+          <span className="text-muted-foreground font-mono break-all">
+            {expanded ? str : str.slice(0, COLLAPSE_THRESHOLD) + '…'}
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="ml-1 text-primary hover:underline font-sans"
+            >
+              {expanded ? 'show less' : 'show more'}
+            </button>
+          </span>
+        ) : (
+          <span className="text-muted-foreground font-mono break-all">{str}</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ElementApiExplorer() {
   const [selectedResource, setSelectedResource] = useState<ResourceOperations | null>(null);
   const [showElementInfo, setShowElementInfo] = useState(false);
@@ -146,6 +175,9 @@ export default function ElementApiExplorer() {
       }
       return `/app/rest/${servePrefix}`;
     }
+    // Check element.rs.root — an absolute path set directly on the element
+    const rsRoot = currentElement.attributes?.['dev.getelements.elements.element.rs.root'];
+    if (rsRoot) return rsRoot as string;
     // Last resort: use the short element name as the path component
     const name = currentElement.definition?.name?.split('.').pop() || elementName;
     return name ? `/app/rest/${name}` : '';
@@ -600,12 +632,10 @@ export default function ElementApiExplorer() {
               <div>
                 <h3 className="text-md font-semibold mb-2">Attributes</h3>
                 <div className="space-y-1">
-                  {Object.entries(currentElement.attributes).map(([key, value]) => (
-                    <div key={key} className="flex gap-2 text-xs">
-                      <span className="font-medium font-mono">{key}:</span>
-                      <span className="text-muted-foreground font-mono">{String(value)}</span>
-                    </div>
-                  ))}
+                  {Object.entries(currentElement.attributes)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([key, value]) => <AttributeRow key={key} attrKey={key} value={value} />)
+                  }
                 </div>
               </div>
             )}
