@@ -335,13 +335,16 @@ public class JettyElementContainerService implements ElementContainerService {
         logs.add("Starting container mount for deployment " + deploymentId);
 
         try {
+            // Identity set to deduplicate elements across multiple loaders that may report the same element.
+            final var seenElements = Collections.newSetFromMap(new IdentityHashMap<>());
+
             // Create pending deployment context
             final var pending = new Loader.PendingDeployment(
                     uris::add,
                     logs::add,
                     warnings::add,
                     errors::add,
-                    elements::add
+                    element -> { if (seenElements.add(element)) elements.add(element); }
             );
 
             // Run all loaders
