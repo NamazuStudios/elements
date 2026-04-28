@@ -30,8 +30,10 @@ import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.match.MongoMultiMatchDao;
 import dev.getelements.elements.dao.mongo.metadata.MongoMetadataDao;
 import dev.getelements.elements.dao.mongo.mission.*;
+import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
+import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.receipt.MongoAppleIapReceiptDao;
 import dev.getelements.elements.dao.mongo.receipt.MongoGooglePlayIapReceiptDao;
@@ -56,9 +58,11 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.util.OffensiveWordFilter;
 import dev.getelements.elements.sdk.util.UniqueCodeGenerator;
 import dev.morphia.Datastore;
+import dev.morphia.config.MorphiaConfig;
 
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
@@ -131,7 +135,9 @@ public class MongoDaoModule extends PrivateModule {
         bind(ProductSkuSchemaDao.class).to(MongoProductSkuSchemaDao.class);
         bind(UidVerificationTokenDao.class).to(MongoUidVerificationTokenDao.class);
         bind(PasswordResetTokenDao.class).to(MongoPasswordResetTokenDao.class);
-        bind(ElementEntityRegistrar.class).to(MongoElementEntityRegistrar.class);
+        bind(ElementEntityRegistrar.class)
+                .to(MongoElementEntityRegistrar.class)
+                .asEagerSingleton();
 
 
         bind(SecureRandom.class)
@@ -232,8 +238,15 @@ public class MongoDaoModule extends PrivateModule {
 
         bind(Datastore.class).to(getMainDatastoreKey());
 
+        bind(MorphiaConfig.class)
+                .toProvider(MorphiaConfigProvider.class)
+                .asEagerSingleton();
+
         bind(getMainDatastoreKey())
-                .toProvider(MongoDatastoreProvider.class)
+                .toProvider(MongoDatastoreProvider.class);
+
+        bind(new TypeLiteral<AtomicReference<Datastore>>(){})
+                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
 
     }
