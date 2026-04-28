@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
@@ -48,59 +49,73 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
     private AtomicReference<Datastore> datastoreAtomicReference;
 
+    private final ReentrantLock lock = new ReentrantLock();
+
     private final List<Element> elements = new ArrayList<>();
 
     @Override
     public void registerEntityClasses(final Element element) {
+        lock.lock();
+        try {
 
-        final var locator = element.getServiceLocator();
+            final var locator = element.getServiceLocator();
 
-        locator.findInstance(EntityRegistry.class)
-                .map(Supplier::get)
-                .ifPresent(registry -> {
+            locator.findInstance(EntityRegistry.class)
+                    .map(Supplier::get)
+                    .ifPresent(registry -> {
 
-                    final var classes = registry.entityClasses();
+                        final var classes = registry.entityClasses();
 
-                    if (classes == null || classes.isEmpty()) {
-                        return;
-                    }
+                        if (classes == null || classes.isEmpty()) {
+                            return;
+                        }
 
-                    if (elements.contains(element)) {
-                        throw new IllegalStateException("Element already registered: " +
-                                element.getElementRecord().classLoader().getName()
-                        );
-                    }
+                        if (elements.contains(element)) {
+                            throw new IllegalStateException("Element already registered: " +
+                                    element.getElementRecord().classLoader().getName()
+                            );
+                        }
 
-                    elements.add(element);
-                    rebuildDatastore();
+                        elements.add(element);
+                        rebuildDatastore();
 
-                });
+                    });
+
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public void unregisterEntityClasses(final Element element) {
+        lock.lock();
+        try {
 
-        final var locator = element.getServiceLocator();
+            final var locator = element.getServiceLocator();
 
-        locator.findInstance(EntityRegistry.class)
-                .map(Supplier::get)
-                .ifPresent(registry -> {
+            locator.findInstance(EntityRegistry.class)
+                    .map(Supplier::get)
+                    .ifPresent(registry -> {
 
-                    final var classes = registry.entityClasses();
+                        final var classes = registry.entityClasses();
 
-                    if (classes == null || classes.isEmpty()) {
-                        return;
-                    }
+                        if (classes == null || classes.isEmpty()) {
+                            return;
+                        }
 
-                    if (!elements.remove(element)) {
-                        throw new IllegalStateException("Element not registered: " +
-                                element.getElementRecord().classLoader().getName()
-                        );
-                    }
+                        if (!elements.remove(element)) {
+                            throw new IllegalStateException("Element not registered: " +
+                                    element.getElementRecord().classLoader().getName()
+                            );
+                        }
 
-                    rebuildDatastore();
+                        rebuildDatastore();
 
-                });
+                    });
+
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void rebuildDatastore() {
