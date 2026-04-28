@@ -22,8 +22,6 @@ public interface ElementEntityRegistrar {
 
     /**
      * Attempts to deregister any entity classes previously registered for the given element.
-     * Implementations should make a best effort to clean up mapper state, but may no-op if the
-     * underlying mapper does not support unregistration.
      *
      * @param element the element whose entity classes should be deregistered
      */
