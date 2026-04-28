@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -31,6 +30,13 @@ import java.util.function.Supplier;
  * {@code Class.forName(String)} (which uses the Morphia library's own classloader and cannot
  * see element classes), removing the need for {@code useDiscriminator = false} on every
  * element-owned {@code @Entity}.
+ *
+ * <p>Morphia caches entity models by class name. A full datastore rebuild is performed on each
+ * register/unregister so that reloaded elements (same class name, new classloader) replace the
+ * stale cached model rather than being silently ignored.
+ *
+ * <p>All calls to this class are serialized by the outer {@code StandardElementRuntimeService}
+ * lock, so no additional synchronization is needed here.
  */
 public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
@@ -42,7 +48,7 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
     private AtomicReference<Datastore> datastoreAtomicReference;
 
-    private final AtomicReference<List<Element>> elementListAtomicReference = new AtomicReference<>(List.of());
+    private final List<Element> elements = new ArrayList<>();
 
     @Override
     public void registerEntityClasses(final Element element) {
@@ -50,7 +56,7 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
         final var locator = element.getServiceLocator();
 
         locator.findInstance(EntityRegistry.class)
-                .map(supplier -> supplier.get())
+                .map(Supplier::get)
                 .ifPresent(registry -> {
 
                     final var classes = registry.entityClasses();
@@ -59,29 +65,14 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
                         return;
                     }
 
-                    final var thread = Thread.currentThread();
-                    final var datastore = Morphia.createDatastore(
-                            getMongoClientProvider().get(),
-                            getMorphiaConfigProvider().get()
-                    );
+                    if (elements.contains(element)) {
+                        throw new IllegalStateException("Element already registered: " +
+                                element.getElementRecord().classLoader().getName()
+                        );
+                    }
 
-                    elementListAtomicReference
-                            .updateAndGet(list -> {
-
-                                if (list.contains(element)) {
-                                    throw new IllegalStateException("Element already added: " + element
-                                            .getElementRecord()
-                                            .classLoader()
-                                            .getName()
-                                    );
-                                }
-
-                                return new ArrayList<>(list) { { add(element); }};
-
-                            })
-                            .forEach(e -> applyChanges(e, thread, datastore));
-
-                    getDatastoreAtomicReference().set(datastore);
+                    elements.add(element);
+                    rebuildDatastore();
 
                 });
     }
@@ -101,31 +92,29 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
                         return;
                     }
 
-                    final var thread = Thread.currentThread();
-                    final var datastore = Morphia.createDatastore(
-                            getMongoClientProvider().get(),
-                            getMorphiaConfigProvider().get()
-                    );
+                    if (!elements.remove(element)) {
+                        throw new IllegalStateException("Element not registered: " +
+                                element.getElementRecord().classLoader().getName()
+                        );
+                    }
 
-                    elementListAtomicReference
-                            .updateAndGet(list -> {
-
-                                if (list.contains(element)) {
-                                    return new ArrayList<>(list) { { remove(element); }};
-                                }
-
-                                throw new IllegalStateException("Element not added: " + element
-                                        .getElementRecord()
-                                        .classLoader()
-                                        .getName()
-                                );
-
-                            })
-                            .forEach(e -> applyChanges(e, thread, datastore));
-
-                    getDatastoreAtomicReference().set(datastore);
+                    rebuildDatastore();
 
                 });
+    }
+
+    private void rebuildDatastore() {
+
+        final var datastore = Morphia.createDatastore(
+                getMongoClientProvider().get(),
+                getMorphiaConfigProvider().get()
+        );
+
+        final var thread = Thread.currentThread();
+        elements.forEach(e -> applyChanges(e, thread, datastore));
+
+        getDatastoreAtomicReference().set(datastore);
+
     }
 
     private void applyChanges(final Element element,
@@ -133,13 +122,9 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
                               final Datastore datastore) {
 
         final var previous = thread.getContextClassLoader();
+        final var elementClassLoader = element.getElementRecord().classLoader();
 
-        final var elementClassLoader = element
-                .getElementRecord()
-                .classLoader();
-
-        element
-                .getServiceLocator()
+        element.getServiceLocator()
                 .findInstance(EntityRegistry.class)
                 .map(Supplier::get)
                 .ifPresent(registry -> {
