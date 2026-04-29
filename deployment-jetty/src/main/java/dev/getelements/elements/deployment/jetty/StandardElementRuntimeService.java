@@ -1257,6 +1257,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             for (final FileSystem fileSystem : filesystems) {
                 try {
                     fileSystem.close();
+                } catch (java.nio.file.NoSuchFileException ex) {
+                    logger.debug("File system backing file already gone for deployment {} (file was likely replaced): {}",
+                            deployment.id(), ex.getFile());
                 } catch (IOException ex) {
                     logger.warn("Failed to close file system {} for deployment {}", fileSystem, deployment.id(), ex);
                 }

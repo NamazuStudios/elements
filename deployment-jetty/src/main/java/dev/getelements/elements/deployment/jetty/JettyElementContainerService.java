@@ -174,7 +174,11 @@ public class JettyElementContainerService implements ElementContainerService {
             // Check if already mounted
             final var existing = activeContainers.get(deploymentId);
             if (existing != null) {
-                logger.warn("Container already mounted for deployment: {}, remounting", deploymentId);
+                if (existing.runtime().deployment().version() == runtimeRecord.deployment().version()) {
+                    logger.debug("Container already mounted at current version for deployment: {}, skipping event-driven mount", deploymentId);
+                    return;
+                }
+                logger.info("Container mounted at stale version for deployment: {}, remounting", deploymentId);
                 doUnmount(deploymentId);
             }
 
@@ -218,8 +222,21 @@ public class JettyElementContainerService implements ElementContainerService {
     public void onRuntimeUnloaded(final String deploymentId) {
         boolean unmounted = false;
 
+        // Check BEFORE acquiring the container lock whether the deployment is still active
+        // in the runtime service. If it is, the deployment was reloaded (not truly removed),
+        // and the RuntimeUnloaded event is the "old version" notification from reconcile().
+        // In that case we must not unmount the freshly-loaded container.
+        final var stillActive = getElementRuntimeService().getActiveRuntimes()
+                .stream()
+                .anyMatch(r -> r.deployment().id().equals(deploymentId));
+
         try (var mon = Monitor.enter(lock)) {
             logger.info("Received RuntimeUnloaded event for deployment: {}", deploymentId);
+
+            if (stillActive) {
+                logger.debug("Deployment {} was reloaded; skipping event-driven unmount", deploymentId);
+                return;
+            }
 
             // Unmount the container if it exists
             final var existing = activeContainers.get(deploymentId);
