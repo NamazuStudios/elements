@@ -36,8 +36,8 @@ import java.util.function.Supplier;
  * register/unregister so that reloaded elements (same class name, new classloader) replace the
  * stale cached model rather than being silently ignored.
  *
- * <p>All calls to this class are serialized by the outer {@code StandardElementRuntimeService}
- * lock, so no additional synchronization is needed here.
+ * <p>An internal {@link java.util.concurrent.locks.ReentrantLock} guards the element list and
+ * datastore rebuild. This provides a safety net even if the caller does not hold an outer lock.
  */
 public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 

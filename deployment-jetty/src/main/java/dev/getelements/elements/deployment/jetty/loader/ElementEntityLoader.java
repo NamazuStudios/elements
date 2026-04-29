@@ -12,8 +12,7 @@ import org.slf4j.LoggerFactory;
  * on load and deregisters them on unload.
  *
  * <p>This loader is independent of the RS and WS loaders so that entity registration applies
- * to all element types uniformly. It is an optional binding: if no {@link ElementEntityRegistrar}
- * is bound (e.g. in non-Mongo deployments), both operations are silently skipped.
+ * to all element types uniformly.
  */
 public class ElementEntityLoader implements Loader {
 

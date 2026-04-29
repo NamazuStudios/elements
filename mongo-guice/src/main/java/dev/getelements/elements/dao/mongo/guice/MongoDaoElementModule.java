@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.guice;
 
+import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
 
 public class MongoDaoElementModule extends SharedElementModule {
@@ -12,6 +13,7 @@ public class MongoDaoElementModule extends SharedElementModule {
     protected void configureElement() {
         install(new MongoDaoModule());
         install(new MongoGridFSLargeObjectBucketModule());
+        expose(ElementEntityRegistrar.class);
     }
 
 }

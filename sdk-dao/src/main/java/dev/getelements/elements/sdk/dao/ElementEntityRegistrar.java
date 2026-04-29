@@ -6,9 +6,8 @@ import dev.getelements.elements.sdk.Element;
  * Platform service that discovers {@link EntityRegistry} implementations exported by an
  * {@link Element} and registers the declared entity classes with the underlying database mapper.
  *
- * <p>This is an optional binding in non-Mongo deployments; the loader injects it with
- * {@code @Inject(optional = true)} and skips registration silently when no implementation
- * is bound.
+ * <p>Implementations are bound by the database module (e.g. {@code MongoDaoModule}) and
+ * exposed to the root injector by the corresponding element module (e.g. {@code MongoDaoElementModule}).
  */
 public interface ElementEntityRegistrar {
 
