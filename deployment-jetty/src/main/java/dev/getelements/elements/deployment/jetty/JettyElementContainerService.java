@@ -123,14 +123,23 @@ public class JettyElementContainerService implements ElementContainerService {
         try (var mon = Monitor.enter(lock)) {
             return activeContainers.values()
                     .stream()
-                    .map(active -> new ContainerRecord(
-                            active.runtime(),
-                            active.status(),
-                            active.uris(),
-                            active.logs(),
-                            active.errors(),
-                            active.elements()
-                    ))
+                    .map(active -> {
+                        // Override status to LOADING if any loader still has background work
+                        // in progress for any element in this container (e.g. async Jersey start).
+                        final var status = active.status() != FAILED
+                                && active.elements().stream().anyMatch(
+                                        e -> getLoaders().stream().anyMatch(l -> l.hasPendingWork(e)))
+                                ? LOADING
+                                : active.status();
+                        return new ContainerRecord(
+                                active.runtime(),
+                                status,
+                                active.uris(),
+                                active.logs(),
+                                active.errors(),
+                                active.elements()
+                        );
+                    })
                     .toList();
         }
     }
