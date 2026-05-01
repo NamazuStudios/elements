@@ -124,11 +124,14 @@ export default function ElementApiExplorer() {
   const elementUri = params.get('uri');
   const showAppInfo = params.get('showAppInfo') === 'true';
 
+  const [pollingActive, setPollingActive] = useState(false);
+
   // Fetch element containers from Elements backend
   const { data: containersData } = useQuery({
     queryKey: ['/api/rest/elements/container'],
     enabled: !!deploymentId || !!appId,
     staleTime: 30000,
+    refetchInterval: pollingActive ? 3000 : false,
   });
 
   // Find the specific container and element
@@ -154,6 +157,13 @@ export default function ElementApiExplorer() {
     );
     return { currentElement: element, currentAppStatus: container };
   }, [containersData, deploymentId, appId, elementName, showAppInfo]);
+
+  const isContainerLoading = currentAppStatus?.status === 'LOADING';
+
+  // Auto-poll while the container is still initialising (Jersey startup).
+  useEffect(() => {
+    setPollingActive(isContainerLoading);
+  }, [isContainerLoading]);
 
   // Extract the path from the URI, or derive it from element metadata
   const elementPath = useMemo(() => {
@@ -227,7 +237,8 @@ export default function ElementApiExplorer() {
     enabled: !!elementPath,
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: true, // Refetch when component mounts
-    retry: false, // Don't retry if spec doesn't exist
+    retry: false, // Don't retry immediately; interval-based retry handles the loading case
+    refetchInterval: pollingActive ? 3000 : false,
   });
 
   // Analyze spec to extract resources (returns array now)
@@ -423,9 +434,14 @@ export default function ElementApiExplorer() {
           <div className="flex items-center gap-3">
             <Icons.AppWindow className="w-6 h-6" />
             <div>
-              <h1 className="text-2xl font-bold" data-testid="page-title">
-                {appName}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold" data-testid="page-title">
+                  {appName}
+                </h1>
+                {isContainerLoading && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" title="Element is still initializing" />
+                )}
+              </div>
               <div className="text-sm text-muted-foreground flex items-center gap-2" data-testid="page-subtitle">
                 Application Information
                 {currentAppStatus.status && (
@@ -534,14 +550,19 @@ export default function ElementApiExplorer() {
           <div className="flex items-center gap-3 mb-2">
             <Database className="w-6 h-6" />
             <div>
-              <h1 className="text-2xl font-bold" data-testid="page-title">
-                {currentElement.definition?.name?.split('.').pop() || elementName}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold" data-testid="page-title">
+                  {currentElement.definition?.name?.split('.').pop() || elementName}
+                </h1>
+                {isContainerLoading && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" title="Element is still initializing" />
+                )}
+              </div>
               <div className="text-sm text-muted-foreground" data-testid="page-subtitle">
                 Application: {appName}
                 {currentAppStatus?.status && (
-                  <Badge 
-                    variant={currentAppStatus.status === 'CLEAN' ? 'default' : currentAppStatus.status === 'UNSTABLE' ? 'secondary' : 'destructive'}
+                  <Badge
+                    variant={currentAppStatus.status === 'CLEAN' ? 'default' : currentAppStatus.status === 'LOADING' || currentAppStatus.status === 'UNSTABLE' ? 'secondary' : 'destructive'}
                     className="ml-2 text-[10px]"
                   >
                     {currentAppStatus.status}
@@ -695,9 +716,14 @@ export default function ElementApiExplorer() {
             </Button>
             <Database className="w-6 h-6" />
             <div>
-              <h1 className="text-2xl font-bold" data-testid="page-title">
-                {elementName || 'Element'} API Explorer
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold" data-testid="page-title">
+                  {elementName || 'Element'} API Explorer
+                </h1>
+                {isContainerLoading && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" title="Element is still initializing" />
+                )}
+              </div>
               <p className="text-sm text-muted-foreground" data-testid="page-subtitle">
                 {currentAppStatus
                   ? (() => {

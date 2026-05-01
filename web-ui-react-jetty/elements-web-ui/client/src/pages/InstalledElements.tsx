@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +49,8 @@ interface AppGroup {
 
 function getStatusDotColor(status: string): string {
   switch (status?.toUpperCase()) {
+    case 'LOADING':
+      return 'bg-blue-500';
     case 'CLEAN':
     case 'RUNNING':
     case 'ACTIVE':
@@ -66,10 +68,17 @@ function getStatusDotColor(status: string): string {
 
 export default function InstalledElements() {
   const [_, setLocation] = useLocation();
+  const [pollingActive, setPollingActive] = useState(false);
 
   const { data: containers, isLoading } = useQuery<ElementContainerStatus[]>({
     queryKey: ['/api/rest/elements/container'],
+    refetchInterval: pollingActive ? 3000 : false,
   });
+
+  // Auto-poll while any container is still initialising in the background.
+  useEffect(() => {
+    setPollingActive(containers?.some(c => c.status === 'LOADING') ?? false);
+  }, [containers]);
 
   // Group all elements by application (or global), flattening across deployments
   const groups = useMemo<[string, AppGroup][]>(() => {
@@ -173,7 +182,7 @@ export default function InstalledElements() {
                         className="w-full text-left flex items-center gap-3 rounded-md px-3 py-2 hover-elevate border bg-card"
                         data-testid={`button-element-${displayName}`}
                       >
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(container.status)}`} />
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(container.status)} ${container.status === 'LOADING' ? 'animate-pulse' : ''}`} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-sm">{displayName}</span>
