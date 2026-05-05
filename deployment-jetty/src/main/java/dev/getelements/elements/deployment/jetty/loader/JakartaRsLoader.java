@@ -230,7 +230,16 @@ public class JakartaRsLoader implements Loader {
 
         try {
 
-            // 1. Start the handler (this is the slow part on a cold JVM).
+            // 1. Submit OpenAPI context build on a sibling thread so its Kotlin/Jackson reflection
+            //    work overlaps with handler.start() below.  Both scan the same resource and model
+            //    classes; whichever thread hits a type first pays the cold Kotlin reflection cost
+            //    and the other reads from the cache.  Total wall-clock time becomes
+            //    max(handler.start(), oaCtx.read()) instead of their sum.
+            //    mountExecutor is a cached pool so submitting from within a pool task is safe.
+            final var oaFuture = mountExecutor.submit(
+                    () -> buildOpenApiContext(application, openApiCtxId, elementClassLoader, elementName));
+
+            // 2. Start the handler (this is the slow part on a cold JVM).
             boolean startSucceeded = false;
             Exception startException = null;
             try {
@@ -240,7 +249,7 @@ public class JakartaRsLoader implements Loader {
                 startException = ex;
             }
 
-            // 2. Re-acquire the lock to check whether the element is still active.
+            // 3. Re-acquire the lock to check whether the element is still active.
             //    unload() may have fired while start() was blocked above.
             boolean stillActive;
 
@@ -249,8 +258,10 @@ public class JakartaRsLoader implements Loader {
                 pendingMounts.remove(element);
             }
 
-            // 3. Handle failure / post-startup unload.
+            // 4. Handle failure / post-startup unload.
             if (!startSucceeded) {
+
+                oaFuture.cancel(true);
 
                 if (stillActive) {
                     logger.error("Failed to start REST handler for element: {}", elementName, startException);
@@ -265,6 +276,8 @@ public class JakartaRsLoader implements Loader {
 
             if (!stillActive) {
 
+                oaFuture.cancel(true);
+
                 logger.info("REST handler for element {} was unloaded during startup; stopping.", elementName);
 
                 try {
@@ -278,30 +291,14 @@ public class JakartaRsLoader implements Loader {
                 return;
             }
 
-            // 4. Build the OpenAPI context for this element using the application's own classes
-            //    (JaxrsApplicationScanner) and clear the parent context to prevent the server-level
-            //    OpenAPI context from being merged in.  This ensures the element's /openapi.json
-            //    only contains its own APIs.
+            // 5. Wait for the OpenAPI build to finish.  buildOpenApiContext() catches and logs its
+            //    own errors, so ExecutionException is not expected here; we handle it anyway.
             try {
-
-                final var swaggerConfig = new SwaggerConfiguration()
-                        .openAPI(new OpenAPI())
-                        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner");
-
-                final var oaCtx = new JaxrsOpenApiContextBuilder<>()
-                        .ctxId(openApiCtxId)
-                        .application(application)
-                        .openApiConfiguration(swaggerConfig)
-                        .buildContext(true);
-
-                if (oaCtx instanceof GenericOpenApiContext<?> gctx) {
-                    gctx.setParent(null);
-                }
-
-                oaCtx.read();
-                logger.debug("OpenAPI context initialized for {}", elementName);
-
-            } catch (final Exception ex) {
+                oaFuture.get();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                logger.warn("Interrupted waiting for OpenAPI context for {}", elementName);
+            } catch (Exception ex) {
                 logger.warn("OpenAPI context initialization failed for {}; /openapi.json may include server-level APIs",
                         elementName, ex);
             }
@@ -311,6 +308,51 @@ public class JakartaRsLoader implements Loader {
         } finally {
             thread.setContextClassLoader(previousTccl);
         }
+    }
+
+    /**
+     * Builds and pre-reads the OpenAPI context for the element.  Intended to run on a background
+     * thread in parallel with {@link Handler#start()} in {@link #runMountTask}.
+     *
+     * <p>Sets the TCCL to the element's classloader for the duration so that any class resolution
+     * during Swagger Core scanning uses the correct loader.  All exceptions are caught and logged
+     * so the calling future never completes exceptionally.
+     */
+    private void buildOpenApiContext(final Application application,
+                                     final String openApiCtxId,
+                                     final ClassLoader elementClassLoader,
+                                     final String elementName) {
+
+        final var thread = Thread.currentThread();
+        final var previousTccl = thread.getContextClassLoader();
+        thread.setContextClassLoader(elementClassLoader);
+
+        try {
+
+            final var swaggerConfig = new SwaggerConfiguration()
+                    .openAPI(new OpenAPI())
+                    .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner");
+
+            final var oaCtx = new JaxrsOpenApiContextBuilder<>()
+                    .ctxId(openApiCtxId)
+                    .application(application)
+                    .openApiConfiguration(swaggerConfig)
+                    .buildContext(true);
+
+            if (oaCtx instanceof GenericOpenApiContext<?> gctx) {
+                gctx.setParent(null);
+            }
+
+            oaCtx.read();
+            logger.debug("OpenAPI context initialized for {}", elementName);
+
+        } catch (final Exception ex) {
+            logger.warn("OpenAPI context initialization failed for {}; /openapi.json may include server-level APIs",
+                    elementName, ex);
+        } finally {
+            thread.setContextClassLoader(previousTccl);
+        }
+
     }
 
     @Override
