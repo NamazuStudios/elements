@@ -31,10 +31,8 @@ import dev.getelements.elements.dao.mongo.match.MongoMatchDao;
 import dev.getelements.elements.dao.mongo.match.MongoMultiMatchDao;
 import dev.getelements.elements.dao.mongo.metadata.MongoMetadataDao;
 import dev.getelements.elements.dao.mongo.mission.*;
-import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
-import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.dao.mongo.query.*;
 import dev.getelements.elements.dao.mongo.receipt.MongoAppleIapReceiptDao;
 import dev.getelements.elements.dao.mongo.receipt.MongoGooglePlayIapReceiptDao;
@@ -59,11 +57,9 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.util.OffensiveWordFilter;
 import dev.getelements.elements.sdk.util.UniqueCodeGenerator;
 import dev.morphia.Datastore;
-import dev.morphia.config.MorphiaConfig;
 
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.google.inject.multibindings.MapBinder.newMapBinder;
@@ -173,7 +169,6 @@ public class MongoDaoModule extends PrivateModule {
         indexableByType.addBinding(METADATA).to(MongoIndexable.Metadata.class);
         indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoIndexable.DistinctInventoryItem.class);
 
-        expose(Datastore.class);
         expose(Transaction.class);
 
         expose(IndexDao.class);
@@ -234,17 +229,13 @@ public class MongoDaoModule extends PrivateModule {
 
     protected void bindDatastore() {
 
-        bind(Datastore.class).to(getMainDatastoreKey());
-
-        bind(MorphiaConfig.class)
-                .toProvider(MorphiaConfigProvider.class);
+        // MorphiaConfig and AtomicReference<Datastore> are bound in the parent scope
+        // (MongoDaoElementModule), which is visible to this nested PrivateModule.
+        // They are NOT bound here so that MongoDaoElementModule can expose them directly
+        // to the outer scope — Guice's expose() only accepts bindings from the same binder.
 
         bind(getMainDatastoreKey())
                 .toProvider(MongoDatastoreProvider.class);
-
-        bind(new TypeLiteral<AtomicReference<Datastore>>(){})
-                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
-                .asEagerSingleton();
 
     }
 

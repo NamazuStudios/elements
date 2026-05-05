@@ -225,7 +225,9 @@ public class JakartaRsLoader implements Loader {
         // aren't registered via EntityRegistry.
         final var thread = Thread.currentThread();
         final var previousTccl = thread.getContextClassLoader();
+
         thread.setContextClassLoader(elementClassLoader);
+
         try {
 
             // 1. Start the handler (this is the slow part on a cold JVM).
@@ -241,6 +243,7 @@ public class JakartaRsLoader implements Loader {
             // 2. Re-acquire the lock to check whether the element is still active.
             //    unload() may have fired while start() was blocked above.
             boolean stillActive;
+
             try (var mon = Monitor.enter(lock)) {
                 stillActive = activeDeployments.stream().anyMatch(d -> d.element().equals(element));
                 pendingMounts.remove(element);
@@ -248,23 +251,30 @@ public class JakartaRsLoader implements Loader {
 
             // 3. Handle failure / post-startup unload.
             if (!startSucceeded) {
+
                 if (stillActive) {
                     logger.error("Failed to start REST handler for element: {}", elementName, startException);
                 } else {
                     logger.debug("REST handler startup cancelled for element: {}", elementName);
                 }
+
                 getSequence().removeHandler(handler);
+
                 return;
             }
 
             if (!stillActive) {
+
                 logger.info("REST handler for element {} was unloaded during startup; stopping.", elementName);
+
                 try {
                     handler.stop();
                 } catch (Exception ex) {
                     logger.warn("Failed to stop handler for element {} after post-startup unload.", elementName, ex);
                 }
+
                 getSequence().removeHandler(handler);
+
                 return;
             }
 
@@ -273,6 +283,7 @@ public class JakartaRsLoader implements Loader {
             //    OpenAPI context from being merged in.  This ensures the element's /openapi.json
             //    only contains its own APIs.
             try {
+
                 final var swaggerConfig = new SwaggerConfiguration()
                         .openAPI(new OpenAPI())
                         .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner");
@@ -289,6 +300,7 @@ public class JakartaRsLoader implements Loader {
 
                 oaCtx.read();
                 logger.debug("OpenAPI context initialized for {}", elementName);
+
             } catch (final Exception ex) {
                 logger.warn("OpenAPI context initialization failed for {}; /openapi.json may include server-level APIs",
                         elementName, ex);
@@ -307,6 +319,7 @@ public class JakartaRsLoader implements Loader {
         Handler handlerToStop = null;
 
         try (var mon = Monitor.enter(lock)) {
+
             final var deployment = activeDeployments.stream()
                     .filter(d -> d.element().equals(element))
                     .findFirst()
@@ -316,19 +329,24 @@ public class JakartaRsLoader implements Loader {
                 activeDeployments.remove(deployment);
 
                 final var sch = findServletContextHandler(deployment.handler());
+
                 if (sch != null) {
                     httpPathRegistry.deregister(sch.getContextPath());
                 }
 
                 final var pending = pendingMounts.remove(element);
+
                 if (pending != null) {
+
                     // Startup is still running on a background thread.  Interrupt it (best-effort)
                     // and let runMountTask() handle stop()/removeHandler() once start() returns.
                     // Calling stop() here while start() is still executing inside a synchronized
                     // method would block for the entire startup duration.
                     pending.cancel(true);
+
                     logger.info("Cancelled pending startup for element {}; background task will clean up.",
                             element.getElementRecord().definition().name());
+
                 } else {
                     // Startup is complete — safe to stop synchronously (outside the lock below).
                     handlerToStop = deployment.handler();
@@ -337,6 +355,7 @@ public class JakartaRsLoader implements Loader {
         }
 
         if (handlerToStop != null) {
+
             try {
                 handlerToStop.stop();
                 getSequence().removeHandler(handlerToStop);
@@ -351,6 +370,7 @@ public class JakartaRsLoader implements Loader {
 
     @Override
     public void load(final PendingDeployment pending, final RuntimeRecord record, final Element element) {
+
         try (var mon = Monitor.enter(lock)) {
 
             final var deployed = activeDeployments
@@ -359,11 +379,14 @@ public class JakartaRsLoader implements Loader {
 
             if (deployed) {
                 final var appId = record.deployment().id();
+
                 pending.logWarningf("WARNING: Detected existing deployment for %s.", appId);
+
                 logger.warn("{}/{} is already deployed. Skipping.",
                         appId,
                         element.getElementRecord().definition().name());
             } else {
+
                 element.getServiceLocator()
                         .findInstance(Application.class)
                         .map(Supplier::get)
@@ -371,10 +394,12 @@ public class JakartaRsLoader implements Loader {
                         .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
                         .ifPresent(application -> {
                             final var ctx = deploy(pending, element, application);
+
                             // Add to activeDeployments BEFORE submitting the background task so
                             // that runMountTask's activeDeployments check correctly reflects the
                             // current state even if the executor starts the task immediately.
                             activeDeployments.add(ctx.record());
+
                             final var future = mountExecutor.submit(() -> runMountTask(element, ctx));
                             pendingMounts.put(element, future);
                             pending.element(element);

@@ -1,10 +1,13 @@
 package dev.getelements.elements.service;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
+import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
+import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.dao.mongo.test.MongoTestInstanceModule;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
@@ -23,9 +26,11 @@ import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.SteamIapReceiptInvokerModule;
 import dev.getelements.elements.test.EmbeddedTestService;
 import dev.morphia.Datastore;
+import dev.morphia.config.MorphiaConfig;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.getelements.elements.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
@@ -71,13 +76,12 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
             return properties;
         }));
 
-        install(new MongoDaoModule() {
-            @Override
-            protected void configure() {
-                super.configure();
-                expose(Datastore.class);
-            }
-        });
+        bind(MorphiaConfig.class)
+                .toProvider(MorphiaConfigProvider.class);
+        bind(new TypeLiteral<AtomicReference<Datastore>>(){})
+                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
+                .asEagerSingleton();
+        install(new MongoDaoModule());
 
         bind(JeroMQSecurity.class).toInstance(JeroMQSecurity.DEFAULT);
 
