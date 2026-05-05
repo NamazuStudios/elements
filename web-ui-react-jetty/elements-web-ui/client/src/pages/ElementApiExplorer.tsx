@@ -52,9 +52,11 @@ export default function ElementApiExplorer() {
   const [selectedResource, setSelectedResource] = useState<ResourceOperations | null>(null);
   const [showElementInfo, setShowElementInfo] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createOpIndex, setCreateOpIndex] = useState(0);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [deletePathParamValues, setDeletePathParamValues] = useState<Record<string, string>>({});
   const [lastResponse, setLastResponse] = useState<{operation: string; status: number; data: any; timestamp: string} | null>(null);
   const [sessionOverride, setSessionOverride] = useState(() => localStorage.getItem('elements-session-override') || '');
   const [profileId, setProfileId] = useState(() => localStorage.getItem('elements-profile-id') || '');
@@ -264,7 +266,7 @@ export default function ElementApiExplorer() {
   const createMutation = useMutation({
     mutationFn: async (data: { pathParams: Record<string, string>; queryParams: Record<string, string>; body: any }) => {
       if (!selectedResource?.create || selectedResource.create.length === 0) throw new Error('No create endpoint');
-      const createOp = selectedResource.create[0]; // Use first create operation
+      const createOp = selectedResource.create[createOpIndex];
       
       // Build URL with path parameters
       let path = createOp.path;
@@ -296,8 +298,8 @@ export default function ElementApiExplorer() {
     onSuccess: async () => {
       toast({ title: 'Success', description: 'Item created successfully' });
       setCreateDialogOpen(false);
-      if (selectedResource?.list) {
-        const listPath = await buildFullPath(selectedResource.list.path);
+      if (selectedResource?.list?.[0]?.path) {
+        const listPath = await buildFullPath(selectedResource.list[0].path);
         queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
@@ -349,8 +351,8 @@ export default function ElementApiExplorer() {
       toast({ title: 'Success', description: 'Item updated successfully' });
       setEditDialogOpen(false);
       setSelectedItem(null);
-      if (selectedResource?.list) {
-        const listPath = await buildFullPath(selectedResource.list.path);
+      if (selectedResource?.list?.[0]?.path) {
+        const listPath = await buildFullPath(selectedResource.list[0].path);
         queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
@@ -373,7 +375,7 @@ export default function ElementApiExplorer() {
       
       let path = deleteOp.path;
       for (const param of deleteOp.pathParams) {
-        let value = selectedItem[param];
+        let value = deletePathParamValues[param] || selectedItem[param];
         if (!value) {
           if (param.includes('OrId')) {
             const nameField = param.replace('OrId', '');
@@ -407,8 +409,8 @@ export default function ElementApiExplorer() {
       toast({ title: 'Success', description: 'Item deleted successfully' });
       setDeleteDialogOpen(false);
       setSelectedItem(null);
-      if (selectedResource?.list) {
-        const listPath = await buildFullPath(selectedResource.list.path);
+      if (selectedResource?.list?.[0]?.path) {
+        const listPath = await buildFullPath(selectedResource.list[0].path);
         queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
@@ -791,7 +793,7 @@ export default function ElementApiExplorer() {
                 >
                   <div className="truncate">{resource.resourceName}</div>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {resource.list && (
+                    {resource.list && resource.list.length > 0 && (
                       <Badge variant="secondary" className="text-xs">
                         GET
                       </Badge>
@@ -799,7 +801,7 @@ export default function ElementApiExplorer() {
                     {resource.create && resource.create.length > 0 && <Badge variant="secondary" className="text-xs">POST</Badge>}
                     {resource.update && resource.update.length > 0 && <Badge variant="secondary" className="text-xs">PUT</Badge>}
                     {resource.delete && resource.delete.length > 0 && <Badge variant="secondary" className="text-xs">DELETE</Badge>}
-                    {resource.get && !resource.list && <Badge variant="secondary" className="text-xs">GET</Badge>}
+                    {resource.get && (!resource.list || resource.list.length === 0) && <Badge variant="secondary" className="text-xs">GET</Badge>}
                   </div>
                 </button>
               );
@@ -1017,13 +1019,20 @@ export default function ElementApiExplorer() {
                 spec={spec}
                 baseUrl={elementPath}
                 customHeaders={getCustomHeaders()}
-                onCreateClick={() => setCreateDialogOpen(true)}
+                onCreateClick={(idx) => { setCreateOpIndex(idx); setCreateDialogOpen(true); }}
                 onEditClick={(item) => {
                   setSelectedItem(item);
                   setEditDialogOpen(true);
                 }}
                 onDeleteClick={(item) => {
                   setSelectedItem(item);
+                  const opIndex = item._operationIndex || 0;
+                  const deleteOp = selectedResource?.delete?.[opIndex];
+                  const initial: Record<string, string> = {};
+                  for (const param of deleteOp?.pathParams ?? []) {
+                    initial[param] = String(item[param] ?? item.id ?? item.name ?? '');
+                  }
+                  setDeletePathParamValues(initial);
                   setDeleteDialogOpen(true);
                 }}
               />
@@ -1146,13 +1155,13 @@ export default function ElementApiExplorer() {
           {selectedResource?.create && selectedResource.create.length > 0 && spec && (
             <DynamicFormGenerator
               spec={spec}
-              schema={selectedResource.create[0].requestSchema || selectedResource.create[0].operation.requestBody?.content?.['application/json']?.schema}
+              schema={selectedResource.create[createOpIndex].requestSchema || selectedResource.create[createOpIndex].operation.requestBody?.content?.['application/json']?.schema}
               onSubmit={async (data) => createMutation.mutate(data)}
               onCancel={() => setCreateDialogOpen(false)}
               isLoading={createMutation.isPending}
               submitLabel="Create"
-              pathParams={selectedResource.create[0].pathParams || []}
-              queryParams={selectedResource.create[0].queryParams || []}
+              pathParams={selectedResource.create[createOpIndex].pathParams || []}
+              queryParams={selectedResource.create[createOpIndex].queryParams || []}
             />
           )}
         </DialogContent>
@@ -1170,7 +1179,7 @@ export default function ElementApiExplorer() {
             <DynamicFormGenerator
               spec={spec}
               schema={(() => {
-                const opIndex = selectedItem._operationIndex || 0;
+                const opIndex = Math.min(selectedItem._operationIndex || 0, selectedResource.update.length - 1);
                 const updateOp = selectedResource.update[opIndex];
                 return updateOp.requestSchema || updateOp.operation.requestBody?.content?.['application/json']?.schema;
               })()}
@@ -1180,12 +1189,12 @@ export default function ElementApiExplorer() {
               isLoading={updateMutation.isPending}
               submitLabel="Update"
               pathParams={(() => {
-                const opIndex = selectedItem._operationIndex || 0;
+                const opIndex = Math.min(selectedItem._operationIndex || 0, selectedResource.update.length - 1);
                 const updateOp = selectedResource.update[opIndex];
                 return updateOp.pathParams || [];
               })()}
               queryParams={(() => {
-                const opIndex = selectedItem._operationIndex || 0;
+                const opIndex = Math.min(selectedItem._operationIndex || 0, selectedResource.update.length - 1);
                 const updateOp = selectedResource.update[opIndex];
                 return updateOp.queryParams || [];
               })()}
@@ -1202,6 +1211,25 @@ export default function ElementApiExplorer() {
               This will permanently delete this {selectedResource?.resourceName.toLowerCase()}. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {selectedItem && selectedResource && (() => {
+            const opIndex = selectedItem._operationIndex || 0;
+            const deleteOp = selectedResource.delete?.[opIndex];
+            if (!deleteOp?.pathParams?.length) return null;
+            return (
+              <div className="space-y-3 py-2">
+                {deleteOp.pathParams.map((param: string) => (
+                  <div key={param} className="space-y-1">
+                    <Label htmlFor={`delete-param-${param}`}>{param}</Label>
+                    <Input
+                      id={`delete-param-${param}`}
+                      value={deletePathParamValues[param] ?? ''}
+                      onChange={(e) => setDeletePathParamValues(prev => ({ ...prev, [param]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
             <AlertDialogAction

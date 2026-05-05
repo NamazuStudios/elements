@@ -157,8 +157,8 @@ export default function DynamicApiExplorer() {
       }
       toast({ title: 'Success', description: 'Item created successfully' });
       setCreateDialogOpen(false);
-      if (selectedResource?.list) {
-        const listPath = await getApiPath(`/api/rest${selectedResource.list.path}`);
+      if (selectedResource?.list?.[0]?.path) {
+        const listPath = await getApiPath(`/api/rest${selectedResource.list[0].path}`);
         queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
@@ -214,8 +214,8 @@ export default function DynamicApiExplorer() {
       toast({ title: 'Success', description: 'Item updated successfully' });
       setEditDialogOpen(false);
       setSelectedItem(null);
-      if (selectedResource?.list) {
-        const listPath = await getApiPath(`/api/rest${selectedResource.list.path}`);
+      if (selectedResource?.list?.[0]?.path) {
+        const listPath = await getApiPath(`/api/rest${selectedResource.list[0].path}`);
         queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
@@ -278,8 +278,8 @@ export default function DynamicApiExplorer() {
       toast({ title: 'Success', description: 'Item deleted successfully' });
       setDeleteDialogOpen(false);
       setSelectedItem(null);
-      if (selectedResource?.list) {
-        const listPath = await getApiPath(`/api/rest${selectedResource.list.path}`);
+      if (selectedResource?.list?.[0]?.path) {
+        const listPath = await getApiPath(`/api/rest${selectedResource.list[0].path}`);
         queryClient.invalidateQueries({ queryKey: [listPath] });
       }
     },
