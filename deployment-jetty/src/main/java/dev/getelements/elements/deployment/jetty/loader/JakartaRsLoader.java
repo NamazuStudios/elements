@@ -5,10 +5,13 @@ import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.servlet.HttpContextRoot;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.integration.GenericOpenApiContext;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.integration.api.OpenApiScanner;
 import io.swagger.v3.oas.models.OpenAPI;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -24,10 +27,11 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.UUID;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -310,9 +314,17 @@ public class JakartaRsLoader implements Loader {
         }
     }
 
+    /** Classpath location where element artifacts may bundle a pre-generated OpenAPI spec. */
+    private static final String PREGEN_SPEC_RESOURCE = "META-INF/openapi.json";
+
     /**
      * Builds and pre-reads the OpenAPI context for the element.  Intended to run on a background
      * thread in parallel with {@link Handler#start()} in {@link #runMountTask}.
+     *
+     * <p>If the element bundles a pre-generated spec at {@value PREGEN_SPEC_RESOURCE} on its
+     * classpath, that file is loaded directly and runtime class scanning is skipped entirely
+     * (zero cold-start cost).  Otherwise the current {@code JaxrsApplicationScanner} path is
+     * used as a fallback.
      *
      * <p>Sets the TCCL to the element's classloader for the duration so that any class resolution
      * during Swagger Core scanning uses the correct loader.  All exceptions are caught and logged
@@ -329,9 +341,20 @@ public class JakartaRsLoader implements Loader {
 
         try {
 
-            final var swaggerConfig = new SwaggerConfiguration()
-                    .openAPI(new OpenAPI())
-                    .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner");
+            // Fast path: if a pre-generated spec is bundled into the element at
+            // META-INF/openapi.json, use it directly and skip runtime scanning.
+            final var pregenSpec = loadPreGeneratedSpec(elementClassLoader, elementName);
+
+            final SwaggerConfiguration swaggerConfig;
+            if (pregenSpec != null) {
+                swaggerConfig = new SwaggerConfiguration()
+                        .openAPI(pregenSpec)
+                        .scannerClass(NoScanOpenApiScanner.class.getName());
+            } else {
+                swaggerConfig = new SwaggerConfiguration()
+                        .openAPI(new OpenAPI())
+                        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner");
+            }
 
             final var oaCtx = new JaxrsOpenApiContextBuilder<>()
                     .ctxId(openApiCtxId)
@@ -353,6 +376,36 @@ public class JakartaRsLoader implements Loader {
             thread.setContextClassLoader(previousTccl);
         }
 
+    }
+
+    /**
+     * Attempts to load a pre-generated OpenAPI spec from {@value PREGEN_SPEC_RESOURCE} on the
+     * given classloader.  Returns {@code null} if the resource is absent or cannot be parsed,
+     * in which case the caller should fall back to runtime scanning.
+     */
+    private OpenAPI loadPreGeneratedSpec(final ClassLoader classLoader, final String elementName) {
+        try (final var stream = classLoader.getResourceAsStream(PREGEN_SPEC_RESOURCE)) {
+            if (stream == null) return null;
+            final var spec = Json.mapper().readValue(stream, OpenAPI.class);
+            logger.info("Loaded pre-generated OpenAPI spec for {} from {}", elementName, PREGEN_SPEC_RESOURCE);
+            return spec;
+        } catch (final Exception ex) {
+            logger.warn("Failed to parse pre-generated OpenAPI spec for {} at {}; falling back to runtime scan",
+                    elementName, PREGEN_SPEC_RESOURCE, ex);
+            return null;
+        }
+    }
+
+    /**
+     * No-op {@link OpenApiScanner} used when a pre-generated spec is loaded from the element
+     * classpath.  Returning empty sets prevents Swagger Core from scanning resource classes at
+     * runtime, so the pre-generated spec from {@value PREGEN_SPEC_RESOURCE} is used as-is.
+     */
+    public static final class NoScanOpenApiScanner implements OpenApiScanner {
+        private OpenAPIConfiguration configuration;
+        @Override public void setConfiguration(final OpenAPIConfiguration configuration) { this.configuration = configuration; }
+        @Override public Set<Class<?>> classes() { return Set.of(); }
+        @Override public Map<String, Object> resources() { return Map.of(); }
     }
 
     @Override

@@ -3,11 +3,10 @@ package dev.getelements.elements.sdk.spi;
 import dev.getelements.elements.sdk.exception.SdkException;
 
 import java.io.ByteArrayInputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.Cleaner;
 import java.net.*;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +17,9 @@ import java.util.stream.Stream;
 public class UrlUtils {
 
     private UrlUtils() {}
+
+    /** Closes {@link java.nio.file.FileSystem} instances when their associated URL handler is GC'd. */
+    private static final Cleaner FILE_SYSTEM_CLEANER = Cleaner.create();
 
     /**
      * Converts the supplied string to a URL which will load its authority segment as text.
@@ -67,35 +69,25 @@ public class UrlUtils {
      */
     public static URL forPath(final Path jarPath) {
 
-        class FileSystemInputStream extends FilterInputStream {
-
-            private final FileSystem fileSystem;
-
-            FileSystemInputStream(final InputStream in, final FileSystem fileSystem) {
-                super(in);
-                this.fileSystem = fileSystem;
-            }
-
-            @Override
-            public void close() throws IOException {
-                try {
-                    super.close();
-                } finally {
-                    fileSystem.close();
-                }
-            }
-        }
-
         try {
 
             final var uuid = UUID.randomUUID();
             final var host = "%016X%016X".formatted(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
             final var uri = URI.create("elm://" + host + "/");
+            final var innerFs = FileSystems.newFileSystem(jarPath);
+            final var fsRoot = innerFs.getRootDirectories().iterator().next();
 
-            return URL.of(uri, new URLStreamHandler() {
+            // Open the nested JAR's FileSystem once and reuse it for every resource lookup.
+            // Previously a new FileSystem was opened (and the entire JAR decompressed from the ELM
+            // archive) on every getInputStream() call, causing ~45s startup time as Jersey made
+            // hundreds of resource lookups across all bundled JARs.
+            final var handler = new URLStreamHandler() {
+
                 @Override
                 protected URLConnection openConnection(final URL url) {
+
                     return new URLConnection(url) {
+
                         @Override
                         public void connect() {}
 
@@ -108,15 +100,60 @@ public class UrlUtils {
                                 return InputStream.nullInputStream();
                             }
 
-                            final var resourcePath = urlPath.substring(1);
-                            final var innerFs = FileSystems.newFileSystem(jarPath);
-                            final var root = innerFs.getRootDirectories().iterator().next();
+                            return Files.newInputStream(fsRoot.resolve(urlPath.substring(1)));
+                        }
+                    };
+                }
+            };
 
-                            return new FileSystemInputStream(
-                                    Files.newInputStream(root.resolve(resourcePath)),
-                                    innerFs
-                            );
+            // Close the FileSystem when the handler (and therefore the URL) is GC'd.
+            // The action captures only innerFs — NOT handler — so the Cleaner can detect
+            // when handler becomes phantom-reachable.
+            FILE_SYSTEM_CLEANER.register(handler, () -> {
+                try {
+                    innerFs.close();
+                } catch (IOException ignored) {}
+            });
 
+            return URL.of(uri, handler);
+
+        } catch (IOException ex) {
+            throw new SdkException(ex);
+        }
+    }
+
+    /**
+     * Creates a URL for a JAR file nested inside a ZIP-based {@link java.nio.file.FileSystem}
+     * using an already-open {@link java.nio.file.FileSystem}.  The caller is responsible for
+     * closing {@code fs} when the URL (and its associated {@link java.net.URLClassLoader}) is
+     * no longer needed.  Use this overload when you need deterministic, explicit cleanup;
+     * use {@link #forPath(Path)} when you want automatic GC-based cleanup instead.
+     *
+     * @param jarPath path to a JAR file within {@code fs}
+     * @param fs      an already-open FileSystem wrapping the JAR; the caller owns its lifecycle
+     * @return a URL suitable for use as a URLClassLoader classpath entry
+     */
+    public static URL forPath(final Path jarPath, final java.nio.file.FileSystem fs) {
+        try {
+            final var uuid = UUID.randomUUID();
+            final var host = "%016X%016X".formatted(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
+            final var uri = URI.create("elm://" + host + "/");
+            final var fsRoot = fs.getRootDirectories().iterator().next();
+
+            return URL.of(uri, new URLStreamHandler() {
+                @Override
+                protected URLConnection openConnection(final URL url) {
+                    return new URLConnection(url) {
+                        @Override
+                        public void connect() {}
+
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            final var urlPath = url.getPath();
+                            if (urlPath.isEmpty() || urlPath.equals("/")) {
+                                return InputStream.nullInputStream();
+                            }
+                            return Files.newInputStream(fsRoot.resolve(urlPath.substring(1)));
                         }
                     };
                 }
