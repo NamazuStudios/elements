@@ -16,6 +16,8 @@ import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
+import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.security.SecureRandomPasswordGenerator;
 import dev.morphia.Datastore;
 import dev.morphia.config.MorphiaConfig;
@@ -25,6 +27,8 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.Runtime.getRuntime;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
@@ -47,6 +51,13 @@ public class IntegrationTestModule extends AbstractModule {
 
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
         final int port = testPort.getAndIncrement();
+
+        // Start MongoDB before building the injector so that eager singletons
+        // (e.g. AtomicReference<Datastore>) can connect immediately.
+        final var mongoTestInstance = new DockerMongoTestInstance(port);
+        mongoTestInstance.start();
+        getRuntime().addShutdownHook(new Thread(mongoTestInstance::close));
+        bind(MongoTestInstance.class).toInstance(mongoTestInstance);
 
         install(new ConfigurationModule(() -> {
             final var properties = defaultConfigurationSupplier.get();
@@ -88,7 +99,6 @@ public class IntegrationTestModule extends AbstractModule {
         bind(ProfileTestFactory.class).asEagerSingleton();
         bind(ApplicationTestFactory.class).asEagerSingleton();
 
-        install(new MongoTestInstanceModule(port));
         install(new MongoSdkModule());
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
