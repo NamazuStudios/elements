@@ -8,7 +8,8 @@ import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
-import dev.getelements.elements.dao.mongo.test.MongoTestInstanceModule;
+import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.guice.FacebookBuiltinPermissionsModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
@@ -55,6 +56,13 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         final int mongoPort = testMongoPort.getAndIncrement();
         final int redisPort = testRedisPort.getAndIncrement();
 
+        // Start MongoDB before building the injector so that eager singletons
+        // (e.g. AtomicReference<Datastore>) can connect immediately.
+        final var mongoTestInstance = new DockerMongoTestInstance(mongoPort);
+        mongoTestInstance.start();
+        getRuntime().addShutdownHook(new Thread(mongoTestInstance::close));
+        bind(MongoTestInstance.class).toInstance(mongoTestInstance);
+
         try {
             final var embeddedTestService = embeddedTestService(mongoPort, redisPort, nodePort);
             getRuntime().addShutdownHook(new Thread(embeddedTestService::close));
@@ -98,7 +106,6 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         install(new KryoPayloadReaderWriterModule());
 
         install(new JerseyHttpClientModule());
-        install(new MongoTestInstanceModule(mongoPort));
         install(new MongoSdkModule());
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
