@@ -20,6 +20,7 @@ import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Handler.Sequence;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,7 @@ import java.util.function.Supplier;
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.glassfish.jersey.CommonProperties.MOXY_JSON_FEATURE_DISABLE;
 import static org.glassfish.jersey.server.ResourceConfig.forApplication;
+import static org.glassfish.jersey.server.ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE;
 
 /**
  * Searches an {@link Element} for a service of type {@link Application} and loads it into the application container
@@ -158,6 +160,13 @@ public class JakartaRsLoader implements Loader {
             // doesn't specify one way or another. We assume the application provides its own support for JSON or
             // whatever media types it wants.
             config.property(MOXY_JSON_FEATURE_DISABLE, true);
+        }
+
+        if (!config.hasProperty(FEATURE_AUTO_DISCOVERY_DISABLE)) {
+            // We know this interferes with Kotlin based elements or any Element which tries to include its own
+            // jackson provider. So we disable support for this by default. Even in non-kotlin projects this should
+            // be avoided because we end up polluting the Element's classpath with services it may not want to use.
+            config.property(FEATURE_AUTO_DISCOVERY_DISABLE, true);
         }
 
         final var container = new ServletContainer(config);
