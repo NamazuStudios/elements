@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
@@ -81,6 +82,7 @@ public class MongoDaoModule extends PrivateModule {
         bindTransaction();
         bindEventPublisher();
         bindElementRegistries();
+        bindElementEntityRegistrar();
 
         bind(ObjectMapper.class).asEagerSingleton();
 
@@ -167,7 +169,6 @@ public class MongoDaoModule extends PrivateModule {
         indexableByType.addBinding(METADATA).to(MongoIndexable.Metadata.class);
         indexableByType.addBinding(DISTINCT_INVENTORY_ITEM).to(MongoIndexable.DistinctInventoryItem.class);
 
-        expose(Datastore.class);
         expose(Transaction.class);
 
         expose(IndexDao.class);
@@ -228,11 +229,13 @@ public class MongoDaoModule extends PrivateModule {
 
     protected void bindDatastore() {
 
-        bind(Datastore.class).to(getMainDatastoreKey());
+        // MorphiaConfig and AtomicReference<Datastore> are bound in the parent scope
+        // (MongoDaoElementModule), which is visible to this nested PrivateModule.
+        // They are NOT bound here so that MongoDaoElementModule can expose them directly
+        // to the outer scope — Guice's expose() only accepts bindings from the same binder.
 
         bind(getMainDatastoreKey())
-                .toProvider(MongoDatastoreProvider.class)
-                .asEagerSingleton();
+                .toProvider(MongoDatastoreProvider.class);
 
     }
 
@@ -251,6 +254,13 @@ public class MongoDaoModule extends PrivateModule {
     }
 
     protected void bindElementRegistries() {}
+
+    protected void bindElementEntityRegistrar() {
+        bind(ElementEntityRegistrar.class)
+                .to(MongoElementEntityRegistrar.class)
+                .in(Singleton.class);
+        expose(ElementEntityRegistrar.class);
+    }
 
     protected Key<Datastore> getMainDatastoreKey() {
         return Key.get(Datastore.class, named(MongoDatastoreProvider.MAIN));

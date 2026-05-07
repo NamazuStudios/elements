@@ -93,6 +93,11 @@ public class MongoTransactionProvider implements Provider<Transaction> {
                                 .toProvider(getRootElementRegistryProvider());
                     }
 
+                    @Override
+                    protected void bindElementEntityRegistrar() {
+                        // Not needed in a transaction-scoped injector.
+                    }
+
                 }
         );
 

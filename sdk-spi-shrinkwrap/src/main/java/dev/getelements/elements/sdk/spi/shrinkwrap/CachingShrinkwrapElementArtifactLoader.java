@@ -26,6 +26,18 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
     private static final Logger logger = LoggerFactory.getLogger(CachingShrinkwrapElementArtifactLoader.class);
 
+    static {
+        // ShrinkWrap's LogTransferListener logs MetadataNotFoundException at WARNING via JUL.
+        // These failures are expected when Aether probes all configured repositories for SNAPSHOT
+        // metadata — e.g. JitPack (added by elements that use JitPack libraries) will 404 for
+        // dev.getelements.elements:sdk-spi and other non-JitPack artifacts.  The failures are
+        // already caught and handled by isNotFound(); raising the log threshold to SEVERE
+        // eliminates the noise without hiding real problems.
+        java.util.logging.Logger
+                .getLogger("org.jboss.shrinkwrap.resolver.impl.maven.logging.LogTransferListener")
+                .setLevel(java.util.logging.Level.SEVERE);
+    }
+
     public static final String DEFAULT_LAYOUT = "default";
 
     private static final Set<String> NOT_FOUND_EXCEPTIONS = Set.of(

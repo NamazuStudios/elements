@@ -498,7 +498,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             // PHASE A: STAGING
             // Collect all element source paths into a list
-            context.log("=== Phase A: Staging all element sources ===");
+            context.log("=== Staging all element sources ===");
+            final var phaseAStartNs = System.nanoTime();
 
             // Strategy 1: Stage uploaded ELM from LargeObject if present
             if (hasElmFromLargeObject(context.deployment())) {
@@ -573,10 +574,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             }
 
             context.log("Staged " + context.elementPaths().size() + " element path(s)");
+            context.log("Staging completed in " + (System.nanoTime() - phaseAStartNs) / 1_000_000 + " ms");
 
             // PHASE B: LOADING
             // Load all elements in a single operation
-            context.log("=== Phase B: Loading all elements ===");
+            context.log("=== Loading all elements ===");
+            final var phaseBStartNs = System.nanoTime();
 
             final List<Element> allElements;
 
@@ -619,6 +622,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     ));
                 }
 
+                context.log("Guice/classloader completed in " + (System.nanoTime() - phaseBStartNs) / 1_000_000 + " ms");
                 context.log("Successfully loaded " + allElements.size() + " element(s)");
 
             } catch (Exception ex) {
@@ -1257,6 +1261,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             for (final FileSystem fileSystem : filesystems) {
                 try {
                     fileSystem.close();
+                } catch (java.nio.file.NoSuchFileException ex) {
+                    logger.debug("File system backing file already gone for deployment {} (file was likely replaced): {}",
+                            deployment.id(), ex.getFile());
                 } catch (IOException ex) {
                     logger.warn("Failed to close file system {} for deployment {}", fileSystem, deployment.id(), ex);
                 }

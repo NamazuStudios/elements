@@ -123,14 +123,23 @@ public class JettyElementContainerService implements ElementContainerService {
         try (var mon = Monitor.enter(lock)) {
             return activeContainers.values()
                     .stream()
-                    .map(active -> new ContainerRecord(
-                            active.runtime(),
-                            active.status(),
-                            active.uris(),
-                            active.logs(),
-                            active.errors(),
-                            active.elements()
-                    ))
+                    .map(active -> {
+                        // Override status to LOADING if any loader still has background work
+                        // in progress for any element in this container (e.g. async Jersey start).
+                        final var status = active.status() != FAILED
+                                && active.elements().stream().anyMatch(
+                                        e -> getLoaders().stream().anyMatch(l -> l.hasPendingWork(e)))
+                                ? LOADING
+                                : active.status();
+                        return new ContainerRecord(
+                                active.runtime(),
+                                status,
+                                active.uris(),
+                                active.logs(),
+                                active.errors(),
+                                active.elements()
+                        );
+                    })
                     .toList();
         }
     }
@@ -174,7 +183,11 @@ public class JettyElementContainerService implements ElementContainerService {
             // Check if already mounted
             final var existing = activeContainers.get(deploymentId);
             if (existing != null) {
-                logger.warn("Container already mounted for deployment: {}, remounting", deploymentId);
+                if (existing.runtime().deployment().version() == runtimeRecord.deployment().version()) {
+                    logger.debug("Container already mounted at current version for deployment: {}, skipping event-driven mount", deploymentId);
+                    return;
+                }
+                logger.info("Container mounted at stale version for deployment: {}, remounting", deploymentId);
                 doUnmount(deploymentId);
             }
 
@@ -218,8 +231,21 @@ public class JettyElementContainerService implements ElementContainerService {
     public void onRuntimeUnloaded(final String deploymentId) {
         boolean unmounted = false;
 
+        // Check BEFORE acquiring the container lock whether the deployment is still active
+        // in the runtime service. If it is, the deployment was reloaded (not truly removed),
+        // and the RuntimeUnloaded event is the "old version" notification from reconcile().
+        // In that case we must not unmount the freshly-loaded container.
+        final var stillActive = getElementRuntimeService().getActiveRuntimes()
+                .stream()
+                .anyMatch(r -> r.deployment().id().equals(deploymentId));
+
         try (var mon = Monitor.enter(lock)) {
             logger.info("Received RuntimeUnloaded event for deployment: {}", deploymentId);
+
+            if (stillActive) {
+                logger.debug("Deployment {} was reloaded; skipping event-driven unmount", deploymentId);
+                return;
+            }
 
             // Unmount the container if it exists
             final var existing = activeContainers.get(deploymentId);
@@ -335,13 +361,16 @@ public class JettyElementContainerService implements ElementContainerService {
         logs.add("Starting container mount for deployment " + deploymentId);
 
         try {
+            // Identity set to deduplicate elements across multiple loaders that may report the same element.
+            final var seenElements = Collections.newSetFromMap(new IdentityHashMap<>());
+
             // Create pending deployment context
             final var pending = new Loader.PendingDeployment(
                     uris::add,
                     logs::add,
                     warnings::add,
                     errors::add,
-                    elements::add
+                    element -> { if (seenElements.add(element)) elements.add(element); }
             );
 
             // Run all loaders

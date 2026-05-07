@@ -31,7 +31,7 @@ public class GuiceServiceLocator implements ServiceLocator {
             ? Key.get(elementServiceKey.type(), named(elementServiceKey.name()))
             : Key.get(elementServiceKey.type());
 
-        final var binding = getInjector().getBinding(guiceKey);
+        final var binding = getInjector().getExistingBinding(guiceKey);
         return Optional.ofNullable(binding).map(b -> b.getProvider()::get);
 
     }

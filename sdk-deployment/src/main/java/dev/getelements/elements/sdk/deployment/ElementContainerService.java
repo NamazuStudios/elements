@@ -196,6 +196,14 @@ public interface ElementContainerService {
     enum ContainerStatus {
 
         /**
+         * One or more loaders are still initializing asynchronously (e.g. Jersey/kotlin-reflect
+         * startup).  The container is registered and its element handlers are being brought up
+         * in the background.  Transitions to {@link #CLEAN}, {@link #WARNINGS}, or
+         * {@link #UNSTABLE} once all loaders finish.
+         */
+        LOADING,
+
+        /**
          * The container has been deployed with success.
          */
         CLEAN,

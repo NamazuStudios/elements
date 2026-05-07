@@ -10,6 +10,7 @@ import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.core.filter.AbstractSpecFilter;
 import io.swagger.v3.core.filter.SpecFilter;
 import io.swagger.v3.core.model.ApiDescription;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
@@ -21,7 +22,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.security.SecuritySchemes;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.integration.api.OpenApiContext;
+import io.swagger.v3.oas.integration.api.OpenApiScanner;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.Schema;
@@ -80,6 +84,21 @@ import static java.lang.String.format;
 })
 @Path("")
 public class Oas3DocumentationResource extends BaseOpenApiResource {
+
+    private static final String PREGEN_SPEC_RESOURCE = "META-INF/openapi.json";
+
+    private static final OpenAPI PREGEN_SPEC = loadPreGeneratedSpec();
+
+    private static OpenAPI loadPreGeneratedSpec() {
+        try (final var stream = Oas3DocumentationResource.class
+                .getClassLoader()
+                .getResourceAsStream(PREGEN_SPEC_RESOURCE)) {
+            if (stream == null) return null;
+            return Json.mapper().readValue(stream, OpenAPI.class);
+        } catch (final Exception e) {
+            return null;
+        }
+    }
 
     private URI apiOutsideUrl;
 
@@ -187,17 +206,27 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
             final ServletConfig servletConfig
     ) throws OpenApiConfigurationException {
 
-        final var resourcePackages = Set.of(
-                "dev.getelements.elements.rest",
-                "dev.getelements.elements.model"
-        );
-
-        return new JaxrsOpenApiContextBuilder()
+        final var builder = new JaxrsOpenApiContextBuilder()
                 .application(application)
                 .servletConfig(servletConfig)
-                .resourcePackages(resourcePackages)
-                .ctxId(getContextId(servletConfig))
-                .buildContext(true);
+                .ctxId(getContextId(servletConfig));
+
+        if (PREGEN_SPEC != null) {
+
+            final var config = new SwaggerConfiguration()
+                    .openAPI(PREGEN_SPEC)
+                    .scannerClass(NoScanOpenApiScanner.class.getName());
+
+            builder.openApiConfiguration(config);
+
+        } else {
+            builder.resourcePackages(Set.of(
+                    "dev.getelements.elements.rest",
+                    "dev.getelements.elements.model"
+            ));
+        }
+
+        return builder.buildContext(true);
     }
 
     private static Map<String, List<String>> getQueryParams(MultivaluedMap<String, String> params) {
@@ -242,6 +271,34 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
         this.versionService = versionService;
     }
 
+
+    /**
+     * Override for when the spec is pre-generated
+     */
+    public static final class NoScanOpenApiScanner implements OpenApiScanner {
+
+        private OpenAPIConfiguration configuration;
+
+        @Override
+        public void setConfiguration(final OpenAPIConfiguration configuration) {
+            this.configuration = configuration;
+        }
+
+        @Override
+        public Set<Class<?>> classes() {
+            return Set.of();
+        }
+
+        @Override
+        public Map<String, Object> resources() {
+            return Map.of();
+        }
+
+    }
+
+    /**
+     * Adds some on the fly modifications needed for the client side generation
+     */
     private class EnhancedSpecFilter extends AbstractSpecFilter {
 
         private final ResolvedSchema errorResponseSchema;

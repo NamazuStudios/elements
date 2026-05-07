@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
+import dev.getelements.elements.sdk.record.ElementServiceRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,9 +238,46 @@ public class ElementImplementationClassLoader extends ClassLoader {
                 // normal superclass
                 return fromSuper;
             } else {
-                // We shouldn't pull from the delegate. We have already tried to load the class. We should give up
-                // because it's not in this classloader either.
+
+                // Step 5: Initialization Check - if elementRecord is not yet set, the Element is still
+                // initializing and we deny all delegate-only classes.
+                if (elementRecord == null) {
+                    throw new ClassNotFoundException(name);
+                }
+
+                // Step 6: Registered Service Check - classes that are part of this Element's service exports
+                // are implicitly visible.
+                final boolean permittedByService = elementRecord.services().stream()
+                        .flatMap(ElementServiceRecord::exposedTypes)
+                        .anyMatch(t -> t.getName().equals(name));
+
+                if (permittedByService) {
+                    return fromDelegate;
+                }
+
+                // Step 7: TypeRequest Check - explicit per-type visibility requests declared by the Element.
+                final boolean permittedByTypeRequest = elementRecord.typeRequests().stream()
+                        .anyMatch(r -> r.test(name));
+
+                if (permittedByTypeRequest) {
+                    return fromDelegate;
+                }
+
+                // Step 8: PackageRequest Check - explicit per-package visibility requests declared by the Element.
+                final String packageName = name.contains(".")
+                        ? name.substring(0, name.lastIndexOf('.'))
+                        : "";
+
+                final boolean permittedByPackageRequest = elementRecord.packageRequests().stream()
+                        .anyMatch(r -> r.test(packageName));
+
+                if (permittedByPackageRequest) {
+                    return fromDelegate;
+                }
+
+                // Step 9: Default Deny
                 throw new ClassNotFoundException(name);
+
             }
 
         }

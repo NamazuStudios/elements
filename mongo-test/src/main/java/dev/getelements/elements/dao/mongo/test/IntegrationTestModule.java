@@ -2,10 +2,13 @@ package dev.getelements.elements.dao.mongo.test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
+import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
+import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.ElementRegistry;
@@ -13,12 +16,19 @@ import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
+import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
+import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.security.SecureRandomPasswordGenerator;
+import dev.morphia.Datastore;
+import dev.morphia.config.MorphiaConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.Runtime.getRuntime;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
@@ -42,11 +52,24 @@ public class IntegrationTestModule extends AbstractModule {
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
         final int port = testPort.getAndIncrement();
 
+        // Start MongoDB before building the injector so that eager singletons
+        // (e.g. AtomicReference<Datastore>) can connect immediately.
+        final var mongoTestInstance = new DockerMongoTestInstance(port);
+        mongoTestInstance.start();
+        getRuntime().addShutdownHook(new Thread(mongoTestInstance::close));
+        bind(MongoTestInstance.class).toInstance(mongoTestInstance);
+
         install(new ConfigurationModule(() -> {
             final var properties = defaultConfigurationSupplier.get();
             properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
             return properties;
         }));
+
+        bind(MorphiaConfig.class)
+                .toProvider(MorphiaConfigProvider.class);
+        bind(new TypeLiteral<AtomicReference<Datastore>>(){})
+                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
+                .asEagerSingleton();
 
         install(new MongoDaoModule(){
             @Override
@@ -76,7 +99,6 @@ public class IntegrationTestModule extends AbstractModule {
         bind(ProfileTestFactory.class).asEagerSingleton();
         bind(ApplicationTestFactory.class).asEagerSingleton();
 
-        install(new MongoTestInstanceModule(port));
         install(new MongoSdkModule());
         install(new MongoGridFSLargeObjectBucketModule());
         install(new ValidationModule());
