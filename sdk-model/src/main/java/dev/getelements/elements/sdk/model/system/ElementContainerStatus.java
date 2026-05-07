@@ -33,6 +33,9 @@ public record ElementContainerStatus(
         @Schema(description = "A list of logs related to the deployment of the container.")
         List<String> logs,
 
+        @Schema(description = "A list of warnings produced during container mounting.")
+        List<String> warnings,
+
         @Schema(description = "A list of Elements included in the container.")
         List<ElementMetadata> elements
 

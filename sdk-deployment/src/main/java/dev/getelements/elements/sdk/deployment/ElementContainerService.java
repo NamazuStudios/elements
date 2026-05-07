@@ -128,6 +128,7 @@ public interface ElementContainerService {
      * @param status the {@link ContainerRecord}
      * @param runtime the {@link RuntimeRecord}
      * @param logs a set of very brief logs produced during deployment.
+     * @param warnings a set of warnings produced during deployment.
      * @param uris the set of URIs exposed by the deployment
      * @param errors a set of {@link java.net.URI}s served out of this deployment
      */
@@ -136,12 +137,14 @@ public interface ElementContainerService {
             ContainerStatus status,
             Set<URI> uris,
             List<String> logs,
+            List<String> warnings,
             List<Throwable> errors,
             List<Element> elements) {
 
         public ContainerRecord {
             uris = uris == null ? Set.of() : Set.copyOf(uris);
             logs = logs == null ? List.of() : List.copyOf(logs);
+            warnings = warnings == null ? List.of() : List.copyOf(warnings);
             errors = errors == null ? List.of() : List.copyOf(errors);
             elements = elements == null ? List.of() : List.copyOf(elements);
         }
@@ -162,6 +165,7 @@ public interface ElementContainerService {
                     ContainerStatus.FAILED,
                     null,
                     List.copyOf(logs),
+                    List.of(),
                     List.of(error),
                     List.of()
             );
@@ -183,6 +187,7 @@ public interface ElementContainerService {
                     ContainerStatus.FAILED,
                     Set.of(),
                     List.copyOf(logs),
+                    List.of(),
                     List.copyOf(causes),
                     List.of()
             );

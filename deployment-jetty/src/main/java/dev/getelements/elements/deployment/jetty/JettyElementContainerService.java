@@ -136,6 +136,7 @@ public class JettyElementContainerService implements ElementContainerService {
                                 status,
                                 active.uris(),
                                 active.logs(),
+                                active.warnings(),
                                 active.errors(),
                                 active.elements()
                         );
@@ -204,6 +205,7 @@ public class JettyElementContainerService implements ElementContainerService {
                             active.status(),
                             active.uris(),
                             active.logs(),
+                            active.warnings(),
                             active.errors(),
                             active.elements()
                     );
@@ -400,6 +402,7 @@ public class JettyElementContainerService implements ElementContainerService {
                     status,
                     Set.copyOf(uris),
                     logs,
+                    warnings,
                     errors,
                     elements
             );
@@ -416,6 +419,7 @@ public class JettyElementContainerService implements ElementContainerService {
                     FAILED,
                     Set.of(),
                     logs,
+                    warnings,
                     errors,
                     elements
             );
@@ -533,12 +537,14 @@ public class JettyElementContainerService implements ElementContainerService {
             ContainerStatus status,
             Set<URI> uris,
             List<String> logs,
+            List<String> warnings,
             List<Throwable> errors,
             List<Element> elements
     ) {
         ActiveContainer {
             uris = uris != null ? Set.copyOf(uris) : Set.of();
             logs = logs != null ? List.copyOf(logs) : List.of();
+            warnings = warnings != null ? List.copyOf(warnings) : List.of();
             errors = errors != null ? List.copyOf(errors) : List.of();
             elements = elements != null ? List.copyOf(elements) : List.of();
         }
