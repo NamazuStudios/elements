@@ -92,7 +92,9 @@ public interface Attributes {
      */
     default Properties asProperties() {
         final var properties = new Properties();
-        stream().forEach(attribute -> properties.put(attribute.name(), attribute.value()));
+        stream()
+            .filter(attribute -> attribute.value() != null)
+            .forEach(attribute -> properties.setProperty(attribute.name(), attribute.value().toString()));
         return properties;
     }
 
@@ -104,7 +106,9 @@ public interface Attributes {
      */
     default Properties asProperties(final Properties defaults) {
         final var properties = new Properties(defaults);
-        stream().forEach(attribute -> properties.put(attribute.name(), attribute.value()));
+        stream()
+            .filter(attribute -> attribute.value() != null)
+            .forEach(attribute -> properties.setProperty(attribute.name(), attribute.value().toString()));
         return properties;
     }
 
