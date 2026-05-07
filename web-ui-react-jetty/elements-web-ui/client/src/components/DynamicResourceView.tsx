@@ -14,6 +14,85 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ResourceOperations, OpenAPIOperation, OpenAPIParameter } from '@/lib/openapi-analyzer';
 import { getApiPath, apiClient } from '@/lib/api-client';
 
+function ExpandableValue({ value }: { value: any }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (value === null || value === undefined) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  if (typeof value === 'boolean') {
+    return <Badge variant={value ? 'default' : 'secondary'}>{value ? 'Yes' : 'No'}</Badge>;
+  }
+  if (typeof value === 'number') {
+    return <span>{String(value)}</span>;
+  }
+  if (typeof value === 'string') {
+    if (value.length <= 80) return <span>{value}</span>;
+    return (
+      <div className="space-y-1">
+        <span className={`block text-xs font-mono break-all ${expanded ? '' : 'line-clamp-2'}`}>{value}</span>
+        <button onClick={() => setExpanded(v => !v)} className="text-xs text-primary hover:underline">
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      </div>
+    );
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <span className="text-muted-foreground text-xs italic">empty array</span>;
+    return (
+      <div className="space-y-1">
+        <button onClick={() => setExpanded(v => !v)} className="text-xs text-primary hover:underline flex items-center gap-1">
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {value.length} item{value.length !== 1 ? 's' : ''}
+        </button>
+        {expanded && (
+          <div className="pl-3 border-l-2 border-border space-y-2 mt-1">
+            {value.map((item, i) => (
+              <div key={i} className={`text-xs ${i > 0 && typeof item === 'object' && item !== null ? 'pt-2 border-t border-border/50' : ''}`}>
+                {typeof item === 'object' && item !== null && !Array.isArray(item) ? (
+                  <div className="space-y-1">
+                    {Object.entries(item).map(([k, v]) => (
+                      <div key={k} className="flex gap-2 items-start">
+                        <span className="font-medium shrink-0 text-muted-foreground">{k}:</span>
+                        <ExpandableValue value={v} />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ExpandableValue value={item} />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  if (typeof value === 'object') {
+    const entries = Object.entries(value);
+    if (entries.length === 0) return <span className="text-muted-foreground text-xs italic">empty object</span>;
+    return (
+      <div className="space-y-1">
+        <button onClick={() => setExpanded(v => !v)} className="text-xs text-primary hover:underline flex items-center gap-1">
+          {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          {entries.length} field{entries.length !== 1 ? 's' : ''}
+        </button>
+        {expanded && (
+          <div className="pl-3 border-l-2 border-border space-y-1 mt-1">
+            {entries.map(([k, v]) => (
+              <div key={k} className="text-xs flex gap-2 items-start">
+                <span className="font-medium shrink-0 text-muted-foreground">{k}:</span>
+                <ExpandableValue value={v} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  return <span>{String(value)}</span>;
+}
+
 class HttpError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -27,7 +106,7 @@ interface DynamicResourceViewProps {
   spec: any;
   baseUrl?: string;
   customHeaders?: Record<string, string>;
-  onCreateClick?: () => void;
+  onCreateClick?: (index: number) => void;
   onEditClick?: (item: any) => void;
   onDeleteClick?: (item: any) => void;
   onGetClick?: () => void;
@@ -47,9 +126,20 @@ export function DynamicResourceView({
   const [requestedPath, setRequestedPath] = useState<string | null>(null);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  
+  const [activeListIndex, setActiveListIndex] = useState(0);
+  const [listPathParamValues, setListPathParamValues] = useState<Record<string, string>>({});
+  const [listPathParamsExpanded, setListPathParamsExpanded] = useState(false);
+  const [getPathParamValues, setGetPathParamValues] = useState<Record<string, string>>({});
+  const [getExpanded, setGetExpanded] = useState(false);
+  const [getResult, setGetResult] = useState<{ data?: any; error?: string; status?: number } | null>(null);
+  const [getLoading, setGetLoading] = useState(false);
+  const [lastRequestType, setLastRequestType] = useState<'list' | 'get' | null>(null);
+
   const paginationParamNames = ['offset', 'count', 'limit', 'page', 'size', 'pagesize'];
-  const listQueryParams: OpenAPIParameter[] = (resource.list?.queryParams || [])
+
+  const activeList = resource.list?.[activeListIndex];
+
+  const listQueryParams: OpenAPIParameter[] = (activeList?.queryParams || [])
     .filter(p => !paginationParamNames.includes(p.name.toLowerCase()));
 
   // Read page size from settings (localStorage)
@@ -58,7 +148,7 @@ export function DynamicResourceView({
     return saved ? parseInt(saved, 10) : 20;
   };
   const [pageSize, setPageSize] = useState(getPageSize());
-  
+
   // Update page size if settings change
   useEffect(() => {
     const handleStorageChange = () => {
@@ -72,16 +162,23 @@ export function DynamicResourceView({
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [pageSize]);
 
-  // Reset filters when switching resources
+  // Reset filters and get state when switching resources
   useEffect(() => {
     setFilterValues({});
     setFiltersExpanded(false);
+    setListPathParamValues({});
+    setListPathParamsExpanded(false);
+    setActiveListIndex(0);
     setPage(0);
+    setGetPathParamValues({});
+    setGetExpanded(false);
+    setGetResult(null);
+    setLastRequestType(null);
   }, [resource.resourceName]);
 
   // Build query parameters for list endpoint
   const queryParams = new URLSearchParams();
-  if (resource.list?.isPaginated) {
+  if (activeList?.isPaginated) {
     queryParams.set('offset', (page * pageSize).toString());
     queryParams.set('count', pageSize.toString());
   }
@@ -91,19 +188,28 @@ export function DynamicResourceView({
     }
   }
 
+  // Substitute path params into a path template
+  const resolvePathParams = (path: string, values: Record<string, string>) =>
+    path.replace(/\{([^}]+)\}/g, (_, p) => values[p] || `{${p}}`);
+
   // Build the base path (without environment-specific prefix yet)
-  const basePath = resource.list?.path ? `${baseUrl}${resource.list.path}` : '';
+  const basePath = activeList?.path
+    ? `${baseUrl}${resolvePathParams(activeList.path, listPathParamValues)}`
+    : '';
   const pathWithQuery = `${basePath}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+  // All required path params for the active list are filled
+  const allListPathParamsFilled = (activeList?.pathParams || []).every(p => listPathParamValues[p]?.trim());
 
   // Determine expected response content type from OpenAPI spec
   const getResponseContentType = () => {
-    if (!resource.list?.operation?.responses) return 'application/json';
-    
-    const responses = resource.list.operation.responses;
+    if (!activeList?.operation?.responses) return 'application/json';
+
+    const responses = activeList.operation.responses;
     const successResponse = responses['200'] || responses['default'];
-    
+
     if (!successResponse?.content) return 'application/json';
-    
+
     const contentTypes = Object.keys(successResponse.content);
     return contentTypes[0] || 'application/json';
   };
@@ -112,10 +218,10 @@ export function DynamicResourceView({
   const isJsonResponse = responseContentType.includes('json');
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [basePath, page, pageSize, filterValues],
+    queryKey: [basePath, page, pageSize, filterValues, activeListIndex, listPathParamValues],
     queryFn: async () => {
       const fullUrl = await getApiPath(pathWithQuery);
-      
+
       const headers: Record<string, string> = {};
       const token = customHeaders?.['Elements-SessionSecret'] || apiClient.getSessionToken() || '';
       if (token) {
@@ -124,9 +230,9 @@ export function DynamicResourceView({
       if (customHeaders?.['Elements-ProfileId']) {
         headers['Elements-ProfileId'] = customHeaders['Elements-ProfileId'];
       }
-      
+
       headers['Accept'] = responseContentType;
-      
+
       const response = await fetch(fullUrl, { headers });
       if (!response.ok) {
         let errorDetail = '';
@@ -143,7 +249,7 @@ export function DynamicResourceView({
         }
         throw new HttpError(response.status, errorDetail || `${response.status} ${response.statusText}`);
       }
-      
+
       // Handle different response content types
       if (isJsonResponse) {
         return response.json();
@@ -153,7 +259,7 @@ export function DynamicResourceView({
         return response.blob();
       }
     },
-    enabled: !!resource.list && requestedPath === basePath,
+    enabled: !!activeList && requestedPath === basePath && allListPathParamsFilled,
     retry: false, // Don't auto-retry on error - let user manually retry
   });
 
@@ -180,7 +286,7 @@ export function DynamicResourceView({
       items = [data];
     }
   }
-  
+
   const total = (data as any)?.total || items.length;
   const totalPages = Math.ceil(total / pageSize);
 
@@ -188,50 +294,37 @@ export function DynamicResourceView({
   const getColumns = () => {
     if (items.length === 0) return [];
     const firstItem = items[0];
-    
+
     // Prioritize certain common fields
     const priorityFields = ['id', 'name', 'displayName', 'email', 'type', 'status'];
     const allKeys = Object.keys(firstItem);
-    
+
     // Filter out complex objects and arrays for display
     const simpleKeys = allKeys.filter(key => {
       const value = firstItem[key];
-      return value === null || value === undefined || 
-             typeof value === 'string' || 
-             typeof value === 'number' || 
+      return value === null || value === undefined ||
+             typeof value === 'string' ||
+             typeof value === 'number' ||
              typeof value === 'boolean';
     });
-    
+
     // Sort: priority fields first, then alphabetically
     return simpleKeys.sort((a, b) => {
       const aPriority = priorityFields.indexOf(a);
       const bPriority = priorityFields.indexOf(b);
-      
+
       if (aPriority !== -1 && bPriority !== -1) {
         return aPriority - bPriority;
       }
       if (aPriority !== -1) return -1;
       if (bPriority !== -1) return 1;
-      
+
       return a.localeCompare(b);
     }).slice(0, 6); // Limit to 6 columns
   };
 
   const columns = getColumns();
 
-  // Render cell value
-  const renderCellValue = (value: any) => {
-    if (value === null || value === undefined) {
-      return <span className="text-muted-foreground">—</span>;
-    }
-    if (typeof value === 'boolean') {
-      return <Badge variant={value ? 'default' : 'secondary'}>{value ? 'Yes' : 'No'}</Badge>;
-    }
-    if (typeof value === 'string' && value.length > 50) {
-      return <span className="truncate block max-w-xs" title={value}>{value}</span>;
-    }
-    return <span>{String(value)}</span>;
-  };
 
   const getResourceDisplayName = () => {
     const name = resource.resourceName;
@@ -244,9 +337,9 @@ export function DynamicResourceView({
 
   // Get any available operation for displaying info when there's no list operation
   const getAnyOperation = () => {
-    return resource.list?.operation || 
-           (resource.create && resource.create.length > 0 ? resource.create[0].operation : undefined) || 
-           (resource.update && resource.update.length > 0 ? resource.update[0].operation : undefined) || 
+    return resource.list?.[0]?.operation ||
+           (resource.create && resource.create.length > 0 ? resource.create[0].operation : undefined) ||
+           (resource.update && resource.update.length > 0 ? resource.update[0].operation : undefined) ||
            (resource.delete && resource.delete.length > 0 ? resource.delete[0].operation : undefined);
   };
 
@@ -263,9 +356,44 @@ export function DynamicResourceView({
     if (!operation?.requestBody?.content) return null;
     return Object.keys(operation.requestBody.content)[0] || null;
   };
-  
+
+  // Handler for single-item GET request
+  const handleGetRequest = async () => {
+    if (!resource.get) return;
+    const allFilled = resource.get.pathParams.every(p => getPathParamValues[p]?.trim());
+    if (!allFilled) return;
+    setGetLoading(true);
+    setGetResult(null);
+    let path = resource.get.path;
+    for (const param of resource.get.pathParams) {
+      path = path.replace(`{${param}}`, encodeURIComponent(getPathParamValues[param]));
+    }
+    const fullUrl = await getApiPath(`${baseUrl}${path}`);
+    const headers: Record<string, string> = {};
+    const token = customHeaders?.['Elements-SessionSecret'] || apiClient.getSessionToken() || '';
+    if (token) headers['Elements-SessionSecret'] = token;
+    if (customHeaders?.['Elements-ProfileId']) headers['Elements-ProfileId'] = customHeaders['Elements-ProfileId'];
+    setLastRequestType('get');
+    try {
+      const response = await fetch(fullUrl, { headers });
+      let data: any;
+      try { data = await response.json(); } catch { data = null; }
+      setGetResult({
+        data,
+        status: response.status,
+        error: response.ok ? undefined : (data?.message || `${response.status} ${response.statusText}`),
+      });
+    } catch (err) {
+      setGetResult({ error: String(err) });
+    } finally {
+      setGetLoading(false);
+    }
+  };
+
   // Handler for sending request
   const handleSendRequest = () => {
+    if (!allListPathParamsFilled) return;
+    setLastRequestType('list');
     setRequestedPath(basePath);
     // Force refetch even if data is cached
     refetch();
@@ -297,9 +425,9 @@ export function DynamicResourceView({
                     </a>
                   )}
                   {spec.info.contact.url && (
-                    <a 
-                      href={spec.info.contact.url} 
-                      target="_blank" 
+                    <a
+                      href={spec.info.contact.url}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="hover:text-foreground flex items-center gap-1"
                     >
@@ -322,9 +450,9 @@ export function DynamicResourceView({
               <p className="text-sm mb-1">{spec.externalDocs.description}</p>
             )}
             {spec.externalDocs.url && (
-              <a 
-                href={spec.externalDocs.url} 
-                target="_blank" 
+              <a
+                href={spec.externalDocs.url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-primary hover:underline flex items-center gap-1"
               >
@@ -352,11 +480,11 @@ export function DynamicResourceView({
       </div>
 
       {/* Available Endpoints Section - show all operations */}
-      {((resource.create && resource.create.length > 0) || 
-        (resource.update && resource.update.length > 0) || 
+      {((resource.create && resource.create.length > 0) ||
+        (resource.update && resource.update.length > 0) ||
         (resource.delete && resource.delete.length > 0) ||
         resource.get ||
-        resource.list) && (
+        (resource.list && resource.list.length > 0)) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Available Endpoints</CardTitle>
@@ -366,144 +494,305 @@ export function DynamicResourceView({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {resource.list && (
+              {resource.list?.map((listOp, listIdx) => {
+                const isActiveList = activeListIndex === listIdx;
+                const listOpQueryParams = listOp.queryParams
+                  .filter(p => !paginationParamNames.includes(p.name.toLowerCase()));
+                return (
+                  <div key={`list-${listIdx}`} className="space-y-2">
+                    <div className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!isActiveList) {
+                            setActiveListIndex(listIdx);
+                            setListPathParamValues({});
+                            setListPathParamsExpanded(listOp.pathParams.length > 0);
+                            setFilterValues({});
+                            setFiltersExpanded(false);
+                            setPage(0);
+                            setRequestedPath(null);
+                          } else if (listOp.pathParams.length === 0) {
+                            handleSendRequest();
+                          } else {
+                            setListPathParamsExpanded(v => !v);
+                          }
+                        }}
+                        disabled={isLoading && isActiveList}
+                        data-testid={`button-test-list-${resource.resourceName}-${listIdx}`}
+                        className="font-mono text-xs shrink-0"
+                      >
+                        {isLoading && isActiveList ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                        GET {listOp.path}
+                      </Button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {listOp.operation.operationId && (
+                          <span className="text-xs text-muted-foreground">{listOp.operation.operationId}</span>
+                        )}
+                        {getOperationResponseType(listOp.operation) && (
+                          <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(listOp.operation)}</Badge>
+                        )}
+                        {listOp.isPaginated && (
+                          <Badge variant="secondary" className="text-[10px]">paginated</Badge>
+                        )}
+                        {isActiveList && data && !error && requestedPath && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-green-600 dark:text-green-400 cursor-pointer"
+                            onClick={() => document.getElementById('list-results-section')?.scrollIntoView({ behavior: 'smooth' })}
+                            data-testid="badge-success-status"
+                          >
+                            200
+                          </Badge>
+                        )}
+                        {isActiveList && error && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-destructive cursor-pointer"
+                            onClick={() => document.getElementById('list-error-section')?.scrollIntoView({ behavior: 'smooth' })}
+                            data-testid="badge-error-status"
+                          >
+                            {error instanceof HttpError ? error.status : 'error'}
+                          </Badge>
+                        )}
+                        {listOp.pathParams.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setActiveListIndex(listIdx);
+                              setListPathParamsExpanded(v => !v);
+                            }}
+                            className="text-xs gap-1"
+                          >
+                            Path Params ({listOp.pathParams.length})
+                            {isActiveList && listPathParamsExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </Button>
+                        )}
+                        {listOpQueryParams.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setActiveListIndex(listIdx);
+                              setFiltersExpanded(!filtersExpanded);
+                            }}
+                            className="text-xs gap-1"
+                            data-testid="button-toggle-filters"
+                          >
+                            <Filter className="w-3 h-3" />
+                            Filters ({listOpQueryParams.length})
+                            {isActiveList && filtersExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    {isActiveList && listPathParamsExpanded && listOp.pathParams.length > 0 && (
+                      <div className="ml-4 p-3 rounded-md border border-border/50 space-y-3">
+                        <span className="text-xs font-semibold text-muted-foreground">Path Parameters</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {listOp.pathParams.map(param => (
+                            <div key={param} className="space-y-1">
+                              <Label className="text-xs flex items-center gap-1">
+                                {param}
+                                <span className="text-destructive">*</span>
+                              </Label>
+                              <Input
+                                type="text"
+                                placeholder={`Enter ${param}`}
+                                value={listPathParamValues[param] || ''}
+                                onChange={(e) => setListPathParamValues(prev => ({ ...prev, [param]: e.target.value }))}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleSendRequest(); }}
+                                className="text-xs"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleSendRequest}
+                          disabled={!allListPathParamsFilled || isLoading}
+                          data-testid={`button-send-list-${resource.resourceName}-${listIdx}`}
+                        >
+                          {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                          Send Request
+                        </Button>
+                      </div>
+                    )}
+                    {isActiveList && filtersExpanded && listOpQueryParams.length > 0 && (
+                      <div className="ml-4 p-3 rounded-md border border-border/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-muted-foreground">Query Parameters</span>
+                          {Object.values(filterValues).some(v => v !== '') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => { setFilterValues({}); setPage(0); }}
+                              className="text-xs"
+                              data-testid="button-clear-filters"
+                            >
+                              Clear all
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {listOpQueryParams.map(param => {
+                            const paramSchema = param.schema;
+                            return (
+                              <div key={param.name} className="space-y-1">
+                                <Label htmlFor={`filter-${param.name}`} className="text-xs flex items-center gap-1">
+                                  {param.name}
+                                  {param.required && <span className="text-destructive">*</span>}
+                                  {paramSchema?.type && (
+                                    <span className="text-muted-foreground font-normal">({paramSchema.type})</span>
+                                  )}
+                                </Label>
+                                {paramSchema?.enum ? (
+                                  <Select
+                                    value={filterValues[param.name] || ''}
+                                    onValueChange={(val) => {
+                                      setFilterValues(prev => ({ ...prev, [param.name]: val === '__clear__' ? '' : val }));
+                                      setPage(0);
+                                    }}
+                                  >
+                                    <SelectTrigger className="text-xs" data-testid={`select-filter-${param.name}`}>
+                                      <SelectValue placeholder={param.description || `Select ${param.name}`} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__clear__">-- None --</SelectItem>
+                                      {paramSchema.enum.map((option: string) => (
+                                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : paramSchema?.type === 'boolean' ? (
+                                  <div className="flex items-center gap-2">
+                                    <Checkbox
+                                      id={`filter-${param.name}`}
+                                      checked={filterValues[param.name] === 'true'}
+                                      onCheckedChange={(checked) => {
+                                        setFilterValues(prev => ({ ...prev, [param.name]: checked ? 'true' : '' }));
+                                        setPage(0);
+                                      }}
+                                      data-testid={`checkbox-filter-${param.name}`}
+                                    />
+                                  </div>
+                                ) : (
+                                  <Input
+                                    id={`filter-${param.name}`}
+                                    type={paramSchema?.type === 'integer' || paramSchema?.type === 'number' ? 'number' : 'text'}
+                                    placeholder={param.description || (paramSchema?.default !== undefined ? `Default: ${paramSchema.default}` : `Enter ${param.name}`)}
+                                    value={filterValues[param.name] || ''}
+                                    onChange={(e) => {
+                                      setFilterValues(prev => ({ ...prev, [param.name]: e.target.value }));
+                                      setPage(0);
+                                    }}
+                                    className="text-xs"
+                                    data-testid={`input-filter-${param.name}`}
+                                  />
+                                )}
+                                {param.description && (
+                                  <p className="text-[10px] text-muted-foreground">{param.description}</p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {resource.get && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleSendRequest}
-                      disabled={isLoading}
-                      data-testid={`button-test-list-${resource.resourceName}`}
+                      onClick={() => {
+                        if (resource.get!.pathParams.length === 0) {
+                          handleGetRequest();
+                        } else {
+                          setGetExpanded(v => !v);
+                        }
+                      }}
+                      disabled={getLoading}
+                      data-testid={`button-test-get-${resource.resourceName}`}
                       className="font-mono text-xs shrink-0"
                     >
-                      {isLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
-                      GET {resource.list.path}
+                      {getLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                      GET {resource.get.path}
                     </Button>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {resource.list.operation.operationId && (
-                        <span className="text-xs text-muted-foreground">{resource.list.operation.operationId}</span>
+                      {resource.get.operation.operationId && (
+                        <span className="text-xs text-muted-foreground">{resource.get.operation.operationId}</span>
                       )}
-                      {getOperationResponseType(resource.list.operation) && (
-                        <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(resource.list.operation)}</Badge>
+                      {getOperationResponseType(resource.get.operation) && (
+                        <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(resource.get.operation)}</Badge>
                       )}
-                      {resource.list.isPaginated && (
-                        <Badge variant="secondary" className="text-[10px]">paginated</Badge>
-                      )}
-                      {data && !error && requestedPath && (
+                      {getResult && !getResult.error && (
                         <Badge
                           variant="outline"
                           className="text-[10px] text-green-600 dark:text-green-400 cursor-pointer"
                           onClick={() => document.getElementById('list-results-section')?.scrollIntoView({ behavior: 'smooth' })}
-                          data-testid="badge-success-status"
+                          data-testid="badge-get-success-status"
                         >
-                          200
+                          {getResult.status}
                         </Badge>
                       )}
-                      {error && (
+                      {getResult?.error && (
                         <Badge
                           variant="outline"
                           className="text-[10px] text-destructive cursor-pointer"
-                          onClick={() => document.getElementById('list-error-section')?.scrollIntoView({ behavior: 'smooth' })}
-                          data-testid="badge-error-status"
+                          onClick={() => document.getElementById('list-results-section')?.scrollIntoView({ behavior: 'smooth' })}
+                          data-testid="badge-get-error-status"
                         >
-                          {error instanceof HttpError ? error.status : 'error'}
+                          {getResult.status ?? 'error'}
                         </Badge>
                       )}
-                      {listQueryParams.length > 0 && (
+                      {resource.get.pathParams.length > 0 && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setFiltersExpanded(!filtersExpanded)}
+                          onClick={() => setGetExpanded(v => !v)}
                           className="text-xs gap-1"
-                          data-testid="button-toggle-filters"
                         >
-                          <Filter className="w-3 h-3" />
-                          Filters ({listQueryParams.length})
-                          {filtersExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          Path Params ({resource.get.pathParams.length})
+                          {getExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </Button>
                       )}
                     </div>
                   </div>
-                  {filtersExpanded && listQueryParams.length > 0 && (
+                  {getExpanded && resource.get.pathParams.length > 0 && (
                     <div className="ml-4 p-3 rounded-md border border-border/50 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-muted-foreground">Query Parameters</span>
-                        {Object.values(filterValues).some(v => v !== '') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setFilterValues({}); setPage(0); }}
-                            className="text-xs"
-                            data-testid="button-clear-filters"
-                          >
-                            Clear all
-                          </Button>
-                        )}
-                      </div>
+                      <span className="text-xs font-semibold text-muted-foreground">Path Parameters</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {listQueryParams.map(param => {
-                          const paramSchema = param.schema;
-                          return (
-                            <div key={param.name} className="space-y-1">
-                              <Label htmlFor={`filter-${param.name}`} className="text-xs flex items-center gap-1">
-                                {param.name}
-                                {param.required && <span className="text-destructive">*</span>}
-                                {paramSchema?.type && (
-                                  <span className="text-muted-foreground font-normal">({paramSchema.type})</span>
-                                )}
-                              </Label>
-                              {paramSchema?.enum ? (
-                                <Select
-                                  value={filterValues[param.name] || ''}
-                                  onValueChange={(val) => {
-                                    setFilterValues(prev => ({ ...prev, [param.name]: val === '__clear__' ? '' : val }));
-                                    setPage(0);
-                                  }}
-                                >
-                                  <SelectTrigger className="text-xs" data-testid={`select-filter-${param.name}`}>
-                                    <SelectValue placeholder={param.description || `Select ${param.name}`} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="__clear__">-- None --</SelectItem>
-                                    {paramSchema.enum.map((option: string) => (
-                                      <SelectItem key={option} value={option}>{option}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : paramSchema?.type === 'boolean' ? (
-                                <div className="flex items-center gap-2">
-                                  <Checkbox
-                                    id={`filter-${param.name}`}
-                                    checked={filterValues[param.name] === 'true'}
-                                    onCheckedChange={(checked) => {
-                                      setFilterValues(prev => ({ ...prev, [param.name]: checked ? 'true' : '' }));
-                                      setPage(0);
-                                    }}
-                                    data-testid={`checkbox-filter-${param.name}`}
-                                  />
-                                </div>
-                              ) : (
-                                <Input
-                                  id={`filter-${param.name}`}
-                                  type={paramSchema?.type === 'integer' || paramSchema?.type === 'number' ? 'number' : 'text'}
-                                  placeholder={param.description || (paramSchema?.default !== undefined ? `Default: ${paramSchema.default}` : `Enter ${param.name}`)}
-                                  value={filterValues[param.name] || ''}
-                                  onChange={(e) => {
-                                    setFilterValues(prev => ({ ...prev, [param.name]: e.target.value }));
-                                    setPage(0);
-                                  }}
-                                  className="text-xs"
-                                  data-testid={`input-filter-${param.name}`}
-                                />
-                              )}
-                              {param.description && (
-                                <p className="text-[10px] text-muted-foreground">{param.description}</p>
-                              )}
-                            </div>
-                          );
-                        })}
+                        {resource.get.pathParams.map(param => (
+                          <div key={param} className="space-y-1">
+                            <Label className="text-xs flex items-center gap-1">
+                              {param}
+                              <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              type="text"
+                              placeholder={`Enter ${param}`}
+                              value={getPathParamValues[param] || ''}
+                              onChange={(e) => setGetPathParamValues(prev => ({ ...prev, [param]: e.target.value }))}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleGetRequest(); }}
+                              className="text-xs"
+                            />
+                          </div>
+                        ))}
                       </div>
+                      <Button
+                        size="sm"
+                        onClick={handleGetRequest}
+                        disabled={!resource.get.pathParams.every(p => getPathParamValues[p]?.trim()) || getLoading}
+                      >
+                        {getLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : null}
+                        Send Request
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -511,10 +800,10 @@ export function DynamicResourceView({
               {resource.create?.map((createOp, idx) => (
                 <div key={`create-${idx}`} className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
                   {onCreateClick ? (
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
-                      onClick={onCreateClick}
+                      onClick={() => onCreateClick(idx)}
                       data-testid={`button-test-create-${resource.resourceName}-${idx}`}
                       className="font-mono text-xs shrink-0"
                     >
@@ -538,37 +827,10 @@ export function DynamicResourceView({
                   </div>
                 </div>
               ))}
-              {resource.get && (
-                <div className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
-                  {onGetClick ? (
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      onClick={onGetClick}
-                      data-testid={`button-test-get-${resource.resourceName}`}
-                      className="font-mono text-xs shrink-0"
-                    >
-                      GET {resource.get.path}
-                    </Button>
-                  ) : (
-                    <Badge variant="outline" className="text-xs font-mono px-3 py-1.5 shrink-0">
-                      GET {resource.get.path}
-                    </Badge>
-                  )}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {resource.get.operation.operationId && (
-                      <span className="text-xs text-muted-foreground">{resource.get.operation.operationId}</span>
-                    )}
-                    {getOperationResponseType(resource.get.operation) && (
-                      <Badge variant="secondary" className="text-[10px]">{getOperationResponseType(resource.get.operation)}</Badge>
-                    )}
-                  </div>
-                </div>
-              )}
               {resource.update?.map((updateOp, idx) => (
                 <div key={`update-${idx}`} className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
                   {onEditClick ? (
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
@@ -604,7 +866,7 @@ export function DynamicResourceView({
               {resource.delete?.map((deleteOp, idx) => (
                 <div key={`delete-${idx}`} className="flex items-center gap-3 p-2 rounded-md border border-border/50 flex-wrap">
                   {onDeleteClick ? (
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
@@ -639,7 +901,7 @@ export function DynamicResourceView({
         </Card>
       )}
 
-      {resource.list && error && (
+      {activeList && error && lastRequestType === 'list' && (
         <Alert id="list-error-section" className="border-destructive">
           <AlertDescription className="text-destructive">
             <div className="flex items-start gap-2">
@@ -650,7 +912,7 @@ export function DynamicResourceView({
         </Alert>
       )}
 
-      {resource.list && (
+      {(activeList || resource.get) && (
         <Card id="list-results-section">
           <Tabs defaultValue="table">
           <CardHeader className="pb-0">
@@ -662,13 +924,44 @@ export function DynamicResourceView({
           <TabsContent value="raw-json" className="m-0">
             <CardContent>
               <pre className="text-xs font-mono bg-muted p-4 rounded-md overflow-auto max-h-[600px]">
-                <code>{data !== undefined ? JSON.stringify(data, null, 2) : 'No data — send a request first'}</code>
+                <code>{
+                  lastRequestType === 'get'
+                    ? (getResult !== null ? JSON.stringify(getResult.data ?? getResult.error, null, 2) : 'No data — send a request first')
+                    : lastRequestType === 'list'
+                    ? (data !== undefined ? JSON.stringify(data, null, 2) : 'No data — send a request first')
+                    : 'No data — send a request first'
+                }</code>
               </pre>
             </CardContent>
           </TabsContent>
           <TabsContent value="table" className="m-0">
           <CardContent className="p-0">
-            {isTextResponse ? (
+            {lastRequestType === 'get' ? (
+              getResult?.error ? (
+                <div className="flex flex-col items-center justify-center h-64 text-destructive">
+                  <p className="text-sm">{getResult.error}</p>
+                </div>
+              ) : getResult?.data && typeof getResult.data === 'object' && !Array.isArray(getResult.data) ? (
+                <Table>
+                  <TableBody>
+                    {Object.entries(getResult.data).map(([key, value]) => (
+                      <TableRow key={key}>
+                        <TableCell className="font-semibold text-sm w-1/3 align-top">
+                          {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <ExpandableValue value={value} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <p className="text-lg font-medium">No data</p>
+                </div>
+              )
+            ) : isTextResponse ? (
               <div className="p-6">
                 <div className="bg-muted rounded-lg p-4 font-mono text-sm whitespace-pre-wrap break-words">
                   {data}
@@ -680,9 +973,11 @@ export function DynamicResourceView({
               </div>
             ) : items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                <p className="text-lg font-medium">No {getResourceDisplayName()} Found</p>
+                <p className="text-lg font-medium">
+                  {lastRequestType === null ? 'Send a request to see results' : `No ${getResourceDisplayName()} Found`}
+                </p>
                 <p className="text-sm mt-2">
-                  {resource.create && resource.create.length > 0 ? `Click "Create ${getResourceDisplayName()}" to add one.` : 'No items available.'}
+                  {lastRequestType !== null && resource.create && resource.create.length > 0 ? `Click "Create ${getResourceDisplayName()}" to add one.` : ''}
                 </p>
               </div>
             ) : (
@@ -705,7 +1000,7 @@ export function DynamicResourceView({
                     <TableRow key={item.id || index} data-testid={`row-${resource.resourceName}-${index}`}>
                       {columns.map(column => (
                         <TableCell key={column}>
-                          {renderCellValue(item[column])}
+                          <ExpandableValue value={item[column]} />
                         </TableCell>
                       ))}
                       {((resource.update && resource.update.length > 0) || (resource.delete && resource.delete.length > 0)) && (
@@ -740,7 +1035,7 @@ export function DynamicResourceView({
               </Table>
 
               {/* Pagination Controls - show when paginated OR when there are results */}
-              {(resource.list?.isPaginated || items.length > 0) && (
+              {lastRequestType === 'list' && (activeList?.isPaginated || items.length > 0) && (
                 <div className="flex items-center justify-between px-4 py-3 border-t">
                   <div className="text-sm text-muted-foreground">
                     {total > 0 ? (

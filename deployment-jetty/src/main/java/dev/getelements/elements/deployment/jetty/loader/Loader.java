@@ -53,6 +53,19 @@ public interface Loader {
     void unload(Element element);
 
     /**
+     * Returns {@code true} if this loader has a background task still in progress for the given
+     * {@link Element} (e.g. an asynchronous handler start).  Used by the container service to
+     * report {@link dev.getelements.elements.sdk.deployment.ElementContainerService.ContainerStatus#LOADING}
+     * until all loaders have finished their work.
+     *
+     * @param element the element to check
+     * @return true if work is still pending
+     */
+    default boolean hasPendingWork(Element element) {
+        return false;
+    }
+
+    /**
      * Provides context and  callbacks for pending deployments.
      *
      * @param uris a predicate that returns true if the URI is new, false if it has already been recorded.

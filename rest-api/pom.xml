@@ -78,6 +78,31 @@
                 </includes>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-maven-plugin-jakarta</artifactId>
+                <version>${swagger.version}</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputFileName>openapi</outputFileName>
+                    <outputPath>${project.build.outputDirectory}/META-INF</outputPath>
+                    <outputFormat>JSON</outputFormat>
+                    <resourcePackages>
+                        <resourcePackage>dev.getelements.elements.rest</resourcePackage>
+                        <resourcePackage>dev.getelements.elements.model</resourcePackage>
+                    </resourcePackages>
+                    <prettyPrint>true</prettyPrint>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

@@ -44,13 +44,14 @@ export interface OpenAPIOperation {
 export interface ResourceOperations {
   resourceName: string;
   basePath: string;
-  list?: {
+  list?: Array<{
     method: 'GET';
     path: string;
     operation: OpenAPIOperation;
     isPaginated: boolean;
+    pathParams: string[];
     queryParams: OpenAPIParameter[];
-  };
+  }>;
   get?: {
     method: 'GET';
     path: string;
@@ -149,11 +150,14 @@ function getResourceName(path: string): string {
 }
 
 /**
- * Determine if a path is a "list" endpoint (no path params at all)
- * This ensures we only show top-level collections that can be loaded without parent IDs
+ * Determine if a path is a "list" endpoint.
+ * A path is a list if its last segment is not a path parameter.
+ * e.g. "/organizations" and "/organizations/{id}/members" are lists;
+ *      "/organizations/{id}" is a single-item get.
  */
 function isListPath(path: string): boolean {
-  return !path.includes('{');
+  const lastSegment = path.split('/').pop() || '';
+  return !lastSegment.startsWith('{');
 }
 
 /**
@@ -209,14 +213,16 @@ export function analyzeOpenAPISpec(spec: OpenAPISpec): ResourceOperations[] {
     // Analyze GET operation
     if (pathItem.get) {
       if (isListPath(path)) {
-        // List operation (returns array or pagination)
-        resource.list = {
+        // List operation (returns array or pagination); may have path params for sub-resources
+        if (!resource.list) resource.list = [];
+        resource.list.push({
           method: 'GET',
           path,
           operation: pathItem.get,
           isPaginated: isPaginatedOperation(pathItem.get),
+          pathParams,
           queryParams: extractQueryParams(pathItem.get),
-        };
+        });
       } else if (hasPathParams) {
         // Detail/Get operation (single item by ID)
         resource.get = {

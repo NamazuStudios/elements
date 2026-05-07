@@ -44,6 +44,11 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>dev.morphia.morphia</groupId>
+            <artifactId>morphia-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>

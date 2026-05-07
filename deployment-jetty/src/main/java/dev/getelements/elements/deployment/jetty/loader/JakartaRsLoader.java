@@ -3,13 +3,15 @@ package dev.getelements.elements.deployment.jetty.loader;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService.RuntimeRecord;
-import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.servlet.HttpContextRoot;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.integration.GenericOpenApiContext;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
+import io.swagger.v3.oas.integration.api.OpenApiScanner;
 import io.swagger.v3.oas.models.OpenAPI;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -25,14 +27,17 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
 import static org.glassfish.jersey.CommonProperties.MOXY_JSON_FEATURE_DISABLE;
@@ -52,6 +57,23 @@ public class JakartaRsLoader implements Loader {
 
     private final List<JettyDeploymentRecord> activeDeployments = new ArrayList<>();
 
+    /**
+     * Tracks in-progress background mount tasks keyed by element.  Entries are present only while
+     * {@link Handler#start()} has not yet returned.  Access is guarded by {@link #lock}.
+     */
+    private final Map<Element, Future<?>> pendingMounts = new HashMap<>();
+
+    /**
+     * Daemon thread pool for running the slow Jersey initialisation off the caller's thread.
+     * A cached pool is used so that multiple elements can start up in parallel without queuing
+     * behind each other.
+     */
+    private final ExecutorService mountExecutor = Executors.newCachedThreadPool(r -> {
+        final var t = new Thread(r, "element-rs-mount");
+        t.setDaemon(true);
+        return t;
+    });
+
     private final ElementPathResolver pathResolver = new ElementPathResolver();
 
     private String appOutsideUrl;
@@ -64,9 +86,29 @@ public class JakartaRsLoader implements Loader {
 
     private AuthFilterFeature authFilterFeature;
 
-    private JettyDeploymentRecord deploy(final PendingDeployment pending,
-                                         final Element element,
-                                         final Application application) {
+    /**
+     * Captures all context needed to start a Jersey handler on a background thread after
+     * {@link #deploy} has already added it to the Jetty handler sequence.
+     */
+    private record MountContext(
+            JettyDeploymentRecord record,
+            ClassLoader elementClassLoader,
+            Application application,
+            String openApiCtxId
+    ) {}
+
+    /**
+     * Builds the Jetty handler structure for the element's {@link Application} and adds it to the
+     * handler sequence.  The handler is intentionally left un-started here; the caller submits
+     * {@link #runMountTask} to {@link #mountExecutor} so that the slow Jersey initialisation
+     * happens off the calling thread.
+     *
+     * <p>An un-started {@link ServletContextHandler} in the sequence returns {@code false} from
+     * {@link Handler#handle}, so requests 404 gracefully until the background task completes.
+     */
+    private MountContext deploy(final PendingDeployment pending,
+                                final Element element,
+                                final Application application) {
 
         pending.logf(
                 "Starting REST deployment for %s.",
@@ -121,16 +163,13 @@ public class JakartaRsLoader implements Loader {
         final var container = new ServletContainer(config);
         final var holder = new ServletHolder(container);
 
-        // Force Jersey to initialize when the ServletContextHandler starts (servletContextHandler.start()
-        // below), not lazily on the first HTTP request. Without this, Jersey defers scanning JAX-RS
-        // resource classes and instantiating singletons to the first request, causing a multi-second
-        // hang — especially for Kotlin elements where kotlin-reflect initialization is expensive.
+        // Force Jersey to initialize eagerly when start() is called on the background thread,
+        // not lazily on the first HTTP request.
         holder.setInitOrder(1);
 
-        // Assign a unique OpenAPI context ID for this deployment.  OpenApiResource reads this init
-        // parameter to look up its OpenApiContext from OpenApiContextLocator.  By using the same ID
-        // in the pre-warm call below we ensure both the warm-up and the first HTTP request share
-        // the same pre-built context.  A UUID prevents stale contexts from being reused on reload.
+        // Assign a unique OpenAPI context ID for this deployment so that OpenApiResource uses
+        // an isolated context rather than inheriting the server-level one (which would expose
+        // all Core APIs in the element's /openapi.json response).
         final var openApiCtxId = UUID.randomUUID().toString();
         holder.setInitParameter("openapi.context.id", openApiCtxId);
 
@@ -149,86 +188,233 @@ public class JakartaRsLoader implements Loader {
         // entire duration of each request.  This covers Morphia DiscriminatorLookup fallbacks
         // and any other library that resolves classes via Thread.currentThread().getContextClassLoader().
         final var classLoaderHandler = new ClassLoaderSwitchHandler(elementClassLoader, servletContextHandler);
+
+        // Add to the sequence now (un-started).  Jetty's ContextHandler.handle() checks isStarted();
+        // an un-started handler returns false, so requests fall through to a 404 until the
+        // background thread calls start().
         getSequence().addHandler(classLoaderHandler);
 
-        // Set TCCL to the element's classloader for both start() and the OpenAPI pre-warm below.
-        //
-        // (1) start(): Jersey initialises singletons eagerly (setInitOrder=1); those singletons
-        //     may trigger MongoDB queries hitting DiscriminatorLookup.  The patched
-        //     DiscriminatorLookup uses TCCL to resolve element-owned @Entity classes that aren't
-        //     registered via EntityRegistry.
-        //
-        // (2) OpenAPI pre-warm: Swagger's annotation scanner triggers kotlin-reflect and other
-        //     per-JVM initialisation the first time it introspects a Kotlin class.  Running the
-        //     scan here, with the correct TCCL, means the first real HTTP request to /openapi.json
-        //     finds the spec already built and returns immediately.
+        return new MountContext(
+                new JettyDeploymentRecord(element, classLoaderHandler),
+                elementClassLoader,
+                application,
+                openApiCtxId
+        );
+    }
+
+    /**
+     * Background task that starts the Jetty handler.
+     *
+     * <p>This is where the cold-start cost lives on first load (Jersey + HK2 wiring, JIT
+     * compilation).  Running it off the calling thread means the deployment API returns quickly
+     * and the element becomes available once this task completes.
+     *
+     * <p>After {@link Handler#start()} returns the task re-acquires {@link #lock} to verify the
+     * element is still active.  If {@link #unload} fired during startup the element has already
+     * been removed from {@link #activeDeployments}; the task then stops/removes the handler
+     * itself, avoiding the deadlock that would result from calling stop() while start() is
+     * still blocked inside a synchronized method.
+     */
+    private void runMountTask(final Element element, final MountContext ctx) {
+
+        final var handler = ctx.record().handler();
+        final var elementClassLoader = ctx.elementClassLoader();
+        final var application = ctx.application();
+        final var openApiCtxId = ctx.openApiCtxId();
+        final var elementName = element.getElementRecord().definition().name();
+
+        // Set TCCL to the element's classloader for start(): Jersey initialises singletons eagerly
+        // (setInitOrder=1); those singletons may trigger MongoDB queries hitting DiscriminatorLookup.
+        // The patched DiscriminatorLookup uses TCCL to resolve element-owned @Entity classes that
+        // aren't registered via EntityRegistry.
+        final var thread = Thread.currentThread();
+        final var previousTccl = thread.getContextClassLoader();
+
+        thread.setContextClassLoader(elementClassLoader);
+
+        try {
+
+            // 1. Submit OpenAPI context build on a sibling thread so its Kotlin/Jackson reflection
+            //    work overlaps with handler.start() below.  Both scan the same resource and model
+            //    classes; whichever thread hits a type first pays the cold Kotlin reflection cost
+            //    and the other reads from the cache.  Total wall-clock time becomes
+            //    max(handler.start(), oaCtx.read()) instead of their sum.
+            //    mountExecutor is a cached pool so submitting from within a pool task is safe.
+            final var oaFuture = mountExecutor.submit(
+                    () -> buildOpenApiContext(application, openApiCtxId, elementClassLoader, elementName));
+
+            // 2. Start the handler (this is the slow part on a cold JVM).
+            boolean startSucceeded = false;
+            Exception startException = null;
+            try {
+                handler.start();
+                startSucceeded = true;
+            } catch (Exception ex) {
+                startException = ex;
+            }
+
+            // 3. Re-acquire the lock to check whether the element is still active.
+            //    unload() may have fired while start() was blocked above.
+            boolean stillActive;
+
+            try (var mon = Monitor.enter(lock)) {
+                stillActive = activeDeployments.stream().anyMatch(d -> d.element().equals(element));
+                pendingMounts.remove(element);
+            }
+
+            // 4. Handle failure / post-startup unload.
+            if (!startSucceeded) {
+
+                oaFuture.cancel(true);
+
+                if (stillActive) {
+                    logger.error("Failed to start REST handler for element: {}", elementName, startException);
+                } else {
+                    logger.debug("REST handler startup cancelled for element: {}", elementName);
+                }
+
+                getSequence().removeHandler(handler);
+
+                return;
+            }
+
+            if (!stillActive) {
+
+                oaFuture.cancel(true);
+
+                logger.info("REST handler for element {} was unloaded during startup; stopping.", elementName);
+
+                try {
+                    handler.stop();
+                } catch (Exception ex) {
+                    logger.warn("Failed to stop handler for element {} after post-startup unload.", elementName, ex);
+                }
+
+                getSequence().removeHandler(handler);
+
+                return;
+            }
+
+            // 5. Wait for the OpenAPI build to finish.  buildOpenApiContext() catches and logs its
+            //    own errors, so ExecutionException is not expected here; we handle it anyway.
+            try {
+                oaFuture.get();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                logger.warn("Interrupted waiting for OpenAPI context for {}", elementName);
+            } catch (Exception ex) {
+                logger.warn("OpenAPI context initialization failed for {}; /openapi.json may include server-level APIs",
+                        elementName, ex);
+            }
+
+            logger.info("REST handler ready for element: {}", elementName);
+
+        } finally {
+            thread.setContextClassLoader(previousTccl);
+        }
+    }
+
+    /** Classpath location where element artifacts may bundle a pre-generated OpenAPI spec. */
+    private static final String PREGEN_SPEC_RESOURCE = "META-INF/openapi.json";
+
+    /**
+     * Builds and pre-reads the OpenAPI context for the element.  Intended to run on a background
+     * thread in parallel with {@link Handler#start()} in {@link #runMountTask}.
+     *
+     * <p>If the element bundles a pre-generated spec at {@value PREGEN_SPEC_RESOURCE} on its
+     * classpath, that file is loaded directly and runtime class scanning is skipped entirely
+     * (zero cold-start cost).  Otherwise the current {@code JaxrsApplicationScanner} path is
+     * used as a fallback.
+     *
+     * <p>Sets the TCCL to the element's classloader for the duration so that any class resolution
+     * during Swagger Core scanning uses the correct loader.  All exceptions are caught and logged
+     * so the calling future never completes exceptionally.
+     */
+    private void buildOpenApiContext(final Application application,
+                                     final String openApiCtxId,
+                                     final ClassLoader elementClassLoader,
+                                     final String elementName) {
+
         final var thread = Thread.currentThread();
         final var previousTccl = thread.getContextClassLoader();
         thread.setContextClassLoader(elementClassLoader);
+
         try {
-            try {
-                classLoaderHandler.start();
-            } catch (Exception ex) {
-                getSequence().removeHandler(classLoaderHandler);
-                throw new InternalException(ex);
-            }
 
-            // Pre-warm the OpenAPI spec.  buildContext(true) initialises Swagger's reader/scanner;
-            // read() runs the full annotation scan and caches the result in the OpenApiContext.
-            // The context is stored in OpenApiContextLocator under openApiCtxId so that
-            // OpenApiResource picks it up (via "openapi.context.id" init param) without re-scanning.
-            final var elementName = element.getElementRecord().definition().name();
-            try {
-                // JaxrsAnnotationScanner.classes() always runs ClassGraph.scan(). With no
-                // resourcePackages whitelist the scan covers the entire classpath, finding
-                // every @Path class including the platform's Core API endpoints.
-                //
-                // Fix: derive resourcePackages from the application's own classes so
-                // ClassGraph whitelists only those packages.  We also pass the Application
-                // object directly (.application()) so that Class objects already loaded by
-                // the element's classloader are used as-is — no Class.forName() call is
-                // made, avoiding ClassNotFoundException for element-isolated types.
-                // (The resourceClasses string approach triggers an early-return path in
-                // JaxrsAnnotationScanner that calls Class.forName(name) with the system
-                // classloader, which cannot see element-isolated classes.)
-                final Set<String> resourcePackages = Stream.concat(
-                        application.getClasses().stream(),
-                        application.getSingletons().stream().map(Object::getClass)
-                ).map(cls -> cls.getPackage().getName()).collect(Collectors.toSet());
+            // Fast path: if a pre-generated spec is bundled into the element at
+            // META-INF/openapi.json, use it directly and skip runtime scanning.
+            final var pregenSpec = loadPreGeneratedSpec(elementClassLoader, elementName);
 
-                final var swaggerConfig = new SwaggerConfiguration()
+            final SwaggerConfiguration swaggerConfig;
+            if (pregenSpec != null) {
+                swaggerConfig = new SwaggerConfiguration()
+                        .openAPI(pregenSpec)
+                        .scannerClass(NoScanOpenApiScanner.class.getName());
+            } else {
+                swaggerConfig = new SwaggerConfiguration()
                         .openAPI(new OpenAPI())
-                        .resourcePackages(resourcePackages);
-
-                final var ctx = new JaxrsOpenApiContextBuilder<>()
-                        .ctxId(openApiCtxId)
-                        .application(application)
-                        .openApiConfiguration(swaggerConfig)
-                        .buildContext(true);
-
-                // Also clear any parent context to prevent the server's default OpenAPI
-                // context from being merged in as a base spec.
-                if (ctx instanceof GenericOpenApiContext<?> gctx) {
-                    gctx.setParent(null);
-                }
-
-                ctx.read();
-                logger.debug("OpenAPI spec pre-warmed for {}", elementName);
-            } catch (final Exception ex) {
-                logger.warn("OpenAPI pre-warm failed for {}; first /openapi.json request will be slow",
-                        elementName, ex);
+                        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsApplicationScanner");
             }
+
+            final var oaCtx = new JaxrsOpenApiContextBuilder<>()
+                    .ctxId(openApiCtxId)
+                    .application(application)
+                    .openApiConfiguration(swaggerConfig)
+                    .buildContext(true);
+
+            if (oaCtx instanceof GenericOpenApiContext<?> gctx) {
+                gctx.setParent(null);
+            }
+
+            oaCtx.read();
+            logger.debug("OpenAPI context initialized for {}", elementName);
+
+        } catch (final Exception ex) {
+            logger.warn("OpenAPI context initialization failed for {}; /openapi.json may include server-level APIs",
+                    elementName, ex);
         } finally {
             thread.setContextClassLoader(previousTccl);
         }
 
-        return new JettyDeploymentRecord(element, classLoaderHandler);
+    }
 
+    /**
+     * Attempts to load a pre-generated OpenAPI spec from {@value PREGEN_SPEC_RESOURCE} on the
+     * given classloader.  Returns {@code null} if the resource is absent or cannot be parsed,
+     * in which case the caller should fall back to runtime scanning.
+     */
+    private OpenAPI loadPreGeneratedSpec(final ClassLoader classLoader, final String elementName) {
+        try (final var stream = classLoader.getResourceAsStream(PREGEN_SPEC_RESOURCE)) {
+            if (stream == null) return null;
+            final var spec = Json.mapper().readValue(stream, OpenAPI.class);
+            logger.info("Loaded pre-generated OpenAPI spec for {} from {}", elementName, PREGEN_SPEC_RESOURCE);
+            return spec;
+        } catch (final Exception ex) {
+            logger.warn("Failed to parse pre-generated OpenAPI spec for {} at {}; falling back to runtime scan",
+                    elementName, PREGEN_SPEC_RESOURCE, ex);
+            return null;
+        }
+    }
+
+    /**
+     * No-op {@link OpenApiScanner} used when a pre-generated spec is loaded from the element
+     * classpath.  Returning empty sets prevents Swagger Core from scanning resource classes at
+     * runtime, so the pre-generated spec from {@value PREGEN_SPEC_RESOURCE} is used as-is.
+     */
+    public static final class NoScanOpenApiScanner implements OpenApiScanner {
+        private OpenAPIConfiguration configuration;
+        @Override public void setConfiguration(final OpenAPIConfiguration configuration) { this.configuration = configuration; }
+        @Override public Set<Class<?>> classes() { return Set.of(); }
+        @Override public Map<String, Object> resources() { return Map.of(); }
     }
 
     @Override
     public void unload(final Element element) {
+
+        Handler handlerToStop = null;
+
         try (var mon = Monitor.enter(lock)) {
+
             final var deployment = activeDeployments.stream()
                     .filter(d -> d.element().equals(element))
                     .findFirst()
@@ -238,25 +424,48 @@ public class JakartaRsLoader implements Loader {
                 activeDeployments.remove(deployment);
 
                 final var sch = findServletContextHandler(deployment.handler());
+
                 if (sch != null) {
                     httpPathRegistry.deregister(sch.getContextPath());
                 }
 
-                try {
-                    deployment.handler().stop();
-                    getSequence().removeHandler(deployment.handler());
-                    logger.info("Unloaded REST handler for element: {}",
+                final var pending = pendingMounts.remove(element);
+
+                if (pending != null) {
+
+                    // Startup is still running on a background thread.  Interrupt it (best-effort)
+                    // and let runMountTask() handle stop()/removeHandler() once start() returns.
+                    // Calling stop() here while start() is still executing inside a synchronized
+                    // method would block for the entire startup duration.
+                    pending.cancel(true);
+
+                    logger.info("Cancelled pending startup for element {}; background task will clean up.",
                             element.getElementRecord().definition().name());
-                } catch (Exception ex) {
-                    logger.error("Failed to cleanly unload REST handler for element: {}",
-                            element.getElementRecord().definition().name(), ex);
+
+                } else {
+                    // Startup is complete — safe to stop synchronously (outside the lock below).
+                    handlerToStop = deployment.handler();
                 }
+            }
+        }
+
+        if (handlerToStop != null) {
+
+            try {
+                handlerToStop.stop();
+                getSequence().removeHandler(handlerToStop);
+                logger.info("Unloaded REST handler for element: {}",
+                        element.getElementRecord().definition().name());
+            } catch (Exception ex) {
+                logger.error("Failed to cleanly unload REST handler for element: {}",
+                        element.getElementRecord().definition().name(), ex);
             }
         }
     }
 
     @Override
     public void load(final PendingDeployment pending, final RuntimeRecord record, final Element element) {
+
         try (var mon = Monitor.enter(lock)) {
 
             final var deployed = activeDeployments
@@ -265,23 +474,40 @@ public class JakartaRsLoader implements Loader {
 
             if (deployed) {
                 final var appId = record.deployment().id();
+
                 pending.logWarningf("WARNING: Detected existing deployment for %s.", appId);
+
                 logger.warn("{}/{} is already deployed. Skipping.",
                         appId,
                         element.getElementRecord().definition().name());
             } else {
+
                 element.getServiceLocator()
                         .findInstance(Application.class)
                         .map(Supplier::get)
                         .filter(a -> Application.class != a.getClass())
                         .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
-                        .map(a -> deploy(pending, element, a))
-                        .ifPresent(deploymentRecord -> {
-                            activeDeployments.add(deploymentRecord);
+                        .ifPresent(application -> {
+                            final var ctx = deploy(pending, element, application);
+
+                            // Add to activeDeployments BEFORE submitting the background task so
+                            // that runMountTask's activeDeployments check correctly reflects the
+                            // current state even if the executor starts the task immediately.
+                            activeDeployments.add(ctx.record());
+
+                            final var future = mountExecutor.submit(() -> runMountTask(element, ctx));
+                            pendingMounts.put(element, future);
                             pending.element(element);
                         });
             }
 
+        }
+    }
+
+    @Override
+    public boolean hasPendingWork(final Element element) {
+        try (var mon = Monitor.enter(lock)) {
+            return pendingMounts.containsKey(element);
         }
     }
 

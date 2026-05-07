@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +70,8 @@ interface ElementContainerStatus {
 
 function getStatusColor(status: string) {
   switch (status?.toUpperCase()) {
+    case 'LOADING':
+      return 'bg-blue-500';
     case 'CLEAN':
     case 'RUNNING':
     case 'ACTIVE':
@@ -87,6 +89,8 @@ function getStatusColor(status: string) {
 
 function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status?.toUpperCase()) {
+    case 'LOADING':
+      return 'secondary';
     case 'CLEAN':
     case 'RUNNING':
     case 'ACTIVE':
@@ -104,16 +108,24 @@ function getStatusVariant(status: string): 'default' | 'secondary' | 'destructiv
 
 function getContainerDotColor(container: ElementContainerStatus): string {
   if (container.runtime?.errors?.length) return 'bg-red-500';
+  if (container.status === 'LOADING') return 'bg-blue-500';
   if (container.runtime?.warnings?.length) return 'bg-yellow-500';
   return getStatusColor(container.status);
 }
 
 export default function Containers() {
   const [selectedContainerId, setSelectedContainerId] = useState<string | null>(null);
+  const [pollingActive, setPollingActive] = useState(false);
 
   const { data: containers, isLoading, error } = useQuery<ElementContainerStatus[]>({
     queryKey: ['/api/rest/elements/container'],
+    refetchInterval: pollingActive ? 3000 : false,
   });
+
+  // Auto-poll while any container is still initialising in the background.
+  useEffect(() => {
+    setPollingActive(containers?.some(c => c.status === 'LOADING') ?? false);
+  }, [containers]);
 
   if (isLoading) {
     return (
@@ -192,7 +204,7 @@ export default function Containers() {
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getContainerDotColor(container)}`} />
+                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getContainerDotColor(container)} ${container.status === 'LOADING' ? 'animate-pulse' : ''}`} />
                       <span className="font-mono text-sm font-medium" data-testid={`text-container-deployment-${idx}`}>
                         {container.runtime?.deployment?.id || `Container ${idx + 1}`}
                       </span>

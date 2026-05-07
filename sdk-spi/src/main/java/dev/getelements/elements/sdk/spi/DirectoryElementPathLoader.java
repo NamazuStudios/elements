@@ -783,16 +783,21 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         private ElementLoader getLoader() {
 
-            final var implUrls = allClasspathUrls();
             final var attributes = loadAttributes();
 
             // Build the classloader hierarchy: API -> SPI -> Implementation.
-            // Create implementation classloader with SPI as parent
+            // Create implementation classloader with SPI as parent.
 
             final var classLoaderName = "%s[%s]".formatted(
                     ELEMENT_PATH_ENV,
                     elementPath()
             );
+
+            // Collect the FileSystem instances opened for lib JARs inside ZIP-based
+            // filesystems (e.g. ELM archives).  They are closed explicitly when the
+            // URLClassLoader is closed so we don't rely on GC for cleanup.
+            final var openLibFileSystems = new ArrayList<FileSystem>();
+            final var implUrls = buildImplUrls(openLibFileSystems);
 
             return ServiceLoader
                     .load(ElementLoaderFactory.class, baseClassLoader())
@@ -807,11 +812,55 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             attributes,
                             baseAttributes,
                             baseClassLoader(),
-                            cl -> new URLClassLoader(classLoaderName, implUrls, cl),
+                            cl -> new URLClassLoader(classLoaderName, implUrls, cl) {
+                                @Override
+                                public void close() throws IOException {
+                                    try {
+                                        super.close();
+                                    } finally {
+                                        for (final var fs : openLibFileSystems) {
+                                            try {
+                                                fs.close();
+                                            } catch (IOException ex) {
+                                                logger.warn("Failed to close lib FileSystem on classloader close", ex);
+                                            }
+                                        }
+                                    }
+                                }
+                            },
                             elementParent(),
                             el -> true
                     );
 
+        }
+
+        /**
+         * Builds the implementation classpath URL array.  For lib JARs nested inside a
+         * ZIP-based {@link FileSystem} (e.g. an ELM archive), opens each JAR's own
+         * {@link FileSystem} and adds it to {@code openFileSystems} so the caller can
+         * close them explicitly when the classloader is closed.
+         */
+        private URL[] buildImplUrls(final List<FileSystem> openFileSystems) {
+            try {
+                final Stream<URL> libUrls = libs() == null ? Stream.empty() :
+                        list(libs())
+                                .filter(DirectoryElementPathLoader::isJarFile)
+                                .map(libJar -> {
+                                    if (libJar.getFileSystem() == FileSystems.getDefault()) {
+                                        return toUrl(libJar);
+                                    }
+                                    try {
+                                        final var fs = FileSystems.newFileSystem(libJar);
+                                        openFileSystems.add(fs);
+                                        return UrlUtils.forPath(libJar, fs);
+                                    } catch (IOException ex) {
+                                        throw new SdkException(ex);
+                                    }
+                                });
+                return Stream.concat(libUrls, classpathUrls()).toArray(URL[]::new);
+            } catch (IOException ex) {
+                throw new SdkException(ex);
+            }
         }
 
     }

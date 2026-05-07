@@ -78,6 +78,10 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
     }
 
     private void fail(final HttpServletResponse response, final Exception ex) throws IOException {
+        if (response.isCommitted()) {
+            logger.debug("Response already committed; suppressing secondary error write.", ex);
+            return;
+        }
         final var error = new ErrorResponse();
         error.setCode(UNKNOWN.toString());
         error.setMessage(ex.getMessage());
@@ -86,6 +90,10 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
     }
 
     private void fail(final HttpServletResponse response, final BaseException ex) throws IOException {
+        if (response.isCommitted()) {
+            logger.debug("Response already committed; suppressing secondary error write.", ex);
+            return;
+        }
         final var error = new ErrorResponse();
         error.setCode(ex.getCode().toString());
         error.setMessage(ex.getMessage());
