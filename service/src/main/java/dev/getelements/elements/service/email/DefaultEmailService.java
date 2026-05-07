@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.email;
 
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.service.email.EmailService;
 import jakarta.inject.Inject;
@@ -16,9 +17,14 @@ public class DefaultEmailService implements EmailService {
 
     private Provider<Session> sessionProvider;
     private String defaultFrom;
+    private String smtpHost;
 
     @Override
     public void send(final String from, final String to, final String subject, final String body, final boolean html) {
+
+        if (smtpHost == null || smtpHost.isBlank()) {
+            throw new InvalidDataException("Email service is not configured (SMTP_HOST is blank).");
+        }
 
         final var resolvedFrom = (from == null || from.isBlank()) ? defaultFrom : from;
 
@@ -52,6 +58,15 @@ public class DefaultEmailService implements EmailService {
     @Inject
     public void setDefaultFrom(@Named(EmailService.DEFAULT_FROM) final String defaultFrom) {
         this.defaultFrom = defaultFrom;
+    }
+
+    public String getSmtpHost() {
+        return smtpHost;
+    }
+
+    @Inject
+    public void setSmtpHost(@Named(EmailService.SMTP_HOST) final String smtpHost) {
+        this.smtpHost = smtpHost;
     }
 
 }
