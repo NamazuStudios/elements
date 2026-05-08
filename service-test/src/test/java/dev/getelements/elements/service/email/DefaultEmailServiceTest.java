@@ -53,9 +53,42 @@ public class DefaultEmailServiceTest {
         final var service = new DefaultEmailService();
         service.setSessionProvider(provider);
         service.setDefaultFrom(FROM);
+        service.setSmtpHost("localhost");
 
         assertThrows(InvalidDataException.class,
                 () -> service.send(FROM, TO, SUBJECT, BODY, false));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSend_blankSmtpHost_throwsInvalidDataException() {
+        final var service = new DefaultEmailService();
+        service.setSessionProvider(mock(Provider.class));
+        service.setDefaultFrom(FROM);
+        service.setSmtpHost("");
+
+        try {
+            service.send(FROM, TO, SUBJECT, BODY, false);
+            fail("Expected InvalidDataException");
+        } catch (final InvalidDataException ex) {
+            assertTrue(ex.getMessage().contains("SMTP_HOST"), "Expected message to mention SMTP_HOST");
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSend_nullSmtpHost_throwsInvalidDataException() {
+        final var service = new DefaultEmailService();
+        service.setSessionProvider(mock(Provider.class));
+        service.setDefaultFrom(FROM);
+        service.setSmtpHost(null);
+
+        try {
+            service.send(FROM, TO, SUBJECT, BODY, false);
+            fail("Expected InvalidDataException");
+        } catch (final InvalidDataException ex) {
+            assertTrue(ex.getMessage().contains("SMTP_HOST"), "Expected message to mention SMTP_HOST");
+        }
     }
 
     // ---------- GreenMail integration tests ----------
@@ -115,6 +148,7 @@ public class DefaultEmailServiceTest {
         final var service = new DefaultEmailService();
         service.setSessionProvider(provider);
         service.setDefaultFrom(defaultFrom);
+        service.setSmtpHost("localhost");
         return service;
     }
 
