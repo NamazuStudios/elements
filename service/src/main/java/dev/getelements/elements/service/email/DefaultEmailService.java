@@ -28,6 +28,10 @@ public class DefaultEmailService implements EmailService {
 
         final var resolvedFrom = (from == null || from.isBlank()) ? defaultFrom : from;
 
+        if (resolvedFrom == null || resolvedFrom.isBlank()) {
+            throw new InvalidDataException("No sender address: configure " + DEFAULT_FROM + " or pass an explicit from address.");
+        }
+
         try {
             final var message = new MimeMessage(sessionProvider.get());
             message.setFrom(new InternetAddress(resolvedFrom));
@@ -38,6 +42,10 @@ public class DefaultEmailService implements EmailService {
             Transport.send(message);
 
         } catch (final MessagingException e) {
+            final var cause = e.getCause();
+            if (cause instanceof java.net.ConnectException) {
+                throw new InternalException("Failed to connect to SMTP host " + smtpHost + ": " + cause.getMessage(), e);
+            }
             throw new InternalException("Failed to send email.", e);
         }
     }
