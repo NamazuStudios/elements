@@ -14,8 +14,9 @@ import static java.util.Objects.requireNonNull;
  *
  * @param exposed all exposed types
  * @param name the name of the service
+ * @param expose whether this export should be exposed to the parent Guice injector
  */
-public record ElementServiceExportRecord(List<Class<?>> exposed, String name) {
+public record ElementServiceExportRecord(List<Class<?>> exposed, String name, boolean expose) {
 
     public ElementServiceExportRecord {
         name = name == null ? "" : name;
@@ -69,7 +70,7 @@ public record ElementServiceExportRecord(List<Class<?>> exposed, String name) {
                 ? List.of(aClass)
                 : List.of(elementServiceExport.value());
 
-        return new ElementServiceExportRecord(exposed, name);
+        return new ElementServiceExportRecord(exposed, name, elementServiceExport.expose());
 
     }
 

@@ -121,6 +121,8 @@ public class GuiceSpiModule extends PrivateModule {
 
         final var export = elementServiceRecord.export();
 
+        if (!export.expose()) return;
+
         export.exposed()
                 .stream()
                 .forEach(aClass -> {

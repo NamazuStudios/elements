@@ -33,4 +33,16 @@ public @interface ElementServiceExport {
      */
     String name() default "";
 
+    /**
+     * Controls whether this export is exposed to the parent Guice injector when running in
+     * shared-classpath mode. Set to {@code false} for element-lifecycle types (e.g.
+     * {@code jakarta.ws.rs.core.Application}) that are consumed through each element's own
+     * {@link dev.getelements.elements.sdk.ServiceLocator} and must not be exposed to the shared
+     * parent injector (which would cause a "bound twice" error when multiple elements in the same
+     * deployment each export the same type).
+     *
+     * @return true if this export should be exposed to the parent injector, false otherwise
+     */
+    boolean expose() default true;
+
 }
