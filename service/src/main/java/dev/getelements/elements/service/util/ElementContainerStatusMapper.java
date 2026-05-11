@@ -13,6 +13,7 @@ public interface ElementContainerStatusMapper extends MapperRegistry.Mapper<Cont
     @Override
     @Mapping(target = "status", expression = "java(mapStatus(source.status()))")
     @Mapping(target = "runtime", source = "runtime")
+    @Mapping(target = "warnings", source = "warnings")
     @Mapping(target = "elements", source = "elements")
     ElementContainerStatus forward(ContainerRecord source);
 

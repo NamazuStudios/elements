@@ -65,6 +65,7 @@ interface ElementContainerStatus {
   status: string;
   uris: string[];
   logs: string[];
+  warnings?: string[];
   elements: ElementMetadata[];
 }
 
@@ -109,7 +110,7 @@ function getStatusVariant(status: string): 'default' | 'secondary' | 'destructiv
 function getContainerDotColor(container: ElementContainerStatus): string {
   if (container.runtime?.errors?.length) return 'bg-red-500';
   if (container.status === 'LOADING') return 'bg-blue-500';
-  if (container.runtime?.warnings?.length) return 'bg-yellow-500';
+  if (container.warnings?.length || container.runtime?.warnings?.length) return 'bg-yellow-500';
   return getStatusColor(container.status);
 }
 
@@ -218,11 +219,14 @@ export default function Containers() {
                           <AlertCircle className="w-3 h-3" />{container.runtime.errors.length} error{container.runtime.errors.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                      {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
-                        <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
-                          <AlertTriangle className="w-3 h-3" />{container.runtime.warnings.length} warning{container.runtime.warnings.length !== 1 ? 's' : ''}
-                        </span>
-                      )}
+                      {(() => {
+                        const count = (container.warnings?.length ?? 0) + (container.runtime?.warnings?.length ?? 0);
+                        return count > 0 ? (
+                          <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
+                            <AlertTriangle className="w-3 h-3" />{count} warning{count !== 1 ? 's' : ''}
+                          </span>
+                        ) : null;
+                      })()}
                       {container.elements && container.elements.length > 0 && (
                         <span className="text-muted-foreground">{container.elements.length} element{container.elements.length !== 1 ? 's' : ''}</span>
                       )}
@@ -268,12 +272,15 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
               {container.runtime.errors.length} error{container.runtime.errors.length !== 1 ? 's' : ''}
             </Badge>
           )}
-          {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
-            <Badge variant="outline" className="gap-1 text-yellow-600 dark:text-yellow-500 border-yellow-500/50">
-              <AlertTriangle className="w-3 h-3" />
-              {container.runtime.warnings.length} warning{container.runtime.warnings.length !== 1 ? 's' : ''}
-            </Badge>
-          )}
+          {(() => {
+            const count = (container.warnings?.length ?? 0) + (container.runtime?.warnings?.length ?? 0);
+            return count > 0 ? (
+              <Badge variant="outline" className="gap-1 text-yellow-600 dark:text-yellow-500 border-yellow-500/50">
+                <AlertTriangle className="w-3 h-3" />
+                {count} warning{count !== 1 ? 's' : ''}
+              </Badge>
+            ) : null;
+          })()}
         </div>
 
         <Tabs defaultValue="overview">
@@ -302,21 +309,24 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
                 </div>
               </div>
             )}
-            {container.runtime?.warnings && container.runtime.warnings.length > 0 && (
-              <div className="rounded-md border border-yellow-500/50 bg-yellow-500/5 p-3 space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
-                  <span className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
-                    {container.runtime.warnings.length} Warning{container.runtime.warnings.length !== 1 ? 's' : ''}
-                  </span>
+            {(() => {
+              const allWarnings = [...(container.warnings ?? []), ...(container.runtime?.warnings ?? [])];
+              return allWarnings.length > 0 ? (
+                <div className="rounded-md border border-yellow-500/50 bg-yellow-500/5 p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-500" />
+                    <span className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                      {allWarnings.length} Warning{allWarnings.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {allWarnings.map((warn, i) => (
+                      <ExpandableMessage key={i} text={warn} colorClass="text-yellow-700 dark:text-yellow-400" />
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  {container.runtime.warnings.map((warn, i) => (
-                    <ExpandableMessage key={i} text={warn} colorClass="text-yellow-700 dark:text-yellow-400" />
-                  ))}
-                </div>
-              </div>
-            )}
+              ) : null;
+            })()}
             {container.uris && container.uris.length > 0 && (
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Endpoints</h3>

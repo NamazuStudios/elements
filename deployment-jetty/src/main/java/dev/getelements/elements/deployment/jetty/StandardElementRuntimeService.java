@@ -382,20 +382,24 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             }
 
+            // Collect IDs to unload first to avoid ConcurrentModificationException,
+            // since doUnloadDeployment removes entries from activeDeployments.
+            final var toUnload = new ArrayList<String>();
+            for (final var entry : activeDeployments.entrySet()) {
+                if (!dbDeploymentIds.contains(entry.getKey()) && !entry.getValue().isTransient()) {
+                    toUnload.add(entry.getKey());
+                }
+            }
+
             // Unload deployments no longer in database (deleted or state changed)
             // Skip transient deployments - they are managed separately
-            for (final var entry : activeDeployments.entrySet()) {
-                final var activeId = entry.getKey();
-                final var active = entry.getValue();
-
-                if (!dbDeploymentIds.contains(activeId) && !active.isTransient()) {
-                    try {
-                        doUnloadDeployment(activeId);
-                        unloadedDeploymentIds.add(activeId);
-                        logger.info("Unloaded deployment: {}", activeId);
-                    } catch (Exception ex) {
-                        logger.error("Failed to unload deployment: {}", activeId, ex);
-                    }
+            for (final var activeId : toUnload) {
+                try {
+                    doUnloadDeployment(activeId);
+                    unloadedDeploymentIds.add(activeId);
+                    logger.info("Unloaded deployment: {}", activeId);
+                } catch (Exception ex) {
+                    logger.error("Failed to unload deployment: {}", activeId, ex);
                 }
             }
 

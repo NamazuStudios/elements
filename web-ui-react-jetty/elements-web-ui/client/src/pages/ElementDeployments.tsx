@@ -258,7 +258,7 @@ export default function ElementDeployments() {
   const [formData, setFormData] = useState<FormData>({ ...emptyFormData });
   const [wizardStep, setWizardStep] = useState(0);
   const [elmUploadDialogOpen, setElmUploadDialogOpen] = useState(false);
-  const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any; deploymentState?: string } | null>(null);
+  const [elmUploadTarget, setElmUploadTarget] = useState<{ deploymentId: string; elm: any; deploymentState?: string; deployment: ElementDeployment } | null>(null);
   const [wizardCreatedDeployment, setWizardCreatedDeployment] = useState<{ deploymentId: string; elmId?: string } | null>(null);
   const [wizardElmFile, setWizardElmFile] = useState<File | null>(null);
   const [wizardEnableNow, setWizardEnableNow] = useState(true);
@@ -305,10 +305,19 @@ export default function ElementDeployments() {
   });
 
   const restartMutation = useMutation({
-    mutationFn: async ({ id, state }: { id: string; state: string }) => {
+    mutationFn: async ({ id, deployment, state }: { id: string; deployment: ElementDeployment; state: string }) => {
       return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ state }),
+        body: JSON.stringify({
+          elements: deployment.elements,
+          packages: deployment.packages,
+          useDefaultRepositories: deployment.useDefaultRepositories,
+          repositories: deployment.repositories,
+          pathAttributes: deployment.pathAttributes,
+          pathSpiBuiltins: deployment.pathSpiBuiltins,
+          pathSpiClassPaths: deployment.pathSpiClassPaths,
+          state,
+        }),
       });
     },
     onSuccess: () => {
@@ -389,10 +398,19 @@ export default function ElementDeployments() {
   });
 
   const enableDeploymentMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, deployment }: { id: string; deployment: ElementDeployment }) => {
       return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
         method: 'PUT',
-        body: JSON.stringify({ state: 'ENABLED' }),
+        body: JSON.stringify({
+          elements: deployment.elements,
+          packages: deployment.packages,
+          useDefaultRepositories: deployment.useDefaultRepositories,
+          repositories: deployment.repositories,
+          pathAttributes: deployment.pathAttributes,
+          pathSpiBuiltins: deployment.pathSpiBuiltins,
+          pathSpiClassPaths: deployment.pathSpiClassPaths,
+          state: 'ENABLED',
+        }),
       });
     },
     onSuccess: () => {
@@ -625,7 +643,7 @@ export default function ElementDeployments() {
                         size="icon"
                         variant="ghost"
                         title="Restart"
-                        onClick={() => restartMutation.mutate({ id: deployment.id, state: deployment.state })}
+                        onClick={() => restartMutation.mutate({ id: deployment.id, deployment, state: deployment.state })}
                         disabled={restartMutation.isPending && restartMutation.variables?.id === deployment.id}
                         data-testid={`button-restart-${deployment.id}`}
                       >
@@ -639,7 +657,7 @@ export default function ElementDeployments() {
                           variant="ghost"
                           title="Upload ELM File"
                           onClick={() => {
-                            setElmUploadTarget({ deploymentId: deployment.id, elm: deployment.elm, deploymentState: deployment.state });
+                            setElmUploadTarget({ deploymentId: deployment.id, elm: deployment.elm, deploymentState: deployment.state, deployment });
                             setElmUploadDialogOpen(true);
                           }}
                           data-testid={`button-upload-elm-${deployment.id}`}
@@ -867,8 +885,8 @@ export default function ElementDeployments() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  if (wizardEnableNow && wizardCreatedDeployment?.deploymentId) {
-                    enableDeploymentMutation.mutate(wizardCreatedDeployment.deploymentId);
+                  if (wizardEnableNow && wizardCreatedDeployment?.deploymentId && createMutation.data) {
+                    enableDeploymentMutation.mutate({ id: wizardCreatedDeployment.deploymentId, deployment: createMutation.data });
                   }
                   setCreateDialogOpen(false);
                   setWizardCreatedDeployment(null);
@@ -1017,7 +1035,7 @@ export default function ElementDeployments() {
             {elmUploadTarget?.deploymentState && (
               <Button
                 onClick={() => {
-                  restartMutation.mutate({ id: elmUploadTarget.deploymentId, state: elmUploadTarget.deploymentState! });
+                  restartMutation.mutate({ id: elmUploadTarget.deploymentId, deployment: elmUploadTarget.deployment, state: elmUploadTarget.deploymentState! });
                   setElmUploadDialogOpen(false);
                   setElmUploadTarget(null);
                 }}

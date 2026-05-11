@@ -5,9 +5,9 @@ import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
 import dev.getelements.elements.sdk.*;
+import dev.getelements.elements.sdk.record.ElementServiceExportRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
 import dev.getelements.elements.sdk.ElementReflectionUtils;
-
 import static com.google.inject.name.Names.named;
 
 /**
@@ -42,6 +42,7 @@ public class SharedElementModule extends PrivateModule {
         final var exposedServiceKeys = loaderFactory
                 .getExposedServices(aPackage)
                 .map(ElementServiceRecord::export)
+                .filter(ElementServiceExportRecord::expose)
                 .flatMap(export -> export
                         .exposed()
                         .stream()
