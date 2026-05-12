@@ -23,6 +23,13 @@ export interface LoadedPlugin {
 declare global {
   interface Window {
     React: typeof import('react');
+    __elementsApiClient: {
+      getSessionToken(): string | null;
+      setSessionToken(token: string | null): void;
+    };
+    __elementsSettings: {
+      getResultsPerPage(): number;
+    };
     __elementsPlugins: {
       _registry: Record<string, React.ComponentType>;
       register(route: string, component: React.ComponentType): void;
