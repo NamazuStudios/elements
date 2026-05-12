@@ -13,8 +13,13 @@ import jakarta.ws.rs.core.Application;
 
 import java.util.Set;
 
+// @ElementServiceImplementation registers this class as the JAX-RS Application for this Element.
+// @ElementServiceExport is required for Jersey to discover the application, but expose = false
+// prevents the binding from being pushed into the shared parent injector. Without expose = false,
+// every deployed Element would try to export its own Application binding to the same parent
+// injector, causing a BindingAlreadySet error at startup when more than one Element is loaded.
 @ElementServiceImplementation
-@ElementServiceExport(Application.class)
+@ElementServiceExport(value = Application.class, expose = false)
 public class HelloWorldApplication extends Application {
 
     @ElementDefaultAttribute("true")

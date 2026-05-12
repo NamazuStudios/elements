@@ -57,6 +57,9 @@ public class ElementBinder extends AbstractBinder {
     private <T> void bindService(final Element source, final ElementServiceRecord service) {
 
         final var export = service.export();
+
+        if (!export.expose()) return;
+
         final var exposedTypes = export.exposed();
 
         if (exposedTypes.isEmpty()) return;
