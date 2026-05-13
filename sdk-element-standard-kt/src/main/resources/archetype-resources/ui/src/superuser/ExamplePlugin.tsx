@@ -11,11 +11,30 @@ export function ExamplePlugin() {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
+  // Always read the session token from window.__elementsApiClient rather than
+  // storing or hardcoding it yourself. The CMS manages the token lifecycle
+  // (login, refresh, logout), so reading it at call time ensures you always
+  // use a valid token without any extra state management in your plugin.
+  const sessionToken = window.__elementsApiClient?.getSessionToken()
+
+  // Use window.__elementsSettings.getResultsPerPage() for any paginated list
+  // in your plugin. This respects the user's preference set in CMS Settings,
+  // so your plugin's pagination stays consistent with the rest of the interface
+  // rather than imposing a hardcoded page size.
+  const resultsPerPage = window.__elementsSettings?.getResultsPerPage() ?? 20
+
   async function fetchVersion() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/rest/version')
+      // Pass the session token in the Elements-SessionSecret header when calling
+      // authenticated endpoints. Reading it fresh each time (rather than closing
+      // over an earlier value) ensures the request uses the current token even if
+      // the user has logged out and back in since the component mounted.
+      const token = window.__elementsApiClient?.getSessionToken()
+      const headers: Record<string, string> = {}
+      if (token) headers['Elements-SessionSecret'] = token
+      const res = await fetch('/api/rest/version', { headers })
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
       setInfo(await res.json())
     } catch (e) {
@@ -33,6 +52,17 @@ export function ExamplePlugin() {
       </p>
 
       <div className="space-y-4">
+        <div className="rounded-lg border p-4 text-sm space-y-2">
+          <div className="flex gap-2">
+            <span className="text-muted-foreground w-36">Session token</span>
+            <span className="font-mono">{sessionToken ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (present)' : 'none'}</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-muted-foreground w-36">Results per page</span>
+            <span className="font-mono">{resultsPerPage}</span>
+          </div>
+        </div>
+
         <div>
           <button
             onClick={fetchVersion}
