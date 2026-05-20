@@ -185,7 +185,13 @@
                             <prependGroupId>true</prependGroupId>
                         </configuration>
                     </execution>
-                    <!-- Kotlin Specific. The API must have the Kotlin libraries included -->
+                    <!--
+                        Copies kotlin-stdlib into the "api" directory of the staging area so it is
+                        visible on the API classloader. The platform's Swagger/Jackson scanner runs
+                        in the API classloader and needs kotlin-stdlib to reflect over Kotlin model
+                        classes (e.g. to find DefaultConstructorMarker, EnumEntries, etc.). Without
+                        this, Swagger scanning throws NoClassDefFoundError for Kotlin internal types.
+                    -->
                     <execution>
                         <id>elm-copy-kotlin-stdlib-api</id>
                         <phase>prepare-package</phase>
