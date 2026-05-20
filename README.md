@@ -88,11 +88,13 @@ import dev.getelements.elements.sdk.annotation.Element;
 
 ## License
 
-Elements is licensed under **AGPLv3**.
+Elements is licensed under the **Mozilla Public License 2.0 (MPL 2.0)**. See [LICENSE.txt](./LICENSE.txt) for the full text.
 
-**Your game code stays yours.** If you build plugins using the Elements SDK (`dev.getelements.sdk` and subpackages), you are not required to open-source your game or server code. This exemption is built into the license.
+**Starting with Elements 3.8, we greatly relaxed the project license, moving from AGPLv3 to MPL 2.0** to make Elements straightforward to adopt in commercial game backends and SaaS deployments. There is no source-release trigger for running Elements as your backend, file-level copyleft means changes you make to Elements stay under MPL 2.0 without infecting the rest of your stack, and you can combine Elements freely with proprietary code.
 
-We also offer a **commercial license** for studios that need a more permissive option. [Contact us →](mailto:info@namazustudios.com)
+**Your game code stays yours.** Plugins built on `dev.getelements.sdk` and subpackages are not derived works under MPL 2.0, so you keep full ownership and full license freedom over your own modules.
+
+We also offer **commercial support and custom development** for studios that want professional assistance, SLAs, or bespoke extensions. [Contact us →](mailto:info@namazustudios.com)
 
 ---
 

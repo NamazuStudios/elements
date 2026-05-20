@@ -1,6 +1,6 @@
 ### Contributor License Agreement (CLA)
 
-This Contributor License Agreement ("Agreement") is entered into by and between Elemental Computing Inc., a California corporation ("Company"), and the individual or entity identified below ("Contributor").
+This Contributor License Agreement ("Agreement") is entered into by and between Namazu Studios LLC, a California corporation ("Company"), and the individual or entity identified below ("Contributor").
 
 **1. Definitions**  
 1.1. "Project" means the software or documentation made available by Company under the Affero General Public License (AGPL) and/or a proprietary license.  

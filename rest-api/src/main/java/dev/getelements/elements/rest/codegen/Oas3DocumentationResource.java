@@ -58,7 +58,7 @@ import static java.lang.String.format;
                 contact = @Contact(
                         url = "https://namazustudios.com",
                         email = "info@namazustudios.com",
-                        name = "Namazu Studios / Elemental Computing Inc."
+                        name = "Namazu Studios"
                 )
         ),
         externalDocs = @ExternalDocumentation(
