@@ -76,6 +76,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementProducedEvents = scanForProducedEvents(classLoader, elementDefinitionRecord);
         final var elementConsumedEvents = scanForConsumedEvents(classLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(classLoader, elementDefinitionRecord);
+        final var elementRequiredAttributes = scanForRequiredAttributes(classLoader, elementDefinitionRecord);
         final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
         final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
         final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
@@ -88,6 +89,18 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .build()
                 .immutableCopy();
 
+        final var missingRequired = elementRequiredAttributes
+                .stream()
+                .map(ElementRequiredAttributeRecord::name)
+                .filter(name -> !elementResolvedAttributes.asMap().containsKey(name))
+                .collect(toList());
+
+        if (!missingRequired.isEmpty()) {
+            throw new SdkException(
+                    "Element '" + elementDefinitionRecord.name() + "' is missing required attributes: " + missingRequired
+            );
+        }
+
         return new ElementRecord(
                 ElementType.ISOLATED_CLASSPATH,
                 elementDefinitionRecord,
@@ -97,6 +110,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
+                elementRequiredAttributes,
                 elementTypeRequests,
                 elementPackageRequests,
                 classLoader
@@ -172,6 +186,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementProducedEvents = scanForProducedEvents(localClassLoader, elementDefinitionRecord);
         final var elementConsumedEvents = scanForConsumedEvents(localClassLoader, elementDefinitionRecord, elementServices);
         final var elementDefaultAttributes = scanForDefaultAttributes(localClassLoader, elementDefinitionRecord);
+        final var elementRequiredAttributes = scanForRequiredAttributes(localClassLoader, elementDefinitionRecord);
         final var elementDependencies = ElementDependencyRecord.fromPackage(aPackage).toList();
         final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(aPackage).toList();
         final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(aPackage).toList();
@@ -183,6 +198,18 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .build()
                 .immutableCopy();
 
+        final var missingRequired = elementRequiredAttributes
+                .stream()
+                .map(ElementRequiredAttributeRecord::name)
+                .filter(name -> !elementResolvedAttributes.asMap().containsKey(name))
+                .collect(toList());
+
+        if (!missingRequired.isEmpty()) {
+            throw new SdkException(
+                    "Element '" + elementDefinitionRecord.name() + "' is missing required attributes: " + missingRequired
+            );
+        }
+
         return new ElementRecord(
                 ElementType.SHARED_CLASSPATH,
                 elementDefinitionRecord,
@@ -192,6 +219,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 elementDependencies,
                 elementResolvedAttributes,
                 elementDefaultAttributes,
+                elementRequiredAttributes,
                 elementTypeRequests,
                 elementPackageRequests,
                 localClassLoader
@@ -230,6 +258,43 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                             .map(FieldInfo::loadClassAndGetField)
                     )
                     .map(ElementDefaultAttributeRecord::from)
+                    .collect(toList());
+
+        }
+
+    }
+
+    private List<ElementRequiredAttributeRecord> scanForRequiredAttributes(
+            final ClassLoader classLoader,
+            final ElementDefinitionRecord elementDefinitionRecord) {
+
+        final var cg = new ClassGraph()
+                .enableClassInfo()
+                .enableFieldInfo()
+                .enableAnnotationInfo()
+                .ignoreParentClassLoaders()
+                .overrideClassLoaders(classLoader);
+
+        elementDefinitionRecord.acceptPackages(
+                cg::acceptPackages,
+                cg::acceptPackagesNonRecursive
+        );
+
+        try (final var result = cg.scan()) {
+
+            return result
+                    .getClassesWithFieldAnnotation(ElementRequiredAttribute.class)
+                    .stream()
+                    .flatMap(classInfo -> classInfo
+                            .getDeclaredFieldInfo()
+                            .stream()
+                            .filter(fieldInfo ->
+                                    fieldInfo.hasAnnotation(ElementRequiredAttribute.class) &&
+                                    fieldInfo.isStatic() &&
+                                    fieldInfo.isFinal())
+                            .map(FieldInfo::loadClassAndGetField)
+                    )
+                    .map(ElementRequiredAttributeRecord::from)
                     .collect(toList());
 
         }
