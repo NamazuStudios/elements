@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
-import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ElementArtifactRepository {
@@ -81,6 +81,27 @@ interface ElmInspectorRecord {
   manifest?: {
     builtinSpis?: string[];
   };
+}
+
+interface DefaultAttributeHint {
+  value: string;
+  description: string;
+  sensitive: boolean;
+}
+
+interface RequiredAttributeHint {
+  description: string;
+  sensitive: boolean;
+}
+
+interface ElementRuntimeStatus {
+  deployment: { id: string; state: string; [key: string]: any };
+  elements: Array<{
+    defaultAttributes: Array<{ name: string; value: string; description: string; sensitive: boolean }>;
+    requiredAttributes: Array<{ name: string; description: string; sensitive: boolean }>;
+    [key: string]: any;
+  }>;
+  [key: string]: any;
 }
 
 function getStateBadgeVariant(state: string): 'default' | 'secondary' | 'outline' | 'destructive' {
@@ -273,6 +294,12 @@ export default function ElementDeployments() {
     },
   });
 
+  const { data: listRuntimeStatuses } = useQuery<ElementRuntimeStatus[]>({
+    queryKey: ['/api/rest/elements/runtime'],
+    queryFn: () => apiClient.request<ElementRuntimeStatus[]>('/api/rest/elements/runtime'),
+    staleTime: 30000,
+  });
+
   const createMutation = useMutation({
     mutationFn: async (body: any) => {
       return apiClient.request<ElementDeployment>('/api/rest/elements/deployment', {
@@ -438,6 +465,7 @@ export default function ElementDeployments() {
   const openEditDialog = (deployment: ElementDeployment) => {
     setSelectedDeployment(deployment);
     setFormData(deploymentToFormData(deployment));
+    queryClient.invalidateQueries({ queryKey: ['/api/rest/elements/runtime'] });
     setEditDialogOpen(true);
   };
 
@@ -473,8 +501,11 @@ export default function ElementDeployments() {
     if (formData.elements.length > 0) body.elements = mapElements(formData.elements);
     if (formData.packages.length > 0) body.packages = mapPackages(formData.packages);
     body.repositories = formData.repositories.filter(r => r.id.trim() || r.url.trim());
-    if (formData.pathAttributes && Object.keys(formData.pathAttributes).length > 0) {
-      body.pathAttributes = formData.pathAttributes;
+    const nonEmptyPathAttrs = Object.fromEntries(
+      Object.entries(formData.pathAttributes || {}).filter(([, attrs]) => Object.keys(attrs).length > 0)
+    );
+    if (Object.keys(nonEmptyPathAttrs).length > 0) {
+      body.pathAttributes = nonEmptyPathAttrs;
     }
     if (formData.pathSpiBuiltins && Object.keys(formData.pathSpiBuiltins).length > 0) {
       body.pathSpiBuiltins = formData.pathSpiBuiltins;
@@ -609,6 +640,23 @@ export default function ElementDeployments() {
                         <Badge variant="outline" className="text-xs">
                           v{deployment.version}
                         </Badge>
+                        {(() => {
+                          const runtime = listRuntimeStatuses?.find(r => r.deployment?.id === deployment.id);
+                          if (!runtime?.elements) return null;
+                          const allValues = Object.values(deployment.pathAttributes || {}).reduce<Record<string, any>>((acc, attrs) => Object.assign(acc, attrs), {});
+                          const missing = runtime.elements.some(el =>
+                            (el.requiredAttributes ?? []).some((req: { name: string }) => {
+                              const v = allValues[req.name];
+                              return !(req.name in allValues) || v === '' || v === null || v === undefined;
+                            })
+                          );
+                          return missing ? (
+                            <Badge variant="destructive" className="text-[10px] flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              Missing attrs
+                            </Badge>
+                          ) : null;
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
@@ -1184,6 +1232,9 @@ function KeyValueEditor({
   testIdPrefix,
   keyPlaceholder = 'key',
   valuePlaceholder = 'value',
+  sensitiveKeys,
+  hints,
+  requiredHints,
 }: {
   value: Record<string, any>;
   onChange: (val: Record<string, any>) => void;
@@ -1191,13 +1242,27 @@ function KeyValueEditor({
   testIdPrefix: string;
   keyPlaceholder?: string;
   valuePlaceholder?: string;
+  sensitiveKeys?: Set<string>;
+  hints?: Record<string, DefaultAttributeHint>;
+  requiredHints?: Record<string, RequiredAttributeHint>;
 }) {
-  const entries = Object.entries(value || {});
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const isAttributeMode = sensitiveKeys !== undefined;
+
+  // In attribute mode, show the union of overridden keys and all hint keys,
+  // excluding keys handled by requiredHints (they render in their own section)
+  const allKeys = isAttributeMode && hints
+    ? Array.from(new Set([...Object.keys(hints), ...Object.keys(value || {})]))
+        .filter(k => !requiredHints || !(k in requiredHints))
+    : null;
+
+  const entries = allKeys ? allKeys.map(k => [k, (value || {})[k]] as [string, any]) : Object.entries(value || {});
 
   const addEntry = () => {
     let counter = entries.length + 1;
-    let newKey = `key${counter}`;
-    while (newKey in value) newKey = `key${++counter}`;
+    const prefix = sensitiveKeys !== undefined ? 'com.example.attribute' : 'key';
+    let newKey = `${prefix}${counter}`;
+    while (newKey in value) newKey = `${prefix}${++counter}`;
     onChange({ ...value, [newKey]: '' });
   };
 
@@ -1248,32 +1313,187 @@ function KeyValueEditor({
       {entries.length === 0 && (
         <p className="text-xs text-muted-foreground italic">No entries</p>
       )}
-      {entries.map(([key, val], i) => (
-        <div key={i} className="flex items-center gap-1" data-testid={`${testIdPrefix}-row-${i}`}>
-          <Input
-            value={key}
-            onChange={(e) => updateKey(key, e.target.value)}
-            placeholder={keyPlaceholder}
-            className="flex-shrink-0 w-2/5 font-mono text-xs"
-            onBlur={(e) => {
-              const trimmed = e.target.value.trim();
-              if (trimmed && trimmed !== key) updateKey(key, trimmed);
-            }}
-            data-testid={`${testIdPrefix}-key-${i}`}
-          />
-          <Input
-            value={typeof val === 'object' ? JSON.stringify(val) : String(val ?? '')}
-            onChange={(e) => updateValue(key, e.target.value)}
-            onBlur={(e) => commitValue(key, e.target.value)}
-            placeholder={valuePlaceholder}
-            className="flex-1 font-mono text-xs"
-            data-testid={`${testIdPrefix}-val-${i}`}
-          />
-          <Button type="button" variant="ghost" size="icon" onClick={() => removeEntry(key)} data-testid={`${testIdPrefix}-remove-${i}`}>
-            <X className="w-3 h-3" />
-          </Button>
+      {entries.map(([key, val], i) => {
+        const isSensitive = sensitiveKeys?.has(key) ?? false;
+        const isRevealed = revealed[key] ?? false;
+        const isAttributeMode = sensitiveKeys !== undefined;
+
+        if (isAttributeMode) {
+          const hint = hints?.[key];
+          const isOverride = key in (value || {});
+          const lastDot = key.lastIndexOf('.');
+          const keyPrefix = lastDot >= 0 ? key.substring(0, lastDot) : '';
+          const keyLeaf = lastDot >= 0 ? key.substring(lastDot + 1) : key;
+          const defaultDisplay = hint?.value
+            ? (isSensitive ? '••••••••' : hint.value)
+            : <span className="italic">empty</span>;
+          return (
+            <div key={i} className="rounded-md border p-2 space-y-1.5" data-testid={`${testIdPrefix}-row-${i}`}>
+              <div className="flex items-center justify-between gap-1 min-w-0">
+                {hint ? (
+                  <div className="font-mono text-xs min-w-0 flex-1 truncate" title={key}>
+                    {keyPrefix && <span className="text-muted-foreground">{keyPrefix}.</span>}
+                    <span className="font-medium">{keyLeaf}</span>
+                  </div>
+                ) : (
+                  <Input
+                    value={key}
+                    onChange={(e) => updateKey(key, e.target.value)}
+                    onBlur={(e) => { const t = e.target.value.trim(); if (t && t !== key) updateKey(key, t); }}
+                    placeholder="attribute.key"
+                    className="flex-1 font-mono text-xs h-7"
+                    data-testid={`${testIdPrefix}-key-custom`}
+                  />
+                )}
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {isSensitive && isOverride && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setRevealed(r => ({ ...r, [key]: !r[key] }))}
+                      data-testid={`${testIdPrefix}-reveal-${i}`}
+                    >
+                      {isRevealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    </Button>
+                  )}
+                  {!hint && (
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeEntry(key)} data-testid={`${testIdPrefix}-remove-${i}`}>
+                      <X className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {isOverride ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={typeof val === 'object' ? JSON.stringify(val) : String(val ?? '')}
+                    onChange={(e) => updateValue(key, e.target.value)}
+                    onBlur={(e) => commitValue(key, e.target.value)}
+                    placeholder={valuePlaceholder}
+                    type={isSensitive && !isRevealed ? 'password' : 'text'}
+                    className="flex-1 font-mono text-xs"
+                    data-testid={`${testIdPrefix}-val-${i}`}
+                  />
+                  {hint && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Checkbox
+                        id={`${testIdPrefix}-default-${i}`}
+                        checked={false}
+                        onCheckedChange={() => removeEntry(key)}
+                        data-testid={`${testIdPrefix}-use-default-${i}`}
+                      />
+                      <label htmlFor={`${testIdPrefix}-default-${i}`} className="text-xs text-muted-foreground cursor-pointer select-none whitespace-nowrap">
+                        Use default
+                      </label>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 font-mono text-xs text-muted-foreground px-3 py-2 bg-muted/30 rounded border border-dashed">
+                    {defaultDisplay}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Checkbox
+                      id={`${testIdPrefix}-default-${i}`}
+                      checked={true}
+                      onCheckedChange={() => onChange({ ...(value || {}), [key]: hint?.value ?? '' })}
+                      data-testid={`${testIdPrefix}-use-default-${i}`}
+                    />
+                    <label htmlFor={`${testIdPrefix}-default-${i}`} className="text-xs text-muted-foreground cursor-pointer select-none whitespace-nowrap">
+                      Use default
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        return (
+          <div key={i} className="flex items-center gap-1" data-testid={`${testIdPrefix}-row-${i}`}>
+            <Input
+              value={key}
+              onChange={(e) => updateKey(key, e.target.value)}
+              placeholder={keyPlaceholder}
+              className="flex-shrink-0 w-2/5 font-mono text-xs"
+              onBlur={(e) => {
+                const trimmed = e.target.value.trim();
+                if (trimmed && trimmed !== key) updateKey(key, trimmed);
+              }}
+              data-testid={`${testIdPrefix}-key-${i}`}
+            />
+            <Input
+              value={typeof val === 'object' ? JSON.stringify(val) : String(val ?? '')}
+              onChange={(e) => updateValue(key, e.target.value)}
+              onBlur={(e) => commitValue(key, e.target.value)}
+              placeholder={valuePlaceholder}
+              className="flex-1 font-mono text-xs"
+              data-testid={`${testIdPrefix}-val-${i}`}
+            />
+            <Button type="button" variant="ghost" size="icon" onClick={() => removeEntry(key)} data-testid={`${testIdPrefix}-remove-${i}`}>
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        );
+      })}
+      {/* ── Required Attributes ── */}
+      {isAttributeMode && requiredHints && Object.keys(requiredHints).length > 0 && (
+        <div className="space-y-1 pt-2 border-t mt-2">
+          {(() => {
+            const anyMissing = Object.keys(requiredHints).some(k => !(k in (value || {})));
+            return (
+              <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                Required Attributes
+                <Badge variant={anyMissing ? 'destructive' : 'secondary'} className="text-[9px] px-1 py-0 h-4">Required</Badge>
+              </Label>
+            );
+          })()}
+          {Object.entries(requiredHints).map(([key, hint], i) => {
+            const isSensitive = hint.sensitive;
+            const isRevealed = revealed[`req-${key}`] ?? false;
+            const currentVal = (value || {})[key];
+            const hasOverride = key in (value || {});
+            const lastDot = key.lastIndexOf('.');
+            const keyPrefix = lastDot >= 0 ? key.substring(0, lastDot) : '';
+            const keyLeaf = lastDot >= 0 ? key.substring(lastDot + 1) : key;
+            return (
+              <div key={key} className={`rounded-md border p-2 space-y-1.5 ${!hasOverride ? 'border-destructive/40' : ''}`} data-testid={`${testIdPrefix}-req-row-${i}`}>
+                <div className="flex items-center justify-between gap-1 min-w-0">
+                  <div className="font-mono text-xs min-w-0 flex-1 truncate" title={key}>
+                    {keyPrefix && <span className="text-muted-foreground">{keyPrefix}.</span>}
+                    <span className="font-medium">{keyLeaf}</span>
+                  </div>
+                  {isSensitive && hasOverride && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setRevealed(r => ({ ...r, [`req-${key}`]: !r[`req-${key}`] }))}
+                      data-testid={`${testIdPrefix}-req-reveal-${i}`}
+                    >
+                      {isRevealed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    </Button>
+                  )}
+                </div>
+                {hint.description && (
+                  <p className="text-xs text-muted-foreground">{hint.description}</p>
+                )}
+                <Input
+                  value={hasOverride ? (typeof currentVal === 'object' ? JSON.stringify(currentVal) : String(currentVal ?? '')) : ''}
+                  onChange={(e) => onChange({ ...(value || {}), [key]: e.target.value })}
+                  onBlur={(e) => onChange({ ...(value || {}), [key]: parseValue(e.target.value) })}
+                  placeholder={isSensitive ? 'Enter secret value...' : 'Enter required value...'}
+                  type={isSensitive && !isRevealed ? 'password' : 'text'}
+                  className={`flex-1 font-mono text-xs ${!hasOverride ? 'border-destructive/50' : ''}`}
+                  data-testid={`${testIdPrefix}-req-val-${i}`}
+                />
+              </div>
+            );
+          })}
         </div>
-      ))}
+      )}
     </div>
   );
 }
@@ -1394,26 +1614,39 @@ function PathKeyValueMapEditor({
   label,
   description,
   testIdPrefix,
+  sensitiveKeys,
+  hints,
+  requiredHints,
+  pathMetadata,
 }: {
   value: Record<string, Record<string, any>>;
   onChange: (val: Record<string, Record<string, any>>) => void;
   label: string;
   description?: string;
   testIdPrefix: string;
+  sensitiveKeys?: Set<string>;
+  hints?: Record<string, DefaultAttributeHint>;
+  requiredHints?: Record<string, RequiredAttributeHint>;
+  pathMetadata?: Record<string, { version?: string }>;
 }) {
   const entries = Object.entries(value || {});
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
+    entries.length > 1 ? Object.fromEntries(entries.map(([k]) => [k, true])) : {}
+  );
 
   const addPath = () => {
     let counter = entries.length + 1;
     let newKey = `path${counter}`;
     while (newKey in value) newKey = `path${++counter}`;
     onChange({ ...value, [newKey]: {} });
+    setCollapsed(c => ({ ...c, [newKey]: false }));
   };
 
   const removePath = (key: string) => {
     const copy = { ...value };
     delete copy[key];
     onChange(copy);
+    setCollapsed(c => { const next = { ...c }; delete next[key]; return next; });
   };
 
   const updatePathKey = (oldKey: string, newKey: string) => {
@@ -1423,11 +1656,14 @@ function PathKeyValueMapEditor({
       result[k === oldKey ? newKey : k] = v;
     }
     onChange(result);
+    setCollapsed(c => { const next = { ...c }; next[newKey] = next[oldKey]; delete next[oldKey]; return next; });
   };
 
   const updatePathAttrs = (pathKey: string, attrs: Record<string, any>) => {
     onChange({ ...value, [pathKey]: attrs });
   };
+
+  const toggleCollapsed = (key: string) => setCollapsed(c => ({ ...c, [key]: !c[key] }));
 
   return (
     <div className="space-y-2">
@@ -1444,35 +1680,77 @@ function PathKeyValueMapEditor({
       {entries.length === 0 && (
         <p className="text-xs text-muted-foreground italic">No paths configured</p>
       )}
-      {entries.map(([pathKey, attrs], pi) => (
-        <Card key={pi} data-testid={`${testIdPrefix}-path-${pi}`}>
-          <CardContent className="p-2 space-y-2">
-            <Label className="text-xs text-muted-foreground">Element Path</Label>
-            <div className="flex items-center gap-1">
-              <Input
-                value={pathKey}
-                onChange={(e) => updatePathKey(pathKey, e.target.value)}
-                placeholder="element-path"
-                className="flex-1 font-mono text-xs"
-                data-testid={`${testIdPrefix}-pathkey-${pi}`}
-              />
-              <Button type="button" variant="ghost" size="icon" onClick={() => removePath(pathKey)} data-testid={`${testIdPrefix}-remove-path-${pi}`}>
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-            <div className="pl-3">
-              <KeyValueEditor
-                value={attrs}
-                onChange={(a) => updatePathAttrs(pathKey, a)}
-                label="Attributes"
-                testIdPrefix={`${testIdPrefix}-attrs-${pi}`}
-                keyPlaceholder="attribute key"
-                valuePlaceholder="attribute value"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {entries.map(([pathKey, attrs], pi) => {
+        const isCollapsed = collapsed[pathKey] ?? false;
+        const meta = pathMetadata?.[pathKey];
+        const parts = pathKey.split('.');
+        const displayName = parts.length > 2 ? parts.slice(-2).join('.') : pathKey;
+        const hasPrefix = parts.length > 2;
+        return (
+          <Card key={pi} data-testid={`${testIdPrefix}-path-${pi}`}>
+            <CardContent className="p-2 space-y-2">
+              {/* ── Path header (always visible) ── */}
+              <div
+                className="flex items-center gap-2 cursor-pointer select-none"
+                onClick={() => toggleCollapsed(pathKey)}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs font-medium">{displayName}</span>
+                    {meta?.version && (
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">v{meta.version}</Badge>
+                    )}
+                  </div>
+                  {hasPrefix && (
+                    <div className="font-mono text-[10px] text-muted-foreground truncate" title={pathKey}>
+                      {parts.slice(0, -2).join('.')}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {isCollapsed ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronUp className="w-3 h-3 text-muted-foreground" />}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); removePath(pathKey); }}
+                    data-testid={`${testIdPrefix}-remove-path-${pi}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+              {/* ── Expanded content ── */}
+              {!isCollapsed && (
+                <>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={pathKey}
+                      onChange={(e) => updatePathKey(pathKey, e.target.value)}
+                      placeholder="element-path"
+                      className="flex-1 font-mono text-xs"
+                      data-testid={`${testIdPrefix}-pathkey-${pi}`}
+                    />
+                  </div>
+                  <div className="pl-3">
+                    <KeyValueEditor
+                      value={attrs}
+                      onChange={(a) => updatePathAttrs(pathKey, a)}
+                      label="Attributes"
+                      testIdPrefix={`${testIdPrefix}-attrs-${pi}`}
+                      keyPlaceholder="attribute key"
+                      valuePlaceholder="attribute value"
+                      sensitiveKeys={sensitiveKeys}
+                      hints={hints}
+                      requiredHints={requiredHints}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
@@ -2462,6 +2740,120 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [additionalOpen, setAdditionalOpen] = useState(false);
+  const [attributesOpen, setAttributesOpen] = useState(false);
+
+  const { data: runtimeStatuses } = useQuery<ElementRuntimeStatus[]>({
+    queryKey: ['/api/rest/elements/runtime'],
+    queryFn: () => apiClient.request<ElementRuntimeStatus[]>('/api/rest/elements/runtime'),
+    enabled: mode === 'edit' && !!deployment,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  const hintsByKey = useMemo<Record<string, DefaultAttributeHint>>(() => {
+    if (!runtimeStatuses || !deployment) return {};
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
+    if (!runtime?.elements) return {};
+    const map: Record<string, DefaultAttributeHint> = {};
+    for (const el of runtime.elements) {
+      for (const attr of (el.defaultAttributes ?? [])) {
+        if (!(attr.name in map)) {
+          map[attr.name] = { value: attr.value, description: attr.description, sensitive: attr.sensitive };
+        }
+      }
+    }
+    return map;
+  }, [runtimeStatuses, deployment]);
+
+  const sensitiveKeys = useMemo(
+    () => new Set(Object.entries(hintsByKey).filter(([, h]) => h.sensitive).map(([k]) => k)),
+    [hintsByKey]
+  );
+
+  const requiredByKey = useMemo<Record<string, RequiredAttributeHint>>(() => {
+    if (!runtimeStatuses || !deployment) return {};
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
+    if (!runtime?.elements) return {};
+    const map: Record<string, RequiredAttributeHint> = {};
+    for (const el of runtime.elements) {
+      for (const attr of (el.requiredAttributes ?? [])) {
+        if (!(attr.name in map)) {
+          map[attr.name] = { description: attr.description, sensitive: attr.sensitive };
+        }
+      }
+    }
+    return map;
+  }, [runtimeStatuses, deployment]);
+
+  const requiredSensitiveKeys = useMemo(
+    () => new Set(Object.entries(requiredByKey).filter(([, h]) => h.sensitive).map(([k]) => k)),
+    [requiredByKey]
+  );
+
+  const pathMetadata = useMemo<Record<string, { version?: string }>>(() => {
+    if (!runtimeStatuses || !deployment) return {};
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
+    if (!runtime?.elementManifests) return {};
+    const map: Record<string, { version?: string }> = {};
+    for (const [key, manifest] of Object.entries(runtime.elementManifests as Record<string, any>)) {
+      const atIdx = key.lastIndexOf('@');
+      const zipPath = atIdx >= 0 ? key.substring(atIdx + 1) : key;
+      const normPath = zipPath.replace(/^\/+/, '');
+      if (normPath) map[normPath] = { version: manifest?.version?.version };
+    }
+    return map;
+  }, [runtimeStatuses, deployment]);
+
+  const hintsApplied = useRef(false);
+  useEffect(() => { hintsApplied.current = false; }, [deployment?.id]);
+  useEffect(() => {
+    if (!runtimeStatuses || hintsApplied.current) return;
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment?.id);
+    if (!runtime) return;
+    hintsApplied.current = true;
+
+    // Derive element paths from elementManifests keys.
+    // Server key format: "<filesystem>@<zip-path>" (e.g. "/tmp/file.elm@/dev.example.element").
+    // Extract the zip-path part and strip the leading slash to get the pathAttributes key.
+    const elementPaths = Object.keys(runtime.elementManifests ?? {})
+      .map(key => {
+        const atIdx = key.lastIndexOf('@');
+        const zipPath = atIdx >= 0 ? key.substring(atIdx + 1) : key;
+        return zipPath.replace(/^\/+/, '');
+      })
+      .filter(Boolean);
+
+    const currentAttrs = formData.pathAttributes;
+
+    // Normalize stale keys that include the filesystem prefix before "@"
+    // (old format: "Users/.../file.elm@/dev.example.element" → correct: "dev.example.element")
+    const normalizedAttrs: Record<string, Record<string, any>> = {};
+    let needsNormalization = false;
+    for (const [k, v] of Object.entries(currentAttrs)) {
+      const atIdx = k.lastIndexOf('@');
+      if (atIdx >= 0) {
+        const normalizedKey = k.substring(atIdx + 1).replace(/^\/+/, '');
+        if (normalizedKey) {
+          normalizedAttrs[normalizedKey] = { ...(normalizedAttrs[normalizedKey] || {}), ...v };
+          needsNormalization = true;
+        }
+      } else {
+        normalizedAttrs[k] = v;
+      }
+    }
+
+    // Add any element paths from the runtime that aren't already present
+    const updated: Record<string, Record<string, any>> = { ...normalizedAttrs };
+    for (const path of elementPaths) {
+      if (!(path in updated)) {
+        updated[path] = {};
+      }
+    }
+
+    if (needsNormalization || Object.keys(updated).length !== Object.keys(currentAttrs).length) {
+      setFormData({ ...formData, pathAttributes: updated });
+    }
+  }, [runtimeStatuses]);
 
   const { data: applications = [], isLoading: appsLoading } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ['/api/rest/application', 'picker'],
@@ -2595,6 +2987,51 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
         </div>
       )}
 
+      {/* ── Element Attributes (edit only, collapsible) ── */}
+      {mode === 'edit' && (
+        <div className="border-t pt-1">
+          <button
+            type="button"
+            className="flex items-center gap-2 w-full py-2 text-sm font-medium hover:text-foreground text-muted-foreground transition-colors"
+            onClick={() => setAttributesOpen(v => !v)}
+            data-testid="button-toggle-element-attributes"
+          >
+            {attributesOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+            Element Attributes
+            {(() => {
+              const hintKeys = new Set(Object.keys(hintsByKey));
+              const reqKeys = new Set(Object.keys(requiredByKey));
+              const customCount = new Set(
+                Object.values(formData.pathAttributes).flatMap(attrs =>
+                  Object.keys(attrs).filter(k => !hintKeys.has(k) && !reqKeys.has(k))
+                )
+              ).size;
+              const total = hintKeys.size + reqKeys.size + customCount;
+              return total > 0 ? (
+                <Badge variant="secondary" className="ml-1 text-[10px]">{total}</Badge>
+              ) : null;
+            })()}
+          </button>
+          {attributesOpen && (
+            <div className="space-y-3 pt-2">
+              <p className="text-xs text-muted-foreground">
+                Per-path attribute overrides for Elements in the ELM file. The key is the element path inside the ELM (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time.
+              </p>
+              <PathKeyValueMapEditor
+                value={formData.pathAttributes}
+                onChange={(val) => update({ pathAttributes: val })}
+                label="Paths"
+                testIdPrefix="deploy-path-attrs"
+                sensitiveKeys={new Set(Array.from(sensitiveKeys).concat(Array.from(requiredSensitiveKeys)))}
+                hints={hintsByKey}
+                requiredHints={requiredByKey}
+                pathMetadata={pathMetadata}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Advanced Settings (collapsible) ── */}
       <div className="border-t pt-1">
         <button
@@ -2626,15 +3063,19 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
             <p className="text-xs text-muted-foreground">
               Per-path custom SPI class paths for Elements in the ELM file. The key is the element path inside the ELM, and the value is the list of SPI class path entries.
             </p>
-            <PathKeyValueMapEditor
-              value={formData.pathAttributes}
-              onChange={(val) => update({ pathAttributes: val })}
-              label="Deployment Path Attributes"
-              testIdPrefix="deploy-path-attrs"
-            />
-            <p className="text-xs text-muted-foreground">
-              Per-path custom attributes for Elements in the ELM file. The key is the element path inside the ELM, and the value is a map of attributes passed at load time via the AttributesLoader mechanism.
-            </p>
+            {mode === 'create' && (
+              <>
+                <PathKeyValueMapEditor
+                  value={formData.pathAttributes}
+                  onChange={(val) => update({ pathAttributes: val })}
+                  label="Deployment Path Attributes"
+                  testIdPrefix="deploy-path-attrs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Per-path custom attributes for Elements in the ELM file. The key is the element path inside the ELM, and the value is a map of attributes passed at load time via the AttributesLoader mechanism.
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>
