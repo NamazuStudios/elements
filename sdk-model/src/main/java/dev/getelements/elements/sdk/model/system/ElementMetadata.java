@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementType;
 import dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
+import dev.getelements.elements.sdk.record.ElementRequiredAttributeRecord;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import static dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord.
  * @param dependencies the dependencies of the {@link dev.getelements.elements.sdk.Element}
  * @param attributes the attributes of the {@link dev.getelements.elements.sdk.Element}
  * @param defaultAttributes the default attributes of the {@link dev.getelements.elements.sdk.Element}
+ * @param requiredAttributes the required attributes of the {@link dev.getelements.elements.sdk.Element}
  */
 public record ElementMetadata(
         ElementType type,
@@ -32,7 +34,8 @@ public record ElementMetadata(
         List<ElementEventConsumerMetadata> consumedEvents,
         List<ElementDependencyMetadata> dependencies,
         Map<String, Object> attributes,
-        List<ElementDefaultAttributeRecord> defaultAttributes) {
+        List<ElementDefaultAttributeRecord> defaultAttributes,
+        List<ElementRequiredAttributeRecord> requiredAttributes) {
 
     /**
      * Convenience method to construct an ElementMetadata from an {@link Element}.
@@ -88,7 +91,8 @@ public record ElementMetadata(
                 element.defaultAttributes()
                         .stream()
                         .map(ElementDefaultAttributeRecord::redacted)
-                        .toList()
+                        .toList(),
+                element.requiredAttributes()
         );
 
     }

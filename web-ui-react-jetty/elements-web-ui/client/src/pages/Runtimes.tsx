@@ -40,6 +40,9 @@ interface ElementDeployment {
   id: string;
   state: string;
   version: number;
+  pathSpiBuiltins?: Record<string, string[]> | null;
+  pathSpiClassPaths?: Record<string, string[]> | null;
+  pathAttributes?: Record<string, Record<string, any>> | null;
   [key: string]: any;
 }
 
@@ -471,8 +474,15 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
 
 function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }) {
   const [extraOpen, setExtraOpen] = useState(false);
-  const { id, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, ...rest } = deployment;
+  const { id, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, pathSpiBuiltins, pathSpiClassPaths, pathAttributes, ...rest } = deployment;
   const extraKeys = Object.keys(rest);
+
+  const attrOverrideCount = pathAttributes
+    ? Object.values(pathAttributes).reduce((sum, attrs) => sum + Object.keys(attrs).length, 0)
+    : 0;
+  const pathSpiBuiltinsCount = pathSpiBuiltins ? Object.keys(pathSpiBuiltins).length : 0;
+  const pathSpiClassPathsCount = pathSpiClassPaths ? Object.keys(pathSpiClassPaths).length : 0;
+  const hasPathConfig = attrOverrideCount > 0 || pathSpiBuiltinsCount > 0 || pathSpiClassPathsCount > 0;
 
   return (
     <div className="space-y-2">
@@ -540,12 +550,45 @@ function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }
               <span className="font-mono text-xs truncate">{elm.id}</span>
             </>
           )}
+          {attrOverrideCount > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">Attr Overrides</span>
+              <span className="text-xs">{attrOverrideCount}</span>
+            </>
+          )}
+          {pathSpiBuiltinsCount > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">SPI Builtins</span>
+              <span className="text-xs">{pathSpiBuiltinsCount} path{pathSpiBuiltinsCount !== 1 ? 's' : ''}</span>
+            </>
+          )}
+          {pathSpiClassPathsCount > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">SPI Class Paths</span>
+              <span className="text-xs">{pathSpiClassPathsCount} path{pathSpiClassPathsCount !== 1 ? 's' : ''}</span>
+            </>
+          )}
         </div>
-        {extraKeys.length > 0 && (
+        {hasPathConfig && (
           <div className="p-3">
             <Collapsible open={extraOpen} onOpenChange={setExtraOpen}>
               <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                 {extraOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                Path configuration
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2">
+                <pre className="bg-muted/50 p-2 rounded text-[10px] overflow-auto">
+                  {JSON.stringify({ pathAttributes, pathSpiBuiltins, pathSpiClassPaths }, null, 2)}
+                </pre>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
+        {extraKeys.length > 0 && (
+          <div className="p-3">
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <ChevronRight className="w-3 h-3" />
                 Additional properties ({extraKeys.length})
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
