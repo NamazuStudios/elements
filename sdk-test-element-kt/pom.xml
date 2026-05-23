@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.8.2-SNAPSHOT</version>
+        <version>3.8.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>sdk-test-element-kt</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.8.2-SNAPSHOT</version>
+    <version>3.8.3-SNAPSHOT</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
@@ -64,14 +64,17 @@
             </plugin>
 
             <!--
-                The javadoc plugin cannot generate documentation for Kotlin sources. Skipping it here
-                avoids a build failure ("No public or protected classes found to document").
+                The javadoc plugin cannot process Kotlin sources. We restrict it to src/main/java
+                (which contains package-info.java) and suppress the "no public classes" error so
+                that a valid (possibly near-empty) javadoc JAR is still produced for release publishing.
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
+                    <sourcepath>${project.basedir}/src/main/java</sourcepath>
+                    <failOnError>false</failOnError>
+                    <quiet>true</quiet>
                 </configuration>
             </plugin>
 
