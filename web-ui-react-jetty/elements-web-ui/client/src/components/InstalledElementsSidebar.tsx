@@ -5,10 +5,89 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import * as Icons from 'lucide-react';
 import { usePlugins } from '@/contexts/PluginContext';
+import { LoadedPlugin } from '@/lib/plugin-loader';
+
+interface PluginGroupsProps {
+  plugins: LoadedPlugin[];
+  location: string;
+  setLocation: (path: string) => void;
+}
+
+function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
+  // Separate plugins with an application from those without
+  const grouped: Record<string, LoadedPlugin[]> = {};
+  const ungrouped: LoadedPlugin[] = [];
+
+  for (const plugin of plugins) {
+    if (plugin.application) {
+      (grouped[plugin.application] ??= []).push(plugin);
+    } else {
+      ungrouped.push(plugin);
+    }
+  }
+
+  const appNames = Object.keys(grouped).sort();
+  const hasGroups = appNames.length > 0;
+
+  return (
+    <SidebarMenu>
+      {appNames.map(appName => (
+        <SidebarMenuItem key={appName}>
+          <Collapsible defaultOpen>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton className="font-medium">
+                <Icons.AppWindow className="w-4 h-4 shrink-0" />
+                <span className="truncate">{appName}</span>
+                <Icons.ChevronDown className="ml-auto w-3 h-3 shrink-0 transition-transform [[data-state=open]_&]:rotate-180" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {grouped[appName].map(plugin => {
+                  const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+                  return (
+                    <SidebarMenuSubItem key={plugin.route}>
+                      <SidebarMenuSubButton
+                        onClick={() => setLocation(`/plugin/${plugin.route}`)}
+                        isActive={location.startsWith(`/plugin/${plugin.route}`)}
+                      >
+                        <IconComponent className="w-4 h-4" />
+                        <span>{plugin.label}</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  );
+                })}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </Collapsible>
+        </SidebarMenuItem>
+      ))}
+
+      {ungrouped.map(plugin => {
+        const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+        return (
+          <SidebarMenuItem key={plugin.route}>
+            <SidebarMenuButton
+              onClick={() => setLocation(`/plugin/${plugin.route}`)}
+              isActive={location.startsWith(`/plugin/${plugin.route}`)}
+              className={hasGroups ? 'pl-2' : ''}
+            >
+              <IconComponent className="w-4 h-4" />
+              <span>{plugin.label}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
+  );
+}
 
 interface InstalledElementsSidebarProps {
   location: string;
@@ -147,22 +226,7 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
           </SidebarGroupLabel>
           <CollapsibleContent>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {plugins.map(plugin => {
-                  const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
-                  return (
-                    <SidebarMenuItem key={plugin.route}>
-                      <SidebarMenuButton
-                        onClick={() => setLocation(`/plugin/${plugin.route}`)}
-                        isActive={location.startsWith(`/plugin/${plugin.route}`)}
-                      >
-                        <IconComponent className="w-4 h-4" />
-                        <span>{plugin.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
+              <PluginGroups plugins={plugins} location={location} setLocation={setLocation} />
             </SidebarGroupContent>
           </CollapsibleContent>
         </SidebarGroup>
