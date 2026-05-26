@@ -20,6 +20,7 @@ import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Handler.Sequence;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
@@ -167,6 +168,15 @@ public class JakartaRsLoader implements Loader {
             // jackson provider. So we disable support for this by default. Even in non-kotlin projects this should
             // be avoided because we end up polluting the Element's classpath with services it may not want to use.
             config.property(FEATURE_AUTO_DISCOVERY_DISABLE, true);
+        }
+
+        if (!config.isRegistered(JacksonFeature.class)) {
+            // Register JacksonFeature on behalf of the element so that resource methods returning
+            // custom POJOs are serialized to JSON without any element-side configuration. This is
+            // safe to do here because auto-discovery is disabled above, meaning JacksonFeature
+            // would not otherwise be present. Elements that need a custom ObjectMapper should
+            // register a ContextResolver<ObjectMapper> in their Application instead.
+            config.register(JacksonFeature.class);
         }
 
         final var container = new ServletContainer(config);

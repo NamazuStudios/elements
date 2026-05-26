@@ -18,6 +18,7 @@ export interface LoadedPlugin {
   icon: string;
   route: string;
   component: React.ComponentType;
+  application?: string;
 }
 
 declare global {
@@ -110,33 +111,40 @@ export function loadPluginBundle(bundleUrl: string): Promise<void> {
  * Returns successfully loaded plugins; failures are silently skipped.
  */
 export async function discoverAndLoadPlugins(
-  containers: Array<{ uris?: string[] }>,
+  containers: Array<{ uris?: string[]; application?: string }>,
   segment: string
 ): Promise<LoadedPlugin[]> {
-  const uiBasePaths = extractUiBasePaths(containers);
   const loadedPlugins: LoadedPlugin[] = [];
+  const seenPaths = new Set<string>();
 
-  for (const uiBasePath of uiBasePaths) {
-    const manifest = await fetchPluginManifest(uiBasePath, segment);
-    if (!manifest) continue;
+  for (const container of containers) {
+    const uiBasePaths = extractUiBasePaths([container]);
+    for (const uiBasePath of uiBasePaths) {
+      if (seenPaths.has(uiBasePath)) continue;
+      seenPaths.add(uiBasePath);
 
-    for (const entry of manifest.entries) {
-      try {
-        const bundleRelPath = `${uiBasePath}${segment}/${entry.bundlePath}`;
-        const bundleUrl = await getApiPath(bundleRelPath);
-        await loadPluginBundle(bundleUrl);
+      const manifest = await fetchPluginManifest(uiBasePath, segment);
+      if (!manifest) continue;
 
-        const component = window.__elementsPlugins?._registry?.[entry.route];
-        if (component) {
-          loadedPlugins.push({
-            label: entry.label,
-            icon: entry.icon,
-            route: entry.route,
-            component,
-          });
+      for (const entry of manifest.entries) {
+        try {
+          const bundleRelPath = `${uiBasePath}${segment}/${entry.bundlePath}`;
+          const bundleUrl = await getApiPath(bundleRelPath);
+          await loadPluginBundle(bundleUrl);
+
+          const component = window.__elementsPlugins?._registry?.[entry.route];
+          if (component) {
+            loadedPlugins.push({
+              label: entry.label,
+              icon: entry.icon,
+              route: entry.route,
+              component,
+              application: container.application,
+            });
+          }
+        } catch {
+          // Error loading this entry: skip it
         }
-      } catch {
-        // Error loading this entry: skip it
       }
     }
   }
