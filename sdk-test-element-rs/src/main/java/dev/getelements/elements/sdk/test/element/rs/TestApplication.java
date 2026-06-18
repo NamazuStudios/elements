@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk.test.element.rs;
 
-import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;
 import dev.getelements.elements.sdk.ElementSupplier;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
@@ -38,9 +37,12 @@ public class TestApplication extends Application {
         final var registry = ElementRegistrySupplier.getElementLocal(getClass()).get();
         logger.info("Using ElementRegistry {}", registry);
 
+        // JacksonFeature is intentionally NOT registered here.
+        // The platform (JakartaRsLoader) registers it for every element context, so this element
+        // serves as a regression test: if the platform stops providing Jackson, the JSON POJO
+        // roundtrip assertions in CustomApiTest will fail immediately.
         return Set.of(
-                MessageEndpoint.class,
-                JacksonJsonProvider.class
+                MessageEndpoint.class
         );
 
     }

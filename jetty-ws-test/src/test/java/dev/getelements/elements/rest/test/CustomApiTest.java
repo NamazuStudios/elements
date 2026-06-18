@@ -129,6 +129,16 @@ public class CustomApiTest {
                 .request()
                 .post(Entity.entity(toCreate, APPLICATION_JSON));
 
+        // Verify the platform-registered JacksonFeature is serving JSON responses.
+        // This element does NOT register its own Jackson provider — if JakartaRsLoader stops
+        // providing JacksonFeature automatically, this will fail with a 500 (MessageBodyWriter
+        // not found) or a non-JSON content-type, catching the regression immediately.
+        Assert.assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode(),
+                "Expected 201 Created — a 500 here likely means JacksonFeature is not registered by the platform");
+        Assert.assertTrue(
+                response.getMediaType().isCompatible(jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE),
+                "Expected application/json response — platform JacksonFeature may not be registered");
+
         message = response.readEntity(Message.class);
         Assert.assertNotNull(message);
         Assert.assertEquals(message.getMessage(), "Hello World!");
