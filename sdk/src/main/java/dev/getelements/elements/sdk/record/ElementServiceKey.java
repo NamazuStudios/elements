@@ -76,9 +76,9 @@ public record ElementServiceKey<ServiceT>(Class<ServiceT> type, String name) {
                 .filter(designation -> TYPE_DESIGNATION.equals(designation.designation()))
                 .map(ElementDesignationRecord::value)
                 .map(sks -> sks.split(quote(SERVICE_NAME_SEPARATOR)))
-                .filter(components -> components.length == 0 || components.length == 1)
+                .filter(components -> components.length == 1 || components.length == 2)
                 .flatMap(components -> {
-                    if (components.length == 0) {
+                    if (components.length == 1) {
                         final var aClass = tryLoadClass(elementRecord, components[0]);
                         return aClass.isEmpty()
                                 ? Optional.empty()
