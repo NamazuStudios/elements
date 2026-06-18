@@ -25,11 +25,14 @@ import java.nio.file.StandardOpenOption;
  * {@code dev.getelements.static.error.<code>}), that file is streamed as the response body instead of Jetty's
  * default error page.</p>
  *
+ * <p>Each file response carries a strong {@code ETag} (derived from size + mtime at load time), a
+ * {@code Last-Modified} header, and a default {@code Cache-Control} (overridable per-file via rules). Conditional
+ * requests using {@code If-None-Match} return {@code 304 Not Modified}.</p>
+ *
  * <p>Supports HTTP range requests ({@code Range: bytes=...}) for efficient partial content delivery, which
  * is particularly useful for streaming large audio and video assets. The {@code Accept-Ranges: bytes} header is
  * advertised on all file responses. Multi-range requests fall back to a full {@code 200} response. When
- * {@code If-Range} is present the request also falls back to a full {@code 200} response, as this servlet does
- * not issue or validate ETags.</p>
+ * {@code If-Range} is present the request also falls back to a full {@code 200} response.</p>
  */
 class StaticContentServlet extends HttpServlet {
 
@@ -105,6 +108,24 @@ class StaticContentServlet extends HttpServlet {
         resp.setContentType(meta.mimeType());
         meta.resolvedHeaders().forEach(resp::setHeader);
         resp.setHeader("Accept-Ranges", "bytes");
+
+        // Default Cache-Control if no rule already set one (case-insensitive check).
+        if (config.defaultCacheControl() != null
+                && meta.resolvedHeaders().keySet().stream().noneMatch(h -> h.equalsIgnoreCase("Cache-Control"))) {
+            resp.setHeader("Cache-Control", config.defaultCacheControl());
+        }
+
+        resp.setHeader("ETag", meta.etag());
+        if (meta.lastModifiedMillis() > 0) {
+            resp.setDateHeader("Last-Modified", meta.lastModifiedMillis());
+        }
+
+        // Conditional GET via If-None-Match. Honored on GET and HEAD only (caller restricts entry).
+        final var ifNoneMatch = req.getHeader("If-None-Match");
+        if (ifNoneMatch != null && etagMatches(ifNoneMatch, meta.etag())) {
+            resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+            return;
+        }
 
         final long size = Files.size(meta.absolutePath());
         final var rangeHeader = req.getHeader("Range");
@@ -189,6 +210,18 @@ class StaticContentServlet extends HttpServlet {
         } catch (final NumberFormatException e) {
             return null;
         }
+    }
+
+    /**
+     * Returns {@code true} if {@code ifNoneMatch} (an {@code If-None-Match} header value) matches the resource's
+     * ETag. Supports the wildcard {@code *} and comma-separated lists per RFC 7232.
+     */
+    private static boolean etagMatches(final String ifNoneMatch, final String etag) {
+        for (final var part : ifNoneMatch.split(",")) {
+            final var trimmed = part.trim();
+            if ("*".equals(trimmed) || trimmed.equals(etag)) return true;
+        }
+        return false;
     }
 
     private void sendErrorOrPage(
