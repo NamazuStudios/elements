@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.ServiceLocator;
-import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 
 import java.util.Optional;
@@ -22,13 +21,7 @@ public class FilteredServiceLocator implements ServiceLocator {
 
     @Override
     public <T> Optional<Supplier<T>> findInstance(final ElementServiceKey<T> key) {
-
-        if (serviceKeySet.stream().anyMatch(k -> k.type() == key.type())) {
-            return delegate.findInstance(key);
-        }
-
-        throw new SdkServiceNotFoundException("Service not found: " + key);
-
+        return serviceKeySet.contains(key) ? delegate.findInstance(key) : Optional.empty();
     }
 
 }
