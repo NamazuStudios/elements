@@ -42,24 +42,25 @@ public class GuiceSpiModule extends PrivateModule {
         bindProperties(binder(), attributes);
 
         final var targets  = new HashSet<Class<?>>();
+        final var ownKeys  = new HashSet<Key<?>>();
 
         elementRecord
                 .services()
                 .stream()
                 .filter(esr -> DefaultImplementation.class.equals(esr.implementation().type()))
-                .forEach(this::exposeService);
+                .forEach(esr -> exposeService(ownKeys, esr));
 
         elementRecord
                 .services()
                 .stream()
                 .filter(esr -> !DefaultImplementation.class.equals(esr.implementation().type()))
-                .forEach(esr -> bindAndExposeService(targets, esr));
+                .forEach(esr -> bindAndExposeService(targets, ownKeys, esr));
 
         elementRecord
                 .dependencies()
                 .stream()
                 .flatMap(dep -> dep.findDependencies(parent))
-                .forEach(this::bindDependentElement);
+                .forEach(element -> bindDependentElement(ownKeys, element));
 
         final var elementPackage = elementRecord.definition().pkg();
 
@@ -70,7 +71,8 @@ public class GuiceSpiModule extends PrivateModule {
 
     }
 
-    private void exposeService(final ElementServiceRecord elementServiceRecord) {
+    private void exposeService(final Set<Key<?>> ownKeys,
+                               final ElementServiceRecord elementServiceRecord) {
 
         final var export = elementServiceRecord.export();
 
@@ -78,11 +80,15 @@ public class GuiceSpiModule extends PrivateModule {
                 ? export.exposed().stream().map(anInterface -> Key.get(anInterface, named(export.name())))
                 : export.exposed().stream().map(Key::get);
 
-        keys.forEach(this::expose);
+        keys.forEach(k -> {
+            ownKeys.add(k);
+            expose(k);
+        });
 
     }
 
     private void bindAndExposeService(final Set<Class<?>> targets,
+                                      final Set<Key<?>> ownKeys,
                                       final ElementServiceRecord elementServiceRecord) {
 
         final var export = elementServiceRecord.export();
@@ -103,19 +109,21 @@ public class GuiceSpiModule extends PrivateModule {
                 : export.exposed().stream().map(Key::get);
 
         keys.forEach(k -> {
+            ownKeys.add(k);
             bind(k).to((Class)implementation.type());
             expose(k);
         });
 
     }
 
-    private void bindDependentElement(final Element element) {
+    private void bindDependentElement(final Set<Key<?>> ownKeys, final Element element) {
         element.getElementRecord()
                 .services()
-                .forEach(esr -> bindDependentService(element, esr));
+                .forEach(esr -> bindDependentService(ownKeys, element, esr));
     }
 
     private void bindDependentService(
+            final Set<Key<?>> ownKeys,
             final Element element,
             final ElementServiceRecord elementServiceRecord) {
 
@@ -130,6 +138,8 @@ public class GuiceSpiModule extends PrivateModule {
                     final Key<Object> key = export.isNamed()
                             ? (Key<Object>) Key.get(aClass, named(export.name()))
                             : (Key<Object>) Key.get(aClass);
+
+                    if (ownKeys.contains(key)) return;
 
                     final Provider<Object> provider = () -> export.isNamed()
                             ? element.getServiceLocator().getInstance(aClass, export.name())

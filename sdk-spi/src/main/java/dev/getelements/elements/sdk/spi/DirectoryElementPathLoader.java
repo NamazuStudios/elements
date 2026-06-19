@@ -2,15 +2,14 @@ package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.exception.SdkException;
+import dev.getelements.elements.sdk.record.ElementDependencyRecord;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
-import dev.getelements.elements.sdk.util.InheritedAttributes;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Attr;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -248,10 +247,75 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         try {
 
-            // Build the list of all Elements we're trying to load
-            for (final var path : config.paths()) {
-                final var fromPath = loadElementsFromPath(path, apiClassLoader, config).toList();
-                elements.addAll(fromPath);
+            // Collect all element subdirectories across all staged paths, then pre-scan each for
+            // @ElementDefinition name and @ElementDependency declarations so we can topologically sort
+            // them before loading. This ensures dependencies are always registered in the ElementRegistry
+            // before the elements that depend on them are wired by Guice.
+            final var allSubdirs = collectElementSubdirs(config.paths());
+
+            final var scanRecords = allSubdirs.stream()
+                    .map(subdir -> preScanSubdir(subdir, apiClassLoader, config))
+                    .toList();
+
+            final var sortedSubdirs = topoSortSubdirs(scanRecords);
+
+            // Load elements in dependency order
+            for (final var subdir : sortedSubdirs) {
+
+                ClassLoader spiClassLoader = apiClassLoader;
+                ClassLoader elementClassLoader = null;
+
+                try (final var elementDirectory = newDirectoryStream(subdir)) {
+
+                    spiClassLoader = findSpiClassLoader(apiClassLoader, subdir).orElse(apiClassLoader);
+                    elementClassLoader = config.spiLoader().apply(spiClassLoader, subdir);
+
+                    final var record = ElementPathLoaderRecord.from(
+                            config.baseAttributes(),
+                            config.registry(),
+                            elementClassLoader,
+                            config.baseClassLoader(),
+                            subdir,
+                            elementDirectory,
+                            config.attributesProvider()
+                    );
+
+                    if (record.isValidElement()) {
+                        try {
+                            final var element = record.loadElement();
+                            elements.add(element);
+                            config.elementLoadedHandler().accept(subdir, element);
+                        } catch (final Throwable t) {
+
+                            if (t instanceof SdkException sdkEx) {
+                                logger.warn("Caught exception loading element. Deferring to handler.", sdkEx);
+                                config.sdkExceptionHandler().accept(sdkEx);
+                            } else {
+                                config.sdkExceptionHandler().accept(new SdkException(t));
+                                logger.error("Caught exception loading element. Skipping.", t);
+                            }
+
+                            // Close classloaders on failure to release OS file handles. On Windows,
+                            // URLClassLoaders hold exclusive locks on their JAR files until closed,
+                            // preventing temp directory cleanup after a failed element load.
+
+                            // Only close spiClassLoader if it's distinct from apiClassLoader —
+                            // when findSpiClassLoader returns empty, spiClassLoader IS apiClassLoader
+                            // and closing it would break all subsequent element loads.
+
+                            if (spiClassLoader != apiClassLoader) closeClassLoader(spiClassLoader);
+                            closeClassLoader(elementClassLoader);
+
+                        }
+                    }
+
+                } catch (IOException ex) {
+                    logger.warn("Failed to open element directory {}: {}", subdir, ex.getMessage());
+                    config.sdkExceptionHandler().accept(new SdkException(ex));
+                    if (spiClassLoader != apiClassLoader) closeClassLoader(spiClassLoader);
+                    if (elementClassLoader != null) closeClassLoader(elementClassLoader);
+                }
+
             }
 
             // Attach close handlers to all elements for reference counting. This ensures that any FileSystems
@@ -307,6 +371,198 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
         }
 
         return elements.stream();
+
+    }
+
+    /**
+     * Collects all element subdirectories from the given top-level paths. Each top-level path
+     * is either a real filesystem directory or the root of an already-open zip FileSystem (ELM).
+     * Non-API, non-hidden immediate subdirectories are treated as element subdirs.
+     */
+    private List<Path> collectElementSubdirs(final Collection<Path> topLevelPaths) {
+
+        final var result = new ArrayList<Path>();
+
+        for (final var path : topLevelPaths) {
+
+            if (!Files.isDirectory(path)) {
+                logger.debug("Skipping non-directory path {} during element subdir collection", path);
+                continue;
+            }
+
+            try (final var ds = newDirectoryStream(path)) {
+                for (final var subpath : ds) {
+                    if (isDirectory(subpath) && !isApiDirectory(subpath) && !isPathInHiddenHierarchy(subpath)) {
+                        result.add(subpath);
+                    }
+                }
+            } catch (IOException ex) {
+                logger.warn("Failed to list element subdirs from {}: {}", path, ex.getMessage());
+            }
+
+        }
+
+        return result;
+
+    }
+
+    /**
+     * Pre-scans a single element subdirectory by building a lightweight classloader over its lib
+     * jars, then using {@link ElementLoaderFactory#findElementDefinitionRecord} to locate the
+     * element's declared name and {@link dev.getelements.elements.sdk.annotation.ElementDependency}
+     * annotations. The lightweight classloader is closed immediately after the scan.
+     *
+     * <p>Failures are treated as "no declared name / no dependencies" so that ordering degrades
+     * gracefully rather than preventing the deployment from loading at all.</p>
+     */
+    private ElementScanRecord preScanSubdir(
+            final Path subdir,
+            final URLClassLoader apiClassLoader,
+            final LoadConfiguration config) {
+
+        try {
+
+            final var libDir = subdir.resolve(LIB_DIR);
+            final var classpathDir = subdir.resolve(CLASSPATH_DIR);
+
+            final var urls = new ArrayList<URL>();
+
+            if (isDirectory(libDir)) {
+                try (final var ds = newDirectoryStream(libDir)) {
+                    for (final var jar : ds) {
+                        if (isJarFile(jar)) {
+                            // For jars nested inside a zip FileSystem (e.g. inside an ELM archive),
+                            // UrlUtils.forPath opens the inner zip and GC-manages its lifecycle so
+                            // we don't need to track it explicitly here.
+                            urls.add(jar.getFileSystem() == FileSystems.getDefault()
+                                    ? toUrl(jar)
+                                    : UrlUtils.forPath(jar));
+                        }
+                    }
+                }
+            }
+
+            if (isDirectory(classpathDir)) {
+                urls.add(toUrl(classpathDir));
+            }
+
+            if (urls.isEmpty()) {
+                return new ElementScanRecord(subdir, null, List.of());
+            }
+
+            final var factoryOpt = ServiceLoader
+                    .load(ElementLoaderFactory.class, config.baseClassLoader())
+                    .stream()
+                    .findFirst();
+
+            if (factoryOpt.isEmpty()) {
+                logger.debug("No ElementLoaderFactory available; skipping pre-scan for {}", subdir);
+                return new ElementScanRecord(subdir, null, List.of());
+            }
+
+            try (final var lightCL = new URLClassLoader(
+                    "prescan[%s]".formatted(subdir),
+                    urls.toArray(URL[]::new),
+                    apiClassLoader)) {
+
+                final var defOpt = factoryOpt.get().get()
+                        .findElementDefinitionRecord(lightCL, config.baseAttributes(), r -> true);
+
+                if (defOpt.isEmpty()) {
+                    return new ElementScanRecord(subdir, null, List.of());
+                }
+
+                final var def = defOpt.get();
+                final var depNames = ElementDependencyRecord.fromPackage(def.pkg())
+                        .map(rec -> rec.dependency().value())
+                        .toList();
+
+                logger.debug("Pre-scanned element '{}' at {}: dependencies={}", def.name(), subdir, depNames);
+                return new ElementScanRecord(subdir, def.name(), depNames);
+
+            }
+
+        } catch (Exception ex) {
+            logger.warn("Pre-scan failed for element at {} ({}). Loading in original order.", subdir, ex.getMessage());
+            return new ElementScanRecord(subdir, null, List.of());
+        }
+
+    }
+
+    /**
+     * Topologically sorts element subdirectories using Kahn's BFS algorithm so that each element
+     * is loaded after all elements it depends on (via {@code @ElementDependency}).
+     *
+     * <p>Dependencies that do not appear in the scan results (i.e. satisfied by elements from a
+     * different deployment) are silently ignored for ordering purposes. Cycles are detected,
+     * logged as an error, and broken by appending the cyclic elements in their original order.</p>
+     */
+    private List<Path> topoSortSubdirs(final List<ElementScanRecord> scanRecords) {
+
+        // Map element name -> its subdir, for dependency lookup
+        final var nameToSubdir = new HashMap<String, Path>();
+        for (final var rec : scanRecords) {
+            if (rec.elementName() != null) {
+                nameToSubdir.put(rec.elementName(), rec.subdir());
+            }
+        }
+
+        // Build in-degree map (LinkedHashMap preserves insertion / original order as tie-breaker)
+        // and reverse adjacency: dependency subdir -> list of subdirs that depend on it
+        final var inDegree = new LinkedHashMap<Path, Integer>();
+        final var dependents = new HashMap<Path, List<Path>>();
+
+        for (final var rec : scanRecords) {
+            inDegree.put(rec.subdir(), 0);
+        }
+
+        for (final var rec : scanRecords) {
+            for (final var depName : rec.dependencyNames()) {
+                final var depSubdir = nameToSubdir.get(depName);
+                if (depSubdir != null) {
+                    dependents.computeIfAbsent(depSubdir, k -> new ArrayList<>()).add(rec.subdir());
+                    inDegree.merge(rec.subdir(), 1, Integer::sum);
+                } else {
+                    logger.debug("Dependency '{}' declared by element at {} is not in this deployment; ignoring for ordering",
+                            depName, rec.subdir());
+                }
+            }
+        }
+
+        // Kahn's BFS topological sort
+        final var queue = new ArrayDeque<Path>();
+        for (final var entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.add(entry.getKey());
+            }
+        }
+
+        final var sorted = new ArrayList<Path>(scanRecords.size());
+        while (!queue.isEmpty()) {
+            final var node = queue.poll();
+            sorted.add(node);
+            for (final var dependent : dependents.getOrDefault(node, List.of())) {
+                if (inDegree.merge(dependent, -1, Integer::sum) == 0) {
+                    queue.add(dependent);
+                }
+            }
+        }
+
+        // Detect cycles: any subdir still in inDegree with value > 0 is part of a cycle
+        if (sorted.size() < scanRecords.size()) {
+            final var cycleMembers = scanRecords.stream()
+                    .map(ElementScanRecord::subdir)
+                    .filter(p -> !sorted.contains(p))
+                    .map(Path::toString)
+                    .toList();
+            logger.error("@ElementDependency cycle detected among elements: {}. Appending in original order.", cycleMembers);
+            scanRecords.stream()
+                    .map(ElementScanRecord::subdir)
+                    .filter(p -> !sorted.contains(p))
+                    .forEach(sorted::add);
+        }
+
+        return sorted;
 
     }
 
@@ -461,185 +717,6 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
     }
 
-    /**
-     * Internal method that loads Elements with custom attributes provider.
-     */
-    private Stream<Element> loadElementsFromPath(
-            final Path path,
-            final ClassLoader apiClassLoader,
-            final LoadConfiguration config) {
-        try {
-
-            // Try to open as a FileSystem (for ELM/zip files)
-            final var fs = FileSystems.newFileSystem(path);
-            final var root = fs.getPath("/");
-
-            final List<Element> elements;
-            try {
-                elements = doLoadElementsFromPath(root, apiClassLoader, config).toList();
-            } catch (RuntimeException | Error t) {
-                // Ensure the FileSystem is closed on any failure (critical on Windows where open
-                // FileSystems hold OS-level file locks that prevent temp directory cleanup).
-                try {
-                    fs.close();
-                } catch (IOException closeEx) {
-                    t.addSuppressed(closeEx);
-                }
-                throw t;
-            }
-
-            if (elements.isEmpty()) {
-                // No elements loaded, close the FileSystem immediately
-                try {
-                    fs.close();
-                } catch (IOException e) {
-                    logger.error("Error closing FileSystem for {}", path, e);
-                }
-                return Stream.empty();
-            }
-
-            // Attach close handlers to all elements using reference counting
-            final var counter = new AtomicInteger(elements.size());
-
-            elements.forEach(element -> element.onClose(el -> {
-                if (counter.decrementAndGet() == 0) {
-                    try {
-                        fs.close();
-                    } catch (IOException e) {
-                        logger.error("Error closing FileSystem for {}", path, e);
-                    }
-                }
-            }));
-
-            return elements.stream();
-
-        } catch (ProviderNotFoundException ex) {
-            // Not a zip/ELM file, try as directory
-            if (Files.isDirectory(path)) {
-                return doLoadElementsFromPath(path, apiClassLoader, config);
-            } else {
-                logger.warn("{} not a directory. Skipping.", path);
-                return Stream.empty();
-            }
-        } catch (NoSuchFileException ex) {
-            logger.warn("{} not found. Skipping.", path);
-            return Stream.empty();
-        } catch (FileSystemAlreadyExistsException ex) {
-            logger.warn("FileSystem already exists for {}. Using existing.", path);
-            final var fs = FileSystems.getFileSystem(path.toUri());
-            return doLoadElementsFromPath(fs.getPath("/"), apiClassLoader, config);
-        } catch (IOException ex) {
-            throw new SdkException(ex);
-        }
-    }
-
-
-    /**
-     * Internal method with attributes provider support.
-     */
-    private Stream<Element> doLoadElementsFromPath(
-            final Path path,
-            final ClassLoader apiClassLoader,
-            final LoadConfiguration config) {
-
-        final var elements = new ArrayList<Element>();
-
-        try (final var directory = newDirectoryStream(path)) {
-
-            for (final var subpath : directory) {
-                if (isDirectory(subpath) && !isApiDirectory(subpath)) {
-                    try (final var elementDirectory = newDirectoryStream(subpath)) {
-
-                        // If the Element provides its own SPI, we will include it. This is not required and
-                        // in that case we will assume it's on the parent provided and use the parent instead.
-
-                        final var spiClassLoader = findSpiClassLoader(apiClassLoader, subpath)
-                                .orElse(apiClassLoader);
-
-                        final var elementClassLoader = config
-                                .spiLoader()
-                                .apply(spiClassLoader, subpath);
-
-                        // Construct the record with everything needed to make the new Element
-
-                        final var record = ElementPathLoaderRecord.from(
-                                config.baseAttributes(),
-                                config.registry(),
-                                elementClassLoader,
-                                config.baseClassLoader(),
-                                subpath,
-                                elementDirectory,
-                                config.attributesProvider()
-                        );
-
-                        // Check that the Element is valid and can be loaded. If conditions are met, then
-                        // load the Element
-
-                        if (record.isValidElement()) {
-                            try {
-                                final var element = record.loadElement();
-                                elements.add(element);
-                                config.elementLoadedHandler().accept(subpath, element);
-                            } catch (final Throwable t) {
-
-                                if (t instanceof SdkException ex) {
-                                    logger.warn("Caught exception loading element. Deferring to handler.", ex);
-                                    config.sdkExceptionHandler().accept(ex);
-                                } else {
-                                    config.sdkExceptionHandler().accept(new SdkException(t));
-                                    logger.error("Caught exception loading element. Skipping.", t);
-                                }
-
-                                // Close classloaders on failure to release OS file handles. On Windows,
-                                // URLClassLoaders hold exclusive locks on their JAR files until closed,
-                                // preventing temp directory cleanup after a failed element load.
-
-                                // Only close spiClassLoader if it's distinct from apiClassLoader —
-                                // when findSpiClassLoader returns empty, spiClassLoader IS apiClassLoader
-                                // and closing it would break all subsequent element loads.
-
-                                if (spiClassLoader != apiClassLoader)
-                                    closeClassLoader(spiClassLoader);
-
-                                closeClassLoader(elementClassLoader);
-
-                            }
-                        }
-
-                    }
-                }
-            }
-
-            return elements.stream();
-
-        } catch (IOException ex) {
-
-            elements.forEach(el -> {
-                try {
-                    el.close();
-                } catch (Exception suppressed) {
-                    ex.addSuppressed(suppressed);
-                }
-            });
-
-            throw new SdkException(ex);
-
-        } catch (Exception | Error ex) {
-
-            elements.forEach(el -> {
-                try {
-                    el.close();
-                } catch (Exception suppressed) {
-                    ex.addSuppressed(suppressed);
-                }
-            });
-
-            throw ex;
-
-        }
-
-    }
-
     private static void closeClassLoader(final ClassLoader classLoader) {
         if (classLoader instanceof URLClassLoader ucl) {
             try {
@@ -649,6 +726,11 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             }
         }
     }
+
+    /**
+     * Pre-scan result for a single element subdirectory.
+     */
+    private record ElementScanRecord(Path subdir, String elementName, List<String> dependencyNames) {}
 
     /**
      * Delegates to doLoadWithAttributes with a pass-through attributes provider.
