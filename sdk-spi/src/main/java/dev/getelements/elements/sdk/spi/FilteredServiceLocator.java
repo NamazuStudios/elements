@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.ServiceLocator;
-import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 
 import java.util.Optional;
