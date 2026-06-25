@@ -14,14 +14,6 @@ public class SslEnabledModule extends AbstractModule {
 
     private final Boolean insecure;
 
-    public SslEnabledModule() {
-        this(null);
-    }
-
-    public SslEnabledModule(final Boolean insecure) {
-        this(insecure, 27017);
-    }
-
     public SslEnabledModule(final Boolean insecure, final int port) {
         this.port = port;
         this.insecure = insecure;
