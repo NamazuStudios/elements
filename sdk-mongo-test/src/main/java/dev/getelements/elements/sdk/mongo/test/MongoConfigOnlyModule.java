@@ -22,7 +22,7 @@ import static dev.getelements.elements.sdk.mongo.MongoConfigurationService.*;
  */
 public class MongoConfigOnlyModule extends AbstractModule {
 
-    /** SSL modes for {@link #MongoConfigOnlyModule(Mode, Boolean)}. */
+    /** SSL modes for {@link MongoConfigOnlyModule}. */
     public enum Mode {
         /** {@code mongodb://localhost/?tls=true} — TLS on, certificates wired from test-bundled keystores. */
         SSL_ENABLED,
@@ -36,11 +36,18 @@ public class MongoConfigOnlyModule extends AbstractModule {
 
     private final Boolean insecure;
 
+    /**
+     * Creates a module with the given SSL mode and no {@code tlsinsecure} flag.
+     *
+     * @param mode SSL URI mode
+     */
     public MongoConfigOnlyModule(final Mode mode) {
         this(mode, null);
     }
 
     /**
+     * Creates a module with the given SSL mode and {@code tlsinsecure} flag.
+     *
      * @param mode SSL URI mode
      * @param insecure when {@code mode == SSL_ENABLED}, whether to set {@code tlsinsecure} in the URI;
      *                 ignored otherwise. {@code null} omits the flag.
