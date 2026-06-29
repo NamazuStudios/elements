@@ -105,6 +105,7 @@ public class CodegenResourceIntegrationTest {
                 .build();
 
         runtimeService.loadTransientDeployment(deployment);
+        TestUtils.awaitElementReady(client, appServeRoot + ELEMENT_OPENAPI_YAML);
     }
 
     // -- Core codegen tests --
