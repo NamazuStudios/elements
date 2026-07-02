@@ -59,7 +59,7 @@ public class SuperUserProgressService implements ProgressService {
 
         final var progress = new Progress();
 
-        progress.setProfile(progress.getProfile());
+        progress.setProfile(request.getProfile());
         progress.setMission(request.getMission());
 
         return getProgressDao().createOrGetExistingProgress(progress);
