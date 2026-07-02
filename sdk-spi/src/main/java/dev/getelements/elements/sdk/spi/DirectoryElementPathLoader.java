@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -835,7 +834,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
             if (attributesFile() != null) {
                 try (
-                        var fis = new FileInputStream(attributesFile().toFile());
+                        var fis = Files.newInputStream(attributesFile());
                         var bis = new BufferedInputStream(fis)
                 ) {
 
