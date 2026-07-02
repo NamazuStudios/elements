@@ -16,12 +16,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import static dev.getelements.elements.sdk.model.Constants.CDN_PUBLIC_MAX_AGE;
 import static dev.getelements.elements.sdk.service.Constants.CDN_FILE_DIRECTORY;
 import static dev.getelements.elements.sdk.service.Constants.CDN_SERVE_ENDPOINT;
 import static jakarta.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static jakarta.servlet.http.HttpServletResponse.SC_NOT_MODIFIED;
 import static java.util.stream.Collectors.joining;
 
 public class StaticContentServlet extends HttpServlet {
@@ -31,6 +34,8 @@ public class StaticContentServlet extends HttpServlet {
     private String serveEndpoint;
 
     private String contentDirectory;
+
+    private int publicMaxAgeSeconds;
 
     private ApplicationDao applicationDao;
 
@@ -90,7 +95,49 @@ public class StaticContentServlet extends HttpServlet {
                 .toRealPath();
 
         if (applicationFilePath.startsWith(applicationBase)) {
-            try (var fis = new FileInputStream(applicationFilePath.toFile());
+
+            final var file = applicationFilePath.toFile();
+
+            if (!file.isFile()) {
+                resp.setStatus(SC_NOT_FOUND);
+                logger.debug("Not a regular file: {}", applicationFilePath);
+                return;
+            }
+
+            final long lastModified = file.lastModified();
+            final long length = file.length();
+            final String etag = "\"" + Long.toHexString(lastModified) + "-" + Long.toHexString(length) + "\"";
+            final String cacheControl = "public, max-age=" + publicMaxAgeSeconds + ", must-revalidate";
+
+            final String ifNoneMatch = req.getHeader("If-None-Match");
+            if (etag.equals(ifNoneMatch)) {
+                resp.setHeader("ETag", etag);
+                resp.setHeader("Cache-Control", cacheControl);
+                resp.setStatus(SC_NOT_MODIFIED);
+                return;
+            }
+
+            resp.setHeader("ETag", etag);
+            resp.setHeader("Cache-Control", cacheControl);
+            if (lastModified > 0) {
+                resp.setDateHeader("Last-Modified", lastModified);
+            }
+
+            String contentType = null;
+            try {
+                contentType = Files.probeContentType(applicationFilePath);
+            } catch (IOException ex) {
+                logger.debug("Failed to probe content type for {}", applicationFilePath, ex);
+            }
+            resp.setContentType(contentType != null ? contentType : "application/octet-stream");
+
+            if (length <= Integer.MAX_VALUE) {
+                resp.setContentLength((int) length);
+            } else {
+                resp.setContentLengthLong(length);
+            }
+
+            try (var fis = new FileInputStream(file);
                  var bis = new BufferedInputStream(fis)) {
                 bis.transferTo(resp.getOutputStream());
             } catch (FileNotFoundException ex) {
@@ -124,6 +171,11 @@ public class StaticContentServlet extends HttpServlet {
     @Inject
     private void setContentDirectory(@Named(CDN_FILE_DIRECTORY) String contentDirectory) {
         this.contentDirectory = contentDirectory;
+    }
+
+    @Inject
+    public void setPublicMaxAgeSeconds(@Named(CDN_PUBLIC_MAX_AGE) int publicMaxAgeSeconds) {
+        this.publicMaxAgeSeconds = publicMaxAgeSeconds;
     }
 
     private String getServeEndpoint() {

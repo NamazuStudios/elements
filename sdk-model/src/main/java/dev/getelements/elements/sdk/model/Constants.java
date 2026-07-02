@@ -73,6 +73,11 @@ public interface Constants {
     String CDN_OUTSIDE_URL = "dev.getelements.elements.cdn.url";
 
     /**
+     * Max-age (in seconds) advertised in Cache-Control for publicly-readable large objects.
+     */
+    String CDN_PUBLIC_MAX_AGE = "dev.getelements.elements.cdn.public.max.age";
+
+    /**
      * The allowed CORS origins for the request.
      */
     String CORS_ALLOWED_ORIGINS = "dev.getelements.elements.cors.allowed.origins";
