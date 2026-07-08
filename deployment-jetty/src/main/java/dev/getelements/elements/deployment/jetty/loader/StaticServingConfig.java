@@ -5,11 +5,13 @@ import java.util.Map;
 /**
  * The fully-resolved serving configuration produced by {@link StaticRuleEngine} for a single static content tree.
  *
- * @param files      file index keyed by forward-slash relative path
- * @param indexFile  metadata for the root index file (e.g. {@code index.html}), or {@code null} if absent
- * @param errorPages map of HTTP status code to the error-page file served for that code
+ * @param files               file index keyed by forward-slash relative path
+ * @param indexFile           metadata for the root index file (e.g. {@code index.html}), or {@code null} if absent
+ * @param errorPages          map of HTTP status code to the error-page file served for that code
+ * @param defaultCacheControl default {@code Cache-Control} header applied when no rule sets one for a file
  */
 record StaticServingConfig(
         Map<String, StaticFileMetadata> files,
         StaticFileMetadata indexFile,
-        Map<Integer, StaticFileMetadata> errorPages) {}
+        Map<Integer, StaticFileMetadata> errorPages,
+        String defaultCacheControl) {}

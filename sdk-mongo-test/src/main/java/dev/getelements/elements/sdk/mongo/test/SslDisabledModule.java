@@ -14,10 +14,6 @@ public class SslDisabledModule extends AbstractModule {
 
     private final boolean explicit;
 
-    public SslDisabledModule(final boolean explicit) {
-        this(explicit, 27017);
-    }
-
     public SslDisabledModule(final boolean explicit, final int port) {
         this.port = port;
         this.explicit = explicit;

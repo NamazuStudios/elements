@@ -4,6 +4,8 @@ import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
 import org.eclipse.jetty.http.MimeTypes;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -64,14 +66,18 @@ class StaticRuleEngine {
 
     private final Loader.PendingDeployment pending;
 
+    private final String defaultCacheControl;
+
     StaticRuleEngine(
             final ElementStaticContentRecord contentRecord,
             final Attributes attributes,
             final String namespace,
-            final Loader.PendingDeployment pending) {
+            final Loader.PendingDeployment pending,
+            final String defaultCacheControl) {
         this.contentRecord = contentRecord;
         this.attributes = attributes;
         this.pending = pending;
+        this.defaultCacheControl = defaultCacheControl;
         this.rulePrefix  = "dev.getelements." + namespace + ".rule.";
         this.indexAttr   = "dev.getelements." + namespace + ".index";
         this.errorPrefix = "dev.getelements." + namespace + ".error.";
@@ -148,7 +154,18 @@ class StaticRuleEngine {
                 }
             }
 
-            index.put(relPathStr, new StaticFileMetadata(absolutePath, mimeType, Map.copyOf(resolvedHeaders)));
+            long size = 0;
+            long mtime = 0;
+            try {
+                size = Files.size(absolutePath);
+                mtime = Files.getLastModifiedTime(absolutePath).toMillis();
+            } catch (final IOException ex) {
+                pending.logWarningf("Failed to stat static file '%s': %s", relPathStr, ex.getMessage());
+            }
+            final var etag = "\"" + Long.toHexString(mtime) + "-" + Long.toHexString(size) + "\"";
+
+            index.put(relPathStr, new StaticFileMetadata(
+                    absolutePath, mimeType, Map.copyOf(resolvedHeaders), etag, mtime));
         }
 
         // Warn about dead rules
@@ -194,7 +211,8 @@ class StaticRuleEngine {
                     }
                 });
 
-        return new StaticServingConfig(immutableIndex, indexFile, Collections.unmodifiableMap(errorPages));
+        return new StaticServingConfig(
+                immutableIndex, indexFile, Collections.unmodifiableMap(errorPages), defaultCacheControl);
     }
 
     // ---- Private helpers ----------------------------------------------------------------

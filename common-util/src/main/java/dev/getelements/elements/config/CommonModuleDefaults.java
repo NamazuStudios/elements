@@ -31,6 +31,7 @@ public class CommonModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(HTTP_TUNNEL_URL, "http://localhost:8080/app");
         defaultProperties.setProperty(CODE_SERVE_URL,  "http://localhost:8080/code");
         defaultProperties.setProperty(CDN_OUTSIDE_URL, "http://localhost:8080/cdn");
+        defaultProperties.setProperty(CDN_PUBLIC_MAX_AGE, "300");
 
         return defaultProperties;
     }
