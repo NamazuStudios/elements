@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.model.Tabulation;
 import dev.getelements.elements.sdk.model.mission.CreateProgressRequest;
 import dev.getelements.elements.sdk.model.mission.Progress;
 import dev.getelements.elements.sdk.model.mission.ProgressRow;
-
+import dev.getelements.elements.sdk.model.exception.NotImplementedException;
 import dev.getelements.elements.sdk.model.mission.UpdateProgressRequest;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
 import jakarta.inject.Inject;
@@ -39,13 +39,11 @@ public class SuperUserProgressService implements ProgressService {
 
     @Override
     public Progress updateProgress(final String progressId, final UpdateProgressRequest request) {
-
-        final var progress = new Progress();
-        progress.setId(progressId);
-        progress.setRemaining(request.getRemaining());
-        progress.setCurrentStep(request.getCurrentStep());
-
-        return getProgressDao().updateProgress(progress);
+        throw new NotImplementedException(
+            "Direct progress updates are not supported. Mission advancement is authoritative: " +
+            "call AdvancementService.advanceProgress() from your Element code when a verified " +
+            "game action occurs. See the AdvancementService interface for details."
+        );
     }
 
     @Override
@@ -59,7 +57,7 @@ public class SuperUserProgressService implements ProgressService {
 
         final var progress = new Progress();
 
-        progress.setProfile(progress.getProfile());
+        progress.setProfile(request.getProfile());
         progress.setMission(request.getMission());
 
         return getProgressDao().createOrGetExistingProgress(progress);
