@@ -77,7 +77,7 @@ public class ProgressApiTest {
 
     // -- createProgress regression --
 
-    @Test(dependsOnMethods = "createMission")
+    @Test
     public void testCreateProgressReturns200() {
         final var profile = superUser.getDefaultProfile();
         assertNotNull(profile, "superuser must have a default profile for this test");
