@@ -47,7 +47,7 @@ public class ProgressApiTest {
 
     @BeforeClass
     public void setUp() {
-        superUser.createSuperuser("progress_api_superuser").createSession();
+        superUser.createSuperuser("progress_api_superuser").createProfile("Progress API Superuser").createSession();
     }
 
     @BeforeClass(dependsOnMethods = "setUp")
@@ -61,6 +61,7 @@ public class ProgressApiTest {
         step.setCount(5);
         step.setDisplayName("step_one");
         step.setDescription("step one");
+        step.setRewards(java.util.List.of());
         request.setSteps(java.util.List.of(step));
 
         final var response = client
