@@ -18,7 +18,8 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 
 /**
- * Regression tests for POST /progress (createProgress) and GET /progress/{id}.
+ * Regression tests for POST /progress (createProgress), GET /progress/{id}, and
+ * PUT /progress/{id} (superuser manual update).
  *
  * Covers the bug where SuperUserProgressService.createProgress read profile from the
  * freshly-constructed Progress object instead of the request, always producing a null
@@ -132,6 +133,45 @@ public class ProgressApiTest {
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         final var fetched = response.readEntity(Progress.class);
         assertEquals(fetched.getId(), createdProgress.getId());
+    }
+
+    // -- updateProgress (superuser) --
+
+    @Test(dependsOnMethods = "testCreateProgressReturns200")
+    public void testSuperuserUpdateProgressReturns200() {
+        final var request = new UpdateProgressRequest();
+        request.setRemaining(3);
+
+        final var response = client
+                .target(apiRoot + "/progress/" + createdProgress.getId())
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superUser.getSessionSecret())
+                .put(Entity.entity(request, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "superuser updateProgress must return 200");
+
+        final var updated = response.readEntity(Progress.class);
+        assertEquals(updated.getRemaining(), Integer.valueOf(3),
+                "remaining must reflect the requested value");
+        assertEquals(updated.getId(), createdProgress.getId(),
+                "updated progress id must be unchanged");
+    }
+
+    @Test(dependsOnMethods = "testSuperuserUpdateProgressReturns200")
+    public void testSuperuserUpdateProgressPreservesProfile() {
+        final var response = client
+                .target(apiRoot + "/progress/" + createdProgress.getId())
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superUser.getSessionSecret())
+                .get();
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
+        final var fetched = response.readEntity(Progress.class);
+        assertEquals(fetched.getProfile().getId(), superUser.getDefaultProfile().getId(),
+                "profile must be unchanged after superuser update");
+        assertEquals(fetched.getRemaining(), Integer.valueOf(3),
+                "persisted remaining must match the updated value");
     }
 
     // -- helpers --
