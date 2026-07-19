@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.ElementLoader;
 import dev.getelements.elements.sdk.ElementRegistrySupplier;
 import dev.getelements.elements.sdk.ElementSupplier;
 import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation;
@@ -19,6 +20,9 @@ public class TestServiceImplementation implements TestService {
     private static final List<Event> events = new CopyOnWriteArrayList<>();
 
     private static final List<MethodEventRecord> eventObjects = new CopyOnWriteArrayList<>();
+
+    @ElementDefaultAttribute(value = "value-from-b", description = "Shared key used to verify default-attribute isolation between elements.")
+    public static final String SHARED_DEFAULT_ATTR = TestService.SHARED_DEFAULT_ATTR;
 
     @Override
     public String getImplementationPackage() {

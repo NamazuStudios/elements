@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.ElementSupplier;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
+import dev.getelements.elements.sdk.annotation.ElementRequiredAttribute;
 import dev.getelements.elements.sdk.test.element.TestService;
 
 import java.util.List;
@@ -19,6 +20,15 @@ public class TestServiceImplementation implements TestService {
 
     @ElementDefaultAttribute(value = "test.value", description = "A test configuration parameter.")
     public static final String TEST_CONFIGURATION_PARAMETER = "dev.getelements.elements.sdk.test.element.a.config";
+
+    @ElementDefaultAttribute(value = "value-from-a", description = "Shared key used to verify default-attribute isolation between elements.")
+    public static final String SHARED_DEFAULT_ATTR = TestService.SHARED_DEFAULT_ATTR;
+
+    @ElementDefaultAttribute(value = "element-a-override", description = "Element A re-declares the server-level key with a different default, simulating auth.enabled=true override.")
+    public static final String SERVER_OVERRIDABLE_ATTR = TestService.SERVER_OVERRIDABLE_ATTR;
+
+    @ElementRequiredAttribute(description = "A required attribute that need not be set for the element to load.")
+    public static final String TEST_REQUIRED_ATTRIBUTE = "dev.getelements.elements.sdk.test.element.a.required";
 
     @Override
     public String getImplementationPackage() {

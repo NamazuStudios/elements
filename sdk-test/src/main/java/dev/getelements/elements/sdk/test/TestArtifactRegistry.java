@@ -98,6 +98,24 @@ public class TestArtifactRegistry {
     }
 
     /**
+     * Finds the Path of the ELM archive for the artifact.
+     *
+     * @param artifact the artifact
+     * @return the Path of the ELM archive
+     * @throws java.util.NoSuchElementException if the ELM artifact wasn't found
+     */
+    public Path findElmPath(final TestElementArtifact artifact) {
+
+        final var coordinates = artifact.getCoordinatesForElm();
+
+        return elementArtifactLoader
+                .findArtifact(ArtifactRepository.DEFAULTS, coordinates)
+                .map(Artifact::path)
+                .orElseThrow(NoSuchElementException::new);
+
+    }
+
+    /**
      * Copies the specified artifact to the path. If the destination path is a directory it will be copied into
      * that directory. Otherwise, it will be copied to the destination exactly as it is.
      *
