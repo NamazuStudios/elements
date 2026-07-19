@@ -63,12 +63,18 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
     @Override
     public ElementsLocal build() {
 
-        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+        // Build a DefaultConfigurationSupplier treating user-supplied attributes as "explicit" (operator-set).
+        // ElementsCoreModule detects DefaultConfigurationSupplier and uses the two-arg ConfigurationModule
+        // constructor, which binds GLOBAL_ELEMENT_ATTRIBUTES from getExplicitProperties(). These are then
+        // injected into StandardElementRuntimeService and applied in DeploymentContext.createAttributesForPath
+        // between disk attrs and per-element path attrs — above element @ElementDefaultAttribute declarations
+        // but below per-element path attributes.
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier(attributes.asProperties());
 
         final var injector = Guice.createInjector(
                 new JettyServerModule(),
                 new JettySdkElementModule(),
-                new ElementsCoreModule(() -> attributes.asProperties(defaultConfigurationSupplier.get())),
+                new ElementsCoreModule(defaultConfigurationSupplier),
                 new ElementsWebServiceComponentModule(),
                 new AbstractModule() {
                     @Override

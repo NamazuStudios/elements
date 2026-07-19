@@ -34,8 +34,39 @@ public class ConfigurationModule extends AbstractModule {
 
     private final Supplier<Properties> propertiesSupplier;
 
+    private final Supplier<Properties> systemAttributesSupplier;
+
+    /**
+     * Uses all properties (including classpath-scanned {@code @ElementDefaultAttribute} defaults)
+     * for both {@code @Named} bindings and {@code SYSTEM_ATTRIBUTES}.  Suitable for non-element
+     * contexts such as MongoDB test modules where element default isolation is not required.
+     *
+     * @param propertiesSupplier source of all merged properties
+     */
     public ConfigurationModule(final Supplier<Properties> propertiesSupplier) {
         this.propertiesSupplier = propertiesSupplier;
+        this.systemAttributesSupplier = propertiesSupplier;
+    }
+
+    /**
+     * Preferred constructor for production use with {@code DefaultConfigurationSupplier}.
+     *
+     * <p>{@code allPropertiesSupplier} is used for {@code @Named} Guice bindings and must include
+     * classpath-scanned {@code @ElementDefaultAttribute} defaults so that server infrastructure
+     * constants (e.g. {@code session.timeout.seconds}) resolve correctly.</p>
+     *
+     * <p>{@code systemAttributesSupplier} is used exclusively for {@code SYSTEM_ATTRIBUTES} and
+     * should return <em>only</em> operator-set values (env vars, system properties, config files).
+     * This prevents server-level scan defaults from shadowing an element's own
+     * {@code @ElementDefaultAttribute} re-declaration.</p>
+     *
+     * @param allPropertiesSupplier      full merged properties for {@code @Named} bindings
+     * @param systemAttributesSupplier   explicit-only properties for {@code SYSTEM_ATTRIBUTES}
+     */
+    public ConfigurationModule(final Supplier<Properties> allPropertiesSupplier,
+                               final Supplier<Properties> systemAttributesSupplier) {
+        this.propertiesSupplier = allPropertiesSupplier;
+        this.systemAttributesSupplier = systemAttributesSupplier;
     }
 
     @Override
@@ -46,14 +77,15 @@ public class ConfigurationModule extends AbstractModule {
         convertToTypes(only(get(Path.class)), (s, to) -> Paths.get(s));
 
         final Properties properties = propertiesSupplier.get();
+        final Properties systemAttributesProperties = systemAttributesSupplier.get();
         final SimpleAttributes.Builder systemAttributesBuilder = new SimpleAttributes.Builder();
 
         if (properties == null) {
             addError("Supplier supplied null properties.");
         } else {
-            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements();) {
+            for (Enumeration<?> e = systemAttributesProperties.propertyNames(); e.hasMoreElements();) {
                 final var name = e.nextElement().toString();
-                final var value = properties.getProperty(name);
+                final var value = systemAttributesProperties.getProperty(name);
                 systemAttributesBuilder.setAttribute(name, value);
             }
         }
@@ -64,6 +96,14 @@ public class ConfigurationModule extends AbstractModule {
 
         bind(Attributes.class)
                 .annotatedWith(named(Attributes.SYSTEM_ATTRIBUTES))
+                .toInstance(systemAttributes);
+
+        // GLOBAL_ELEMENT_ATTRIBUTES holds the same explicit operator-set values but is applied
+        // inside the per-element attributes layer (above element @ElementDefaultAttribute, below
+        // per-element path attributes). This gives operator-set properties priority over element
+        // declared defaults without requiring per-element path attribute configuration.
+        bind(Attributes.class)
+                .annotatedWith(named(Attributes.GLOBAL_ELEMENT_ATTRIBUTES))
                 .toInstance(systemAttributes);
 
         bind(Properties.class).toProvider(() -> new Properties(properties));

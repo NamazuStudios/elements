@@ -46,7 +46,8 @@ record DeploymentContext(
         Set<ArtifactRepository> repositories,
         TemporaryFiles temporaryFiles,
         Set<Path> unconsumedSpiPaths,
-        Set<Path> unconsumedAttributePaths
+        Set<Path> unconsumedAttributePaths,
+        Attributes globalAttributes
 ) {
 
     public DeploymentContext {
@@ -61,7 +62,8 @@ record DeploymentContext(
             final MutableElementRegistry registry,
             final ElementArtifactLoader artifactLoader,
             final ElementPathLoader pathLoader,
-            final TemporaryFiles temporaryFiles
+            final TemporaryFiles temporaryFiles,
+            final Attributes globalAttributes
     ) {
         return new DeploymentContext(
                 deployment,
@@ -81,7 +83,8 @@ record DeploymentContext(
                 new HashSet<>(),
                 temporaryFiles,
                 new HashSet<>(),
-                new HashSet<>()
+                new HashSet<>(),
+                globalAttributes
         );
     }
 
@@ -205,9 +208,15 @@ record DeploymentContext(
                 Attributes.emptyAttributes()
         );
 
-        // Create the base attributes found in the deployment
+        // Apply in priority order (last wins):
+        //   disk attrs → global operator attrs → per-element path attrs
+        // globalAttributes() carries operator-set explicit properties (env vars, local.properties,
+        // config files, or withProperties() in the local SDK). Applied after disk attrs but before
+        // per-element path attrs so they override element @ElementDefaultAttribute declarations
+        // while still being overridable by per-element path attributes.
         final var builder = new SimpleAttributes.Builder()
                 .from(baseAttrs)
+                .from(globalAttributes())
                 .from(resolved);
 
         // If the deployment is scoped to an Application, inject APPLICATION_ATTRIBUTE for all elements
