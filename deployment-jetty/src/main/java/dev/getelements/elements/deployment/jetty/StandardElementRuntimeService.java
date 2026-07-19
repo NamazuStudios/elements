@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
+import static dev.getelements.elements.sdk.Attributes.GLOBAL_ELEMENT_ATTRIBUTES;
 import static dev.getelements.elements.sdk.Attributes.SYSTEM_ATTRIBUTES;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
@@ -105,6 +106,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
 
     private Attributes systemAttributes;
+
+    private Attributes globalElementAttributes = Attributes.emptyAttributes();
 
     private ValidationHelper validationHelper;
 
@@ -426,7 +429,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         List<Element> elements = List.of();
         final var registry = getRootElementRegistry().newSubordinateRegistry();
-        final var context = DeploymentContext.create(deployment, registry, elementArtifactLoader, pathLoader, temporaryFiles);
+        final var context = DeploymentContext.create(deployment, registry, elementArtifactLoader, pathLoader, temporaryFiles, globalElementAttributes);
 
         try {
 
@@ -1069,6 +1072,11 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     @Inject
     public void setSystemAttributes(@Named(SYSTEM_ATTRIBUTES) Attributes systemAttributes) {
         this.systemAttributes = systemAttributes;
+    }
+
+    @com.google.inject.Inject(optional = true)
+    public void setGlobalElementAttributes(@Named(GLOBAL_ELEMENT_ATTRIBUTES) Attributes globalElementAttributes) {
+        this.globalElementAttributes = globalElementAttributes;
     }
 
     public ValidationHelper getValidationHelper() {

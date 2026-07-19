@@ -26,7 +26,7 @@ public class  SetupCommonModule extends AbstractModule {
         final FacebookBuiltinPermissionsSupplier facebookBuiltinPermissionsSupplier;
         facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();
 
-        install(new ConfigurationModule(defaultConfigurationSupplier));
+        install(new ConfigurationModule(defaultConfigurationSupplier::get, defaultConfigurationSupplier::getExplicitProperties));
         install(new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier));
         install(new MongoSdkModule());
         install(new MongoDaoModule());
