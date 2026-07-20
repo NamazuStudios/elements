@@ -85,12 +85,15 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
         final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
-        // Priority (last wins): SYSTEM_ATTRIBUTES < element @ElementDefaultAttribute < per-element path attributes
-        // SYSTEM_ATTRIBUTES provides a global floor (scan defaults, operator-level settings);
-        // element declared defaults customise it per-element; per-element path attributes are the
-        // authoritative operator override for a specific element in a specific deployment.
-        // Note: SYSTEM_ATTRIBUTES must contain only operator-set explicit values (not classpath-scanned
-        // @ElementDefaultAttribute scan defaults) — see DefaultConfigurationSupplier.getExplicitProperties().
+        // Priority (last wins):
+        //   SYSTEM_ATTRIBUTES (all scan defaults + operator-set)
+        //   < element @ElementDefaultAttribute
+        //   < GLOBAL_ELEMENT_ATTRIBUTES (operator-set explicit, inside `attributes`)
+        //   < per-element path attributes (inside `attributes`)
+        // SYSTEM_ATTRIBUTES is the floor: elements read any server default they need, and can
+        // re-declare individual keys via @ElementDefaultAttribute to change the default for that
+        // element. Operator-explicit overrides (GLOBAL_ELEMENT_ATTRIBUTES) then beat element
+        // defaults, and per-element path attributes beat everything.
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
                 .from(defaultAttributes)
                 .from(elementDefaultAttributes)
@@ -617,6 +620,11 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
      * This prevents a recursive element scan from picking up {@link ElementDefaultAttribute} or
      * {@link ElementRequiredAttribute} declarations that belong to a sibling/child element whose
      * package happens to be a sub-package of the current element's package.
+     *
+     * <p>Ancestor packages of the current element are not rejected even if they carry
+     * {@code @ElementDefinition}, because ClassGraph's {@code rejectPackages} uses prefix
+     * matching: rejecting {@code "com.example"} would also block
+     * {@code "com.example.sub"} (the current element's own package).</p>
      */
     private void rejectOtherElementPackages(
             final ClassGraph cg,
@@ -629,12 +637,17 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .enableClassInfo()
                 .enableAnnotationInfo();
 
+        final var currentPkg = current.pkgName();
+
         try (final var result = probe.scan()) {
             result.getPackageInfo()
                     .stream()
                     .filter(nfo -> nfo.hasAnnotation(ElementDefinition.class))
                     .map(nfo -> nfo.getName())
-                    .filter(name -> !name.equals(current.pkgName()))
+                    .filter(name -> !name.equals(currentPkg))
+                    // Don't reject ancestor packages — ClassGraph rejectPackages uses prefix
+                    // matching, so rejecting "com.example" would also reject "com.example.sub".
+                    .filter(name -> !currentPkg.startsWith(name + "."))
                     .forEach(cg::rejectPackages);
         }
 
