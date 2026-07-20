@@ -34,8 +34,40 @@ public class ConfigurationModule extends AbstractModule {
 
     private final Supplier<Properties> propertiesSupplier;
 
+    private final Supplier<Properties> systemAttributesSupplier;
+
+    /**
+     * Uses all properties (including classpath-scanned {@code @ElementDefaultAttribute} defaults)
+     * for both {@code @Named} bindings and {@code SYSTEM_ATTRIBUTES}.  Suitable for non-element
+     * contexts such as MongoDB test modules where element default isolation is not required.
+     *
+     * @param propertiesSupplier source of all merged properties
+     */
     public ConfigurationModule(final Supplier<Properties> propertiesSupplier) {
         this.propertiesSupplier = propertiesSupplier;
+        this.systemAttributesSupplier = propertiesSupplier;
+    }
+
+    /**
+     * Preferred constructor for production use with {@code DefaultConfigurationSupplier}.
+     *
+     * <p>{@code allPropertiesSupplier} is used for both {@code @Named} Guice bindings and
+     * {@code SYSTEM_ATTRIBUTES}. It must include classpath-scanned {@code @ElementDefaultAttribute}
+     * defaults so that elements can read any server default via {@code @Named} injection.
+     * Elements override individual keys by re-declaring them with {@code @ElementDefaultAttribute}.</p>
+     *
+     * <p>{@code systemAttributesSupplier} is used exclusively for {@code GLOBAL_ELEMENT_ATTRIBUTES}
+     * and should return <em>only</em> operator-set values (env vars, system properties, config files).
+     * This layer sits above element {@code @ElementDefaultAttribute} declarations in the priority
+     * chain, so operator overrides win over element defaults without per-element path configuration.</p>
+     *
+     * @param allPropertiesSupplier      full merged properties (scan defaults + operator-set)
+     * @param systemAttributesSupplier   explicit-only operator properties for {@code GLOBAL_ELEMENT_ATTRIBUTES}
+     */
+    public ConfigurationModule(final Supplier<Properties> allPropertiesSupplier,
+                               final Supplier<Properties> systemAttributesSupplier) {
+        this.propertiesSupplier = allPropertiesSupplier;
+        this.systemAttributesSupplier = systemAttributesSupplier;
     }
 
     @Override
@@ -46,25 +78,45 @@ public class ConfigurationModule extends AbstractModule {
         convertToTypes(only(get(Path.class)), (s, to) -> Paths.get(s));
 
         final Properties properties = propertiesSupplier.get();
-        final SimpleAttributes.Builder systemAttributesBuilder = new SimpleAttributes.Builder();
+        final Properties explicitProperties = systemAttributesSupplier.get();
 
         if (properties == null) {
             addError("Supplier supplied null properties.");
-        } else {
-            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements();) {
-                final var name = e.nextElement().toString();
-                final var value = properties.getProperty(name);
-                systemAttributesBuilder.setAttribute(name, value);
-            }
         }
 
-        final var systemAttributes = systemAttributesBuilder
-                .build()
-                .immutableCopy();
+        // SYSTEM_ATTRIBUTES is the floor for element attribute resolution. It includes ALL
+        // system properties (classpath-scanned @ElementDefaultAttribute scan defaults plus
+        // operator-set values) so elements can read any server default via @Named injection.
+        // Elements override individual keys by re-declaring them with @ElementDefaultAttribute.
+        final var allSystemAttrsBuilder = new SimpleAttributes.Builder();
+        if (properties != null) {
+            for (Enumeration<?> e = properties.propertyNames(); e.hasMoreElements();) {
+                final var name = e.nextElement().toString();
+                allSystemAttrsBuilder.setAttribute(name, properties.getProperty(name));
+            }
+        }
+        final var allSystemAttributes = allSystemAttrsBuilder.build().immutableCopy();
+
+        // GLOBAL_ELEMENT_ATTRIBUTES holds only operator-set explicit values (env vars, system
+        // properties, config files). Applied above element @ElementDefaultAttribute in the
+        // priority chain so operator overrides win over element-declared defaults, but are
+        // themselves overridable by per-element path attributes.
+        final var explicitAttrsBuilder = new SimpleAttributes.Builder();
+        if (explicitProperties != null) {
+            for (Enumeration<?> e = explicitProperties.propertyNames(); e.hasMoreElements();) {
+                final var name = e.nextElement().toString();
+                explicitAttrsBuilder.setAttribute(name, explicitProperties.getProperty(name));
+            }
+        }
+        final var explicitAttributes = explicitAttrsBuilder.build().immutableCopy();
 
         bind(Attributes.class)
                 .annotatedWith(named(Attributes.SYSTEM_ATTRIBUTES))
-                .toInstance(systemAttributes);
+                .toInstance(allSystemAttributes);
+
+        bind(Attributes.class)
+                .annotatedWith(named(Attributes.GLOBAL_ELEMENT_ATTRIBUTES))
+                .toInstance(explicitAttributes);
 
         bind(Properties.class).toProvider(() -> new Properties(properties));
 

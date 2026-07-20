@@ -215,8 +215,7 @@ public class MongoProgressDao implements ProgressDao {
 
         final var mongoProgress = new UpdateBuilder().with(
                 set("version", randomUUID().toString()),
-                set("remaining", progress.getRemaining()),
-                set("currentStep", progress.getCurrentStep())
+                set("remaining", progress.getRemaining())
             ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (mongoProgress == null) {

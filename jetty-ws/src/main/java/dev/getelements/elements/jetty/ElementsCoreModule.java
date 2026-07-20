@@ -46,11 +46,11 @@ public class ElementsCoreModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        final Properties properties = configurationSupplier.get();
-
         // Modules required for core web services
         install(new RootElementRegistryModule());
-        install(new ConfigurationModule(() -> properties));
+        install(configurationSupplier instanceof DefaultConfigurationSupplier dcs
+                ? new ConfigurationModule(dcs::get, dcs::getExplicitProperties)
+                : new ConfigurationModule(configurationSupplier));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
         install(new MongoSdkElementModule());
         install(new MongoDaoElementModule());
@@ -64,7 +64,7 @@ public class ElementsCoreModule extends AbstractModule {
 
         // Old cluster code which needs to be replaced
         install(new RandomInstanceIdModule());
-        install(new InstanceDiscoveryServiceModule(() -> properties));
+        install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ZContextModule());
         install(new JeroMQSecurityModule());
         install(new ClusterContextFactoryModule());

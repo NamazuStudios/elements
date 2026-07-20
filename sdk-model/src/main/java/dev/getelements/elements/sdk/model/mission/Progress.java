@@ -32,11 +32,9 @@ public class Progress implements Serializable {
     @Schema(description = "The profile of the owner of this progress")
     private Profile profile;
 
-    @Null
     @Schema(description = "The current step")
     private Step currentStep;
 
-    @Null
     @Schema(description = "The remaining actions")
     private Integer remaining;
 

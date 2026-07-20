@@ -1,6 +1,9 @@
 package dev.getelements.elements.sdk.spi;
 
 import dev.getelements.elements.sdk.*;
+import dev.getelements.elements.sdk.annotation.ElementDefinition;
+import dev.getelements.elements.sdk.annotation.ElementDependencies;
+import dev.getelements.elements.sdk.annotation.ElementDependency;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementDependencyRecord;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
@@ -8,6 +11,8 @@ import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
+import io.github.classgraph.AnnotationInfo;
+import io.github.classgraph.ClassGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.*;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -406,10 +412,15 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
     }
 
     /**
-     * Pre-scans a single element subdirectory by building a lightweight classloader over its lib
-     * jars, then using {@link ElementLoaderFactory#findElementDefinitionRecord} to locate the
-     * element's declared name and {@link dev.getelements.elements.sdk.annotation.ElementDependency}
-     * annotations. The lightweight classloader is closed immediately after the scan.
+     * Pre-scans a single element subdirectory using ClassGraph to locate the element's declared
+     * name ({@link ElementDefinition}) and dependency names ({@link ElementDependency}) without
+     * loading any classes.
+     *
+     * <p>ClassGraph cannot scan jars via custom {@code elm://} URLs (which {@link UrlUtils#forPath}
+     * produces for jars nested inside ELM zip archives). To work around this, jars that live inside
+     * a zip {@link FileSystem} are extracted to temporary {@code file://} paths before the scan and
+     * deleted immediately afterward. This ensures the topo-sort has correct dependency information
+     * regardless of whether elements reside on disk or inside ELM archives.</p>
      *
      * <p>Failures are treated as "no declared name / no dependencies" so that ordering degrades
      * gracefully rather than preventing the deployment from loading at all.</p>
@@ -418,6 +429,8 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
             final Path subdir,
             final URLClassLoader apiClassLoader,
             final LoadConfiguration config) {
+
+        final var tempJars = new ArrayList<Path>();
 
         try {
 
@@ -430,62 +443,147 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                 try (final var ds = newDirectoryStream(libDir)) {
                     for (final var jar : ds) {
                         if (isJarFile(jar)) {
-                            // For jars nested inside a zip FileSystem (e.g. inside an ELM archive),
-                            // UrlUtils.forPath opens the inner zip and GC-manages its lifecycle so
-                            // we don't need to track it explicitly here.
-                            urls.add(jar.getFileSystem() == FileSystems.getDefault()
-                                    ? toUrl(jar)
-                                    : UrlUtils.forPath(jar));
+                            if (jar.getFileSystem() == FileSystems.getDefault()) {
+                                urls.add(jar.toUri().toURL());
+                            } else {
+                                // Jar is inside a zip FileSystem (e.g. an ELM archive). ClassGraph
+                                // cannot scan elm:// URLs, so extract to a temp file with a file:// URL.
+                                final var tempJar = Files.createTempFile("prescan-", ".jar");
+                                Files.copy(jar, tempJar, StandardCopyOption.REPLACE_EXISTING);
+                                tempJars.add(tempJar);
+                                urls.add(tempJar.toUri().toURL());
+                            }
                         }
                     }
                 }
             }
 
             if (isDirectory(classpathDir)) {
-                urls.add(toUrl(classpathDir));
+                if (classpathDir.getFileSystem() == FileSystems.getDefault()) {
+                    urls.add(classpathDir.toUri().toURL());
+                } else {
+                    // Classpath dir is inside a zip FileSystem. Extract its contents to a temp directory
+                    // with file:// URLs so ClassGraph can scan them.
+                    final var tempClasspathDir = Files.createTempDirectory("prescan-cp-");
+                    tempJars.add(tempClasspathDir);
+                    try (final var walk = Files.walk(classpathDir)) {
+                        walk.filter(p -> !p.equals(classpathDir)).forEach(src -> {
+                            try {
+                                final var relative = classpathDir.relativize(src);
+                                final var dest = tempClasspathDir.resolve(relative.toString());
+                                if (isDirectory(src)) {
+                                    Files.createDirectories(dest);
+                                } else {
+                                    Files.createDirectories(dest.getParent());
+                                    Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+                                }
+                            } catch (IOException ex) {
+                                throw new java.io.UncheckedIOException(ex);
+                            }
+                        });
+                    }
+                    final var tempUrl = tempClasspathDir.toUri().toURL();
+                    final var tempUrlStr = tempUrl.toString();
+                    urls.add(tempUrlStr.endsWith("/") ? tempUrl : new URL(tempUrlStr + "/"));
+                }
             }
 
             if (urls.isEmpty()) {
                 return new ElementScanRecord(subdir, null, List.of());
             }
 
-            final var factoryOpt = ServiceLoader
-                    .load(ElementLoaderFactory.class, config.baseClassLoader())
-                    .stream()
-                    .findFirst();
-
-            if (factoryOpt.isEmpty()) {
-                logger.debug("No ElementLoaderFactory available; skipping pre-scan for {}", subdir);
-                return new ElementScanRecord(subdir, null, List.of());
-            }
-
             try (final var lightCL = new URLClassLoader(
                     "prescan[%s]".formatted(subdir),
                     urls.toArray(URL[]::new),
-                    apiClassLoader)) {
+                    null)) {
 
-                final var defOpt = factoryOpt.get().get()
-                        .findElementDefinitionRecord(lightCL, config.baseAttributes(), r -> true);
+                final var cg = new ClassGraph()
+                        .overrideClassLoaders(lightCL)
+                        .ignoreParentClassLoaders()
+                        .enableClassInfo()
+                        .enableAnnotationInfo();
 
-                if (defOpt.isEmpty()) {
-                    return new ElementScanRecord(subdir, null, List.of());
+                try (final var result = cg.scan()) {
+
+                    final var pkgInfoOpt = result.getPackageInfo().stream()
+                            .filter(nfo -> nfo.hasAnnotation(ElementDefinition.class.getName()))
+                            .findFirst();
+
+                    if (pkgInfoOpt.isEmpty()) {
+                        return new ElementScanRecord(subdir, null, List.of());
+                    }
+
+                    final var pkgInfo = pkgInfoOpt.get();
+
+                    // Read element name from @ElementDefinition(value="..."); falls back to package name.
+                    final var defAnnot = pkgInfo.getAnnotationInfo(ElementDefinition.class.getName());
+                    final String rawName = defAnnot != null
+                            ? (String) defAnnot.getParameterValues().getValue("value")
+                            : null;
+                    final String elementName = (rawName == null || rawName.isBlank())
+                            ? pkgInfo.getName()
+                            : rawName;
+
+                    // Read dependency names from @ElementDependency. Java stores a single annotation
+                    // directly; multiple are wrapped by the compiler in @ElementDependencies.
+                    final var depNames = new ArrayList<String>();
+                    collectDependencyNames(pkgInfo.getAnnotationInfo(ElementDependency.class.getName()), depNames);
+                    collectDependencyNamesFromContainer(
+                            pkgInfo.getAnnotationInfo(ElementDependencies.class.getName()), depNames);
+
+                    logger.debug("Pre-scanned element '{}' at {}: dependencies={}", elementName, subdir, depNames);
+                    return new ElementScanRecord(subdir, elementName, List.copyOf(depNames));
+
                 }
-
-                final var def = defOpt.get();
-                final var depNames = ElementDependencyRecord.fromPackage(def.pkg())
-                        .map(rec -> rec.dependency().value())
-                        .toList();
-
-                logger.debug("Pre-scanned element '{}' at {}: dependencies={}", def.name(), subdir, depNames);
-                return new ElementScanRecord(subdir, def.name(), depNames);
 
             }
 
         } catch (Exception ex) {
             logger.warn("Pre-scan failed for element at {} ({}). Loading in original order.", subdir, ex.getMessage());
             return new ElementScanRecord(subdir, null, List.of());
+        } finally {
+            for (final var tempPath : tempJars) {
+                try {
+                    deleteRecursive(tempPath);
+                } catch (IOException ex) {
+                    logger.warn("Failed to delete pre-scan temp path {}", tempPath, ex);
+                }
+            }
         }
 
+    }
+
+    private static void deleteRecursive(final Path path) throws IOException {
+        if (!Files.exists(path)) return;
+        if (isDirectory(path)) {
+            try (final var walk = Files.walk(path)) {
+                walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> {
+                    try { Files.deleteIfExists(p); }
+                    catch (IOException ex) { throw new UncheckedIOException(ex); }
+                });
+            }
+        } else {
+            Files.deleteIfExists(path);
+        }
+    }
+
+    private static void collectDependencyNames(final AnnotationInfo depAnnot, final List<String> out) {
+        if (depAnnot == null) return;
+        final var v = depAnnot.getParameterValues().getValue("value");
+        if (v instanceof String s && !s.isBlank()) out.add(s);
+    }
+
+    private static void collectDependencyNamesFromContainer(
+            final AnnotationInfo containerAnnot, final List<String> out) {
+        if (containerAnnot == null) return;
+        final var arr = containerAnnot.getParameterValues().getValue("value");
+        if (arr instanceof Object[] elements) {
+            for (final var elem : elements) {
+                if (elem instanceof AnnotationInfo depAnnot) {
+                    collectDependencyNames(depAnnot, out);
+                }
+            }
+        }
     }
 
     /**

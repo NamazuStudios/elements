@@ -27,6 +27,23 @@ public interface Attributes {
     String SYSTEM_ATTRIBUTES = "dev.getelements.elements.system.attributes";
 
     /**
+     * Names the global operator-explicit attributes. These are applied above element
+     * {@code @ElementDefaultAttribute} declarations but below per-element path attributes,
+     * giving operator-set properties priority over element declared defaults without requiring
+     * per-element configuration.
+     *
+     * <p>Unlike {@link #SYSTEM_ATTRIBUTES} (which includes all scan defaults and serves as the
+     * floor for element attribute resolution), this binding holds <em>only</em> operator-set
+     * explicit values (env vars, system properties, config files).  An element's
+     * {@code @ElementDefaultAttribute} re-declaration of a key therefore wins over the server's
+     * scan default for that key, but loses to an operator-explicit override here.</p>
+     *
+     * <p>In production, populated from {@code DefaultConfigurationSupplier.getExplicitProperties()}.
+     * In the local SDK, populated from {@code ElementsLocalBuilder.withProperties()}.</p>
+     */
+    String GLOBAL_ELEMENT_ATTRIBUTES = "dev.getelements.elements.global.element.attributes";
+
+    /**
      * Gets a {@link List<String>} containing all attribute names contained in this instance.
      *
      * @return the {@link List<String>} of attribute names
