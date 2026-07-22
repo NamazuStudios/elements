@@ -130,6 +130,22 @@ public interface Constants {
         String NO_WHITE_SPACE = "^\\S+$";
 
         /**
+         * A valid username.
+         *
+         * <p>Rules:
+         * <ul>
+         *   <li>No whitespace characters</li>
+         *   <li>No ASCII/Unicode control characters ({@code \p{Cc}}) — blocks null bytes, etc.</li>
+         *   <li>No Unicode format characters ({@code \p{Cf}}) — blocks RTL/LTR direction overrides
+         *       such as U+202E that can spoof displayed names</li>
+         *   <li>Length: 1–50 characters</li>
+         * </ul>
+         * Allows any printable Unicode character otherwise, including CJK and accented Latin,
+         * making this safe for international users.
+         */
+        String USERNAME = "^[^\\s\\p{Cc}\\p{Cf}]{1,50}$";
+
+        /**
          * Alphanumeric only. Allows underscore and dash.
          */
         String WORD_ONLY = "\\w+";

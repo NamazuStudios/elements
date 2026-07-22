@@ -121,15 +121,15 @@ public class MongoUserDao implements UserDao {
 
     public Optional<User> findUser(final String userId) {
 
+        // Always try name/email first so a username that happens to be a 24-hex ObjectId string
+        // is resolved by name rather than silently routing to a different user's record by ID.
+        final var byName = findUserByNameOrEmail(userId);
+        if (byName.isPresent()) return byName;
+
         final var mongoUserId = getMongoDBUtils().parseOrReturnNull(userId);
+        if (mongoUserId == null) return Optional.empty();
 
-        if(mongoUserId == null) {
-            return findUserByNameOrEmail(userId);
-        }
-
-        final var mongoUser = findMongoUser(mongoUserId);
-
-        return mongoUser.map(user -> getDozerMapper().map(user, User.class));
+        return findMongoUser(mongoUserId).map(user -> getDozerMapper().map(user, User.class));
     }
 
     @Override
@@ -622,16 +622,12 @@ public class MongoUserDao implements UserDao {
 
         final var query = getDatastore().find(MongoUser.class);
 
-        if (ObjectId.isValid(userNameOrEmail)) {
-            query.filter(eq("_id", new ObjectId(userNameOrEmail)));
-        } else {
-            query.filter(
-                or(
-                    eq("name", userNameOrEmail),
-                    eq("email", userNameOrEmail.trim().toLowerCase())
-                )
-            );
-        }
+        query.filter(
+            or(
+                eq("name", userNameOrEmail),
+                eq("email", userNameOrEmail.trim().toLowerCase())
+            )
+        );
 
         final var mongoUser = query.first();
 
