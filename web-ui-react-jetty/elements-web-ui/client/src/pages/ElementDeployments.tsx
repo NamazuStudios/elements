@@ -96,12 +96,33 @@ interface RequiredAttributeHint {
 
 interface ElementRuntimeStatus {
   deployment: { id: string; state: string; [key: string]: any };
+  status: string;
   elements: Array<{
+    definition?: { name?: string; [key: string]: any };
+    elementPath?: string;
+    sourceElmArtifact?: string | null;
+    attributes: Record<string, any>;
+    defaultAttributes: Array<{ name: string; value: string; description: string; sensitive: boolean }>;
+    requiredAttributes: Array<{ name: string; description: string; sensitive: boolean }>;
+    [key: string]: any;
+  }>;
+  failedElements: Array<{
+    definition?: { name?: string; [key: string]: any };
+    elementPath?: string;
+    sourceElmArtifact?: string | null;
+    attributes: Record<string, any>;
     defaultAttributes: Array<{ name: string; value: string; description: string; sensitive: boolean }>;
     requiredAttributes: Array<{ name: string; description: string; sensitive: boolean }>;
     [key: string]: any;
   }>;
   [key: string]: any;
+}
+
+interface PerPathHints {
+  hints: Record<string, DefaultAttributeHint>;
+  required: Record<string, RequiredAttributeHint>;
+  sensitive: Set<string>;
+  inherited: Record<string, string>; // system-provided attributes that don't need user configuration
 }
 
 function getStateBadgeVariant(state: string): 'default' | 'secondary' | 'outline' | 'destructive' {
@@ -110,6 +131,17 @@ function getStateBadgeVariant(state: string): 'default' | 'secondary' | 'outline
     case 'DISABLED': return 'secondary';
     case 'UNLOADED': return 'outline';
     default: return 'outline';
+  }
+}
+
+function getRuntimeDotColor(runtimeStatus: string | undefined, deploymentState: string): string {
+  if (deploymentState !== 'ENABLED') return getStateColor(deploymentState);
+  switch (runtimeStatus) {
+    case 'CLEAN':    return 'bg-green-500';
+    case 'WARNINGS': return 'bg-yellow-500';
+    case 'UNSTABLE': return 'bg-yellow-500';
+    case 'FAILED':   return 'bg-red-500';
+    default:         return 'bg-green-500';
   }
 }
 
@@ -630,7 +662,7 @@ export default function ElementDeployments() {
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStateColor(deployment.state)}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getRuntimeDotColor(listRuntimeStatuses?.find(r => r.deployment?.id === deployment.id)?.status, deployment.state)}`} />
                         <span className="font-mono text-sm font-medium truncate" data-testid={`text-deployment-id-${deployment.id}`}>
                           {deployment.id}
                         </span>
@@ -642,20 +674,54 @@ export default function ElementDeployments() {
                         </Badge>
                         {(() => {
                           const runtime = listRuntimeStatuses?.find(r => r.deployment?.id === deployment.id);
-                          if (!runtime?.elements) return null;
-                          const allValues = Object.values(deployment.pathAttributes || {}).reduce<Record<string, any>>((acc, attrs) => Object.assign(acc, attrs), {});
-                          const missing = runtime.elements.some(el =>
+                          if (!runtime) return null;
+
+                          // Merge all operator-configured attrs: deployment-level + all package-level
+                          const allConfigured = [
+                            ...Object.values(deployment.pathAttributes || {}),
+                            ...(deployment.packages || []).flatMap(pkg => Object.values(pkg.pathAttributes || {})),
+                          ].reduce<Record<string, any>>((acc, attrs) => Object.assign(acc, attrs), {});
+
+                          // Failed elements: check against operator config, not stale runtime attrs
+                          const failedLines: string[] = [];
+                          for (const el of (runtime.failedElements ?? [])) {
+                            const elName = el.definition?.name ?? 'unknown';
+                            const missing = (el.requiredAttributes ?? [])
+                              .filter((req: { name: string }) =>
+                                !(req.name in (el.attributes ?? {})) && !(req.name in allConfigured)
+                              )
+                              .map((req: { name: string }) => req.name);
+                            if (missing.length > 0) {
+                              failedLines.push(`${elName}:\n  missing: ${missing.join(', ')}`);
+                            } else {
+                              failedLines.push(`${elName}: failed to load`);
+                            }
+                          }
+                          const loadedMissing = (runtime.elements ?? []).some(el =>
                             (el.requiredAttributes ?? []).some((req: { name: string }) => {
-                              const v = allValues[req.name];
-                              return !(req.name in allValues) || v === '' || v === null || v === undefined;
+                              const v = allConfigured[req.name];
+                              return !(req.name in allConfigured) || v === '' || v === null || v === undefined;
                             })
                           );
-                          return missing ? (
-                            <Badge variant="destructive" className="text-[10px] flex items-center gap-1">
+
+                          const hasIssues = failedLines.length > 0 || loadedMissing || (runtime.status && runtime.status !== 'CLEAN' && runtime.status !== 'WARNINGS');
+                          if (!hasIssues) return null;
+
+                          const tooltipParts: string[] = [];
+                          if (failedLines.length > 0) tooltipParts.push('Elements failed to load:\n' + failedLines.join('\n'));
+                          if (loadedMissing) tooltipParts.push('Some loaded elements have unconfigured required attributes.');
+                          if (runtime.status && runtime.status !== 'CLEAN') tooltipParts.push(`Runtime status: ${runtime.status}`);
+
+                          return (
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] flex items-center gap-1 border-yellow-500 text-yellow-600 dark:text-yellow-400"
+                              title={tooltipParts.join('\n\n')}
+                            >
                               <AlertTriangle className="w-3 h-3" />
-                              Missing attrs
+                              {failedLines.length > 0 ? `${failedLines.length} element${failedLines.length !== 1 ? 's' : ''} failed` : 'Missing attrs'}
                             </Badge>
-                          ) : null;
+                          );
                         })()}
                       </div>
 
@@ -1235,6 +1301,7 @@ function KeyValueEditor({
   sensitiveKeys,
   hints,
   requiredHints,
+  inheritedAttrs,
 }: {
   value: Record<string, any>;
   onChange: (val: Record<string, any>) => void;
@@ -1245,8 +1312,10 @@ function KeyValueEditor({
   sensitiveKeys?: Set<string>;
   hints?: Record<string, DefaultAttributeHint>;
   requiredHints?: Record<string, RequiredAttributeHint>;
+  inheritedAttrs?: Record<string, string>;
 }) {
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [inheritedOpen, setInheritedOpen] = useState(false);
   const isAttributeMode = sensitiveKeys !== undefined;
 
   // In attribute mode, show the union of overridden keys and all hint keys,
@@ -1365,14 +1434,14 @@ function KeyValueEditor({
                 </div>
               </div>
               {isOverride ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <Input
                     value={typeof val === 'object' ? JSON.stringify(val) : String(val ?? '')}
                     onChange={(e) => updateValue(key, e.target.value)}
                     onBlur={(e) => commitValue(key, e.target.value)}
                     placeholder={valuePlaceholder}
                     type={isSensitive && !isRevealed ? 'password' : 'text'}
-                    className="flex-1 font-mono text-xs"
+                    className="flex-1 min-w-0 font-mono text-xs"
                     data-testid={`${testIdPrefix}-val-${i}`}
                   />
                   {hint && (
@@ -1412,12 +1481,12 @@ function KeyValueEditor({
         }
 
         return (
-          <div key={i} className="flex items-center gap-1" data-testid={`${testIdPrefix}-row-${i}`}>
+          <div key={i} className="flex items-center gap-1 min-w-0" data-testid={`${testIdPrefix}-row-${i}`}>
             <Input
               value={key}
               onChange={(e) => updateKey(key, e.target.value)}
               placeholder={keyPlaceholder}
-              className="flex-shrink-0 w-2/5 font-mono text-xs"
+              className="w-2/5 min-w-0 font-mono text-xs"
               onBlur={(e) => {
                 const trimmed = e.target.value.trim();
                 if (trimmed && trimmed !== key) updateKey(key, trimmed);
@@ -1429,7 +1498,7 @@ function KeyValueEditor({
               onChange={(e) => updateValue(key, e.target.value)}
               onBlur={(e) => commitValue(key, e.target.value)}
               placeholder={valuePlaceholder}
-              className="flex-1 font-mono text-xs"
+              className="flex-1 min-w-0 font-mono text-xs"
               data-testid={`${testIdPrefix}-val-${i}`}
             />
             <Button type="button" variant="ghost" size="icon" onClick={() => removeEntry(key)} data-testid={`${testIdPrefix}-remove-${i}`}>
@@ -1486,12 +1555,49 @@ function KeyValueEditor({
                   onBlur={(e) => onChange({ ...(value || {}), [key]: parseValue(e.target.value) })}
                   placeholder={isSensitive ? 'Enter secret value...' : 'Enter required value...'}
                   type={isSensitive && !isRevealed ? 'password' : 'text'}
-                  className={`flex-1 font-mono text-xs ${!hasOverride ? 'border-destructive/50' : ''}`}
+                  className={`w-full min-w-0 font-mono text-xs ${!hasOverride ? 'border-destructive/50' : ''}`}
                   data-testid={`${testIdPrefix}-req-val-${i}`}
                 />
               </div>
             );
           })}
+        </div>
+      )}
+      {/* ── Inherited System Attributes ── */}
+      {isAttributeMode && inheritedAttrs && Object.keys(inheritedAttrs).length > 0 && (
+        <div className="space-y-1 pt-2 border-t mt-2">
+          <button
+            type="button"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-full"
+            onClick={() => setInheritedOpen(v => !v)}
+          >
+            {inheritedOpen ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
+            <span>System Attributes</span>
+            <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 ml-1">{Object.keys(inheritedAttrs).length}</Badge>
+            <span className="text-[10px] text-muted-foreground ml-1">inherited, read-only</span>
+          </button>
+          {inheritedOpen && (
+            <div className="space-y-1 opacity-70">
+              {Object.entries(inheritedAttrs).map(([key, val]) => {
+                const lastDot = key.lastIndexOf('.');
+                const keyPrefix = lastDot >= 0 ? key.substring(0, lastDot) : '';
+                const keyLeaf = lastDot >= 0 ? key.substring(lastDot + 1) : key;
+                return (
+                  <div key={key} className="rounded-md border border-dashed p-2 space-y-1">
+                    <div className="font-mono text-xs truncate" title={key}>
+                      {keyPrefix && <span className="text-muted-foreground">{keyPrefix}.</span>}
+                      <span>{keyLeaf}</span>
+                    </div>
+                    <Input
+                      value={val}
+                      readOnly
+                      className="w-full min-w-0 font-mono text-xs text-muted-foreground bg-muted/50 cursor-default"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1618,6 +1724,7 @@ function PathKeyValueMapEditor({
   hints,
   requiredHints,
   pathMetadata,
+  perPathHints,
 }: {
   value: Record<string, Record<string, any>>;
   onChange: (val: Record<string, Record<string, any>>) => void;
@@ -1628,6 +1735,7 @@ function PathKeyValueMapEditor({
   hints?: Record<string, DefaultAttributeHint>;
   requiredHints?: Record<string, RequiredAttributeHint>;
   pathMetadata?: Record<string, { version?: string }>;
+  perPathHints?: Record<string, PerPathHints>;
 }) {
   const entries = Object.entries(value || {});
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() =>
@@ -1686,19 +1794,29 @@ function PathKeyValueMapEditor({
         const parts = pathKey.split('.');
         const displayName = parts.length > 2 ? parts.slice(-2).join('.') : pathKey;
         const hasPrefix = parts.length > 2;
+        const ph = perPathHints?.[pathKey];
+        const missingRequired = ph?.required
+          ? Object.keys(ph.required).some(k => !(k in (attrs ?? {})))
+          : false;
         return (
-          <Card key={pi} data-testid={`${testIdPrefix}-path-${pi}`}>
+          <Card key={pi} className="overflow-hidden" data-testid={`${testIdPrefix}-path-${pi}`}>
             <CardContent className="p-2 space-y-2">
               {/* ── Path header (always visible) ── */}
               <div
-                className="flex items-center gap-2 cursor-pointer select-none"
+                className="flex items-center gap-2 cursor-pointer select-none min-w-0"
                 onClick={() => toggleCollapsed(pathKey)}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xs font-medium">{displayName}</span>
+                    <span className="font-mono text-xs font-medium truncate">{displayName}</span>
                     {meta?.version && (
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">v{meta.version}</Badge>
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shrink-0">v{meta.version}</Badge>
+                    )}
+                    {isCollapsed && missingRequired && (
+                      <Badge variant="destructive" className="text-[9px] px-1 py-0 h-4 shrink-0 flex items-center gap-0.5">
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        missing
+                      </Badge>
                     )}
                   </div>
                   {hasPrefix && (
@@ -1708,7 +1826,7 @@ function PathKeyValueMapEditor({
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  {isCollapsed ? <ChevronDown className="w-3 h-3 text-muted-foreground" /> : <ChevronUp className="w-3 h-3 text-muted-foreground" />}
+                  {!isCollapsed ? <ChevronUp className="w-3 h-3 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
                   <Button
                     type="button"
                     variant="ghost"
@@ -1723,7 +1841,7 @@ function PathKeyValueMapEditor({
               {/* ── Expanded content ── */}
               {!isCollapsed && (
                 <>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 min-w-0">
                     <Input
                       value={pathKey}
                       onChange={(e) => updatePathKey(pathKey, e.target.value)}
@@ -1733,17 +1851,23 @@ function PathKeyValueMapEditor({
                     />
                   </div>
                   <div className="pl-3">
-                    <KeyValueEditor
-                      value={attrs}
-                      onChange={(a) => updatePathAttrs(pathKey, a)}
-                      label="Attributes"
-                      testIdPrefix={`${testIdPrefix}-attrs-${pi}`}
-                      keyPlaceholder="attribute key"
-                      valuePlaceholder="attribute value"
-                      sensitiveKeys={sensitiveKeys}
-                      hints={hints}
-                      requiredHints={requiredHints}
-                    />
+                    {(() => {
+                      const ph = perPathHints?.[pathKey];
+                      return (
+                        <KeyValueEditor
+                          value={attrs}
+                          onChange={(a) => updatePathAttrs(pathKey, a)}
+                          label="Attributes"
+                          testIdPrefix={`${testIdPrefix}-attrs-${pi}`}
+                          keyPlaceholder="attribute key"
+                          valuePlaceholder="attribute value"
+                          sensitiveKeys={ph?.sensitive ?? sensitiveKeys}
+                          hints={ph?.hints ?? hints}
+                          requiredHints={ph?.required ?? requiredHints}
+                          inheritedAttrs={ph?.inherited}
+                        />
+                      );
+                    })()}
                   </div>
                 </>
               )}
@@ -1836,11 +1960,13 @@ function ElementDefinitionEditor({
   onChange,
   availableSpis,
   spisLoading,
+  hintsByPath,
 }: {
   elements: ElementPathDefinition[];
   onChange: (els: ElementPathDefinition[]) => void;
   availableSpis: ElementSpi[];
   spisLoading: boolean;
+  hintsByPath?: Record<string, PerPathHints>;
 }) {
   const addElement = () => {
     onChange([...elements, {
@@ -1949,6 +2075,10 @@ function ElementDefinitionEditor({
               testIdPrefix={`el-${i}-attrs`}
               keyPlaceholder="attribute key"
               valuePlaceholder="attribute value"
+              hints={hintsByPath?.[el.path]?.hints}
+              requiredHints={hintsByPath?.[el.path]?.required}
+              sensitiveKeys={hintsByPath?.[el.path]?.sensitive}
+              inheritedAttrs={hintsByPath?.[el.path]?.inherited}
             />
             <p className="text-xs text-muted-foreground">
               Custom attributes passed to this Element at load time via the AttributesLoader mechanism.
@@ -1963,9 +2093,11 @@ function ElementDefinitionEditor({
 function PackageDefinitionEditor({
   packages,
   onChange,
+  hintsByPath,
 }: {
   packages: ElementPackageDefinition[];
   onChange: (pkgs: ElementPackageDefinition[]) => void;
+  hintsByPath?: Record<string, PerPathHints>;
 }) {
   const addPackage = () => {
     onChange([...packages, { elmArtifact: '', pathSpiBuiltins: {}, pathSpiClassPaths: {}, pathAttributes: {} }]);
@@ -2045,6 +2177,7 @@ function PackageDefinitionEditor({
               label="Path Attributes"
               description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
               testIdPrefix={`pkg-${i}-attrs`}
+              perPathHints={hintsByPath}
             />
           </CardContent>
         </Card>
@@ -2750,6 +2883,26 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
     refetchOnMount: 'always',
   });
 
+  // Auto-open the Additional Elements section when any element has a source package
+  useEffect(() => {
+    if (!runtimeStatuses || !deployment) return;
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
+    const hasPackageElements =
+      [...(runtime?.elements ?? []), ...(runtime?.failedElements ?? [])].some(el => el.sourceElmArtifact);
+    if (hasPackageElements && formData.packages.length > 0) setAdditionalOpen(true);
+  }, [runtimeStatuses, deployment?.id]);
+
+  // Auto-open Advanced Settings when main ELM elements exist (they seed into deployment-level pathAttributes)
+  useEffect(() => {
+    if (!runtimeStatuses || !deployment) return;
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
+    const hasMainElmElements =
+      [...(runtime?.elements ?? []), ...(runtime?.failedElements ?? [])].some(
+        el => !el.sourceElmArtifact && (el.elementPath ?? el.definition?.name)
+      );
+    if (hasMainElmElements) setAdvancedOpen(true);
+  }, [runtimeStatuses, deployment?.id]);
+
   const hintsByKey = useMemo<Record<string, DefaultAttributeHint>>(() => {
     if (!runtimeStatuses || !deployment) return {};
     const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
@@ -2790,6 +2943,49 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
     [requiredByKey]
   );
 
+  // Per-element-path hints built from runtime element definitions.
+  // Keyed by element path (element.definition.name) so each path card in
+  // PathKeyValueMapEditor only shows hints/required for its own element.
+  // Includes both successfully loaded elements AND failed elements — failed
+  // elements are the ones that most need their required attrs surfaced to the operator.
+  const hintsByPath = useMemo<Record<string, PerPathHints>>(() => {
+    if (!runtimeStatuses || !deployment) return {};
+    const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
+    if (!runtime) return {};
+    const map: Record<string, PerPathHints> = {};
+    const allElements = [...(runtime.elements ?? []), ...(runtime.failedElements ?? [])];
+    for (const el of allElements) {
+      // Prefer elementPath (actual on-disk directory name) over definition.name for the key —
+      // elementPath is the exact string the user must use in pathAttributes to configure this element.
+      const path = el.elementPath ?? el.definition?.name;
+      if (!path) continue;
+      const hints: Record<string, DefaultAttributeHint> = {};
+      for (const attr of (el.defaultAttributes ?? [])) {
+        hints[attr.name] = { value: attr.value, description: attr.description, sensitive: attr.sensitive };
+      }
+      const required: Record<string, RequiredAttributeHint> = {};
+      for (const attr of (el.requiredAttributes ?? [])) {
+        required[attr.name] = { description: attr.description, sensitive: attr.sensitive };
+      }
+      const sensitive = new Set([
+        ...Object.entries(hints).filter(([, h]) => h.sensitive).map(([k]) => k),
+        ...Object.entries(required).filter(([, h]) => h.sensitive).map(([k]) => k),
+      ]);
+      // Inherited = resolved attributes that come from system config, not element defaults or required fields.
+      // These are already injected by the server and don't need to be set by the user.
+      const inherited: Record<string, string> = {};
+      const elementDefNames = new Set(Object.keys(hints));
+      const requiredNames = new Set(Object.keys(required));
+      for (const [k, v] of Object.entries(el.attributes ?? {})) {
+        if (!elementDefNames.has(k) && !requiredNames.has(k)) {
+          inherited[k] = typeof v === 'object' ? JSON.stringify(v) : String(v ?? '');
+        }
+      }
+      map[path] = { hints, required, sensitive, inherited };
+    }
+    return map;
+  }, [runtimeStatuses, deployment]);
+
   const pathMetadata = useMemo<Record<string, { version?: string }>>(() => {
     if (!runtimeStatuses || !deployment) return {};
     const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment.id);
@@ -2804,56 +3000,91 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
     return map;
   }, [runtimeStatuses, deployment]);
 
-  const hintsApplied = useRef(false);
-  useEffect(() => { hintsApplied.current = false; }, [deployment?.id]);
   useEffect(() => {
-    if (!runtimeStatuses || hintsApplied.current) return;
+    // Two jobs:
+    // 1. Normalize stale "@"-prefixed keys (old format: "file.elm@/dev.example.element" → "dev.example.element").
+    // 2. Seed failed element paths with empty maps so the editor shows them with required-attribute hints,
+    //    giving the operator a clear target to fill in. Only failed elements are seeded — successfully
+    //    loaded elements have already proven their attributes are present and don't need scaffolding.
+    //
+    // No guard flag — the effect is idempotent: it only seeds paths not already present and only
+    // calls setFormData when something actually changed. Running it on every runtimeStatuses update
+    // is safe and ensures the seeding fires even when runtimeStatuses arrives after the initial render.
+    if (!runtimeStatuses) return;
     const runtime = runtimeStatuses.find(r => r.deployment?.id === deployment?.id);
     if (!runtime) return;
-    hintsApplied.current = true;
-
-    // Derive element paths from elementManifests keys.
-    // Server key format: "<filesystem>@<zip-path>" (e.g. "/tmp/file.elm@/dev.example.element").
-    // Extract the zip-path part and strip the leading slash to get the pathAttributes key.
-    const elementPaths = Object.keys(runtime.elementManifests ?? {})
-      .map(key => {
-        const atIdx = key.lastIndexOf('@');
-        const zipPath = atIdx >= 0 ? key.substring(atIdx + 1) : key;
-        return zipPath.replace(/^\/+/, '');
-      })
-      .filter(Boolean);
 
     const currentAttrs = formData.pathAttributes;
-
-    // Normalize stale keys that include the filesystem prefix before "@"
-    // (old format: "Users/.../file.elm@/dev.example.element" → correct: "dev.example.element")
     const normalizedAttrs: Record<string, Record<string, any>> = {};
-    let needsNormalization = false;
+    let changed = false;
+
     for (const [k, v] of Object.entries(currentAttrs)) {
       const atIdx = k.lastIndexOf('@');
       if (atIdx >= 0) {
         const normalizedKey = k.substring(atIdx + 1).replace(/^\/+/, '');
         if (normalizedKey) {
           normalizedAttrs[normalizedKey] = { ...(normalizedAttrs[normalizedKey] || {}), ...v };
-          needsNormalization = true;
+          changed = true;
         }
       } else {
         normalizedAttrs[k] = v;
       }
     }
 
-    // Add any element paths from the runtime that aren't already present
-    const updated: Record<string, Record<string, any>> = { ...normalizedAttrs };
-    for (const path of elementPaths) {
-      if (!(path in updated)) {
-        updated[path] = {};
+    // Per-package seeds keyed by package index — each entry is the set of paths to seed into that package
+    const packagePathSeeds = new Map<number, string[]>();
+
+    // Seed from both loaded and failed elements — all elements need paths visible for configuration.
+    for (const el of [...(runtime.elements ?? []), ...(runtime.failedElements ?? [])]) {
+      const path = el.elementPath ?? el.definition?.name;
+      if (!path) continue;
+      if (formData.elements.some(e => e.path === path)) continue;
+
+      if (el.sourceElmArtifact) {
+        // Server tagged this element with its source package — seed only into that package.
+        const pkgIdx = formData.packages.findIndex(p => p.elmArtifact === el.sourceElmArtifact);
+        if (pkgIdx >= 0) {
+          if (!(formData.packages[pkgIdx].pathAttributes && path in formData.packages[pkgIdx].pathAttributes)) {
+            const seeds = packagePathSeeds.get(pkgIdx) ?? [];
+            seeds.push(path);
+            packagePathSeeds.set(pkgIdx, seeds);
+          }
+        } else {
+          // Package coordinate didn't match any form package — fall back to deployment-level.
+          if (!(path in normalizedAttrs)) { normalizedAttrs[path] = {}; changed = true; }
+        }
+      } else {
+        // No sourceElmArtifact means the element came from the main ELM or an element definition —
+        // always seed into the deployment-level pathAttributes regardless of whether packages exist.
+        if (!(path in normalizedAttrs)) {
+          normalizedAttrs[path] = {};
+          changed = true;
+        }
       }
     }
 
-    if (needsNormalization || Object.keys(updated).length !== Object.keys(currentAttrs).length) {
-      setFormData({ ...formData, pathAttributes: updated });
+    let updatedPackages = formData.packages;
+    if (packagePathSeeds.size > 0) {
+      updatedPackages = formData.packages.map((pkg, i) => {
+        const seeds = packagePathSeeds.get(i) ?? [];
+        if (seeds.length === 0) return pkg;
+        const pkgPaths = { ...(pkg.pathAttributes ?? {}) };
+        let pkgChanged = false;
+        for (const path of seeds) {
+          if (!(path in pkgPaths)) {
+            pkgPaths[path] = {};
+            pkgChanged = true;
+          }
+        }
+        return pkgChanged ? { ...pkg, pathAttributes: pkgPaths } : pkg;
+      });
+      if (updatedPackages.some((p, i) => p !== formData.packages[i])) changed = true;
     }
-  }, [runtimeStatuses]);
+
+    if (changed) {
+      setFormData({ ...formData, pathAttributes: normalizedAttrs, packages: updatedPackages });
+    }
+  }, [runtimeStatuses, deployment?.id]);
 
   const { data: applications = [], isLoading: appsLoading } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ['/api/rest/application', 'picker'],
@@ -2987,8 +3218,16 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
         </div>
       )}
 
-      {/* ── Element Attributes (edit only, collapsible) ── */}
-      {mode === 'edit' && (
+      {/* ── Element Attributes (edit only, collapsible) ──
+           Only shown when the deployment has an uploaded ELM file, or when there are
+           already saved deployment-level path attributes to display. For pure-package
+           deployments (packages[] only, no elm), attributes belong in each package's
+           own pathAttributes and are edited in the "Additional Elements" section below. */}
+      {mode === 'edit' && (() => {
+        const hasElm = !!deployment?.elm;
+        const hasPathAttrs = Object.values(formData.pathAttributes).some(attrs => Object.keys(attrs).length > 0);
+        return hasElm || hasPathAttrs;
+      })() && (
         <div className="border-t pt-1">
           <button
             type="button"
@@ -2999,33 +3238,43 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
             {attributesOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
             Element Attributes
             {(() => {
-              const hintKeys = new Set(Object.keys(hintsByKey));
-              const reqKeys = new Set(Object.keys(requiredByKey));
-              const customCount = new Set(
-                Object.values(formData.pathAttributes).flatMap(attrs =>
-                  Object.keys(attrs).filter(k => !hintKeys.has(k) && !reqKeys.has(k))
-                )
+              const configured = new Set(
+                Object.values(formData.pathAttributes).flatMap(attrs => Object.keys(attrs))
               ).size;
-              const total = hintKeys.size + reqKeys.size + customCount;
-              return total > 0 ? (
-                <Badge variant="secondary" className="ml-1 text-[10px]">{total}</Badge>
+              return configured > 0 ? (
+                <Badge variant="secondary" className="ml-1 text-[10px]">{configured}</Badge>
               ) : null;
             })()}
           </button>
           {attributesOpen && (
             <div className="space-y-3 pt-2">
               <p className="text-xs text-muted-foreground">
-                Per-path attribute overrides for Elements in the ELM file. The key is the element path inside the ELM (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time.
+                Per-path attribute overrides for Elements in the uploaded ELM file. The key is the element path (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time. Elements from packages or element definitions are configured in the Additional Elements section.
+                {(() => {
+                  const runtime = runtimeStatuses?.find(r => r.deployment?.id === deployment?.id);
+                  const elmFailed = (runtime?.failedElements ?? []).filter(el => {
+                    const path = el.elementPath ?? el.definition?.name;
+                    if (!path) return false;
+                    if (formData.elements.some(e => e.path === path)) return false;
+                    if (formData.packages.some(p => p.pathAttributes && path in p.pathAttributes)) return false;
+                    // Only count as "ELM-level" if actually seeded into deployment pathAttributes
+                    return path in formData.pathAttributes;
+                  });
+                  if (elmFailed.length === 0) return null;
+                  return (
+                    <span className="block mt-1 text-yellow-600 dark:text-yellow-400">
+                      {elmFailed.length} element{elmFailed.length !== 1 ? 's' : ''} from the ELM failed to load. Required attributes (shown in red) must be configured before they will start.
+                    </span>
+                  );
+                })()}
               </p>
               <PathKeyValueMapEditor
                 value={formData.pathAttributes}
                 onChange={(val) => update({ pathAttributes: val })}
                 label="Paths"
                 testIdPrefix="deploy-path-attrs"
-                sensitiveKeys={new Set(Array.from(sensitiveKeys).concat(Array.from(requiredSensitiveKeys)))}
-                hints={hintsByKey}
-                requiredHints={requiredByKey}
                 pathMetadata={pathMetadata}
+                perPathHints={hintsByPath}
               />
             </div>
           )}
@@ -3095,19 +3344,61 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
               {formData.elements.length + formData.packages.length}
             </Badge>
           )}
+          {(() => {
+            const runtime = runtimeStatuses?.find(r => r.deployment?.id === deployment?.id);
+            const hasUnresolved = (runtime?.failedElements ?? []).some(el => {
+              const path = el.elementPath ?? el.definition?.name;
+              if (!path) return false;
+              if (formData.elements.some(e => e.path === path)) return false;
+              if (formData.packages.some(p => p.pathAttributes && path in p.pathAttributes)) return false;
+              if (path in formData.pathAttributes) return false;
+              return true;
+            });
+            return hasUnresolved ? (
+              <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0" title="Some elements need configuration" />
+            ) : null;
+          })()}
         </button>
         {additionalOpen && (
           <div className="space-y-4 pt-2">
+            {(() => {
+              const runtime = runtimeStatuses?.find(r => r.deployment?.id === deployment?.id);
+              const unresolved = (runtime?.failedElements ?? []).filter(el => {
+                const path = el.elementPath ?? el.definition?.name;
+                if (!path) return false;
+                if (formData.elements.some(e => e.path === path)) return false;
+                if (formData.packages.some(p => p.pathAttributes && path in p.pathAttributes)) return false;
+                if (path in formData.pathAttributes) return false;
+                return true;
+              });
+              if (unresolved.length === 0) return null;
+              return (
+                <div className="flex items-start gap-2 p-3 rounded-md bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 text-xs text-yellow-800 dark:text-yellow-200">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400" />
+                  <div className="space-y-1">
+                    <p className="font-medium">Elements require configuration</p>
+                    <p>The following elements failed to load. Open the package or element definition that contains them and fill in the required attributes (highlighted in red).</p>
+                    <ul className="mt-1 space-y-0.5 font-mono">
+                      {unresolved.map((el, i) => (
+                        <li key={i} className="truncate">{el.elementPath ?? el.definition?.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })()}
             <ElementDefinitionEditor
               elements={formData.elements}
               onChange={(elements) => update({ elements })}
               availableSpis={availableSpis}
               spisLoading={spisLoading}
+              hintsByPath={hintsByPath}
             />
             <div className="border-t pt-4">
               <PackageDefinitionEditor
                 packages={formData.packages}
                 onChange={(packages) => update({ packages })}
+                hintsByPath={hintsByPath}
               />
             </div>
             <div className="border-t pt-4 space-y-3">

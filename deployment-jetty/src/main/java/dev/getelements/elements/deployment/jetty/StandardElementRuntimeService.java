@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -607,6 +608,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .attributesLoader(context::loadAttributesForPath)
                         .sdkExceptionHandler(context::error)
                         .elementLoadedHandler(context::recordElement)
+                        .failedElementHandler(context::recordFailedElement)
                         .build();
 
                 allElements = pathLoader.load(config).toList();
@@ -700,6 +702,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     .toAbsolutePath();
 
             context.elementPaths().add(fileSystemRoot);
+            context.elementPathSources().put(fileSystemRoot, definition.elmArtifact());
 
             applyPathMappings(definition.pathSpiBuiltins(), definition.pathSpiClassPaths(), definition.pathAttributes(), fileSystem, context);
 
@@ -727,8 +730,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             context.log("Staging from Maven artifacts");
 
             // Generate unique subdirectory name
-            final var elementPath = context
-                    .createDeploymentDirectory()
+            final var deploymentDir = context.createDeploymentDirectory();
+            context.elementPathSources().put(deploymentDir, null);
+            final var elementPath = deploymentDir
                     .resolve(definition.path() == null || definition.path().isBlank()
                             ? ELEMENT_DEFAULT_PATH
                             : definition.path()
@@ -858,6 +862,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     .toAbsolutePath();
 
             context.elementPaths().add(fileSystemRoot);
+            context.elementPathSources().put(fileSystemRoot, null);
             context.log("Successfully staged ELM from LargeObject.");
 
             applyPathMappings(deployment.pathSpiBuiltins(), deployment.pathSpiClassPaths(), deployment.pathAttributes(), fileSystem, context);
@@ -1139,10 +1144,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             boolean isTransient,
             MutableElementRegistry registry,
             List<Element> elements,
+            List<FailedElementEntry> failedElements,
             List<Path> elementPaths,
             List<Path> deploymentFiles,
             Map<Path, ElementManifestRecord> manifests,
             Map<Element, ElementPathRecord> elementPathsByElement,
+            Map<Path, String> elementPathSources,
             List<FileSystem> filesystems,
             List<String> logs,
             List<String> warnings,
@@ -1151,9 +1158,14 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         public ActiveDeployment {
             elements = List.copyOf(elements);
+            failedElements = failedElements == null ? List.of() : java.util.List.copyOf(failedElements);
             deploymentFiles = List.copyOf(deploymentFiles);
             manifests = Map.copyOf(manifests);
             elementPathsByElement = Map.copyOf(elementPathsByElement);
+            // elementPathSources has null values (null = main ELM); Map.copyOf forbids nulls so use unmodifiableMap
+            elementPathSources = elementPathSources == null
+                    ? Collections.emptyMap()
+                    : Collections.unmodifiableMap(new HashMap<>(elementPathSources));
             filesystems = List.copyOf(filesystems);
             logs = List.copyOf(logs);
             warnings = List.copyOf(warnings);
@@ -1167,12 +1179,36 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
          * @return a RuntimeRecord representing this deployment's current state
          */
         public RuntimeRecord toRuntimeRecord() {
+            final var failedElementInfos = failedElements.stream()
+                    .map(e -> new ElementRuntimeService.FailedElementInfo(
+                            e.record(),
+                            e.elementPath().toString().replaceFirst("^/+", ""),
+                            e.sourceElmArtifact()))
+                    .toList();
+            final var loadedElementInfos = elements.stream()
+                    .map(e -> {
+                        final var pathRecord = elementPathsByElement.get(e);
+                        final String pathStr = pathRecord != null
+                                ? pathRecord.path().toString().replaceFirst("^/+", "")
+                                : null;
+                        final String sourceArtifact = pathRecord != null
+                                ? elementPathSources.entrySet().stream()
+                                        .filter(entry -> pathRecord.path().getFileSystem() == entry.getKey().getFileSystem())
+                                        .map(Map.Entry::getValue)
+                                        .filter(Objects::nonNull)
+                                        .findFirst().orElse(null)
+                                : null;
+                        return new ElementRuntimeService.FailedElementInfo(e.getElementRecord(), pathStr, sourceArtifact);
+                    })
+                    .toList();
             return new RuntimeRecord(
                     deployment,
                     status,
                     isTransient,
                     registry,
                     elements,
+                    failedElementInfos,
+                    loadedElementInfos,
                     elementPaths,
                     deploymentFiles,
                     manifests,
@@ -1212,10 +1248,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     deploymentContext.registry(),
                     elements != null ? elements : List.of(),
+                    deploymentContext.failedElements(),
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
                     deploymentContext.manifests(),
                     deploymentContext.elementPathsByElement(),
+                    deploymentContext.elementPathSources(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.warnings(),
@@ -1239,10 +1277,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     isTransient,
                     deploymentContext.registry(),
                     elements,
+                    deploymentContext.failedElements(),
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
                     deploymentContext.manifests(),
                     deploymentContext.elementPathsByElement(),
+                    deploymentContext.elementPathSources(),
                     deploymentContext.fileSystems(),
                     deploymentContext.logs(),
                     deploymentContext.warnings(),
