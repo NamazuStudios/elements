@@ -158,14 +158,31 @@ public interface Constants {
         String PHONE_NB = "([\\.\\+\\-\\s\\/()]*[0-9][\\.\\+\\-\\s\\/()]*){8,15}";
 
         /**
-         * Checks for valid first name. Rules: only alphanumeric, length 2-20
+         * Checks for valid first name.
+         *
+         * <p>Rules:
+         * <ul>
+         *   <li>Must start with a Unicode letter ({@code \p{L}}) — blocks leading punctuation and
+         *       NoSQL-operator prefixes such as {@code $}</li>
+         *   <li>Subsequent characters may be Unicode letters, combining marks ({@code \p{M}}, needed
+         *       for pre-composed accents stored as base + combining code-point), Unicode digits,
+         *       plain space, apostrophe, hyphen, or period</li>
+         *   <li>Length: 1–50 characters</li>
+         * </ul>
+         * This covers international names including accented Latin (é, ñ, ç), CJK single-character
+         * given names, hyphenated names (Mary-Jane), names with apostrophes (O'Brien), and names
+         * with dots (St. Pierre).
          */
-        String FIRST_NAME = "^[A-Za-z0-9 ]{2,20}";
+        String FIRST_NAME = "^\\p{L}[\\p{L}\\p{M}\\p{N} '\\-.]{0,49}$";
 
         /**
-         * Checks for valid last name. Rules: only alphanumeric, length 3-30, white spaces available
+         * Checks for valid last name.
+         *
+         * <p>Rules: same character set as {@link #FIRST_NAME}; length 1–50 characters.
+         * The previous 3-character minimum was too restrictive for many Asian and other
+         * non-English surnames (e.g. Li, Wu).
          */
-        String LAST_NAME = "^[A-Za-z0-9 ]{3,30}";
+        String LAST_NAME = "^\\p{L}[\\p{L}\\p{M}\\p{N} '\\-.]{0,49}$";
 
         /**
          * Indicates valid Hex regex.

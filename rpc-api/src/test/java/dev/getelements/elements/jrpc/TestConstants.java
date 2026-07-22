@@ -54,34 +54,64 @@ public class TestConstants {
 
     @Test
     public void testFirstNameRegex() {
-        final List<String> validNames = asList("John", "Wieslaw", "Jo", "Sir John", "John2");
+        final List<String> validNames = asList(
+            // ASCII basics (existing)
+            "John", "Wieslaw", "Jo", "Sir John", "John2",
+            // Single character — allowed for short Asian given names
+            "F", "李",
+            // Hyphens, apostrophes, dots
+            "Mary-Jane", "O'Brien", "St. Pierre",
+            // Accented / non-ASCII Latin
+            "André", "François", "José", "Ñoño",
+            // CJK
+            "山田"
+        );
 
-        final List<String> invalidNames = asList("F", "T#$TEW#@$", "JohnJohnJohnJohnJohnJohnJohnJohnJohn");
+        final List<String> invalidNames = asList(
+            // Starts with punctuation / operator char
+            "!John", "$admin", " John",
+            // Contains disallowed chars
+            "T#$TEW#@$",
+            // Exceeds 50-character maximum
+            "JohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJ"
+        );
 
-        validNames.forEach(validName -> {
-            assertTrue(validName.matches(Constants.Regexp.FIRST_NAME));
-        });
+        validNames.forEach(validName ->
+            assertTrue(validName.matches(Constants.Regexp.FIRST_NAME), "Should be valid: " + validName));
 
-
-        invalidNames.forEach(invalidName -> {
-            assertFalse(invalidName.matches(Constants.Regexp.FIRST_NAME));
-        });
+        invalidNames.forEach(invalidName ->
+            assertFalse(invalidName.matches(Constants.Regexp.FIRST_NAME), "Should be invalid: " + invalidName));
     }
 
     @Test
     public void testLastNameRegex() {
-        final List<String> validNames = asList("Dear", "Ping Pong", "Dwarfs12", "VerylongLastnameeeeeeee");
+        final List<String> validNames = asList(
+            // ASCII basics (existing)
+            "Dear", "Ping Pong", "Dwarfs12", "VerylongLastnameeeeeeee",
+            // Single and two-character surnames — allowed for Asian names (Li, Wu, etc.)
+            "F", "Li", "Wu",
+            // Hyphens, apostrophes, dots
+            "Smith-Jones", "O'Neill", "St. Pierre",
+            // Accented / non-ASCII Latin
+            "García", "Müller", "Ångström",
+            // CJK
+            "李"
+        );
 
-        final List<String> invalidNames = asList("F", "T#$TEW#@$", "DearDearDearDearDearDearDearDearDearDearDear");
+        final List<String> invalidNames = asList(
+            // Starts with punctuation / operator char
+            "!Garcia", "$where", " Smith",
+            // Contains disallowed chars
+            "T#$TEW#@$",
+            // Exceeds 50-character maximum
+            "DearDearDearDearDearDearDearDearDearDearDearDearDearDe"
+        );
 
-        validNames.forEach(validName -> {
-            assertTrue(validName.matches(Constants.Regexp.LAST_NAME));
-        });
+        validNames.forEach(validName ->
+            assertTrue(validName.matches(Constants.Regexp.LAST_NAME), "Should be valid: " + validName));
 
-
-        invalidNames.forEach(invalidName -> {
-            assertFalse(invalidName.matches(Constants.Regexp.LAST_NAME));
-        });
+        invalidNames.forEach(invalidName ->
+            assertFalse(invalidName.matches(Constants.Regexp.LAST_NAME), "Should be invalid: " + invalidName));
     }
 
     public void check(final int value) {
