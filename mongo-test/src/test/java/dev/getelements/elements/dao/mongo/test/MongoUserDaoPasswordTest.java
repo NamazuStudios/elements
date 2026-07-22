@@ -1,7 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.sdk.dao.UserDao;
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
@@ -77,16 +76,13 @@ public class MongoUserDaoPasswordTest {
     }
 
     /**
-     * Login by raw database ID must be rejected. ObjectIds are not secret (they are
-     * timestamp-derived) and must never serve as authentication credentials.
+     * Login by raw database ID is supported as a convenience fallback but name/email always takes
+     * priority, so a user whose name happens to be a 24-hex string is resolved by name first.
      */
-    @Test(
-        dependsOnMethods = "testCreateUser",
-        dataProvider = "getUsersForIdLoginTest",
-        expectedExceptions = ForbiddenException.class
-    )
-    public void testLoginByIdFails(final User user, final String password) {
-        getUserDao().validateUserPassword(user.getId(), password);
+    @Test(dependsOnMethods = "testCreateUser", dataProvider = "getUsersForIdLoginTest")
+    public void testLoginById(final User user, final String password) {
+        final var found = getUserDao().validateUserPassword(user.getId(), password);
+        assertEquals(found.getId(), user.getId());
     }
 
     @DataProvider

@@ -134,6 +134,8 @@ public interface Constants {
          *
          * <p>Rules:
          * <ul>
+         *   <li>Must not be a valid MongoDB ObjectId (exactly 24 hex digits) — prevents usernames
+         *       that collide with database ID lookups at the source</li>
          *   <li>No whitespace characters</li>
          *   <li>No ASCII/Unicode control characters ({@code \p{Cc}}) — blocks null bytes, etc.</li>
          *   <li>No Unicode format characters ({@code \p{Cf}}) — blocks RTL/LTR direction overrides
@@ -143,7 +145,7 @@ public interface Constants {
          * Allows any printable Unicode character otherwise, including CJK and accented Latin,
          * making this safe for international users.
          */
-        String USERNAME = "^[^\\s\\p{Cc}\\p{Cf}]{1,50}$";
+        String USERNAME = "^(?![0-9a-fA-F]{24}$)[^\\s\\p{Cc}\\p{Cf}]{1,50}$";
 
         /**
          * Alphanumeric only. Allows underscore and dash.
