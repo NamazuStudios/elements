@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.sdk.dao.UserDao;
+import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
@@ -46,7 +47,6 @@ public class MongoUserDaoPasswordTest {
         final var created = getUserDao().createUserWithPassword(user, password);
 
         intermediateUsers.put(created.getId(), created);
-        assertNull(intermediateLoginCredentials.put(created.getId(), password));
         assertNull(intermediateLoginCredentials.put(created.getName(), password));
         assertNull(intermediateLoginCredentials.put(created.getEmail(), password));
 
@@ -68,11 +68,33 @@ public class MongoUserDaoPasswordTest {
     }
 
     @DataProvider
+    public Object[][] getUsersForIdLoginTest() {
+        return intermediateUsers
+                .values()
+                .stream()
+                .map(user -> new Object[]{user, intermediateLoginCredentials.get(user.getName())})
+                .toArray(Object[][]::new);
+    }
+
+    /**
+     * Login by raw database ID must be rejected. ObjectIds are not secret (they are
+     * timestamp-derived) and must never serve as authentication credentials.
+     */
+    @Test(
+        dependsOnMethods = "testCreateUser",
+        dataProvider = "getUsersForIdLoginTest",
+        expectedExceptions = ForbiddenException.class
+    )
+    public void testLoginByIdFails(final User user, final String password) {
+        getUserDao().validateUserPassword(user.getId(), password);
+    }
+
+    @DataProvider
     public Object[][] getUserAndPassword() {
         return intermediateUsers
                 .values()
                 .stream()
-                .map(user -> new Object[]{user, intermediateLoginCredentials.get(user.getId())})
+                .map(user -> new Object[]{user, intermediateLoginCredentials.get(user.getName())})
                 .toArray(Object[][]::new);
     }
 
@@ -85,12 +107,10 @@ public class MongoUserDaoPasswordTest {
         assertEquals(user.getId(), updatedUser.getId());
 
         intermediateUsers.put(updatedUser.getId(), updatedUser);
-        assertNotNull(intermediateLoginCredentials.put(updatedUser.getId(), newPassword));
         assertNotNull(intermediateLoginCredentials.put(updatedUser.getName(), newPassword));
         assertNotNull(intermediateLoginCredentials.put(updatedUser.getEmail(), newPassword));
 
         Stream.of(
-            getUserDao().validateUserPassword(user.getId(), newPassword),
             getUserDao().validateUserPassword(user.getName(), newPassword),
             getUserDao().validateUserPassword(user.getEmail(), newPassword)
         ).forEach(u -> assertEquals(user.getId(), u.getId()));
