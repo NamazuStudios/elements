@@ -25,6 +25,12 @@ import static dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord.
  * @param attributes the attributes of the {@link dev.getelements.elements.sdk.Element}
  * @param defaultAttributes the default attributes of the {@link dev.getelements.elements.sdk.Element}
  * @param requiredAttributes the required attributes of the {@link dev.getelements.elements.sdk.Element}
+ * @param elementPath the on-disk directory path of the element within its deployment (only set for failed elements;
+ *                    null for successfully loaded elements). This is the exact key to use in {@code pathAttributes}
+ *                    to configure attributes for this element.
+ * @param sourceElmArtifact the Maven coordinates of the package ELM that contributed this element, or {@code null}
+ *                          if the element came from the deployment's own ELM file or an element definition.
+ *                          Only set for failed elements.
  */
 public record ElementMetadata(
         ElementType type,
@@ -35,7 +41,9 @@ public record ElementMetadata(
         List<ElementDependencyMetadata> dependencies,
         Map<String, Object> attributes,
         List<ElementDefaultAttributeRecord> defaultAttributes,
-        List<ElementRequiredAttributeRecord> requiredAttributes) {
+        List<ElementRequiredAttributeRecord> requiredAttributes,
+        String elementPath,
+        String sourceElmArtifact) {
 
     /**
      * Convenience method to construct an ElementMetadata from an {@link Element}.
@@ -48,12 +56,25 @@ public record ElementMetadata(
     }
 
     /**
-     * Convenience method to construct and ElementMetadata from an {@link ElementRecord}.
+     * Convenience method to construct an ElementMetadata from an {@link ElementRecord}.
      *
      * @param element the {@link ElementRecord}
      * @return the newly created {@link ElementMetadata}
      */
     public static ElementMetadata from(final ElementRecord element) {
+        return from(element, null, null);
+    }
+
+    /**
+     * Constructs an ElementMetadata from an {@link ElementRecord} with the on-disk element path and source package.
+     * Use this overload for failed elements where the path and source are known.
+     *
+     * @param element the {@link ElementRecord}
+     * @param elementPath the directory path of the element within the deployment (leading slashes stripped)
+     * @param sourceElmArtifact the Maven coordinates of the source package, or {@code null} for ELM/element-definition elements
+     * @return the newly created {@link ElementMetadata}
+     */
+    public static ElementMetadata from(final ElementRecord element, final String elementPath, final String sourceElmArtifact) {
 
         final var attributesMap = new LinkedHashMap<>(element.attributes().asMap());
 
@@ -92,7 +113,9 @@ public record ElementMetadata(
                         .stream()
                         .map(ElementDefaultAttributeRecord::redacted)
                         .toList(),
-                element.requiredAttributes()
+                element.requiredAttributes(),
+                elementPath,
+                sourceElmArtifact
         );
 
     }
