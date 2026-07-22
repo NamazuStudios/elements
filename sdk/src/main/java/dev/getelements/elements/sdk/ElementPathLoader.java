@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementRecord;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -160,7 +161,8 @@ public interface ElementPathLoader {
             SpiLoader spiLoader,
             AttributesLoader attributesProvider,
             Consumer<SdkException> sdkExceptionHandler,
-            BiConsumer<Path, Element> elementLoadedHandler) {
+            BiConsumer<Path, Element> elementLoadedHandler,
+            FailedElementHandler failedElementHandler) {
 
         /**
          * Creates a new builder for LoadConfiguration.
@@ -193,6 +195,8 @@ public interface ElementPathLoader {
             private Consumer<SdkException> loadErrorHandler = ex -> { throw ex; };
 
             private BiConsumer<Path, Element> elementLoadedHandler = (p, e) -> {};
+
+            private FailedElementHandler failedElementHandler = (r, p, t) -> {};
 
             private Builder() {}
 
@@ -328,6 +332,21 @@ public interface ElementPathLoader {
             }
 
             /**
+             * Handles a failed element load. Called with the element's {@link ElementRecord} (which carries
+             * declared required and default attributes), the element's {@link Path} on disk, and the cause of
+             * the failure, so callers can surface diagnostic information even for elements that never initialised.
+             *
+             * @param failedElementHandler the handler (null resets to no-op)
+             * @return this
+             */
+            public Builder failedElementHandler(final FailedElementHandler failedElementHandler) {
+                this.failedElementHandler = failedElementHandler == null
+                        ? (r, p, t) -> {}
+                        : failedElementHandler;
+                return this;
+            }
+
+            /**
              * Builds the LoadConfiguration with defaults applied for unspecified optional parameters.
              *
              * @return the configured LoadConfiguration
@@ -351,7 +370,8 @@ public interface ElementPathLoader {
                         spiLoader,
                         attributesLoader,
                         loadErrorHandler,
-                        elementLoadedHandler
+                        elementLoadedHandler,
+                        failedElementHandler
                 );
 
             }
@@ -596,6 +616,15 @@ public interface ElementPathLoader {
      * @since 3.7
      */
     Stream<ElementPathRecord> readElementPaths(Path path);
+
+    /**
+     * Handles a failed element load. Called with the element's {@link ElementRecord}, the on-disk {@link Path}
+     * of the element directory, and the {@link Throwable} cause of the failure.
+     */
+    @FunctionalInterface
+    interface FailedElementHandler {
+        void accept(ElementRecord record, Path elementPath, Throwable cause);
+    }
 
     /**
      * Loads a ClassLoader given the parent ClassLoader and the path of the Element itself. This is useful for when you

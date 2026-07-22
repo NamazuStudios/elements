@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementDependencyRecord;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementStaticContentRecord;
 import dev.getelements.elements.sdk.util.PropertiesAttributes;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
@@ -287,7 +288,7 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
                     if (record.isValidElement()) {
                         try {
-                            final var element = record.loadElement();
+                            final var element = record.loadElement(config.failedElementHandler());
                             elements.add(element);
                             config.elementLoadedHandler().accept(subdir, element);
                         } catch (final Throwable t) {
@@ -954,10 +955,16 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         }
 
-        public Element loadElement() {
+        public Element loadElement(final ElementPathLoader.FailedElementHandler failedElementHandler) {
             logger.debug("Loading element from: {}", elementPath());
             final var elementLoader = getLoader();
-            return registry().register(elementLoader);
+            final var elementRecord = elementLoader.getElementRecord();
+            try {
+                return registry().register(elementLoader);
+            } catch (final Throwable t) {
+                failedElementHandler.accept(elementRecord, elementPath(), t);
+                throw t;
+            }
         }
 
         private ElementLoader getLoader() {
