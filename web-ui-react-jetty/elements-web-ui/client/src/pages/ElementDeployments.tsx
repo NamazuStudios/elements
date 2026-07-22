@@ -676,12 +676,20 @@ export default function ElementDeployments() {
                           const runtime = listRuntimeStatuses?.find(r => r.deployment?.id === deployment.id);
                           if (!runtime) return null;
 
-                          // Failed elements: couldn't load at all — required attrs listed but not resolved
+                          // Merge all operator-configured attrs: deployment-level + all package-level
+                          const allConfigured = [
+                            ...Object.values(deployment.pathAttributes || {}),
+                            ...(deployment.packages || []).flatMap(pkg => Object.values(pkg.pathAttributes || {})),
+                          ].reduce<Record<string, any>>((acc, attrs) => Object.assign(acc, attrs), {});
+
+                          // Failed elements: check against operator config, not stale runtime attrs
                           const failedLines: string[] = [];
                           for (const el of (runtime.failedElements ?? [])) {
                             const elName = el.definition?.name ?? 'unknown';
                             const missing = (el.requiredAttributes ?? [])
-                              .filter((req: { name: string }) => !(req.name in (el.attributes ?? {})))
+                              .filter((req: { name: string }) =>
+                                !(req.name in (el.attributes ?? {})) && !(req.name in allConfigured)
+                              )
                               .map((req: { name: string }) => req.name);
                             if (missing.length > 0) {
                               failedLines.push(`${elName}:\n  missing: ${missing.join(', ')}`);
@@ -689,10 +697,6 @@ export default function ElementDeployments() {
                               failedLines.push(`${elName}: failed to load`);
                             }
                           }
-
-                          // Loaded elements: check whether operator-configured path attrs satisfy required attrs
-                          const allConfigured = Object.values(deployment.pathAttributes || {})
-                            .reduce<Record<string, any>>((acc, attrs) => Object.assign(acc, attrs), {});
                           const loadedMissing = (runtime.elements ?? []).some(el =>
                             (el.requiredAttributes ?? []).some((req: { name: string }) => {
                               const v = allConfigured[req.name];
