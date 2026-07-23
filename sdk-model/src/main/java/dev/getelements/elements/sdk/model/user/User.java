@@ -30,7 +30,7 @@ public class User implements Serializable {
     @Schema(description = "The user's database assigned unique ID.")
     private String id;
 
-    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @Pattern(regexp = Constants.Regexp.USERNAME)
     @Schema(description = "A unique name for the user.")
     private String name;
 

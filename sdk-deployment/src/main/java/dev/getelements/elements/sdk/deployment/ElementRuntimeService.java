@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.model.system.ElementSpi;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementRecord;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -125,6 +126,19 @@ public interface ElementRuntimeService {
     RuntimeRecord loadTransientDeployment(TransientDeploymentRequest request);
 
     /**
+     * Bundles an {@link ElementRecord} with the on-disk element path for elements that failed to load.
+     * The {@code elementPath} is the directory name (relative to the deployment root, leading slashes stripped)
+     * and is the exact key used in {@code pathAttributes} to configure attributes for this element.
+     * {@code sourceElmArtifact} is the Maven coordinates of the package ELM that contributed this element,
+     * or {@code null} if the element came from the deployment's own ELM file or an element definition.
+     *
+     * @param record the element record scanned before the failure (carries requiredAttributes)
+     * @param elementPath the directory path of the element within the deployment (e.g. {@code "dev.getelements.elements.stripe"})
+     * @param sourceElmArtifact the Maven coordinates of the source package, or {@code null} for ELM/element-definition elements
+     */
+    record FailedElementInfo(ElementRecord record, String elementPath, String sourceElmArtifact) {}
+
+    /**
      * Represents an active element runtime.
      *
      * @param deployment the underlying {@link ElementDeployment}
@@ -132,6 +146,7 @@ public interface ElementRuntimeService {
      * @param isTransient true if this is a transient (non-persistent) deployment
      * @param registry the {@link ElementRegistry} used to manage the Elements
      * @param elements the {@link Element}s loaded in this deployment
+     * @param failedElements element info for elements that failed to load, including the on-disk path
      * @param elementPaths the paths of staged element directories
      * @param deploymentFiles temporary files created during deployment loading
      * @param elementManifests manifests parsed from each element's manifest properties file, keyed by element path
@@ -144,6 +159,8 @@ public interface ElementRuntimeService {
             boolean isTransient,
             ElementRegistry registry,
             List<Element> elements,
+            List<FailedElementInfo> failedElements,
+            List<FailedElementInfo> loadedElements,
             List<Path> elementPaths,
             List<Path> deploymentFiles,
             Map<Path, ElementManifestRecord> elementManifests,
@@ -156,6 +173,8 @@ public interface ElementRuntimeService {
             logs = logs == null ? null : java.util.List.copyOf(logs);
             errors = errors == null ? null : java.util.List.copyOf(errors);
             elements = elements == null ? null : java.util.List.copyOf(elements);
+            failedElements = failedElements == null ? List.of() : java.util.List.copyOf(failedElements);
+            loadedElements = loadedElements == null ? List.of() : java.util.List.copyOf(loadedElements);
             deploymentFiles = deploymentFiles == null ? null : java.util.List.copyOf(deploymentFiles);
             elementManifests = elementManifests == null ? Map.of() : Map.copyOf(elementManifests);
         }

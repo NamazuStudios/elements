@@ -123,7 +123,7 @@ public class MongoUserDao implements UserDao {
 
         final var mongoUserId = getMongoDBUtils().parseOrReturnNull(userId);
 
-        if(mongoUserId == null) {
+        if (mongoUserId == null) {
             return findUserByNameOrEmail(userId);
         }
 

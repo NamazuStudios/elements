@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.model.system.ElementRuntimeStatus;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 public interface ElementRuntimeStatusMapper extends MapperRegistry.Mapper<RuntimeRecord, ElementRuntimeStatus> {
 
     @Override
+    @Mapping(target = "elements", source = "loadedElements")
     ElementRuntimeStatus forward(RuntimeRecord source);
 
     /**

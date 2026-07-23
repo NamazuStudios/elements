@@ -50,6 +50,10 @@ public record ElementRuntimeStatus(
         @Schema(description = "A list of Elements included in the runtime.")
         List<ElementMetadata> elements,
 
+        @Schema(description = "A list of Elements that failed to load, preserving their declared required and default " +
+                "attributes so that missing configuration can be identified even when an element cannot initialise.")
+        List<ElementMetadata> failedElements,
+
         @Schema(description = "A mapping of paths to manifests of loaded elements.")
         Map<String, ElementManifestRecord> elementManifests
 
