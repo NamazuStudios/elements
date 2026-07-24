@@ -23,7 +23,7 @@ public class PropertyConverters {
     }
 
     public ObjectId toObjectId(final String objectIdString) {
-        return objectIdString == null ? null : new ObjectId(objectIdString);
+        return objectIdString != null && ObjectId.isValid(objectIdString) ? new ObjectId(objectIdString) : null;
     }
 
     public String toHexString(final byte[] bytes) {
