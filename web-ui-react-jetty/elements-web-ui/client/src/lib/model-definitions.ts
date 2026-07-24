@@ -417,7 +417,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     fields: [
       { name: 'id', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
-      { name: 'metadataSpec', type: 'string', required: true, isArray: false, isMap: false },
+      { name: 'metadataSpec', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: true, isArray: false, isMap: false },
       { name: 'accessLevel', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The minimum level of access required to view this metadata' },
     ],
@@ -426,7 +426,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     name: 'MetadataCreateRequest',
     fields: [
       { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
-      { name: 'metadataSpec', type: 'string', required: true, isArray: false, isMap: false },
+      { name: 'metadataSpec', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: true, isArray: false, isMap: false },
       { name: 'accessLevel', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The minimum level of access required to view this metadata' },
     ],
