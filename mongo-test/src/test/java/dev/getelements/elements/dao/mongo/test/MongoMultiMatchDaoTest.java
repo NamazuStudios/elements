@@ -254,7 +254,7 @@ public class MongoMultiMatchDaoTest {
      * would be only ~1 second in the future instead of ~1000 seconds.  The assertion window of ±5 s leaves
      * plenty of room for test-harness latency while still catching any unit-conversion mistake.
      */
-    @Test(groups = "expiryCalculation")
+    @Test(groups = "expiryCalculation", dependsOnGroups = "postDeleteMultiMatches")
     public void testCreateMultiMatchExpiryIsConvertedToMillis() {
 
         final int timeoutSeconds = 1000;
