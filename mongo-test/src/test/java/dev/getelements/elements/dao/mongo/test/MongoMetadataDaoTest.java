@@ -225,6 +225,81 @@ public class MongoMetadataDaoTest {
         getMetadataDao().getMetadata(objectId.toString(), User.Level.SUPERUSER);
     }
 
+    // ---- Global metadata (no MetadataSpec) tests ---------------------------------
+
+    @Test(groups = "create.nospec")
+    public void testCreateMetadataWithoutSpec() {
+        final var metadata = new Metadata();
+        metadata.setName("test_metadata_nospec-" + UUID.randomUUID());
+        metadata.setAccessLevel(User.Level.USER);
+        metadata.setMetadata(Map.of("key", "value"));
+
+        final var created = getMetadataDao().createMetadata(metadata);
+        noSpecMetadata = created;
+
+        assertNotNull(created.getId());
+        assertNull(created.getMetadataSpec());
+        assertEquals(created.getAccessLevel(), User.Level.USER);
+    }
+
+    @Test(groups = "update.nospec", dependsOnGroups = "create.nospec")
+    public void testChangeAccessLevelWithoutSpec() {
+        final var update = new Metadata();
+        update.setId(noSpecMetadata.getId());
+        update.setName(noSpecMetadata.getName());
+        update.setMetadata(noSpecMetadata.getMetadata());
+        update.setMetadataSpec(null);
+        update.setAccessLevel(User.Level.SUPERUSER);
+
+        final var updated = getMetadataDao().updateMetadata(update);
+
+        assertEquals(updated.getAccessLevel(), User.Level.SUPERUSER);
+        assertNull(updated.getMetadataSpec());
+    }
+
+    @Test(groups = "delete.nospec", dependsOnGroups = "update.nospec")
+    public void testDeleteMetadataWithoutSpec() {
+        getMetadataDao().softDeleteMetadata(noSpecMetadata.getId());
+    }
+
+    // ---- Access-level change on metadata with a spec ----------------------------
+
+    @Test(groups = "create.withspec.accesslevel")
+    public void testCreateMetadataForAccessLevelChange() {
+        final var metadata = new Metadata();
+        metadata.setMetadataSpec(testMetadataSpec);
+        metadata.setName("test_metadata_accesslevel-" + UUID.randomUUID());
+        metadata.setAccessLevel(User.Level.USER);
+        metadata.setMetadata(Map.of("key", "value"));
+
+        withSpecAccessLevelMetadata = getMetadataDao().createMetadata(metadata);
+        assertNotNull(withSpecAccessLevelMetadata.getId());
+    }
+
+    @Test(groups = "update.withspec.accesslevel", dependsOnGroups = "create.withspec.accesslevel")
+    public void testChangeAccessLevelWithSpec() {
+        final var update = new Metadata();
+        update.setId(withSpecAccessLevelMetadata.getId());
+        update.setName(withSpecAccessLevelMetadata.getName());
+        update.setMetadata(withSpecAccessLevelMetadata.getMetadata());
+        update.setMetadataSpec(withSpecAccessLevelMetadata.getMetadataSpec());
+        update.setAccessLevel(User.Level.SUPERUSER);
+
+        final var updated = getMetadataDao().updateMetadata(update);
+
+        assertEquals(updated.getAccessLevel(), User.Level.SUPERUSER);
+        assertNotNull(updated.getMetadataSpec());
+        assertEquals(updated.getMetadataSpec().getId(), withSpecAccessLevelMetadata.getMetadataSpec().getId());
+    }
+
+    @Test(groups = "delete.withspec.accesslevel", dependsOnGroups = "update.withspec.accesslevel")
+    public void testDeleteMetadataForAccessLevelChange() {
+        getMetadataDao().softDeleteMetadata(withSpecAccessLevelMetadata.getId());
+    }
+
+    private Metadata noSpecMetadata;
+    private Metadata withSpecAccessLevelMetadata;
+
     public MetadataDao getMetadataDao() {
         return metadataDao;
     }

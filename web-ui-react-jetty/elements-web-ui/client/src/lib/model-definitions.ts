@@ -19,7 +19,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'email', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'primaryPhoneNb', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'password', type: 'string', required: true, isArray: false, isMap: false },
-      { name: 'level', type: 'enum', required: false, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false },
+      { name: 'level', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false },
       { name: 'profiles', type: 'string', required: false, isArray: true, isMap: false },
     ],
   },
@@ -33,7 +33,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'primaryPhoneNb', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'password', type: 'string', required: true, isArray: false, isMap: false },
       { name: 'confirmPassword', type: 'string', required: true, isArray: false, isMap: false, uiOnly: true },
-      { name: 'level', type: 'enum', required: false, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false },
+      { name: 'level', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false },
     ],
   },
   'user/UserUpdateRequest': {
@@ -417,7 +417,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     fields: [
       { name: 'id', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
-      { name: 'metadataSpec', type: 'string', required: true, isArray: false, isMap: false },
+      { name: 'metadataSpec', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: true, isArray: false, isMap: false },
       { name: 'accessLevel', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The minimum level of access required to view this metadata' },
     ],
@@ -426,7 +426,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
     name: 'MetadataCreateRequest',
     fields: [
       { name: 'name', type: 'string', required: true, isArray: false, isMap: false },
-      { name: 'metadataSpec', type: 'string', required: true, isArray: false, isMap: false },
+      { name: 'metadataSpec', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'metadata', type: 'object', required: true, isArray: false, isMap: false },
       { name: 'accessLevel', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The minimum level of access required to view this metadata' },
     ],

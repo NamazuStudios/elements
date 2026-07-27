@@ -428,6 +428,62 @@ function IOSConfigFields({ value, onChange }: { value: any; onChange: (field: st
   );
 }
 
+function secondsToDhms(totalSeconds: number): { d: number; h: number; m: number; s: number } {
+  const d = Math.floor(totalSeconds / 86400);
+  const h = Math.floor((totalSeconds % 86400) / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return { d, h, m, s };
+}
+
+function dhmsToSeconds(d: number, h: number, m: number, s: number): number {
+  return d * 86400 + h * 3600 + m * 60 + s;
+}
+
+function DurationInput({
+  label,
+  description,
+  defaultSeconds,
+  value,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  defaultSeconds: number;
+  value: number;
+  onChange: (seconds: number) => void;
+  'data-testid'?: string;
+}) {
+  const { d, h, m, s } = secondsToDhms(value ?? defaultSeconds);
+
+  const update = (field: 'd' | 'h' | 'm' | 's', raw: string) => {
+    const parsed = raw === '' ? 0 : Math.max(0, parseInt(raw) || 0);
+    const next = { d, h, m, s, [field]: parsed };
+    onChange(dhmsToSeconds(next.d, next.h, next.m, next.s));
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <div className="grid grid-cols-4 gap-2">
+        {([['d', 'Days'], ['h', 'Hours'], ['m', 'Mins'], ['s', 'Secs']] as const).map(([field, lbl]) => (
+          <div key={field} className="space-y-1">
+            <Label className="text-xs text-muted-foreground">{lbl}</Label>
+            <Input
+              type="number"
+              min={0}
+              value={{ d, h, m, s }[field]}
+              onChange={(e) => update(field, e.target.value)}
+              className="text-center"
+            />
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">{description} ({dhmsToSeconds(d, h, m, s)}s total)</p>
+    </div>
+  );
+}
+
 function MatchmakingConfigFields({ value, onChange }: { value: any; onChange: (field: string, val: any) => void }) {
   const [useDefaultMatchmaker, setUseDefaultMatchmaker] = useState(!value.matchmaker);
   const maxProfilesValue = value.maxProfiles;
@@ -468,43 +524,23 @@ function MatchmakingConfigFields({ value, onChange }: { value: any; onChange: (f
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="lingerSeconds">
-          Linger Seconds
-        </Label>
-        <Input
-          id="lingerSeconds"
-          type="number"
-          min={0}
-          value={value.lingerSeconds ?? 300}
-          onChange={(e) => {
-            const val = e.target.value === '' ? 300 : parseInt(e.target.value);
-            onChange('lingerSeconds', val);
-          }}
-          placeholder="300"
-          data-testid="input-lingerSeconds"
-        />
-        <p className="text-sm text-muted-foreground">Time a match will linger after expiry (default: 300 = 5 minutes)</p>
-      </div>
+      <DurationInput
+        label="Linger Duration"
+        description="How long a match stays visible after expiry (default: 5 minutes)"
+        defaultSeconds={300}
+        value={value.lingerSeconds ?? 300}
+        onChange={(secs) => onChange('lingerSeconds', secs)}
+        data-testid="input-lingerSeconds"
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="timeoutSeconds">
-          Timeout Seconds
-        </Label>
-        <Input
-          id="timeoutSeconds"
-          type="number"
-          min={0}
-          value={value.timeoutSeconds ?? 86400}
-          onChange={(e) => {
-            const val = e.target.value === '' ? 86400 : parseInt(e.target.value);
-            onChange('timeoutSeconds', val);
-          }}
-          placeholder="86400"
-          data-testid="input-timeoutSeconds"
-        />
-        <p className="text-sm text-muted-foreground">Absolute match timeout (default: 86400 = 24 hours)</p>
-      </div>
+      <DurationInput
+        label="Match Timeout"
+        description="Absolute match timeout — match expires after this duration (default: 24 hours)"
+        defaultSeconds={86400}
+        value={value.timeoutSeconds ?? 86400}
+        onChange={(secs) => onChange('timeoutSeconds', secs)}
+        data-testid="input-timeoutSeconds"
+      />
 
       <div className="flex items-center space-x-2">
         <Checkbox
