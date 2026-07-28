@@ -247,6 +247,56 @@ public class MongoMultiMatchDaoTest {
 
     }
 
+    /**
+     * Verifies that match expiry is computed as epoch-millisecond absolute time, not a raw-seconds offset.
+     *
+     * If timeoutSeconds=1000 but the DAO adds it directly in milliseconds (1000ms = 1 second), the expiry
+     * would be only ~1 second in the future instead of ~1000 seconds.  The assertion window of ±5 s leaves
+     * plenty of room for test-harness latency while still catching any unit-conversion mistake.
+     */
+    @Test(groups = "expiryCalculation", dependsOnGroups = "postDeleteMultiMatches")
+    public void testCreateMultiMatchExpiryIsConvertedToMillis() {
+
+        final int timeoutSeconds = 1000;
+
+        final var config = new MatchmakingApplicationConfiguration();
+        config.setName("test_expiry_conversion");
+        config.setParent(application);
+        config.setMaxProfiles(2);
+        config.setTimeoutSeconds(timeoutSeconds);
+
+        final var savedConfig = applicationConfigurationDao.createApplicationConfiguration(
+                application.getId(),
+                config
+        );
+
+        final var match = new MultiMatch();
+        match.setStatus(OPEN);
+        match.setConfiguration(savedConfig);
+
+        final long beforeCreate = System.currentTimeMillis();
+        final var result = multiMatchDao.createMultiMatch(match);
+        final long afterCreate = System.currentTimeMillis();
+
+        assertNotNull(result.getExpiry(), "Match expiry must not be null");
+
+        final long minExpected = beforeCreate + (long) (timeoutSeconds - 5) * 1000L;
+        final long maxExpected = afterCreate  + (long) (timeoutSeconds + 5) * 1000L;
+
+        assertTrue(
+            result.getExpiry() >= minExpected,
+            "Expiry is too soon — likely timeoutSeconds was added directly in milliseconds rather than converted. " +
+            "expiry=" + result.getExpiry() + " minExpected=" + minExpected
+        );
+        assertTrue(
+            result.getExpiry() <= maxExpected,
+            "Expiry is unexpectedly far in the future. expiry=" + result.getExpiry() + " maxExpected=" + maxExpected
+        );
+
+        multiMatchDao.deleteMultiMatch(result.getId());
+
+    }
+
     @Test(groups = "createMultiMatch", threadPoolSize = 10, invocationCount = TEST_MATCH_COUNT)
     public void testCreateMultiMatch() {
 

@@ -115,6 +115,7 @@ interface ApplicationFormProps {
 
 export function ApplicationForm({ initialData = {}, onSubmit, mode }: ApplicationFormProps) {
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [configDialogKey, setConfigDialogKey] = useState(0);
   const [editingConfig, setEditingConfig] = useState<{ index: number | null; type: any; value: any } | null>(null);
   const { toast } = useToast();
 
@@ -326,6 +327,7 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
                   size="sm"
                   onClick={() => {
                     setEditingConfig({ index: null, type: null, value: {} });
+                    setConfigDialogKey(k => k + 1);
                     setConfigDialogOpen(true);
                   }}
                   data-testid="button-add-configuration"
@@ -387,6 +389,7 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
                                         `/api/rest/application/${initialData?.id}/configuration/${typeEndpoint}/${config.id}`
                                       );
                                       setEditingConfig({ index, type: configType, value: fullConfig });
+                                      setConfigDialogKey(k => k + 1);
                                       setConfigDialogOpen(true);
                                     } catch (error) {
                                       console.error('Failed to fetch full config details:', error);
@@ -399,6 +402,7 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
                                   } else {
                                     // In create mode or no ID, use what we have
                                     setEditingConfig({ index, type: configType, value: config });
+                                    setConfigDialogKey(k => k + 1);
                                     setConfigDialogOpen(true);
                                   }
                                 }}
@@ -457,6 +461,7 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
         </Form>
 
         <ApplicationConfigurationDialog
+          key={configDialogKey}
           open={configDialogOpen}
           onOpenChange={(open) => {
             setConfigDialogOpen(open);
