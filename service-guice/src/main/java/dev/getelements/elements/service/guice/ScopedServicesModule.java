@@ -179,6 +179,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OidcAuthServiceProvider.class)
                 .in(scope);
 
+        bind(OidcLoginAttemptService.class)
+                .toProvider(OidcLoginAttemptServiceProvider.class)
+                .in(scope);
+
         bind(OAuth2AuthService.class)
                 .toProvider(OAuth2AuthServiceProvider.class)
                 .in(scope);
@@ -345,6 +349,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(OidcAuthSchemeService.class)
                 .toProvider(OidcAuthSchemeServiceProvider.class)
+                .in(scope);
+
+        bind(OidcProviderConfigurationService.class)
+                .toProvider(OidcProviderConfigurationServiceProvider.class)
                 .in(scope);
 
         bind(OAuth2AuthSchemeService.class)
@@ -847,6 +855,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(OidcAuthSchemeService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserOidcAuthSchemeService.class);
+
+        bind(OidcProviderConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserOidcProviderConfigurationService.class);
 
         bind(ProfileOverrideService.class)
                 .annotatedWith(named(SUPERUSER))

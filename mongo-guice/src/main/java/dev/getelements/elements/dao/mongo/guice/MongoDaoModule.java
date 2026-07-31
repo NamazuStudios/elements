@@ -17,6 +17,8 @@ import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOAuth2AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcAuthSchemeDao;
+import dev.getelements.elements.dao.mongo.auth.MongoOidcProviderConfigurationDao;
+import dev.getelements.elements.dao.mongo.auth.MongoOidcLoginAttemptDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoSmartContractDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
@@ -116,6 +118,8 @@ public class MongoDaoModule extends PrivateModule {
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(OidcAuthSchemeDao.class).to(MongoOidcAuthSchemeDao.class);
+        bind(OidcProviderConfigurationDao.class).to(MongoOidcProviderConfigurationDao.class);
+        bind(OidcLoginAttemptDao.class).to(MongoOidcLoginAttemptDao.class);
         bind(OAuth2AuthSchemeDao.class).to(MongoOAuth2AuthSchemeDao.class);
         bind(DistinctInventoryItemDao.class).to(MongoDistinctInventoryItemDao.class);
         bind(ItemLedgerDao.class).to(MongoItemLedgerDao.class);
@@ -201,6 +205,8 @@ public class MongoDaoModule extends PrivateModule {
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(OidcAuthSchemeDao.class);
+        expose(OidcProviderConfigurationDao.class);
+        expose(OidcLoginAttemptDao.class);
         expose(OAuth2AuthSchemeDao.class);
         expose(DistinctInventoryItemDao.class);
         expose(ItemLedgerDao.class);

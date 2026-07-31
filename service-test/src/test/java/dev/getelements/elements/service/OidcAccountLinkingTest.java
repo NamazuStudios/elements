@@ -49,8 +49,15 @@ public class OidcAccountLinkingTest {
     private static final String ISSUER     = "https://test.issuer.com";
     private static final String KID        = "test-key-1";
 
+    private static final String SCHEME_NAME_2 = "TestIssuer2";
+    private static final String ISSUER_2      = "https://test2.issuer.com";
+    private static final String KID_2         = "test-key-2";
+
     private RSAPublicKey publicKey;
     private Algorithm   algorithm;
+
+    private RSAPublicKey publicKey2;
+    private Algorithm   algorithm2;
 
     @Inject
     private Provider<AnonOidcAuthService> anonServiceProvider;
@@ -71,15 +78,21 @@ public class OidcAccountLinkingTest {
     public void setupKeys() throws Exception {
         final var kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
+
         final var kp  = kpg.generateKeyPair();
         publicKey  = (RSAPublicKey) kp.getPublic();
         algorithm  = Algorithm.RSA256(publicKey, (RSAPrivateKey) kp.getPrivate());
+
+        final var kp2 = kpg.generateKeyPair();
+        publicKey2 = (RSAPublicKey) kp2.getPublic();
+        algorithm2 = Algorithm.RSA256(publicKey2, (RSAPrivateKey) kp2.getPrivate());
     }
 
     @BeforeClass(dependsOnMethods = "setupKeys")
     public void setupInjector() {
         createInjector(new TestModule()).injectMembers(this);
         when(oidcAuthSchemeDao.findAuthScheme(ISSUER)).thenReturn(Optional.of(buildScheme()));
+        when(oidcAuthSchemeDao.findAuthScheme(ISSUER_2)).thenReturn(Optional.of(buildScheme2()));
     }
 
     @BeforeMethod
@@ -196,13 +209,54 @@ public class OidcAccountLinkingTest {
         verify(userUidDao, never()).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
     }
 
+    // ── scenario 6: same sub via two different providers (issuers) ────────────
+    //   the ticket requires account linking to key on (issuer, sub), never sub
+    //   alone — presenting the identical 'sub' value through two distinct
+    //   provider schemes must therefore produce two distinct UserUid links,
+    //   not be treated as the same identity.
+
+    @Test
+    public void testSameSubAcrossTwoProvidersProducesTwoDistinctLinks() {
+
+        final var sharedSub = randomId();
+        final var userIdFromProvider1 = randomId();
+        final var userIdFromProvider2 = randomId();
+
+        when(userUidDao.findUserUid(sharedSub, SCHEME_NAME)).thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(sharedSub, SCHEME_NAME_2)).thenReturn(Optional.empty());
+        when(userDao.createUserStrict(any()))
+                .thenReturn(user(new User(), userIdFromProvider1))
+                .thenReturn(user(new User(), userIdFromProvider2));
+
+        final var firstSession = session(sharedSub, null, ISSUER, algorithm, KID);
+        final var secondSession = session(sharedSub, null, ISSUER_2, algorithm2, KID_2);
+
+        assertNotNull(firstSession);
+        assertNotNull(secondSession);
+        assertNotEquals(
+                firstSession.getSession().getUser().getId(),
+                secondSession.getSession().getUser().getId(),
+                "The same 'sub' from two different issuers must resolve to two distinct users/links");
+
+        verify(userUidDao).createUserUidStrict(argThat(u ->
+                SCHEME_NAME.equals(u.getScheme()) && sharedSub.equals(u.getId()) && userIdFromProvider1.equals(u.getUserId())));
+        verify(userUidDao).createUserUidStrict(argThat(u ->
+                SCHEME_NAME_2.equals(u.getScheme()) && sharedSub.equals(u.getId()) && userIdFromProvider2.equals(u.getUserId())));
+
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private SessionCreation session(final String uid, final String email) {
+        return session(uid, email, ISSUER, algorithm, KID);
+    }
+
+    private SessionCreation session(final String uid, final String email,
+                                     final String issuer, final Algorithm signingAlgorithm, final String kid) {
         var builder = JWT.create()
-                .withIssuer(ISSUER)
+                .withIssuer(issuer)
                 .withSubject(uid)
-                .withKeyId(KID)
+                .withKeyId(kid)
                 .withExpiresAt(new Date(currentTimeMillis() + 60_000));
 
         if (email != null) {
@@ -212,7 +266,7 @@ public class OidcAccountLinkingTest {
         }
 
         final var request = new OidcSessionRequest();
-        request.setJwt(builder.sign(algorithm));
+        request.setJwt(builder.sign(signingAlgorithm));
         return anonServiceProvider.get().createSession(request);
     }
 
@@ -224,6 +278,18 @@ public class OidcAccountLinkingTest {
         final var scheme = new OidcAuthScheme();
         scheme.setName(SCHEME_NAME);
         scheme.setIssuer(ISSUER);
+        scheme.setKeys(List.of(jwk));
+        return scheme;
+    }
+
+    private OidcAuthScheme buildScheme2() {
+        final var n   = Base64.getUrlEncoder().encodeToString(publicKey2.getModulus().toByteArray());
+        final var e   = Base64.getUrlEncoder().encodeToString(publicKey2.getPublicExponent().toByteArray());
+        final var jwk = new JWK("RS256", KID_2, "RSA", "sig", e, n);
+
+        final var scheme = new OidcAuthScheme();
+        scheme.setName(SCHEME_NAME_2);
+        scheme.setIssuer(ISSUER_2);
         scheme.setKeys(List.of(jwk));
         return scheme;
     }

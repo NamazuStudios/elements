@@ -37,6 +37,8 @@ import dev.getelements.elements.service.auth.oauth2.AnonOAuth2AuthService;
 import dev.getelements.elements.service.auth.oauth2.SuperUserOAuth2AuthSchemeService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcAuthSchemeService;
+import dev.getelements.elements.service.auth.oidc.StandardOidcLoginAttemptService;
+import dev.getelements.elements.service.auth.oidc.SuperUserOidcProviderConfigurationService;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.SuperUserFlowSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.near.SuperUserNearSmartContractInvocationService;
@@ -116,6 +118,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(OidcAuthService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(AnonOidcAuthService.class);
+
+        bind(OidcLoginAttemptService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcLoginAttemptService.class);
 
         bind(OAuth2AuthService.class)
                 .annotatedWith(named(UNSCOPED))
@@ -250,6 +256,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(OidcAuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOidcAuthSchemeService.class);
+
+        bind(OidcProviderConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserOidcProviderConfigurationService.class);
 
         bind(OAuth2AuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))

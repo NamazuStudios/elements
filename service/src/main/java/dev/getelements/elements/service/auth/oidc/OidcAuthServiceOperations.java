@@ -89,7 +89,63 @@ public class OidcAuthServiceOperations {
         final var scheme = schemeSearch.get();
 
         // Attempts to validate the identity, and if it is not valid presumes that the request should be forbidden.
-        verify(decodedJWT, scheme);
+        // No expected audience/nonce here: this is the direct-id_token path, which has no attempt-bound nonce,
+        // and today's schemes carry no client id to check the audience against.
+        verify(decodedJWT, scheme, null, null);
+
+        return buildSession(decodedJWT, scheme, userMapper);
+    }
+
+    /**
+     * Decodes and validates a possessed id_token against the given scheme, additionally checking the audience
+     * (if {@code expectedAudience} is non-null) and nonce (if {@code expectedNonce} is non-null) claims. Shared by
+     * the direct id_token path ({@link #createOrUpdateUserWithToken}, which passes both as {@code null}) and the
+     * browser-redirect callback path, which passes the provider's client id and the attempt's bound nonce.
+     *
+     * @param idToken the id_token to decode and validate
+     * @param scheme the scheme to validate against
+     * @param expectedAudience the expected 'aud' claim value, or {@code null} to skip the check
+     * @param expectedNonce the expected 'nonce' claim value, or {@code null} to skip the check
+     * @return the decoded, validated JWT
+     */
+    public DecodedJWT decodeAndVerify(final String idToken,
+                                       final OidcAuthScheme scheme,
+                                       final String expectedAudience,
+                                       final String expectedNonce) {
+
+        final DecodedJWT decodedJWT;
+
+        try {
+            decodedJWT = JWT.decode(idToken);
+        } catch (JWTDecodeException ex) {
+            throw new InvalidDataException(ex.getMessage(), ex);
+        }
+
+        verify(decodedJWT, scheme, expectedAudience, expectedNonce);
+        return decodedJWT;
+
+    }
+
+    /**
+     * Maps and creates/updates the user and session for an already-validated JWT. Callers that have already
+     * validated the token (e.g. via {@link #decodeAndVerify}) use this directly rather than re-validating through
+     * {@link #createOrUpdateUserWithToken}.
+     *
+     * @param decodedJWT the already-validated, decoded JWT
+     * @param scheme the scheme the token was validated against
+     * @param userMapper resolves/creates the {@link User} for the token
+     * @return the created session
+     */
+    public SessionCreation createOrUpdateUserWithVerifiedToken(
+            final DecodedJWT decodedJWT,
+            final OidcAuthScheme scheme,
+            final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
+        return buildSession(decodedJWT, scheme, userMapper);
+    }
+
+    private SessionCreation buildSession(final DecodedJWT decodedJWT,
+                                          final OidcAuthScheme scheme,
+                                          final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
 
         // Maps the user, writing it to the database.
         final User user = userMapper.apply(decodedJWT, scheme);
@@ -118,7 +174,28 @@ public class OidcAuthServiceOperations {
         return getSessionDao().create(session);
     }
 
-    private void verify(final DecodedJWT jwt, final OidcAuthScheme scheme) {
+    private void verify(final DecodedJWT jwt,
+                         final OidcAuthScheme scheme,
+                         final String expectedAudience,
+                         final String expectedNonce) {
+
+        if (scheme.getIssuer() != null && !scheme.getIssuer().equals(jwt.getIssuer())) {
+            throw new ForbiddenException("Issuer mismatch");
+        }
+
+        if (expectedAudience != null) {
+            final var audience = jwt.getAudience();
+            if (audience == null || !audience.contains(expectedAudience)) {
+                throw new ForbiddenException("Audience mismatch");
+            }
+        }
+
+        if (expectedNonce != null) {
+            final var nonce = jwt.getClaim("nonce").asString();
+            if (!expectedNonce.equals(nonce)) {
+                throw new ForbiddenException("Nonce mismatch");
+            }
+        }
 
         final var kid = jwt.getHeaderClaim(OidcClaim.KID.getValue()).asString();
 

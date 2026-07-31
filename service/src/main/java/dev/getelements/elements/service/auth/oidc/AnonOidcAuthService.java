@@ -65,7 +65,7 @@ public class AnonOidcAuthService implements OidcAuthService {
         return Optional.empty();
     }
 
-    private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
+    public User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
         final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
         final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();

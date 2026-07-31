@@ -62,6 +62,24 @@ public interface Constants {
     String MOCK_SESSION_TIMEOUT_SECONDS = "dev.getelements.elements.mock.session.timeout.seconds";
 
     /**
+     * Used to specify how long a pending browser-redirect OIDC login attempt remains valid.
+     */
+    @ElementDefaultAttribute(
+            value = "300",
+            description = "The lifetime of a pending OIDC login attempt, in seconds."
+    )
+    String OIDC_LOGIN_ATTEMPT_TTL_SECONDS = "dev.getelements.elements.oidc.login.attempt.ttl.seconds";
+
+    /**
+     * Used to specify how often a cached OIDC provider discovery document is refreshed.
+     */
+    @ElementDefaultAttribute(
+            value = "3600",
+            description = "How often a cached OIDC provider discovery document is refreshed, in seconds."
+    )
+    String OIDC_DISCOVERY_REFRESH_SECONDS = "dev.getelements.elements.oidc.discovery.refresh.seconds";
+
+    /**
      * Used to specify the host for neo blockchain.
      */
     @ElementDefaultAttribute(
