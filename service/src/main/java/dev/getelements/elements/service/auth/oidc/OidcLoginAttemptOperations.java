@@ -162,16 +162,20 @@ public class OidcLoginAttemptOperations {
                                            final OidcDiscoveryDocument discoveryDocument,
                                            final String code) {
 
+        // client_id is always sent in the body, even under CLIENT_SECRET_BASIC — some providers (e.g. Twitch)
+        // don't read it from the Authorization header and fail with "missing client id" if it's only sent
+        // there. client_secret placement stays conditional on tokenEndpointAuthMethod: it's not safe to assume
+        // every provider tolerates it in both places at once.
         final var form = new Form()
                 .param("grant_type", "authorization_code")
                 .param("code", code)
-                .param("redirect_uri", config.getRedirectUri());
+                .param("redirect_uri", config.getRedirectUri())
+                .param("client_id", config.getClientId());
 
         var target = getClient().target(discoveryDocument.getTokenEndpoint());
         var requestBuilder = target.request(MediaType.APPLICATION_JSON);
 
         if (config.getTokenEndpointAuthMethod() == TokenEndpointAuthMethod.CLIENT_SECRET_POST) {
-            form.param("client_id", config.getClientId());
             form.param("client_secret", config.getClientSecret());
         } else {
             final var credentials = config.getClientId() + ":" + config.getClientSecret();
@@ -184,7 +188,8 @@ public class OidcLoginAttemptOperations {
         try {
 
             if (response.getStatus() != 200) {
-                // Do not log the response body — it may contain tokens.
+                final var errorResponse = response.readEntity(String.class);
+                logger.error("Error from OIDC Provider {} {}.", config.getProvider(), errorResponse);
                 throw new ForbiddenException("Token exchange failed with status " + response.getStatus());
             }
 
