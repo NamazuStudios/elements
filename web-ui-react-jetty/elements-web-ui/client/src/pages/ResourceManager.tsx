@@ -740,6 +740,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           const filteredKeys = keys.filter(k => k === 'id' || k === 'name' || k === 'validationUrl');
           return filteredKeys;
         }
+
+        // Custom column filtering for OIDC Providers resource - clientSecret must never render in the table
+        if (resourceName === 'OIDC Providers') {
+          const filteredKeys = keys.filter(k => k === 'id' || k === 'provider' || k === 'discoveryUrl');
+          return filteredKeys;
+        }
         
         // Custom column filtering and ordering for Metadata resource
         if (resourceName === 'Metadata') {
@@ -1149,8 +1155,8 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             setDialogMode('create');
                             setIsDialogOpen(true);
                           } else {
-                            // For auth schemes (OAuth2, OIDC, Custom), fetch full details
-                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'Custom';
+                            // For auth schemes (OAuth2, OIDC, Custom, OIDC Providers), fetch full details
+                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'Custom' || resourceName === 'OIDC Providers';
                             
                             if (isAuthScheme && item.id) {
                               try {

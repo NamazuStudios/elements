@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.model.auth;
 
+import dev.getelements.elements.sdk.model.ValidationGroups;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
@@ -26,15 +27,17 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
     @Schema(description = "The OAuth2 client id registered with the provider.")
     private String clientId;
 
-    @NotBlank
-    @Schema(description = "The OAuth2 client secret registered with the provider.")
+    @NotBlank(groups = ValidationGroups.Create.class)
+    @Schema(description = "The OAuth2 client secret registered with the provider. Required on create; on " +
+            "update, leave blank to keep the existing secret unchanged.")
     private String clientSecret;
 
     @Schema(description = "The OAuth2 scopes to request during authorization.")
     private List<String> scopes;
 
-    @NotBlank
-    @Schema(description = "The full, literal redirect URI registered with the provider.")
+    @Schema(description = "The full, literal redirect URI registered with the provider. If left blank, " +
+            "defaults to this server's built-in OIDC callback URI for the provider " +
+            "(i.e. '{this server}/oidc/{provider}/callback').")
     private String redirectUri;
 
     @Schema(description = "Additional provider-specific query parameters to include in the authorize request.")

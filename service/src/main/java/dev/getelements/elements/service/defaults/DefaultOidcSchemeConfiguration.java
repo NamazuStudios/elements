@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static java.lang.System.currentTimeMillis;
+
 @ElementServiceExport(DefaultOidcSchemeConfiguration.class)
 public class DefaultOidcSchemeConfiguration {
 
@@ -28,6 +30,7 @@ public class DefaultOidcSchemeConfiguration {
         createPlaystationScheme();
         createXBoxScheme();
         createSwitchScheme();
+        createTwitchScheme();
     }
 
     private void createGoogleScheme() {
@@ -59,6 +62,7 @@ public class DefaultOidcSchemeConfiguration {
         request.setIssuer(issuer);
         request.setKeysUrl("https://www.googleapis.com/oauth2/v3/certs");
         request.setMediaType("application/json");
+        request.setKeysFetchedAt(currentTimeMillis() / 1000);
 
         tryCreateOidcScheme(request);
     }
@@ -94,6 +98,36 @@ public class DefaultOidcSchemeConfiguration {
         request.setKeys(keys);
         request.setIssuer(issuer);
         request.setKeysUrl("https://appleid.apple.com/auth/keys");
+        request.setMediaType("application/json");
+        request.setKeysFetchedAt(currentTimeMillis() / 1000);
+
+        tryCreateOidcScheme(request);
+    }
+
+    private void createTwitchScheme() {
+
+        final var name = "Twitch";
+        final var issuer = "https://id.twitch.tv/oauth2";
+        final var schemeOptional = getAuthSchemeService().findAuthScheme(issuer);
+
+        if(schemeOptional.isPresent()) {
+
+            final var authScheme = schemeOptional.get();
+
+            if(authScheme.getName() == null) {
+                authScheme.setName(name);
+                tryUpdateOidcScheme(authScheme);
+            }
+
+            return;
+        }
+
+        final var request = new OidcAuthScheme();
+
+        request.setName(name);
+        request.setIssuer(issuer);
+        request.setKeys(List.of());
+        request.setKeysUrl("https://id.twitch.tv/oauth2/keys");
         request.setMediaType("application/json");
 
         tryCreateOidcScheme(request);

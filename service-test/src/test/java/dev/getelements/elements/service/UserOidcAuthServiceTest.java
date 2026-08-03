@@ -27,6 +27,7 @@ import java.util.function.BiFunction;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.model.Constants.API_OUTSIDE_URL;
+import static dev.getelements.elements.sdk.service.Constants.OIDC_JWKS_REFRESH_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -238,6 +239,7 @@ public class UserOidcAuthServiceTest {
             bind(OidcAuthServiceOperations.class).toInstance(mock(OidcAuthServiceOperations.class));
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(named(SESSION_TIMEOUT_SECONDS)).to(3600L);
+            bindConstant().annotatedWith(named(OIDC_JWKS_REFRESH_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
     }

@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.service.Constants.OIDC_JWKS_REFRESH_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -64,6 +65,8 @@ public class OidcAuthServiceOperations {
     private OidcAuthSchemeDao oidcAuthSchemeDao;
 
     private long sessionTimeoutSeconds;
+
+    private long jwksRefreshIntervalSeconds;
 
 
     public SessionCreation createOrUpdateUserWithToken(
@@ -205,13 +208,15 @@ public class OidcAuthServiceOperations {
                 .findFirst()
                 .orElse(null);
 
-        if(jwk != null) {
+        //Staleness only forces a refresh when there's a keysUrl to refresh from; a scheme with no keysUrl has
+        //no other source of truth, so its keys are always trusted as-is.
+        if(jwk != null && !(scheme.getKeysUrl() != null && isKeysStale(scheme))) {
             final var algorithm = getAlgorithmFromJWK(jwk);
             attemptVerify(jwt, algorithm);
             return;
         }
 
-        //If we don't have a matching JWK for the provided KID, attempt to fetch
+        //If we don't have a matching, fresh JWK for the provided KID, attempt to fetch
         if(scheme.getKeysUrl() != null) {
             fetchPublicKeys(kid, scheme)
                 .map(algorithm -> attemptVerify(jwt, algorithm))
@@ -222,6 +227,13 @@ public class OidcAuthServiceOperations {
         }
 
         throw new ForbiddenException("No matching JWK for the provided key id");
+    }
+
+    private boolean isKeysStale(final OidcAuthScheme scheme) {
+        final var keysFetchedAt = scheme.getKeysFetchedAt();
+        if (keysFetchedAt == null) return true;
+        final var now = currentTimeMillis() / 1000;
+        return now - keysFetchedAt > getJwksRefreshIntervalSeconds();
     }
 
     private DecodedJWT attemptVerify(final DecodedJWT jwt,
@@ -259,6 +271,7 @@ public class OidcAuthServiceOperations {
 
         //Update scheme with new keys
         scheme.setKeys(jwkSet.getKeys());
+        scheme.setKeysFetchedAt(currentTimeMillis() / 1000);
         getOidcAuthSchemeDao().updateAuthScheme(scheme);
 
         return jwkSet.getKeys()
@@ -356,6 +369,15 @@ public class OidcAuthServiceOperations {
     @Inject
     public void setOidcAuthSchemeDao(OidcAuthSchemeDao oidcAuthSchemeDao) {
         this.oidcAuthSchemeDao = oidcAuthSchemeDao;
+    }
+
+    public long getJwksRefreshIntervalSeconds() {
+        return jwksRefreshIntervalSeconds;
+    }
+
+    @Inject
+    public void setJwksRefreshIntervalSeconds(@Named(OIDC_JWKS_REFRESH_SECONDS) long jwksRefreshIntervalSeconds) {
+        this.jwksRefreshIntervalSeconds = jwksRefreshIntervalSeconds;
     }
 
     public enum Claim {

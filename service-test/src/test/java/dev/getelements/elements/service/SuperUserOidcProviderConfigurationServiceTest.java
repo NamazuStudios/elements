@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 import java.util.List;
 
 import static com.google.inject.Guice.createInjector;
+import static dev.getelements.elements.sdk.model.Constants.API_OUTSIDE_URL;
 import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -56,17 +57,8 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         // the service's later config.setClientSecret(null) mutation (on the *returned* object) can't retroactively
         // affect what we captured as having been *sent* to the DAO.
         when(providerConfigurationDao.createProviderConfiguration(any())).thenAnswer(i -> {
-            final OidcProviderConfiguration sent = i.getArgument(0);
-            final var stored = new OidcProviderConfiguration();
+            final var stored = copyOf(i.getArgument(0));
             stored.setId("config-1");
-            stored.setProvider(sent.getProvider());
-            stored.setDiscoveryUrl(sent.getDiscoveryUrl());
-            stored.setClientId(sent.getClientId());
-            stored.setClientSecret(sent.getClientSecret());
-            stored.setScopes(sent.getScopes());
-            stored.setRedirectUri(sent.getRedirectUri());
-            stored.setExtraAuthorizeParams(sent.getExtraAuthorizeParams());
-            stored.setTokenEndpointAuthMethod(sent.getTokenEndpointAuthMethod());
             return stored;
         });
 
@@ -95,7 +87,7 @@ public class SuperUserOidcProviderConfigurationServiceTest {
     @Test
     public void testUpdatePropagatesFields() {
 
-        when(providerConfigurationDao.updateProviderConfiguration(any())).thenAnswer(i -> i.getArgument(0));
+        when(providerConfigurationDao.updateProviderConfiguration(any())).thenAnswer(i -> copyOf(i.getArgument(0)));
 
         service.updateProviderConfiguration("config-1", validRequest("google"));
 
@@ -104,6 +96,7 @@ public class SuperUserOidcProviderConfigurationServiceTest {
 
         assertEquals(captor.getValue().getId(), "config-1");
         assertEquals(captor.getValue().getProvider(), "google");
+        assertEquals(captor.getValue().getClientSecret(), "super-secret");
 
     }
 
@@ -120,28 +113,145 @@ public class SuperUserOidcProviderConfigurationServiceTest {
     }
 
     @Test
+    public void testUpdateWithBlankClientSecretPreservesExisting() {
+
+        final var existing = new OidcProviderConfiguration();
+        existing.setId("config-1");
+        existing.setClientSecret("original-secret");
+        when(providerConfigurationDao.getProviderConfiguration("config-1")).thenReturn(existing);
+        when(providerConfigurationDao.updateProviderConfiguration(any())).thenAnswer(i -> copyOf(i.getArgument(0)));
+
+        final var request = validRequest("twitch");
+        request.setClientSecret(null);
+
+        service.updateProviderConfiguration("config-1", request);
+
+        final var captor = ArgumentCaptor.forClass(OidcProviderConfiguration.class);
+        verify(providerConfigurationDao).updateProviderConfiguration(captor.capture());
+
+        assertEquals(captor.getValue().getClientSecret(), "original-secret");
+
+    }
+
+    @Test
+    public void testUpdateWithNewClientSecretOverwritesExisting() {
+
+        final var existing = new OidcProviderConfiguration();
+        existing.setId("config-1");
+        existing.setClientSecret("original-secret");
+        when(providerConfigurationDao.getProviderConfiguration("config-1")).thenReturn(existing);
+        when(providerConfigurationDao.updateProviderConfiguration(any())).thenAnswer(i -> copyOf(i.getArgument(0)));
+
+        service.updateProviderConfiguration("config-1", validRequest("twitch"));
+
+        final var captor = ArgumentCaptor.forClass(OidcProviderConfiguration.class);
+        verify(providerConfigurationDao).updateProviderConfiguration(captor.capture());
+
+        // validRequest() sets clientSecret to "super-secret" — a non-blank value on update must overwrite,
+        // not fall back to the existing stored secret.
+        assertEquals(captor.getValue().getClientSecret(), "super-secret");
+        verify(providerConfigurationDao, never()).getProviderConfiguration(any(String.class));
+
+    }
+
+    @Test
+    public void testCreateWithBlankRedirectUriDefaultsToBuiltInCallback() {
+
+        when(providerConfigurationDao.createProviderConfiguration(any())).thenAnswer(i -> copyOf(i.getArgument(0)));
+
+        final var request = validRequest("twitch");
+        request.setRedirectUri(null);
+
+        service.createProviderConfiguration(request);
+
+        final var captor = ArgumentCaptor.forClass(OidcProviderConfiguration.class);
+        verify(providerConfigurationDao).createProviderConfiguration(captor.capture());
+
+        assertEquals(captor.getValue().getRedirectUri(), "https://api.example.com/api/rest/oidc/twitch/callback");
+
+    }
+
+    @Test
+    public void testUpdateWithBlankRedirectUriDefaultsToBuiltInCallback() {
+
+        final var existing = new OidcProviderConfiguration();
+        existing.setId("config-1");
+        existing.setClientSecret("original-secret");
+        when(providerConfigurationDao.getProviderConfiguration("config-1")).thenReturn(existing);
+        when(providerConfigurationDao.updateProviderConfiguration(any())).thenAnswer(i -> copyOf(i.getArgument(0)));
+
+        final var request = validRequest("google");
+        request.setRedirectUri("");
+
+        service.updateProviderConfiguration("config-1", request);
+
+        final var captor = ArgumentCaptor.forClass(OidcProviderConfiguration.class);
+        verify(providerConfigurationDao).updateProviderConfiguration(captor.capture());
+
+        assertEquals(captor.getValue().getRedirectUri(), "https://api.example.com/api/rest/oidc/google/callback");
+
+    }
+
+    @Test
     public void testDeleteDelegatesToDao() {
         service.deleteProviderConfiguration("config-1");
         verify(providerConfigurationDao).deleteProviderConfiguration("config-1");
     }
 
     @Test
-    public void testGetConfigurationDelegatesToDao() {
+    public void testGetConfigurationDelegatesToDaoAndRedactsSecret() {
         final var expected = new OidcProviderConfiguration();
         expected.setId("config-1");
+        expected.setClientSecret("super-secret");
         when(providerConfigurationDao.getProviderConfiguration("config-1")).thenReturn(expected);
-        assertSame(service.getProviderConfiguration("config-1"), expected);
+
+        final var result = service.getProviderConfiguration("config-1");
+
+        assertEquals(result.getId(), "config-1");
+        assertNull(result.getClientSecret());
     }
 
     @Test
-    public void testGetConfigurationsDelegatesToDao() {
-        @SuppressWarnings("unchecked")
-        final var page = (Pagination<OidcProviderConfiguration>) mock(Pagination.class);
+    public void testGetConfigurationsDelegatesToDaoAndRedactsSecret() {
+
+        final var config = new OidcProviderConfiguration();
+        config.setId("config-1");
+        config.setClientSecret("super-secret");
+
+        final var page = new Pagination<OidcProviderConfiguration>();
+        page.setOffset(5);
+        page.setTotal(1);
+        page.setObjects(List.of(config));
+
         when(providerConfigurationDao.getProviderConfigurations(5, 20, List.of("tag-a"))).thenReturn(page);
-        assertSame(service.getProviderConfigurations(5, 20, List.of("tag-a")), page);
+
+        final var result = service.getProviderConfigurations(5, 20, List.of("tag-a"));
+
+        assertEquals(result.getOffset(), 5);
+        assertEquals(result.getTotal(), 1);
+        assertEquals(result.getObjects().size(), 1);
+        assertEquals(result.getObjects().get(0).getId(), "config-1");
+        assertNull(result.getObjects().get(0).getClientSecret());
     }
 
     // ---------- helpers ----------
+
+    // A real DAO returns a freshly-mapped object, not the same instance passed in. Mockito's captor holds a
+    // reference, not a snapshot, so returning the same instance the service later mutates (e.g. redact()'s
+    // setClientSecret(null)) would retroactively corrupt what the test captured as having been *sent* to the DAO.
+    private static OidcProviderConfiguration copyOf(final OidcProviderConfiguration source) {
+        final var copy = new OidcProviderConfiguration();
+        copy.setId(source.getId());
+        copy.setProvider(source.getProvider());
+        copy.setDiscoveryUrl(source.getDiscoveryUrl());
+        copy.setClientId(source.getClientId());
+        copy.setClientSecret(source.getClientSecret());
+        copy.setScopes(source.getScopes());
+        copy.setRedirectUri(source.getRedirectUri());
+        copy.setExtraAuthorizeParams(source.getExtraAuthorizeParams());
+        copy.setTokenEndpointAuthMethod(source.getTokenEndpointAuthMethod());
+        return copy;
+    }
 
     private static CreateOrUpdateOidcProviderConfigurationRequest validRequest(final String provider) {
         final var request = new CreateOrUpdateOidcProviderConfigurationRequest();
@@ -168,6 +278,9 @@ public class SuperUserOidcProviderConfigurationServiceTest {
                     .in(com.google.inject.Singleton.class);
             bind(jakarta.validation.Validator.class)
                     .toInstance(buildDefaultValidatorFactory().getValidator());
+            bind(String.class)
+                    .annotatedWith(com.google.inject.name.Names.named(API_OUTSIDE_URL))
+                    .toInstance("https://api.example.com/api/rest");
         }
     }
 

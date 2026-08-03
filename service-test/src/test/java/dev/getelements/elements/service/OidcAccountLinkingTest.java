@@ -36,6 +36,7 @@ import java.util.UUID;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.model.Constants.API_OUTSIDE_URL;
+import static dev.getelements.elements.sdk.service.Constants.OIDC_JWKS_REFRESH_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static java.lang.System.currentTimeMillis;
@@ -337,6 +338,7 @@ public class OidcAccountLinkingTest {
 
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
             bind(long.class)  .annotatedWith(named(SESSION_TIMEOUT_SECONDS)).toInstance(300L);
+            bind(long.class)  .annotatedWith(named(OIDC_JWKS_REFRESH_SECONDS)).toInstance(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
     }

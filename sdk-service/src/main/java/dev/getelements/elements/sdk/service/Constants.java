@@ -80,6 +80,15 @@ public interface Constants {
     String OIDC_DISCOVERY_REFRESH_SECONDS = "dev.getelements.elements.oidc.discovery.refresh.seconds";
 
     /**
+     * Used to specify how often a cached OIDC scheme's JWKS keys are refreshed.
+     */
+    @ElementDefaultAttribute(
+            value = "3600",
+            description = "How often cached OIDC JWKS keys are refreshed, in seconds."
+    )
+    String OIDC_JWKS_REFRESH_SECONDS = "dev.getelements.elements.oidc.jwks.refresh.seconds";
+
+    /**
      * Used to specify the host for neo blockchain.
      */
     @ElementDefaultAttribute(

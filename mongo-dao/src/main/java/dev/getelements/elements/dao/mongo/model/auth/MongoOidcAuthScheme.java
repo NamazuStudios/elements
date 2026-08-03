@@ -33,6 +33,9 @@ public class MongoOidcAuthScheme {
     @Property
     private String mediaType = "application/json";
 
+    @Property
+    private Long keysFetchedAt;
+
     public ObjectId getId() {
         return id;
     }
@@ -81,17 +84,25 @@ public class MongoOidcAuthScheme {
         this.mediaType = mediaType;
     }
 
+    public Long getKeysFetchedAt() {
+        return keysFetchedAt;
+    }
+
+    public void setKeysFetchedAt(Long keysFetchedAt) {
+        this.keysFetchedAt = keysFetchedAt;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoOidcAuthScheme that = (MongoOidcAuthScheme) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType()) && Objects.equals(getKeysFetchedAt(), that.getKeysFetchedAt());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(getId(), getName(), getIssuer(), getKeys(), getKeysUrl(), getMediaType(), getKeysFetchedAt());
     }
 
 }

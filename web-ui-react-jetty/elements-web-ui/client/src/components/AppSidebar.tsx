@@ -36,6 +36,7 @@ const iconMap: Record<string, any> = {
   Calendar: Icons.Calendar,
   KeyRound: Icons.KeyRound,
   Lock: Icons.Lock,
+  Globe: Icons.Globe,
   FileCode: Icons.FileCode,
   Vault: Icons.Vault,
   Boxes: Icons.Boxes,

@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, RotateCcw, Search, X } from 'lucide-react';
 import { UserSearchDialog } from './UserSearchDialog';
 import { FormFieldGenerator } from './FormFieldGenerator';
+import { OidcRedirectUriField } from './OidcRedirectUriField';
 import { MetadataEditor } from './MetadataEditor';
 import { MetadataSpecPropertyEditor } from './MetadataSpecPropertyEditor';
 import { MissionStepsEditor } from './MissionStepsEditor';
@@ -930,6 +931,18 @@ export function DynamicResourceForm({
       );
     }
     
+    // For OIDC Providers, offer a checkbox to fall back to this server's built-in OIDC callback URI
+    if (resourceName === 'OIDC Providers' && field.name === 'redirectUri') {
+      return (
+        <OidcRedirectUriField
+          key={field.name}
+          form={form}
+          fieldName={field.name}
+          description={field.description}
+        />
+      );
+    }
+
     // Use default field generator for all other fields
     return (
       <FormFieldGenerator
