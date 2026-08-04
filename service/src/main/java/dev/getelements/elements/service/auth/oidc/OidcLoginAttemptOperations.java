@@ -11,6 +11,7 @@ import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptBegin;
+import dev.getelements.elements.sdk.model.session.OidcLoginAttemptCallbackResult;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import jakarta.inject.Inject;
@@ -62,7 +63,9 @@ public class OidcLoginAttemptOperations {
 
     private long ttlSeconds;
 
-    public OidcLoginAttemptBegin begin(final String provider) {
+    public OidcLoginAttemptBegin begin(final String provider,
+                                        final String successRedirectUrl,
+                                        final String errorRedirectUrl) {
 
         final var config = findConfigOrThrow(provider);
         final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
@@ -79,6 +82,8 @@ public class OidcLoginAttemptOperations {
         attempt.setNonce(nonce);
         attempt.setStatus(OidcLoginAttemptStatus.PENDING);
         attempt.setExpiry(expiry);
+        attempt.setSuccessRedirectUrl(successRedirectUrl);
+        attempt.setErrorRedirectUrl(errorRedirectUrl);
 
         getOidcLoginAttemptDao().create(attempt);
 
@@ -108,23 +113,30 @@ public class OidcLoginAttemptOperations {
 
     }
 
-    public void handleCallback(final String provider, final String code, final String state, final String error) {
+    public OidcLoginAttemptCallbackResult handleCallback(final String provider, final String code,
+                                                          final String state, final String error) {
 
-        if (error != null) {
-            logger.debug("OIDC callback for provider {} reported an error", provider);
-            getOidcLoginAttemptDao().markFailed(state, "Login was not completed");
-            throw new ForbiddenException("Provider reported an error");
-        }
-
-        final var attempt = getOidcLoginAttemptDao()
-                .findPendingByState(provider, state)
-                .orElseThrow(() -> new ForbiddenException("Unknown or expired login attempt"));
-
-        final var config = findConfigOrThrow(provider);
-        final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
-        final var scheme = getOidcProviderConfigurationOperations().resolveScheme(config, discoveryDocument);
+        // Looked up unconditionally, before any failure branch, so the caller-configured redirect URLs are known
+        // regardless of which outcome this callback resolves to — including the "provider reported an error" and
+        // "unknown attempt" cases below, neither of which used to have access to them.
+        final var attemptOptional = getOidcLoginAttemptDao().findPendingByState(provider, state);
+        final var successRedirectUrl = attemptOptional.map(OidcLoginAttempt::getSuccessRedirectUrl).orElse(null);
+        final var errorRedirectUrl = attemptOptional.map(OidcLoginAttempt::getErrorRedirectUrl).orElse(null);
 
         try {
+
+            if (error != null) {
+                logger.debug("OIDC callback for provider {} reported an error", provider);
+                getOidcLoginAttemptDao().markFailed(state, "Login was not completed");
+                return OidcLoginAttemptCallbackResult.failure(errorRedirectUrl);
+            }
+
+            final var attempt = attemptOptional
+                    .orElseThrow(() -> new ForbiddenException("Unknown or expired login attempt"));
+
+            final var config = findConfigOrThrow(provider);
+            final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
+            final var scheme = getOidcProviderConfigurationOperations().resolveScheme(config, discoveryDocument);
 
             final var idToken = exchangeCodeForIdToken(config, discoveryDocument, code);
 
@@ -140,14 +152,18 @@ public class OidcLoginAttemptOperations {
                 // Guard did not match: either a replayed callback for an already-resolved attempt, or a
                 // concurrent duplicate delivery for the same state. Fail closed rather than silently succeeding
                 // twice.
-                throw new ForbiddenException("Login attempt already resolved");
+                return OidcLoginAttemptCallbackResult.failure(errorRedirectUrl);
             }
+
+            return OidcLoginAttemptCallbackResult.success(successRedirectUrl);
 
         } catch (final Exception ex) {
             // Never log the code, id_token, or handle — only enough context to debug which provider/attempt failed.
+            // Every expected failure mode is caught here so the REST layer never has to interpret an exception —
+            // it only sees a plain failure result.
             logger.debug("OIDC callback failed for provider {}", provider, ex);
             getOidcLoginAttemptDao().markFailed(state, "Login failed");
-            throw ex;
+            return OidcLoginAttemptCallbackResult.failure(errorRedirectUrl);
         }
 
     }

@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.auth.oidc;
 
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptBegin;
+import dev.getelements.elements.sdk.model.session.OidcLoginAttemptCallbackResult;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse;
 import dev.getelements.elements.sdk.service.auth.OidcLoginAttemptService;
 import jakarta.inject.Inject;
@@ -10,8 +11,10 @@ public class StandardOidcLoginAttemptService implements OidcLoginAttemptService 
     private OidcLoginAttemptOperations oidcLoginAttemptOperations;
 
     @Override
-    public OidcLoginAttemptBegin begin(final String provider) {
-        return getOidcLoginAttemptOperations().begin(provider);
+    public OidcLoginAttemptBegin begin(final String provider,
+                                        final String successRedirectUrl,
+                                        final String errorRedirectUrl) {
+        return getOidcLoginAttemptOperations().begin(provider, successRedirectUrl, errorRedirectUrl);
     }
 
     @Override
@@ -20,8 +23,9 @@ public class StandardOidcLoginAttemptService implements OidcLoginAttemptService 
     }
 
     @Override
-    public void handleCallback(final String provider, final String code, final String state, final String error) {
-        getOidcLoginAttemptOperations().handleCallback(provider, code, state, error);
+    public OidcLoginAttemptCallbackResult handleCallback(final String provider, final String code,
+                                                           final String state, final String error) {
+        return getOidcLoginAttemptOperations().handleCallback(provider, code, state, error);
     }
 
     public OidcLoginAttemptOperations getOidcLoginAttemptOperations() {

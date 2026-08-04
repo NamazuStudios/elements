@@ -38,6 +38,12 @@ public class OidcLoginAttempt {
     /** The absolute timestamp after which this attempt is no longer valid. */
     private Timestamp expiry;
 
+    /** Optional. If set, the callback redirects the browser here on success instead of the default HTML page. */
+    private String successRedirectUrl;
+
+    /** Optional. If set, the callback redirects the browser here on failure instead of the default HTML page. */
+    private String errorRedirectUrl;
+
     public String getHandle() {
         return handle;
     }
@@ -100,6 +106,22 @@ public class OidcLoginAttempt {
 
     public void setExpiry(Timestamp expiry) {
         this.expiry = expiry;
+    }
+
+    public String getSuccessRedirectUrl() {
+        return successRedirectUrl;
+    }
+
+    public void setSuccessRedirectUrl(String successRedirectUrl) {
+        this.successRedirectUrl = successRedirectUrl;
+    }
+
+    public String getErrorRedirectUrl() {
+        return errorRedirectUrl;
+    }
+
+    public void setErrorRedirectUrl(String errorRedirectUrl) {
+        this.errorRedirectUrl = errorRedirectUrl;
     }
 
 }

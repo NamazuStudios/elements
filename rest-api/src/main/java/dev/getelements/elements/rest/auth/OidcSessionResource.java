@@ -55,7 +55,8 @@ public class OidcSessionResource {
 
         }
 
-        final var begin = getOidcLoginAttemptService().begin(request.getProvider());
+        final var begin = getOidcLoginAttemptService().begin(
+                request.getProvider(), request.getSuccessRedirectUrl(), request.getErrorRedirectUrl());
         final var body = OidcLoginAttemptResponse.pending(begin.getHandle(), begin.getAuthorizeUrl(), begin.getExpiresAt());
 
         return Response.status(Response.Status.CREATED).entity(body).build();

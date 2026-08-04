@@ -12,7 +12,6 @@ import dev.getelements.elements.sdk.model.auth.OidcLoginAttempt;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttemptStatus;
 import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
 import dev.getelements.elements.sdk.model.auth.TokenEndpointAuthMethod;
-import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
@@ -164,13 +163,13 @@ public class OidcLoginAttemptOperationsTest {
     @Test(expectedExceptions = InvalidDataException.class)
     public void testBeginWithUnknownProviderThrows() {
         when(oidcProviderConfigurationDao.findByProvider("unknown")).thenReturn(Optional.empty());
-        operations.begin("unknown");
+        operations.begin("unknown", null, null);
     }
 
     @Test
     public void testBeginBuildsAuthorizeUrlWithAllRequiredParamsAndNeverTheSecret() {
 
-        final var begin = operations.begin(PROVIDER);
+        final var begin = operations.begin(PROVIDER, null, null);
 
         assertNotNull(begin.getHandle());
         assertTrue(begin.getExpiresAt() > currentTimeMillis() / 1000);
@@ -197,28 +196,56 @@ public class OidcLoginAttemptOperationsTest {
 
     }
 
+    @Test
+    public void testBeginPersistsConfiguredRedirectUrls() {
+
+        operations.begin(PROVIDER, "https://game.example.com/success", "https://game.example.com/error");
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+
+        final var persisted = attemptCaptor.getValue();
+        assertEquals(persisted.getSuccessRedirectUrl(), "https://game.example.com/success");
+        assertEquals(persisted.getErrorRedirectUrl(), "https://game.example.com/error");
+
+    }
+
     // ── handleCallback() ─────────────────────────────────────────────────────
 
     @Test
     public void testHandleCallbackWithProviderErrorFailsClosedWithoutExchange() {
 
-        try {
-            operations.handleCallback(PROVIDER, null, "some-state", "access_denied");
-            fail("Expected ForbiddenException");
-        } catch (final ForbiddenException expected) {
-            // expected
-        }
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, "some-state")).thenReturn(Optional.empty());
 
+        final var result = operations.handleCallback(PROVIDER, null, "some-state", "access_denied");
+
+        assertFalse(result.isSuccess());
+        assertNull(result.getRedirectUrl());
         verify(oidcLoginAttemptDao).markFailed(eq("some-state"), anyString());
-        verify(oidcLoginAttemptDao, never()).findPendingByState(any(), any());
         verifyNoInteractions(client);
 
     }
 
-    @Test(expectedExceptions = ForbiddenException.class)
+    @Test
+    public void testHandleCallbackWithProviderErrorUsesConfiguredErrorRedirectUrl() {
+
+        final var attempt = pendingAttempt("some-state", "some-nonce");
+        attempt.setErrorRedirectUrl("https://game.example.com/error");
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, "some-state")).thenReturn(Optional.of(attempt));
+
+        final var result = operations.handleCallback(PROVIDER, null, "some-state", "access_denied");
+
+        assertFalse(result.isSuccess());
+        assertEquals(result.getRedirectUrl(), "https://game.example.com/error");
+
+    }
+
+    @Test
     public void testHandleCallbackWithUnknownStateFailsClosed() {
         when(oidcLoginAttemptDao.findPendingByState(PROVIDER, "unknown-state")).thenReturn(Optional.empty());
-        operations.handleCallback(PROVIDER, "some-code", "unknown-state", null);
+        final var result = operations.handleCallback(PROVIDER, "some-code", "unknown-state", null);
+        assertFalse(result.isSuccess());
+        assertNull(result.getRedirectUrl());
     }
 
     @Test
@@ -246,15 +273,47 @@ public class OidcLoginAttemptOperationsTest {
         sessionCreation.setSessionSecret("secret");
         when(anonOidcAuthService.apply(any(), any())).thenReturn(null);
 
-        operations.handleCallback(PROVIDER, "auth-code", state, null);
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
 
+        assertTrue(result.isSuccess());
+        assertNull(result.getRedirectUrl());
         verify(oidcLoginAttemptDao).markComplete(eq(state), anyString());
         verify(oidcLoginAttemptDao, never()).markFailed(eq(state), anyString());
 
     }
 
     @Test
-    public void testHandleCallbackNonceMismatchMarksFailedAndThrows() {
+    public void testHandleCallbackHappyPathUsesConfiguredSuccessRedirectUrl() {
+
+        final var state = "matching-state";
+        final var nonce = "matching-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        attempt.setSuccessRedirectUrl("https://game.example.com/success");
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markComplete(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+        when(anonOidcAuthService.apply(any(), any())).thenReturn(null);
+
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        assertTrue(result.isSuccess());
+        assertEquals(result.getRedirectUrl(), "https://game.example.com/success");
+
+    }
+
+    @Test
+    public void testHandleCallbackNonceMismatchMarksFailed() {
 
         final var state = "matching-state";
         final var attempt = pendingAttempt(state, "expected-nonce");
@@ -272,13 +331,9 @@ public class OidcLoginAttemptOperationsTest {
 
         stubTokenExchange(idToken);
 
-        try {
-            operations.handleCallback(PROVIDER, "auth-code", state, null);
-            fail("Expected ForbiddenException on nonce mismatch");
-        } catch (final ForbiddenException expected) {
-            // expected
-        }
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
 
+        assertFalse(result.isSuccess());
         verify(oidcLoginAttemptDao, never()).markComplete(any(), any());
         verify(oidcLoginAttemptDao).markFailed(eq(state), anyString());
 

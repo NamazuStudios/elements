@@ -44,6 +44,12 @@ public class MongoOidcLoginAttempt {
     @Property
     private Timestamp expiry;
 
+    @Property
+    private String successRedirectUrl;
+
+    @Property
+    private String errorRedirectUrl;
+
     public String getHandle() {
         return handle;
     }
@@ -108,6 +114,22 @@ public class MongoOidcLoginAttempt {
         this.expiry = expiry;
     }
 
+    public String getSuccessRedirectUrl() {
+        return successRedirectUrl;
+    }
+
+    public void setSuccessRedirectUrl(String successRedirectUrl) {
+        this.successRedirectUrl = successRedirectUrl;
+    }
+
+    public String getErrorRedirectUrl() {
+        return errorRedirectUrl;
+    }
+
+    public void setErrorRedirectUrl(String errorRedirectUrl) {
+        this.errorRedirectUrl = errorRedirectUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -120,13 +142,15 @@ public class MongoOidcLoginAttempt {
                 && getStatus() == that.getStatus()
                 && Objects.equals(getSessionToken(), that.getSessionToken())
                 && Objects.equals(getFailureReason(), that.getFailureReason())
-                && Objects.equals(getExpiry(), that.getExpiry());
+                && Objects.equals(getExpiry(), that.getExpiry())
+                && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
+                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getHandle(), getProvider(), getState(), getNonce(), getStatus(),
-                getSessionToken(), getFailureReason(), getExpiry());
+                getSessionToken(), getFailureReason(), getExpiry(), getSuccessRedirectUrl(), getErrorRedirectUrl());
     }
 
 }
