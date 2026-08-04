@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -63,6 +65,8 @@ public class MongoUserDao implements UserDao {
     private MongoProfileDao mongoProfileDao;
 
     private MongoUserUidDao mongoUserUidDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public User getUser(final String userId) {
@@ -193,6 +197,11 @@ public class MongoUserDao implements UserDao {
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
 
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
+
         return createdUser;
 
     }
@@ -239,6 +248,11 @@ public class MongoUserDao implements UserDao {
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
 
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
+
         return createdUser;
 
     }
@@ -269,6 +283,11 @@ public class MongoUserDao implements UserDao {
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
 
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
+
         return createdUser;
 
     }
@@ -298,6 +317,11 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
 
         return createdUser;
 
@@ -334,7 +358,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -371,7 +402,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -407,7 +445,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -444,7 +489,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -504,7 +556,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User does not exist.");
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -533,6 +592,11 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
 
         return createdUser;
     }
@@ -567,8 +631,15 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with userid does not exist:" + userId);
         }
 
+        final var deletedUser = getDozerMapper().map(mongoUser, User.class);
+
         getMongoProfileDao().softDeleteProfilesForUser(mongoUser);
-        getMongoUserUidDao().softDeleteUserUidsForUserId(getDozerMapper().map(mongoUser, User.class));
+        getMongoUserUidDao().softDeleteUserUidsForUserId(deletedUser);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedUser)
+                .named(USER_DELETED)
+                .build());
     }
 
     private void updateBuilderWithOptionalData(User user, UpdateBuilder builder) {
@@ -608,7 +679,15 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
         if (mongoUser == null) throw new NotFoundException("User not found: " + userId);
-        return getDozerMapper().map(mongoUser, User.class);
+
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
     }
 
     @Override
@@ -774,5 +853,14 @@ public class MongoUserDao implements UserDao {
     @Inject
     public void setMongoUserUidDao(MongoUserUidDao mongoUserUidDao) {
         this.mongoUserUidDao = mongoUserUidDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

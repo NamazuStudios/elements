@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
@@ -18,11 +19,59 @@ import java.util.Optional;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = UserUidDao.USER_UID_CREATED,
+        parameters = UserUid.class,
+        description = "Called when a UserUid was created."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UID_CREATED,
+        parameters = {UserUid.class, Transaction.class},
+        description = "Called when a UserUid was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UID_UPDATED,
+        parameters = UserUid.class,
+        description = "Called when a UserUid was updated."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UID_UPDATED,
+        parameters = {UserUid.class, Transaction.class},
+        description = "Called when a UserUid was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UID_DELETED,
+        parameters = UserUid.class,
+        description = "Called when a UserUid was deleted."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UID_DELETED,
+        parameters = {UserUid.class, Transaction.class},
+        description = "Called when a UserUid was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UIDS_TRUNCATED,
+        parameters = String.class,
+        description = "Called when all UserUid records for a user were removed as part of a soft-delete. Carries the affected user's ID. Will not drive individual USER_UID_DELETED events."
+)
+@ElementEventProducer(
+        value = UserUidDao.USER_UIDS_TRUNCATED,
+        parameters = {String.class, Transaction.class},
+        description = "Called when all UserUid records for a user were removed as part of a soft-delete. Carries the affected user's ID. Will not drive individual USER_UID_DELETED events. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface UserUidDao {
 
     String SCHEME_NAME = "dev.getelements.auth.scheme.name";
     String SCHEME_EMAIL = "dev.getelements.auth.scheme.email";
     String SCHEME_PHONE_NUMBER = "dev.getelements.auth.scheme.phone";
+
+    String USER_UID_CREATED = "dev.getelements.elements.sdk.model.dao.user.uid.created";
+
+    String USER_UID_UPDATED = "dev.getelements.elements.sdk.model.dao.user.uid.updated";
+
+    String USER_UID_DELETED = "dev.getelements.elements.sdk.model.dao.user.uid.deleted";
+
+    String USER_UIDS_TRUNCATED = "dev.getelements.elements.sdk.model.dao.user.uids.truncated";
 
     /**
      * Gets all user uids for a given user
