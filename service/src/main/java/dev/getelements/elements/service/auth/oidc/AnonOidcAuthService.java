@@ -12,6 +12,7 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
+import dev.getelements.elements.sdk.service.name.NameService;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,8 @@ public class AnonOidcAuthService implements OidcAuthService {
     private OidcAuthServiceOperations oidcAuthServiceOperations;
 
     private ElementRegistry elementRegistry;
+
+    private NameService nameService;
 
     @Override
     public SessionCreation createSession(OidcSessionRequest oidcSessionRequest) {
@@ -181,6 +184,8 @@ public class AnonOidcAuthService implements OidcAuthService {
             putLinkedAccountProfile(user, scheme.getName(), profileClaims);
         }
 
+        getNameService().assignNameAndEmailIfNecessary(user);
+
         user = getUserDao().createUserStrict(user);
 
         // If a stale OIDC UID exists (user was deleted), delete it before relinking
@@ -253,6 +258,15 @@ public class AnonOidcAuthService implements OidcAuthService {
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
 }

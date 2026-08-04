@@ -15,6 +15,7 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filter;
 import dev.morphia.query.filters.Filters;
 
 import org.bson.types.ObjectId;
@@ -202,12 +203,7 @@ public class MongoUserDao implements UserDao {
 
         final var query = getDatastore().find(MongoUser.class);
 
-        final var existingUser = query.filter(
-                        or(
-                                eq("name", user.getName()),
-                                eq("email", user.getEmail())
-                        )
-                )
+        final var existingUser = query.filter(nameOrEmailFilter(user))
                 .first();
 
         if(existingUser != null) {
@@ -252,12 +248,7 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-            .filter(and(
-                or(
-                    eq("name", user.getName()),
-                    eq("email", user.getEmail())
-                )
-            ));
+            .filter(nameOrEmailFilter(user));
 
         final var builder = new UpdateBuilder();
 
@@ -288,10 +279,7 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-            .filter(or(
-                eq("name", user.getName()),
-                eq("email", user.getEmail())
-            ));
+            .filter(nameOrEmailFilter(user));
 
         final var builder = new UpdateBuilder()
             .with(
@@ -526,10 +514,7 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-                .filter(or(
-                        eq("name", user.getName()),
-                        eq("email", user.getEmail())
-                ));
+                .filter(nameOrEmailFilter(user));
 
         final var builder = new UpdateBuilder()
                 .with(
@@ -592,6 +577,16 @@ public class MongoUserDao implements UserDao {
         if (user.getLastName() != null) builder.with(set("lastName", user.getLastName()));
     }
 
+    // A null name has no equivalent to match against: Mongo's $eq semantics treat "field is null"
+    // and "field does not exist" as the same match, so eq("name", null) would spuriously match
+    // every other nameless user rather than narrowing anything. Omit the name term entirely in
+    // that case and match on email alone.
+    private Filter nameOrEmailFilter(final User user) {
+        return user.getName() == null
+                ? eq("email", user.getEmail())
+                : or(eq("name", user.getName()), eq("email", user.getEmail()));
+    }
+
     public void validate(final User user) {
 
         if (user == null) {
@@ -601,7 +596,6 @@ public class MongoUserDao implements UserDao {
         getValidationHelper().validateModel(user);
 
         user.setEmail(nullToEmpty(user.getEmail()).trim().toLowerCase());
-        user.setName(nullToEmpty(user.getName()).trim());
 
     }
 
