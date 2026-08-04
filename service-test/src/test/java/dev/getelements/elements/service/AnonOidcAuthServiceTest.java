@@ -11,6 +11,7 @@ import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.OidcAuthServiceOperations;
@@ -20,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
@@ -45,11 +47,18 @@ public class AnonOidcAuthServiceTest {
     @Inject private OidcAuthServiceOperations oidcAuthServiceOperations;
     @Inject private SessionDao sessionDao;
 
+    private UserCreation userCreation;
+
     @BeforeMethod
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
         when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
+
+        // newEmptyUser() returns a fluent builder; RETURNS_SELF makes every chained setter return the
+        // same mock so calls can be verified individually without hand-rolling a fake implementation.
+        userCreation = mock(UserCreation.class, RETURNS_SELF);
+        when(userDao.newEmptyUser()).thenReturn(userCreation);
     }
 
     /**
@@ -78,21 +87,23 @@ public class AnonOidcAuthServiceTest {
         when(userUidDao.findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL)).thenReturn(Optional.empty());
 
         final var newUser = userWithId("new-user-1");
-        when(userDao.createUserStrict(any(User.class))).thenReturn(newUser);
+        when(userCreation.create()).thenReturn(newUser);
 
         runMapper(jwt(SUB_1, EMAIL, true), scheme(SCHEME_NAME));
 
-        final var userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userDao).createUserStrict(userCaptor.capture());
+        verify(userDao).newEmptyUser();
+        verify(userDao, never()).createUserStrict(any());
         verify(userDao, never()).createUser(any());
-        assertEquals(userCaptor.getValue().getEmail(), EMAIL);
-        assertNull(userCaptor.getValue().getName(), "Name must not be copied from email");
 
-        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao, times(2)).createUserUidStrict(uidCaptor.capture());
-        final var uids = uidCaptor.getAllValues();
-        assertTrue(uids.stream().anyMatch(u -> SUB_1.equals(u.getId()) && SCHEME_NAME.equals(u.getScheme())));
-        assertTrue(uids.stream().anyMatch(u -> EMAIL.equals(u.getId()) && UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
+        verify(userCreation).email(EMAIL);
+
+        final var nameCaptor = ArgumentCaptor.forClass(String.class);
+        verify(userCreation).name(nameCaptor.capture());
+        assertNull(nameCaptor.getValue(), "Name must not be copied from email");
+
+        verify(userCreation).uid(SCHEME_NAME, SUB_1, VerificationStatus.VERIFIED);
+        verify(userCreation).uid(UserUidDao.SCHEME_EMAIL, EMAIL, VerificationStatus.VERIFIED);
+        verify(userCreation).create();
     }
 
     /**
@@ -106,19 +117,14 @@ public class AnonOidcAuthServiceTest {
         when(userUidDao.findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL)).thenReturn(Optional.empty());
 
         final var newUser = userWithId("new-user-2");
-        when(userDao.createUserStrict(any(User.class))).thenReturn(newUser);
+        when(userCreation.create()).thenReturn(newUser);
 
         runMapper(jwt(SUB_1, EMAIL, false), scheme(SCHEME_NAME));
 
-        final var userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userDao).createUserStrict(userCaptor.capture());
-        assertEquals(userCaptor.getValue().getEmail(), EMAIL, "Email should be trusted even when not marked verified");
+        verify(userCreation).email(EMAIL); // Email should be trusted even when not marked verified
 
-        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao, times(2)).createUserUidStrict(uidCaptor.capture());
-        final var uids = uidCaptor.getAllValues();
-        assertTrue(uids.stream().anyMatch(u -> SUB_1.equals(u.getId()) && SCHEME_NAME.equals(u.getScheme())));
-        assertTrue(uids.stream().anyMatch(u -> EMAIL.equals(u.getId()) && UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
+        verify(userCreation).uid(SCHEME_NAME, SUB_1, VerificationStatus.VERIFIED);
+        verify(userCreation).uid(UserUidDao.SCHEME_EMAIL, EMAIL, VerificationStatus.VERIFIED);
     }
 
     /**
@@ -173,21 +179,22 @@ public class AnonOidcAuthServiceTest {
         when(userUidDao.findUserUid(SUB_1, SCHEME_NAME)).thenReturn(Optional.empty());
         when(userUidDao.findUserUid(SUB_2, SCHEME_NAME)).thenReturn(Optional.empty());
 
-        when(userDao.createUserStrict(any(User.class)))
+        when(userCreation.create())
                 .thenReturn(userWithId("user-a"))
                 .thenReturn(userWithId("user-b"));
 
         runMapper(jwt(SUB_1, null, false), scheme(SCHEME_NAME));
         runMapper(jwt(SUB_2, null, false), scheme(SCHEME_NAME));
 
-        verify(userDao, times(2)).createUserStrict(any(User.class));
+        verify(userDao, times(2)).newEmptyUser();
+        verify(userDao, never()).createUserStrict(any());
         verify(userDao, never()).createUser(any());
+        verify(userCreation, times(2)).create();
 
-        final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao, times(2)).createUserUidStrict(uidCaptor.capture());
-        final var uids = uidCaptor.getAllValues();
-        assertNotEquals(uids.get(0).getUserId(), uids.get(1).getUserId(),
-                "Different external subs must produce different Elements users");
+        final var idCaptor = ArgumentCaptor.forClass(String.class);
+        verify(userCreation, times(2)).uid(eq(SCHEME_NAME), idCaptor.capture(), eq(VerificationStatus.VERIFIED));
+        assertEquals(idCaptor.getAllValues(), List.of(SUB_1, SUB_2),
+                "Different external subs must produce independent creation calls, in order");
     }
 
     // ---------- helpers ----------

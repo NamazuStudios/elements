@@ -11,6 +11,7 @@ import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthSchemeService;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.util.CryptoKeyPairUtility;
@@ -75,6 +76,8 @@ public class OidcAccountLinkingTest {
     @Inject
     private OidcAuthSchemeDao oidcAuthSchemeDao;
 
+    private UserCreation userCreation;
+
     @BeforeClass
     public void setupKeys() throws Exception {
         final var kpg = KeyPairGenerator.getInstance("RSA");
@@ -106,6 +109,11 @@ public class OidcAccountLinkingTest {
             sc.setSessionSecret("secret");
             return sc;
         });
+
+        // newEmptyUser() returns a fluent builder; RETURNS_SELF makes every chained setter return the
+        // same mock so calls can be verified individually without hand-rolling a fake implementation.
+        userCreation = mock(UserCreation.class, RETURNS_SELF);
+        when(userDao.newEmptyUser()).thenReturn(userCreation);
     }
 
     // ── scenario 1: brand-new user ────────────────────────────────────────────
@@ -118,13 +126,13 @@ public class OidcAccountLinkingTest {
 
         when(userUidDao.findUserUid(uid,   SCHEME_NAME))              .thenReturn(Optional.empty());
         when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL))  .thenReturn(Optional.empty());
-        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newId));
+        when(userCreation.create()).thenReturn(user(new User(), newId));
 
         assertNotNull(session(uid, email));
 
-        verify(userDao).createUserStrict(any());
-        verify(userUidDao).createUserUidStrict(argThat(u -> SCHEME_NAME.equals(u.getScheme())             && uid.equals(u.getId())));
-        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
+        verify(userDao, never()).createUserStrict(any());
+        verify(userCreation).uid(SCHEME_NAME, uid, VerificationStatus.VERIFIED);
+        verify(userCreation).uid(UserUidDao.SCHEME_EMAIL, email, VerificationStatus.VERIFIED);
     }
 
     // ── scenario 2: returning user with matching OIDC UID ─────────────────────
@@ -192,27 +200,11 @@ public class OidcAccountLinkingTest {
         verify(userUidDao, never()).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
     }
 
-    // ── scenario 4: stale email UID (user was deleted) ────────────────────────
-    //   email UID document exists but its userId is null; code must delete the
-    //   stale UID and relink it to the newly-created user
-
-    @Test
-    public void testStaleEmailUidIsDeletedAndRelinkedToNewUser() {
-        final var uid      = randomId();
-        final var email    = "stale@example.com";
-        final var newUserId = randomId();
-
-        final var staleEmailUid = uid(email, UserUidDao.SCHEME_EMAIL, null);
-        when(userUidDao.findUserUid(uid,   SCHEME_NAME))             .thenReturn(Optional.empty());
-        when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)) .thenReturn(Optional.of(staleEmailUid));
-        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newUserId));
-
-        assertNotNull(session(uid, email));
-
-        verify(userDao).createUserStrict(any());
-        verify(userUidDao).tryDeleteUserUid(staleEmailUid);
-        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
-    }
+    // Note: reclaiming a stale/orphaned email UID (present but unresolvable to any user, e.g. left behind
+    // by a prior delete) is now handled entirely inside MongoUserDao's newEmptyUser() builder, not by
+    // AnonOidcAuthService — it always just requests the link via UserCreation#uid(...) regardless of
+    // whether a stale row exists, and the DAO decides whether to reclaim it or reject a genuine conflict.
+    // See MongoUserCreationTest (mongo-test) for coverage of that resolution logic.
 
     // ── scenario 5: JWT has no email claim ────────────────────────────────────
 
@@ -222,14 +214,14 @@ public class OidcAccountLinkingTest {
         final var newUserId = randomId();
 
         when(userUidDao.findUserUid(uid, SCHEME_NAME)).thenReturn(Optional.empty());
-        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newUserId));
+        when(userCreation.create()).thenReturn(user(new User(), newUserId));
 
         assertNotNull(session(uid, null));
 
-        verify(userDao).createUserStrict(any());
-        verify(userUidDao).createUserUidStrict(argThat(u -> SCHEME_NAME.equals(u.getScheme()) && uid.equals(u.getId())));
+        verify(userDao, never()).createUserStrict(any());
+        verify(userCreation).uid(SCHEME_NAME, uid, VerificationStatus.VERIFIED);
         verify(userUidDao, never()).findUserUid(anyString(), eq(UserUidDao.SCHEME_EMAIL));
-        verify(userUidDao, never()).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
+        verify(userCreation, never()).uid(eq(UserUidDao.SCHEME_EMAIL), anyString(), any());
     }
 
     // ── scenario 6: email present but not marked verified ────────────────────
@@ -244,7 +236,7 @@ public class OidcAccountLinkingTest {
 
         when(userUidDao.findUserUid(uid,   SCHEME_NAME))              .thenReturn(Optional.empty());
         when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL))  .thenReturn(Optional.empty());
-        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newId));
+        when(userCreation.create()).thenReturn(user(new User(), newId));
 
         final var jwt = JWT.create()
                 .withIssuer(ISSUER)
@@ -260,8 +252,8 @@ public class OidcAccountLinkingTest {
 
         assertNotNull(anonServiceProvider.get().createSession(request));
 
-        verify(userDao).createUserStrict(argThat(u -> email.equals(u.getEmail())));
-        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
+        verify(userCreation).email(email);
+        verify(userCreation).uid(UserUidDao.SCHEME_EMAIL, email, VerificationStatus.VERIFIED);
     }
 
     // ── scenario 7: new user captures profile claims + per-scheme snapshot ────
@@ -274,18 +266,17 @@ public class OidcAccountLinkingTest {
 
         when(userUidDao.findUserUid(uid,   SCHEME_NAME))             .thenReturn(Optional.empty());
         when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)) .thenReturn(Optional.empty());
-        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newId));
+        when(userCreation.create()).thenReturn(user(new User(), newId));
 
         assertNotNull(sessionWithProfileClaims(uid, email, "Pat", "Doe", "patdoe"));
 
-        verify(userDao).createUserStrict(argThat(u ->
-                "patdoe".equals(u.getPreferredUsername())
-                        && "Pat".equals(u.getFirstName())
-                        && "Doe".equals(u.getLastName())
-                        && u.getLinkedAccountProfiles() != null
-                        && "patdoe".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("preferred_username"))
-                        && "Pat".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("given_name"))
-                        && "Doe".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("family_name"))));
+        verify(userCreation).preferredUsername("patdoe");
+        verify(userCreation).firstName("Pat");
+        verify(userCreation).lastName("Doe");
+        verify(userCreation).linkedAccountProfile(eq(SCHEME_NAME), argThat(claims ->
+                "patdoe".equals(claims.get("preferred_username"))
+                        && "Pat".equals(claims.get("given_name"))
+                        && "Doe".equals(claims.get("family_name"))));
     }
 
     // ── scenario 8: returning user, blank fields — profile claims backfilled ──
@@ -395,9 +386,14 @@ public class OidcAccountLinkingTest {
 
         when(userUidDao.findUserUid(sharedSub, SCHEME_NAME)).thenReturn(Optional.empty());
         when(userUidDao.findUserUid(sharedSub, SCHEME_NAME_2)).thenReturn(Optional.empty());
-        when(userDao.createUserStrict(any()))
-                .thenReturn(user(new User(), userIdFromProvider1))
-                .thenReturn(user(new User(), userIdFromProvider2));
+
+        // Two distinct builder instances so each provider's creation flow can be verified independently
+        // (a single shared mock couldn't distinguish which uid() call belongs to which create() call).
+        final var creation1 = mock(UserCreation.class, RETURNS_SELF);
+        final var creation2 = mock(UserCreation.class, RETURNS_SELF);
+        when(userDao.newEmptyUser()).thenReturn(creation1, creation2);
+        when(creation1.create()).thenReturn(user(new User(), userIdFromProvider1));
+        when(creation2.create()).thenReturn(user(new User(), userIdFromProvider2));
 
         final var firstSession = session(sharedSub, null, ISSUER, algorithm, KID);
         final var secondSession = session(sharedSub, null, ISSUER_2, algorithm2, KID_2);
@@ -409,10 +405,8 @@ public class OidcAccountLinkingTest {
                 secondSession.getSession().getUser().getId(),
                 "The same 'sub' from two different issuers must resolve to two distinct users/links");
 
-        verify(userUidDao).createUserUidStrict(argThat(u ->
-                SCHEME_NAME.equals(u.getScheme()) && sharedSub.equals(u.getId()) && userIdFromProvider1.equals(u.getUserId())));
-        verify(userUidDao).createUserUidStrict(argThat(u ->
-                SCHEME_NAME_2.equals(u.getScheme()) && sharedSub.equals(u.getId()) && userIdFromProvider2.equals(u.getUserId())));
+        verify(creation1).uid(SCHEME_NAME, sharedSub, VerificationStatus.VERIFIED);
+        verify(creation2).uid(SCHEME_NAME_2, sharedSub, VerificationStatus.VERIFIED);
 
     }
 

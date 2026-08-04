@@ -159,51 +159,44 @@ public class AnonOidcAuthService implements OidcAuthService {
             return user;
         }
 
-        // No existing user — insert a fresh document via createUserStrict to avoid collision
-        // when name/email are absent (createUser uses an upsert that would merge blank users).
-        var user = new User();
-        user.setLevel(USER);
+        // No existing user — start a fresh User with the minimum needed via newEmptyUser(), then attach
+        // every UserUid link explicitly. createUserStrict's automatic email/name linking would otherwise
+        // collide with the explicit email link requested below.
+        final var placeholder = new User();
 
         if (hasEmail) {
-            user.setEmail(email);
+            placeholder.setEmail(email);
+        }
+
+        getNameService().assignNameAndEmailIfNecessary(placeholder);
+
+        final var builder = getUserDao().newEmptyUser()
+                .level(USER)
+                .name(placeholder.getName())
+                .email(placeholder.getEmail())
+                .uid(scheme.getName(), uid, VerificationStatus.VERIFIED);
+
+        if (hasEmail) {
+            builder.uid(UserUidDao.SCHEME_EMAIL, email, VerificationStatus.VERIFIED);
         }
 
         if (isPresent(preferredUsername)) {
-            user.setPreferredUsername(preferredUsername);
+            builder.preferredUsername(preferredUsername);
         }
 
         if (isPresent(givenName)) {
-            user.setFirstName(givenName);
+            builder.firstName(givenName);
         }
 
         if (isPresent(familyName)) {
-            user.setLastName(familyName);
+            builder.lastName(familyName);
         }
 
         if (!profileClaims.isEmpty()) {
-            putLinkedAccountProfile(user, scheme.getName(), profileClaims);
+            builder.linkedAccountProfile(scheme.getName(), profileClaims);
         }
 
-        getNameService().assignNameAndEmailIfNecessary(user);
-
-        user = getUserDao().createUserStrict(user);
-
-        // If a stale OIDC UID exists (user was deleted), delete it before relinking
-        if (oidcUid.isPresent()) {
-            userUidDao.tryDeleteUserUid(oidcUid.get());
-        }
-
-        createNewUserUid(uid, scheme.getName(), user.getId());
-
-        if (hasEmail) {
-            // If a stale email UID exists (user was deleted), delete it before relinking
-            if (emailUid.isPresent()) {
-                userUidDao.tryDeleteUserUid(emailUid.get());
-            }
-            createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
-        }
-
-        return user;
+        return builder.create();
 
     }
 
