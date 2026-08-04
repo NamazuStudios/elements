@@ -332,6 +332,30 @@ public class OidcAccountLinkingTest {
                         && "Pat".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("given_name"))));
     }
 
+    // ── scenario 9b: backfill persistence failure must not block login ────────
+    //   a pre-existing data issue on the user record (e.g. a legacy field value that predates a validation rule
+    //   tightened since the account was created) can make updateUserStrict throw when persisting the backfilled
+    //   profile claims. This is a best-effort capture, not part of the authentication contract — login must
+    //   still succeed even if it fails.
+
+    @Test
+    public void testLoginSucceedsEvenWhenBackfillPersistenceFails() {
+        final var uid = randomId();
+        final var userId = randomId();
+        final var existing = existingUser(userId);
+
+        when(userUidDao.findUserUid(uid, SCHEME_NAME)).thenReturn(Optional.of(uid(uid, SCHEME_NAME, userId)));
+        when(userDao.getUser(userId)).thenReturn(existing);
+        // Simulates the real-world case: MongoUserDao.validate() rejects the full User object during
+        // updateUserStrict because of an unrelated, pre-existing invalid field (e.g. 'name').
+        when(userDao.updateUserStrict(any())).thenThrow(new RuntimeException("name is invalid"));
+
+        final var result = sessionWithProfileClaims(uid, null, "Pat", null, null);
+
+        assertNotNull(result, "Login must succeed even if the opportunistic profile backfill fails to persist");
+        assertEquals(result.getSession().getUser().getId(), userId);
+    }
+
     // ── scenario 10: linkedAccountProfiles preserved independently per scheme ─
     //   linking a second scheme to the same user must not clobber or remove the first scheme's entry.
 

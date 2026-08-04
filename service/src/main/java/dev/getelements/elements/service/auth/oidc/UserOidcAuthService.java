@@ -106,7 +106,15 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
                 user.setLinkedAccountProfiles(profiles);
             }
             profiles.put(scheme.getName(), profileClaims);
-            getUserDao().updateUserStrict(user);
+
+            try {
+                getUserDao().updateUserStrict(user);
+            } catch (final Exception ex) {
+                // Best-effort: this is an opportunistic profile-data capture, not a critical part of linking
+                // the account. A pre-existing data issue on this user record must never block the link operation.
+                logger.warn("Failed to persist linked account profile for user {}; continuing without it.",
+                        user.getId(), ex);
+            }
         }
 
         return user;

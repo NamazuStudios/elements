@@ -13,6 +13,8 @@ import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +24,8 @@ import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
 public class AnonOidcAuthService implements OidcAuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AnonOidcAuthService.class);
 
     private UserDao userDao;
 
@@ -138,7 +142,15 @@ public class AnonOidcAuthService implements OidcAuthService {
             }
 
             if (changed) {
-                getUserDao().updateUserStrict(user);
+                try {
+                    getUserDao().updateUserStrict(user);
+                } catch (final Exception ex) {
+                    // Best-effort: this is an opportunistic profile-data capture, not a critical part of
+                    // authentication. A pre-existing data issue on this user record (e.g. a field that predates
+                    // a validation rule tightened since the account was created) must never block login.
+                    logger.warn("Failed to persist backfilled profile claims for user {}; continuing without them.",
+                            user.getId(), ex);
+                }
             }
 
             return user;
