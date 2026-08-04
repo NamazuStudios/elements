@@ -147,6 +147,28 @@ public class OidcAccountLinkingTest {
         verify(userUidDao, never()).createUserUidStrict(any());
     }
 
+    // ── scenario 2b: returning user whose account predates the provider supplying an email ──────────
+    //   the OIDC UID already resolves to an existing user with no email set (e.g. created before the
+    //   provider config requested email claims) — a later login that now includes an email must backfill it
+    //   onto the existing User record, not just leave it linked via the UserUid.
+
+    @Test
+    public void testReturningUserBackfillsEmailWhenNewlyProvided() {
+        final var uid    = randomId();
+        final var email  = "backfilled@example.com";
+        final var userId = randomId();
+
+        when(userUidDao.findUserUid(uid,   SCHEME_NAME))             .thenReturn(Optional.of(uid(uid,   SCHEME_NAME, userId)));
+        when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)) .thenReturn(Optional.empty());
+        when(userDao.getUser(userId)).thenReturn(existingUser(userId));
+
+        final var result = session(uid, email);
+        assertNotNull(result);
+
+        verify(userDao).updateUserStrict(argThat(u -> email.equals(u.getEmail())));
+        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
+    }
+
     // ── scenario 3: account linking via email ─────────────────────────────────
     //   user exists (has an email UID) but logs in via a new OIDC scheme for
     //   the first time → OIDC UID should be added to the existing user
@@ -210,7 +232,131 @@ public class OidcAccountLinkingTest {
         verify(userUidDao, never()).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
     }
 
-    // ── scenario 6: same sub via two different providers (issuers) ────────────
+    // ── scenario 6: email present but not marked verified ────────────────────
+    //   the provider is trusted infrastructure the admin configured; any email claim it returns is linked and
+    //   trusted regardless of email_verified (which some providers omit or encode as a non-boolean type)
+
+    @Test
+    public void testUnverifiedEmailIsStillLinkedAndTrusted() {
+        final var uid   = randomId();
+        final var email = "unverified@example.com";
+        final var newId = randomId();
+
+        when(userUidDao.findUserUid(uid,   SCHEME_NAME))              .thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL))  .thenReturn(Optional.empty());
+        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newId));
+
+        final var jwt = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject(uid)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .withClaim("email", email)
+                .withClaim("email_verified", false)
+                .sign(algorithm);
+
+        final var request = new OidcSessionRequest();
+        request.setJwt(jwt);
+
+        assertNotNull(anonServiceProvider.get().createSession(request));
+
+        verify(userDao).createUserStrict(argThat(u -> email.equals(u.getEmail())));
+        verify(userUidDao).createUserUidStrict(argThat(u -> UserUidDao.SCHEME_EMAIL.equals(u.getScheme()) && email.equals(u.getId())));
+    }
+
+    // ── scenario 7: new user captures profile claims + per-scheme snapshot ────
+
+    @Test
+    public void testNewUserCapturesProfileClaimsAndLinkedAccountProfile() {
+        final var uid = randomId();
+        final var email = "profile@example.com";
+        final var newId = randomId();
+
+        when(userUidDao.findUserUid(uid,   SCHEME_NAME))             .thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)) .thenReturn(Optional.empty());
+        when(userDao.createUserStrict(any())).then(i -> user(i.getArgument(0), newId));
+
+        assertNotNull(sessionWithProfileClaims(uid, email, "Pat", "Doe", "patdoe"));
+
+        verify(userDao).createUserStrict(argThat(u ->
+                "patdoe".equals(u.getPreferredUsername())
+                        && "Pat".equals(u.getFirstName())
+                        && "Doe".equals(u.getLastName())
+                        && u.getLinkedAccountProfiles() != null
+                        && "patdoe".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("preferred_username"))
+                        && "Pat".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("given_name"))
+                        && "Doe".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("family_name"))));
+    }
+
+    // ── scenario 8: returning user, blank fields — profile claims backfilled ──
+
+    @Test
+    public void testReturningUserBackfillsProfileFieldsWhenBlank() {
+        final var uid = randomId();
+        final var userId = randomId();
+        final var existing = existingUser(userId);
+
+        when(userUidDao.findUserUid(uid, SCHEME_NAME)).thenReturn(Optional.of(uid(uid, SCHEME_NAME, userId)));
+        when(userDao.getUser(userId)).thenReturn(existing);
+
+        assertNotNull(sessionWithProfileClaims(uid, null, "Pat", "Doe", "patdoe"));
+
+        verify(userDao).updateUserStrict(argThat(u ->
+                "patdoe".equals(u.getPreferredUsername())
+                        && "Pat".equals(u.getFirstName())
+                        && "Doe".equals(u.getLastName())
+                        && u.getLinkedAccountProfiles() != null
+                        && u.getLinkedAccountProfiles().containsKey(SCHEME_NAME)));
+    }
+
+    // ── scenario 9: returning user, already-set fields — never overwritten ────
+    //   fill-only-if-blank: an existing value (admin-set, user-set, or from an earlier login) always wins over
+    //   whatever a linked provider reports. linkedAccountProfiles is unaffected by this rule — it's a tracking
+    //   snapshot, not a "don't overwrite" convenience field, so it still gets the latest value either way.
+
+    @Test
+    public void testReturningUserDoesNotOverwriteExistingProfileFields() {
+        final var uid = randomId();
+        final var userId = randomId();
+        final var existing = existingUser(userId);
+        existing.setFirstName("Custom");
+
+        when(userUidDao.findUserUid(uid, SCHEME_NAME)).thenReturn(Optional.of(uid(uid, SCHEME_NAME, userId)));
+        when(userDao.getUser(userId)).thenReturn(existing);
+
+        assertNotNull(sessionWithProfileClaims(uid, null, "Pat", null, null));
+
+        verify(userDao).updateUserStrict(argThat(u ->
+                "Custom".equals(u.getFirstName())
+                        && u.getLinkedAccountProfiles() != null
+                        && "Pat".equals(u.getLinkedAccountProfiles().get(SCHEME_NAME).get("given_name"))));
+    }
+
+    // ── scenario 10: linkedAccountProfiles preserved independently per scheme ─
+    //   linking a second scheme to the same user must not clobber or remove the first scheme's entry.
+
+    @Test
+    public void testLinkedAccountProfilesPreservedIndependentlyAcrossSchemes() {
+        final var userId = randomId();
+        final var sub1 = randomId();
+        final var sub2 = randomId();
+        final var existing = existingUser(userId);
+
+        when(userUidDao.findUserUid(sub1, SCHEME_NAME)).thenReturn(Optional.of(uid(sub1, SCHEME_NAME, userId)));
+        when(userDao.getUser(userId)).thenReturn(existing);
+
+        assertNotNull(sessionWithProfileClaims(sub1, null, "Pat", null, null, ISSUER, algorithm, KID));
+        assertEquals(existing.getLinkedAccountProfiles().get(SCHEME_NAME).get("given_name"), "Pat");
+
+        when(userUidDao.findUserUid(sub2, SCHEME_NAME_2)).thenReturn(Optional.of(uid(sub2, SCHEME_NAME_2, userId)));
+
+        assertNotNull(sessionWithProfileClaims(sub2, null, null, "Smith", null, ISSUER_2, algorithm2, KID_2));
+
+        assertEquals(existing.getLinkedAccountProfiles().get(SCHEME_NAME).get("given_name"), "Pat");
+        assertEquals(existing.getLinkedAccountProfiles().get(SCHEME_NAME_2).get("family_name"), "Smith");
+    }
+
+    // ── scenario 11: same sub via two different providers (issuers) ────────────
     //   the ticket requires account linking to key on (issuer, sub), never sub
     //   alone — presenting the identical 'sub' value through two distinct
     //   provider schemes must therefore produce two distinct UserUid links,
@@ -250,6 +396,41 @@ public class OidcAccountLinkingTest {
 
     private SessionCreation session(final String uid, final String email) {
         return session(uid, email, ISSUER, algorithm, KID);
+    }
+
+    private SessionCreation sessionWithProfileClaims(final String uid, final String email,
+                                                      final String givenName, final String familyName,
+                                                      final String preferredUsername) {
+        return sessionWithProfileClaims(uid, email, givenName, familyName, preferredUsername, ISSUER, algorithm, KID);
+    }
+
+    private SessionCreation sessionWithProfileClaims(final String uid, final String email,
+                                                      final String givenName, final String familyName,
+                                                      final String preferredUsername,
+                                                      final String issuer, final Algorithm signingAlgorithm,
+                                                      final String kid) {
+        var builder = JWT.create()
+                .withIssuer(issuer)
+                .withSubject(uid)
+                .withKeyId(kid)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000));
+
+        if (email != null) {
+            builder = builder.withClaim("email", email).withClaim("email_verified", true);
+        }
+        if (givenName != null) {
+            builder = builder.withClaim("given_name", givenName);
+        }
+        if (familyName != null) {
+            builder = builder.withClaim("family_name", familyName);
+        }
+        if (preferredUsername != null) {
+            builder = builder.withClaim("preferred_username", preferredUsername);
+        }
+
+        final var request = new OidcSessionRequest();
+        request.setJwt(builder.sign(signingAlgorithm));
+        return anonServiceProvider.get().createSession(request);
     }
 
     private SessionCreation session(final String uid, final String email,

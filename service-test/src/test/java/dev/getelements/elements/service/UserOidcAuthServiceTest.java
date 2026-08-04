@@ -148,21 +148,27 @@ public class UserOidcAuthServiceTest {
     }
 
     /**
-     * Unverified email → email UID NOT created.
+     * Email present but not marked verified by the provider → still trusted and linked. The provider is
+     * trusted infrastructure the admin explicitly configured, and Elements has no independent way to check a
+     * provider's own email_verified claim (some providers omit it, or encode it as a non-boolean type) — see
+     * AnonOidcAuthService for the full rationale.
      */
     @Test
-    public void testUnverifiedEmail_emailUidNotCreated() {
+    public void testUnverifiedEmail_stillCreatesEmailUid() {
         when(userUidDao.findUserUid(SUB, SCHEME_NAME)).thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL)).thenReturn(Optional.empty());
 
         runMapper(jwt(SUB, EMAIL, false), scheme(SCHEME_NAME));
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao, times(1)).createUserUidStrict(uidCaptor.capture());
-        assertEquals(uidCaptor.getValue().getId(), SUB);
-        assertEquals(uidCaptor.getValue().getScheme(), SCHEME_NAME);
+        verify(userUidDao, times(2)).createUserUidStrict(uidCaptor.capture());
 
-        // No email UID lookup should be performed at all
-        verify(userUidDao, never()).findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL);
+        final var emailUid = uidCaptor.getAllValues().stream()
+                .filter(u -> EMAIL.equals(u.getId()) && UserUidDao.SCHEME_EMAIL.equals(u.getScheme()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(emailUid, "Email UID should be created even when not marked verified");
+        assertEquals(emailUid.getUserId(), CURRENT_USER_ID);
     }
 
     /**

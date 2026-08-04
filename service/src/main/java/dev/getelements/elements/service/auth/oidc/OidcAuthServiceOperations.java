@@ -36,6 +36,9 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -380,9 +383,64 @@ public class OidcAuthServiceOperations {
         this.jwksRefreshIntervalSeconds = jwksRefreshIntervalSeconds;
     }
 
+    /**
+     * The standard OIDC {@code profile} scope claim names (OpenID Connect Core 1.0 §5.1), excluding {@code sub}/
+     * {@code email}/{@code email_verified} (handled separately, with dedicated user-uid linking) and
+     * token/session metadata such as {@code aud}/{@code iss}/{@code exp}/{@code iat}/{@code nonce} (not profile
+     * data, and mostly change on every login).
+     */
+    private static final List<String> PROFILE_CLAIM_NAMES = List.of(
+            "name", "given_name", "family_name", "middle_name", "nickname", "preferred_username",
+            "profile", "picture", "website", "gender", "birthdate", "zoneinfo", "locale", "updated_at"
+    );
+
+    /**
+     * Reads a claim as a string, tolerating a bare {@code null} from {@link DecodedJWT#getClaim(String)} — a real
+     * {@code DecodedJWT} never returns null there (a missing claim comes back as a {@code NullClaim} whose
+     * {@code asString()} is null), but a mocked one used in tests can return a bare null for an unstubbed claim
+     * name. All claim reads in this package should go through this rather than calling {@code getClaim(...)
+     * .asString()} directly.
+     *
+     * @param jwt the decoded id_token
+     * @param claimName the claim name
+     * @return the claim's string value, or {@code null} if absent
+     */
+    public static String claimAsString(final DecodedJWT jwt, final String claimName) {
+        final var claim = jwt.getClaim(claimName);
+        return claim == null ? null : claim.asString();
+    }
+
+    /**
+     * Extracts whichever standard OIDC profile-scope claims are actually present in the given token, keyed by
+     * their raw claim name. Used to snapshot a linked scheme's reported profile data onto {@link User#getLinkedAccountProfiles()}.
+     *
+     * @param jwt the decoded id_token
+     * @return a map of present profile claim names to their string values; empty if none are present
+     */
+    public static Map<String, String> extractProfileClaims(final DecodedJWT jwt) {
+
+        final var claims = new HashMap<String, String>();
+
+        for (final var claimName : PROFILE_CLAIM_NAMES) {
+            final var value = claimAsString(jwt, claimName);
+            if (value != null && !value.isEmpty()) {
+                claims.put(claimName, value);
+            }
+        }
+
+        return claims;
+
+    }
+
     public enum Claim {
 
         EMAIL("email"),
+
+        PREFERRED_USERNAME("preferred_username"),
+
+        GIVEN_NAME("given_name"),
+
+        FAMILY_NAME("family_name"),
 
         USER_ID(OidcClaim.SUB.getValue()),
 

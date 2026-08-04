@@ -96,11 +96,14 @@ public class AnonOidcAuthServiceTest {
     }
 
     /**
-     * New OIDC user, email_verified=false → creates user without email, only sub UID created.
+     * New OIDC user, email_verified=false → email is still trusted and applied. The provider is trusted
+     * infrastructure the admin explicitly configured, and Elements has no independent way to check a provider's
+     * own email_verified claim (some providers omit it, or encode it as a non-boolean type).
      */
     @Test
-    public void testNewUser_emailNotVerified_createsUserWithoutEmailUid() {
+    public void testNewUser_emailNotVerified_stillCreatesUserWithEmailAndBothUids() {
         when(userUidDao.findUserUid(SUB_1, SCHEME_NAME)).thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL)).thenReturn(Optional.empty());
 
         final var newUser = userWithId("new-user-2");
         when(userDao.createUserStrict(any(User.class))).thenReturn(newUser);
@@ -109,12 +112,13 @@ public class AnonOidcAuthServiceTest {
 
         final var userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userDao).createUserStrict(userCaptor.capture());
-        assertNull(userCaptor.getValue().getEmail(), "Email must not be set when not verified");
+        assertEquals(userCaptor.getValue().getEmail(), EMAIL, "Email should be trusted even when not marked verified");
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao, times(1)).createUserUidStrict(uidCaptor.capture());
-        assertEquals(uidCaptor.getValue().getId(), SUB_1);
-        assertEquals(uidCaptor.getValue().getScheme(), SCHEME_NAME);
+        verify(userUidDao, times(2)).createUserUidStrict(uidCaptor.capture());
+        final var uids = uidCaptor.getAllValues();
+        assertTrue(uids.stream().anyMatch(u -> SUB_1.equals(u.getId()) && SCHEME_NAME.equals(u.getScheme())));
+        assertTrue(uids.stream().anyMatch(u -> EMAIL.equals(u.getId()) && UserUidDao.SCHEME_EMAIL.equals(u.getScheme())));
     }
 
     /**
