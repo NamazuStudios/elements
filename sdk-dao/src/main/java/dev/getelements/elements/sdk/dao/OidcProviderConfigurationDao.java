@@ -42,12 +42,12 @@ public interface OidcProviderConfigurationDao {
     }
 
     /**
-     * Finds a provider configuration by its unique provider slug (e.g. "twitch").
+     * Finds a provider configuration by its unique name (e.g. "twitch").
      *
-     * @param provider the provider slug
+     * @param name the provider's unique name
      * @return an {@link Optional} containing the configuration, or empty if absent
      */
-    Optional<OidcProviderConfiguration> findByProvider(String provider);
+    Optional<OidcProviderConfiguration> findByName(String name);
 
     /**
      * Creates a new provider configuration.

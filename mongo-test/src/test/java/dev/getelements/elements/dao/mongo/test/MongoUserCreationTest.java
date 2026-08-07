@@ -54,7 +54,7 @@ public class MongoUserCreationTest {
         final var user = userDao.newEmptyUser()
                 .level(USER)
                 .email(email)
-                .preferredUsername("patdoe")
+                .displayName("patdoe")
                 .firstName("Pat")
                 .lastName("Doe")
                 .linkedAccountProfile(oidcScheme, Map.of("given_name", "Pat"))
@@ -64,7 +64,7 @@ public class MongoUserCreationTest {
 
         assertNotNull(user.getId());
         assertEquals(user.getEmail(), email);
-        assertEquals(user.getPreferredUsername(), "patdoe");
+        assertEquals(user.getDisplayName(), "patdoe");
         assertEquals(user.getFirstName(), "Pat");
         assertEquals(user.getLastName(), "Doe");
         assertEquals(user.getLinkedAccountProfiles().get(oidcScheme).get("given_name"), "Pat");

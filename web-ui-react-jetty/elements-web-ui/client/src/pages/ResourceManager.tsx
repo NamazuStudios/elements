@@ -743,7 +743,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
 
         // Custom column filtering for OIDC Providers resource - clientSecret must never render in the table
         if (resourceName === 'OIDC Providers') {
-          const filteredKeys = keys.filter(k => k === 'id' || k === 'provider' || k === 'discoveryUrl');
+          const filteredKeys = keys.filter(k => k === 'id' || k === 'name' || k === 'discoveryUrl');
           return filteredKeys;
         }
         

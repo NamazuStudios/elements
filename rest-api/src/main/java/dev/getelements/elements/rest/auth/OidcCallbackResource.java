@@ -23,9 +23,9 @@ import java.net.URISyntaxException;
  * The provider-facing redirect target for the browser-redirect OIDC login flow. Registered as each provider's
  * redirect_uri; never called directly by a game client. By default renders a minimal human-readable page and
  * returns 200 with an HTML body — the outcome is communicated to the waiting client via
- * {@link OidcSessionResource}'s poll endpoint, not via this response. If the login attempt was started with a
- * {@code successRedirectUrl}/{@code errorRedirectUrl}, the browser is redirected there instead (302), with this
- * request's own query parameters appended so the destination page has access to the same information.
+ * {@link OidcSessionResource}'s poll endpoint, not via this response. If the provider's configuration has a
+ * {@code successRedirectUrl}/{@code errorRedirectUrl} set, the browser is redirected there instead (302), with
+ * this request's own query parameters appended so the destination page has access to the same information.
  */
 @Path("oidc/{provider}/callback")
 public class OidcCallbackResource {

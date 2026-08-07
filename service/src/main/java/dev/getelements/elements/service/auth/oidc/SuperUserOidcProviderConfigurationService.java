@@ -100,17 +100,19 @@ public class SuperUserOidcProviderConfigurationService implements OidcProviderCo
 
     private void applyRequest(final OidcProviderConfiguration config,
                                final CreateOrUpdateOidcProviderConfigurationRequest request) {
-        config.setProvider(request.getProvider());
+        config.setName(request.getName());
         config.setDiscoveryUrl(request.getDiscoveryUrl());
         config.setClientId(request.getClientId());
         config.setClientSecret(request.getClientSecret());
         config.setScopes(request.getScopes());
-        config.setRedirectUri(resolveRedirectUri(request.getProvider(), request.getRedirectUri()));
+        config.setRedirectUri(resolveRedirectUri(request.getName(), request.getRedirectUri()));
         config.setExtraAuthorizeParams(request.getExtraAuthorizeParams());
         config.setTokenEndpointAuthMethod(request.getTokenEndpointAuthMethod());
+        config.setSuccessRedirectUrl(request.getSuccessRedirectUrl());
+        config.setErrorRedirectUrl(request.getErrorRedirectUrl());
     }
 
-    private String resolveRedirectUri(final String provider, final String requestedRedirectUri) {
+    private String resolveRedirectUri(final String name, final String requestedRedirectUri) {
 
         if (requestedRedirectUri != null && !requestedRedirectUri.isBlank()) {
             return requestedRedirectUri;
@@ -120,7 +122,7 @@ public class SuperUserOidcProviderConfigurationService implements OidcProviderCo
                 ? getApiOutsideUrl().substring(0, getApiOutsideUrl().length() - 1)
                 : getApiOutsideUrl();
 
-        return base + "/oidc/" + provider + "/callback";
+        return base + "/oidc/" + name + "/callback";
 
     }
 

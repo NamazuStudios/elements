@@ -108,7 +108,7 @@ public class OidcLoginAttemptOperationsTest {
         operations.setClient(client);
         operations.setTtlSeconds(300L);
 
-        when(oidcProviderConfigurationDao.findByProvider(PROVIDER)).thenReturn(Optional.of(config()));
+        when(oidcProviderConfigurationDao.findByName(PROVIDER)).thenReturn(Optional.of(config()));
         when(oidcProviderConfigurationOperations.resolveDiscovery(any())).thenReturn(discoveryDocument());
         when(oidcProviderConfigurationOperations.resolveScheme(any(), any())).thenReturn(scheme());
 
@@ -116,7 +116,7 @@ public class OidcLoginAttemptOperationsTest {
 
     private OidcProviderConfiguration config() {
         final var config = new OidcProviderConfiguration();
-        config.setProvider(PROVIDER);
+        config.setName(PROVIDER);
         config.setDiscoveryUrl("https://id.twitch.tv/oauth2/.well-known/openid-configuration");
         config.setClientId(CLIENT_ID);
         config.setClientSecret(CLIENT_SECRET);
@@ -162,14 +162,14 @@ public class OidcLoginAttemptOperationsTest {
 
     @Test(expectedExceptions = InvalidDataException.class)
     public void testBeginWithUnknownProviderThrows() {
-        when(oidcProviderConfigurationDao.findByProvider("unknown")).thenReturn(Optional.empty());
-        operations.begin("unknown", null, null);
+        when(oidcProviderConfigurationDao.findByName("unknown")).thenReturn(Optional.empty());
+        operations.begin("unknown");
     }
 
     @Test
     public void testBeginBuildsAuthorizeUrlWithAllRequiredParamsAndNeverTheSecret() {
 
-        final var begin = operations.begin(PROVIDER, null, null);
+        final var begin = operations.begin(PROVIDER);
 
         assertNotNull(begin.getHandle());
         assertTrue(begin.getExpiresAt() > currentTimeMillis() / 1000);
@@ -199,7 +199,12 @@ public class OidcLoginAttemptOperationsTest {
     @Test
     public void testBeginPersistsConfiguredRedirectUrls() {
 
-        operations.begin(PROVIDER, "https://game.example.com/success", "https://game.example.com/error");
+        final var config = config();
+        config.setSuccessRedirectUrl("https://game.example.com/success");
+        config.setErrorRedirectUrl("https://game.example.com/error");
+        when(oidcProviderConfigurationDao.findByName(PROVIDER)).thenReturn(Optional.of(config));
+
+        operations.begin(PROVIDER);
 
         final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
         verify(oidcLoginAttemptDao).create(attemptCaptor.capture());

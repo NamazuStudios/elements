@@ -263,8 +263,8 @@ public class MongoUserDao implements UserDao {
         }
 
         @Override
-        public UserCreation preferredUsername(final String preferredUsername) {
-            user.setPreferredUsername(preferredUsername);
+        public UserCreation displayName(final String displayName) {
+            user.setDisplayName(displayName);
             return this;
         }
 

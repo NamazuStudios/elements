@@ -270,7 +270,7 @@ public class OidcAccountLinkingTest {
 
         assertNotNull(sessionWithProfileClaims(uid, email, "Pat", "Doe", "patdoe"));
 
-        verify(userCreation).preferredUsername("patdoe");
+        verify(userCreation).displayName("patdoe");
         verify(userCreation).firstName("Pat");
         verify(userCreation).lastName("Doe");
         verify(userCreation).linkedAccountProfile(eq(SCHEME_NAME), argThat(claims ->
@@ -293,7 +293,7 @@ public class OidcAccountLinkingTest {
         assertNotNull(sessionWithProfileClaims(uid, null, "Pat", "Doe", "patdoe"));
 
         verify(userDao).updateUserStrict(argThat(u ->
-                "patdoe".equals(u.getPreferredUsername())
+                "patdoe".equals(u.getDisplayName())
                         && "Pat".equals(u.getFirstName())
                         && "Doe".equals(u.getLastName())
                         && u.getLinkedAccountProfiles() != null

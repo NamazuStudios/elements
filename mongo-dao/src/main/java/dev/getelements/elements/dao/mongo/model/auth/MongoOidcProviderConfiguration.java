@@ -10,7 +10,7 @@ import java.util.Objects;
 
 @Entity(value = "oidc_provider_configuration", useDiscriminator = false)
 @Indexes({
-        @Index(fields = @Field("provider"), options = @IndexOptions(unique = true))
+        @Index(fields = @Field("name"), options = @IndexOptions(unique = true))
 })
 public class MongoOidcProviderConfiguration {
 
@@ -18,7 +18,7 @@ public class MongoOidcProviderConfiguration {
     private ObjectId id;
 
     @Property
-    private String provider;
+    private String name;
 
     @Property
     private String discoveryUrl;
@@ -41,6 +41,12 @@ public class MongoOidcProviderConfiguration {
     @Property
     private TokenEndpointAuthMethod tokenEndpointAuthMethod = TokenEndpointAuthMethod.CLIENT_SECRET_BASIC;
 
+    @Property
+    private String successRedirectUrl;
+
+    @Property
+    private String errorRedirectUrl;
+
     public ObjectId getId() {
         return id;
     }
@@ -49,12 +55,12 @@ public class MongoOidcProviderConfiguration {
         this.id = id;
     }
 
-    public String getProvider() {
-        return provider;
+    public String getName() {
+        return name;
     }
 
-    public void setProvider(String provider) {
-        this.provider = provider;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDiscoveryUrl() {
@@ -113,26 +119,45 @@ public class MongoOidcProviderConfiguration {
         this.tokenEndpointAuthMethod = tokenEndpointAuthMethod;
     }
 
+    public String getSuccessRedirectUrl() {
+        return successRedirectUrl;
+    }
+
+    public void setSuccessRedirectUrl(String successRedirectUrl) {
+        this.successRedirectUrl = successRedirectUrl;
+    }
+
+    public String getErrorRedirectUrl() {
+        return errorRedirectUrl;
+    }
+
+    public void setErrorRedirectUrl(String errorRedirectUrl) {
+        this.errorRedirectUrl = errorRedirectUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoOidcProviderConfiguration that = (MongoOidcProviderConfiguration) o;
         return Objects.equals(getId(), that.getId())
-                && Objects.equals(getProvider(), that.getProvider())
+                && Objects.equals(getName(), that.getName())
                 && Objects.equals(getDiscoveryUrl(), that.getDiscoveryUrl())
                 && Objects.equals(getClientId(), that.getClientId())
                 && Objects.equals(getClientSecret(), that.getClientSecret())
                 && Objects.equals(getScopes(), that.getScopes())
                 && Objects.equals(getRedirectUri(), that.getRedirectUri())
                 && Objects.equals(getExtraAuthorizeParams(), that.getExtraAuthorizeParams())
-                && getTokenEndpointAuthMethod() == that.getTokenEndpointAuthMethod();
+                && getTokenEndpointAuthMethod() == that.getTokenEndpointAuthMethod()
+                && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
+                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProvider(), getDiscoveryUrl(), getClientId(), getClientSecret(),
-                getScopes(), getRedirectUri(), getExtraAuthorizeParams(), getTokenEndpointAuthMethod());
+        return Objects.hash(getId(), getName(), getDiscoveryUrl(), getClientId(), getClientSecret(),
+                getScopes(), getRedirectUri(), getExtraAuthorizeParams(), getTokenEndpointAuthMethod(),
+                getSuccessRedirectUrl(), getErrorRedirectUrl());
     }
 
 }

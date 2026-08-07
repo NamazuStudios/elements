@@ -29,7 +29,7 @@ public class OidcProviderConfiguration {
     @NotBlank
     @Schema(description = "A unique, lowercase, URL-safe identifier for the provider (e.g. 'twitch'). " +
             "Used as the 'provider' path segment and request body value for the OIDC session endpoints.")
-    private String provider;
+    private String name;
 
     @NotBlank
     @Schema(description = "The provider's OIDC discovery document URL, " +
@@ -61,6 +61,16 @@ public class OidcProviderConfiguration {
     @Schema(description = "How the client authenticates to the provider's token endpoint during code exchange.")
     private TokenEndpointAuthMethod tokenEndpointAuthMethod = TokenEndpointAuthMethod.CLIENT_SECRET_BASIC;
 
+    @Schema(description = "Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a " +
+            "successful login instead of rendering the default success page. Server-authoritative: not " +
+            "overridable per login attempt.")
+    private String successRedirectUrl;
+
+    @Schema(description = "Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a " +
+            "failed login instead of rendering the default error page. Server-authoritative: not overridable " +
+            "per login attempt.")
+    private String errorRedirectUrl;
+
     /**
      * Returns the unique ID of the provider configuration.
      *
@@ -84,17 +94,17 @@ public class OidcProviderConfiguration {
      *
      * @return the provider identifier
      */
-    public String getProvider() {
-        return provider;
+    public String getName() {
+        return name;
     }
 
     /**
      * Sets the unique provider identifier.
      *
-     * @param provider the provider identifier
+     * @param name the provider identifier
      */
-    public void setProvider(String provider) {
-        this.provider = provider;
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -223,39 +233,80 @@ public class OidcProviderConfiguration {
         this.tokenEndpointAuthMethod = tokenEndpointAuthMethod;
     }
 
+    /**
+     * Returns the configured success redirect URL.
+     *
+     * @return the success redirect URL, or {@code null} if unset
+     */
+    public String getSuccessRedirectUrl() {
+        return successRedirectUrl;
+    }
+
+    /**
+     * Sets the success redirect URL.
+     *
+     * @param successRedirectUrl the success redirect URL
+     */
+    public void setSuccessRedirectUrl(String successRedirectUrl) {
+        this.successRedirectUrl = successRedirectUrl;
+    }
+
+    /**
+     * Returns the configured error redirect URL.
+     *
+     * @return the error redirect URL, or {@code null} if unset
+     */
+    public String getErrorRedirectUrl() {
+        return errorRedirectUrl;
+    }
+
+    /**
+     * Sets the error redirect URL.
+     *
+     * @param errorRedirectUrl the error redirect URL
+     */
+    public void setErrorRedirectUrl(String errorRedirectUrl) {
+        this.errorRedirectUrl = errorRedirectUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OidcProviderConfiguration that = (OidcProviderConfiguration) o;
         return Objects.equals(getId(), that.getId())
-                && Objects.equals(getProvider(), that.getProvider())
+                && Objects.equals(getName(), that.getName())
                 && Objects.equals(getDiscoveryUrl(), that.getDiscoveryUrl())
                 && Objects.equals(getClientId(), that.getClientId())
                 && Objects.equals(getClientSecret(), that.getClientSecret())
                 && Objects.equals(getScopes(), that.getScopes())
                 && Objects.equals(getRedirectUri(), that.getRedirectUri())
                 && Objects.equals(getExtraAuthorizeParams(), that.getExtraAuthorizeParams())
-                && getTokenEndpointAuthMethod() == that.getTokenEndpointAuthMethod();
+                && getTokenEndpointAuthMethod() == that.getTokenEndpointAuthMethod()
+                && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
+                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getProvider(), getDiscoveryUrl(), getClientId(), getClientSecret(),
-                getScopes(), getRedirectUri(), getExtraAuthorizeParams(), getTokenEndpointAuthMethod());
+        return Objects.hash(getId(), getName(), getDiscoveryUrl(), getClientId(), getClientSecret(),
+                getScopes(), getRedirectUri(), getExtraAuthorizeParams(), getTokenEndpointAuthMethod(),
+                getSuccessRedirectUrl(), getErrorRedirectUrl());
     }
 
     @Override
     public String toString() {
         return "OidcProviderConfiguration{" +
                 "id='" + id + '\'' +
-                ", provider='" + provider + '\'' +
+                ", name='" + name + '\'' +
                 ", discoveryUrl='" + discoveryUrl + '\'' +
                 ", clientId='" + clientId + '\'' +
                 ", scopes=" + scopes +
                 ", redirectUri='" + redirectUri + '\'' +
                 ", extraAuthorizeParams=" + extraAuthorizeParams +
                 ", tokenEndpointAuthMethod=" + tokenEndpointAuthMethod +
+                ", successRedirectUrl='" + successRedirectUrl + '\'' +
+                ", errorRedirectUrl='" + errorRedirectUrl + '\'' +
                 '}';
     }
 

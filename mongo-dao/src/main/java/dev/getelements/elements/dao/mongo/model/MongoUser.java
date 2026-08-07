@@ -57,7 +57,7 @@ public class MongoUser {
     private Set<String> linkedAccounts;
 
     @Property
-    private String preferredUsername;
+    private String displayName;
 
     @Property
     private Map<String, Map<String, String>> linkedAccountProfiles;
@@ -150,12 +150,12 @@ public class MongoUser {
         this.linkedAccounts = linkedAccounts;
     }
 
-    public String getPreferredUsername() {
-        return preferredUsername;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public void setPreferredUsername(String preferredUsername) {
-        this.preferredUsername = preferredUsername;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public Map<String, Map<String, String>> getLinkedAccountProfiles() {
@@ -171,12 +171,12 @@ public class MongoUser {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-        return Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(linkedAccounts, mongoUser.linkedAccounts) && Objects.equals(preferredUsername, mongoUser.preferredUsername) && Objects.equals(linkedAccountProfiles, mongoUser.linkedAccountProfiles);
+        return Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(linkedAccounts, mongoUser.linkedAccounts) && Objects.equals(displayName, mongoUser.displayName) && Objects.equals(linkedAccountProfiles, mongoUser.linkedAccountProfiles);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, linkedAccounts, preferredUsername, linkedAccountProfiles);
+        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, linkedAccounts, displayName, linkedAccountProfiles);
         result = 31 * result + Arrays.hashCode(salt);
         result = 31 * result + Arrays.hashCode(passwordHash);
         return result;
@@ -196,7 +196,7 @@ public class MongoUser {
                 ", passwordHash=" + Arrays.toString(passwordHash) +
                 ", level=" + level +
                 ", linkedAccounts=" + linkedAccounts +
-                ", preferredUsername='" + preferredUsername + '\'' +
+                ", displayName='" + displayName + '\'' +
                 ", linkedAccountProfiles=" + linkedAccountProfiles +
                 '}';
     }

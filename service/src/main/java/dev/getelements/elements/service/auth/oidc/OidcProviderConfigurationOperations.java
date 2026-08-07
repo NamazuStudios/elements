@@ -51,7 +51,7 @@ public class OidcProviderConfigurationOperations {
                                          final OidcDiscoveryDocument discoveryDocument) {
 
         final var scheme = new OidcAuthScheme();
-        scheme.setName(config.getProvider());
+        scheme.setName(config.getName());
         scheme.setIssuer(discoveryDocument.getIssuer());
         scheme.setKeysUrl(discoveryDocument.getJwksUri());
 

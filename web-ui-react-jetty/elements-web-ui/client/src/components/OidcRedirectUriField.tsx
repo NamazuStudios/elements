@@ -25,7 +25,7 @@ export function OidcRedirectUriField({ form, fieldName, description }: OidcRedir
   const [initialized, setInitialized] = useState(false);
   const [useBuiltIn, setUseBuiltIn] = useState(true);
 
-  const provider = form.watch('provider');
+  const provider = form.watch('name');
   const redirectUri = form.watch(fieldName);
 
   useEffect(() => {

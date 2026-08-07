@@ -24,14 +24,6 @@ public class OidcLoginAttemptRequest {
     @Schema(description = "An already-possessed id_token to validate directly, skipping the browser-redirect flow.")
     private String idToken;
 
-    @Schema(description = "Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a " +
-            "successful login instead of rendering the default success page.")
-    private String successRedirectUrl;
-
-    @Schema(description = "Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a " +
-            "failed login instead of rendering the default error page.")
-    private String errorRedirectUrl;
-
     public String getProvider() {
         return provider;
     }
@@ -48,34 +40,16 @@ public class OidcLoginAttemptRequest {
         this.idToken = idToken;
     }
 
-    public String getSuccessRedirectUrl() {
-        return successRedirectUrl;
-    }
-
-    public void setSuccessRedirectUrl(String successRedirectUrl) {
-        this.successRedirectUrl = successRedirectUrl;
-    }
-
-    public String getErrorRedirectUrl() {
-        return errorRedirectUrl;
-    }
-
-    public void setErrorRedirectUrl(String errorRedirectUrl) {
-        this.errorRedirectUrl = errorRedirectUrl;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof OidcLoginAttemptRequest that)) return false;
         return Objects.equals(provider, that.provider)
-                && Objects.equals(idToken, that.idToken)
-                && Objects.equals(successRedirectUrl, that.successRedirectUrl)
-                && Objects.equals(errorRedirectUrl, that.errorRedirectUrl);
+                && Objects.equals(idToken, that.idToken);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(provider, idToken, successRedirectUrl, errorRedirectUrl);
+        return Objects.hash(provider, idToken);
     }
 
     @Override

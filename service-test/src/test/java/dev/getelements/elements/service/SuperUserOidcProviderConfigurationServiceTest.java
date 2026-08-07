@@ -68,7 +68,7 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         verify(providerConfigurationDao).createProviderConfiguration(captor.capture());
 
         final var persisted = captor.getValue();
-        assertEquals(persisted.getProvider(), "twitch");
+        assertEquals(persisted.getName(), "twitch");
         assertEquals(persisted.getClientId(), "client-id");
         assertEquals(persisted.getClientSecret(), "super-secret");
         assertEquals(persisted.getRedirectUri(), "https://api.example.com/oidc/twitch/callback");
@@ -95,7 +95,7 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         verify(providerConfigurationDao).updateProviderConfiguration(captor.capture());
 
         assertEquals(captor.getValue().getId(), "config-1");
-        assertEquals(captor.getValue().getProvider(), "google");
+        assertEquals(captor.getValue().getName(), "google");
         assertEquals(captor.getValue().getClientSecret(), "super-secret");
 
     }
@@ -242,7 +242,7 @@ public class SuperUserOidcProviderConfigurationServiceTest {
     private static OidcProviderConfiguration copyOf(final OidcProviderConfiguration source) {
         final var copy = new OidcProviderConfiguration();
         copy.setId(source.getId());
-        copy.setProvider(source.getProvider());
+        copy.setName(source.getName());
         copy.setDiscoveryUrl(source.getDiscoveryUrl());
         copy.setClientId(source.getClientId());
         copy.setClientSecret(source.getClientSecret());
@@ -250,12 +250,14 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         copy.setRedirectUri(source.getRedirectUri());
         copy.setExtraAuthorizeParams(source.getExtraAuthorizeParams());
         copy.setTokenEndpointAuthMethod(source.getTokenEndpointAuthMethod());
+        copy.setSuccessRedirectUrl(source.getSuccessRedirectUrl());
+        copy.setErrorRedirectUrl(source.getErrorRedirectUrl());
         return copy;
     }
 
-    private static CreateOrUpdateOidcProviderConfigurationRequest validRequest(final String provider) {
+    private static CreateOrUpdateOidcProviderConfigurationRequest validRequest(final String name) {
         final var request = new CreateOrUpdateOidcProviderConfigurationRequest();
-        request.setProvider(provider);
+        request.setName(name);
         request.setDiscoveryUrl("https://id.twitch.tv/oauth2/.well-known/openid-configuration");
         request.setClientId("client-id");
         request.setClientSecret("super-secret");

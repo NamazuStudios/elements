@@ -122,8 +122,8 @@ public class AnonOidcAuthService implements OidcAuthService {
                 changed = true;
             }
 
-            if (isPresent(preferredUsername) && isBlank(user.getPreferredUsername())) {
-                user.setPreferredUsername(preferredUsername);
+            if (isPresent(preferredUsername) && isBlank(user.getDisplayName())) {
+                user.setDisplayName(preferredUsername);
                 changed = true;
             }
 
@@ -181,7 +181,7 @@ public class AnonOidcAuthService implements OidcAuthService {
         }
 
         if (isPresent(preferredUsername)) {
-            builder.preferredUsername(preferredUsername);
+            builder.displayName(preferredUsername);
         }
 
         if (isPresent(givenName)) {

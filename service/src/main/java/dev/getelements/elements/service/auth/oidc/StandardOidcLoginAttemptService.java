@@ -11,10 +11,8 @@ public class StandardOidcLoginAttemptService implements OidcLoginAttemptService 
     private OidcLoginAttemptOperations oidcLoginAttemptOperations;
 
     @Override
-    public OidcLoginAttemptBegin begin(final String provider,
-                                        final String successRedirectUrl,
-                                        final String errorRedirectUrl) {
-        return getOidcLoginAttemptOperations().begin(provider, successRedirectUrl, errorRedirectUrl);
+    public OidcLoginAttemptBegin begin(final String provider) {
+        return getOidcLoginAttemptOperations().begin(provider);
     }
 
     @Override

@@ -52,9 +52,9 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
     }
 
     @Override
-    public Optional<OidcProviderConfiguration> findByProvider(final String provider) {
+    public Optional<OidcProviderConfiguration> findByName(final String name) {
         final var entity = getDatastore().find(MongoOidcProviderConfiguration.class)
-                .filter(eq("provider", provider))
+                .filter(eq("name", name))
                 .first();
         return Optional.ofNullable(entity).map(this::transform);
     }
@@ -81,7 +81,7 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
         query.filter(eq("_id", objectId));
 
         final var builder = new UpdateBuilder();
-        builder.with(set("provider", providerConfiguration.getProvider()));
+        builder.with(set("name", providerConfiguration.getName()));
         builder.with(set("discoveryUrl", providerConfiguration.getDiscoveryUrl()));
         builder.with(set("clientId", providerConfiguration.getClientId()));
         builder.with(set("clientSecret", providerConfiguration.getClientSecret()));
@@ -89,6 +89,8 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
         builder.with(set("redirectUri", providerConfiguration.getRedirectUri()));
         builder.with(set("extraAuthorizeParams", providerConfiguration.getExtraAuthorizeParams()));
         builder.with(set("tokenEndpointAuthMethod", providerConfiguration.getTokenEndpointAuthMethod()));
+        builder.with(set("successRedirectUrl", providerConfiguration.getSuccessRedirectUrl()));
+        builder.with(set("errorRedirectUrl", providerConfiguration.getErrorRedirectUrl()));
 
         final var entity = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))

@@ -20,16 +20,13 @@ public interface OidcLoginAttemptService {
 
     /**
      * Begins a pending login attempt for the given provider, building the provider's authorize URL and returning
-     * an opaque handle used to poll for completion.
+     * an opaque handle used to poll for completion. The success/error redirect URLs applied on callback, if any,
+     * come from the provider's own configuration — server-authoritative, not caller-supplied.
      *
      * @param provider the provider identifier (e.g. "twitch")
-     * @param successRedirectUrl if set, {@code GET /oidc/{provider}/callback} redirects the browser here on
-     *                           success instead of rendering the default success page; may be {@code null}
-     * @param errorRedirectUrl if set, {@code GET /oidc/{provider}/callback} redirects the browser here on
-     *                         failure instead of rendering the default error page; may be {@code null}
      * @return the pending attempt's handle, authorize URL, and expiry
      */
-    OidcLoginAttemptBegin begin(String provider, String successRedirectUrl, String errorRedirectUrl);
+    OidcLoginAttemptBegin begin(String provider);
 
     /**
      * Polls a pending attempt by handle. Returns COMPLETE with the session exactly once, on the poll that first

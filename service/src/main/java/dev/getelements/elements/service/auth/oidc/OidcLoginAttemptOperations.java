@@ -63,9 +63,7 @@ public class OidcLoginAttemptOperations {
 
     private long ttlSeconds;
 
-    public OidcLoginAttemptBegin begin(final String provider,
-                                        final String successRedirectUrl,
-                                        final String errorRedirectUrl) {
+    public OidcLoginAttemptBegin begin(final String provider) {
 
         final var config = findConfigOrThrow(provider);
         final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
@@ -82,8 +80,10 @@ public class OidcLoginAttemptOperations {
         attempt.setNonce(nonce);
         attempt.setStatus(OidcLoginAttemptStatus.PENDING);
         attempt.setExpiry(expiry);
-        attempt.setSuccessRedirectUrl(successRedirectUrl);
-        attempt.setErrorRedirectUrl(errorRedirectUrl);
+        // Snapshotted from the provider config at begin() time, not read live at callback time, so an admin
+        // edit to the config mid-flight can't change the outcome of an attempt already in progress.
+        attempt.setSuccessRedirectUrl(config.getSuccessRedirectUrl());
+        attempt.setErrorRedirectUrl(config.getErrorRedirectUrl());
 
         getOidcLoginAttemptDao().create(attempt);
 
@@ -170,7 +170,7 @@ public class OidcLoginAttemptOperations {
 
     private OidcProviderConfiguration findConfigOrThrow(final String provider) {
         return getOidcProviderConfigurationDao()
-                .findByProvider(provider)
+                .findByName(provider)
                 .orElseThrow(() -> new InvalidDataException("Unknown provider: " + provider));
     }
 
@@ -205,7 +205,7 @@ public class OidcLoginAttemptOperations {
 
             if (response.getStatus() != 200) {
                 final var errorResponse = response.readEntity(String.class);
-                logger.error("Error from OIDC Provider {} {}.", config.getProvider(), errorResponse);
+                logger.error("Error from OIDC Provider {} {}.", config.getName(), errorResponse);
                 throw new ForbiddenException("Token exchange failed with status " + response.getStatus());
             }
 

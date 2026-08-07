@@ -17,7 +17,7 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
 
     @NotBlank
     @Schema(description = "A unique, lowercase, URL-safe identifier for the provider (e.g. 'twitch').")
-    private String provider;
+    private String name;
 
     @NotBlank
     @Schema(description = "The provider's OIDC discovery document URL.")
@@ -46,12 +46,22 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
     @Schema(description = "How the client authenticates to the provider's token endpoint during code exchange.")
     private TokenEndpointAuthMethod tokenEndpointAuthMethod = TokenEndpointAuthMethod.CLIENT_SECRET_BASIC;
 
-    public String getProvider() {
-        return provider;
+    @Schema(description = "Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a " +
+            "successful login instead of rendering the default success page. Server-authoritative: not " +
+            "overridable per login attempt.")
+    private String successRedirectUrl;
+
+    @Schema(description = "Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a " +
+            "failed login instead of rendering the default error page. Server-authoritative: not overridable " +
+            "per login attempt.")
+    private String errorRedirectUrl;
+
+    public String getName() {
+        return name;
     }
 
-    public void setProvider(String provider) {
-        this.provider = provider;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDiscoveryUrl() {
@@ -110,35 +120,55 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
         this.tokenEndpointAuthMethod = tokenEndpointAuthMethod;
     }
 
+    public String getSuccessRedirectUrl() {
+        return successRedirectUrl;
+    }
+
+    public void setSuccessRedirectUrl(String successRedirectUrl) {
+        this.successRedirectUrl = successRedirectUrl;
+    }
+
+    public String getErrorRedirectUrl() {
+        return errorRedirectUrl;
+    }
+
+    public void setErrorRedirectUrl(String errorRedirectUrl) {
+        this.errorRedirectUrl = errorRedirectUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CreateOrUpdateOidcProviderConfigurationRequest that)) return false;
-        return Objects.equals(provider, that.provider)
+        return Objects.equals(name, that.name)
                 && Objects.equals(discoveryUrl, that.discoveryUrl)
                 && Objects.equals(clientId, that.clientId)
                 && Objects.equals(clientSecret, that.clientSecret)
                 && Objects.equals(scopes, that.scopes)
                 && Objects.equals(redirectUri, that.redirectUri)
                 && Objects.equals(extraAuthorizeParams, that.extraAuthorizeParams)
-                && tokenEndpointAuthMethod == that.tokenEndpointAuthMethod;
+                && tokenEndpointAuthMethod == that.tokenEndpointAuthMethod
+                && Objects.equals(successRedirectUrl, that.successRedirectUrl)
+                && Objects.equals(errorRedirectUrl, that.errorRedirectUrl);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(provider, discoveryUrl, clientId, clientSecret, scopes, redirectUri,
-                extraAuthorizeParams, tokenEndpointAuthMethod);
+        return Objects.hash(name, discoveryUrl, clientId, clientSecret, scopes, redirectUri,
+                extraAuthorizeParams, tokenEndpointAuthMethod, successRedirectUrl, errorRedirectUrl);
     }
 
     @Override
     public String toString() {
         return "CreateOrUpdateOidcProviderConfigurationRequest{" +
-                "provider='" + provider + '\'' +
+                "name='" + name + '\'' +
                 ", discoveryUrl='" + discoveryUrl + '\'' +
                 ", clientId='" + clientId + '\'' +
                 ", scopes=" + scopes +
                 ", redirectUri='" + redirectUri + '\'' +
                 ", extraAuthorizeParams=" + extraAuthorizeParams +
                 ", tokenEndpointAuthMethod=" + tokenEndpointAuthMethod +
+                ", successRedirectUrl='" + successRedirectUrl + '\'' +
+                ", errorRedirectUrl='" + errorRedirectUrl + '\'' +
                 '}';
     }
 

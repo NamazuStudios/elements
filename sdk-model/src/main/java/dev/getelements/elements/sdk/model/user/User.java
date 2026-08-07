@@ -58,9 +58,9 @@ public class User implements Serializable {
     @Schema(description = "List of linked account or auth scheme names.")
     private Set<String> linkedAccounts;
 
-    @Schema(description = "The user's preferred username, as reported by an OIDC provider. Never overwrites " +
+    @Schema(description = "The user's display name, as reported by an OIDC provider. Never overwrites " +
             "an existing value; only filled in if previously blank.")
-    private String preferredUsername;
+    private String displayName;
 
     @Schema(description = "Per-linked-OIDC-scheme snapshot of the standard OIDC profile-scope claims that " +
             "scheme most recently reported, keyed by the auth scheme name.")
@@ -284,21 +284,21 @@ public class User implements Serializable {
     }
 
     /**
-     * Returns the user's preferred username, as reported by an OIDC provider.
+     * Returns the user's display name, as reported by an OIDC provider.
      *
-     * @return the preferred username
+     * @return the display name
      */
-    public String getPreferredUsername() {
-        return preferredUsername;
+    public String getDisplayName() {
+        return displayName;
     }
 
     /**
-     * Sets the user's preferred username.
+     * Sets the user's display name.
      *
-     * @param preferredUsername the preferred username
+     * @param displayName the display name
      */
-    public void setPreferredUsername(String preferredUsername) {
-        this.preferredUsername = preferredUsername;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     /**
@@ -324,12 +324,12 @@ public class User implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(linkedAccounts, user.linkedAccounts) && Objects.equals(preferredUsername, user.preferredUsername) && Objects.equals(linkedAccountProfiles, user.linkedAccountProfiles);
+        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(linkedAccounts, user.linkedAccounts) && Objects.equals(displayName, user.displayName) && Objects.equals(linkedAccountProfiles, user.linkedAccountProfiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, linkedAccounts, preferredUsername, linkedAccountProfiles);
+        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, linkedAccounts, displayName, linkedAccountProfiles);
     }
 
     @Override
@@ -343,7 +343,7 @@ public class User implements Serializable {
                 ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
                 ", level=" + level +
                 ", linkedAccounts=" + linkedAccounts +
-                ", preferredUsername='" + preferredUsername + '\'' +
+                ", displayName='" + displayName + '\'' +
                 ", linkedAccountProfiles=" + linkedAccountProfiles +
                 '}';
     }

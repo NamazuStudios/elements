@@ -60,12 +60,12 @@ public interface UserCreation {
     UserCreation lastName(String lastName);
 
     /**
-     * Sets the user's preferred username.
+     * Sets the user's display name.
      *
-     * @param preferredUsername the preferred username
+     * @param displayName the display name
      * @return this instance
      */
-    UserCreation preferredUsername(String preferredUsername);
+    UserCreation displayName(String displayName);
 
     /**
      * Records a linked-account profile snapshot for the given scheme.
