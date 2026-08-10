@@ -149,7 +149,7 @@ public class OidcLoginAttemptOperationsTest {
 
     private OidcLoginAttempt pendingAttempt(final String state, final String nonce) {
         final var attempt = new OidcLoginAttempt();
-        attempt.setHandle("test-handle");
+        attempt.setId("test-id");
         attempt.setProvider(PROVIDER);
         attempt.setState(state);
         attempt.setNonce(nonce);
@@ -171,7 +171,7 @@ public class OidcLoginAttemptOperationsTest {
 
         final var begin = operations.begin(PROVIDER);
 
-        assertNotNull(begin.getHandle());
+        assertNotNull(begin.getId());
         assertTrue(begin.getExpiresAt() > currentTimeMillis() / 1000);
 
         final var url = begin.getAuthorizeUrl();
@@ -188,7 +188,7 @@ public class OidcLoginAttemptOperationsTest {
         verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
 
         final var persisted = attemptCaptor.getValue();
-        assertEquals(persisted.getHandle(), begin.getHandle());
+        assertEquals(persisted.getId(), begin.getId());
         assertEquals(persisted.getProvider(), PROVIDER);
         assertEquals(persisted.getStatus(), OidcLoginAttemptStatus.PENDING);
         assertNotNull(persisted.getState());

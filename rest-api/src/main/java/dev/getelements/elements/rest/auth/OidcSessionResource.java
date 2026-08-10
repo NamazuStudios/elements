@@ -36,7 +36,7 @@ public class OidcSessionResource {
     @Operation(
             summary = "Begins an OIDC login attempt, or validates a possessed id_token directly",
             description = "Supplying only 'provider' starts a pending browser-redirect login attempt and " +
-                    "returns a handle plus the authorize URL to open in the system browser. Additionally " +
+                    "returns an id plus the authorize URL to open in the system browser. Additionally " +
                     "supplying 'idToken' instead validates it directly and returns a completed session " +
                     "synchronously, sharing validation code with the callback path.")
     public Response createOidcSession(final OidcLoginAttemptRequest request) {
@@ -56,23 +56,23 @@ public class OidcSessionResource {
         }
 
         final var begin = getOidcLoginAttemptService().begin(request.getProvider());
-        final var body = OidcLoginAttemptResponse.pending(begin.getHandle(), begin.getAuthorizeUrl(), begin.getExpiresAt());
+        final var body = OidcLoginAttemptResponse.pending(begin.getId(), begin.getAuthorizeUrl(), begin.getExpiresAt());
 
         return Response.status(Response.Status.CREATED).entity(body).build();
 
     }
 
     @GET
-    @Path("{handle}")
+    @Path("{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
             summary = "Polls a pending OIDC login attempt",
             description = "Returns COMPLETE with the session exactly once, on the poll that first observes " +
-                    "completion; a subsequent poll for the same handle, or a poll for an unknown/expired " +
-                    "handle, returns 404.")
-    public OidcLoginAttemptStatusResponse pollOidcSession(@PathParam("handle") final String handle) {
+                    "completion; a subsequent poll for the same id, or a poll for an unknown/expired " +
+                    "id, returns 404.")
+    public OidcLoginAttemptStatusResponse pollOidcSession(@PathParam("id") final String id) {
 
-        final var status = getOidcLoginAttemptService().poll(handle);
+        final var status = getOidcLoginAttemptService().poll(id);
 
         if (status.getStatus() == OidcLoginAttemptState.EXPIRED) {
             throw new NotFoundException();

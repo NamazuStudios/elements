@@ -82,10 +82,10 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
     }
 
     @Override
-    public Optional<OidcLoginAttempt> claimCompleteByHandle(final String handle) {
+    public Optional<OidcLoginAttempt> claimCompleteById(final String id) {
 
         final var query = getDatastore().find(MongoOidcLoginAttempt.class)
-                .filter(and(eq("_id", handle), eq("status", COMPLETE)));
+                .filter(and(eq("_id", id), eq("status", COMPLETE)));
 
         // returnDocument(BEFORE): the caller that wins the race gets the pre-claim document, which still has
         // sessionToken populated. A concurrent second caller's modify() no longer matches (status is CLAIMED)
@@ -100,10 +100,10 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
     }
 
     @Override
-    public Optional<OidcLoginAttempt> findPendingOrFailedByHandle(final String handle) {
+    public Optional<OidcLoginAttempt> findPendingOrFailedById(final String id) {
 
         final var entity = getDatastore().find(MongoOidcLoginAttempt.class)
-                .filter(eq("_id", handle))
+                .filter(eq("_id", id))
                 .first();
 
         return notExpired(entity)

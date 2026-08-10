@@ -16,8 +16,8 @@ public class StandardOidcLoginAttemptService implements OidcLoginAttemptService 
     }
 
     @Override
-    public OidcLoginAttemptStatusResponse poll(final String handle) {
-        return getOidcLoginAttemptOperations().poll(handle);
+    public OidcLoginAttemptStatusResponse poll(final String id) {
+        return getOidcLoginAttemptOperations().poll(id);
     }
 
     @Override

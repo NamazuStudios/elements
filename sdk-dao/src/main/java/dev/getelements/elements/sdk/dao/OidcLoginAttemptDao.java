@@ -17,7 +17,7 @@ public interface OidcLoginAttemptDao {
     /**
      * Creates and persists a new PENDING attempt.
      *
-     * @param attempt the attempt to create, with {@code handle}, {@code provider}, {@code state}, {@code nonce},
+     * @param attempt the attempt to create, with {@code id}, {@code provider}, {@code state}, {@code nonce},
      *                and {@code expiry} already populated
      * @return the created attempt
      */
@@ -56,25 +56,25 @@ public interface OidcLoginAttemptDao {
     Optional<OidcLoginAttempt> markFailed(String state, String reason);
 
     /**
-     * Atomically claims a COMPLETE attempt matching the given handle, transitioning it to a terminal claimed
+     * Atomically claims a COMPLETE attempt matching the given id, transitioning it to a terminal claimed
      * state and clearing the stored session so it cannot be observed again. Returns the pre-claim attempt (with
      * the session still populated) to the caller that wins the race; a no-op (empty result) if no COMPLETE
-     * attempt matches — including on every subsequent call for the same handle.
+     * attempt matches — including on every subsequent call for the same id.
      *
-     * @param handle the opaque poll handle
+     * @param id the opaque poll id
      * @return an {@link Optional} containing the pre-claim attempt, or empty if already claimed, not yet
      *         complete, expired, or unknown
      */
-    Optional<OidcLoginAttempt> claimCompleteByHandle(String handle);
+    Optional<OidcLoginAttempt> claimCompleteById(String id);
 
     /**
-     * Finds a non-COMPLETE attempt by handle without mutating it, for reporting PENDING or FAILED status during
-     * a poll. Returns empty if the attempt is missing, expired, COMPLETE (use {@link #claimCompleteByHandle}
+     * Finds a non-COMPLETE attempt by id without mutating it, for reporting PENDING or FAILED status during
+     * a poll. Returns empty if the attempt is missing, expired, COMPLETE (use {@link #claimCompleteById}
      * instead), or already claimed.
      *
-     * @param handle the opaque poll handle
+     * @param id the opaque poll id
      * @return an {@link Optional} containing the attempt, or empty
      */
-    Optional<OidcLoginAttempt> findPendingOrFailedByHandle(String handle);
+    Optional<OidcLoginAttempt> findPendingOrFailedById(String id);
 
 }

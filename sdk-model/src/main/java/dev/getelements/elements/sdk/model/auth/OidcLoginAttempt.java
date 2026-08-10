@@ -6,16 +6,16 @@ import java.sql.Timestamp;
  * Represents a single pending (or resolved) browser-redirect OIDC login attempt.
  *
  * <p>Not part of the public REST API — this is the DAO-level model consumed by the service layer to orchestrate
- * {@code POST /oidc/session}, {@code GET /oidc/session/{handle}}, and {@code GET /oidc/{provider}/callback}. The
- * {@code handle}, {@code state}, and {@code nonce} values are all server-generated via {@link java.security.SecureRandom}.
+ * {@code POST /oidc/session}, {@code GET /oidc/session/{id}}, and {@code GET /oidc/{provider}/callback}. The
+ * {@code id}, {@code state}, and {@code nonce} values are all server-generated via {@link java.security.SecureRandom}.
  */
 public class OidcLoginAttempt {
 
     /** Creates a new instance. */
     public OidcLoginAttempt() {}
 
-    /** The opaque bearer handle used to poll for completion. Doubles as the database primary key. */
-    private String handle;
+    /** The opaque bearer token used to poll for completion. Doubles as the database primary key. */
+    private String id;
 
     /** The provider identifier this attempt was started for. */
     private String provider;
@@ -44,12 +44,12 @@ public class OidcLoginAttempt {
     /** Optional. If set, the callback redirects the browser here on failure instead of the default HTML page. */
     private String errorRedirectUrl;
 
-    public String getHandle() {
-        return handle;
+    public String getId() {
+        return id;
     }
 
-    public void setHandle(String handle) {
-        this.handle = handle;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getProvider() {

@@ -9,28 +9,28 @@ public class OidcLoginAttemptBegin {
     /**
      * Creates a new instance with all fields.
      *
-     * @param handle the opaque poll handle
+     * @param id the opaque poll id
      * @param authorizeUrl the fully-built provider authorize URL
      * @param expiresAt the epoch second after which the attempt expires
      */
-    public OidcLoginAttemptBegin(final String handle, final String authorizeUrl, final long expiresAt) {
-        this.handle = handle;
+    public OidcLoginAttemptBegin(final String id, final String authorizeUrl, final long expiresAt) {
+        this.id = id;
         this.authorizeUrl = authorizeUrl;
         this.expiresAt = expiresAt;
     }
 
-    private String handle;
+    private String id;
 
     private String authorizeUrl;
 
     private long expiresAt;
 
-    public String getHandle() {
-        return handle;
+    public String getId() {
+        return id;
     }
 
-    public void setHandle(String handle) {
-        this.handle = handle;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getAuthorizeUrl() {

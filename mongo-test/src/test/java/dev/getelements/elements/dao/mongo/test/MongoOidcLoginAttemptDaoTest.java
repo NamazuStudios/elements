@@ -30,7 +30,7 @@ public class MongoOidcLoginAttemptDaoTest {
     private OidcLoginAttempt newAttempt(final String provider) {
 
         final var attempt = new OidcLoginAttempt();
-        attempt.setHandle(UUID.randomUUID().toString());
+        attempt.setId(UUID.randomUUID().toString());
         attempt.setProvider(provider);
         attempt.setState(UUID.randomUUID().toString());
         attempt.setNonce(UUID.randomUUID().toString());
@@ -48,7 +48,7 @@ public class MongoOidcLoginAttemptDaoTest {
 
         final var found = getOidcLoginAttemptDao().findPendingByState("twitch", created.getState());
         assertTrue(found.isPresent());
-        assertEquals(found.get().getHandle(), created.getHandle());
+        assertEquals(found.get().getId(), created.getId());
 
         // Provider mismatch must not find the attempt, even with a correct state.
         assertTrue(getOidcLoginAttemptDao().findPendingByState("google", created.getState()).isEmpty());
@@ -61,7 +61,7 @@ public class MongoOidcLoginAttemptDaoTest {
         final var first = newAttempt("twitch");
 
         final var second = new OidcLoginAttempt();
-        second.setHandle(UUID.randomUUID().toString());
+        second.setId(UUID.randomUUID().toString());
         second.setProvider("twitch");
         second.setState(first.getState());
         second.setNonce(UUID.randomUUID().toString());
@@ -86,7 +86,7 @@ public class MongoOidcLoginAttemptDaoTest {
         assertTrue(replayed.isEmpty());
 
         // And must not clobber the originally stored session.
-        final var claimed = getOidcLoginAttemptDao().claimCompleteByHandle(created.getHandle());
+        final var claimed = getOidcLoginAttemptDao().claimCompleteById(created.getId());
         assertTrue(claimed.isPresent());
         assertEquals(claimed.get().getSessionToken(), "{\"sessionSecret\":\"abc\"}");
 
@@ -106,20 +106,20 @@ public class MongoOidcLoginAttemptDaoTest {
     }
 
     @Test
-    public void testClaimCompleteByHandleIsSingleUse() {
+    public void testClaimCompleteByIdIsSingleUse() {
 
         final var created = newAttempt("twitch");
         getOidcLoginAttemptDao().markComplete(created.getState(), "{\"sessionSecret\":\"once\"}");
 
-        final var firstClaim = getOidcLoginAttemptDao().claimCompleteByHandle(created.getHandle());
+        final var firstClaim = getOidcLoginAttemptDao().claimCompleteById(created.getId());
         assertTrue(firstClaim.isPresent());
         assertEquals(firstClaim.get().getSessionToken(), "{\"sessionSecret\":\"once\"}");
 
-        final var secondClaim = getOidcLoginAttemptDao().claimCompleteByHandle(created.getHandle());
+        final var secondClaim = getOidcLoginAttemptDao().claimCompleteById(created.getId());
         assertTrue(secondClaim.isEmpty(), "COMPLETE must be readable exactly once");
 
         // Once claimed, it must also not be reported as PENDING or FAILED.
-        assertTrue(getOidcLoginAttemptDao().findPendingOrFailedByHandle(created.getHandle()).isEmpty());
+        assertTrue(getOidcLoginAttemptDao().findPendingOrFailedById(created.getId()).isEmpty());
 
     }
 
@@ -136,7 +136,7 @@ public class MongoOidcLoginAttemptDaoTest {
 
             final List<Callable<Boolean>> tasks = IntStream.range(0, threadCount)
                     .mapToObj(i -> (Callable<Boolean>) () ->
-                            getOidcLoginAttemptDao().claimCompleteByHandle(created.getHandle()).isPresent())
+                            getOidcLoginAttemptDao().claimCompleteById(created.getId()).isPresent())
                     .collect(Collectors.toList());
 
             final List<Future<Boolean>> futures = pool.invokeAll(tasks);
@@ -158,12 +158,12 @@ public class MongoOidcLoginAttemptDaoTest {
     }
 
     @Test
-    public void testFindPendingOrFailedByHandleReportsFailure() {
+    public void testFindPendingOrFailedByIdReportsFailure() {
 
         final var created = newAttempt("twitch");
         getOidcLoginAttemptDao().markFailed(created.getState(), "denied");
 
-        final var found = getOidcLoginAttemptDao().findPendingOrFailedByHandle(created.getHandle());
+        final var found = getOidcLoginAttemptDao().findPendingOrFailedById(created.getId());
         assertTrue(found.isPresent());
         assertEquals(found.get().getStatus(), OidcLoginAttemptStatus.FAILED);
         assertEquals(found.get().getFailureReason(), "denied");
@@ -174,7 +174,7 @@ public class MongoOidcLoginAttemptDaoTest {
     public void testExpiredAttemptIsNotReturned() {
 
         final var attempt = new OidcLoginAttempt();
-        attempt.setHandle(UUID.randomUUID().toString());
+        attempt.setId(UUID.randomUUID().toString());
         attempt.setProvider("twitch");
         attempt.setState(UUID.randomUUID().toString());
         attempt.setNonce(UUID.randomUUID().toString());
@@ -185,7 +185,7 @@ public class MongoOidcLoginAttemptDaoTest {
         final var created = getOidcLoginAttemptDao().create(attempt);
 
         assertTrue(getOidcLoginAttemptDao().findPendingByState("twitch", created.getState()).isEmpty());
-        assertTrue(getOidcLoginAttemptDao().findPendingOrFailedByHandle(created.getHandle()).isEmpty());
+        assertTrue(getOidcLoginAttemptDao().findPendingOrFailedById(created.getId()).isEmpty());
 
     }
 

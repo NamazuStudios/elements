@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * MongoDB entity for a single pending browser-redirect OIDC login attempt.
- * The {@code handle} field doubles as the document {@code _id}.
+ * The {@code id} field is the document {@code _id}.
  *
  * <p>The TTL index on {@code expiry} (with {@code expireAfterSeconds=0}) causes MongoDB to automatically
  * remove expired attempts, mirroring {@code MongoPasswordResetToken}.
@@ -21,7 +21,7 @@ import java.util.Objects;
 public class MongoOidcLoginAttempt {
 
     @Id
-    private String handle;
+    private String id;
 
     @Property
     private String provider;
@@ -50,12 +50,12 @@ public class MongoOidcLoginAttempt {
     @Property
     private String errorRedirectUrl;
 
-    public String getHandle() {
-        return handle;
+    public String getId() {
+        return id;
     }
 
-    public void setHandle(String handle) {
-        this.handle = handle;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getProvider() {
@@ -135,7 +135,7 @@ public class MongoOidcLoginAttempt {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoOidcLoginAttempt that = (MongoOidcLoginAttempt) o;
-        return Objects.equals(getHandle(), that.getHandle())
+        return Objects.equals(getId(), that.getId())
                 && Objects.equals(getProvider(), that.getProvider())
                 && Objects.equals(getState(), that.getState())
                 && Objects.equals(getNonce(), that.getNonce())
@@ -149,7 +149,7 @@ public class MongoOidcLoginAttempt {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getHandle(), getProvider(), getState(), getNonce(), getStatus(),
+        return Objects.hash(getId(), getProvider(), getState(), getNonce(), getStatus(),
                 getSessionToken(), getFailureReason(), getExpiry(), getSuccessRedirectUrl(), getErrorRedirectUrl());
     }
 

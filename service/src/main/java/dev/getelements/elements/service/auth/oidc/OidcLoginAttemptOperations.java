@@ -35,8 +35,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Orchestrates the provider-agnostic, browser-redirect OIDC login flow: starting a pending attempt, polling for
- * completion, and handling the provider's callback. All state (handle/state/nonce), the code exchange, and
- * id_token validation happen here, server-side, per the design — the client only ever sees an opaque handle and
+ * completion, and handling the provider's callback. All state (id/state/nonce), the code exchange, and
+ * id_token validation happen here, server-side, per the design — the client only ever sees an opaque id and
  * the Elements session it eventually resolves to.
  */
 public class OidcLoginAttemptOperations {
@@ -68,13 +68,13 @@ public class OidcLoginAttemptOperations {
         final var config = findConfigOrThrow(provider);
         final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
 
-        final var handle = randomToken();
+        final var id = randomToken();
         final var state = randomToken();
         final var nonce = randomToken();
         final var expiry = new Timestamp(currentTimeMillis() + (ttlSeconds * 1000));
 
         final var attempt = new OidcLoginAttempt();
-        attempt.setHandle(handle);
+        attempt.setId(id);
         attempt.setProvider(provider);
         attempt.setState(state);
         attempt.setNonce(nonce);
@@ -89,13 +89,13 @@ public class OidcLoginAttemptOperations {
 
         final var authorizeUrl = buildAuthorizeUrl(config, discoveryDocument, state, nonce);
 
-        return new OidcLoginAttemptBegin(handle, authorizeUrl, expiry.toInstant().getEpochSecond());
+        return new OidcLoginAttemptBegin(id, authorizeUrl, expiry.toInstant().getEpochSecond());
 
     }
 
-    public OidcLoginAttemptStatusResponse poll(final String handle) {
+    public OidcLoginAttemptStatusResponse poll(final String id) {
 
-        final var claimed = getOidcLoginAttemptDao().claimCompleteByHandle(handle);
+        final var claimed = getOidcLoginAttemptDao().claimCompleteById(id);
 
         if (claimed.isPresent()) {
             final var sessionCreation = deserializeSession(claimed.get().getSessionToken());
@@ -103,11 +103,11 @@ public class OidcLoginAttemptOperations {
         }
 
         return getOidcLoginAttemptDao()
-                .findPendingOrFailedByHandle(handle)
+                .findPendingOrFailedById(id)
                 .map(attempt -> attempt.getStatus() == OidcLoginAttemptStatus.FAILED
                         ? OidcLoginAttemptStatusResponse.failed(attempt.getFailureReason())
                         : OidcLoginAttemptStatusResponse.pending())
-                // Unknown handle, already claimed, or TTL-purged are all indistinguishable to the caller, and
+                // Unknown id, already claimed, or TTL-purged are all indistinguishable to the caller, and
                 // all correctly reported as EXPIRED per the API contract.
                 .orElseGet(OidcLoginAttemptStatusResponse::expired);
 
@@ -158,7 +158,7 @@ public class OidcLoginAttemptOperations {
             return OidcLoginAttemptCallbackResult.success(successRedirectUrl);
 
         } catch (final Exception ex) {
-            // Never log the code, id_token, or handle — only enough context to debug which provider/attempt failed.
+            // Never log the code, id_token, or attempt id — only enough context to debug which provider/attempt failed.
             // Every expected failure mode is caught here so the REST layer never has to interpret an exception —
             // it only sees a plain failure result.
             logger.debug("OIDC callback failed for provider {}", provider, ex);

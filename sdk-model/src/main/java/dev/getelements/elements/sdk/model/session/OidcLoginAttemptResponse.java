@@ -4,19 +4,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Response body for {@code POST /oidc/session}. Exactly one of two shapes is populated: when a pending
- * browser-redirect attempt was started, {@link #getHandle()}, {@link #getAuthorizeUrl()}, and
+ * browser-redirect attempt was started, {@link #getId()}, {@link #getAuthorizeUrl()}, and
  * {@link #getExpiresAt()} are set and {@link #getSession()} is {@code null}; when direct id_token validation
  * completed synchronously, only {@link #getSession()} is set.
  */
-@Schema(description = "Either a pending login attempt (handle/authorizeUrl/expiresAt) " +
+@Schema(description = "Either a pending login attempt (id/authorizeUrl/expiresAt) " +
         "or a synchronously completed session, depending on whether an idToken was supplied in the request.")
 public class OidcLoginAttemptResponse {
 
     /** Creates a new instance. */
     public OidcLoginAttemptResponse() {}
 
-    @Schema(description = "The opaque handle used to poll GET /oidc/session/{handle}. Only set for pending attempts.")
-    private String handle;
+    @Schema(description = "The opaque id used to poll GET /oidc/session/{id}. Only set for pending attempts.")
+    private String id;
 
     @Schema(description = "The fully-built provider authorize URL to open in the system browser. " +
             "Only set for pending attempts.")
@@ -31,14 +31,14 @@ public class OidcLoginAttemptResponse {
     /**
      * Builds a pending-attempt response.
      *
-     * @param handle       the opaque poll handle
+     * @param id           the opaque poll id
      * @param authorizeUrl the provider authorize URL
      * @param expiresAt    the epoch second expiry
      * @return the response
      */
-    public static OidcLoginAttemptResponse pending(final String handle, final String authorizeUrl, final long expiresAt) {
+    public static OidcLoginAttemptResponse pending(final String id, final String authorizeUrl, final long expiresAt) {
         final var response = new OidcLoginAttemptResponse();
-        response.setHandle(handle);
+        response.setId(id);
         response.setAuthorizeUrl(authorizeUrl);
         response.setExpiresAt(expiresAt);
         return response;
@@ -56,12 +56,12 @@ public class OidcLoginAttemptResponse {
         return response;
     }
 
-    public String getHandle() {
-        return handle;
+    public String getId() {
+        return id;
     }
 
-    public void setHandle(String handle) {
-        this.handle = handle;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getAuthorizeUrl() {

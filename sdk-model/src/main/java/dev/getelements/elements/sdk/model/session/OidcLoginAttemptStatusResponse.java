@@ -2,7 +2,7 @@ package dev.getelements.elements.sdk.model.session;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-/** Response body for {@code GET /oidc/session/{handle}}. */
+/** Response body for {@code GET /oidc/session/{id}}. */
 @Schema(description = "The current state of a pending OIDC login attempt.")
 public class OidcLoginAttemptStatusResponse {
 
