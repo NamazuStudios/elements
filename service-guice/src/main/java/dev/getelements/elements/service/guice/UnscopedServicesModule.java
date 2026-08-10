@@ -60,7 +60,6 @@ import dev.getelements.elements.service.auth.*;
 import dev.getelements.elements.service.cdn.SuperuserDeploymentService;
 import dev.getelements.elements.service.codegen.SuperUserOpenApiCodegenService;
 import dev.getelements.elements.service.defaults.DefaultOAuth2SchemeConfiguration;
-import dev.getelements.elements.service.defaults.DefaultOidcSchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultUserConfiguration;
 import dev.getelements.elements.service.goods.ProductBundleMigration;
 import dev.getelements.elements.service.follower.SuperUserFollowerService;
@@ -395,7 +394,6 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(ProductSkuSchemaSeeder.class).asEagerSingleton();
 
         bind(DefaultUserConfiguration.class).asEagerSingleton();
-        bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultOAuth2SchemeConfiguration.class).asEagerSingleton();
         bind(ProductBundleMigration.class).asEagerSingleton();
     }
