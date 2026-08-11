@@ -1,7 +1,9 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.model.Constants;
+import dev.getelements.elements.sdk.dao.UserCreation;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -10,11 +12,13 @@ import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.filters.Filter;
 import dev.morphia.query.filters.Filters;
 
 import org.bson.types.ObjectId;
@@ -23,14 +27,21 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -47,6 +58,7 @@ import static dev.morphia.query.updates.UpdateOperators.unset;
 @Singleton
 public class MongoUserDao implements UserDao {
 
+    private static final Logger log = LoggerFactory.getLogger(MongoUserDao.class);
     private Datastore datastore;
 
     private String passwordEncoding;
@@ -62,6 +74,8 @@ public class MongoUserDao implements UserDao {
     private MongoProfileDao mongoProfileDao;
 
     private MongoUserUidDao mongoUserUidDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public User getUser(final String userId) {
@@ -192,7 +206,147 @@ public class MongoUserDao implements UserDao {
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
 
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
+
         return createdUser;
+
+    }
+
+    @Override
+    public UserCreation newEmptyUser() {
+        return new MongoUserCreation();
+    }
+
+    /**
+     * Builder backing {@link #newEmptyUser()}. Unlike {@link #createUserStrict(User)}, this never links a
+     * UserUid automatically — every scheme association must be requested explicitly via {@link #uid}.
+     */
+    private final class MongoUserCreation implements UserCreation {
+
+        private final User user = new User();
+
+        private final List<UidRequest> uidRequests = new ArrayList<>();
+
+        private record UidRequest(String scheme, String id, VerificationStatus status) {}
+
+        @Override
+        public UserCreation level(final User.Level level) {
+            user.setLevel(level);
+            return this;
+        }
+
+        @Override
+        public UserCreation email(final String email) {
+            user.setEmail(email);
+            return this;
+        }
+
+        @Override
+        public UserCreation name(final String name) {
+            user.setName(name);
+            return this;
+        }
+
+        @Override
+        public UserCreation firstName(final String firstName) {
+            user.setFirstName(firstName);
+            return this;
+        }
+
+        @Override
+        public UserCreation lastName(final String lastName) {
+            user.setLastName(lastName);
+            return this;
+        }
+
+        @Override
+        public UserCreation displayName(final String displayName) {
+            user.setDisplayName(displayName);
+            return this;
+        }
+
+        @Override
+        public UserCreation linkedAccountProfile(final String scheme, final Map<String, String> claims) {
+            var profiles = user.getLinkedAccountProfiles();
+            if (profiles == null) {
+                profiles = new HashMap<>();
+                user.setLinkedAccountProfiles(profiles);
+            }
+            profiles.put(scheme, claims);
+            return this;
+        }
+
+        @Override
+        public UserCreation uid(final String scheme, final String id, final VerificationStatus status) {
+            uidRequests.add(new UidRequest(scheme, id, status));
+            return this;
+        }
+
+        @Override
+        public User create() {
+
+            validate(user);
+
+            final MongoUser mongoUser = getDozerMapper().map(user, MongoUser.class);
+
+            getMongoPasswordUtils().scramblePassword(mongoUser);
+
+            try {
+                getDatastore().save(mongoUser);
+            } catch (DuplicateKeyException ex) {
+                throw new DuplicateException(ex);
+            }
+
+            final var createdUser = getDozerMapper().map(mongoUser, User.class);
+
+            for (final var request : uidRequests) {
+                claimUid(createdUser, request.scheme(), request.id(), request.status());
+            }
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(createdUser)
+                    .named(USER_CREATED)
+                    .build());
+
+            return createdUser;
+
+        }
+
+        // Re-checks (rather than trusting a snapshot taken before create()) whether the requested UserUid
+        // is orphaned (unresolvable to a user, safe to reclaim) or genuinely belongs to another, resolvable
+        // user (a real conflict that must not be silently overwritten).
+        private void claimUid(final User createdUser, final String scheme, final String id, final VerificationStatus status) {
+
+            final var existing = getMongoUserUidDao().findUserUid(id, scheme);
+
+            if (existing.isPresent()) {
+                if (existing.get().getUserId() != null) {
+                    throw new DuplicateException("UserUid " + scheme + "/" + id + " is already linked to another user.");
+                }
+                getMongoUserUidDao().tryDeleteUserUid(existing.get());
+            }
+
+            final var uid = new UserUid();
+            uid.setScheme(scheme);
+            uid.setId(id);
+            uid.setUserId(createdUser.getId());
+
+            getMongoUserUidDao().createUserUid(uid);
+
+            if (status != null) {
+                getMongoUserUidDao().updateVerificationStatus(id, scheme, status);
+            }
+
+            if (createdUser.getLinkedAccounts() == null) {
+                createdUser.setLinkedAccounts(new HashSet<>());
+            }
+
+            createdUser.getLinkedAccounts().add(scheme);
+
+        }
 
     }
 
@@ -202,12 +356,7 @@ public class MongoUserDao implements UserDao {
 
         final var query = getDatastore().find(MongoUser.class);
 
-        final var existingUser = query.filter(
-                        or(
-                                eq("name", user.getName()),
-                                eq("email", user.getEmail())
-                        )
-                )
+        final var existingUser = query.filter(nameOrEmailFilter(user))
                 .first();
 
         if(existingUser != null) {
@@ -243,6 +392,11 @@ public class MongoUserDao implements UserDao {
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
 
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
+
         return createdUser;
 
     }
@@ -252,12 +406,7 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-            .filter(and(
-                or(
-                    eq("name", user.getName()),
-                    eq("email", user.getEmail())
-                )
-            ));
+            .filter(nameOrEmailFilter(user));
 
         final var builder = new UpdateBuilder();
 
@@ -278,6 +427,11 @@ public class MongoUserDao implements UserDao {
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
 
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
+
         return createdUser;
 
     }
@@ -288,10 +442,7 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-            .filter(or(
-                eq("name", user.getName()),
-                eq("email", user.getEmail())
-            ));
+            .filter(nameOrEmailFilter(user));
 
         final var builder = new UpdateBuilder()
             .with(
@@ -310,6 +461,11 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
 
         return createdUser;
 
@@ -346,7 +502,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -383,7 +546,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -419,7 +589,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -456,7 +633,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -516,7 +700,14 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User does not exist.");
         }
 
-        return getDozerMapper().map(mongoUser, User.class);
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
 
     }
 
@@ -526,10 +717,7 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-                .filter(or(
-                        eq("name", user.getName()),
-                        eq("email", user.getEmail())
-                ));
+                .filter(nameOrEmailFilter(user));
 
         final var builder = new UpdateBuilder()
                 .with(
@@ -548,6 +736,11 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
         final var createdUser = getDozerMapper().map(mongoUser, User.class);
         createUidsStrictForUser(createdUser);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUser)
+                .named(USER_CREATED)
+                .build());
 
         return createdUser;
     }
@@ -582,14 +775,35 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with userid does not exist:" + userId);
         }
 
+        final var deletedUser = getDozerMapper().map(mongoUser, User.class);
+
         getMongoProfileDao().softDeleteProfilesForUser(mongoUser);
-        getMongoUserUidDao().softDeleteUserUidsForUserId(getDozerMapper().map(mongoUser, User.class));
+
+        if (!getMongoUserUidDao().trySoftDeleteUser(deletedUser.getId())) {
+            log.warn("Failed to clear UIDs for user {}", deletedUser.getId());
+        }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedUser)
+                .named(USER_DELETED)
+                .build());
+
     }
 
     private void updateBuilderWithOptionalData(User user, UpdateBuilder builder) {
         if (user.getPrimaryPhoneNb() != null) builder.with(set("primaryPhoneNb", user.getPrimaryPhoneNb()));
         if (user.getFirstName() != null) builder.with(set("firstName", user.getFirstName()));
         if (user.getLastName() != null) builder.with(set("lastName", user.getLastName()));
+    }
+
+    // A null name has no equivalent to match against: Mongo's $eq semantics treat "field is null"
+    // and "field does not exist" as the same match, so eq("name", null) would spuriously match
+    // every other nameless user rather than narrowing anything. Omit the name term entirely in
+    // that case and match on email alone.
+    private Filter nameOrEmailFilter(final User user) {
+        return user.getName() == null
+                ? eq("email", user.getEmail())
+                : or(eq("name", user.getName()), eq("email", user.getEmail()));
     }
 
     public void validate(final User user) {
@@ -601,7 +815,6 @@ public class MongoUserDao implements UserDao {
         getValidationHelper().validateModel(user);
 
         user.setEmail(nullToEmpty(user.getEmail()).trim().toLowerCase());
-        user.setName(nullToEmpty(user.getName()).trim());
 
     }
 
@@ -614,7 +827,15 @@ public class MongoUserDao implements UserDao {
         final var mongoUser = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
         if (mongoUser == null) throw new NotFoundException("User not found: " + userId);
-        return getDozerMapper().map(mongoUser, User.class);
+
+        final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUser)
+                .named(USER_UPDATED)
+                .build());
+
+        return updatedUser;
     }
 
     @Override
@@ -693,6 +914,7 @@ public class MongoUserDao implements UserDao {
                 createUidStrict(UserUidDao.SCHEME_PHONE_NUMBER, user, user.getPrimaryPhoneNb());
             } catch (DuplicateException ignored) {}
         }
+
     }
 
     private void createUidStrict(final String scheme, final User user, final String schemeId) {
@@ -780,5 +1002,14 @@ public class MongoUserDao implements UserDao {
     @Inject
     public void setMongoUserUidDao(MongoUserUidDao mongoUserUidDao) {
         this.mongoUserUidDao = mongoUserUidDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

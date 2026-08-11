@@ -3,6 +3,7 @@ package dev.getelements.elements.service.auth.oidc;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
@@ -17,6 +18,9 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
 public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
@@ -24,6 +28,8 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
     private static final Logger logger = LoggerFactory.getLogger(UserOidcAuthService.class);
 
     private User user;
+
+    private UserDao userDao;
 
     private UserUidDao userUidDao;
 
@@ -55,9 +61,8 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
 
     private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
-        final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
-        final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();
-        final var emailVerified = Boolean.TRUE.equals(jwt.getClaim("email_verified").asBoolean());
+        final var uid = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.USER_ID.value);
+        final var email = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.EMAIL.value);
 
         // Check if this OIDC sub is already mapped to any user
         final var existingOidcUid = userUidDao.findUserUid(uid, scheme.getName());
@@ -72,8 +77,9 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
             createNewUserUid(uid, scheme.getName(), user.getId());
         }
 
-        // Handle verified email UID
-        if (emailVerified && email != null && !email.isEmpty()) {
+        // Trust any email claim returned by a configured provider as verified — see AnonOidcAuthService for
+        // rationale.
+        if (email != null && !email.isEmpty()) {
             final var existingEmailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
 
             if (existingEmailUid.isEmpty()) {
@@ -85,6 +91,29 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
                     logger.warn("Email UID {} is already linked to a different user; skipping email UID creation.", email);
                 }
                 // else: already linked to current user — idempotent, do nothing
+            }
+        }
+
+        // Tracking/audit snapshot of this scheme's reported profile claims — unlike email above, this isn't
+        // identity-sensitive (no account-takeover concern), so it's safe to capture here too, unlike the flat
+        // convenience fields on User which stay scoped to the anonymous login path (see AnonOidcAuthService).
+        final var profileClaims = OidcAuthServiceOperations.extractProfileClaims(jwt);
+
+        if (!profileClaims.isEmpty()) {
+            var profiles = user.getLinkedAccountProfiles();
+            if (profiles == null) {
+                profiles = new HashMap<String, Map<String, String>>();
+                user.setLinkedAccountProfiles(profiles);
+            }
+            profiles.put(scheme.getName(), profileClaims);
+
+            try {
+                getUserDao().updateUserStrict(user);
+            } catch (final Exception ex) {
+                // Best-effort: this is an opportunistic profile-data capture, not a critical part of linking
+                // the account. A pre-existing data issue on this user record must never block the link operation.
+                logger.warn("Failed to persist linked account profile for user {}; continuing without it.",
+                        user.getId(), ex);
             }
         }
 
@@ -108,6 +137,15 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
     @Inject
     public void setOidcAuthServiceOperations(OidcAuthServiceOperations oidcAuthServiceOperations) {
         this.oidcAuthServiceOperations = oidcAuthServiceOperations;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public UserUidDao getUserUidDao() {

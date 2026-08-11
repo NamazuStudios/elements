@@ -12,14 +12,21 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
+import dev.getelements.elements.sdk.service.name.NameService;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static dev.getelements.elements.sdk.model.user.UserUid.USER_UID_CREATED_EVENT;
 
 public class AnonOidcAuthService implements OidcAuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AnonOidcAuthService.class);
 
     private UserDao userDao;
 
@@ -28,6 +35,8 @@ public class AnonOidcAuthService implements OidcAuthService {
     private OidcAuthServiceOperations oidcAuthServiceOperations;
 
     private ElementRegistry elementRegistry;
+
+    private NameService nameService;
 
     @Override
     public SessionCreation createSession(OidcSessionRequest oidcSessionRequest) {
@@ -65,17 +74,23 @@ public class AnonOidcAuthService implements OidcAuthService {
         return Optional.empty();
     }
 
-    private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
+    public User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
-        final var uid = jwt.getClaim(OidcAuthServiceOperations.Claim.USER_ID.value).asString();
-        final var email = jwt.getClaim(OidcAuthServiceOperations.Claim.EMAIL.value).asString();
-        final var emailVerified = Boolean.TRUE.equals(jwt.getClaim("email_verified").asBoolean());
+        final var uid = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.USER_ID.value);
+        final var email = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.EMAIL.value);
+        final var preferredUsername = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.PREFERRED_USERNAME.value);
+        final var givenName = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.GIVEN_NAME.value);
+        final var familyName = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.FAMILY_NAME.value);
+        final var hasEmail = isPresent(email);
+        final var profileClaims = OidcAuthServiceOperations.extractProfileClaims(jwt);
 
         // Search the existing UIDs to see if the user already exists
         final var oidcUid = userUidDao.findUserUid(uid, scheme.getName());
 
-        // Only use email UID for lookup when email is verified to prevent account takeover
-        final var emailUid = emailVerified && email != null && !email.isEmpty()
+        // Trust any email claim returned by a configured provider as verified — the provider is trusted
+        // infrastructure the admin explicitly configured, and Elements has no independent way to check a
+        // provider's own email_verified claim (some providers omit it, or encode it as a non-boolean type).
+        final var emailUid = hasEmail
                 ? userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL)
                 : Optional.<UserUid>empty();
 
@@ -93,41 +108,113 @@ public class AnonOidcAuthService implements OidcAuthService {
                 createNewUserUid(uid, scheme.getName(), user.getId());
             }
 
-            if (emailVerified && email != null && !email.isEmpty() && emailUid.isEmpty()) {
+            if (hasEmail && emailUid.isEmpty()) {
                 createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
+            }
+
+            var changed = false;
+
+            // Fill-only-if-blank: a returning user's existing value (set by an admin, the user, or an earlier
+            // login) always wins over whatever a linked provider reports — this never overwrites, it only
+            // fills in what a user created before the provider supplied these claims never got.
+            if (hasEmail && isBlank(user.getEmail())) {
+                user.setEmail(email);
+                changed = true;
+            }
+
+            if (isPresent(preferredUsername) && isBlank(user.getDisplayName())) {
+                user.setDisplayName(preferredUsername);
+                changed = true;
+            }
+
+            if (isPresent(givenName) && isBlank(user.getFirstName())) {
+                user.setFirstName(givenName);
+                changed = true;
+            }
+
+            if (isPresent(familyName) && isBlank(user.getLastName())) {
+                user.setLastName(familyName);
+                changed = true;
+            }
+
+            // Unlike the fields above, this is a tracking/audit snapshot, not a "don't overwrite" convenience
+            // field — always replaced wholesale with this scheme's latest reported profile claims.
+            if (!profileClaims.isEmpty()) {
+                putLinkedAccountProfile(user, scheme.getName(), profileClaims);
+                changed = true;
+            }
+
+            if (changed) {
+                try {
+                    getUserDao().updateUserStrict(user);
+                } catch (final Exception ex) {
+                    // Best-effort: this is an opportunistic profile-data capture, not a critical part of
+                    // authentication. A pre-existing data issue on this user record (e.g. a field that predates
+                    // a validation rule tightened since the account was created) must never block login.
+                    logger.warn("Failed to persist backfilled profile claims for user {}; continuing without them.",
+                            user.getId(), ex);
+                }
             }
 
             return user;
         }
 
-        // No existing user — insert a fresh document via createUserStrict to avoid collision
-        // when name/email are absent (createUser uses an upsert that would merge blank users).
-        var user = new User();
-        user.setLevel(USER);
+        // No existing user — start a fresh User with the minimum needed via newEmptyUser(), then attach
+        // every UserUid link explicitly. createUserStrict's automatic email/name linking would otherwise
+        // collide with the explicit email link requested below.
+        final var placeholder = new User();
 
-        if (emailVerified && email != null && !email.isEmpty()) {
-            user.setEmail(email);
+        if (hasEmail) {
+            placeholder.setEmail(email);
         }
 
-        user = getUserDao().createUserStrict(user);
+        getNameService().assignNameAndEmailIfNecessary(placeholder);
 
-        // If a stale OIDC UID exists (user was deleted), delete it before relinking
-        if (oidcUid.isPresent()) {
-            userUidDao.tryDeleteUserUid(oidcUid.get());
+        final var builder = getUserDao().newEmptyUser()
+                .level(USER)
+                .name(placeholder.getName())
+                .email(placeholder.getEmail())
+                .uid(scheme.getName(), uid, VerificationStatus.VERIFIED);
+
+        if (hasEmail) {
+            builder.uid(UserUidDao.SCHEME_EMAIL, email, VerificationStatus.VERIFIED);
         }
 
-        createNewUserUid(uid, scheme.getName(), user.getId());
-
-        if (emailVerified && email != null && !email.isEmpty()) {
-            // If a stale email UID exists (user was deleted), delete it before relinking
-            if (emailUid.isPresent()) {
-                userUidDao.tryDeleteUserUid(emailUid.get());
-            }
-            createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
+        if (isPresent(preferredUsername)) {
+            builder.displayName(preferredUsername);
         }
 
-        return user;
+        if (isPresent(givenName)) {
+            builder.firstName(givenName);
+        }
 
+        if (isPresent(familyName)) {
+            builder.lastName(familyName);
+        }
+
+        if (!profileClaims.isEmpty()) {
+            builder.linkedAccountProfile(scheme.getName(), profileClaims);
+        }
+
+        return builder.create();
+
+    }
+
+    private static boolean isPresent(final String value) {
+        return value != null && !value.isEmpty();
+    }
+
+    private static boolean isBlank(final String value) {
+        return value == null || value.isEmpty();
+    }
+
+    private static void putLinkedAccountProfile(final User user, final String schemeName, final Map<String, String> claims) {
+        var profiles = user.getLinkedAccountProfiles();
+        if (profiles == null) {
+            profiles = new HashMap<>();
+            user.setLinkedAccountProfiles(profiles);
+        }
+        profiles.put(schemeName, claims);
     }
 
     public UserDao getUserDao() {
@@ -164,6 +251,15 @@ public class AnonOidcAuthService implements OidcAuthService {
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
 }

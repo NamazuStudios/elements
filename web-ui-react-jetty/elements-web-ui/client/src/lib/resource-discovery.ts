@@ -28,6 +28,7 @@ const POTENTIAL_RESOURCES = [
   { name: 'OIDC', endpoint: '/api/rest/auth_scheme/oidc', icon: 'Shield', category: 'Auth' },
   { name: 'OAuth2', endpoint: '/api/rest/auth_scheme/oauth2', icon: 'KeyRound', category: 'Auth' },
   { name: 'Custom', endpoint: '/api/rest/auth_scheme/custom', icon: 'Lock', category: 'Auth' },
+  { name: 'OIDC Providers', endpoint: '/api/rest/auth_scheme/oidc_provider', icon: 'Globe', category: 'Auth' },
   
   // Metadata
   { name: 'Metadata', endpoint: '/api/rest/metadata', icon: 'Database', category: 'Metadata' },

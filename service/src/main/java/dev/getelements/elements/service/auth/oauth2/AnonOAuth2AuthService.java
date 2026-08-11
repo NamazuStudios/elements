@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OAuth2AuthService;
+import dev.getelements.elements.sdk.service.name.NameService;
 import jakarta.inject.Inject;
 
 import java.util.Optional;
@@ -26,6 +27,8 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
     private OAuth2AuthServiceOperations oAuth2AuthServiceOperations;
 
     private ElementRegistry elementRegistry;
+
+    private NameService nameService;
 
     @Override
     public SessionCreation createSession(OAuth2SessionRequest oAuth2SessionRequest) {
@@ -49,12 +52,11 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
             return user;
         }
 
-        // No existing user was found — insert a fresh document via createUserStrict.
-        // createUser uses an upsert-by-name/email pattern; with a nameless/emailless anonymous
-        // user it would match any existing document where name="" and return it, collapsing all
-        // anonymous logins onto the same user record.
+        // No existing user was found — insert a fresh document via createUserStrict, avoiding
+        // createUser's upsert-by-name/email pattern entirely.
         var user = new User();
         user.setLevel(USER);
+        getNameService().assignNameAndEmailIfNecessary(user);
         user = getUserDao().createUserStrict(user);
 
         // If a stale UID exists (user was deleted), relink it to the new user
@@ -129,6 +131,15 @@ public class AnonOAuth2AuthService implements OAuth2AuthService {
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
 }

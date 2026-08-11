@@ -1,0 +1,127 @@
+package dev.getelements.elements.sdk.model.auth;
+
+import java.sql.Timestamp;
+
+/**
+ * Represents a single pending (or resolved) browser-redirect OIDC login attempt.
+ *
+ * <p>Not part of the public REST API — this is the DAO-level model consumed by the service layer to orchestrate
+ * {@code POST /oidc/session}, {@code GET /oidc/session/{id}}, and {@code GET /oidc/{provider}/callback}. The
+ * {@code id}, {@code state}, and {@code nonce} values are all server-generated via {@link java.security.SecureRandom}.
+ */
+public class OidcLoginAttempt {
+
+    /** Creates a new instance. */
+    public OidcLoginAttempt() {}
+
+    /** The opaque bearer token used to poll for completion. Doubles as the database primary key. */
+    private String id;
+
+    /** The provider identifier this attempt was started for. */
+    private String provider;
+
+    /** The single-use CSRF state value bound to the authorize request and validated on callback. */
+    private String state;
+
+    /** The single-use nonce bound to the authorize request and validated against the resulting id_token. */
+    private String nonce;
+
+    /** The current lifecycle status. */
+    private OidcLoginAttemptStatus status;
+
+    /** The serialized {@code SessionCreation} payload, set on COMPLETE and cleared when claimed. */
+    private String sessionToken;
+
+    /** A human-readable failure reason, set on FAILED. */
+    private String failureReason;
+
+    /** The absolute timestamp after which this attempt is no longer valid. */
+    private Timestamp expiry;
+
+    /** Optional. If set, the callback redirects the browser here on success instead of the default HTML page. */
+    private String successRedirectUrl;
+
+    /** Optional. If set, the callback redirects the browser here on failure instead of the default HTML page. */
+    private String errorRedirectUrl;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(String nonce) {
+        this.nonce = nonce;
+    }
+
+    public OidcLoginAttemptStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OidcLoginAttemptStatus status) {
+        this.status = status;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
+    }
+
+    public Timestamp getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(Timestamp expiry) {
+        this.expiry = expiry;
+    }
+
+    public String getSuccessRedirectUrl() {
+        return successRedirectUrl;
+    }
+
+    public void setSuccessRedirectUrl(String successRedirectUrl) {
+        this.successRedirectUrl = successRedirectUrl;
+    }
+
+    public String getErrorRedirectUrl() {
+        return errorRedirectUrl;
+    }
+
+    public void setErrorRedirectUrl(String errorRedirectUrl) {
+        this.errorRedirectUrl = errorRedirectUrl;
+    }
+
+}

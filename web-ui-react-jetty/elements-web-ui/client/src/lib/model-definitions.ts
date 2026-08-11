@@ -21,6 +21,8 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'password', type: 'string', required: true, isArray: false, isMap: false },
       { name: 'level', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false },
       { name: 'profiles', type: 'string', required: false, isArray: true, isMap: false },
+      { name: 'displayName', type: 'string', required: false, isArray: false, isMap: false, readOnly: true, description: "The user's display name, as reported by an OIDC provider. Only filled in if previously blank; never overwritten." },
+      { name: 'linkedAccountProfiles', type: 'object', required: false, isArray: false, isMap: true, readOnly: true, description: 'Per-linked-OIDC-scheme snapshot of the standard profile claims that scheme most recently reported.' },
     ],
   },
   'user/UserCreateRequest': {
@@ -48,6 +50,8 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'password', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'confirmPassword', type: 'string', required: false, isArray: false, isMap: false, uiOnly: true },
       { name: 'level', type: 'enum', required: false, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false },
+      { name: 'displayName', type: 'string', required: false, isArray: false, isMap: false, readOnly: true, description: "The user's display name, as reported by an OIDC provider. Only filled in if previously blank; never overwritten." },
+      { name: 'linkedAccountProfiles', type: 'object', required: false, isArray: false, isMap: true, readOnly: true, description: 'Per-linked-OIDC-scheme snapshot of the standard profile claims that scheme most recently reported.' },
     ],
   },
 
@@ -298,6 +302,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'keys', type: 'object', required: true, isArray: true, isMap: false },
       { name: 'keysUrl', type: 'string', required: false, isArray: false, isMap: false },
       { name: 'mediaType', type: 'string', required: false, isArray: false, isMap: false },
+      { name: 'keysFetchedAt', type: 'number', required: false, isArray: false, isMap: false, readOnly: true, description: 'Epoch second the keys were last refreshed. Server-managed.' },
     ],
   },
   'auth/OAuth2AuthScheme': {
@@ -327,6 +332,22 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'userLevel', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The highest permitted user level this particular scheme will authorize.' },
       { name: 'tags', type: 'string', required: true, isArray: true, isMap: false, description: 'A list of tags used to index the auth scheme.' },
       { name: 'allowedIssuers', type: 'string', required: true, isArray: true, isMap: false, description: 'The list of issuers allowed to use this scheme.' },
+    ],
+  },
+  'auth/OidcProviderConfiguration': {
+    name: 'OidcProviderConfiguration',
+    fields: [
+      { name: 'id', type: 'string', required: false, isArray: false, isMap: false, validationGroups: { insert: 'null', create: 'null', update: 'notNull' } },
+      { name: 'name', type: 'string', required: true, isArray: false, isMap: false, description: "A unique, lowercase, URL-safe identifier for the provider (e.g. 'twitch'). Used as the 'provider' path segment and request body value for the OIDC session endpoints." },
+      { name: 'discoveryUrl', type: 'string', required: true, isArray: false, isMap: false, description: "The provider's OIDC discovery document URL, e.g. https://id.twitch.tv/oauth2/.well-known/openid-configuration. The issuer, authorization endpoint, token endpoint, and JWKS URI are all resolved from this document." },
+      { name: 'clientId', type: 'string', required: true, isArray: false, isMap: false, description: 'The OAuth2 client id registered with the provider.' },
+      { name: 'clientSecret', type: 'string', required: false, isArray: false, isMap: false, validationGroups: { create: 'notNull' }, description: 'The OAuth2 client secret registered with the provider. Required on create; leave blank on update to keep the existing secret unchanged.' },
+      { name: 'scopes', type: 'string', required: false, isArray: true, isMap: false, description: 'The OAuth2 scopes to request during authorization.' },
+      { name: 'redirectUri', type: 'string', required: false, isArray: false, isMap: false, description: "The full, literal redirect URI registered with the provider. Leave blank to use this server's built-in OIDC callback URI." },
+      { name: 'extraAuthorizeParams', type: 'object', required: false, isArray: false, isMap: true, description: "Additional provider-specific query parameters to include in the authorize request. For Twitch, to also receive email/username, set: { \"claims\": { \"id_token\": { \"email\": null, \"email_verified\": null, \"preferred_username\": null } } } — note the 'claims' key wraps the whole request; nested object values are stringified automatically." },
+      { name: 'tokenEndpointAuthMethod', type: 'enum', required: false, enumValues: ['CLIENT_SECRET_BASIC', 'CLIENT_SECRET_POST'], isArray: false, isMap: false, description: "How the client authenticates to the provider's token endpoint during code exchange." },
+      { name: 'successRedirectUrl', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a successful login instead of rendering the default success page. Server-authoritative: not overridable per login attempt.' },
+      { name: 'errorRedirectUrl', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a failed login instead of rendering the default error page. Server-authoritative: not overridable per login attempt.' },
     ],
   },
 
