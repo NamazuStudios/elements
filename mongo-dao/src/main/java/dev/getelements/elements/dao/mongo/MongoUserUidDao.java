@@ -4,6 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.MongoUserUid;
 import dev.getelements.elements.dao.mongo.model.MongoUserUidScheme;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -29,6 +30,7 @@ import org.bson.types.ObjectId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -48,6 +50,8 @@ public class MongoUserUidDao implements UserUidDao {
     private MapperRegistry dozerMapperRegistry;
 
     private MongoUserDao mongoUserDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public List<UserUid> getAllUserIdsForUser(final String userId) {
@@ -143,7 +147,14 @@ public class MongoUserUidDao implements UserUidDao {
         getMongoDBUtils().performV(ds -> getDatastore().insert(mongoUserUid));
         addLinkedAccount(mongoUserUid);
 
-        return getDozerMapperRegistry().map(mongoUserUid, UserUid.class);
+        final var createdUserUid = getDozerMapperRegistry().map(mongoUserUid, UserUid.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdUserUid)
+                .named(USER_UID_CREATED)
+                .build());
+
+        return createdUserUid;
     }
 
     @Override
@@ -176,7 +187,15 @@ public class MongoUserUidDao implements UserUidDao {
             throw new InternalException("More than one UserUid deleted for scheme " + scheme + " and id " + id);
         }
 
-        return count == 1;
+        if (count == 1) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(getDozerMapperRegistry().map(uid, UserUid.class))
+                    .named(USER_UID_DELETED)
+                    .build());
+            return true;
+        }
+
+        return false;
 
     }
 
@@ -186,7 +205,15 @@ public class MongoUserUidDao implements UserUidDao {
                 .filter(eq("_id", new MongoUserUidScheme(scheme, id)))
                 .update(set("verificationStatus", status))
                 .execute();
-        return getUserUid(id, scheme);
+
+        final var updatedUserUid = getUserUid(id, scheme);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedUserUid)
+                .named(USER_UID_UPDATED)
+                .build());
+
+        return updatedUserUid;
     }
 
     @Override
@@ -212,6 +239,11 @@ public class MongoUserUidDao implements UserUidDao {
                 .with(unset("linkedAccounts"));
 
         getMongoDBUtils().perform(ds -> builder.execute(query, new ModifyOptions().upsert(false)));
+
+        getEventPublisher().accept(Event.builder()
+                .argument(userId)
+                .named(USER_UIDS_TRUNCATED)
+                .build());
 
         return true;
 
@@ -326,6 +358,15 @@ public class MongoUserUidDao implements UserUidDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.dao;
 
 import com.google.common.base.Strings;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
@@ -23,7 +24,43 @@ import java.util.Optional;
  * Created by patricktwohig on 3/26/15.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = UserDao.USER_CREATED,
+        parameters = User.class,
+        description = "Called when a user was created."
+)
+@ElementEventProducer(
+        value = UserDao.USER_CREATED,
+        parameters = {User.class, Transaction.class},
+        description = "Called when a user was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UserDao.USER_UPDATED,
+        parameters = User.class,
+        description = "Called when a user was updated."
+)
+@ElementEventProducer(
+        value = UserDao.USER_UPDATED,
+        parameters = {User.class, Transaction.class},
+        description = "Called when a user was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UserDao.USER_DELETED,
+        parameters = User.class,
+        description = "Called when a user was soft-deleted."
+)
+@ElementEventProducer(
+        value = UserDao.USER_DELETED,
+        parameters = {User.class, Transaction.class},
+        description = "Called when a user was soft-deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface UserDao {
+
+    String USER_CREATED = "dev.getelements.elements.sdk.model.dao.user.created";
+
+    String USER_UPDATED = "dev.getelements.elements.sdk.model.dao.user.updated";
+
+    String USER_DELETED = "dev.getelements.elements.sdk.model.dao.user.deleted";
 
     /**
      * Gets the user with the userId.  If the user is not active, then this method will behave as if the user does
@@ -104,6 +141,13 @@ public interface UserDao {
     /**
      * Creates a user with the given User object.  Using "Strict" semantics, if the user exists
      * then this will throw an exception.  The resulting user will have a scrambled password.
+     * <p>
+     * As a side effect, this automatically links a {@link UserUid} for each of the user's non-blank
+     * {@link User#getEmail()}, {@link User#getName()}, and {@link User#getPrimaryPhoneNb()} values, using
+     * the corresponding {@link UserUidDao#SCHEME_EMAIL}, {@link UserUidDao#SCHEME_NAME}, and
+     * {@link UserUidDao#SCHEME_PHONE_NUMBER} schemes. If explicit control over which UserUid schemes get
+     * linked is needed instead (e.g. an identity-provider integration linking only a subset of schemes),
+     * use {@link #newEmptyUser()}.
      *
      * @param user the user to create
      * @return the User as it was created.
@@ -111,9 +155,23 @@ public interface UserDao {
     User createUserStrict(User user);
 
     /**
+     * Begins constructing a new {@link User} with the minimum information needed to persist it. Unlike
+     * {@link #createUserStrict(User)} and its siblings, no {@link UserUid} is linked automatically — the
+     * caller is expected to attach each one it needs, one at a time, via the returned {@link UserCreation}.
+     *
+     * @return a new {@link UserCreation} builder
+     */
+    UserCreation newEmptyUser();
+
+    /**
      * Creates a user with the given User object and password.  Using "Strict" semantics, if the
      * user exists then this will throw an exception.  The resulting user will be assigned
      * the given password.
+     * <p>
+     * As a side effect, this automatically links a {@link UserUid} for each of the user's non-blank
+     * {@link User#getEmail()}, {@link User#getName()}, and {@link User#getPrimaryPhoneNb()} values, using
+     * the corresponding {@link UserUidDao#SCHEME_EMAIL}, {@link UserUidDao#SCHEME_NAME}, and
+     * {@link UserUidDao#SCHEME_PHONE_NUMBER} schemes.
      *
      * @param user the user to create
      * @param password the password to assign the user
@@ -129,6 +187,11 @@ public interface UserDao {
      * Similar to {@link #createUserStrict(User)} the user will be assigned a scrambled
      * password if the user does not exist (or was previously inactive). This will not
      * touch the user's password if the user both exists and was flagged as active.
+     * <p>
+     * As a side effect, this automatically links a {@link UserUid} for each of the user's non-blank
+     * {@link User#getEmail()}, {@link User#getName()}, and {@link User#getPrimaryPhoneNb()} values, using
+     * the corresponding {@link UserUidDao#SCHEME_EMAIL}, {@link UserUidDao#SCHEME_NAME}, and
+     * {@link UserUidDao#SCHEME_PHONE_NUMBER} schemes.
      *
      * @param user the user
      * @return the User, as written to the database
@@ -138,6 +201,11 @@ public interface UserDao {
     /**
      * Creates a user and sets the user's password.  If the user exists
      * then this will reinstate the user's account with a new password.
+     * <p>
+     * As a side effect, this automatically links a {@link UserUid} for each of the user's non-blank
+     * {@link User#getEmail()}, {@link User#getName()}, and {@link User#getPrimaryPhoneNb()} values, using
+     * the corresponding {@link UserUidDao#SCHEME_EMAIL}, {@link UserUidDao#SCHEME_NAME}, and
+     * {@link UserUidDao#SCHEME_PHONE_NUMBER} schemes.
      *
      * @param user     the user to create
      * @param password the password for the user to use
@@ -224,6 +292,11 @@ public interface UserDao {
      * Similar to {@link #createUserStrict(User)} the user will be assigned a scrambled
      * password if the user does not exist (or was previously inactive). This will not
      * touch the user's password if the user both exists and was flagged as active.
+     * <p>
+     * As a side effect of creating a user, this automatically links a {@link UserUid} for each of the
+     * user's non-blank {@link User#getEmail()}, {@link User#getName()}, and {@link User#getPrimaryPhoneNb()}
+     * values, using the corresponding {@link UserUidDao#SCHEME_EMAIL}, {@link UserUidDao#SCHEME_NAME}, and
+     * {@link UserUidDao#SCHEME_PHONE_NUMBER} schemes.
      *
      * @param user the user
      * @return the User, as written to the database

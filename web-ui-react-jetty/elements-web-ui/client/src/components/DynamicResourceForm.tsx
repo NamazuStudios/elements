@@ -9,6 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, RotateCcw, Search, X } from 'lucide-react';
 import { UserSearchDialog } from './UserSearchDialog';
 import { FormFieldGenerator } from './FormFieldGenerator';
+import { OidcRedirectUriField } from './OidcRedirectUriField';
+import { LinkedAccountProfilesView } from './LinkedAccountProfilesView';
 import { MetadataEditor } from './MetadataEditor';
 import { MetadataSpecPropertyEditor } from './MetadataSpecPropertyEditor';
 import { MissionStepsEditor } from './MissionStepsEditor';
@@ -186,6 +188,45 @@ export function DynamicResourceForm({
         continue; // Skip the rest of the logic for this field
       }
       
+      // Special case: OIDC Providers extraAuthorizeParams is Map<String, String> on the backend, but a
+      // provider's extra param value (e.g. Twitch's 'claims') is itself a JSON object serialized as a string.
+      // Typing that as double-escaped JSON-within-JSON by hand is error-prone, so accept a plain nested object
+      // for any entry and auto-stringify it here rather than sending it as-is and failing Jackson deserialization
+      // ("Cannot deserialize value of type String from Object value") on submit.
+      if (resourceName === 'OIDC Providers' && field.name === 'extraAuthorizeParams') {
+        shape[field.name] = z.string().transform((val, ctx) => {
+          if (!val || val.trim() === '') {
+            return {};
+          }
+
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(val);
+          } catch {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Invalid JSON format',
+            });
+            return z.NEVER;
+          }
+
+          if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: 'Must be a JSON object of key/value pairs',
+            });
+            return z.NEVER;
+          }
+
+          const stringified: Record<string, string> = {};
+          for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+            stringified[key] = typeof value === 'string' ? value : JSON.stringify(value);
+          }
+          return stringified;
+        });
+        continue; // Skip the rest of the logic for this field
+      }
+
       // Special case: CustomAuthScheme publicKey field - optional but must be valid Base64 if provided
       if (resourceName === 'Custom' && field.name === 'publicKey') {
         shape[field.name] = z.string()
@@ -930,6 +971,30 @@ export function DynamicResourceForm({
       );
     }
     
+    // For Users, render linkedAccountProfiles as a per-scheme breakout view instead of a raw JSON textarea
+    if (resourceName === 'Users' && field.name === 'linkedAccountProfiles') {
+      return (
+        <LinkedAccountProfilesView
+          key={field.name}
+          form={form}
+          fieldName={field.name}
+          description={field.description}
+        />
+      );
+    }
+
+    // For OIDC Providers, offer a checkbox to fall back to this server's built-in OIDC callback URI
+    if (resourceName === 'OIDC Providers' && field.name === 'redirectUri') {
+      return (
+        <OidcRedirectUriField
+          key={field.name}
+          form={form}
+          fieldName={field.name}
+          description={field.description}
+        />
+      );
+    }
+
     // Use default field generator for all other fields
     return (
       <FormFieldGenerator

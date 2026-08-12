@@ -37,6 +37,8 @@ import dev.getelements.elements.service.auth.oauth2.AnonOAuth2AuthService;
 import dev.getelements.elements.service.auth.oauth2.SuperUserOAuth2AuthSchemeService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcAuthSchemeService;
+import dev.getelements.elements.service.auth.oidc.StandardOidcLoginAttemptService;
+import dev.getelements.elements.service.auth.oidc.SuperUserOidcProviderConfigurationService;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.SuperUserFlowSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.near.SuperUserNearSmartContractInvocationService;
@@ -58,7 +60,6 @@ import dev.getelements.elements.service.auth.*;
 import dev.getelements.elements.service.cdn.SuperuserDeploymentService;
 import dev.getelements.elements.service.codegen.SuperUserOpenApiCodegenService;
 import dev.getelements.elements.service.defaults.DefaultOAuth2SchemeConfiguration;
-import dev.getelements.elements.service.defaults.DefaultOidcSchemeConfiguration;
 import dev.getelements.elements.service.defaults.DefaultUserConfiguration;
 import dev.getelements.elements.service.goods.ProductBundleMigration;
 import dev.getelements.elements.service.follower.SuperUserFollowerService;
@@ -116,6 +117,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(OidcAuthService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(AnonOidcAuthService.class);
+
+        bind(OidcLoginAttemptService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcLoginAttemptService.class);
 
         bind(OAuth2AuthService.class)
                 .annotatedWith(named(UNSCOPED))
@@ -251,6 +256,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOidcAuthSchemeService.class);
 
+        bind(OidcProviderConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserOidcProviderConfigurationService.class);
+
         bind(OAuth2AuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOAuth2AuthSchemeService.class);
@@ -385,7 +394,6 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(ProductSkuSchemaSeeder.class).asEagerSingleton();
 
         bind(DefaultUserConfiguration.class).asEagerSingleton();
-        bind(DefaultOidcSchemeConfiguration.class).asEagerSingleton();
         bind(DefaultOAuth2SchemeConfiguration.class).asEagerSingleton();
         bind(ProductBundleMigration.class).asEagerSingleton();
     }

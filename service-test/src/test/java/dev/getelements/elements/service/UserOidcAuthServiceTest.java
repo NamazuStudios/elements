@@ -27,6 +27,7 @@ import java.util.function.BiFunction;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.model.Constants.API_OUTSIDE_URL;
+import static dev.getelements.elements.sdk.service.Constants.OIDC_JWKS_REFRESH_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -147,21 +148,27 @@ public class UserOidcAuthServiceTest {
     }
 
     /**
-     * Unverified email → email UID NOT created.
+     * Email present but not marked verified by the provider → still trusted and linked. The provider is
+     * trusted infrastructure the admin explicitly configured, and Elements has no independent way to check a
+     * provider's own email_verified claim (some providers omit it, or encode it as a non-boolean type) — see
+     * AnonOidcAuthService for the full rationale.
      */
     @Test
-    public void testUnverifiedEmail_emailUidNotCreated() {
+    public void testUnverifiedEmail_stillCreatesEmailUid() {
         when(userUidDao.findUserUid(SUB, SCHEME_NAME)).thenReturn(Optional.empty());
+        when(userUidDao.findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL)).thenReturn(Optional.empty());
 
         runMapper(jwt(SUB, EMAIL, false), scheme(SCHEME_NAME));
 
         final var uidCaptor = ArgumentCaptor.forClass(UserUid.class);
-        verify(userUidDao, times(1)).createUserUidStrict(uidCaptor.capture());
-        assertEquals(uidCaptor.getValue().getId(), SUB);
-        assertEquals(uidCaptor.getValue().getScheme(), SCHEME_NAME);
+        verify(userUidDao, times(2)).createUserUidStrict(uidCaptor.capture());
 
-        // No email UID lookup should be performed at all
-        verify(userUidDao, never()).findUserUid(EMAIL, UserUidDao.SCHEME_EMAIL);
+        final var emailUid = uidCaptor.getAllValues().stream()
+                .filter(u -> EMAIL.equals(u.getId()) && UserUidDao.SCHEME_EMAIL.equals(u.getScheme()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(emailUid, "Email UID should be created even when not marked verified");
+        assertEquals(emailUid.getUserId(), CURRENT_USER_ID);
     }
 
     /**
@@ -238,6 +245,7 @@ public class UserOidcAuthServiceTest {
             bind(OidcAuthServiceOperations.class).toInstance(mock(OidcAuthServiceOperations.class));
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(named(SESSION_TIMEOUT_SECONDS)).to(3600L);
+            bindConstant().annotatedWith(named(OIDC_JWKS_REFRESH_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }
     }
