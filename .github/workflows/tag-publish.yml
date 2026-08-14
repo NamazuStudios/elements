@@ -1,0 +1,124 @@
+name: Tag Publish
+
+# The one place real release publishing happens, mirroring the existing
+# Bitbucket `tags: "*"` pipeline pattern: every version-transition workflow
+# (cut-rc, release-branch auto-bump, release) hands off by pushing a git tag,
+# and this workflow does the actual build/test/publish. It never writes to
+# git itself, so it can't loop.
+#
+# The `on.push.tags` glob below is only a coarse pre-filter (GitHub Actions
+# tag filters don't support real regex quantifiers) -- the guard job below
+# does the real validation, and deliberately excludes anything below 3.9.x so
+# it never reacts to: the ~190 legacy `x.y.z-SNAPSHOT` tags already in this
+# repo's history, or the ongoing real `3.8.x` release tags the still-running
+# legacy Bitbucket `release/3.8` pipeline keeps depositing on this remote.
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+      is_release: ${{ steps.check.outputs.is_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - id: check
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+
+          if [[ "$TAG" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+(-rc-[0-9]+)?$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            if (( MAJOR > 3 || (MAJOR == 3 && MINOR >= 9) )); then
+              echo "proceed=true" >> "$GITHUB_OUTPUT"
+              if [[ "$TAG" == *-rc-* ]]; then
+                echo "is_release=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "is_release=true" >> "$GITHUB_OUTPUT"
+              fi
+              exit 0
+            fi
+          fi
+
+          echo "proceed=false" >> "$GITHUB_OUTPUT"
+          echo "is_release=false" >> "$GITHUB_OUTPUT"
+          echo "Tag '$TAG' is not a >=3.9 release/rc version -- ignoring." >&2
+
+  publish:
+    needs: guard
+    if: needs.guard.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    concurrency:
+      group: tag-publish-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+        with:
+          import-gpg: 'true'
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Install (skip tests)
+        # See main-build.yml -- some tests resolve a sibling module's jar
+        # from the local repo at test-execution time, so every module needs
+        # to already be installed before the real (tests-enabled) pass runs.
+        run: make install_no_tests
+
+      - name: Build, test, and publish to Central + GitHub Packages
+        env:
+          SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: make deploy_central
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        run: make docker
+
+      - name: Publish Javadoc + OpenAPI spec to gh-pages
+        uses: ./.github/actions/publish-docs
+        with:
+          version: ${{ needs.guard.outputs.version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        if: needs.guard.outputs.is_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --generate-notes

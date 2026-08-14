@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.SystemVersion;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
+import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
@@ -41,12 +42,15 @@ record DeploymentContext(
         Map<Path, Attributes> attributePaths,
         Map<Path, ElementManifestRecord> manifests,
         Map<Element, ElementPathRecord> elementPathsByElement,
+        List<FailedElementEntry> failedElements,
         ElementArtifactLoader artifactLoader,
         ElementPathLoader pathLoader,
         Set<ArtifactRepository> repositories,
         TemporaryFiles temporaryFiles,
         Set<Path> unconsumedSpiPaths,
-        Set<Path> unconsumedAttributePaths
+        Set<Path> unconsumedAttributePaths,
+        Attributes globalAttributes,
+        Map<Path, String> elementPathSources
 ) {
 
     public DeploymentContext {
@@ -61,7 +65,8 @@ record DeploymentContext(
             final MutableElementRegistry registry,
             final ElementArtifactLoader artifactLoader,
             final ElementPathLoader pathLoader,
-            final TemporaryFiles temporaryFiles
+            final TemporaryFiles temporaryFiles,
+            final Attributes globalAttributes
     ) {
         return new DeploymentContext(
                 deployment,
@@ -76,12 +81,15 @@ record DeploymentContext(
                 new HashMap<>(),
                 new HashMap<>(),
                 new LinkedHashMap<>(),
+                new ArrayList<>(),
                 artifactLoader,
                 pathLoader,
                 new HashSet<>(),
                 temporaryFiles,
                 new HashSet<>(),
-                new HashSet<>()
+                new HashSet<>(),
+                globalAttributes,
+                new HashMap<>()
         );
     }
 
@@ -205,9 +213,15 @@ record DeploymentContext(
                 Attributes.emptyAttributes()
         );
 
-        // Create the base attributes found in the deployment
+        // Apply in priority order (last wins):
+        //   disk attrs → global operator attrs → per-element path attrs
+        // globalAttributes() carries operator-set explicit properties (env vars, local.properties,
+        // config files, or withProperties() in the local SDK). Applied after disk attrs but before
+        // per-element path attrs so they override element @ElementDefaultAttribute declarations
+        // while still being overridable by per-element path attributes.
         final var builder = new SimpleAttributes.Builder()
                 .from(baseAttrs)
+                .from(globalAttributes())
                 .from(resolved);
 
         // If the deployment is scoped to an Application, inject APPLICATION_ATTRIBUTE for all elements
@@ -302,6 +316,30 @@ record DeploymentContext(
             warn("Unknown builtin SPI name: " + name);
             return List.of();
         }
+    }
+
+    /**
+     * Records an element that failed to load, preserving its declared required attributes for diagnostics.
+     * Intended for use as an {@link ElementPathLoader.LoadConfiguration} {@code failedElementHandler}.
+     *
+     * @param record the element record scanned before the failure (carries requiredAttributes)
+     * @param cause  the exception that prevented the element from loading
+     */
+    public void recordFailedElement(final ElementRecord record, final java.nio.file.Path elementPath, final Throwable cause) {
+        logs.add("ERROR: Element '%s' failed to load: %s".formatted(record.definition().name(), cause.getMessage()));
+        // Find which staged root contributed this element path so we can attribute it to the right source.
+        // Match by filesystem identity: ZIP paths from different ELMs all start with "/" so startsWith()
+        // would spuriously match across ELMs. Instead, check that the path lives in the same filesystem.
+        final String sourceArtifact = elementPathSources.entrySet().stream()
+                .filter(e -> elementPath.getFileSystem() == e.getKey().getFileSystem())
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+        failedElements.add(new FailedElementEntry(record, elementPath, sourceArtifact));
+        // Note: do not add to errors here — the sdkExceptionHandler in DirectoryElementPathLoader
+        // calls context::error on the same throwable after loadElement() re-throws, which would
+        // double-count the error in the deployment log and status.
     }
 
     /**

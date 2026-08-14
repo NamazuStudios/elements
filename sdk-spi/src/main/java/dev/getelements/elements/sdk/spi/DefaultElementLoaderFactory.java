@@ -11,6 +11,8 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.FieldInfo;
 import io.github.classgraph.MethodInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -24,6 +26,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public class DefaultElementLoaderFactory implements ElementLoaderFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultElementLoaderFactory.class);
 
     private final ElementReflectionUtils reflectionUtils = new ElementReflectionUtils();
 
@@ -81,7 +85,15 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
         final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
-        // The Module Records and Services
+        // Priority (last wins):
+        //   SYSTEM_ATTRIBUTES (all scan defaults + operator-set)
+        //   < element @ElementDefaultAttribute
+        //   < GLOBAL_ELEMENT_ATTRIBUTES (operator-set explicit, inside `attributes`)
+        //   < per-element path attributes (inside `attributes`)
+        // SYSTEM_ATTRIBUTES is the floor: elements read any server default they need, and can
+        // re-declare individual keys via @ElementDefaultAttribute to change the default for that
+        // element. Operator-explicit overrides (GLOBAL_ELEMENT_ATTRIBUTES) then beat element
+        // defaults, and per-element path attributes beat everything.
         final var elementResolvedAttributes = new SimpleAttributes.Builder()
                 .from(defaultAttributes)
                 .from(elementDefaultAttributes)
@@ -96,9 +108,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .collect(toList());
 
         if (!missingRequired.isEmpty()) {
-            throw new SdkException(
-                    "Element '" + elementDefinitionRecord.name() + "' is missing required attributes: " + missingRequired
-            );
+            logger.warn("Element '{}' is missing required attributes: {}", elementDefinitionRecord.name(), missingRequired);
         }
 
         return new ElementRecord(
@@ -205,9 +215,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .collect(toList());
 
         if (!missingRequired.isEmpty()) {
-            throw new SdkException(
-                    "Element '" + elementDefinitionRecord.name() + "' is missing required attributes: " + missingRequired
-            );
+            logger.warn("Element '{}' is missing required attributes: {}", elementDefinitionRecord.name(), missingRequired);
         }
 
         return new ElementRecord(
@@ -242,6 +250,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 cg::acceptPackages,
                 cg::acceptPackagesNonRecursive
         );
+
+        rejectOtherElementPackages(cg, classLoader, elementDefinitionRecord);
 
         try (final var result = cg.scan()) {
 
@@ -279,6 +289,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 cg::acceptPackages,
                 cg::acceptPackagesNonRecursive
         );
+
+        rejectOtherElementPackages(cg, classLoader, elementDefinitionRecord);
 
         try (final var result = cg.scan()) {
 
@@ -357,6 +369,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 classGraph::acceptPackagesNonRecursive
         );
 
+        rejectOtherElementPackages(classGraph, classLoader, elementDefinitionRecord);
+
         try (final var result = classGraph.scan()) {
 
             final var fromPackage = ElementServiceRecord.fromPackage(elementDefinitionRecord.pkg());
@@ -388,6 +402,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         } else {
             classGraph.acceptPackagesNonRecursive(elementDefinitionRecord.pkgName());
         }
+
+        rejectOtherElementPackages(classGraph, classLoader, elementDefinitionRecord);
 
         try (var result = classGraph.scan()) {
             return result.getClassesWithAnnotation(ElementEventProducer.class)
@@ -426,6 +442,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 classGraph::acceptPackages,
                 classGraph::acceptPackagesNonRecursive
         );
+
+        rejectOtherElementPackages(classGraph, classLoader, elementDefinitionRecord);
 
         try (var result = classGraph.scan()) {
 
@@ -594,6 +612,45 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         // Create standard consumer record
         return ElementEventConsumerRecord.from(serviceRecord, method);
+    }
+
+    /**
+     * Scans the classloader for all packages annotated with {@link ElementDefinition} and adds
+     * {@link ClassGraph#rejectPackages} calls for every package that is NOT the current element.
+     * This prevents a recursive element scan from picking up {@link ElementDefaultAttribute} or
+     * {@link ElementRequiredAttribute} declarations that belong to a sibling/child element whose
+     * package happens to be a sub-package of the current element's package.
+     *
+     * <p>Ancestor packages of the current element are not rejected even if they carry
+     * {@code @ElementDefinition}, because ClassGraph's {@code rejectPackages} uses prefix
+     * matching: rejecting {@code "com.example"} would also block
+     * {@code "com.example.sub"} (the current element's own package).</p>
+     */
+    private void rejectOtherElementPackages(
+            final ClassGraph cg,
+            final ClassLoader classLoader,
+            final ElementDefinitionRecord current) {
+
+        final var probe = new ClassGraph()
+                .ignoreParentClassLoaders()
+                .overrideClassLoaders(classLoader)
+                .enableClassInfo()
+                .enableAnnotationInfo();
+
+        final var currentPkg = current.pkgName();
+
+        try (final var result = probe.scan()) {
+            result.getPackageInfo()
+                    .stream()
+                    .filter(nfo -> nfo.hasAnnotation(ElementDefinition.class))
+                    .map(nfo -> nfo.getName())
+                    .filter(name -> !name.equals(currentPkg))
+                    // Don't reject ancestor packages — ClassGraph rejectPackages uses prefix
+                    // matching, so rejecting "com.example" would also reject "com.example.sub".
+                    .filter(name -> !currentPkg.startsWith(name + "."))
+                    .forEach(cg::rejectPackages);
+        }
+
     }
 
     private ElementLoader newSharedLoader(final ElementRecord elementRecord) {

@@ -54,6 +54,8 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private final Properties properties;
 
+    private final Properties explicitProperties;
+
     private final Properties defaultProperties;
 
     private final List<ElementDefaultAttributeRecord> defaultAttributeRecords;
@@ -196,6 +198,8 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
         defaultAttributeRecords = scanForDefaultAttributes(classLoader);
         defaultProperties = scanForDefaults(classLoader);
+        this.explicitProperties = new Properties();
+        this.explicitProperties.putAll(properties);
         this.properties = new Properties(defaultProperties);
         this.properties.putAll(properties);
 
@@ -256,6 +260,23 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         return properties;
     }
 
+    /**
+     * Returns a copy of only the operator-supplied properties — values loaded from environment
+     * variables, JVM system properties, and configuration files (e.g. {@code local.properties}).
+     * Classpath-scanned {@code @ElementDefaultAttribute} values are intentionally excluded.
+     *
+     * <p>This is the correct source for {@code SYSTEM_ATTRIBUTES}: it ensures that server-level
+     * scan defaults never shadow an element's own {@code @ElementDefaultAttribute} declaration,
+     * while still allowing the operator to override any attribute explicitly.</p>
+     *
+     * @return the explicit operator properties
+     */
+    public Properties getExplicitProperties() {
+        final Properties result = new Properties();
+        result.putAll(explicitProperties);
+        return result;
+    }
+
     private List<ElementDefaultAttributeRecord> scanForDefaultAttributes(final ClassLoader classLoader) {
 
         final var result = new ClassGraph()
@@ -303,7 +324,14 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         try (result) {
 
             final Properties defaultProperties = new Properties();
-            defaultAttributeRecords.forEach(record -> defaultProperties.put(record.name(), record.value()));
+            result.getClassesWithFieldAnnotation(ElementDefaultAttribute.class)
+                    .stream()
+                    .flatMap(classInfo -> classInfo.getDeclaredFieldInfo().stream()
+                            .filter(fi -> fi.hasAnnotation(ElementDefaultAttribute.class) && fi.isStatic() && fi.isFinal())
+                            .map(FieldInfo::loadClassAndGetField)
+                    )
+                    .map(ElementDefaultAttributeRecord::from)
+                    .forEach(record -> defaultProperties.put(record.name(), record.value()));
 
             final var moduleDefaultClassInfo = result.getClassesImplementing(ModuleDefaults.class);
 

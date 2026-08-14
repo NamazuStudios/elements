@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -30,7 +31,7 @@ public class User implements Serializable {
     @Schema(description = "The user's database assigned unique ID.")
     private String id;
 
-    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @Pattern(regexp = Constants.Regexp.USERNAME)
     @Schema(description = "A unique name for the user.")
     private String name;
 
@@ -56,6 +57,14 @@ public class User implements Serializable {
 
     @Schema(description = "List of linked account or auth scheme names.")
     private Set<String> linkedAccounts;
+
+    @Schema(description = "The user's display name, as reported by an OIDC provider. Never overwrites " +
+            "an existing value; only filled in if previously blank.")
+    private String displayName;
+
+    @Schema(description = "Per-linked-OIDC-scheme snapshot of the standard OIDC profile-scope claims that " +
+            "scheme most recently reported, keyed by the auth scheme name.")
+    private Map<String, Map<String, String>> linkedAccountProfiles;
 
     private static final User UNPRIVILIGED = new User() {
 
@@ -274,17 +283,53 @@ public class User implements Serializable {
         this.linkedAccounts = linkedAccounts;
     }
 
+    /**
+     * Returns the user's display name, as reported by an OIDC provider.
+     *
+     * @return the display name
+     */
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    /**
+     * Sets the user's display name.
+     *
+     * @param displayName the display name
+     */
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * Returns the per-linked-OIDC-scheme snapshot of profile claims, keyed by auth scheme name.
+     *
+     * @return the linked account profiles
+     */
+    public Map<String, Map<String, String>> getLinkedAccountProfiles() {
+        return linkedAccountProfiles;
+    }
+
+    /**
+     * Sets the per-linked-OIDC-scheme snapshot of profile claims.
+     *
+     * @param linkedAccountProfiles the linked account profiles
+     */
+    public void setLinkedAccountProfiles(Map<String, Map<String, String>> linkedAccountProfiles) {
+        this.linkedAccountProfiles = linkedAccountProfiles;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(linkedAccounts, user.linkedAccounts);
+        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(email, user.email) && Objects.equals(primaryPhoneNb, user.primaryPhoneNb) && level == user.level && Objects.equals(linkedAccounts, user.linkedAccounts) && Objects.equals(displayName, user.displayName) && Objects.equals(linkedAccountProfiles, user.linkedAccountProfiles);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, linkedAccounts);
+        return Objects.hash(id, name, firstName, lastName, email, primaryPhoneNb, level, linkedAccounts, displayName, linkedAccountProfiles);
     }
 
     @Override
@@ -298,6 +343,8 @@ public class User implements Serializable {
                 ", primaryPhoneNb='" + primaryPhoneNb + '\'' +
                 ", level=" + level +
                 ", linkedAccounts=" + linkedAccounts +
+                ", displayName='" + displayName + '\'' +
+                ", linkedAccountProfiles=" + linkedAccountProfiles +
                 '}';
     }
 

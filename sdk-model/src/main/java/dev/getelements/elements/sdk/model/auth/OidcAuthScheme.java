@@ -36,6 +36,10 @@ public class OidcAuthScheme {
     @Schema(description = "The JWK format. Defaults to application/json")
     private String mediaType = "application/json";
 
+    @Schema(description = "The epoch second at which 'keys' was last refreshed. Server-managed; not settable " +
+            "via the create/update API.")
+    private Long keysFetchedAt;
+
     /**
      * Returns the unique ID of the auth scheme.
      *
@@ -144,17 +148,35 @@ public class OidcAuthScheme {
         this.mediaType = mediaType;
     }
 
+    /**
+     * Returns the epoch second at which {@link #getKeys()} was last refreshed.
+     *
+     * @return the epoch second the keys were last fetched, or {@code null} if never fetched
+     */
+    public Long getKeysFetchedAt() {
+        return keysFetchedAt;
+    }
+
+    /**
+     * Sets the epoch second at which {@link #getKeys()} was last refreshed.
+     *
+     * @param keysFetchedAt the epoch second the keys were last fetched
+     */
+    public void setKeysFetchedAt(Long keysFetchedAt) {
+        this.keysFetchedAt = keysFetchedAt;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OidcAuthScheme that = (OidcAuthScheme) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType());
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getKeys(), that.getKeys()) && Objects.equals(getIssuer(), that.getIssuer()) && Objects.equals(getKeysUrl(), that.getKeysUrl()) && Objects.equals(getMediaType(), that.getMediaType()) && Objects.equals(getKeysFetchedAt(), that.getKeysFetchedAt());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getIssuer(), getKeys(), getKeysUrl(), getMediaType());
+        return Objects.hash(getId(), getName(), getIssuer(), getKeys(), getKeysUrl(), getMediaType(), getKeysFetchedAt());
     }
 
     @Override
@@ -166,6 +188,7 @@ public class OidcAuthScheme {
                 ", keys='" + keys + '\'' +
                 ", keysUrl='" + keysUrl + '\'' +
                 ", mediaType='" + mediaType +
+                ", keysFetchedAt=" + keysFetchedAt +
                 '}';
     }
 }

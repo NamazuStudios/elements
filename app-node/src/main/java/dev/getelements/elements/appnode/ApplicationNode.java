@@ -64,7 +64,7 @@ public class ApplicationNode {
             storageDriverModule,
             new SimpleWatchdogServiceModule(),
             new ClusterContextFactoryModule(),
-            new ConfigurationModule(defaultConfigurationSupplier),
+            new ConfigurationModule(defaultConfigurationSupplier::get, defaultConfigurationSupplier::getExplicitProperties),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new KryoPayloadReaderWriterModule(),
             new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),

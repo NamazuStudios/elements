@@ -79,15 +79,6 @@ public class UserProgressService implements ProgressService {
         this.progressDao = progressDao;
     }
 
-    public ProgressDao setProgressDao() {
-        return progressDao;
-    }
-
-    @Inject
-    public void getProgressDao(ProgressDao progressDao) {
-        this.progressDao = progressDao;
-    }
-
     public Supplier<Profile> getCurrentProfileSupplier() {
         return currentProfileSupplier;
     }

@@ -10,5 +10,12 @@ import java.util.Map;
  * @param absolutePath the absolute path to the file on disk
  * @param mimeType the resolved MIME type (never {@code null}; falls back to {@code application/octet-stream})
  * @param resolvedHeaders resolved response headers to set on every response for this file
+ * @param etag strong ETag value (already quoted), derived from file size + mtime at load time
+ * @param lastModifiedMillis file modification time in millis since epoch, or {@code 0} if unavailable
  */
-record StaticFileMetadata(Path absolutePath, String mimeType, Map<String, String> resolvedHeaders) {}
+record StaticFileMetadata(
+        Path absolutePath,
+        String mimeType,
+        Map<String, String> resolvedHeaders,
+        String etag,
+        long lastModifiedMillis) {}

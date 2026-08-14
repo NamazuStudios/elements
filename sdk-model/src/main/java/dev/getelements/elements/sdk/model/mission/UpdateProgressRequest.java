@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.model.mission;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Null;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -12,11 +11,9 @@ public class UpdateProgressRequest implements Serializable {
     /** Creates a new instance. */
     public UpdateProgressRequest() {}
 
-    @Null
     @Schema(description = "The current step")
     private Step currentStep;
 
-    @Null
     @Schema(description = "The remaining actions")
     private Integer remaining;
 

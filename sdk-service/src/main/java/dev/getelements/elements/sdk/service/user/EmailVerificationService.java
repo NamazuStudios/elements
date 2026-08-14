@@ -17,7 +17,7 @@ import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
  *   <li>User clicks the link — {@link #completeVerification} is invoked — status moves to VERIFIED.</li>
  * </ol>
  *
- * <b>Email template customisation</b>
+ * <b>Email template customization</b>
  * <p>The body of the verification email is controlled by the {@link #VERIFICATION_EMAIL_TEMPLATE} element
  * attribute. Set this attribute in your Element to override the default template. The template must contain
  * the literal token {@code {link}}, which is replaced at send-time with the full verification URL

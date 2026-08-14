@@ -20,7 +20,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +35,29 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static java.lang.String.format;
 
 public class CustomApiTest {
+
+    /**
+     * Builds a diagnostic message for an unexpected response. Includes status, Allow,
+     * Content-Type, Server, X-Powered-By headers, plus the body (truncated). Enough to
+     * fingerprint which handler matched the URL.
+     */
+    private static String buildResponseDebug(final String prefix, final Response response) {
+        String body;
+        try {
+            response.bufferEntity();
+            final var raw = response.readEntity(String.class);
+            body = raw == null ? "<null>" : (raw.length() > 1024 ? raw.substring(0, 1024) + "…[trunc]" : raw);
+        } catch (final Exception ex) {
+            body = "<unreadable: " + ex.getClass().getSimpleName() + ": " + ex.getMessage() + ">";
+        }
+        return prefix
+                + " | status=" + response.getStatus()
+                + " | Allow=" + response.getHeaderString("Allow")
+                + " | Content-Type=" + response.getHeaderString("Content-Type")
+                + " | Server=" + response.getHeaderString("Server")
+                + " | X-Powered-By=" + response.getHeaderString("X-Powered-By")
+                + " | body=" + body;
+    }
 
     @Factory
     public Object[] getTests() {
@@ -115,6 +137,7 @@ public class CustomApiTest {
                 .build();
 
         runtimeService.loadTransientDeployment(restApiDeployment);
+        TestUtils.awaitElementReady(client, appServeRoot + OPENAPI_ENDPOINT);
 
     }
 
@@ -126,8 +149,18 @@ public class CustomApiTest {
 
         final var response = client
                 .target(appServeRoot + MESSAGE_ENDPOINT)
-                .request()
+                .request(APPLICATION_JSON)
                 .post(Entity.entity(toCreate, APPLICATION_JSON));
+
+        // Verify the platform-registered JacksonFeature is serving JSON responses.
+        // This element does NOT register its own Jackson provider — if JakartaRsLoader stops
+        // providing JacksonFeature automatically, this will fail with a 500 (MessageBodyWriter
+        // not found) or a non-JSON content-type, catching the regression immediately.
+        Assert.assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode(),
+                buildResponseDebug("Expected 201 Created from POST " + appServeRoot + MESSAGE_ENDPOINT, response));
+        Assert.assertTrue(
+                response.getMediaType().isCompatible(jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE),
+                buildResponseDebug("Expected application/json response", response));
 
         message = response.readEntity(Message.class);
         Assert.assertNotNull(message);
@@ -144,7 +177,7 @@ public class CustomApiTest {
 
         final var response = client
                 .target(appServeRoot + format("%s/%s", MESSAGE_ENDPOINT, message.getId()))
-                .request()
+                .request(APPLICATION_JSON)
                 .put(Entity.entity(toUpdate, APPLICATION_JSON));
 
         message = response.readEntity(Message.class);
@@ -159,7 +192,7 @@ public class CustomApiTest {
 
         final var response = client
                 .target(appServeRoot + format("%s/%s", MESSAGE_ENDPOINT, message.getId()))
-                .request()
+                .request(APPLICATION_JSON)
                 .get();
 
         final var message = response.readEntity(Message.class);
@@ -171,7 +204,7 @@ public class CustomApiTest {
     public void testGetMessages() {
         final var response = client
                 .target(appServeRoot + MESSAGE_ENDPOINT)
-                .request()
+                .request(APPLICATION_JSON)
                 .get();
 
         final var messages = response.readEntity(GetManyResponse.class);
@@ -184,7 +217,7 @@ public class CustomApiTest {
 
         final var response = client
                 .target(appServeRoot + MESSAGE_ENDPOINT)
-                .request()
+                .request(APPLICATION_JSON)
                 .get();
 
         Assert.assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());

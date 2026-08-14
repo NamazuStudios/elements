@@ -17,7 +17,7 @@ public class UserCreateRequest implements Serializable {
     /** Creates a new instance. */
     public UserCreateRequest() {}
 
-    @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @Pattern(regexp = Constants.Regexp.USERNAME)
     private String name;
 
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)

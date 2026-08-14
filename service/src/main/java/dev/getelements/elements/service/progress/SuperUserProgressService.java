@@ -6,7 +6,6 @@ import dev.getelements.elements.sdk.model.Tabulation;
 import dev.getelements.elements.sdk.model.mission.CreateProgressRequest;
 import dev.getelements.elements.sdk.model.mission.Progress;
 import dev.getelements.elements.sdk.model.mission.ProgressRow;
-
 import dev.getelements.elements.sdk.model.mission.UpdateProgressRequest;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
 import jakarta.inject.Inject;
@@ -39,12 +38,8 @@ public class SuperUserProgressService implements ProgressService {
 
     @Override
     public Progress updateProgress(final String progressId, final UpdateProgressRequest request) {
-
-        final var progress = new Progress();
-        progress.setId(progressId);
-        progress.setRemaining(request.getRemaining());
-        progress.setCurrentStep(request.getCurrentStep());
-
+        final var progress = getProgressDao().getProgress(progressId);
+        if (request.getRemaining() != null) progress.setRemaining(request.getRemaining());
         return getProgressDao().updateProgress(progress);
     }
 

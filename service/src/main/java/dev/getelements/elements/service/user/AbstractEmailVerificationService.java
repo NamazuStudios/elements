@@ -140,7 +140,14 @@ abstract class AbstractEmailVerificationService implements EmailVerificationServ
         this.elementRegistry = elementRegistry;
     }
 
-    public String getEmailSubject() {
+    /**
+     * Returns the subject line for the verification email.
+     *
+     * <p>Override this in a subclass to supply a custom subject without reimplementing
+     * the full verification flow. The default returns the value injected via
+     * {@link EmailVerificationService#VERIFICATION_EMAIL_SUBJECT}.
+     */
+    protected String getEmailSubject() {
         return emailSubject;
     }
 
@@ -149,7 +156,18 @@ abstract class AbstractEmailVerificationService implements EmailVerificationServ
         this.emailSubject = emailSubject;
     }
 
-    public String getEmailTemplate() {
+    /**
+     * Returns the HTML body template for the verification email.
+     *
+     * <p>Override this in a subclass to supply a custom template without reimplementing
+     * the full verification flow. The template must contain the literal token {@code {link}},
+     * which is replaced at send-time with the full verification URL. The default returns
+     * the value injected via {@link EmailVerificationService#VERIFICATION_EMAIL_TEMPLATE}.
+     *
+     * <p>To back this with a database (for a live UI editor), inject a DAO here and
+     * read from it, falling back to {@code super.getEmailTemplate()} when no override is stored.
+     */
+    protected String getEmailTemplate() {
         return emailTemplate;
     }
 

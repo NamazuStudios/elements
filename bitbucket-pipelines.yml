@@ -88,25 +88,28 @@ pipelines:
             # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
             - pipe: atlassian/checkstyle-report:0.3.0
     main:
+      # main has moved to GitHub Actions for real build/test/publish -- this
+      # step does nothing but bridge a Bitbucket push to GitHub's main so
+      # anyone still pushing here doesn't get silently dropped. No build, no
+      # test, no publish, no self-hosted runner/custom image needed: it's
+      # pure git plumbing. A genuine conflict fails the build loudly rather
+      # than being auto-resolved -- do not push tags from here (see
+      # tag-publish.yml's version-scoped guard on the GitHub side).
       - step:
-          size: 4x
-          name: Build and Test
-          services:
-            - docker
-          runs-on:
-            - "linux"
-            - "self.hosted"
-          caches:
-            - maven
+          name: Sync main to GitHub
+          image: alpine/git:latest
           script:
-            - make setup
-            - make install_no_tests
-            - make build_github
-            - make docker
-            - make publish_github
-          after-script:
-            # Collect checkstyle results, if any, and convert to Bitbucket Code Insights.
-            - pipe: atlassian/checkstyle-report:0.3.0
+            - git config --global user.name "Continuous Integration"
+            - git config --global user.email "ci@getelements.dev"
+            - git remote add github git@github.com:NamazuStudios/elements.git || true
+            - git fetch github main
+            - |
+              if git merge-base --is-ancestor github/main HEAD; then
+                echo "GitHub main already up to date with this push, nothing to merge"
+              else
+                git merge --no-edit github/main || { echo "CONFLICT syncing main to GitHub -- manual resolution required"; exit 1; }
+              fi
+            - git push github HEAD:main
   default:
     - step:
         size: 4x

@@ -47,7 +47,6 @@ import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class MongoMultiMatchDao implements MultiMatchDao {
@@ -329,9 +328,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
 
-        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
-                mongoMatchmakingApplicationConfiguration.getTimeoutSeconds(),
-                SECONDS
+        final var expiry = new Timestamp(currentTimeMillis() + SECONDS.toMillis(
+                mongoMatchmakingApplicationConfiguration.getTimeoutSeconds()
         ));
 
         final var mongoMultiMatch = getMapperRegistry().map(multiMatch, MongoMultiMatch.class);
@@ -363,9 +361,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
         final var mongoMatchmakingApplicationConfiguration = getMongoApplicationConfiguration(multiMatch);
 
-        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
-                mongoMatchmakingApplicationConfiguration.getTimeoutSeconds(),
-                SECONDS
+        final var expiry = new Timestamp(currentTimeMillis() + SECONDS.toMillis(
+                mongoMatchmakingApplicationConfiguration.getTimeoutSeconds()
         ));
 
         final var uniqueCode = getMongoUniqueCodeDao().generateMongoCode(joinCodeGenerationParameters);
@@ -526,9 +523,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .findFirst()
                 .orElseThrow(MultiMatchNotFoundException::new);
 
-        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
-                existing.getConfiguration().getLingerSeconds(),
-                SECONDS
+        final var expiry = new Timestamp(currentTimeMillis() + SECONDS.toMillis(
+                existing.getConfiguration().getLingerSeconds()
         ));
 
         query.filter(or(
@@ -593,9 +589,8 @@ public class MongoMultiMatchDao implements MultiMatchDao {
                 .findFirst()
                 .orElseThrow(MultiMatchNotFoundException::new);
 
-        final var expiry = new Timestamp(currentTimeMillis() + MILLISECONDS.convert(
-                existing.getConfiguration().getTimeoutSeconds(),
-                SECONDS
+        final var expiry = new Timestamp(currentTimeMillis() + SECONDS.toMillis(
+                existing.getConfiguration().getTimeoutSeconds()
         ));
 
         query.filter(or(

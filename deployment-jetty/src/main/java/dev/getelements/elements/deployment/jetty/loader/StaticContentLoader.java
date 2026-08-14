@@ -31,6 +31,7 @@ import java.util.function.Predicate;
 import static dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry.PathConflict;
 
 import static dev.getelements.elements.sdk.model.Constants.APP_OUTSIDE_URL;
+import static dev.getelements.elements.sdk.model.Constants.CDN_PUBLIC_MAX_AGE;
 
 /**
  * Loads static content from an {@link ElementPathRecord} and serves it via a {@link ServletContextHandler}.
@@ -61,6 +62,8 @@ public abstract class StaticContentLoader implements Loader {
     private HttpContextRoot httpContextRoot;
 
     private String appOutsideUrl;
+
+    private int publicMaxAgeSeconds;
 
     private HttpPathRegistry httpPathRegistry;
 
@@ -165,11 +168,14 @@ public abstract class StaticContentLoader implements Loader {
                 );
             }
 
+            final var defaultCacheControl = "public, max-age=" + publicMaxAgeSeconds + ", must-revalidate";
+
             final var config = new StaticRuleEngine(
                     contentRecord,
                     element.getElementRecord().attributes(),
                     ruleNamespace,
-                    pending
+                    pending,
+                    defaultCacheControl
             ).buildIndex();
 
             final var servlet = new StaticContentServlet(config);
@@ -271,6 +277,15 @@ public abstract class StaticContentLoader implements Loader {
     @Inject
     public void setAppOutsideUrl(@Named(APP_OUTSIDE_URL) final String appOutsideUrl) {
         this.appOutsideUrl = appOutsideUrl;
+    }
+
+    public int getPublicMaxAgeSeconds() {
+        return publicMaxAgeSeconds;
+    }
+
+    @Inject
+    public void setPublicMaxAgeSeconds(@Named(CDN_PUBLIC_MAX_AGE) final int publicMaxAgeSeconds) {
+        this.publicMaxAgeSeconds = publicMaxAgeSeconds;
     }
 
     public HttpPathRegistry getHttpPathRegistry() {
